@@ -1,0 +1,14 @@
+apply plugin: 'li-product'
+
+subprojects {
+  plugins.withType(JavaPlugin) {
+    dependencies {
+      // dependency defined in product_spec.json
+      testCompile spec.external.testng
+    }
+
+    test {
+      useTestNG()
+    }
+  }
+}
