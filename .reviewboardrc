@@ -1,5 +1,4 @@
 REPOSITORY = "coral"
 TARGET_PEOPLE='atumbde,khtran'
-OPEN_BROWSER='true'
 GUESS_FIELDS='yes'
-TRACKING_BRANCH='master'
+TRACKING_BRANCH='origin/master'

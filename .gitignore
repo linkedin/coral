@@ -10,3 +10,6 @@
 */build
 out/
 */bin/
+target/
+*target/
+derby.log
