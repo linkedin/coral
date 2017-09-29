@@ -51,9 +51,17 @@
   },
   "dependencyResolution": {},
   "external": {
-    "testng": "org.testng:testng:6.4"
+    "testng": "org.testng:testng:6.4",
+    "calcite-core": "org.apache.calcite:calcite-core:1.13.0"
   },
-  "product": {},
+  "product": {
+    "hive": {
+      "libraries": [
+        "hive-exec"
+      ],
+      "version": "1.1.0.124"
+    }
+  },
   "trunkDev": {
     "autoRevert": true
   },

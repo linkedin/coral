@@ -1,0 +1,12 @@
+apply plugin:'li-java'
+apply plugin:'distribution'
+dependencies {
+  compile spec.product.'hive'.'hive-exec'
+  compile spec.external.'calcite-core'
+}
+
+artifacts {
+  archives jar, distTar
+}
+
+build.dependsOn distTar
