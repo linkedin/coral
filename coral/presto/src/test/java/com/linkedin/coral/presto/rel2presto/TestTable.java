@@ -54,7 +54,6 @@ public class TestTable implements Table {
         .stream()
         .map(s -> getRelType(typeFactory, s))
         .collect(Collectors.toList());
-
     RelDataType rowType = typeFactory.createStructType(fieldTypes, fields);
     return rowType;
   }

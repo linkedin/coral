@@ -1,0 +1,26 @@
+apply plugin:'li-java'
+apply plugin:'distribution'
+dependencies {
+  compile (spec.product.hive.'hive-exec') {
+    exclude group: 'org.apache.calcite', module: 'calcite-core'
+  }
+  compile spec.product.hadoop.'hadoop-mapreduce-client-common'
+  compile spec.external.'calcite-core'
+  compile spec.external.'avatica-core'
+  compile spec.external.'calcite-avatica'
+}
+
+artifacts {
+  archives jar, distTar
+}
+
+distributions {
+  main {
+    contents {
+      from jar
+      from projects.configurations.runtime
+    }
+  }
+}
+
+build.dependsOn distTar

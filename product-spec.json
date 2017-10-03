@@ -61,9 +61,18 @@
   "product": {
     "hive": {
       "libraries": [
-        "hive-exec"
+        {
+          "name": "hive-exec",
+          "classifier": "core"
+        }
       ],
-      "version": "1.1.0.124"
+      "version": "1.1.0.128"
+    },
+    "hadoop": {
+      "libraries": [
+        "hadoop-mapreduce-client-common"
+      ],
+      "version": "2.6.1.*"
     }
   },
   "trunkDev": {
