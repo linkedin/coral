@@ -1,4 +1,4 @@
-package com.linkedin.coral.hive.hive2rel.tree;
+package com.linkedin.coral.hive.hive2rel.parsetree;
 
 import com.google.common.base.Preconditions;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
@@ -8,11 +8,12 @@ import org.apache.hadoop.hive.ql.parse.HiveParser;
 /**
  * Abstract visitor (actually, a walker) to hive AST.
  * This class implements a walker that calls specific named methods
- * passing corresponding ASTNode.
+ * passing corresponding {@link ASTNode}.
  *
  * By default, this visits all children of the node
  *
- * @param <C> abstract visitor context that is passed to all the visitor methods
+ * @param <C> abstract visitor context ({@link ASTVisitorContext}) that is passed to all
+ *           the visitor methods
  */
 public abstract class AbstractASTVisitor<C extends ASTVisitorContext> {
 
@@ -270,7 +271,7 @@ public abstract class AbstractASTVisitor<C extends ASTVisitorContext> {
 
       default:
         // visitChildren(node, ctx);
-        throw new UnhandledASTToken(node);
+        throw new UnhandledASTTokenException(node);
     }
   }
 

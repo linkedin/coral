@@ -2,9 +2,13 @@ apply plugin:'li-java'
 apply plugin:'distribution'
 dependencies {
   compile (spec.product.hive.'hive-exec') {
+    // Exclude calcite. We want to use newer version
     exclude group: 'org.apache.calcite', module: 'calcite-core'
+    // avro-tools brings in hadoop-core package files causing duplicate jars and runtime errors
+    exclude group: 'org.apache.avro', module: 'avro-tools'
   }
   compile spec.product.hadoop.'hadoop-mapreduce-client-common'
+  compile spec.product.hadoop.'hadoop-auth'
   compile spec.external.'calcite-core'
   compile spec.external.'avatica-core'
   compile spec.external.'calcite-avatica'

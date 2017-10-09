@@ -1,4 +1,4 @@
-package com.linkedin.coral.hive.hive2rel.tree;
+package com.linkedin.coral.hive.hive2rel.parsetree;
 
 import com.google.common.base.Preconditions;
 import java.util.ArrayList;
@@ -12,6 +12,15 @@ import org.slf4j.LoggerFactory;
 import static com.google.common.base.Preconditions.*;
 
 
+/**
+ * Class representing the basic structure of Hive query representing query source,
+ * projected columns, filter, groupby, aggregations, having, order by and limit clauses
+ * of the query. This class provides convenient random access to different query clauses
+ * without need to traverse the parse tree.
+ *
+ * This class is limited in the kind of queries it can express. This is a first step
+ * towards giving some structure to otherwise unstructured Hive parse tree.
+ */
 public class Query extends AbstractASTVisitor<Query> implements ASTVisitorContext {
   private static final Logger LOGGER = LoggerFactory.getLogger(Query.class);
   private ASTNode from;
@@ -22,6 +31,11 @@ public class Query extends AbstractASTVisitor<Query> implements ASTVisitorContex
   private List<ASTNode> selects = new ArrayList<>();
   private ASTNode limit;
 
+  /**
+   * Create a Query class from parsed Hive {@link ASTNode}
+   * @param queryNode top level ASTNode representing TOK_QUERY node
+   * @return Query object representing input TOK_QUERY
+   */
   public static Query create(ASTNode queryNode) {
     checkNotNull(queryNode);
     Preconditions.checkArgument(queryNode.getType() == HiveParser.TOK_QUERY,

@@ -1,13 +1,13 @@
-package com.linkedin.coral.hive.hive2rel.tree;
+package com.linkedin.coral.hive.hive2rel.parsetree;
 
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 
 
-public class UnhandledASTToken extends RuntimeException {
+public class UnhandledASTTokenException extends RuntimeException {
 
   private final ASTNode node;
 
-  public UnhandledASTToken(ASTNode node) {
+  public UnhandledASTTokenException(ASTNode node) {
     super(String.format("Unhandled Hive AST token %s, tree: %s", node.getText(), node.dump()));
     this.node = node;
   }

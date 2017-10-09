@@ -70,7 +70,8 @@
     },
     "hadoop": {
       "libraries": [
-        "hadoop-mapreduce-client-common"
+        "hadoop-mapreduce-client-common",
+        "hadoop-auth"
       ],
       "version": "2.6.1.*"
     }
