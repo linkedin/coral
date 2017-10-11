@@ -15,124 +15,97 @@ import org.apache.hadoop.hive.ql.parse.HiveParser;
  * @param <C> abstract visitor context ({@link ASTVisitorContext}) that is passed to all
  *           the visitor methods
  */
-public abstract class AbstractASTVisitor<C extends ASTVisitorContext> {
+public abstract class AbstractASTVisitor<R, C> {
 
   public AbstractASTVisitor() {
   }
 
-  public void visit(ASTNode node, C ctx) {
+  public R visit(ASTNode node, C ctx) {
     if (node == null) {
-      return;
+      return null;
     }
     switch (node.getType()) {
       case 0:
-        visitNil(node, ctx);
-        break;
+        return visitNil(node, ctx);
 
       case HiveParser.TOK_SUBQUERY:
-        visitSubquery(node, ctx);
-        break;
+        return visitSubquery(node, ctx);
 
       case HiveParser.TOK_SUBQUERY_EXPR:
-        visitSubqueryExpr(node, ctx);
-        break;
+        return visitSubqueryExpr(node, ctx);
 
       case HiveParser.TOK_SUBQUERY_OP:
-        visitSubqueryOp(node, ctx);
-        break;
+        return visitSubqueryOp(node, ctx);
 
       case HiveParser.TOK_FROM:
-        visitFrom(node, ctx);
-        break;
+        return visitFrom(node, ctx);
 
       case HiveParser.TOK_UNIONTYPE:
-        visitUnion(node, ctx);
-        break;
+        return visitUnion(node, ctx);
 
       case HiveParser.TOK_QUERY:
-        visitQueryNode(node, ctx);
-        break;
+        return visitQueryNode(node, ctx);
 
       case HiveParser.TOK_TABREF:
-        visitTabRefNode(node, ctx);
-        break;
+        return visitTabRefNode(node, ctx);
 
       case HiveParser.TOK_TABNAME:
-        visitTabnameNode(node, ctx);
-        break;
+        return visitTabnameNode(node, ctx);
 
       case HiveParser.Identifier:
       case HiveParser.StringLiteral:
-        visitStringLiteral(node, ctx);
-        break;
+        return visitStringLiteral(node, ctx);
 
       case HiveParser.TOK_INSERT:
-        visitChildren(node, ctx);
-        break;
+        return visitChildren(node, ctx);
 
       case HiveParser.TOK_DESTINATION:
-        // do nothing
-        break;
+        return null;
 
       case HiveParser.TOK_SELECTDI:
-        visitSelectDistinct(node, ctx);
-        break;
+        return visitSelectDistinct(node, ctx);
 
       case HiveParser.TOK_LIMIT:
-        visitLimit(node, ctx);
-        break;
+        return visitLimit(node, ctx);
 
       case HiveParser.TOK_SELECT:
-        visitSelects(node, ctx);
-        break;
+        return visitSelects(node, ctx);
 
       case HiveParser.TOK_SELEXPR:
-        visitSelectExpr(node, ctx);
-        break;
+        return visitSelectExpr(node, ctx);
 
       case HiveParser.TOK_ALLCOLREF:
-        visitAllColRef(node, ctx);
-        break;
+        return visitAllColRef(node, ctx);
 
       case HiveParser.TOK_HAVING:
-        visitHaving(node, ctx);
-        break;
+        return visitHaving(node, ctx);
 
       case HiveParser.TOK_WHERE:
-        visitWhere(node, ctx);
-        break;
+        return visitWhere(node, ctx);
 
       case HiveParser.TOK_GROUPBY:
-        visitGroupBy(node, ctx);
-        break;
+        return visitGroupBy(node, ctx);
 
       case HiveParser.TOK_ORDERBY:
-        visitOrderBy(node, ctx);
-        break;
+        return visitOrderBy(node, ctx);
 
       case HiveParser.TOK_TABSORTCOLNAMEASC:
-        visitSortColNameAsc(node, ctx);
-        break;
+        return visitSortColNameAsc(node, ctx);
 
       case HiveParser.TOK_TABSORTCOLNAMEDESC:
-        visitSortColNameDesc(node, ctx);
-        break;
+        return visitSortColNameDesc(node, ctx);
 
       case HiveParser.TOK_FUNCTION:
-        visitFunction(node, ctx);
-        break;
+        return visitFunction(node, ctx);
 
       case HiveParser.TOK_FUNCTIONDI:
-        visitFunctionDistinct(node, ctx);
-        break;
+        return visitFunctionDistinct(node, ctx);
 
       case HiveParser.TOK_FUNCTIONSTAR:
-        visitFunctionStar(node, ctx);
-        break;
+        return visitFunctionStar(node, ctx);
 
       case HiveParser.DOT:
-        visitDotOperator(node, ctx);
-        break;
+        return visitDotOperator(node, ctx);
 
       case HiveParser.PLUS:
       case HiveParser.MINUS:
@@ -154,337 +127,309 @@ public abstract class AbstractASTVisitor<C extends ASTVisitorContext> {
       case HiveParser.EQUAL_NS:
       case HiveParser.KW_NOT:
       case HiveParser.KW_LIKE:
-        visitOperator(node, ctx);
-        break;
+        return visitOperator(node, ctx);
 
       case HiveParser.LSQUARE:
-        visitLParen(node, ctx);
-        break;
+        return visitLParen(node, ctx);
 
       case HiveParser.KW_FALSE:
-        visitFalse(node, ctx);
-        break;
+        return visitFalse(node, ctx);
 
       case HiveParser.TOK_NULL:
-        visitNullToken(node, ctx);
-        break;
+        return visitNullToken(node, ctx);
 
       case HiveParser.Number:
-        visitNumber(node, ctx);
-        break;
+        return visitNumber(node, ctx);
 
       case HiveParser.TOK_TABLE_OR_COL:
-        visitChildren(node, ctx);
-        break;
+        return visitChildren(node, ctx);
 
       case HiveParser.EOF:
-        break;
-      case HiveParser.KW_IN:
+              case HiveParser.KW_IN:
       case HiveParser.KW_EXISTS:
-        visitStringLiteral(node, ctx);
-        break;
+        return visitStringLiteral(node, ctx);
 
       case HiveParser.TOK_BOOLEAN:
-        visitBoolean(node, ctx);
-        break;
+        return visitBoolean(node, ctx);
 
       case HiveParser.TOK_INT:
-        visitInt(node, ctx);
-        break;
+        return visitInt(node, ctx);
 
       case HiveParser.TOK_STRING:
-        visitString(node, ctx);
-        break;
+        return visitString(node, ctx);
 
       case HiveParser.TOK_DOUBLE:
-        visitDouble(node, ctx);
-        break;
+        return visitDouble(node, ctx);
 
       case HiveParser.TOK_FLOAT:
-        visitFloat(node, ctx);
-        break;
+        return visitFloat(node, ctx);
 
       case HiveParser.TOK_BIGINT:
-        visitBigInt(node, ctx);
-        break;
+        return visitBigInt(node, ctx);
 
       case HiveParser.TOK_TINYINT:
-        visitTinyInt(node, ctx);
-        break;
+        return visitTinyInt(node, ctx);
 
       case HiveParser.TOK_SMALLINT:
-        visitSmallInt(node, ctx);
-        break;
+        return visitSmallInt(node, ctx);
 
       case HiveParser.TOK_CHAR:
-        visitChar(node, ctx);
-        break;
+        return visitChar(node, ctx);
 
       case HiveParser.TOK_DECIMAL:
-        visitDecimal(node, ctx);
-        break;
+        return visitDecimal(node, ctx);
 
       case HiveParser.TOK_VARCHAR:
-        visitVarchar(node, ctx);
-        break;
+        return visitVarchar(node, ctx);
 
       case HiveParser.TOK_DATE:
-        visitDate(node, ctx);
-        break;
+        return visitDate(node, ctx);
 
       case HiveParser.TOK_TIMESTAMP:
-        visitTimestamp(node, ctx);
-        break;
+        return visitTimestamp(node, ctx);
 
         // joins
       case HiveParser.TOK_JOIN:
-        visitJoin(node, ctx);
-        break;
+        return visitJoin(node, ctx);
 
       case HiveParser.TOK_LEFTOUTERJOIN:
-        visitLeftOuterJoin(node, ctx);
-        break;
+        return visitLeftOuterJoin(node, ctx);
 
       case HiveParser.TOK_RIGHTOUTERJOIN:
-        visitRightOuterJoin(node, ctx);
-        break;
+        return visitRightOuterJoin(node, ctx);
 
       case HiveParser.TOK_FULLOUTERJOIN:
-        visitFullOuterJoin(node, ctx);
-        break;
+        return visitFullOuterJoin(node, ctx);
 
       case HiveParser.TOK_CROSSJOIN:
-        visitCrossJoin(node, ctx);
-        break;
+        return visitCrossJoin(node, ctx);
 
       case HiveParser.TOK_LEFTSEMIJOIN:
-        visitLeftSemiJoin(node, ctx);
-        break;
+        return visitLeftSemiJoin(node, ctx);
 
       case HiveParser.TOK_LATERAL_VIEW:
-        visitLateralView(node, ctx);
-        break;
+        return visitLateralView(node, ctx);
 
       case HiveParser.TOK_TABALIAS:
-        visitTabAlias(node, ctx);
-        break;
+        return visitTabAlias(node, ctx);
 
       default:
-        // visitChildren(node, ctx);
+        // return visitChildren(node, ctx);
         throw new UnhandledASTTokenException(node);
     }
   }
 
-  protected void visitChildren(ASTNode node, C ctx) {
+  protected R visitChildren(ASTNode node, C ctx) {
     Preconditions.checkNotNull(node, ctx);
     Preconditions.checkNotNull(ctx);
     if (node.getChildren() == null) {
-      return;
+      return null;
     }
     node.getChildren().forEach(c -> visit((ASTNode) c, ctx));
+    return null;
   }
 
-  protected void visitTabAlias(ASTNode node, C ctx) {
-    visitChildren(node, ctx);
+  protected R visitTabAlias(ASTNode node, C ctx) {
+    return visitChildren(node, ctx);
   }
 
-  protected void visitLateralView(ASTNode node, C ctx) {
-    visitChildren(node, ctx);
+  protected R visitLateralView(ASTNode node, C ctx) {
+    return visitChildren(node, ctx);
   }
 
-  protected void visitLeftSemiJoin(ASTNode node, C ctx) {
-    visitChildren(node, ctx);
+  protected R visitLeftSemiJoin(ASTNode node, C ctx) {
+    return visitChildren(node, ctx);
   }
 
-  protected void visitCrossJoin(ASTNode node, C ctx) {
-    visitChildren(node, ctx);
+  protected R visitCrossJoin(ASTNode node, C ctx) {
+    return visitChildren(node, ctx);
   }
 
-  protected void visitFullOuterJoin(ASTNode node, C ctx) {
-    visitChildren(node, ctx);
+  protected R visitFullOuterJoin(ASTNode node, C ctx) {
+    return visitChildren(node, ctx);
   }
 
-  protected void visitRightOuterJoin(ASTNode node, C ctx) {
-    visitChildren(node, ctx);
+  protected R visitRightOuterJoin(ASTNode node, C ctx) {
+    return visitChildren(node, ctx);
   }
 
-  protected void visitJoin(ASTNode node, C ctx) {
-    visitChildren(node, ctx);
+  protected R visitJoin(ASTNode node, C ctx) {
+    return visitChildren(node, ctx);
   }
 
-  protected void visitLeftOuterJoin(ASTNode node, C ctx) {
-    visitChildren(node, ctx);
+  protected R visitLeftOuterJoin(ASTNode node, C ctx) {
+    return visitChildren(node, ctx);
   }
 
-  protected void visitFalse(ASTNode node, C ctx) {
-    visitChildren(node, ctx);
+  protected R visitFalse(ASTNode node, C ctx) {
+    return visitChildren(node, ctx);
   }
 
-  protected void visitNullToken(ASTNode node, C ctx) {
-    visitChildren(node, ctx);
+  protected R visitNullToken(ASTNode node, C ctx) {
+    return visitChildren(node, ctx);
   }
 
-  protected void visitLimit(ASTNode node, C ctx) {
-    visitChildren(node, ctx);
+  protected R visitLimit(ASTNode node, C ctx) {
+    return visitChildren(node, ctx);
   }
 
-  protected void visitUnion(ASTNode node, C ctx) {
-    visitChildren(node, ctx);
+  protected R visitUnion(ASTNode node, C ctx) {
+    return visitChildren(node, ctx);
   }
 
-  protected void visitNumber(ASTNode node, C ctx) {
-    visitChildren(node, ctx);
+  protected R visitNumber(ASTNode node, C ctx) {
+    return visitChildren(node, ctx);
   }
 
-  protected void visitAllColRef(ASTNode node, C ctx) {
-    visitChildren(node, ctx);
+  protected R visitAllColRef(ASTNode node, C ctx) {
+    return visitChildren(node, ctx);
   }
 
-  protected void visitHaving(ASTNode node, C ctx) {
-    visitChildren(node, ctx);
+  protected R visitHaving(ASTNode node, C ctx) {
+    return visitChildren(node, ctx);
   }
 
-  protected void visitWhere(ASTNode node, C ctx) {
-    visitChildren(node, ctx);
+  protected R visitWhere(ASTNode node, C ctx) {
+    return visitChildren(node, ctx);
   }
 
-  protected void visitSortColNameDesc(ASTNode node, C ctx) {
-    visitChildren(node, ctx);
+  protected R visitSortColNameDesc(ASTNode node, C ctx) {
+    return visitChildren(node, ctx);
   }
 
-  protected void visitSortColNameAsc(ASTNode node, C ctx) {
-    visitChildren(node, ctx);
+  protected R visitSortColNameAsc(ASTNode node, C ctx) {
+    return visitChildren(node, ctx);
   }
 
-  protected void visitOrderBy(ASTNode node, C ctx) {
-    visitChildren(node, ctx);
+  protected R visitOrderBy(ASTNode node, C ctx) {
+    return visitChildren(node, ctx);
   }
 
-  protected void visitGroupBy(ASTNode node, C ctx) {
-    visitChildren(node, ctx);
+  protected R visitGroupBy(ASTNode node, C ctx) {
+    return visitChildren(node, ctx);
   }
 
-  protected void visitOperator(ASTNode node, C ctx) {
-    visitChildren(node, ctx);
+  protected R visitOperator(ASTNode node, C ctx) {
+    return visitChildren(node, ctx);
   }
 
-  protected void visitDotOperator(ASTNode node, C ctx) {
-    visitChildren(node, ctx);
+  protected R visitDotOperator(ASTNode node, C ctx) {
+    return visitChildren(node, ctx);
   }
 
-  protected void visitLParen(ASTNode node, C ctx) {
-    visitChildren(node, ctx);
+  protected R visitLParen(ASTNode node, C ctx) {
+    return visitChildren(node, ctx);
   }
 
-  protected void visitFunctionStar(ASTNode node, C ctx) {
-    visitChildren(node, ctx);
+  protected R visitFunctionStar(ASTNode node, C ctx) {
+    return visitChildren(node, ctx);
   }
 
-  protected void visitFunctionDistinct(ASTNode node, C ctx) {
-    visitChildren(node, ctx);
+  protected R visitFunctionDistinct(ASTNode node, C ctx) {
+    return visitChildren(node, ctx);
   }
 
-  protected void visitFunction(ASTNode node, C ctx) {
-    visitChildren(node, ctx);
+  protected R visitFunction(ASTNode node, C ctx) {
+    return visitChildren(node, ctx);
   }
 
-  protected void visitSelectExpr(ASTNode node, C ctx) {
-    visitChildren(node, ctx);
+  protected R visitSelectExpr(ASTNode node, C ctx) {
+    return visitChildren(node, ctx);
   }
 
-  protected void visitSelectDistinct(ASTNode node, C ctx) {
-    visitChildren(node, ctx);
+  protected R visitSelectDistinct(ASTNode node, C ctx) {
+    return visitChildren(node, ctx);
   }
 
-  protected void visitSelects(ASTNode node, C ctx) {
-    visitChildren(node, ctx);
+  protected R visitSelects(ASTNode node, C ctx) {
+    return visitChildren(node, ctx);
   }
 
-  protected void visitTabRefNode(ASTNode node, C ctx) {
-    visitChildren(node, ctx);
+  protected R visitTabRefNode(ASTNode node, C ctx) {
+    return visitChildren(node, ctx);
   }
 
-  protected void visitTabnameNode(ASTNode node, C ctx) {
-    visitChildren(node, ctx);
+  protected R visitTabnameNode(ASTNode node, C ctx) {
+    return visitChildren(node, ctx);
   }
 
-  protected void visitSubqueryOp(ASTNode node, C ctx) {
-    visitChildren(node, ctx);
+  protected R visitSubqueryOp(ASTNode node, C ctx) {
+    return visitChildren(node, ctx);
   }
 
-  protected void visitSubqueryExpr(ASTNode node, C ctx) {
-    visitChildren(node, ctx);
+  protected R visitSubqueryExpr(ASTNode node, C ctx) {
+    return visitChildren(node, ctx);
   }
 
-  protected void visitSubquery(ASTNode node, C ctx) {
-    visitChildren(node, ctx);
+  protected R visitSubquery(ASTNode node, C ctx) {
+    return visitChildren(node, ctx);
   }
 
-  protected void visitFrom(ASTNode node, C ctx) {
-    visitChildren(node, ctx);
+  protected R visitFrom(ASTNode node, C ctx) {
+    return visitChildren(node, ctx);
   }
 
-  protected void visitStringLiteral(ASTNode node, C ctx) {
-    visitChildren(node, ctx);
+  protected R visitStringLiteral(ASTNode node, C ctx) {
+    return visitChildren(node, ctx);
   }
 
-  protected void visitQueryNode(ASTNode node, C ctx) {
-    visitChildren(node, ctx);
+  protected R visitQueryNode(ASTNode node, C ctx) {
+    return visitChildren(node, ctx);
   }
 
-  protected void visitNil(ASTNode node, C ctx) {
-    visitChildren(node, ctx);
+  protected R visitNil(ASTNode node, C ctx) {
+    return visitChildren(node, ctx);
   }
 
-  protected void visitBoolean(ASTNode node, C ctx) {
-    visitChildren(node, ctx);
+  protected R visitBoolean(ASTNode node, C ctx) {
+    return visitChildren(node, ctx);
   }
 
-  protected void visitInt(ASTNode node, C ctx) {
-    visitChildren(node, ctx);
+  protected R visitInt(ASTNode node, C ctx) {
+    return visitChildren(node, ctx);
   }
 
-  protected void visitSmallInt(ASTNode node, C ctx) {
-    visitChildren(node, ctx);
+  protected R visitSmallInt(ASTNode node, C ctx) {
+    return visitChildren(node, ctx);
   }
 
-  protected void visitBigInt(ASTNode node, C ctx) {
-    visitChildren(node, ctx);
+  protected R visitBigInt(ASTNode node, C ctx) {
+    return visitChildren(node, ctx);
   }
 
-  protected void visitTinyInt(ASTNode node, C ctx) {
-    visitChildren(node, ctx);
+  protected R visitTinyInt(ASTNode node, C ctx) {
+    return visitChildren(node, ctx);
   }
 
-  protected void visitFloat(ASTNode node, C ctx) {
-    visitChildren(node, ctx);
+  protected R visitFloat(ASTNode node, C ctx) {
+    return visitChildren(node, ctx);
   }
 
-  protected void visitDouble(ASTNode node, C ctx) {
-    visitChildren(node, ctx);
+  protected R visitDouble(ASTNode node, C ctx) {
+    return visitChildren(node, ctx);
   }
 
-  protected void visitVarchar(ASTNode node, C ctx) {
-    visitChildren(node, ctx);
+  protected R visitVarchar(ASTNode node, C ctx) {
+    return visitChildren(node, ctx);
   }
 
-  protected void visitChar(ASTNode node, C ctx) {
-    visitChildren(node, ctx);
+  protected R visitChar(ASTNode node, C ctx) {
+    return visitChildren(node, ctx);
   }
 
-  protected void visitString(ASTNode node, C ctx) {
-    visitChildren(node, ctx);
+  protected R visitString(ASTNode node, C ctx) {
+    return visitChildren(node, ctx);
   }
 
-  protected void visitDecimal(ASTNode node, C ctx) {
-    visitChildren(node, ctx);
+  protected R visitDecimal(ASTNode node, C ctx) {
+    return visitChildren(node, ctx);
   }
 
-  protected void visitDate(ASTNode node, C ctx) {
-    visitChildren(node, ctx);
+  protected R visitDate(ASTNode node, C ctx) {
+    return visitChildren(node, ctx);
   }
 
-  protected void visitTimestamp(ASTNode node, C ctx) {
-    visitChildren(node, ctx);
+  protected R visitTimestamp(ASTNode node, C ctx) {
+    return visitChildren(node, ctx);
   }
 }

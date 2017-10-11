@@ -21,7 +21,7 @@ import static com.google.common.base.Preconditions.*;
  * This class is limited in the kind of queries it can express. This is a first step
  * towards giving some structure to otherwise unstructured Hive parse tree.
  */
-public class Query extends AbstractASTVisitor<Query> implements ASTVisitorContext {
+public class Query extends AbstractASTVisitor<Void, Query> {
   private static final Logger LOGGER = LoggerFactory.getLogger(Query.class);
   private ASTNode from;
   private ASTNode where;
@@ -74,34 +74,41 @@ public class Query extends AbstractASTVisitor<Query> implements ASTVisitorContex
     return limit;
   }
 
-  protected void visitLimit(ASTNode node, Query query) {
+  protected Void visitLimit(ASTNode node, Query query) {
     query.limit = node;
+    return null;
   }
 
-  protected void visitSelects(ASTNode node, Query query) {
+  protected Void visitSelects(ASTNode node, Query query) {
     ArrayList<Node> children = node.getChildren();
     checkNotNull(children);
 
     node.getChildren().forEach(c -> query.selects.add((ASTNode) c));
+    return null;
   }
 
-  protected void visitOrderBy(ASTNode node, Query query) {
+  protected Void visitOrderBy(ASTNode node, Query query) {
     query.orderBy = node;
+    return null;
   }
 
-  protected void visitGroupBy(ASTNode node, Query query) {
+  protected Void visitGroupBy(ASTNode node, Query query) {
     query.groupBy = node;
+    return null;
   }
 
-  protected void visitHaving(ASTNode node, Query query) {
+  protected Void visitHaving(ASTNode node, Query query) {
     query.having = node;
+    return null;
   }
 
-  protected void visitFrom(ASTNode node, Query query) {
+  protected Void visitFrom(ASTNode node, Query query) {
     query.from = node;
+    return null;
   }
 
-  protected void visitWhere(ASTNode node, Query query) {
+  protected Void visitWhere(ASTNode node, Query query) {
     query.where = node;
+    return null;
   }
 }

@@ -10,6 +10,10 @@ import static com.google.common.base.Preconditions.*;
 
 public class ASTUtils {
 
+  private ASTUtils() {
+
+  }
+
   public static ASTNode getChildAtPath(ASTNode root, int[] pathNodes) {
     checkNotNull(root);
     checkNotNull(pathNodes);
@@ -24,7 +28,7 @@ public class ASTUtils {
       Optional<Node> node = children.stream()
           .filter(c -> ((ASTNode) c).getType() == pathNodes[d])
           .findFirst();
-      if (! node.isPresent()) {
+      if (!node.isPresent()) {
         throw new IllegalStateException(
             String.format("Illegal AST state. Expected: %s, found: %s", pathNodes[depth], current.dump()));
       }

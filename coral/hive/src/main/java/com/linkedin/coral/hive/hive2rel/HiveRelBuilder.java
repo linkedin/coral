@@ -3,12 +3,19 @@ package com.linkedin.coral.hive.hive2rel;
 import com.google.common.collect.ImmutableList;
 import com.linkedin.coral.hive.hive2rel.parsetree.Query;
 import com.linkedin.coral.hive.hive2rel.parsetree.UnsupportedASTException;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
+import org.apache.calcite.plan.RelTraitDef;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.tools.FrameworkConfig;
+import org.apache.calcite.tools.Frameworks;
+import org.apache.calcite.tools.Programs;
 import org.apache.calcite.tools.RelBuilder;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.lib.Node;
+import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
 import org.apache.hadoop.hive.ql.parse.ParseDriver;
@@ -28,8 +35,18 @@ public class HiveRelBuilder {
   private final HiveSchema schema;
   private final RelBuilder builder;
 
-  public static HiveRelBuilder create(HiveConf conf) {
-    return null;
+  public static HiveRelBuilder create(HiveConf conf) throws HiveException, IOException {
+    HiveSchema schema = HiveSchema.create(conf);
+    SchemaPlus schemaPlus = Frameworks.createRootSchema(false);
+    schemaPlus.add(HiveSchema.ROOT_SCHEMA, schema);
+
+    FrameworkConfig config = Frameworks.newConfigBuilder()
+        .defaultSchema(schemaPlus)
+        .traitDefs((List<RelTraitDef>) null)
+        .programs(Programs.ofRules(Programs.RULE_SET))
+        .build();
+    HiveContext context = HiveContext.create(conf);
+    return new HiveRelBuilder(context, schema, config);
   }
 
   private HiveRelBuilder(HiveContext context, HiveSchema schema, FrameworkConfig config) {
@@ -50,13 +67,20 @@ public class HiveRelBuilder {
 
   public RelNode queryToRel(Query query) {
     visitTableSource(query.getFrom());
-    return null;
+    return builder.build();
   }
 
   private Query hiveSqlToQuery(String sql) throws ParseException {
     ParseDriver pd = new ParseDriver();
     ASTNode parseTree = pd.parse(sql);
-    return Query.create(parseTree);
+    ArrayList<Node> children = parseTree.getChildren();
+    checkState(children != null && children.size() > 0);
+    ASTNode queryNode = (ASTNode) children.get(0);
+    if (queryNode.getType() != HiveParser.TOK_QUERY) {
+      throw new UnsupportedASTException(
+          String.format("TOK_QUERY is expected as the first child of AST, AST: %s", parseTree.dump()));
+    }
+    return Query.create(queryNode);
   }
 
   private void visitTableSource(ASTNode from) {
