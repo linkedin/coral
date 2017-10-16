@@ -1,6 +1,9 @@
 package com.linkedin.coral.hive.hive2rel.parsetree;
 
 import com.google.common.base.Preconditions;
+import java.util.List;
+import java.util.stream.Collectors;
+import org.apache.hadoop.hive.ql.lib.Node;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
 
@@ -21,6 +24,7 @@ public abstract class AbstractASTVisitor<R, C> {
   }
 
   public R visit(ASTNode node, C ctx) {
+
     if (node == null) {
       return null;
     }
@@ -41,6 +45,7 @@ public abstract class AbstractASTVisitor<R, C> {
         return visitFrom(node, ctx);
 
       case HiveParser.TOK_UNIONTYPE:
+      case HiveParser.TOK_UNION:
         return visitUnion(node, ctx);
 
       case HiveParser.TOK_QUERY:
@@ -53,11 +58,13 @@ public abstract class AbstractASTVisitor<R, C> {
         return visitTabnameNode(node, ctx);
 
       case HiveParser.Identifier:
+        return visitIdentifier(node, ctx);
+
       case HiveParser.StringLiteral:
         return visitStringLiteral(node, ctx);
 
       case HiveParser.TOK_INSERT:
-        return visitChildren(node, ctx);
+        return visitInsert(node, ctx);
 
       case HiveParser.TOK_DESTINATION:
         return null;
@@ -142,10 +149,11 @@ public abstract class AbstractASTVisitor<R, C> {
         return visitNumber(node, ctx);
 
       case HiveParser.TOK_TABLE_OR_COL:
-        return visitChildren(node, ctx);
+        return visitTableTokOrCol(node, ctx);
 
       case HiveParser.EOF:
-              case HiveParser.KW_IN:
+        return null;
+      case HiveParser.KW_IN:
       case HiveParser.KW_EXISTS:
         return visitStringLiteral(node, ctx);
 
@@ -219,217 +227,234 @@ public abstract class AbstractASTVisitor<R, C> {
     }
   }
 
-  protected R visitChildren(ASTNode node, C ctx) {
+  protected List<R> visitChildren(ASTNode node, C ctx) {
     Preconditions.checkNotNull(node, ctx);
     Preconditions.checkNotNull(ctx);
     if (node.getChildren() == null) {
       return null;
     }
-    node.getChildren().forEach(c -> visit((ASTNode) c, ctx));
-    return null;
+    return visitChildren(node.getChildren(), ctx);
+  }
+
+  protected List<R> visitChildren(List<Node> nodes, C ctx) {
+    return nodes.stream()
+        .map(n -> visit((ASTNode) n, ctx))
+        .collect(Collectors.toList());
   }
 
   protected R visitTabAlias(ASTNode node, C ctx) {
-    return visitChildren(node, ctx);
+    return visitChildren(node, ctx).get(0);
   }
 
   protected R visitLateralView(ASTNode node, C ctx) {
-    return visitChildren(node, ctx);
+    return visitChildren(node, ctx).get(0);
   }
 
   protected R visitLeftSemiJoin(ASTNode node, C ctx) {
-    return visitChildren(node, ctx);
+    return visitChildren(node, ctx).get(0);
   }
 
   protected R visitCrossJoin(ASTNode node, C ctx) {
-    return visitChildren(node, ctx);
+    return visitChildren(node, ctx).get(0);
   }
 
   protected R visitFullOuterJoin(ASTNode node, C ctx) {
-    return visitChildren(node, ctx);
+    return visitChildren(node, ctx).get(0);
   }
 
   protected R visitRightOuterJoin(ASTNode node, C ctx) {
-    return visitChildren(node, ctx);
+    return visitChildren(node, ctx).get(0);
   }
 
   protected R visitJoin(ASTNode node, C ctx) {
-    return visitChildren(node, ctx);
+    return visitChildren(node, ctx).get(0);
   }
 
   protected R visitLeftOuterJoin(ASTNode node, C ctx) {
-    return visitChildren(node, ctx);
+    return visitChildren(node, ctx).get(0);
   }
 
   protected R visitFalse(ASTNode node, C ctx) {
-    return visitChildren(node, ctx);
+    return visitChildren(node, ctx).get(0);
   }
 
   protected R visitNullToken(ASTNode node, C ctx) {
-    return visitChildren(node, ctx);
+    return visitChildren(node, ctx).get(0);
   }
 
   protected R visitLimit(ASTNode node, C ctx) {
-    return visitChildren(node, ctx);
+    return visitChildren(node, ctx).get(0);
   }
 
   protected R visitUnion(ASTNode node, C ctx) {
-    return visitChildren(node, ctx);
+    return visitChildren(node, ctx).get(0);
   }
 
   protected R visitNumber(ASTNode node, C ctx) {
-    return visitChildren(node, ctx);
+    return visitChildren(node, ctx).get(0);
   }
 
   protected R visitAllColRef(ASTNode node, C ctx) {
-    return visitChildren(node, ctx);
+    return visitChildren(node, ctx).get(0);
   }
 
   protected R visitHaving(ASTNode node, C ctx) {
-    return visitChildren(node, ctx);
+    return visitChildren(node, ctx).get(0);
   }
 
   protected R visitWhere(ASTNode node, C ctx) {
-    return visitChildren(node, ctx);
+    return visitChildren(node, ctx).get(0);
   }
 
   protected R visitSortColNameDesc(ASTNode node, C ctx) {
-    return visitChildren(node, ctx);
+    return visitChildren(node, ctx).get(0);
   }
 
   protected R visitSortColNameAsc(ASTNode node, C ctx) {
-    return visitChildren(node, ctx);
+    return visitChildren(node, ctx).get(0);
   }
 
   protected R visitOrderBy(ASTNode node, C ctx) {
-    return visitChildren(node, ctx);
+    return visitChildren(node, ctx).get(0);
   }
 
   protected R visitGroupBy(ASTNode node, C ctx) {
-    return visitChildren(node, ctx);
+    return visitChildren(node, ctx).get(0);
   }
 
   protected R visitOperator(ASTNode node, C ctx) {
-    return visitChildren(node, ctx);
+    return visitChildren(node, ctx).get(0);
   }
 
   protected R visitDotOperator(ASTNode node, C ctx) {
-    return visitChildren(node, ctx);
+    return visitChildren(node, ctx).get(0);
   }
 
   protected R visitLParen(ASTNode node, C ctx) {
-    return visitChildren(node, ctx);
+    return visitChildren(node, ctx).get(0);
   }
 
   protected R visitFunctionStar(ASTNode node, C ctx) {
-    return visitChildren(node, ctx);
+    return visitChildren(node, ctx).get(0);
   }
 
   protected R visitFunctionDistinct(ASTNode node, C ctx) {
-    return visitChildren(node, ctx);
+    return visitChildren(node, ctx).get(0);
   }
 
   protected R visitFunction(ASTNode node, C ctx) {
-    return visitChildren(node, ctx);
+    return visitChildren(node, ctx).get(0);
   }
 
   protected R visitSelectExpr(ASTNode node, C ctx) {
-    return visitChildren(node, ctx);
+    return visitChildren(node, ctx).get(0);
   }
 
   protected R visitSelectDistinct(ASTNode node, C ctx) {
-    return visitChildren(node, ctx);
+    return visitChildren(node, ctx).get(0);
   }
 
   protected R visitSelects(ASTNode node, C ctx) {
-    return visitChildren(node, ctx);
+    return visitChildren(node, ctx).get(0);
   }
 
   protected R visitTabRefNode(ASTNode node, C ctx) {
-    return visitChildren(node, ctx);
+    return visitChildren(node, ctx).get(0);
   }
 
   protected R visitTabnameNode(ASTNode node, C ctx) {
-    return visitChildren(node, ctx);
+    return visitChildren(node, ctx).get(0);
   }
 
   protected R visitSubqueryOp(ASTNode node, C ctx) {
-    return visitChildren(node, ctx);
+    return visitChildren(node, ctx).get(0);
   }
 
   protected R visitSubqueryExpr(ASTNode node, C ctx) {
-    return visitChildren(node, ctx);
+    return visitChildren(node, ctx).get(0);
   }
 
   protected R visitSubquery(ASTNode node, C ctx) {
-    return visitChildren(node, ctx);
+    return visitChildren(node, ctx).get(0);
   }
 
   protected R visitFrom(ASTNode node, C ctx) {
-    return visitChildren(node, ctx);
+    return visitChildren(node, ctx).get(0);
+  }
+
+  protected R visitIdentifier(ASTNode node, C ctx) {
+    return visitChildren(node, ctx).get(0);
   }
 
   protected R visitStringLiteral(ASTNode node, C ctx) {
-    return visitChildren(node, ctx);
+    return visitChildren(node, ctx).get(0);
   }
 
   protected R visitQueryNode(ASTNode node, C ctx) {
-    return visitChildren(node, ctx);
+    return visitChildren(node, ctx).get(0);
   }
 
   protected R visitNil(ASTNode node, C ctx) {
-    return visitChildren(node, ctx);
+    return visitChildren(node, ctx).get(0);
   }
 
   protected R visitBoolean(ASTNode node, C ctx) {
-    return visitChildren(node, ctx);
+    return visitChildren(node, ctx).get(0);
   }
 
   protected R visitInt(ASTNode node, C ctx) {
-    return visitChildren(node, ctx);
+    return visitChildren(node, ctx).get(0);
   }
 
   protected R visitSmallInt(ASTNode node, C ctx) {
-    return visitChildren(node, ctx);
+    return visitChildren(node, ctx).get(0);
   }
 
   protected R visitBigInt(ASTNode node, C ctx) {
-    return visitChildren(node, ctx);
+    return visitChildren(node, ctx).get(0);
   }
 
   protected R visitTinyInt(ASTNode node, C ctx) {
-    return visitChildren(node, ctx);
+    return visitChildren(node, ctx).get(0);
   }
 
   protected R visitFloat(ASTNode node, C ctx) {
-    return visitChildren(node, ctx);
+    return visitChildren(node, ctx).get(0);
   }
 
   protected R visitDouble(ASTNode node, C ctx) {
-    return visitChildren(node, ctx);
+    return visitChildren(node, ctx).get(0);
   }
 
   protected R visitVarchar(ASTNode node, C ctx) {
-    return visitChildren(node, ctx);
+    return visitChildren(node, ctx).get(0);
   }
 
   protected R visitChar(ASTNode node, C ctx) {
-    return visitChildren(node, ctx);
+    return visitChildren(node, ctx).get(0);
   }
 
   protected R visitString(ASTNode node, C ctx) {
-    return visitChildren(node, ctx);
+    return visitChildren(node, ctx).get(0);
   }
 
   protected R visitDecimal(ASTNode node, C ctx) {
-    return visitChildren(node, ctx);
+    return visitChildren(node, ctx).get(0);
   }
 
   protected R visitDate(ASTNode node, C ctx) {
-    return visitChildren(node, ctx);
+    return visitChildren(node, ctx).get(0);
   }
 
   protected R visitTimestamp(ASTNode node, C ctx) {
-    return visitChildren(node, ctx);
+    return visitChildren(node, ctx).get(0);
+  }
+
+  protected R visitTableTokOrCol(ASTNode node, C ctx) {
+    return visitChildren(node, ctx).get(0);
+  }
+
+  protected R visitInsert(ASTNode node, C ctx) {
+    return visitChildren(node, ctx).get(0);
   }
 }

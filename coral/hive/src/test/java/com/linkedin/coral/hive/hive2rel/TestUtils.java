@@ -15,10 +15,14 @@ import static com.google.common.base.Preconditions.*;
 
 public class TestUtils {
 
-  public static ASTNode toAST(String sql) throws ParseException {
+  public static ASTNode toAST(String sql){
     checkNotNull(sql);
     ParseDriver pd = new ParseDriver();
-    return pd.parse(sql);
+    try {
+      return pd.parse(sql);
+    } catch (ParseException e) {
+      throw  new RuntimeException(e);
+    }
   }
 
   public static class TestHive {
@@ -46,7 +50,7 @@ public class TestUtils {
     }
 
     List<DB> databases;
-    HiveContext context;
+    public HiveContext context;
   }
 
   public static TestHive setupDefaultHive() {
