@@ -9,7 +9,7 @@ import org.apache.calcite.sql.validate.SqlConformance;
 import org.apache.calcite.sql.validate.SqlValidatorImpl;
 
 
-public class HiveSqlValidator extends SqlValidatorImpl {
+class HiveSqlValidator extends SqlValidatorImpl {
 
   public HiveSqlValidator(SqlOperatorTable opTab,
       CalciteCatalogReader catalogReader, JavaTypeFactory typeFactory,
@@ -17,17 +17,15 @@ public class HiveSqlValidator extends SqlValidatorImpl {
     super(opTab, catalogReader, typeFactory, conformance);
   }
 
-  @Override protected RelDataType getLogicalSourceRowType(
-      RelDataType sourceRowType, SqlInsert insert) {
-    final RelDataType superType =
-        super.getLogicalSourceRowType(sourceRowType, insert);
+  @Override
+  protected RelDataType getLogicalSourceRowType(RelDataType sourceRowType, SqlInsert insert) {
+    final RelDataType superType = super.getLogicalSourceRowType(sourceRowType, insert);
     return ((JavaTypeFactory) typeFactory).toSql(superType);
   }
 
-  @Override protected RelDataType getLogicalTargetRowType(
-      RelDataType targetRowType, SqlInsert insert) {
-    final RelDataType superType =
-        super.getLogicalTargetRowType(targetRowType, insert);
+  @Override
+  protected RelDataType getLogicalTargetRowType(RelDataType targetRowType, SqlInsert insert) {
+    final RelDataType superType = super.getLogicalTargetRowType(targetRowType, insert);
     return ((JavaTypeFactory) typeFactory).toSql(superType);
   }
 }

@@ -43,7 +43,7 @@ public class HiveSchema implements Schema {
    * @param hive
    * @return
    */
-  public static HiveSchema create(Hive hive) {
+  private static HiveSchema create(Hive hive) {
     return new HiveSchema(hive);
   }
 

@@ -28,6 +28,7 @@ import org.apache.hadoop.hive.ql.metadata.HiveException;
 public class RelContextProvider {
 
   private final FrameworkConfig config;
+  private final HiveSchema schema;
   private RelBuilder relBuilder;
   private CalciteCatalogReader catalogReader;
   private HiveSqlValidator sqlValidator;
@@ -37,11 +38,11 @@ public class RelContextProvider {
   /**
    * Instantiates a new Rel context provider.
    *
-   * @param hiveContext {@link HiveContext} for accessing hive configuration and creation of schema
+   * @param schema {@link HiveSchema} to use for conversion to relational algebra
    * @throws HiveException the hive exception
    */
-  public RelContextProvider(HiveContext hiveContext) throws HiveException {
-    HiveSchema schema = HiveSchema.create(hiveContext.getConf());
+  public RelContextProvider(HiveSchema schema) throws HiveException {
+    this.schema = schema;
     SchemaPlus schemaPlus = Frameworks.createRootSchema(false);
     schemaPlus.add(HiveSchema.ROOT_SCHEMA, schema);
 

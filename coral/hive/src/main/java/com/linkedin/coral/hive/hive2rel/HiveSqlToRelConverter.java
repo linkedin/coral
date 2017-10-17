@@ -10,9 +10,13 @@ import org.apache.calcite.sql2rel.SqlRexConvertletTable;
 import org.apache.calcite.sql2rel.SqlToRelConverter;
 
 
-public class HiveSqlToRelConverter extends SqlToRelConverter {
+/**
+ * Class to convert Hive SQL to Calcite RelNode. This class
+ * specializes the functionality provided by {@link SqlToRelConverter}.
+ */
+class HiveSqlToRelConverter extends SqlToRelConverter {
 
-  public HiveSqlToRelConverter(RelOptTable.ViewExpander viewExpander, SqlValidator validator,
+  HiveSqlToRelConverter(RelOptTable.ViewExpander viewExpander, SqlValidator validator,
       Prepare.CatalogReader catalogReader, RelOptCluster cluster, SqlRexConvertletTable convertletTable,
       Config config) {
     super(viewExpander, validator, catalogReader, cluster, convertletTable, config);

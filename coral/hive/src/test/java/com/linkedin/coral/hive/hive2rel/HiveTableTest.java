@@ -24,7 +24,7 @@ public class HiveTableTest {
 
   @Test
   public void testTable() throws Exception {
-    HiveSchema schema = HiveSchema.create(hive.context.getHive());
+    HiveSchema schema = HiveSchema.create(hive.context.getConf());
     Schema defaultSchema = schema.getSubSchema("default");
     Table fooTable = defaultSchema.getTable("foo");
     assertEquals(fooTable.getJdbcTableType(), Schema.TableType.TABLE);

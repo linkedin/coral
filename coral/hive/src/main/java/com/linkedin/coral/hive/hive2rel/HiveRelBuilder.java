@@ -26,7 +26,8 @@ import org.slf4j.LoggerFactory;
 import static com.google.common.base.Preconditions.*;
 import static com.linkedin.coral.hive.hive2rel.HiveSchema.*;
 
-
+// DO NOT USE
+@Deprecated
 public class HiveRelBuilder {
   private static final Logger LOGGER = LoggerFactory.getLogger(HiveRelBuilder.class);
 

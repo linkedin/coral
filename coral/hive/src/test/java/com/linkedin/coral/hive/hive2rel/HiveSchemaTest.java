@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.linkedin.coral.hive.hive2rel.TestUtils.TestHive;
 import org.apache.calcite.schema.Schema;
+import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -20,8 +21,8 @@ public class HiveSchemaTest {
   }
 
   @Test
-  public void testHiveSchema() {
-    HiveSchema schema = HiveSchema.create(hive.context.getHive());
+  public void testHiveSchema() throws HiveException {
+    HiveSchema schema = HiveSchema.create(hive.context.getConf());
     assertEquals(schema.getSubSchemaNames(), ImmutableSet.copyOf(hive.getDbNames()));
     assertEquals(schema.getSubSchema("noSuchSchema"), null);
     assertEquals(schema.getTableNames(), ImmutableSet.of());
