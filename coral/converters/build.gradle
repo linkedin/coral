@@ -1,0 +1,21 @@
+apply plugin:'li-java'
+apply plugin:'distribution'
+dependencies {
+  compile project(':coral:hive')
+  compile project(':coral:presto')
+}
+
+artifacts {
+  archives jar, distTar
+}
+
+distributions {
+  main {
+    contents {
+      from jar
+      from projects.configurations.runtime
+    }
+  }
+}
+
+build.dependsOn distTar
