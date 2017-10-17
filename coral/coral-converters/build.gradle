@@ -1,8 +1,8 @@
 apply plugin:'li-java'
 apply plugin:'distribution'
 dependencies {
-  compile project(':coral:hive')
-  compile project(':coral:presto')
+  compile project(':coral:coral-hive')
+  compile project(':coral:coral-presto')
 }
 
 artifacts {
