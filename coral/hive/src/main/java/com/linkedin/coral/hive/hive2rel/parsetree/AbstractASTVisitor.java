@@ -15,15 +15,22 @@ import org.apache.hadoop.hive.ql.parse.HiveParser;
  *
  * By default, this visits all children of the node
  *
- * @param <C> abstract visitor context ({@link ASTVisitorContext}) that is passed to all
- *           the visitor methods
+ * @param <C> Visitor context that is passed to all the visitor methods
  */
 public abstract class AbstractASTVisitor<R, C> {
 
-  public AbstractASTVisitor() {
-  }
-
-  public R visit(ASTNode node, C ctx) {
+  /**
+   * Provides a AST visitor functionality by calling
+   * appropriately named visitor method based on node type.
+   *
+   * We need to provide this because Hive AST object model
+   * does not provide properly typed nodes accepting visitors.
+   *
+   * @param node hive parse tree node to visit
+   * @param ctx abstract context passed to visitor methods
+   * @return
+   */
+  protected R visit(ASTNode node, C ctx) {
 
     if (node == null) {
       return null;

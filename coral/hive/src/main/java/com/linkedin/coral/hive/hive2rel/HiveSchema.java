@@ -25,6 +25,7 @@ public class HiveSchema implements Schema {
 
   private final Hive hive;
   public static final String ROOT_SCHEMA = "hive";
+  public static final String DEFAULT_DB = "default";
 
   /**
    * Create HiveSchema from hive-site configuration

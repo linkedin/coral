@@ -18,16 +18,49 @@ import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.hadoop.hive.ql.lib.Node;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.hadoop.hive.ql.parse.ParseDriver;
+import org.apache.hadoop.hive.ql.parse.ParseException;
 
 import static com.google.common.base.Preconditions.*;
 import static org.apache.calcite.sql.parser.SqlParserPos.*;
 
 
+/**
+ * Class to convert Hive Abstract Syntax Tree(AST) represented by {@link ASTNode} to
+ * Calcite based AST represented using {@link SqlNode}.
+ *
+ * Hive AST nodes are poorly structured and do not support polymorphic behavior for processing
+ * AST using, for example, visitors. ASTNode carries all the information as type and text fields
+ * and children nodes are of base class Node. This requires constant casting of nodes and string
+ * processing to get the type and value out of a node. This complicates analysis of the tree.
+ * Hive converts this AST to another internal structure {@link org.apache.hadoop.hive.ql.parse.QB}
+ * for further processing. We believe this is wrong choice and a lot of processing is complicated by
+ * poor object model for the AST.
+ *
+ * This class converts the AST to Calcite based AST using {@link SqlNode}.This is more structured
+ * allowing for simpler analysis code.
+ *
+ * NOTE:
+ * There are, certain difficulties in correct translation.
+ * For example, for identifier named {@code s.field1} it's hard to ascertain if {@code s} is a
+ * table name or column name of type struct. This is typically resolved by validators using scope but
+ * we haven't specialized that part yet.
+ */
 public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuilder.ParseContext> {
 
-  private static Logger LOGGER = LoggerFactory.getLogger(ParseTreeBuilder.class);
+  public SqlNode process(String sql) {
+    ParseDriver pd = new ParseDriver();
+    try {
+      ASTNode root = pd.parse(sql);
+      return process(root);
+    } catch (ParseException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public SqlNode process(ASTNode node) {
+    return visit(node, new ParseContext());
+  }
 
   protected SqlNode visitTabAlias(ASTNode node, ParseContext ctx) {
     throw new RuntimeException(String.format("%s, %s, %s", node.getType(), node.getText(), node.dump()));
@@ -256,7 +289,14 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
   }
 
   protected SqlNode visitSelectExpr(ASTNode node, ParseContext ctx) {
-    return visitChildren(node, ctx).get(0);
+    List<SqlNode> sqlNodes = visitChildren(node, ctx);
+    if (sqlNodes.size() == 1) {
+      return sqlNodes.get(0);
+    } else if (sqlNodes.size() == 2) {
+      return new SqlBasicCall(SqlStdOperatorTable.AS, sqlNodes.toArray(new SqlNode[0]), ZERO);
+    } else {
+      throw new UnhandledASTTokenException(node);
+    }
   }
 
   protected SqlNode visitSelectDistinct(ASTNode node, ParseContext ctx) {
@@ -288,6 +328,14 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
         .map(s -> ((SqlIdentifier) s).names)
         .flatMap(List::stream)
         .collect(Collectors.toList());
+    // TODO: these should be configured in or transformed through
+    // a set of rules
+    if (names.size() == 1) {
+      names.add(0, "hive");
+      names.add(1, "default");
+    } else if (names.size() == 2) {
+      names.add(0, "hive");
+    }
 
     return new SqlIdentifier(names, ZERO);
   }

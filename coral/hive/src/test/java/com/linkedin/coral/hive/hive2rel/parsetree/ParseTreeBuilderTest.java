@@ -1,23 +1,12 @@
 package com.linkedin.coral.hive.hive2rel.parsetree;
 
-import com.google.common.collect.ImmutableSet;
-import com.linkedin.coral.hive.hive2rel.HiveSchema;
+import com.linkedin.coral.hive.hive2rel.RelContextProvider;
 import com.linkedin.coral.hive.hive2rel.TestUtils;
-import java.util.List;
-import org.apache.calcite.plan.RelOptRule;
-import org.apache.calcite.plan.RelTraitDef;
+import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.sql.SqlNode;
-import org.apache.calcite.sql.parser.SqlParser;
-import org.apache.calcite.sql.validate.SqlConformanceEnum;
-import org.apache.calcite.tools.FrameworkConfig;
-import org.apache.calcite.tools.Frameworks;
-import org.apache.calcite.tools.Planner;
-import org.apache.calcite.tools.Programs;
-import org.apache.calcite.tools.RelConversionException;
-import org.apache.calcite.tools.ValidationException;
-import org.apache.hadoop.hive.ql.parse.ASTNode;
+import org.apache.calcite.sql2rel.SqlToRelConverter;
+import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -27,80 +16,84 @@ import static com.linkedin.coral.hive.hive2rel.TestUtils.*;
 public class ParseTreeBuilderTest {
 
   private static TestHive hive;
+  private static RelContextProvider relProvider;
+  private static SqlToRelConverter converter;
 
   @BeforeClass
-  public static void beforeClass() {
+  public static void beforeClass() throws HiveException {
     hive = TestUtils.setupDefaultHive();
+    relProvider = new RelContextProvider(hive.context);
+    converter = relProvider.getSqlToRelConverter();
   }
 
+  /*driver.run("CREATE TABLE IF NOT EXISTS test.tableOne(a int, b varchar(30), c double, d timestamp)");
+  driver.run("CREATE TABLE IF NOT EXISTS test.tableTwo(x int, y double)");
+  driver.run("CREATE TABLE IF NOT EXISTS foo(a int, b varchar(30), c double)");
+  driver.run("CREATE TABLE IF NOT EXISTS bar(x int, y double)");
+  */
   @Test
-  public void testBasicSql() throws ValidationException, RelConversionException {
-    /*{
-      String sql = "SELECT a, -b, c+d, (c>10), (c > 10 AND D <25) from myTable where c > 10 AND d < 15 OR a = 'abc'";
+  public void testBasicSql() {
+    {
+      String sql = "SELECT a, -c, a+c, (c>10), (c > 10 AND a < 25) from test.tableOne where c > 10 AND a < 15 OR b = 'abc'";
       SqlNode converted = convert(sql);
       System.out.println(converted.toString());
+      System.out.println(toRelStr(converted));
     }
     {
-      String sql = "SELECT * from foo.myTable order by a desc, b asc";
+      String sql = "SELECT * from test.tableTwo order by x desc, y asc";
       SqlNode converted = convert(sql);
       System.out.println(converted.toString());
+      System.out.println(toRelStr(converted));
     }
     {
-      String sql = "SELECT a, sum(c), count(*) from myTable group by a, b";
+      String sql = "SELECT a, sum(c), count(*) from foo group by b, a";
       SqlNode converted = convert(sql);
       System.out.println(converted.toString());
+      System.out.println(toRelStr(converted));
     }
     {
-      String sql = "SELECT distinct c[0] from myTable";
+      String sql = "SELECT c[0], s.name from complex";
+      System.out.println(toAST(sql).dump());
       SqlNode converted = convert(sql);
       System.out.println(converted.toString());
+      //System.out.println(toRelStr(converted));
     }
     {
-      String sql = "SELECT a, b from (select c, d from foo) f";
+      String sql = "SELECT a, b from (select x as a, y as b from bar) f";
+      System.out.println(toAST(sql).dump());
       SqlNode n = convert(sql);
       System.out.println(n);
-    }*/
+      System.out.println(toRelStr(n));
+    }
     {
-      String sql = "SELECT a, b from foo union all select c, d from bar";
+      String sql = "SELECT a, c from foo union all select x, y from bar";
       SqlNode n = convert(sql);
-      RelNode r = toRel(config(), n);
+      RelNode r = toRel(n);
+      System.out.println(RelOptUtil.toString(r));
       System.out.println(n);
     }
     {
-      String sql = "SELECT a, b from foo where a in  (select c from bar where d < 10)";
+      String sql = "SELECT a, b from foo where a in  (select x from bar where y < 10)";
       SqlNode n = convert(sql);
       System.out.println(n);
+      System.out.println(RelOptUtil.toString(toRel(n)));
     }
   }
 
   private static SqlNode convert(String sql) {
-    ASTNode root = toAST(sql);
     ParseTreeBuilder builder = new ParseTreeBuilder();
-    return builder.visit(root, new ParseTreeBuilder.ParseContext());
+    return builder.process(sql);
   }
 
-  static RelNode toRel(FrameworkConfig config, SqlNode node) throws ValidationException, RelConversionException {
-    Planner planner = Frameworks.getPlanner(config);
-    SqlNode validate = planner.validate(node);
-    return planner.rel(validate).rel;
+  static String toRelStr(SqlNode node) {
+    return RelOptUtil.toString(toRel(node));
   }
 
-  static FrameworkConfig config() {
-    SchemaPlus rootSchema = Frameworks.createRootSchema(true);
-    HiveSchema schema = HiveSchema.create(hive.context.getHive());
-    rootSchema.add("hive", schema);
-
-    SqlParser.Config parserConfig =
-        SqlParser.configBuilder().setCaseSensitive(false).setConformance(SqlConformanceEnum.STRICT_2003)
-            .build();
-    ImmutableSet<RelOptRule> programs =
-        ImmutableSet.<RelOptRule>builder().addAll(Programs.RULE_SET).build();
-
-    return Frameworks.newConfigBuilder()
-        .parserConfig(parserConfig)
-        .defaultSchema(rootSchema)
-        .traitDefs((List<RelTraitDef>) null)
-        .programs(Programs.ofRules(programs))
-        .build();
+  static RelNode toRel(SqlNode node) {
+    try {
+      return converter.convertQuery(node, true, true).rel;
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
   }
 }
