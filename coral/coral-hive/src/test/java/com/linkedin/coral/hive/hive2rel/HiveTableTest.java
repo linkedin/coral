@@ -1,6 +1,7 @@
 package com.linkedin.coral.hive.hive2rel;
 
 import com.google.common.collect.ImmutableList;
+import java.io.IOException;
 import org.apache.calcite.jdbc.JavaTypeFactoryImpl;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
@@ -18,13 +19,14 @@ public class HiveTableTest {
   private static TestUtils.TestHive hive;
 
   @BeforeClass
-  public static void beforeClass() {
+  public static void beforeClass() throws IOException {
     hive = TestUtils.setupDefaultHive();
   }
 
   @Test
   public void testTable() throws Exception {
-    HiveSchema schema = HiveSchema.create(hive.context.getConf());
+    HiveMetastoreClientProvider mscProvider = new HiveMetastoreClientProvider(hive.getConf());
+    HiveSchema schema = new HiveSchema(mscProvider.getMetastoreClient());
     Schema defaultSchema = schema.getSubSchema("default");
     Table fooTable = defaultSchema.getTable("foo");
     assertEquals(fooTable.getJdbcTableType(), Schema.TableType.TABLE);

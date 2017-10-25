@@ -31,13 +31,14 @@ import static com.linkedin.coral.hive.hive2rel.HiveSchema.*;
 public class HiveRelBuilder {
   private static final Logger LOGGER = LoggerFactory.getLogger(HiveRelBuilder.class);
 
-  private final HiveContext context;
   private final FrameworkConfig config;
   private final HiveSchema schema;
   private final RelBuilder builder;
 
   public static HiveRelBuilder create(HiveConf conf) throws HiveException, IOException {
-    HiveSchema schema = HiveSchema.create(conf);
+    HiveMetastoreClientProvider mscProvider = new HiveMetastoreClientProvider(conf);
+    HiveSchema schema = new HiveSchema(mscProvider.getMetastoreClient());
+
     SchemaPlus schemaPlus = Frameworks.createRootSchema(false);
     schemaPlus.add(HiveSchema.ROOT_SCHEMA, schema);
 
@@ -46,12 +47,10 @@ public class HiveRelBuilder {
         .traitDefs((List<RelTraitDef>) null)
         .programs(Programs.ofRules(Programs.RULE_SET))
         .build();
-    HiveContext context = HiveContext.create(conf);
-    return new HiveRelBuilder(context, schema, config);
+    return new HiveRelBuilder(schema, config);
   }
 
-  private HiveRelBuilder(HiveContext context, HiveSchema schema, FrameworkConfig config) {
-    this.context = context;
+  private HiveRelBuilder(HiveSchema schema, FrameworkConfig config) {
     this.config = config;
     this.schema = schema;
     builder = RelBuilder.create(config);

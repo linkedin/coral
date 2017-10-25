@@ -2,9 +2,12 @@ package com.linkedin.coral.hive.hive2rel;
 
 import com.linkedin.coral.hive.hive2rel.parsetree.ParseTreeBuilder;
 import java.io.File;
+import javax.annotation.Nonnull;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelRoot;
 import org.apache.calcite.sql.SqlNode;
+
+import static com.google.common.base.Preconditions.*;
 
 
 /**
@@ -22,25 +25,27 @@ import org.apache.calcite.sql.SqlNode;
 public class HiveToRelConverter {
 
   private final RelContextProvider relContextProvider;
-  private final HiveContext hiveContext;
 
   /**
    * Initializes converter with hive configuration at provided path
    * @param hiveConfFile hive configuration file
    */
-  public static HiveToRelConverter create(File hiveConfFile) {
+  public static HiveToRelConverter create(@Nonnull File hiveConfFile) {
+    checkNotNull(hiveConfFile);
+
     try {
-      HiveContext hiveContext = HiveContext.create(hiveConfFile.getPath());
-      HiveSchema schema = HiveSchema.create(hiveContext.getConf());
+      HiveMetastoreClientProvider mscProvider =
+          HiveMetastoreClientProvider.create(hiveConfFile.getPath());
+      HiveSchema schema = new HiveSchema(mscProvider.getMetastoreClient());
       RelContextProvider relContextProvider = new RelContextProvider(schema);
-      return new HiveToRelConverter(hiveContext, relContextProvider);
+      return new HiveToRelConverter(relContextProvider);
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
   }
 
-  private HiveToRelConverter(HiveContext hiveContext, RelContextProvider relContextProvider) {
-    this.hiveContext = hiveContext;
+  private HiveToRelConverter(RelContextProvider relContextProvider) {
+    checkNotNull(relContextProvider);
     this.relContextProvider = relContextProvider;
   }
 

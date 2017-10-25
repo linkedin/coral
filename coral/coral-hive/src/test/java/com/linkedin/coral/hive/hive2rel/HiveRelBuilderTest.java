@@ -17,14 +17,14 @@ public class HiveRelBuilderTest {
   private static TestHive hive;
 
   @BeforeClass
-  public static void beforeClass() {
+  public static void beforeClass() throws IOException {
     hive = setupDefaultHive();
   }
 
   @Test
   public static void testScan() throws HiveException, IOException {
     String sql = "SELECT * from foo";
-    HiveRelBuilder builder = HiveRelBuilder.create(hive.context.getConf());
+    HiveRelBuilder builder = HiveRelBuilder.create(hive.getConf());
     RelNode rel = builder.process(sql);
     assertNotNull(rel);
     String scanStr = "LogicalTableScan(table=[[hive, default, foo]])\n";

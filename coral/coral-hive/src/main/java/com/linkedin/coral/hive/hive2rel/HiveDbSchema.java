@@ -4,14 +4,14 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.util.Collection;
 import java.util.Set;
+import javax.annotation.Nonnull;
 import org.apache.calcite.linq4j.tree.Expression;
 import org.apache.calcite.schema.Function;
 import org.apache.calcite.schema.Schema;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.Table;
-import org.apache.hadoop.hive.ql.metadata.Hive;
-import org.apache.hadoop.hive.ql.metadata.HiveException;
-import org.apache.hadoop.hive.ql.metadata.InvalidTableException;
+
+import static com.google.common.base.Preconditions.*;
 
 
 /**
@@ -22,37 +22,26 @@ public class HiveDbSchema implements Schema {
 
   public static final String DEFAULT_DB = "default";
 
-  private final Hive hive;
+  private final HiveMetastoreClient msc;
   private final String dbName;
 
-  public static HiveDbSchema create(Hive hive, String dbName) {
-    return new HiveDbSchema(hive, dbName);
-  }
 
-  HiveDbSchema(Hive hive, String dbName) {
-    this.hive = hive;
+  HiveDbSchema(@Nonnull HiveMetastoreClient msc, @Nonnull String dbName) {
+    checkNotNull(msc);
+    checkNotNull(dbName);
+    this.msc = msc;
     this.dbName = dbName;
   }
 
   @Override
   public Table getTable(String name) {
-    try {
-      org.apache.hadoop.hive.ql.metadata.Table hiveTable = hive.getTable(dbName, name);
-      return new HiveTable(hiveTable);
-    } catch (InvalidTableException e) {
-      return null;
-    } catch (HiveException e) {
-      throw new RuntimeException("Hive table " + name + " does not exist", e);
-    }
+    org.apache.hadoop.hive.metastore.api.Table table = msc.getTable(dbName, name);
+    return table == null ? null : new HiveTable(table);
   }
 
   @Override
   public Set<String> getTableNames() {
-    try {
-      return ImmutableSet.copyOf(hive.getAllTables(dbName));
-    } catch (HiveException e) {
-      throw new RuntimeException("Failed to read table names from Hive metastore", e);
-    }
+    return ImmutableSet.copyOf(msc.getAllTables(dbName));
   }
 
   @Override

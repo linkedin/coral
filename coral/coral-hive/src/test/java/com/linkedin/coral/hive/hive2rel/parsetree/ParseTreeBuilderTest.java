@@ -1,8 +1,10 @@
 package com.linkedin.coral.hive.hive2rel.parsetree;
 
+import com.linkedin.coral.hive.hive2rel.HiveMetastoreClientProvider;
 import com.linkedin.coral.hive.hive2rel.HiveSchema;
 import com.linkedin.coral.hive.hive2rel.RelContextProvider;
 import com.linkedin.coral.hive.hive2rel.TestUtils;
+import java.io.IOException;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.sql.SqlNode;
@@ -21,9 +23,10 @@ public class ParseTreeBuilderTest {
   private static SqlToRelConverter converter;
 
   @BeforeClass
-  public static void beforeClass() throws HiveException {
+  public static void beforeClass() throws HiveException, IOException {
     hive = TestUtils.setupDefaultHive();
-    HiveSchema schema = HiveSchema.create(hive.context.getConf());
+    HiveMetastoreClientProvider mscProvider = new HiveMetastoreClientProvider(hive.getConf());
+    HiveSchema schema = new HiveSchema(mscProvider.getMetastoreClient());
     relProvider = new RelContextProvider(schema);
     converter = relProvider.getSqlToRelConverter();
   }

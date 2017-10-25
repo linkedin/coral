@@ -1,5 +1,6 @@
 package com.linkedin.coral.hive.hive2rel;
 
+import com.google.common.base.Preconditions;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.calcite.rel.type.RelDataType;
@@ -29,8 +30,9 @@ public class HiveTable implements Table {
    * Constructor to create bridge from hive table to calcite table
    * @param hiveTable Hive table
    */
-  public HiveTable(org.apache.hadoop.hive.ql.metadata.Table hiveTable) {
-    this.hiveTable = hiveTable;
+  public HiveTable(org.apache.hadoop.hive.metastore.api.Table hiveTable) {
+    Preconditions.checkNotNull(hiveTable);
+    this.hiveTable = new org.apache.hadoop.hive.ql.metadata.Table(hiveTable);
   }
 
   @Override

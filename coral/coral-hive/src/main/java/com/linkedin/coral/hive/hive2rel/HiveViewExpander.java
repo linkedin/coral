@@ -1,7 +1,9 @@
 package com.linkedin.coral.hive.hive2rel;
 
+import com.google.common.base.Preconditions;
 import com.linkedin.coral.hive.hive2rel.parsetree.ParseTreeBuilder;
 import java.util.List;
+import javax.annotation.Nonnull;
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.rel.RelRoot;
 import org.apache.calcite.rel.type.RelDataType;
@@ -21,7 +23,8 @@ public class HiveViewExpander implements RelOptTable.ViewExpander {
    *
    * @param relContextProvider Rel context provider instance
    */
-  public HiveViewExpander(RelContextProvider relContextProvider) {
+  public HiveViewExpander(@Nonnull RelContextProvider relContextProvider) {
+    Preconditions.checkNotNull(relContextProvider);
     this.relContextProvider = relContextProvider;
   }
 

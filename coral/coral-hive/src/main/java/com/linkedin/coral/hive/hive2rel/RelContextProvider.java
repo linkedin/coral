@@ -1,7 +1,9 @@
 package com.linkedin.coral.hive.hive2rel;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
+import javax.annotation.Nonnull;
 import org.apache.calcite.adapter.java.JavaTypeFactory;
 import org.apache.calcite.jdbc.CalciteSchema;
 import org.apache.calcite.plan.RelOptCluster;
@@ -41,7 +43,8 @@ public class RelContextProvider {
    * @param schema {@link HiveSchema} to use for conversion to relational algebra
    * @throws HiveException the hive exception
    */
-  public RelContextProvider(HiveSchema schema) throws HiveException {
+  public RelContextProvider(@Nonnull HiveSchema schema) throws HiveException {
+    Preconditions.checkNotNull(schema);
     this.schema = schema;
     SchemaPlus schemaPlus = Frameworks.createRootSchema(false);
     schemaPlus.add(HiveSchema.ROOT_SCHEMA, schema);

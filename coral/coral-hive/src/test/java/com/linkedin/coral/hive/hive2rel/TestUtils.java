@@ -1,6 +1,7 @@
 package com.linkedin.coral.hive.hive2rel;
 
 import com.google.common.collect.ImmutableList;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -9,6 +10,7 @@ import org.apache.hadoop.hive.ql.Driver;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.ParseDriver;
 import org.apache.hadoop.hive.ql.parse.ParseException;
+import org.apache.hadoop.hive.ql.session.SessionState;
 
 import static com.google.common.base.Preconditions.*;
 
@@ -26,6 +28,17 @@ public class TestUtils {
   }
 
   public static class TestHive {
+    private final HiveConf conf;
+    List<DB> databases;
+
+    public TestHive(HiveConf conf) {
+      this.conf = conf;
+    }
+
+    public HiveConf getConf() {
+      return conf;
+    }
+
     public static class DB {
       DB(String name, Iterable<String> tables) {
         this.name = name;
@@ -48,16 +61,13 @@ public class TestUtils {
           .orElseThrow(() -> new RuntimeException("DB " + db + " not found"))
           .tables;
     }
-
-    List<DB> databases;
-    public HiveContext context;
   }
 
-  public static TestHive setupDefaultHive() {
-    HiveContext context = initLocalHive();
-    TestHive hive = new TestHive();
-    hive.context = context;
-    Driver driver = context.getDriver();
+  public static TestHive setupDefaultHive() throws IOException {
+    HiveConf conf = loadResourceHiveConf();
+    TestHive hive = new TestHive(conf);
+    SessionState.start(conf);
+    Driver driver = new Driver(conf);
     try {
       driver.run("CREATE DATABASE IF NOT EXISTS test");
       driver.run("CREATE TABLE IF NOT EXISTS test.tableOne(a int, b varchar(30), c double, d timestamp)");
@@ -73,15 +83,6 @@ public class TestUtils {
       return hive;
     } catch (Exception e) {
       throw new RuntimeException("Failed to setup database", e);
-    }
-  }
-
-  public static HiveContext initLocalHive() {
-    HiveConf conf = loadResourceHiveConf();
-    try {
-      return HiveContext.create(conf);
-    } catch (Exception e) {
-      throw new RuntimeException(e);
     }
   }
 

@@ -5,15 +5,15 @@ import com.google.common.collect.ImmutableSet;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import javax.annotation.Nonnull;
 import org.apache.calcite.linq4j.tree.Expression;
 import org.apache.calcite.schema.Function;
 import org.apache.calcite.schema.Schema;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.Table;
-import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.Database;
-import org.apache.hadoop.hive.ql.metadata.Hive;
-import org.apache.hadoop.hive.ql.metadata.HiveException;
+
+import static com.google.common.base.Preconditions.*;
 
 
 /**
@@ -23,32 +23,18 @@ import org.apache.hadoop.hive.ql.metadata.HiveException;
  */
 public class HiveSchema implements Schema {
 
-  private final Hive hive;
   public static final String ROOT_SCHEMA = "hive";
   public static final String DEFAULT_DB = "default";
 
-  /**
-   * Create HiveSchema from hive-site configuration
-   * @param conf Hive configuration to connect to metastore
-   * @return HiveSchema
-   * @throws HiveException
-   */
-  public static HiveSchema create(HiveConf conf) throws HiveException {
-    Hive hive = Hive.get(conf);
-    return create(hive);
-  }
+  private final HiveMetastoreClient msc;
 
   /**
-   * HiveSchema from input {@link Hive} object providing connection to metastore
-   * @param hive
-   * @return
+   * Create HiveSchema using input metastore client to read hive catalog
+   * @param msc Hive metastore client
    */
-  private static HiveSchema create(Hive hive) {
-    return new HiveSchema(hive);
-  }
-
-  private HiveSchema(Hive hive) {
-    this.hive = hive;
+  public HiveSchema(@Nonnull HiveMetastoreClient msc) {
+    checkNotNull(msc);
+    this.msc = msc;
   }
 
   /**
@@ -78,24 +64,14 @@ public class HiveSchema implements Schema {
 
   @Override
   public Schema getSubSchema(String name) {
-    try {
-      Database database = hive.getDatabase(name);
-      return (database == null) ? null : new HiveDbSchema(hive, database.getName());
-    } catch (HiveException e) {
-      // TODO: throw or return null ??
-      throw new RuntimeException("Database " + name + " does not exist", e);
-    }
+    Database database = msc.getDatabase(name);
+    return (database == null) ? null : new HiveDbSchema(msc, database.getName());
   }
 
   @Override
   public Set<String> getSubSchemaNames() {
-    try {
-      List<String> dbNames = hive.getAllDatabases();
-      return ImmutableSet.copyOf(dbNames);
-    } catch (HiveException e) {
-      // TODO: throw or log and return empty set ??
-      throw new RuntimeException("Failed to load database names from Hive catalog", e);
-    }
+    List<String> dbNames = msc.getAllDatabases();
+    return ImmutableSet.copyOf(dbNames);
   }
 
   @Override
