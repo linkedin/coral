@@ -1,5 +1,7 @@
-apply plugin:'li-java'
-apply plugin:'distribution'
+apply plugin: 'li-java'
+apply plugin: 'distribution'
+apply plugin: 'maven'
+
 dependencies {
   compile spec.external.'calcite-core'
   compile spec.external.'avatica-core'
@@ -7,9 +9,23 @@ dependencies {
   compile spec.external.'protobuf-java'
   testCompile spec.external.'presto-parser'
 }
+def pomPath = "$buildDir/${name}.pom"
+
+task createPom {
+  // doLast is required for successful 'ligradle clean build'
+  doLast {
+    pom {
+      project {
+        groupId "$group"
+        artifactId "$name"
+      }
+    }.writeTo(pomPath)
+  }
+}
 
 artifacts {
-  archives jar, distTar
+  archives jar, distTar, javadocJar, sourcesJar
+  archives file: file("$pomPath"), name: "$name", type: 'text', builtBy: createPom
 }
 
 distributions {
