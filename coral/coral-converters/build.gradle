@@ -22,7 +22,7 @@ task createPom {
 
 artifacts {
   archives jar, distTar, javadocJar, sourcesJar
-  archives file: file("$pomPath"), name: "$name", type: 'pom', builtBy: createPom
+  archives file: file("$pomPath"), name: "$name", type: 'text', builtBy: createPom
 }
 
 distributions {
