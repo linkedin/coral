@@ -1,5 +1,5 @@
 apply plugin:'li-java'
-apply plugin:'distribution'
+
 dependencies {
   compile (spec.product.hive.'hive-exec') {
     // Exclude calcite. We want to use newer version
@@ -13,18 +13,3 @@ dependencies {
   compile spec.external.'avatica-core'
   compile spec.external.'calcite-avatica'
 }
-
-artifacts {
-  archives jar, distTar
-}
-
-distributions {
-  main {
-    contents {
-      from jar
-      from projects.configurations.runtime
-    }
-  }
-}
-
-build.dependsOn distTar

@@ -1,5 +1,5 @@
 apply plugin:'li-java'
-apply plugin:'distribution'
+
 dependencies {
   compile spec.external.'calcite-core'
   compile spec.external.'avatica-core'
@@ -7,18 +7,3 @@ dependencies {
   compile spec.external.'protobuf-java'
   testCompile spec.external.'presto-parser'
 }
-
-artifacts {
-  archives jar, distTar
-}
-
-distributions {
-  main {
-    contents {
-      from jar
-      from projects.configurations.runtime
-    }
-  }
-}
-
-build.dependsOn distTar
