@@ -1,9 +1,7 @@
-apply plugin: 'li-java'
-apply plugin: 'distribution'
-apply plugin: 'maven'
-
+apply plugin:'li-java'
+apply plugin:'distribution'
 dependencies {
-  compile(spec.product.hive.'hive-exec') {
+  compile (spec.product.hive.'hive-exec') {
     // Exclude calcite. We want to use newer version
     exclude group: 'org.apache.calcite', module: 'calcite-core'
     // avro-tools brings in hadoop-core package files causing duplicate jars and runtime errors
@@ -16,23 +14,8 @@ dependencies {
   compile spec.external.'calcite-avatica'
 }
 
-def pomPath = "$buildDir/${name}.pom"
-
-task createPom {
-  // doLast is required for successful 'ligradle clean build'
-  doLast {
-    pom {
-      project {
-        groupId "$group"
-        artifactId "$name"
-      }
-    }.writeTo(pomPath)
-  }
-}
-
 artifacts {
-  archives jar, distTar, javadocJar, sourcesJar
-  archives file: file("$pomPath"), name: "$name", type: 'text', builtBy: createPom
+  archives jar, distTar
 }
 
 distributions {

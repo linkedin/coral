@@ -1,28 +1,12 @@
-apply plugin: 'li-java'
-apply plugin: 'distribution'
-apply plugin: 'maven'
-
+apply plugin:'li-java'
+apply plugin:'distribution'
 dependencies {
   compile project(':coral:coral-hive')
   compile project(':coral:coral-presto')
 }
 
-def pomPath = "$buildDir/${name}.pom"
-
-task createPom {
-  doLast {
-    pom {
-      project {
-        groupId "$group"
-        artifactId "$name"
-      }
-    }.writeTo(pomPath)
-  }
-}
-
 artifacts {
-  archives jar, distTar, javadocJar, sourcesJar
-  archives file: file("$pomPath"), name: "$name", type: 'text', builtBy: createPom
+  archives jar, distTar
 }
 
 distributions {
@@ -35,4 +19,3 @@ distributions {
 }
 
 build.dependsOn distTar
-
