@@ -1,4 +1,5 @@
 apply plugin:'li-java'
+apply plugin: 'maven'
 
 dependencies {
   compile (spec.product.hive.'hive-exec') {
@@ -12,4 +13,22 @@ dependencies {
   compile spec.external.'calcite-core'
   compile spec.external.'avatica-core'
   compile spec.external.'calcite-avatica'
+}
+
+def pomPath = "$buildDir/${name}.pom"
+
+task createPom {
+  doLast {
+    pom {
+      project {
+        groupId "$group"
+        artifactId "$name"
+      }
+    }.writeTo(pomPath)
+  }
+}
+
+artifacts {
+  archives jar, javadocJar, sourcesJar
+  archives file: file("$pomPath"), name: "$name", type: "pom", builtBy: createPom
 }
