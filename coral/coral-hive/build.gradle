@@ -1,6 +1,9 @@
 apply plugin:'li-java'
 apply plugin: 'maven'
 
+configurations {
+  master
+}
 dependencies {
   compile (spec.product.hive.'hive-exec') {
     // Exclude calcite. We want to use newer version
@@ -30,5 +33,5 @@ task createPom {
 
 artifacts {
   archives jar, javadocJar, sourcesJar
-  archives file: file("$pomPath"), name: "$name", type: "pom", builtBy: createPom
+  master file: file("$pomPath"), name: "$name", type: "pom", builtBy: createPom
 }
