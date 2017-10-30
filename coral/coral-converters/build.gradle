@@ -18,6 +18,7 @@ task createPom {
     }.writeTo(pomPath)
   }
 }
+generateModuleArtifactSpec.defaultArtifact = jar
 
 artifacts {
   archives jar, javadocJar, sourcesJar

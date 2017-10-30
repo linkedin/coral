@@ -28,7 +28,9 @@ task createPom {
   }
 }
 
+generateModuleArtifactSpec.defaultArtifact = jar
+
 artifacts {
-  archives jar, javadocJar, sourcesJar
   archives file: file("$pomPath"), name: "$name", type: "pom", builtBy: createPom
+  archives javadocJar, sourcesJar
 }
