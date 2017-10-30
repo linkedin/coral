@@ -12,8 +12,8 @@ task createPom {
   doLast {
     pom {
       project {
-        groupId "$group"
-        artifactId "$name"
+        groupId "$project.group"
+        artifactId "$project.name"
       }
     }.writeTo(pomPath)
   }
