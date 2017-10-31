@@ -57,7 +57,7 @@ public class HiveDbSchema implements Schema {
   /**
    * A Hive DB does not have subschema
    * @param name
-   * @return
+   * @return Calcite schema
    */
   @Override
   public Schema getSubSchema(String name) {
@@ -84,7 +84,7 @@ public class HiveDbSchema implements Schema {
    * Roundtrip to metastore is not that costly
    * @param lastCheck
    * @param now
-   * @return
+   * @return always returns true (there is no caching)
    */
   @Override
   public boolean contentsHaveChangedSince(long lastCheck, long now) {

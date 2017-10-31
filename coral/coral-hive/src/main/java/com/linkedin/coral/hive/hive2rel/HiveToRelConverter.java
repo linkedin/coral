@@ -32,16 +32,16 @@ public class HiveToRelConverter {
    */
   public static HiveToRelConverter create(@Nonnull File hiveConfFile) {
     checkNotNull(hiveConfFile);
+    HiveMetastoreClientProvider mscProvider =
+        HiveMetastoreClientProvider.create(hiveConfFile.getPath());
+    return create(mscProvider.getMetastoreClient());
+  }
 
-    try {
-      HiveMetastoreClientProvider mscProvider =
-          HiveMetastoreClientProvider.create(hiveConfFile.getPath());
-      HiveSchema schema = new HiveSchema(mscProvider.getMetastoreClient());
-      RelContextProvider relContextProvider = new RelContextProvider(schema);
-      return new HiveToRelConverter(relContextProvider);
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
+  public static HiveToRelConverter create(HiveMetastoreClient mscClient) {
+    checkNotNull(mscClient);
+    HiveSchema schema = new HiveSchema(mscClient);
+    RelContextProvider relContextProvider = new RelContextProvider(schema);
+    return new HiveToRelConverter(relContextProvider);
   }
 
   private HiveToRelConverter(RelContextProvider relContextProvider) {

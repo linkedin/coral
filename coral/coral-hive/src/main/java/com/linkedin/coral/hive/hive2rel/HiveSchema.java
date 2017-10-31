@@ -40,7 +40,7 @@ public class HiveSchema implements Schema {
   /**
    * This always returns null as root hive schema does not have tables.
    * @param name
-   * @return
+   * @return get calcite table representation
    */
   @Override
   public Table getTable(String name) {
@@ -89,7 +89,7 @@ public class HiveSchema implements Schema {
    * Roundtrip to metastore is not that costly
    * @param lastCheck
    * @param now
-   * @return
+   * @return always returns true indicating that catalog can change any time
    */
   @Override
   public boolean contentsHaveChangedSince(long lastCheck, long now) {

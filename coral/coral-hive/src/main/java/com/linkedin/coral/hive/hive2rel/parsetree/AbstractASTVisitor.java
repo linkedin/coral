@@ -28,7 +28,7 @@ public abstract class AbstractASTVisitor<R, C> {
    *
    * @param node hive parse tree node to visit
    * @param ctx abstract context passed to visitor methods
-   * @return
+   * @return return the value from visitor node
    */
   protected R visit(ASTNode node, C ctx) {
 

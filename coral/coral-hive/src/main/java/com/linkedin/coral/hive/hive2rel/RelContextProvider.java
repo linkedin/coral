@@ -19,7 +19,6 @@ import org.apache.calcite.tools.FrameworkConfig;
 import org.apache.calcite.tools.Frameworks;
 import org.apache.calcite.tools.Programs;
 import org.apache.calcite.tools.RelBuilder;
-import org.apache.hadoop.hive.ql.metadata.HiveException;
 
 
 /**
@@ -41,9 +40,8 @@ public class RelContextProvider {
    * Instantiates a new Rel context provider.
    *
    * @param schema {@link HiveSchema} to use for conversion to relational algebra
-   * @throws HiveException the hive exception
    */
-  public RelContextProvider(@Nonnull HiveSchema schema) throws HiveException {
+  public RelContextProvider(@Nonnull HiveSchema schema) {
     Preconditions.checkNotNull(schema);
     this.schema = schema;
     SchemaPlus schemaPlus = Frameworks.createRootSchema(false);

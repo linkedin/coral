@@ -1,18 +1,29 @@
 package com.linkedin.coral.converters;
 
+import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
 import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
 import com.linkedin.coral.presto.rel2presto.RelToPrestoConverter;
 import java.io.File;
 import org.apache.calcite.rel.RelNode;
 
+import static com.google.common.base.Preconditions.*;
+
 
 public class HiveToPrestoConverter {
 
   private final HiveToRelConverter hiveToRelConverter;
-  private final RelToPrestoConverter rel2ToPrestoConverter;
+  private final RelToPrestoConverter relToPrestoConverter;
 
   public HiveToPrestoConverter create(File hiveConfPath) {
+    checkNotNull(hiveConfPath);
     HiveToRelConverter hiveToRelConverter = HiveToRelConverter.create(hiveConfPath);
+    RelToPrestoConverter relToPrestoConverter = new RelToPrestoConverter();
+    return new HiveToPrestoConverter(hiveToRelConverter, relToPrestoConverter);
+  }
+
+  public static HiveToPrestoConverter create(HiveMetastoreClient mscClient) {
+    checkNotNull(mscClient);
+    HiveToRelConverter hiveToRelConverter = HiveToRelConverter.create(mscClient);
     RelToPrestoConverter relToPrestoConverter = new RelToPrestoConverter();
     return new HiveToPrestoConverter(hiveToRelConverter, relToPrestoConverter);
   }
@@ -20,7 +31,7 @@ public class HiveToPrestoConverter {
   private HiveToPrestoConverter(HiveToRelConverter hiveToRelConverter,
       RelToPrestoConverter relToPrestoConverter) {
     this.hiveToRelConverter = hiveToRelConverter;
-    this.rel2ToPrestoConverter = relToPrestoConverter;
+    this.relToPrestoConverter = relToPrestoConverter;
   }
 
   /**
@@ -31,6 +42,6 @@ public class HiveToPrestoConverter {
    */
   public String toPrestoSql(String hiveSql) {
     RelNode rel = hiveToRelConverter.convert(hiveSql);
-    return rel2ToPrestoConverter.convert(rel);
+    return relToPrestoConverter.convert(rel);
   }
 }
