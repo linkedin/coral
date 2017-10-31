@@ -18,20 +18,20 @@
     },
     "toolchains": {
       "gradle": {
-        "version": "2.*",
+        "version": "4.1",
         "plugins": {
           "ligradle-jvm": {
             "libraries": [
               "product-plugins"
             ],
-            "version": "2.*.*"
+            "version": "3.*.*"
           }
         }
       }
     },
     "type": "gradle",
     "versions": {
-      "gradle": "2.*",
+      "gradle": "4.*",
       "java": "1.8.0_121",
       "scala": "2.10.4"
     }

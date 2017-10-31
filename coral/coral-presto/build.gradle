@@ -1,5 +1,6 @@
 apply plugin:'li-java'
 apply plugin: 'maven'
+apply plugin: 'com.github.johnrengelman.shadow'
 
 dependencies {
   compile spec.external.'calcite-core'
@@ -8,6 +9,7 @@ dependencies {
   compile spec.external.'protobuf-java'
   testCompile spec.external.'presto-parser'
 }
+
 def pomPath = "$buildDir/${name}.pom"
 
 task createPom {
@@ -17,12 +19,33 @@ task createPom {
         groupId "$project.group"
         artifactId "$project.name"
       }
-    }.writeTo(pomPath)
+      scopeMappings.mappings.remove(project.configurations.compile)
+      scopeMappings.mappings.remove(project.configurations.runtime)
+      scopeMappings.addMapping(MavenPlugin.RUNTIME_PRIORITY, project.configurations.shadow, Conf2ScopeMappingContainer.RUNTIME)
+    }.writeTo("$pomPath")
   }
 }
 
+shadowJar {
+  // classifier = ''
+  zip64 true
+}
+
+// shadow plugin tries to upload pom if the maven plugin is also applied.
+// We need this to silence those errors
+uploadShadow.enabled = false
+uploadShadow {
+  repositories {
+    mavenDeployer {
+      mavenLocal()
+    }
+  }
+}
+
+// need to explicitly set this because we are generating pom files
 generateModuleArtifactSpec.defaultArtifact = jar
+
 artifacts {
-  archives jar, javadocJar, sourcesJar
   archives file: file("$pomPath"), name: "$name", type: "pom", builtBy: createPom
+  archives jar, shadowJar, javadocJar, sourcesJar
 }
