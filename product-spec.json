@@ -3,10 +3,6 @@
   "group": "com.linkedin.@spec.name@",
   "version": "0.0.*",
   "scmUrl": "git@gitli.corp.linkedin.com:coral/coral.git",
-  "owners": [
-    "atumbde",
-    "khtran"
-  ],
   "comment": "",
   "description": "Framework for portable data analysis",
   "watchers": [],
@@ -81,4 +77,3 @@
   },
   "extSCM": {}
 }
-
