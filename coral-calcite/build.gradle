@@ -48,7 +48,7 @@ shadowJar {
   relocate 'org.slf4j', "${shadeBase}.org.slf4j"
   relocate 'javax.annotation', "${shadeBase}.javax.annotation"
 
-  relocate 'org.codehaus', "${shadeBase}.org.codehaus"
+  //relocate 'org.codehaus', "${shadeBase}.org.codehaus"
   relocate 'org.pentaho', "${shadeBase}.org.pentaho"
 
   exclude 'mozilla/public-suffix-list.txt'

@@ -6,6 +6,9 @@ buildscript {
     }
 }
 
+configurations {
+  provided
+}
 subprojects {
   plugins.withType(JavaPlugin) {
     dependencies {

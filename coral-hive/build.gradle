@@ -1,0 +1,53 @@
+apply plugin:'li-java'
+apply plugin: 'maven-publish'
+
+dependencies {
+
+  // use our shaded version of calcite library
+  compile project(path: ':coral-calcite', configuration: 'shadow')
+
+  compile (spec.product.hive.'hive-metastore') {
+    exclude group: 'com.linkedin.metastore-autometrics', module: 'autometrics-reporter'
+    exclude group: 'com.linkedin.metastore-audit', module: 'metastore-audit-logging'
+    // avro-tools brings in whole bunch of hadoop classes causing duplicates and conflicts
+    exclude group: 'org.apache.avro', module: 'avro-tools'
+  }
+  // required for hiveSQL parser code
+  compile spec.external.'antlr-runtime'
+
+  testCompile (spec.product.hive.'hive-exec') {
+    exclude group: 'org.apache.avro', module: 'avro-tools'
+  }
+  // TODO: remove if the overall build passes
+  //testCompile spec.product.hadoop.'hadoop-mapreduce-client-common'
+}
+
+// TODO: this is boilerplate code repeated in all modules. Can we move this to parent build subProjects ?
+
+def pomPath = "$buildDir/${name}.pom"
+
+model {
+  tasks.generatePomFileForMavenJavaPublication {
+    destination = file("$pomPath")
+  }
+
+  tasks.jar {
+    dependsOn tasks.generatePomFileForMavenJavaPublication
+  }
+}
+
+publishing {
+  publications {
+    mavenJava(MavenPublication) {
+      from components.java
+    }
+  }
+}
+
+// need to explicitly set this because we are generating pom files
+generateModuleArtifactSpec.defaultArtifact = jar
+
+artifacts {
+  archives file: file(pomPath), name: "$name", type: "pom"
+  archives jar, javadocJar, sourcesJar
+}

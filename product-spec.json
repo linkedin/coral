@@ -46,6 +46,7 @@
   "dependencyResolution": {},
   "external": {
     "testng": "org.testng:testng:6.4",
+    "antlr-runtime": "org.antlr:antlr-runtime:3.4",
     "calcite-core": "org.apache.calcite:calcite-core:1.13.0",
     "calcite-avatica": "org.apache.calcite:calcite-avatica:1.6.0",
     "avatica-core": "org.apache.calcite.avatica:avatica-core:1.10.0",
@@ -58,9 +59,15 @@
         {
           "name": "hive-exec",
           "classifier": "core"
+        },
+        {
+          "name": "hive-serde"
+        },
+        {
+          "name": "hive-metastore"
         }
       ],
-      "version": "1.1.0.128"
+      "version": "1.1.0.131"
     },
     "hadoop": {
       "libraries": [

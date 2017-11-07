@@ -1,0 +1,33 @@
+apply plugin:'li-java'
+apply plugin: 'maven-publish'
+
+dependencies {
+  compile project (path: ':coral-calcite', configuration: 'shadow')
+  testCompile spec.external.'presto-parser'
+}
+
+def pomPath = "$buildDir/${name}.pom"
+model {
+  tasks.generatePomFileForMavenJavaPublication {
+    destination = file("$pomPath")
+  }
+
+  tasks.jar {
+    dependsOn tasks.generatePomFileForMavenJavaPublication
+  }
+}
+
+publishing {
+  publications {
+    mavenJava(MavenPublication) {
+      from components.java
+    }
+  }
+}
+
+// need to explicitly set this because we are generating pom files
+generateModuleArtifactSpec.defaultArtifact = jar
+artifacts {
+  archives file: file("$pomPath"), name: "$name", type: "pom"
+  archives jar, javadocJar, sourcesJar
+}
