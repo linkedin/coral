@@ -1,4 +1,4 @@
-def modules = ['coral'] /* the name of the modules to use */
+def modules = ['coral', 'coral-calcite']
 
 modules.each { module ->
   if (!file(module).directory) {
