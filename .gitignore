@@ -13,3 +13,4 @@ out/
 target/
 *target/
 derby.log
+ligradle
