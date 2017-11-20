@@ -5,6 +5,7 @@ dependencies {
 
   // use our shaded version of calcite library
   compile project(path: ':coral-calcite', configuration: 'shadow')
+  compile files("${project(':coral-calcite').buildDir.absolutePath}/libs/coral-calcite-${version}.jar")
 
   compile (spec.product.hive.'hive-metastore') {
     exclude group: 'com.linkedin.metastore-autometrics', module: 'autometrics-reporter'

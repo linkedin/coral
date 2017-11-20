@@ -3,6 +3,7 @@ apply plugin: 'maven-publish'
 
 dependencies {
   compile project (path: ':coral-calcite', configuration: 'shadow')
+  compile files("${project(':coral-calcite').buildDir.absolutePath}/libs/coral-calcite-${version}.jar")
   testCompile spec.external.'presto-parser'
 }
 
