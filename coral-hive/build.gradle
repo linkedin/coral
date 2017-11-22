@@ -3,9 +3,17 @@ apply plugin: 'maven-publish'
 
 dependencies {
 
-  // use our shaded version of calcite library
-  compile project(path: ':coral-calcite', configuration: 'shadow')
-  compile files("${project(':coral-calcite').buildDir.absolutePath}/libs/coral-calcite-${version}.jar")
+  // Adding this dependency as compile  project(path: ':coral-calcite', configuration: 'shadow')
+  // does not work well with IntelliJ. It break both, compilation and running of tests.
+  // Adding file based dependency makes IntelliJ happy. `builtBy` ensures that the shaded calcite
+  // jar is generated before running compile for this project.
+  // One suggestion was to add both - file() as below and compile  project(path: ':coral-calcite', configuration: 'shadow').
+  // That solves the compilation issue in intellij but break running of tests in IntelliJ. The compile directive
+  // will cause IntelliJ to transitively bring dependent jars on the classpath. This causes duplicate jars and fails test
+
+  compile files("${project(':coral-calcite').buildDir.absolutePath}/libs/coral-calcite-${version}.jar") {
+    builtBy project(':coral-calcite').tasks.getByName('shadowJar')
+  }
 
   compile (spec.product.hive.'hive-metastore') {
     exclude group: 'com.linkedin.metastore-autometrics', module: 'autometrics-reporter'
@@ -18,13 +26,14 @@ dependencies {
 
   testCompile (spec.product.hive.'hive-exec') {
     exclude group: 'org.apache.avro', module: 'avro-tools'
+    // These exclusions are required to prevent duplicate classes since we include
+    // shaded jar above
+    exclude group: 'org.apache.calcite', module: 'calcite-core'
+    exclude group: 'org.apache.calcite', module: 'calcite-avatica'
   }
-  // TODO: remove if the overall build passes
-  //testCompile spec.product.hadoop.'hadoop-mapreduce-client-common'
 }
 
 // TODO: this is boilerplate code repeated in all modules. Can we move this to parent build subProjects ?
-
 def pomPath = "$buildDir/${name}.pom"
 
 model {
@@ -37,10 +46,23 @@ model {
   }
 }
 
+
 publishing {
   publications {
     mavenJava(MavenPublication) {
       from components.java
+      // since we use file() dependency on shaded jar, we need to explicitly
+      // add coral-calcite dependency in pom
+      pom.withXml {
+        def depRoot = asNode().dependencies[0]
+        if (depRoot == null) {
+          depRoot = asNode().appendNode("dependencies")
+        }
+        def dep = asNode().dependencies[0].appendNode("dependency")
+        dep.appendNode("groupId", project.group)
+        dep.appendNode("artifactId", project(":coral-calcite").name)
+        dep.appendNode("version", version)
+      }
     }
   }
 }

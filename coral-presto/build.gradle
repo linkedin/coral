@@ -2,8 +2,11 @@ apply plugin:'li-java'
 apply plugin: 'maven-publish'
 
 dependencies {
-  compile project (path: ':coral-calcite', configuration: 'shadow')
-  compile files("${project(':coral-calcite').buildDir.absolutePath}/libs/coral-calcite-${version}.jar")
+  // see :coral-hive build.gradle for why we add depedency this way
+  compile files("${project(':coral-calcite').buildDir.absolutePath}/libs/coral-calcite-${version}.jar")  {
+    builtBy project(':coral-calcite').tasks.getByName('shadowJar')
+  }
+
   testCompile spec.external.'presto-parser'
 }
 
@@ -22,6 +25,16 @@ publishing {
   publications {
     mavenJava(MavenPublication) {
       from components.java
+      pom.withXml {
+        def depRoot = asNode().dependencies[0]
+        if (depRoot == null) {
+          depRoot = asNode().appendNode("dependencies")
+        }
+        def dep = asNode().dependencies[0].appendNode("dependency")
+        dep.appendNode("groupId", project.group)
+        dep.appendNode("artifactId", project(":coral-calcite").name)
+        dep.appendNode("version", version)
+      }
     }
   }
 }
