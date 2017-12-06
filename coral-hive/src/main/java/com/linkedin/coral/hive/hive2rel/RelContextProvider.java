@@ -6,6 +6,7 @@ import java.util.List;
 import javax.annotation.Nonnull;
 import org.apache.calcite.adapter.java.JavaTypeFactory;
 import org.apache.calcite.jdbc.CalciteSchema;
+import org.apache.calcite.jdbc.Driver;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelTraitDef;
 import org.apache.calcite.plan.volcano.VolcanoPlanner;
@@ -35,6 +36,7 @@ public class RelContextProvider {
   private HiveSqlValidator sqlValidator;
   private RelOptCluster cluster;
   private SqlToRelConverter relConverter;
+  private Driver driver;
 
   /**
    * Instantiates a new Rel context provider.
@@ -46,7 +48,11 @@ public class RelContextProvider {
     this.schema = schema;
     SchemaPlus schemaPlus = Frameworks.createRootSchema(false);
     schemaPlus.add(HiveSchema.ROOT_SCHEMA, schema);
-
+    // this is to ensure that jdbc:calcite driver is correctly registered
+    // before initializing framework (which needs it)
+    // We don't want each engine to register the driver. It may not also load correctly
+    // if the service uses its own service loader (see Presto)
+    driver = new Driver();
     config = Frameworks.newConfigBuilder()
         .defaultSchema(schemaPlus)
         .traitDefs((List<RelTraitDef>) null)
