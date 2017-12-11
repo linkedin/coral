@@ -59,6 +59,7 @@ public class RelContextProvider {
     driver = new Driver();
     config = Frameworks.newConfigBuilder()
         .defaultSchema(schemaPlus)
+        .typeSystem(new HiveTypeSystem())
         .traitDefs((List<RelTraitDef>) null)
         .programs(Programs.ofRules(Programs.RULE_SET))
         .build();
