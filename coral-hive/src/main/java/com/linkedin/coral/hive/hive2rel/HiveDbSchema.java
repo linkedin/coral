@@ -9,6 +9,7 @@ import org.apache.calcite.linq4j.tree.Expression;
 import org.apache.calcite.schema.Function;
 import org.apache.calcite.schema.Schema;
 import org.apache.calcite.schema.SchemaPlus;
+import org.apache.calcite.schema.SchemaVersion;
 import org.apache.calcite.schema.Table;
 
 import static com.google.common.base.Preconditions.*;
@@ -79,21 +80,9 @@ public class HiveDbSchema implements Schema {
     return true;
   }
 
-  /**
-   * Always return true for now since we are building a library.
-   * Roundtrip to metastore is not that costly
-   * @param lastCheck
-   * @param now
-   * @return always returns true (there is no caching)
-   */
-  @Override
-  public boolean contentsHaveChangedSince(long lastCheck, long now) {
-    return true;
-  }
-
   // TODO: This needs to be snapshot of current state of catalog
   @Override
-  public Schema snapshot(long now) {
+  public Schema snapshot(SchemaVersion schemaVersion) {
     return this;
   }
 }

@@ -3,8 +3,12 @@ package com.linkedin.coral.hive.hive2rel;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
+import java.util.Properties;
 import javax.annotation.Nonnull;
 import org.apache.calcite.adapter.java.JavaTypeFactory;
+import org.apache.calcite.config.CalciteConnectionConfig;
+import org.apache.calcite.config.CalciteConnectionConfigImpl;
+import org.apache.calcite.config.CalciteConnectionProperty;
 import org.apache.calcite.jdbc.CalciteSchema;
 import org.apache.calcite.jdbc.Driver;
 import org.apache.calcite.plan.RelOptCluster;
@@ -88,12 +92,21 @@ public class RelContextProvider {
    * @return the calcite catalog reader
    */
   CalciteCatalogReader getCalciteCatalogReader() {
+    CalciteConnectionConfig connectionConfig;
+    if (config.getContext() != null) {
+      connectionConfig = config.getContext().unwrap(CalciteConnectionConfig.class);
+    } else {
+      Properties properties = new Properties();
+      properties.setProperty(CalciteConnectionProperty.CASE_SENSITIVE.camelName(),
+          String.valueOf(false));
+      connectionConfig = new CalciteConnectionConfigImpl(properties);
+    }
     if (catalogReader == null) {
       catalogReader =
           new CalciteCatalogReader(config.getDefaultSchema().unwrap(CalciteSchema.class),
-              false,
               ImmutableList.of(HiveSchema.ROOT_SCHEMA, HiveSchema.DEFAULT_DB),
-              getRelBuilder().getTypeFactory());
+              getRelBuilder().getTypeFactory(),
+              connectionConfig);
     }
     return catalogReader;
   }

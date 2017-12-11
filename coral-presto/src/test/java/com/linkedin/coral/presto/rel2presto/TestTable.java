@@ -4,12 +4,15 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.apache.calcite.config.CalciteConnectionConfig;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.schema.Schema;
 import org.apache.calcite.schema.Statistic;
 import org.apache.calcite.schema.Statistics;
 import org.apache.calcite.schema.Table;
+import org.apache.calcite.sql.SqlCall;
+import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.type.SqlTypeName;
 
 
@@ -73,6 +76,17 @@ public class TestTable implements Table {
 
   public Schema.TableType getJdbcTableType() {
     return Schema.TableType.TABLE;
+  }
+
+  @Override
+  public boolean isRolledUp(String s) {
+    return false;
+  }
+
+  @Override
+  public boolean rolledUpColumnValidInsideAgg(String s, SqlCall sqlCall, SqlNode sqlNode,
+      CalciteConnectionConfig calciteConnectionConfig) {
+    return true;
   }
 
   public ImmutableList<String> getColumnNames() {

@@ -32,7 +32,6 @@ public class HiveSchemaTest {
     assertEquals(schema.getFunctionNames(), ImmutableSet.of());
     assertEquals(schema.getFunctions("foo"), ImmutableList.of());
     assertTrue(schema.isMutable());
-    assertTrue(schema.contentsHaveChangedSince(300, System.currentTimeMillis()));
 
     Schema defaultDb = schema.getSubSchema("default");
     assertEquals(defaultDb.getTableNames(), ImmutableSet.copyOf(hive.getTables("default")));
@@ -41,7 +40,6 @@ public class HiveSchemaTest {
     assertEquals(defaultDb.getSubSchemaNames(), ImmutableSet.of());
     assertNull(defaultDb.getSubSchema("subSchema"));
     assertTrue(defaultDb.isMutable());
-    assertTrue(defaultDb.contentsHaveChangedSince(300, System.currentTimeMillis()));
     assertEquals(defaultDb.getFunctionNames(), ImmutableSet.of());
     assertEquals(defaultDb.getFunctions("function"), ImmutableList.of());
 

@@ -3,7 +3,7 @@ apply plugin: 'com.github.johnrengelman.shadow'
 apply plugin: 'maven-publish'
 
 dependencies {
-  compile spec.external.'calcite-core'
+  compile spec.product.'calcite-mp'.'calcite-core'
   compile spec.external.'avatica-core'
 }
 

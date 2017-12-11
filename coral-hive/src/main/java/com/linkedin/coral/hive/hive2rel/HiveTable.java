@@ -3,11 +3,14 @@ package com.linkedin.coral.hive.hive2rel;
 import com.google.common.base.Preconditions;
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.calcite.config.CalciteConnectionConfig;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.schema.Schema;
 import org.apache.calcite.schema.Statistic;
 import org.apache.calcite.schema.Statistics;
+import org.apache.calcite.sql.SqlCall;
+import org.apache.calcite.sql.SqlNode;
 import org.apache.hadoop.hive.metastore.TableType;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
@@ -63,5 +66,16 @@ public class HiveTable implements org.apache.calcite.schema.Table {
         default:
           throw new RuntimeException("Unknown table type: " + hiveTable.getTableType());
     }
+  }
+
+  @Override
+  public boolean isRolledUp(String s) {
+    return false;
+  }
+
+  @Override
+  public boolean rolledUpColumnValidInsideAgg(String s, SqlCall sqlCall, SqlNode sqlNode,
+      CalciteConnectionConfig calciteConnectionConfig) {
+    return true;
   }
 }
