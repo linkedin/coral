@@ -30,7 +30,7 @@ public class HiveViewExpander implements RelOptTable.ViewExpander {
 
   @Override
   public RelRoot expandView(RelDataType rowType, String queryString, List<String> schemaPath, List<String> viewPath) {
-    ParseTreeBuilder treeBuilder = new ParseTreeBuilder();
+    ParseTreeBuilder treeBuilder = new ParseTreeBuilder(relContextProvider.getParseTreeBuilderConfig());
     SqlNode viewNode = treeBuilder.process(queryString);
     return relContextProvider.getSqlToRelConverter().convertQuery(viewNode, true, true);
   }

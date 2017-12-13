@@ -2,6 +2,7 @@ package com.linkedin.coral.hive.hive2rel;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.linkedin.coral.hive.hive2rel.parsetree.ParseTreeBuilder;
 import java.util.List;
 import java.util.Properties;
 import javax.annotation.Nonnull;
@@ -73,6 +74,12 @@ public class RelContextProvider {
    */
   FrameworkConfig getConfig() {
     return config;
+  }
+
+  ParseTreeBuilder.Config getParseTreeBuilderConfig() {
+    return new ParseTreeBuilder.Config()
+        .setCatalogName(HiveSchema.ROOT_SCHEMA)
+        .setDefaultDB(HiveDbSchema.DEFAULT_DB);
   }
 
   /**

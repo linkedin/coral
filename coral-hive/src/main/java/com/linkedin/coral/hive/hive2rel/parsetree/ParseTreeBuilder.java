@@ -1,5 +1,6 @@
 package com.linkedin.coral.hive.hive2rel.parsetree;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.linkedin.coral.hive.hive2rel.parsetree.parser.ASTNode;
@@ -12,6 +13,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import org.apache.calcite.sql.SqlBasicCall;
 import org.apache.calcite.sql.SqlBinaryOperator;
+import org.apache.calcite.sql.SqlDataTypeSpec;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlNode;
@@ -19,7 +21,9 @@ import org.apache.calcite.sql.SqlNodeList;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.SqlPrefixOperator;
 import org.apache.calcite.sql.SqlSelect;
+import org.apache.calcite.sql.SqlSyntax;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
+import org.apache.calcite.sql.type.SqlTypeName;
 
 import static com.google.common.base.Preconditions.*;
 import static org.apache.calcite.sql.parser.SqlParserPos.*;
@@ -45,6 +49,18 @@ import static org.apache.calcite.sql.parser.SqlParserPos.*;
  */
 public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuilder.ParseContext> {
 
+  private final Config config;
+
+  public ParseTreeBuilder(Config config) {
+    Preconditions.checkState(config.catalogName.isEmpty() || !config.defaultDBName.isEmpty(),
+        "Default DB is required if catalog name is not empty");
+    this.config = config;
+  }
+
+  public ParseTreeBuilder() {
+    this(new Config());
+  }
+
   public SqlNode process(String sql) {
     ParseDriver pd = new ParseDriver();
     try {
@@ -59,106 +75,127 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     return visit(node, new ParseContext());
   }
 
+  @Override
   protected SqlNode visitTabAlias(ASTNode node, ParseContext ctx) {
     throw new RuntimeException(String.format("%s, %s, %s", node.getType(), node.getText(), node.dump()));
   }
 
+  @Override
   protected SqlNode visitLateralView(ASTNode node, ParseContext ctx) {
     throw new RuntimeException(String.format("%s, %s, %s", node.getType(), node.getText(), node.dump()));
   }
 
+  @Override
   protected SqlNode visitLeftSemiJoin(ASTNode node, ParseContext ctx) {
     throw new RuntimeException(String.format("%s, %s, %s", node.getType(), node.getText(), node.dump()));
   }
 
+  @Override
   protected SqlNode visitCrossJoin(ASTNode node, ParseContext ctx) {
     throw new RuntimeException(String.format("%s, %s, %s", node.getType(), node.getText(), node.dump()));
   }
 
+  @Override
   protected SqlNode visitFullOuterJoin(ASTNode node, ParseContext ctx) {
     throw new RuntimeException(String.format("%s, %s, %s", node.getType(), node.getText(), node.dump()));
   }
 
+  @Override
   protected SqlNode visitRightOuterJoin(ASTNode node, ParseContext ctx) {
     throw new RuntimeException(String.format("%s, %s, %s", node.getType(), node.getText(), node.dump()));
   }
 
+  @Override
   protected SqlNode visitJoin(ASTNode node, ParseContext ctx) {
     throw new RuntimeException(String.format("%s, %s, %s", node.getType(), node.getText(), node.dump()));
   }
 
+  @Override
   protected SqlNode visitLeftOuterJoin(ASTNode node, ParseContext ctx) {
     throw new RuntimeException(String.format("%s, %s, %s", node.getType(), node.getText(), node.dump()));
   }
 
+  @Override
   protected SqlNode visitFalse(ASTNode node, ParseContext ctx) {
     return SqlLiteral.createBoolean(false, ZERO);
   }
 
+  @Override
   protected SqlNode visitNullToken(ASTNode node, ParseContext ctx) {
     return SqlLiteral.createNull(ZERO);
   }
 
+  @Override
   protected SqlNode visitLimit(ASTNode node, ParseContext ctx) {
     ctx.fetch = visitChildren(node, ctx).get(0);
     return ctx.fetch;
   }
 
+  @Override
   protected SqlNode visitUnion(ASTNode node, ParseContext ctx) {
     List<SqlNode> sqlNodes = visitChildren(node, ctx);
     return new SqlBasicCall(SqlStdOperatorTable.UNION, sqlNodes.toArray(new SqlNode[0]), ZERO);
   }
 
+  @Override
   protected SqlNode visitNumber(ASTNode node, ParseContext ctx) {
     String strval = node.getText();
     return SqlLiteral.createExactNumeric(strval, ZERO);
   }
 
+  @Override
   protected SqlNode visitAllColRef(ASTNode node, ParseContext ctx) {
     return SqlIdentifier.star(ZERO);
   }
 
+  @Override
   protected SqlNode visitHaving(ASTNode node, ParseContext ctx) {
     checkState(node.getChildren().size() == 1);
     ctx.having = visit((ASTNode) node.getChildren().get(0), ctx);
     return ctx.having;
   }
 
+  @Override
   protected SqlNode visitWhere(ASTNode node, ParseContext ctx) {
     checkState(node.getChildren().size() == 1);
     ctx.where = visit((ASTNode) node.getChildren().get(0), ctx);
     return ctx.where;
   }
 
+  @Override
   protected SqlNode visitSortColNameDesc(ASTNode node, ParseContext ctx) {
     return visitSortColName(node, ctx, true);
   }
 
+  @Override
   protected SqlNode visitSortColNameAsc(ASTNode node, ParseContext ctx) {
     return visitSortColName(node, ctx, false);
   }
 
-  protected SqlNode visitSortColName(ASTNode node, ParseContext ctx, boolean descending) {
+  private SqlNode visitSortColName(ASTNode node, ParseContext ctx, boolean descending) {
     List<SqlNode> children = visitChildren(node, ctx);
     checkState(children.size() == 1);
     if (!descending) {
       return children.get(0);
     }
-    return new SqlBasicCall(SqlStdOperatorTable.DESC, new SqlNode[] {children.get(0)}, ZERO);
+    return new SqlBasicCall(SqlStdOperatorTable.DESC, new SqlNode[]{children.get(0)}, ZERO);
   }
 
+  @Override
   protected SqlNode visitOrderBy(ASTNode node, ParseContext ctx) {
     List<SqlNode> orderByCols = visitChildren(node, ctx);
     ctx.orderBy = new SqlNodeList(orderByCols, ZERO);
     return ctx.orderBy;
   }
 
+  @Override
   protected SqlNode visitGroupBy(ASTNode node, ParseContext ctx) {
     List<SqlNode> grpCols = visitChildren(node, ctx);
     ctx.grpBy = new SqlNodeList(grpCols, ZERO);
     return ctx.grpBy;
   }
 
+  @Override
   protected SqlNode visitOperator(ASTNode node, ParseContext ctx) {
     ArrayList<Node> children = node.getChildren();
     if (children.size() == 1) {
@@ -171,31 +208,32 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     }
   }
 
-  protected SqlNode visitUnaryOperator(ASTNode node, ParseContext ctx) {
+  private SqlNode visitUnaryOperator(ASTNode node, ParseContext ctx) {
     SqlNode operand = visit((ASTNode) node.getChildren().get(0), ctx);
     List<SqlOperator> operators = SqlStdOperatorTable.instance()
         .getOperatorList()
         .stream()
-        .filter(o -> o.getName().toUpperCase().equals(node.getText()) && o instanceof SqlPrefixOperator)
+        .filter(o -> o.getName().toUpperCase().equals(node.getText().toUpperCase()) && o instanceof SqlPrefixOperator)
         .collect(Collectors.toList());
-    checkState(operators.size() == 1, "%s operator %s, tree: %s",
-        operators.isEmpty() ? "Unknown" : "Ambiguous", node.getText(), node.dump());
+    checkState(operators.size() == 1, "%s operator %s, tree: %s", operators.isEmpty() ? "Unknown" : "Ambiguous",
+        node.getText(), node.dump());
     return operators.get(0).createCall(ZERO, operand);
   }
 
-  protected SqlNode visitBinaryOperator(ASTNode node, ParseContext ctx) {
+  private SqlNode visitBinaryOperator(ASTNode node, ParseContext ctx) {
     List<SqlNode> sqlNodes = visitChildren(node, ctx);
     checkState(sqlNodes.size() == 2);
     List<SqlOperator> operators = SqlStdOperatorTable.instance()
         .getOperatorList()
         .stream()
-        .filter(o -> o.getName().toUpperCase().equals(node.getText()) && o instanceof SqlBinaryOperator)
+        .filter(o -> o.getName().toUpperCase().equals(node.getText().toUpperCase()) && o instanceof SqlBinaryOperator)
         .collect(Collectors.toList());
-    checkState(operators.size() == 1, "%s operator %s, tree: %s",
-        operators.isEmpty() ? "Unknown" : "Ambiguous", node.getText(), node.dump());
+    checkState(operators.size() == 1, "%s operator %s, tree: %s", operators.isEmpty() ? "Unknown" : "Ambiguous",
+        node.getText(), node.dump());
     return operators.get(0).createCall(ZERO, sqlNodes);
   }
 
+  @Override
   protected SqlNode visitDotOperator(ASTNode node, ParseContext ctx) {
     List<SqlNode> sqlNodes = visitChildren(node, ctx);
     checkState(sqlNodes != null && sqlNodes.size() == 2);
@@ -205,13 +243,14 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     return new SqlIdentifier(ImmutableList.copyOf(names), ZERO);
   }
 
+  @Override
   protected SqlNode visitLParen(ASTNode node, ParseContext ctx) {
     List<SqlNode> sqlNodes = visitChildren(node, ctx);
     checkState(sqlNodes.size() == 2);
-    return new SqlBasicCall(SqlStdOperatorTable.ITEM,
-        new SqlNode[]{sqlNodes.get(0), sqlNodes.get(1)}, ZERO);
+    return new SqlBasicCall(SqlStdOperatorTable.ITEM, new SqlNode[]{sqlNodes.get(0), sqlNodes.get(1)}, ZERO);
   }
 
+  @Override
   protected SqlNode visitFunctionStar(ASTNode node, ParseContext ctx) {
     ASTNode functionNode = (ASTNode) node.getChildren().get(0);
     List<SqlOperator> functions = SqlStdOperatorTable.instance()
@@ -220,71 +259,97 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
         .filter(f -> functionNode.getText().equalsIgnoreCase(f.getName()))
         .collect(Collectors.toList());
     checkState(functions.size() == 1);
-    return new SqlBasicCall(functions.get(0), new SqlNode[] {new SqlIdentifier("", ZERO)}, ZERO);
+    return new SqlBasicCall(functions.get(0), new SqlNode[]{new SqlIdentifier("", ZERO)}, ZERO);
   }
 
+  @Override
   protected SqlNode visitFunctionDistinct(ASTNode node, ParseContext ctx) {
     return visitFunctionInternal(node, ctx, SqlLiteral.createCharString("DISTINCT", ZERO));
   }
 
+  @Override
   protected SqlNode visitFunction(ASTNode node, ParseContext ctx) {
     return visitFunctionInternal(node, ctx, null);
   }
 
-  protected SqlNode visitFunctionInternal(ASTNode node, ParseContext ctx, SqlLiteral quantifier) {
+  private SqlNode visitFunctionInternal(ASTNode node, ParseContext ctx, SqlLiteral quantifier) {
     ArrayList<Node> children = node.getChildren();
     checkState(children.size() > 0);
     ASTNode functionNode = (ASTNode) children.get(0);
 
     SqlOperator operator = null;
     List<Node> operands = children.subList(1, children.size());
+    String functionName = functionNode.getText();
 
+    if (functionName.equalsIgnoreCase("sum")) {
+      operator = SqlStdOperatorTable.SUM;
+    } else if (functionName.equalsIgnoreCase("count")) {
+      operator = SqlStdOperatorTable.COUNT;
+    } else if (functionName.equalsIgnoreCase("max")) {
+      operator = SqlStdOperatorTable.MAX;
+    } else if (functionName.equalsIgnoreCase("min")) {
+      operator = SqlStdOperatorTable.MIN;
+    } else if (functionName.equalsIgnoreCase("avg")) {
+      operator = SqlStdOperatorTable.AVG;
+    } else if (functionName.equalsIgnoreCase("in")) {
+      operator = SqlStdOperatorTable.IN;
+    }
     if (functionNode.getType() == HiveParser.TOK_ISNULL) {
       operator = SqlStdOperatorTable.IS_NULL;
-
     } else if (functionNode.getType() == HiveParser.TOK_ISNOTNULL) {
       operator = SqlStdOperatorTable.IS_NOT_NULL;
-
-    } else if (functionNode.getText().equalsIgnoreCase("between")) {
+    } else if (functionName.equalsIgnoreCase("between")) {
       if (((ASTNode) children.get(1)).getType() == HiveParser.KW_TRUE) {
         operator = SqlStdOperatorTable.NOT_BETWEEN;
       } else {
         operator = SqlStdOperatorTable.BETWEEN;
       }
       operands = children.subList(2, children.size());
-
-    } else if (functionNode.getText().equalsIgnoreCase("in")) {
-      operator = SqlStdOperatorTable.IN;
-    } else if (functionNode.getText().equalsIgnoreCase("sum")) {
-      operator = SqlStdOperatorTable.SUM;
-    } else if (functionNode.getText().equalsIgnoreCase("count")) {
-      operator = SqlStdOperatorTable.COUNT;
-    } else if (functionNode.getText().equalsIgnoreCase("max")) {
-      operator = SqlStdOperatorTable.MAX;
-    } else if (functionNode.getText().equalsIgnoreCase("min")) {
-      operator = SqlStdOperatorTable.MIN;
-    } else if (functionNode.getText().equalsIgnoreCase("avg")) {
-      operator = SqlStdOperatorTable.AVG;
-    } /*else if (isCastFunction(functionNode)) {
-      visitCastFunction(node, queryBuilder);
-    } else if (functionNode.getText().equalsIgnoreCase("when")) {
-      visitCaseFunction(node, queryBuilder);
-    } else {
-      queryBuilder.currentBuilder.append(functionNode.getText()).append("(");
-      if (children.size() > 1) {
-        visit((ASTNode) children.get(1), queryBuilder);
+      List<SqlNode> sqlNodes = visitChildren(operands, ctx);
+      return operator.createCall(ZERO, sqlNodes);
+    } else if (isCastFunction(functionNode)) {
+      List<SqlNode> sqlNodes = visitChildren(children, ctx);
+      Preconditions.checkState(sqlNodes.size() == 2);
+      return SqlStdOperatorTable.CAST.createCall(ZERO, ImmutableList.of(sqlNodes.get(1), sqlNodes.get(0)));
+    } else if (functionName.equalsIgnoreCase("case")) {
+      List<SqlNode> sqlNodes = visitChildren(operands, ctx);
+      // convert these to SqlNode, SqlNodeList (when), SqlNodeList(then), SqlNode(else)
+      List<SqlNode> whenNodes = new ArrayList<>();
+      List<SqlNode> thenNodes = new ArrayList<>();
+      for (int i = 1; i < sqlNodes.size() - 1; i += 2) {
+        whenNodes.add(sqlNodes.get(i));
+        thenNodes.add(sqlNodes.get(i + 1));
       }
+      return SqlStdOperatorTable.CASE.createCall(ZERO, sqlNodes.get(0), new SqlNodeList(whenNodes, ZERO),
+          new SqlNodeList(thenNodes, ZERO), sqlNodes.get(sqlNodes.size() - 1));
+    }
 
-      for (int i = 2; i < children.size(); i++) {
-        queryBuilder.currentBuilder.append(", ");
-        visit((ASTNode) children.get(i), queryBuilder);
-      }
-      queryBuilder.currentBuilder.append(")");
-    }*/
+    // assume function syntax here..all functions with non-function syntax need to be handled separately
+    // TODO: replace this with statically defined map
+    if (operator == null) {
+      List<SqlOperator> candidates = new ArrayList<>();
+      SqlStdOperatorTable.instance()
+          .lookupOperatorOverloads(new SqlIdentifier(functionName.toUpperCase(), ZERO), null, SqlSyntax.FUNCTION,
+              candidates);
+      Preconditions.checkState(candidates.size() == 1,
+          String.format("Unable to resolve function %s, found %d functions", functionName, candidates.size()));
+      operator = candidates.get(0);
+    }
+
     List<SqlNode> sqlNodes = visitChildren(operands, ctx);
-    return new SqlBasicCall(operator, sqlNodes.toArray(new SqlNode[0]), ZERO);
+    return operator.createCall(ZERO, sqlNodes.toArray(new SqlNode[0]));
   }
 
+  private boolean isCastFunction(ASTNode node) {
+    int name = node.getType();
+    return (name == HiveParser.TOK_BOOLEAN || name == HiveParser.TOK_INT || name == HiveParser.TOK_STRING
+        || name == HiveParser.TOK_DOUBLE || name == HiveParser.TOK_FLOAT || name == HiveParser.TOK_BIGINT
+        || name == HiveParser.TOK_TINYINT || name == HiveParser.TOK_SMALLINT || name == HiveParser.TOK_CHAR
+        || name == HiveParser.TOK_DECIMAL || name == HiveParser.TOK_VARCHAR || name == HiveParser.TOK_BINARY
+        || name == HiveParser.TOK_DATE || name == HiveParser.TOK_TIMESTAMP);
+  }
+
+  @Override
   protected SqlNode visitSelectExpr(ASTNode node, ParseContext ctx) {
     List<SqlNode> sqlNodes = visitChildren(node, ctx);
     if (sqlNodes.size() == 1) {
@@ -296,17 +361,20 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     }
   }
 
+  @Override
   protected SqlNode visitSelectDistinct(ASTNode node, ParseContext ctx) {
     ctx.keywords = new SqlNodeList(ImmutableList.of(SqlLiteral.createCharString("DISTINCT", ZERO)), ZERO);
     return visitSelects(node, ctx);
   }
 
+  @Override
   protected SqlNode visitSelects(ASTNode node, ParseContext ctx) {
     List<SqlNode> sqlNodes = visitChildren(node, ctx);
     ctx.selects = new SqlNodeList(sqlNodes, ZERO);
     return ctx.selects;
   }
 
+  @Override
   protected SqlNode visitTabRefNode(ASTNode node, ParseContext ctx) {
     List<SqlNode> sqlNodes = visitChildren(node, ctx);
     checkState(sqlNodes != null && !sqlNodes.isEmpty());
@@ -314,24 +382,30 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
       return sqlNodes.get(0);
     }
     if (sqlNodes.size() == 2) {
-      return new SqlBasicCall(SqlStdOperatorTable.AS, ((SqlNode[]) sqlNodes.toArray()), ZERO);
+      return new SqlBasicCall(SqlStdOperatorTable.AS, sqlNodes.toArray(new SqlNode[0]), ZERO);
     }
+
     throw new UnhandledASTTokenException(node);
   }
 
+  @Override
   protected SqlNode visitTabnameNode(ASTNode node, ParseContext ctx) {
     List<SqlNode> sqlNodes = visitChildren(node, ctx);
-    List<String> names = sqlNodes.stream()
-        .map(s -> ((SqlIdentifier) s).names)
-        .flatMap(List::stream)
-        .collect(Collectors.toList());
+    List<String> names =
+        sqlNodes.stream().map(s -> ((SqlIdentifier) s).names).flatMap(List::stream).collect(Collectors.toList());
     // TODO: these should be configured in or transformed through
     // a set of rules
     if (names.size() == 1) {
-      names.add(0, "hive");
-      names.add(1, "default");
+      if (!config.defaultDBName.isEmpty()) {
+        names.add(0, config.defaultDBName);
+      }
+      if (!config.catalogName.isEmpty()) {
+        names.add(0, config.catalogName);
+      }
     } else if (names.size() == 2) {
-      names.add(0, "hive");
+      if (!config.catalogName.isEmpty()) {
+        names.add(0, config.catalogName);
+      }
     }
 
     return new SqlIdentifier(names, ZERO);
@@ -353,6 +427,7 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     }
   }
 
+  @Override
   protected SqlNode visitSubqueryExpr(ASTNode node, ParseContext ctx) {
     ArrayList<Node> children = node.getChildren();
     checkState(children.size() >= 2);
@@ -367,6 +442,7 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     return new SqlBasicCall(op, operands.toArray(new SqlNode[0]), ZERO);
   }
 
+  @Override
   protected SqlNode visitSubquery(ASTNode node, ParseContext ctx) {
     ParseContext subQueryContext = new ParseContext();
     List<SqlNode> sqlNodes = visitChildren(node, subQueryContext);
@@ -378,6 +454,7 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     throw new UnhandledASTTokenException(node);
   }
 
+  @Override
   protected SqlNode visitFrom(ASTNode node, ParseContext ctx) {
     List<SqlNode> children = visitChildren(node, ctx);
     if (children.size() == 1) {
@@ -388,82 +465,125 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     throw new UnsupportedASTException(node.dump());
   }
 
-  protected  SqlNode visitIdentifier(ASTNode node, ParseContext ctx) {
+  @Override
+  protected SqlNode visitIdentifier(ASTNode node, ParseContext ctx) {
     return new SqlIdentifier(node.getText(), ZERO);
   }
 
+  @Override
   protected SqlNode visitStringLiteral(ASTNode node, ParseContext ctx) {
-    return SqlLiteral.createCharString(node.getText(), ZERO);
+    // TODO: Add charset here. UTF-8 is not supported by calcite
+    String text = node.getText();
+    Preconditions.checkState(text.length() >= 2);
+    return SqlLiteral.createCharString(text.substring(1, text.length() - 1), ZERO);
   }
 
+  @Override
   protected SqlNode visitQueryNode(ASTNode node, ParseContext ctx) {
     ArrayList<Node> children = node.getChildren();
     checkState(children != null && !children.isEmpty());
     ParseContext qc = new ParseContext();
     List<SqlNode> sqlNodes = visitChildren(node, qc);
-    return new SqlSelect(ZERO, qc.keywords, qc.selects, qc.from, qc.where, qc.grpBy,
-        qc.having, null, qc.orderBy, null, ctx.fetch);
+    return new SqlSelect(ZERO, qc.keywords, qc.selects, qc.from, qc.where, qc.grpBy, qc.having, null, qc.orderBy, null,
+        ctx.fetch);
   }
 
   protected SqlNode visitNil(ASTNode node, ParseContext ctx) {
     return visitChildren(node, ctx).get(0);
   }
 
+  @Override
   protected SqlNode visitBoolean(ASTNode node, ParseContext ctx) {
-    throw new RuntimeException(String.format("%s %s %s", node.getType(), node.getText(), node.dump()));
+    return createTypeSpec(SqlTypeName.BOOLEAN.getName());
   }
 
+  @Override
   protected SqlNode visitInt(ASTNode node, ParseContext ctx) {
-    throw new RuntimeException(String.format("%s, %s, %s", node.getType(), node.getText(), node.dump()));
+    return createTypeSpec(SqlTypeName.INTEGER.getName());
   }
 
+  @Override
   protected SqlNode visitSmallInt(ASTNode node, ParseContext ctx) {
-    throw new RuntimeException(String.format("%s, %s, %s", node.getType(), node.getText(), node.dump()));
+    return createTypeSpec(SqlTypeName.SMALLINT.getName());
   }
 
+  @Override
   protected SqlNode visitBigInt(ASTNode node, ParseContext ctx) {
-    throw new RuntimeException(String.format("%s, %s, %s", node.getType(), node.getText(), node.dump()));
+    return createTypeSpec(SqlTypeName.BIGINT.getName());
   }
 
+  @Override
   protected SqlNode visitTinyInt(ASTNode node, ParseContext ctx) {
-    throw new RuntimeException(String.format("%s, %s, %s", node.getType(), node.getText(), node.dump()));
+    return createTypeSpec(SqlTypeName.TINYINT.getName());
   }
 
+  @Override
   protected SqlNode visitFloat(ASTNode node, ParseContext ctx) {
-    throw new RuntimeException(String.format("%s, %s, %s", node.getType(), node.getText(), node.dump()));
+    return createTypeSpec(SqlTypeName.FLOAT.getName());
   }
 
+  @Override
   protected SqlNode visitDouble(ASTNode node, ParseContext ctx) {
-    throw new RuntimeException(String.format("%s, %s, %s", node.getType(), node.getText(), node.dump()));
+    return createTypeSpec(SqlTypeName.DOUBLE.getName());
   }
 
+  @Override
   protected SqlNode visitVarchar(ASTNode node, ParseContext ctx) {
-    throw new RuntimeException(String.format("%s, %s, %s", node.getType(), node.getText(), node.dump()));
+    return createTypeSpec(SqlTypeName.VARCHAR.getName());
   }
 
+  @Override
   protected SqlNode visitChar(ASTNode node, ParseContext ctx) {
-    throw new RuntimeException(String.format("%s, %s, %s", node.getType(), node.getText(), node.dump()));
+    return createTypeSpec(SqlTypeName.CHAR.getName());
   }
 
+  @Override
   protected SqlNode visitString(ASTNode node, ParseContext ctx) {
-    throw new RuntimeException(String.format("%s, %s, %s", node.getType(), node.getText(), node.dump()));
+    return createTypeSpec(SqlTypeName.VARCHAR.getName());
   }
 
+  @Override
+  protected SqlNode visitBinary(ASTNode node, ParseContext ctx) {
+    return createTypeSpec(SqlTypeName.VARBINARY.getName());
+  }
+
+  @Override
   protected SqlNode visitDecimal(ASTNode node, ParseContext ctx) {
-    throw new RuntimeException(String.format("%s, %s, %s", node.getType(), node.getText(), node.dump()));
+    return createTypeSpec(SqlTypeName.DECIMAL.getName());
   }
 
+  @Override
   protected SqlNode visitDate(ASTNode node, ParseContext ctx) {
-    throw new RuntimeException(String.format("%s, %s, %s", node.getType(), node.getText(), node.dump()));
+    return createTypeSpec(SqlTypeName.DATE.getName());
   }
 
+  @Override
   protected SqlNode visitTimestamp(ASTNode node, ParseContext ctx) {
-    throw new RuntimeException(String.format("%s, %s, %s", node.getType(), node.getText(), node.dump()));
+    return createTypeSpec(SqlTypeName.TIMESTAMP.getName());
+  }
+
+  private SqlDataTypeSpec createTypeSpec(String type) {
+    return new SqlDataTypeSpec(new SqlIdentifier(type, ZERO), -1, -1, null, null, ZERO);
   }
 
   @Override
   protected SqlNode visitTableTokOrCol(ASTNode node, ParseContext ctx) {
     return visitChildren(node, ctx).get(0);
+  }
+
+  public static class Config {
+    private String catalogName = "";
+    private String defaultDBName = "";
+
+    public Config setCatalogName(String catalogName) {
+      this.catalogName = catalogName;
+      return this;
+    }
+
+    public Config setDefaultDB(String defaultDBName) {
+      this.defaultDBName = defaultDBName;
+      return this;
+    }
   }
 
   public static class ParseContext {

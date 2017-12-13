@@ -52,7 +52,7 @@ public class HiveToRelConverter {
    * @return Calcite RelNode representation of input hive sql
    */
   public RelNode convert(String sql) {
-    ParseTreeBuilder treeBuilder = new ParseTreeBuilder();
+    ParseTreeBuilder treeBuilder = new ParseTreeBuilder(relContextProvider.getParseTreeBuilderConfig());
     SqlNode sqlNode = treeBuilder.process(sql);
     RelRoot relRoot = relContextProvider.getSqlToRelConverter().convertQuery(sqlNode, true, true);
     return relRoot.rel;

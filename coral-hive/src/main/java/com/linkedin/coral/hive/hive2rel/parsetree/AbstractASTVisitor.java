@@ -172,6 +172,9 @@ public abstract class AbstractASTVisitor<R, C> {
       case HiveParser.TOK_STRING:
         return visitString(node, ctx);
 
+      case HiveParser.TOK_BINARY:
+        return visitBinary(node, ctx);
+
       case HiveParser.TOK_DOUBLE:
         return visitDouble(node, ctx);
 
@@ -441,6 +444,10 @@ public abstract class AbstractASTVisitor<R, C> {
   }
 
   protected R visitString(ASTNode node, C ctx) {
+    return visitChildren(node, ctx).get(0);
+  }
+
+  protected R visitBinary(ASTNode node, C ctx) {
     return visitChildren(node, ctx).get(0);
   }
 
