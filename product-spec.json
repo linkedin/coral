@@ -64,9 +64,12 @@
         },
         {
           "name": "hive-metastore"
+        },
+        {
+          "name": "hive-common"
         }
       ],
-      "version": "1.1.0.131"
+      "version": "1.1.0.136"
     },
     "hadoop": {
       "libraries": [

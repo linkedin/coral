@@ -1,6 +1,7 @@
 package com.linkedin.coral.hive.hive2rel;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Iterables;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.calcite.DataContext;
@@ -45,7 +46,8 @@ public class HiveTable implements ScannableTable {
     List<FieldSchema> cols = hiveTable.getSd().getCols();
     List<RelDataType> fieldTypes = new ArrayList<>(cols.size());
     List<String> fieldNames = new ArrayList<>(cols.size());
-    cols.forEach(col -> {
+    Iterable<FieldSchema> allCols = Iterables.concat(cols, hiveTable.getPartitionKeys());
+    allCols.forEach(col -> {
       TypeInfo typeInfo = TypeInfoUtils.getTypeInfoFromTypeString(col.getType());
       RelDataType relType = TypeConverter.convert(typeInfo, typeFactory);
       fieldNames.add(col.getName());

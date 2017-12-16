@@ -1,0 +1,11 @@
+apply plugin: 'li-java'
+
+dependencies {
+  compile spec.product.hive.'hive-common'
+  compile spec.product.hive.'hive-metastore'
+  compile spec.product.hive.'hive-exec'
+}
+
+artifacts {
+  archives jar, javadocJar, sourcesJar
+}
