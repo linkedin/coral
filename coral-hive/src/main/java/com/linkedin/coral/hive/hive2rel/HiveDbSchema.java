@@ -37,7 +37,17 @@ public class HiveDbSchema implements Schema {
   @Override
   public Table getTable(String name) {
     org.apache.hadoop.hive.metastore.api.Table table = msc.getTable(dbName, name);
-    return table == null ? null : new HiveTable(table);
+    if (table == null) {
+      return null;
+    }
+    org.apache.hadoop.hive.metastore.TableType tableType =
+        Enum.valueOf(org.apache.hadoop.hive.metastore.TableType.class, table.getTableType());
+    switch (tableType) {
+      case VIRTUAL_VIEW:
+        return new HiveViewTable(table, ImmutableList.of(HiveSchema.ROOT_SCHEMA, dbName));
+      default:
+        return new HiveTable(table);
+    }
   }
 
   @Override

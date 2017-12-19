@@ -3,9 +3,12 @@ package com.linkedin.coral.hive.hive2rel;
 import com.google.common.base.Preconditions;
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.calcite.DataContext;
 import org.apache.calcite.config.CalciteConnectionConfig;
+import org.apache.calcite.linq4j.Enumerable;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
+import org.apache.calcite.schema.ScannableTable;
 import org.apache.calcite.schema.Schema;
 import org.apache.calcite.schema.Statistic;
 import org.apache.calcite.schema.Statistics;
@@ -19,11 +22,14 @@ import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
 
 /**
  * Adaptor class from Hive {@link org.apache.hadoop.hive.metastore.api.Table} representation to
- * Calcite {@link org.apache.calcite.schema.Table}
+ * Calcite {@link ScannableTable}
+ *
+ * Implementing this as a ScannableTable, instead of Table, is hacky approach to make calcite
+ * correctly generate relational algebra. This will have to go away gradually.
  */
-public class HiveTable implements org.apache.calcite.schema.Table {
+public class HiveTable implements ScannableTable {
 
-  private final org.apache.hadoop.hive.metastore.api.Table hiveTable;
+  protected final org.apache.hadoop.hive.metastore.api.Table hiveTable;
 
   /**
    * Constructor to create bridge from hive table to calcite table
@@ -77,5 +83,10 @@ public class HiveTable implements org.apache.calcite.schema.Table {
   public boolean rolledUpColumnValidInsideAgg(String s, SqlCall sqlCall, SqlNode sqlNode,
       CalciteConnectionConfig calciteConnectionConfig) {
     return true;
+  }
+
+  @Override
+  public Enumerable<Object[]> scan(DataContext dataContext) {
+    throw new RuntimeException("Calcite runtime is not supported");
   }
 }

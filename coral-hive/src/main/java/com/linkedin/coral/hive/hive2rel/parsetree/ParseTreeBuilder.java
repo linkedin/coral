@@ -331,6 +331,9 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
       SqlStdOperatorTable.instance()
           .lookupOperatorOverloads(new SqlIdentifier(functionName.toUpperCase(), ZERO), null, SqlSyntax.FUNCTION,
               candidates);
+      if (candidates.size() != 1) {
+        throw new UnknownSqlFunctionException(functionName);
+      }
       Preconditions.checkState(candidates.size() == 1,
           String.format("Unable to resolve function %s, found %d functions", functionName, candidates.size()));
       operator = candidates.get(0);

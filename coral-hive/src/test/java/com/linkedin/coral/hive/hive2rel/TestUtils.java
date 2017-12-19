@@ -6,7 +6,11 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.hive.metastore.IMetaStoreClient;
+import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.ql.Driver;
+import org.apache.hadoop.hive.ql.metadata.Hive;
+import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.ParseDriver;
 import org.apache.hadoop.hive.ql.parse.ParseException;
@@ -61,6 +65,10 @@ public class TestUtils {
           .orElseThrow(() -> new RuntimeException("DB " + db + " not found"))
           .tables;
     }
+
+    public IMetaStoreClient getMetastoreClient() throws HiveException, MetaException {
+      return Hive.get(conf).getMSC();
+    }
   }
 
   public static TestHive setupDefaultHive() throws IOException {
@@ -74,11 +82,12 @@ public class TestUtils {
       driver.run("CREATE TABLE IF NOT EXISTS test.tableTwo(x int, y double)");
       driver.run("CREATE TABLE IF NOT EXISTS foo(a int, b varchar(30), c double)");
       driver.run("CREATE TABLE IF NOT EXISTS bar(x int, y double)");
+      driver.run("CREATE VIEW IF NOT EXISTS foo_view AS SELECT b as bcol, sum(c) as sum_c from foo group by b");
       driver.run(
           "CREATE TABLE IF NOT EXISTS complex(a int, b string, c array<double>, s struct<name:string, age:int>, m map<int, string>)");
       hive.databases = ImmutableList.of(
           new TestHive.DB("test", ImmutableList.of("tableOne", "tableTwo")),
-          new TestHive.DB("default", ImmutableList.of("foo", "bar", "complex"))
+          new TestHive.DB("default", ImmutableList.of("foo", "bar", "complex", "foo_view"))
       );
       return hive;
     } catch (Exception e) {
