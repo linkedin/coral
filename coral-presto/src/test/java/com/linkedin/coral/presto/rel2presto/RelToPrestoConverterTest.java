@@ -32,6 +32,26 @@ public class RelToPrestoConverterTest {
     config = TestUtils.createFrameworkConfig(TABLE_ONE, TABLE_TWO);
   }
 
+  private void testConversion(String inputSql, String expectedSql) {
+    String prestoSql = toPrestoSql(inputSql);
+    validate(prestoSql, expectedSql);
+  }
+
+  private void validate(String prestoSql, String expected) {
+    try{
+      Statement statement = prestoParser.createStatement(prestoSql, new ParsingOptions());
+      assertNotNull(statement);
+    } catch (Exception e) {
+      assertTrue(false, "Failed to parse sql: " + prestoSql);
+    }
+    assertEquals(prestoSql, expected);
+  }
+
+  private String toPrestoSql(String sql) {
+    RelToPrestoConverter converter = new RelToPrestoConverter();
+    return converter.convert(TestUtils.toRel(sql, config));
+  }
+
   @Test
   public void testSimpleSelect() {
     String sql = String.format("SELECT scol, sum(icol) as s from %s where dcol > 3.0 AND icol < 5 group by scol having sum(icol) > 10" +
@@ -157,7 +177,6 @@ public class RelToPrestoConverterTest {
   // Sub query types
   @Test
   public void testInClause() {
-
       String sql = "SELECT tcol, scol\n" + "FROM " + tableOne + " WHERE icol IN ( " + " SELECT ifield from " + tableTwo
           + "   WHERE ifield < 10)";
 
@@ -283,23 +302,66 @@ public class RelToPrestoConverterTest {
     testConversion(sql, expectedSql);
   }
 
-  private void testConversion(String inputSql, String expectedSql) {
-    String prestoSql = toPrestoSql(inputSql);
-    validate(prestoSql, expectedSql);
+  @Test
+  public void testRand() throws Exception {
+    String sql1 = "SELECT icol, rand() "
+        + "FROM " + TABLE_ONE.getTableName();
+    String expectedSql1 = formatSql("SELECT icol AS \"ICOL\", \"RANDOM\"()" +
+        " from " + tableOne);
+    testConversion(sql1, expectedSql1);
+
+    String sql2 = "SELECT icol, rand(1) "
+        + "FROM " + TABLE_ONE.getTableName();
+    String expectedSql2 = formatSql("SELECT icol AS \"ICOL\", \"RANDOM\"()" +
+        " from " + tableOne);
+    testConversion(sql2, expectedSql2);
   }
 
-  private void validate(String prestoSql, String expected) {
-    try{
-      Statement statement = prestoParser.createStatement(prestoSql, new ParsingOptions());
-      assertNotNull(statement);
-    } catch (Exception e) {
-      assertTrue(false, "Failed to parse sql: " + prestoSql);
-    }
-    assertEquals(prestoSql, expected);
+  @Test
+  public void testRandInteger() throws Exception {
+    String sql1 = "SELECT rand_integer(2, icol) "
+        + "FROM " + TABLE_ONE.getTableName();
+    String expectedSql1 = formatSql("SELECT \"RANDOM\"(icol)" +
+        " from " + tableOne);
+    testConversion(sql1, expectedSql1);
+
+    String sql2 = "SELECT rand_integer(icol) "
+        + "FROM " + TABLE_ONE.getTableName();
+    String expectedSql2 = formatSql("SELECT \"RANDOM\"(icol)" +
+        " from " + tableOne);
+    testConversion(sql2, expectedSql2);
   }
 
-  private String toPrestoSql(String sql) {
-    RelToPrestoConverter converter = new RelToPrestoConverter();
-    return converter.convert(TestUtils.toRel(sql, config));
+  @Test
+  public void testTruncate() throws Exception {
+    String sql1 = "SELECT truncate(dcol) "
+        + "FROM " + TABLE_ONE.getTableName();
+    String expectedSql1 = formatSql("SELECT TRUNCATE(dcol)" +
+        " from " + tableOne);
+    testConversion(sql1, expectedSql1);
+
+    String sql2 = "SELECT truncate(dcol, 2) "
+        + "FROM " + TABLE_ONE.getTableName();
+    String expectedSql2 = formatSql("SELECT \"TRUNCATE\"(dcol * POWER(10, 2)) / POWER(10, 2)" +
+        " from " + tableOne);
+    testConversion(sql2, expectedSql2);
+  }
+
+  @Test
+  public void testSubString2() throws Exception {
+    String sql = "SELECT SUBSTRING(scol FROM 1) "
+        + "FROM " + TABLE_ONE.getTableName();
+    String expectedSql = formatSql("SELECT \"SUBSTR\"(scol, 1)" +
+        " from " + tableOne);
+    testConversion(sql, expectedSql);
+  }
+
+  @Test
+  public void testSubString3() throws Exception {
+    String sql = "SELECT SUBSTRING(scol FROM icol FOR 3) "
+        + "FROM " + TABLE_ONE.getTableName();
+    String expectedSql = formatSql("SELECT \"SUBSTR\"(scol, icol, 3)" +
+        " from " + tableOne);
+    testConversion(sql, expectedSql);
   }
 }
