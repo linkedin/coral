@@ -8,6 +8,22 @@ import com.linkedin.coral.converters.HiveToPrestoConverter;
 import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
 import com.linkedin.coral.hive.hive2rel.parsetree.UnknownSqlFunctionException;
 import com.linkedin.coral.tests.MetastoreProvider;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.function.BinaryOperator;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import javax.naming.ConfigurationException;
 import org.apache.hadoop.hive.metastore.IMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.Database;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
@@ -15,20 +31,7 @@ import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.thrift.TException;
 
-import javax.naming.ConfigurationException;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.*;
 
 
 /**
@@ -52,10 +55,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * See {@link MetastoreProvider} for the required configuration properties
  */
 @SuppressWarnings("unused")
-public class ViewReader {
+public class ViewTranslationTest {
+
+  public static final Pattern VIEW_NAME_PATTERN = Pattern.compile("([a-zA-Z0-9_]*)_(\\d+)_(\\d+)_(\\d+)$");
 
   public static void main(String[] args) throws IOException, MetaException, ConfigurationException {
-    InputStream hiveConfStream = ViewReader.class.getClassLoader().getResourceAsStream("hive.properties");
+    InputStream hiveConfStream = ViewTranslationTest.class.getClassLoader().getResourceAsStream("hive.properties");
     Properties props = new Properties();
     props.load(hiveConfStream);
 
@@ -63,6 +68,7 @@ public class ViewReader {
     HiveMetastoreClient msc = new HiveMetaStoreClientAdapter(metastoreClient);
     HiveToPrestoConverter converter = HiveToPrestoConverter.create(msc);
     OutputStream ostr = System.out;
+    // translateTable("l2m_mp_versioned", "message_received_event_zephyr_0_1_8", msc, converter);
     translateAllViews(msc, converter, ostr);
   }
 
@@ -89,7 +95,8 @@ public class ViewReader {
 
     @Override
     public String toString() {
-      return String.format("datasets = %d, views = %d, failures = %d, successes = %d, daliviews = %d, daliFailures = %d, sqlFnErrors = %d",
+      return String.format(
+          "datasets = %d, views = %d, failures = %d, successes = %d, daliviews = %d, daliFailures = %d, sqlFnErrors = %d",
           datasets, views, failures, (views - failures), daliviews, daliviewfailures, sqlFnErrors);
     }
   }
@@ -101,39 +108,51 @@ public class ViewReader {
     Stats stats = new Stats();
     List<String> failures = new ArrayList<>();
     Map<String, Integer> errorCategories = new HashMap<>();
+    Map<String, Integer> sqlFunctions = new HashMap<>();
+    Set<String> translated = new HashSet<>();
 
     for (String db : allDatabases) {
       List<String> tables = metaStoreClient.getAllTables(db);
+      // dali datasets have names ending with mp or mp_versioned
+      // We focus only on dali datasets for the time-being because
+      // processing all datasets is slow process
+      if (!db.endsWith("_mp") && !db.endsWith("_mp_versioned")) {
+        continue;
+      }
+
+      Set<String> maxVersionTables = latestViewVersions(tables);
       ++stats.datasets;
-      for (String tableName : tables) {
+      boolean isDaliView = false;
+      Table table = null;
+      for (String tableName : maxVersionTables) {
         try {
-          Table table = metaStoreClient.getTable(db, tableName);
+          table = metaStoreClient.getTable(db, tableName);
           if (!table.getTableType().equalsIgnoreCase("virtual_view")) {
             continue;
           }
           ++stats.views;
-          boolean isDaliView = table.getOwner().equalsIgnoreCase("daliview");
+          isDaliView = table.getOwner().equalsIgnoreCase("daliview");
           stats.daliviews += isDaliView ? 1 : 0;
-          try {
-            convertToPrestoAndValidate(table, converter);
-          } catch (Exception e) {
-            ++stats.failures;
-            failures.add(db + "." + tableName);
-            stats.daliviewfailures += isDaliView ? 1 : 0;
-            if (e instanceof UnknownSqlFunctionException) {
-              ++stats.sqlFnErrors;
-            }
-            errorCategories.merge(e.getClass().getName(), 1, (i, j) -> i + j);
-          } catch (Throwable t) {
-            writer.println(String.format("Unexpected error translating %s.%s, text: %s", db, tableName, table.getViewOriginalText()));
-            ++stats.failures;
-            failures.add(db + "." + tableName);
-          }
-        } catch (Throwable t) {
-          writer.println(String.format("Unexpected error: %s for %s.%s", t.getMessage(), db, tableName));
+          convertToPrestoAndValidate(table, converter);
+
+        } catch (Exception e) {
+          ++stats.failures;
           failures.add(db + "." + tableName);
-          t.printStackTrace();
+          stats.daliviewfailures += isDaliView ? 1 : 0;
+          if (e instanceof UnknownSqlFunctionException) {
+            ++stats.sqlFnErrors;
+            sqlFunctions.merge(((UnknownSqlFunctionException) e).getFunctionName(), 1, (i, j) -> i + j);
+          }
+          errorCategories.merge(e.getClass().getName(), 1, (i, j) -> i + j);
+        } catch (Throwable t) {
+          writer.println(String.format("Unexpected error translating %s.%s, text: %s", db, tableName,
+              (table == null ? "null" : table.getViewOriginalText()))
+          );
+          ++stats.failures;
+          failures.add(db + "." + tableName);
         }
+        // set this to not carry over state for next iteration or when exiting
+        table = null;
       }
 
       if (stats.datasets % 10 == 0) {
@@ -142,10 +161,133 @@ public class ViewReader {
       }
     }
 
-    writer.println(stats);
+    writer.println("Failed datasets");
     failures.forEach(writer::println);
+    writer.println("Error categories");
     errorCategories.forEach((x, y) -> writer.println(x + " : " + y));
+    writer.println("Unknown functions");
+    sqlFunctions.entrySet().stream()
+        .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
+        .forEach(e -> writer.println(String.format("%s:%d", e.getKey(), e.getValue())));
+    writer.println(stats);
     writer.flush();
+  }
+
+  private static class ViewName {
+    final String basename;
+    final Version version;
+    static final Version VERSION_ZERO = new Version(0, 0, 0);
+
+    static ViewName create(String fullViewName) {
+      Matcher m = VIEW_NAME_PATTERN.matcher(fullViewName);
+      if (!m.matches()) {
+        return new ViewName(fullViewName, new Version(0, 0, 0));
+      }
+
+      return new ViewName(m.group(1),
+          new Version(Integer.parseInt(m.group(2)), Integer.parseInt(m.group(3)), Integer.parseInt(m.group(4))));
+    }
+
+    ViewName(String name, Version v) {
+      this.basename = name;
+      this.version = v;
+    }
+
+    String getBasename() {
+      return basename;
+    }
+
+    Version getVersion() {
+      return version;
+    }
+
+    boolean isSameView(ViewName rhs) {
+      return basename.equals(rhs.basename);
+    }
+
+    @Override
+    public String toString() {
+      return version.equals(VERSION_ZERO) ? basename : String.join("_", basename, version.toString());
+    }
+  }
+
+  static class Version implements Comparable<Version> {
+    int major;
+    int minor;
+    int patch;
+
+    Version(int major, int minor, int patch) {
+      this.major = major;
+      this.minor = minor;
+      this.patch = patch;
+    }
+
+    @Override
+    public int compareTo(Version rhs) {
+      if (major > rhs.major) {
+        return 1;
+      }
+      if (major < rhs.major) {
+        return -1;
+      }
+      // major = rhs.major
+      if (minor > rhs.minor) {
+        return 1;
+      }
+      if (minor < rhs.minor) {
+        return -1;
+      }
+      return Integer.compare(patch, rhs.patch);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (!(o instanceof Version)) {
+        return false;
+      }
+
+      Version version = (Version) o;
+
+      if (major != version.major) {
+        return false;
+      }
+      if (minor != version.minor) {
+        return false;
+      }
+      return patch == version.patch;
+    }
+
+    @Override
+    public int hashCode() {
+      int result = major;
+      result = 31 * result + minor;
+      result = 31 * result + patch;
+      return result;
+    }
+
+    @Override
+    public String toString() {
+      return String.join("_", String.valueOf(major), String.valueOf(minor), String.valueOf(patch));
+    }
+  }
+
+  public static Set<String> latestViewVersions(List<String> allViews) {
+    allViews.sort(String::compareTo);
+    ViewName selected = new ViewName("", new Version(0, 0, 0));
+    //Map<String, List<ViewName>> viewGroups =
+    Map<String, Version> maxViews = allViews.stream()
+        .map(ViewName::create)
+        .collect(Collectors.groupingBy(ViewName::getBasename,
+            Collectors.reducing(new Version(0, 0, 0), ViewName::getVersion, BinaryOperator.maxBy(Version::compareTo))));
+
+    Set<String> views = maxViews.entrySet()
+        .stream()
+        .map(k -> new ViewName(k.getKey(), k.getValue()).toString())
+        .collect(Collectors.toSet());
+    return views;
   }
 
   public static void translateTable(String db, String tableName, HiveMetastoreClient msc,
