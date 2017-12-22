@@ -50,7 +50,6 @@
     "calcite-avatica": "org.apache.calcite:calcite-avatica:1.6.0",
     "avatica-core": "org.apache.calcite.avatica:avatica-core:1.10.0",
     "protobuf-java": "com.google.protobuf:protobuf-java:3.3.0",
-    "gson": "com.google.code.gson:gson:2.8.1",
     "presto-parser": "com.facebook.presto:presto-parser:0.157.1.30"
   },
   "product": {

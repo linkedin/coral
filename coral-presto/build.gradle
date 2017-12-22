@@ -7,8 +7,6 @@ dependencies {
     builtBy project(':coral-calcite').tasks.getByName('shadowJar')
   }
 
-  compile spec.external.gson
-
   testCompile spec.external.'presto-parser'
 }
 
