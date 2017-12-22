@@ -322,6 +322,17 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
       }
       return SqlStdOperatorTable.CASE.createCall(ZERO, sqlNodes.get(0), new SqlNodeList(whenNodes, ZERO),
           new SqlNodeList(thenNodes, ZERO), sqlNodes.get(sqlNodes.size() - 1));
+    } else if (functionName.equalsIgnoreCase("when")) {
+      List<SqlNode> sqlNodes = visitChildren(operands, ctx);
+      // convert these to SqlNode, SqlNodeList (when), SqlNodeList(then), SqlNode(else)
+      List<SqlNode> whenNodes = new ArrayList<>();
+      List<SqlNode> thenNodes = new ArrayList<>();
+      for (int i = 0; i < sqlNodes.size() - 1; i += 2) {
+        whenNodes.add(sqlNodes.get(i));
+        thenNodes.add(sqlNodes.get(i + 1));
+      }
+      return SqlStdOperatorTable.CASE.createCall(ZERO, null, new SqlNodeList(whenNodes, ZERO),
+          new SqlNodeList(thenNodes, ZERO), sqlNodes.get(sqlNodes.size() - 1));
     }
 
     // assume function syntax here..all functions with non-function syntax need to be handled separately
