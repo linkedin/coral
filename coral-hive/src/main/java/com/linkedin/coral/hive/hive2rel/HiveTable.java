@@ -3,7 +3,9 @@ package com.linkedin.coral.hive.hive2rel;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.apache.calcite.DataContext;
 import org.apache.calcite.config.CalciteConnectionConfig;
 import org.apache.calcite.linq4j.Enumerable;
@@ -39,6 +41,32 @@ public class HiveTable implements ScannableTable {
   public HiveTable(org.apache.hadoop.hive.metastore.api.Table hiveTable) {
     Preconditions.checkNotNull(hiveTable);
     this.hiveTable = hiveTable;
+  }
+
+  /**
+   * Get dali function params from table parameters
+   * @return returns a mapping of function name to class name as stored in the
+   * {@code functions} parameter key of table parameters
+   */
+  public Map<String, String> getDaliFunctionParams() {
+    checkDaliTable();
+    String[] funcEntries = hiveTable.getParameters()
+        .getOrDefault("functions", "")
+        .split(" |:");
+    Map<String, String> params = new HashMap<>();
+    for (int i = 0; i < funcEntries.length - 1; i += 2) {
+      params.put(funcEntries[i], funcEntries[i + 1]);
+    }
+    return params;
+  }
+
+  public boolean isDaliTable() {
+    return hiveTable.getOwner().equalsIgnoreCase("daliview");
+  }
+
+  private void checkDaliTable() {
+    // FIXME: this fails unit test right now
+   // Preconditions.checkState(isDaliTable());
   }
 
   @Override

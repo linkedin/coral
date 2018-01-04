@@ -6,7 +6,7 @@ import com.facebook.presto.sql.tree.Statement;
 import com.google.common.collect.ImmutableList;
 import com.linkedin.coral.converters.HiveToPrestoConverter;
 import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
-import com.linkedin.coral.hive.hive2rel.parsetree.UnknownSqlFunctionException;
+import com.linkedin.coral.hive.hive2rel.functions.UnknownSqlFunctionException;
 import com.linkedin.coral.tests.MetastoreProvider;
 import java.io.IOException;
 import java.io.InputStream;

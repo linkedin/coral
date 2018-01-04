@@ -3,6 +3,9 @@ package com.linkedin.coral.hive.hive2rel.parsetree;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.linkedin.coral.hive.hive2rel.functions.HiveFunction;
+import com.linkedin.coral.hive.hive2rel.functions.HiveFunctionResolver;
+import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 import com.linkedin.coral.hive.hive2rel.parsetree.parser.ASTNode;
 import com.linkedin.coral.hive.hive2rel.parsetree.parser.HiveParser;
 import com.linkedin.coral.hive.hive2rel.parsetree.parser.Node;
@@ -21,7 +24,6 @@ import org.apache.calcite.sql.SqlNodeList;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.SqlPrefixOperator;
 import org.apache.calcite.sql.SqlSelect;
-import org.apache.calcite.sql.SqlSyntax;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.type.SqlTypeName;
 
@@ -50,11 +52,13 @@ import static org.apache.calcite.sql.parser.SqlParserPos.*;
 public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuilder.ParseContext> {
 
   private final Config config;
+  private final HiveFunctionResolver functionResolver;
 
   public ParseTreeBuilder(Config config) {
     Preconditions.checkState(config.catalogName.isEmpty() || !config.defaultDBName.isEmpty(),
         "Default DB is required if catalog name is not empty");
     this.config = config;
+    this.functionResolver = new HiveFunctionResolver(new StaticHiveFunctionRegistry());
   }
 
   public ParseTreeBuilder() {
@@ -118,6 +122,11 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
   @Override
   protected SqlNode visitFalse(ASTNode node, ParseContext ctx) {
     return SqlLiteral.createBoolean(false, ZERO);
+  }
+
+  @Override
+  protected SqlNode visitTrue(ASTNode node, ParseContext ctx) {
+    return SqlLiteral.createBoolean(true, ZERO);
   }
 
   @Override
@@ -276,82 +285,11 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     ArrayList<Node> children = node.getChildren();
     checkState(children.size() > 0);
     ASTNode functionNode = (ASTNode) children.get(0);
-
-    SqlOperator operator = null;
-    List<Node> operands = children.subList(1, children.size());
     String functionName = functionNode.getText();
-
-    if (functionName.equalsIgnoreCase("sum")) {
-      operator = SqlStdOperatorTable.SUM;
-    } else if (functionName.equalsIgnoreCase("count")) {
-      operator = SqlStdOperatorTable.COUNT;
-    } else if (functionName.equalsIgnoreCase("max")) {
-      operator = SqlStdOperatorTable.MAX;
-    } else if (functionName.equalsIgnoreCase("min")) {
-      operator = SqlStdOperatorTable.MIN;
-    } else if (functionName.equalsIgnoreCase("avg")) {
-      operator = SqlStdOperatorTable.AVG;
-    } else if (functionName.equalsIgnoreCase("in")) {
-      operator = SqlStdOperatorTable.IN;
-    }
-    if (functionNode.getType() == HiveParser.TOK_ISNULL) {
-      operator = SqlStdOperatorTable.IS_NULL;
-    } else if (functionNode.getType() == HiveParser.TOK_ISNOTNULL) {
-      operator = SqlStdOperatorTable.IS_NOT_NULL;
-    } else if (functionName.equalsIgnoreCase("between")) {
-      if (((ASTNode) children.get(1)).getType() == HiveParser.KW_TRUE) {
-        operator = SqlStdOperatorTable.NOT_BETWEEN;
-      } else {
-        operator = SqlStdOperatorTable.BETWEEN;
-      }
-      operands = children.subList(2, children.size());
-      List<SqlNode> sqlNodes = visitChildren(operands, ctx);
-      return operator.createCall(ZERO, sqlNodes);
-    } else if (isCastFunction(functionNode)) {
-      List<SqlNode> sqlNodes = visitChildren(children, ctx);
-      Preconditions.checkState(sqlNodes.size() == 2);
-      return SqlStdOperatorTable.CAST.createCall(ZERO, ImmutableList.of(sqlNodes.get(1), sqlNodes.get(0)));
-    } else if (functionName.equalsIgnoreCase("case")) {
-      List<SqlNode> sqlNodes = visitChildren(operands, ctx);
-      // convert these to SqlNode, SqlNodeList (when), SqlNodeList(then), SqlNode(else)
-      List<SqlNode> whenNodes = new ArrayList<>();
-      List<SqlNode> thenNodes = new ArrayList<>();
-      for (int i = 1; i < sqlNodes.size() - 1; i += 2) {
-        whenNodes.add(sqlNodes.get(i));
-        thenNodes.add(sqlNodes.get(i + 1));
-      }
-      return SqlStdOperatorTable.CASE.createCall(ZERO, sqlNodes.get(0), new SqlNodeList(whenNodes, ZERO),
-          new SqlNodeList(thenNodes, ZERO), sqlNodes.get(sqlNodes.size() - 1));
-    } else if (functionName.equalsIgnoreCase("when")) {
-      List<SqlNode> sqlNodes = visitChildren(operands, ctx);
-      // convert these to SqlNode, SqlNodeList (when), SqlNodeList(then), SqlNode(else)
-      List<SqlNode> whenNodes = new ArrayList<>();
-      List<SqlNode> thenNodes = new ArrayList<>();
-      for (int i = 0; i < sqlNodes.size() - 1; i += 2) {
-        whenNodes.add(sqlNodes.get(i));
-        thenNodes.add(sqlNodes.get(i + 1));
-      }
-      return SqlStdOperatorTable.CASE.createCall(ZERO, null, new SqlNodeList(whenNodes, ZERO),
-          new SqlNodeList(thenNodes, ZERO), sqlNodes.get(sqlNodes.size() - 1));
-    }
-
-    // assume function syntax here..all functions with non-function syntax need to be handled separately
-    // TODO: replace this with statically defined map
-    if (operator == null) {
-      List<SqlOperator> candidates = new ArrayList<>();
-      SqlStdOperatorTable.instance()
-          .lookupOperatorOverloads(new SqlIdentifier(functionName.toUpperCase(), ZERO), null, SqlSyntax.FUNCTION,
-              candidates);
-      if (candidates.size() != 1) {
-        throw new UnknownSqlFunctionException(functionName);
-      }
-      Preconditions.checkState(candidates.size() == 1,
-          String.format("Unable to resolve function %s, found %d functions", functionName, candidates.size()));
-      operator = candidates.get(0);
-    }
-
-    List<SqlNode> sqlNodes = visitChildren(operands, ctx);
-    return operator.createCall(ZERO, sqlNodes.toArray(new SqlNode[0]));
+    // List<Node> operands = children.subList(1, children.size());
+    List<SqlNode> sqlOperands = visitChildren(children, ctx);
+    HiveFunction hiveFunction = functionResolver.tryResolve(functionName, ((SqlIdentifier) ctx.from));
+    return hiveFunction.createCall(sqlOperands.get(0), sqlOperands.subList(1, sqlOperands.size()));
   }
 
   private boolean isCastFunction(ASTNode node) {
@@ -574,6 +512,16 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
   @Override
   protected SqlNode visitTimestamp(ASTNode node, ParseContext ctx) {
     return createTypeSpec(SqlTypeName.TIMESTAMP.getName());
+  }
+
+  @Override
+  protected SqlNode visitIsNull(ASTNode node, ParseContext ctx) {
+    return SqlLiteral.createCharString("is null", ZERO);
+  }
+
+  @Override
+  protected SqlNode visitIsNotNull(ASTNode node, ParseContext ctx) {
+    return SqlLiteral.createCharString("is not null", ZERO);
   }
 
   private SqlDataTypeSpec createTypeSpec(String type) {

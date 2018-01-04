@@ -3,11 +3,14 @@ package com.linkedin.coral.hive.hive2rel;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.IMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.MetaException;
+import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.hadoop.hive.ql.Driver;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
@@ -89,10 +92,41 @@ public class TestUtils {
           new TestHive.DB("test", ImmutableList.of("tableOne", "tableTwo")),
           new TestHive.DB("default", ImmutableList.of("foo", "bar", "complex", "foo_view"))
       );
+
+      // add some Dali functions to table properties
+      IMetaStoreClient msc = hive.getMetastoreClient();
+      Table fooViewTable = msc.getTable("default", "foo_view");
+      setOrUpdateDaliFunction(fooViewTable, "IsTestMemberId", "com.linkedin.dali.udf.istestmemberid.hive.IsTestMemberId");
+      msc.alter_table("default", "foo_view", fooViewTable);
+
       return hive;
     } catch (Exception e) {
       throw new RuntimeException("Failed to setup database", e);
     }
+  }
+
+  // package private
+
+  /**
+   * Caller must explicitly make changes persistent by calling alter_table method on
+   * metastore client to make changes persistent.
+   */
+  static void setOrUpdateDaliFunction(Table table, String functionName, String functionClass) {
+    table.setOwner("daliview");
+    Map<String, String> parameters = table.getParameters();
+    String[] split = table.getParameters().getOrDefault("functions", new String())
+        .split(" |:");
+    Map<String, String> functionMap = new HashMap<>();
+    for (int i = 0; i < split.length - 1; i += 2) {
+      functionMap.put(split[i], split[i+1]);
+    }
+    functionMap.put(functionName, functionClass);
+    String serializedFunctions = functionMap.entrySet().stream()
+        .map(x -> x.getKey() + ":" + x.getValue())
+        .reduce((x, y) -> x + " " + y)
+        .get();
+    parameters.put("functions", serializedFunctions);
+    table.setParameters(parameters);
   }
 
   public static HiveConf loadResourceHiveConf() {

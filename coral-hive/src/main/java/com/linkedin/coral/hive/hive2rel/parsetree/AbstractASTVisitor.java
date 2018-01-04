@@ -7,6 +7,7 @@ import com.linkedin.coral.hive.hive2rel.parsetree.parser.Node;
 import java.util.List;
 import java.util.stream.Collectors;
 
+
 /**
  * Abstract visitor (actually, a walker) to hive AST.
  * This class implements a walker that calls specific named methods
@@ -145,6 +146,9 @@ public abstract class AbstractASTVisitor<R, C> {
       case HiveParser.LSQUARE:
         return visitLParen(node, ctx);
 
+      case HiveParser.KW_TRUE:
+        return visitTrue(node, ctx);
+
       case HiveParser.KW_FALSE:
         return visitFalse(node, ctx);
 
@@ -159,6 +163,12 @@ public abstract class AbstractASTVisitor<R, C> {
 
       case HiveParser.EOF:
         return null;
+
+      case HiveParser.TOK_ISNOTNULL:
+      case HiveParser.TOK_ISNULL:
+      case HiveParser.KW_CASE:
+      case HiveParser.KW_CAST:
+      case HiveParser.KW_WHEN:
       case HiveParser.KW_IN:
       case HiveParser.KW_EXISTS:
         return visitStringLiteral(node, ctx);
@@ -284,6 +294,10 @@ public abstract class AbstractASTVisitor<R, C> {
   }
 
   protected R visitFalse(ASTNode node, C ctx) {
+    return visitChildren(node, ctx).get(0);
+  }
+
+  protected R visitTrue(ASTNode node, C ctx) {
     return visitChildren(node, ctx).get(0);
   }
 
@@ -470,4 +484,13 @@ public abstract class AbstractASTVisitor<R, C> {
   protected R visitInsert(ASTNode node, C ctx) {
     return visitChildren(node, ctx).get(0);
   }
+
+  protected R visitIsNull(ASTNode node, C ctx) {
+    return visitChildren(node, ctx).get(0);
+  }
+
+  protected R visitIsNotNull(ASTNode node, C ctx) {
+    return visitChildren(node, ctx).get(0);
+  }
+
 }

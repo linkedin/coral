@@ -1,4 +1,4 @@
-package com.linkedin.coral.hive.hive2rel.parsetree;
+package com.linkedin.coral.hive.hive2rel.functions;
 
 /**
  * Exception indicating failure to resolve user-defined or builtin

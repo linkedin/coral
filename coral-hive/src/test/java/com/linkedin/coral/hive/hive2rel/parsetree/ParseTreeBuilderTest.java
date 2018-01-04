@@ -34,6 +34,11 @@ public class ParseTreeBuilderTest {
   }
 
   @Test
+  public void testParser() throws SqlParseException {
+    convertAndValidate("SELECT cast(a as double) from foo");
+  }
+
+  @Test
   public void testBasicSql() throws SqlParseException {
     String[] sql = {
         "SELECT a, -c, a+c, (c>10), (c > 10 AND a < 25) from test.tableOne where c > 10 AND a < 15 OR b = 'abc'",
