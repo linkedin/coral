@@ -171,6 +171,7 @@ public abstract class AbstractASTVisitor<R, C> {
       case HiveParser.KW_WHEN:
       case HiveParser.KW_IN:
       case HiveParser.KW_EXISTS:
+      case HiveParser.KW_IF:
         return visitStringLiteral(node, ctx);
 
       case HiveParser.TOK_BOOLEAN:
