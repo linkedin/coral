@@ -33,7 +33,6 @@ import org.apache.calcite.tools.RelBuilder;
  * simplifies creation of objects, required by Calcite, easy. These objects
  * are created only once and shared across each call to corresponding getter.
  */
-// TODO: Replace this with Google injection framework
 public class RelContextProvider {
 
   private final FrameworkConfig config;

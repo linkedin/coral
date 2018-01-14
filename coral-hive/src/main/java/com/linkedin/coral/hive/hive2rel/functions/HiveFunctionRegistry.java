@@ -12,9 +12,8 @@ public interface HiveFunctionRegistry {
    * function name is not found
    *
    * @param functionName function name to match
-   * @param isCaseSensitive whether to perform case-sensitive match for function name
    * @return collection of HiveFunctions with given function name
    * or empty list if there is no match
    */
-  Collection<HiveFunction> lookup(String functionName, boolean isCaseSensitive);
+  Collection<HiveFunction> lookup(String functionName);
 }

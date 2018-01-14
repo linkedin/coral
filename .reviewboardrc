@@ -1,4 +1,4 @@
 REPOSITORY = "coral"
-TARGET_PEOPLE='atumbde,khtran,wmoustaf,rratti'
+TARGET_PEOPLE='atumbde,khtran,wmoustafa,rratti'
 GUESS_FIELDS='yes'
 TRACKING_BRANCH='origin/master'

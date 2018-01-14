@@ -33,8 +33,7 @@ public class DaliOperatorTable implements SqlOperatorTable {
 
   /**
    * Resolves dali function names to corresponding Calcite UDF. HiveFunctionResolver ensures that
-   * {@code sqlIdentifier} parameter to this method has db, table and function name. All function registry
-   * lookups performed by this class are case-sensitive.
+   * {@code sqlIdentifier} parameter to this method has db, table and function name.
    *
    * There are, however, phases during analysis when Calcite calls this method to resolve UDFs including
    * already resolved UDFs. In that case, sqlIdentifier is a single function name. All SqlUnresolvedUDFs are
@@ -45,7 +44,7 @@ public class DaliOperatorTable implements SqlOperatorTable {
       SqlSyntax sqlSyntax, List<SqlOperator> list) {
     com.linkedin.coral.com.google.common.collect.ImmutableList<String> names = sqlIdentifier.names;
     if (names.size() == 1) {
-      funcResolver.resolve(names.get(0), true).stream()
+      funcResolver.resolve(names.get(0)).stream()
           .map(HiveFunction::getSqlOperator)
           .collect(Collectors.toCollection(() -> list));
       return;
@@ -81,7 +80,7 @@ public class DaliOperatorTable implements SqlOperatorTable {
     if (funcClassName == null) {
       return;
     }
-    HiveFunction hiveFunction = funcResolver.tryResolve(funcClassName, true,
+    HiveFunction hiveFunction = funcResolver.tryResolve(funcClassName,
         new SqlIdentifier(ImmutableList.of(dbName, tableName), SqlParserPos.ZERO));
     if (hiveFunction != null
         && !(hiveFunction.getSqlOperator() instanceof SqlUnresolvedFunction)) {

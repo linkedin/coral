@@ -68,7 +68,7 @@ public class ViewTranslationTest {
     HiveMetastoreClient msc = new HiveMetaStoreClientAdapter(metastoreClient);
     HiveToPrestoConverter converter = HiveToPrestoConverter.create(msc);
     OutputStream ostr = System.out;
-    //translateTable("access_log_mp_versioned", "datavault_resource_access_event_base_0_3_1", msc, converter);
+    // translateTable("l2m_mp_versioned", "message_received_event_zephyr_0_1_8", msc, converter);
     translateAllViews(msc, converter, ostr);
   }
 
