@@ -1,5 +1,6 @@
 package com.linkedin.coral.hive.hive2rel;
 
+import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import java.util.List;
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.plan.RelOptUtil;
@@ -29,7 +30,8 @@ public class HiveViewTable extends HiveTable implements TranslatableTable {
   @Override
   public RelNode toRel(RelOptTable.ToRelContext relContext, RelOptTable relOptTable) {
     try {
-      RelRoot root = relContext.expandView(relOptTable.getRowType(), hiveTable.getViewExpandedText(), schemaPath, null);
+      RelRoot root = relContext.expandView(relOptTable.getRowType(), hiveTable.getViewExpandedText(), schemaPath,
+          ImmutableList.of(hiveTable.getTableName()));
       root = root.withRel(RelOptUtil.createCastRel(root.rel, relOptTable.getRowType(), true));
       return root.rel;
     } catch (Exception e) {

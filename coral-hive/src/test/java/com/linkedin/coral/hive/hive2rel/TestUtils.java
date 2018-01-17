@@ -17,6 +17,7 @@ import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.ParseDriver;
 import org.apache.hadoop.hive.ql.parse.ParseException;
+import org.apache.hadoop.hive.ql.processors.CommandProcessorResponse;
 import org.apache.hadoop.hive.ql.session.SessionState;
 
 import static com.google.common.base.Preconditions.*;
@@ -88,8 +89,13 @@ public class TestUtils {
       driver.run("CREATE VIEW IF NOT EXISTS foo_view AS SELECT b as bcol, sum(c) as sum_c from foo group by b");
       driver.run(
           "CREATE TABLE IF NOT EXISTS complex(a int, b string, c array<double>, s struct<name:string, age:int>, m map<int, string>)");
+      CommandProcessorResponse response = driver.run("create function test_tableOneView_LessThanHundred as 'com.linkedin.coral.hive.hive2rel.CoralTestUDF'");
+      response = driver.run("CREATE VIEW IF NOT EXISTS test.tableOneView as SELECT test_tableOneView_LessThanHundred(a) from test.tableOne");
+      if (response.getResponseCode() != 0) {
+        throw new RuntimeException("Failed to setup view");
+      }
       hive.databases = ImmutableList.of(
-          new TestHive.DB("test", ImmutableList.of("tableOne", "tableTwo")),
+          new TestHive.DB("test", ImmutableList.of("tableOne", "tableTwo", "tableOneView")),
           new TestHive.DB("default", ImmutableList.of("foo", "bar", "complex", "foo_view"))
       );
 
@@ -98,6 +104,9 @@ public class TestUtils {
       Table fooViewTable = msc.getTable("default", "foo_view");
       setOrUpdateDaliFunction(fooViewTable, "IsTestMemberId", "com.linkedin.dali.udf.istestmemberid.hive.IsTestMemberId");
       msc.alter_table("default", "foo_view", fooViewTable);
+      Table tableOneView = msc.getTable("test", "tableOneView");
+      setOrUpdateDaliFunction(tableOneView, "LessThanHundred", "com.linkedin.coral.hive.hive2rel.CoralTestUDF");
+      msc.alter_table("test", "tableOneView", tableOneView);
 
       return hive;
     } catch (Exception e) {
@@ -106,7 +115,6 @@ public class TestUtils {
   }
 
   // package private
-
   /**
    * Caller must explicitly make changes persistent by calling alter_table method on
    * metastore client to make changes persistent.

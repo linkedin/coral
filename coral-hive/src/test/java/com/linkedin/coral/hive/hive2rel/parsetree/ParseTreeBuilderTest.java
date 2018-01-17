@@ -1,6 +1,8 @@
 package com.linkedin.coral.hive.hive2rel.parsetree;
 
 import com.google.common.collect.ImmutableList;
+import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
+import com.linkedin.coral.hive.hive2rel.HiveMscAdapter;
 import java.io.IOException;
 import org.apache.calcite.avatica.util.Casing;
 import org.apache.calcite.sql.SqlIdentifier;
@@ -12,10 +14,12 @@ import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.parser.SqlParser;
 import org.apache.calcite.util.Litmus;
+import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import static com.linkedin.coral.hive.hive2rel.TestUtils.*;
 import static org.apache.calcite.sql.parser.SqlParserPos.*;
 import static org.testng.Assert.*;
 
@@ -23,9 +27,13 @@ import static org.testng.Assert.*;
 public class ParseTreeBuilderTest {
 
   private static SqlParser.Config parserConfig;
+  private static TestHive hive;
+  private static HiveMetastoreClient msc;
 
   @BeforeClass
-  public static void beforeClass() throws HiveException, IOException {
+  public static void beforeClass() throws HiveException, IOException, MetaException {
+    hive = setupDefaultHive();
+    msc = new HiveMscAdapter(hive.getMetastoreClient());
     parserConfig = SqlParser.configBuilder()
         .setCaseSensitive(true)
         .setUnquotedCasing(Casing.UNCHANGED)
@@ -145,7 +153,7 @@ public class ParseTreeBuilderTest {
   }
 
   private static SqlNode convert(String sql) {
-    ParseTreeBuilder builder = new ParseTreeBuilder();
-    return builder.process(sql);
+    ParseTreeBuilder builder = new ParseTreeBuilder(msc, new ParseTreeBuilder.Config());
+    return builder.processSql(sql);
   }
 }

@@ -142,6 +142,10 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
         family(SqlTypeFamily.NUMERIC, SqlTypeFamily.CHARACTER));
     createAddUserDefinedFunction("com.linkedin.dali.udf.urnextractor.hive.UrnExtractor", explicit(SqlTypeName.ARRAY),
         or(STRING, ARRAY));
+
+    // FOR UNIT TESTING
+    createAddUserDefinedFunction("com.linkedin.coral.hive.hive2rel.CoralTestUDF", ReturnTypes.BOOLEAN,
+        family(SqlTypeFamily.INTEGER));
   }
 
   /**

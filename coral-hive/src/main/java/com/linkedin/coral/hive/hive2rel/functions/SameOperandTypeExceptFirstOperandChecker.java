@@ -62,6 +62,7 @@ public class SameOperandTypeExceptFirstOperandChecker extends SameOperandTypeChe
       return SqlUtil.getAliasedSignature(op, opName,
           ImmutableList.of("...", typeName, typeName));
     } else {
+      @SuppressWarnings("unchecked")
       List<String> types = new ImmutableList.Builder().add(firstOperandTypeName)
           .addAll(Collections.nCopies(nOperands - 1, typeName))
           .build();

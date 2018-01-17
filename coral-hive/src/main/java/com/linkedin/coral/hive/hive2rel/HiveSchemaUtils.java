@@ -1,0 +1,48 @@
+package com.linkedin.coral.hive.hive2rel;
+
+import com.google.common.base.Preconditions;
+import java.util.Optional;
+import javax.annotation.Nonnull;
+import org.apache.calcite.schema.Schema;
+import org.apache.calcite.schema.Table;
+
+
+/**
+ * Utility class providing convenience methods to access schema objects
+ */
+public class HiveSchemaUtils {
+
+  private HiveSchemaUtils() {
+
+  }
+
+  /**
+   * Returns Calcite schema corresponding to hive db name
+   * @param schema root level Hive Schema
+   * @param db database name
+   * @return Optional Calcite schema representation of Hive table. Returned value is empty
+   * if the schema is not found
+   */
+  public static Optional<Schema> getDb(@Nonnull HiveSchema schema, @Nonnull String db) {
+    Preconditions.checkNotNull(db);
+    Preconditions.checkNotNull(schema);
+    return Optional.ofNullable(schema.getSubSchema(db));
+  }
+
+  /**
+   * Returns a calcite representation of Hive table
+   * @param schema Root calcite schema representation of hive catalog
+   * @param db database name
+   * @param table table name
+   * @return Returned object is empty if the input db or table does not exist.
+   */
+  public static Optional<Table> getTable(@Nonnull HiveSchema schema, @Nonnull String db, @Nonnull String table) {
+    Preconditions.checkNotNull(table);
+    Optional<Schema> dbSchema = getDb(schema, db);
+    if (dbSchema.isPresent()) {
+      return Optional.ofNullable(dbSchema.get().getTable(table));
+    } else {
+      return Optional.empty();
+    }
+  }
+}

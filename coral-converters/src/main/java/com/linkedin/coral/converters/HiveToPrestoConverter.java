@@ -33,7 +33,18 @@ public class HiveToPrestoConverter {
    * @return presto sql string representing input hiveSql
    */
   public String toPrestoSql(String hiveSql) {
-    RelNode rel = hiveToRelConverter.convert(hiveSql);
+    RelNode rel = hiveToRelConverter.convertSql(hiveSql);
+    return relToPrestoConverter.convert(rel);
+  }
+
+  /**
+   * Converts input view definition to Presto SQL
+   * @param dbName hive DB name
+   * @param viewName hive view base name
+   * @return Presto SQL matching input view definition
+   */
+  public String toPrestoSql(String dbName, String viewName) {
+    RelNode rel = hiveToRelConverter.convertView(dbName, viewName);
     return relToPrestoConverter.convert(rel);
   }
 }

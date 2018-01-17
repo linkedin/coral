@@ -34,7 +34,7 @@ import org.apache.calcite.tools.RelBuilder;
  * are created only once and shared across each call to corresponding getter.
  */
 // TODO: Replace this with Google injection framework
-public class RelContextProvider {
+class RelContextProvider {
 
   private final FrameworkConfig config;
   private final HiveSchema schema;
@@ -50,7 +50,7 @@ public class RelContextProvider {
    *
    * @param schema {@link HiveSchema} to use for conversion to relational algebra
    */
-  public RelContextProvider(@Nonnull HiveSchema schema) {
+  RelContextProvider(@Nonnull HiveSchema schema) {
     Preconditions.checkNotNull(schema);
     this.schema = schema;
     SchemaPlus schemaPlus = Frameworks.createRootSchema(false);
@@ -83,6 +83,10 @@ public class RelContextProvider {
     return new ParseTreeBuilder.Config()
         .setCatalogName(HiveSchema.ROOT_SCHEMA)
         .setDefaultDB(HiveDbSchema.DEFAULT_DB);
+  }
+
+  HiveSchema getHiveSchema() {
+    return schema;
   }
 
   /**
@@ -159,7 +163,7 @@ public class RelContextProvider {
    *
    * @return the sql to rel converter
    */
-  public SqlToRelConverter getSqlToRelConverter() {
+  SqlToRelConverter getSqlToRelConverter() {
     if (relConverter == null) {
       relConverter = new HiveSqlToRelConverter(getViewExpander(),
           getHiveSqlValidator(),

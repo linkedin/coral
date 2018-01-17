@@ -1,12 +1,16 @@
 package com.linkedin.coral.hive.hive2rel.functions;
 
+import com.google.common.base.Preconditions;
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
+import com.linkedin.coral.hive.hive2rel.HiveTable;
 import java.util.Collection;
+import java.util.Map;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.apache.calcite.sql.SqlFunctionCategory;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlUnresolvedFunction;
+import org.apache.hadoop.hive.metastore.api.Table;
 
 import static com.google.common.base.Preconditions.*;
 import static org.apache.calcite.sql.parser.SqlParserPos.*;
@@ -31,20 +35,27 @@ public class HiveFunctionResolver {
    * the subsequent validator and analyzer phases to validate parameter types.
    * @param functionName hive function name
    * @param isCaseSensitive is function name case-sensitive
-   * @param table fully qualified table name
+   * @param hiveTable handle to Hive table representing metastore information. This is used for resolving
+   *                  Dali function names, which are resolved using table parameters
    * @return resolved hive functions
    * @throws UnknownSqlFunctionException if the function name can not be resolved.
    */
-  public HiveFunction tryResolve(@Nonnull String functionName, boolean isCaseSensitive, @Nullable SqlIdentifier table) {
+  public HiveFunction tryResolve(@Nonnull String functionName, boolean isCaseSensitive, @Nullable Table hiveTable) {
     checkNotNull(functionName);
     Collection<HiveFunction> functions = registry.lookup(functionName, isCaseSensitive);
+    if (functions.isEmpty() && hiveTable != null) {
+      functions = tryResolveAsDaliFunction(functionName, hiveTable);
+    }
+    if (functions.isEmpty()) {
+      throw new UnknownSqlFunctionException(functionName);
+    }
     if (functions.size() == 1) {
       return functions.iterator().next();
     }
-
-    // return unresolved function and let analyzer handle resolution
-    // of unknown or overloaded functions
-    return unresolvedFunction(functionName, table);
+    // we've overloaded function names. Calcite will resolve overload later during semantic analysis.
+    // For now, create a placeholder SqlNode for the function. We want to use Dali class name as function
+    // name if this is overloaded function name.
+    return unresolvedFunction(functions.iterator().next().getSqlOperator().getName(), hiveTable);
   }
 
   /**
@@ -57,30 +68,45 @@ public class HiveFunctionResolver {
     return registry.lookup(functionName, isCaseSensitive);
   }
 
-  private HiveFunction unresolvedFunction(String functionName, @Nullable SqlIdentifier table) {
-    SqlIdentifier funcIdentifier = createFunctionIdentifier(functionName, table);
-    return new HiveFunction(functionName,
-        new SqlUnresolvedFunction(funcIdentifier, null,
-            null, null,
-            null, SqlFunctionCategory.USER_DEFINED_FUNCTION));
+  /**
+   * Tries to resolve function name as Dali function name using the provided Hive table catalog information.
+   * This uses table parameters 'function' property to resolve the function name to the implementing class.
+   * @param functionName function name to resolve
+   * @param table Hive metastore table handle
+   * @return list of matching HiveFunctions or empty list if the function name is not in the
+   *   dali function name format of db_tableName_functionName
+   * @throws UnknownSqlFunctionException if the function name is in Dali function name format but there is no mapping
+   */
+  public Collection<HiveFunction> tryResolveAsDaliFunction(String functionName, @Nonnull Table table) {
+    Preconditions.checkNotNull(table);
+    String functionPrefix = String.format("%s_%s_", table.getDbName(), table.getTableName());
+    if (!functionName.toLowerCase().startsWith(functionPrefix.toLowerCase())) {
+      // Don't throw UnknownSqlFunctionException here because this is not a dali function
+      // and this method is trying to resolve only Dali functions
+      return ImmutableList.of();
+    }
+    String funcBaseName = functionName.substring(functionPrefix.length());
+    HiveTable hiveTable = new HiveTable(table);
+    Map<String, String> functionParams = hiveTable.getDaliFunctionParams();
+    String funcClassName = functionParams.get(funcBaseName);
+    if (funcClassName == null) {
+      throw new UnknownSqlFunctionException(funcClassName);
+    }
+    return registry.lookup(funcClassName, true);
   }
 
-  private SqlIdentifier createFunctionIdentifier(String functionName, @Nullable SqlIdentifier table) {
+  private @Nonnull HiveFunction unresolvedFunction(String functionName, Table table) {
+    SqlIdentifier funcIdentifier = createFunctionIdentifier(functionName, table);
+    return new HiveFunction(functionName,
+        new SqlUnresolvedFunction(funcIdentifier, null, null,
+            null, null, SqlFunctionCategory.USER_DEFINED_FUNCTION));
+  }
+
+  private @Nonnull SqlIdentifier createFunctionIdentifier(String functionName, @Nullable Table table) {
     if (table == null) {
       return new SqlIdentifier(ImmutableList.of(functionName), ZERO);
+    } else {
+      return new SqlFunctionIdentifier(functionName, ImmutableList.of(table.getDbName(), table.getTableName()));
     }
-    ImmutableList<String> tableNames = table.names;
-    checkState(tableNames.size() >= 2);
-    int namesSize = tableNames.size();
-    // we need only (db, table) parts of the `table` identifier. If the table identifier
-    // has more components like catalog name, remove those
-    if (namesSize > 2) {
-      tableNames = tableNames.subList(namesSize - 2, namesSize);
-    }
-    ImmutableList<String> funcNameList = ImmutableList.<String>builder()
-        .addAll(tableNames)
-        .add(functionName)
-        .build();
-    return new SqlIdentifier(funcNameList, ZERO);
   }
 }

@@ -2,6 +2,7 @@ package com.linkedin.coral.hive.hive2rel.parsetree;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
 import com.linkedin.coral.hive.hive2rel.functions.HiveFunction;
 import com.linkedin.coral.hive.hive2rel.functions.HiveFunctionResolver;
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
@@ -11,14 +12,14 @@ import com.linkedin.coral.hive.hive2rel.parsetree.parser.ParseDriver;
 import com.linkedin.coral.hive.hive2rel.parsetree.parser.ParseException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
-import org.apache.calcite.sql.SqlAsOperator;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import org.apache.calcite.sql.SqlBasicCall;
 import org.apache.calcite.sql.SqlBinaryOperator;
-import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlDataTypeSpec;
 import org.apache.calcite.sql.SqlIdentifier;
-import org.apache.calcite.sql.SqlJoin;
 import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlNodeList;
@@ -27,6 +28,7 @@ import org.apache.calcite.sql.SqlPrefixOperator;
 import org.apache.calcite.sql.SqlSelect;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.type.SqlTypeName;
+import org.apache.hadoop.hive.metastore.api.Table;
 
 import static com.google.common.base.Preconditions.*;
 import static org.apache.calcite.sql.parser.SqlParserPos.*;
@@ -51,33 +53,70 @@ import static org.apache.calcite.sql.parser.SqlParserPos.*;
  * we haven't specialized that part yet.
  */
 public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuilder.ParseContext> {
-
+  @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
+  private final Optional<HiveMetastoreClient> msc;
   private final Config config;
   private final HiveFunctionResolver functionResolver;
 
-  public ParseTreeBuilder(Config config) {
+  /**
+   * Constructs a parse tree builder to use hive metatstore and user provided configuration
+   * @param msc optional HiveMetastore client. This is required to decode view definitions
+   * @param config parse configuration to use
+   */
+  public ParseTreeBuilder(@Nullable HiveMetastoreClient msc, Config config) {
+    this.msc = Optional.of(msc);
+    checkNotNull(config);
     checkState(config.catalogName.isEmpty() || !config.defaultDBName.isEmpty(),
         "Default DB is required if catalog name is not empty");
     this.config = config;
     this.functionResolver = new HiveFunctionResolver(new StaticHiveFunctionRegistry());
   }
 
-  public ParseTreeBuilder() {
-    this(new Config());
+  /**
+   * Creates a parse tree for a hive view using the expanded view text from hive metastore.
+   * This table name is required for handling dali function name resolution.
+   * @param hiveView hive table handle to read expanded text from
+   * @return Calcite SqlNode representing parse tree that calcite framework can understand
+   */
+  public SqlNode processView(@Nonnull Table hiveView) {
+    checkNotNull(hiveView);
+    return process(hiveView.getViewExpandedText(), hiveView);
   }
 
-  public SqlNode process(String sql) {
+  /**
+   * Gets the hive table handle for db and table and calls {@link #processView(Table)}
+   */
+  public SqlNode processView(String dbName, String tableName) {
+    Table table = getMscOrThrow().getTable(dbName, tableName);
+    if (table == null) {
+      throw new RuntimeException(String.format("Unknown table %s.%s", dbName, tableName));
+    }
+    return processView(table);
+  }
+
+  /**
+   * Creates a parse tree for input sql. The input SQL must NOT contain any Dali function names.
+   * It is okay for the sql to refer to dali views that use dali functions.
+   * @param sql sql statement to convert to parse tree
+   * @return Calcite SqlNode representing parse tree that calcite framework can understand
+   */
+  public SqlNode processSql(String sql) {
+    return process(sql, null);
+  }
+
+  SqlNode process(String sql, @Nullable Table hiveView) {
     ParseDriver pd = new ParseDriver();
     try {
       ASTNode root = pd.parse(sql);
-      return process(root);
+      return processAST(root, hiveView);
     } catch (ParseException e) {
       throw new RuntimeException(e);
     }
   }
 
-  public SqlNode process(ASTNode node) {
-    return visit(node, new ParseContext());
+  private SqlNode processAST(ASTNode node, @Nullable Table hiveView) {
+    ParseContext ctx = new ParseContext(hiveView);
+    return visit(node, ctx);
   }
 
   @Override
@@ -287,15 +326,8 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     checkState(children.size() > 0);
     ASTNode functionNode = (ASTNode) children.get(0);
     String functionName = functionNode.getText();
-    // List<Node> operands = children.subList(1, children.size());
     List<SqlNode> sqlOperands = visitChildren(children, ctx);
-    List<SqlIdentifier> sourceTables = ctx.getSourceTables();
-    // FIXME: this is incorrect because join queries will have two tables
-    // but the table identifier is supported for Dali functions. Dali does not support joins
-    // and it's not clear with tables to use when it supports joins in future
-    checkState(sourceTables.size() <= 1);
-    SqlIdentifier tableIdentifier = sourceTables.isEmpty() ? null : sourceTables.get(0);
-    HiveFunction hiveFunction = functionResolver.tryResolve(functionName, false, tableIdentifier);
+    HiveFunction hiveFunction = functionResolver.tryResolve(functionName, false, ctx.hiveTable.orElse(null));
     return hiveFunction.createCall(sqlOperands.get(0), sqlOperands.subList(1, sqlOperands.size()));
   }
 
@@ -394,7 +426,7 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
 
   @Override
   protected SqlNode visitSubquery(ASTNode node, ParseContext ctx) {
-    ParseContext subQueryContext = new ParseContext();
+    ParseContext subQueryContext = new ParseContext(ctx.getHiveTable().orElse(null));
     List<SqlNode> sqlNodes = visitChildren(node, subQueryContext);
     if (sqlNodes.size() == 1) {
       return sqlNodes.get(0);
@@ -432,7 +464,7 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
   protected SqlNode visitQueryNode(ASTNode node, ParseContext ctx) {
     ArrayList<Node> children = node.getChildren();
     checkState(children != null && !children.isEmpty());
-    ParseContext qc = new ParseContext();
+    ParseContext qc = new ParseContext(ctx.getHiveTable().orElse(null));
     List<SqlNode> sqlNodes = visitChildren(node, qc);
     return new SqlSelect(ZERO, qc.keywords, qc.selects, qc.from, qc.where, qc.grpBy, qc.having, null, qc.orderBy, null,
         ctx.fetch);
@@ -531,6 +563,10 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     return visitChildren(node, ctx).get(0);
   }
 
+  private HiveMetastoreClient getMscOrThrow() {
+    return msc.orElseThrow(() -> new RuntimeException("Hive metastore client is required to access table"));
+  }
+
   public static class Config {
     private String catalogName = "";
     private String defaultDBName = "";
@@ -546,7 +582,9 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     }
   }
 
-  public static class ParseContext {
+  class ParseContext {
+    @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
+    private final Optional<Table> hiveTable;
     SqlNodeList keywords;
     SqlNode from;
     SqlNodeList selects;
@@ -556,29 +594,12 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     SqlNode fetch;
     SqlNodeList orderBy;
 
-    // TODO: handles joins correctly
-    public List<SqlIdentifier> getSourceTables() {
-      return getSourceTablesInternal(from);
+    ParseContext(@Nullable Table hiveTable) {
+      this.hiveTable = Optional.ofNullable(hiveTable);
     }
 
-    private List<SqlIdentifier> getSourceTablesInternal(SqlNode fromNode) {
-      if (fromNode instanceof SqlIdentifier) {
-        return ImmutableList.of(((SqlIdentifier) fromNode));
-      }
-      if (fromNode instanceof SqlSelect) {
-        return getSourceTablesInternal(((SqlSelect) fromNode).getFrom());
-      }
-      if (fromNode instanceof SqlCall) {
-        SqlCall subQuery = (SqlCall) fromNode;
-        if (subQuery.getOperator() instanceof SqlAsOperator) {
-          return getSourceTablesInternal(subQuery.getOperandList().get(0));
-        }
-      }
-      if (fromNode instanceof SqlJoin) {
-        // throw this so that we can detect and fix when we address joins
-        throw new UnsupportedOperationException("Join queries are not yet support for Dali");
-      }
-      return ImmutableList.of();
+    Optional<Table> getHiveTable() {
+      return hiveTable;
     }
   }
 }

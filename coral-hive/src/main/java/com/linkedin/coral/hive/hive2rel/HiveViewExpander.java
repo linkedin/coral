@@ -8,6 +8,8 @@ import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.rel.RelRoot;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.sql.SqlNode;
+import org.apache.calcite.util.Util;
+import org.apache.hadoop.hive.metastore.api.Table;
 
 
 /**
@@ -30,8 +32,19 @@ public class HiveViewExpander implements RelOptTable.ViewExpander {
 
   @Override
   public RelRoot expandView(RelDataType rowType, String queryString, List<String> schemaPath, List<String> viewPath) {
-    ParseTreeBuilder treeBuilder = new ParseTreeBuilder(relContextProvider.getParseTreeBuilderConfig());
-    SqlNode viewNode = treeBuilder.process(queryString);
+    Preconditions.checkNotNull(viewPath);
+    Preconditions.checkState(!viewPath.isEmpty());
+
+    HiveMetastoreClient msc = relContextProvider.getHiveSchema().getHiveMetastoreClient();
+    String dbName = Util.last(schemaPath);
+    String tableName = viewPath.get(0);
+    Table table = msc.getTable(dbName, tableName);
+    if (table == null) {
+      throw new RuntimeException(String.format("Table %s.%s not found", dbName, tableName));
+    }
+    ParseTreeBuilder treeBuilder = new ParseTreeBuilder(msc,
+        relContextProvider.getParseTreeBuilderConfig());
+    SqlNode viewNode = treeBuilder.processView(table);
     return relContextProvider.getSqlToRelConverter().convertQuery(viewNode, true, true);
   }
 }

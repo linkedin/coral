@@ -34,8 +34,7 @@ public class HiveSchema implements Schema {
    * @param msc Hive metastore client
    */
   public HiveSchema(@Nonnull HiveMetastoreClient msc) {
-    checkNotNull(msc);
-    this.msc = msc;
+    this.msc = checkNotNull(msc);
   }
 
   /**
@@ -89,5 +88,12 @@ public class HiveSchema implements Schema {
   @Override
   public Schema snapshot(SchemaVersion schemaVersion) {
     return this;
+  }
+
+  /**
+   * Returns Hive metastore client
+   */
+  public @Nonnull HiveMetastoreClient getHiveMetastoreClient() {
+    return msc;
   }
 }

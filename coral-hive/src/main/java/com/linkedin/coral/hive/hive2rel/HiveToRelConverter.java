@@ -28,7 +28,6 @@ public class HiveToRelConverter {
    * Initializes converter with hive configuration at provided path
    * @param mscClient HiveMetaStoreClient. Hive metastore client provides small subset
    *                  of methods provided by Hive's metastore client interface.
-   *
    */
   public static HiveToRelConverter create(HiveMetastoreClient mscClient) {
     checkNotNull(mscClient);
@@ -46,15 +45,37 @@ public class HiveToRelConverter {
    * Converts input Hive SQL query to Calcite {@link RelNode}.
    *
    * This method resolves all the database, table and field names using the catalog
-   * information provided by hive configuration during initialization
+   * information provided by hive configuration during initialization. The input
+   * sql parameter should not refer to dali functions since those can not be resolved.
+   * The sql can, however, refer to dali views whose definitions include dali functions.
    *
    * @param sql Hive sql string to convert to Calcite RelNode
    * @return Calcite RelNode representation of input hive sql
    */
-  public RelNode convert(String sql) {
-    ParseTreeBuilder treeBuilder = new ParseTreeBuilder(relContextProvider.getParseTreeBuilderConfig());
-    SqlNode sqlNode = treeBuilder.process(sql);
-    RelRoot relRoot = relContextProvider.getSqlToRelConverter().convertQuery(sqlNode, true, true);
-    return relRoot.rel;
+  public RelNode convertSql(String sql) {
+    SqlNode sqlNode = getTreeBuilder().processSql(sql);
+    return toRel(sqlNode);
+  }
+
+  /**
+   * Similar to {@link #convertSql(String)} but converts hive view definition stored
+   * in the hive metastore to corresponding {@link RelNode} implementation.
+   * This sets up the initial context for resolving Dali function names using table parameters.
+   * @param hiveDbName hive database name
+   * @param hiveViewName hive view name whose definition to convert
+   * @return Calcite {@link RelNode} representation of hive view definition
+   */
+  public RelNode convertView(String hiveDbName, String hiveViewName) {
+    SqlNode sqlNode = getTreeBuilder().processView(hiveDbName, hiveViewName);
+    return toRel(sqlNode);
+  }
+
+  private ParseTreeBuilder getTreeBuilder() {
+    return new ParseTreeBuilder(relContextProvider.getHiveSchema().getHiveMetastoreClient(),
+        relContextProvider.getParseTreeBuilderConfig());
+  }
+  private RelNode toRel(SqlNode sqlNode) {
+    RelRoot root = relContextProvider.getSqlToRelConverter().convertQuery(sqlNode, true, true);
+    return root.rel;
   }
 }
