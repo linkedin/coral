@@ -100,7 +100,11 @@ public class ParseTreeBuilderTest {
         { "SELECT case (a + 10) when 20 then 5 when 30 then 10 else 1 END from foo",
             "SELECT CASE `a` + 10 when 20 then 5 when 30 then 10 else 1 END from `foo`" },
         { "SELECT CASE WHEN a THEN 10 WHEN b THEN 20 ELSE 30 END from foo",
-            "SELECT CASE WHEN `a` THEN 10 WHEN `b` THEN 20 ELSE 30 END from `foo`"}
+            "SELECT CASE WHEN `a` THEN 10 WHEN `b` THEN 20 ELSE 30 END from `foo`"},
+        {
+          "SELECT named_struct('abc', 123, 'def', 234.23) FROM foo",
+            "SELECT `named_struct`('abc', 123, 'def', 234.23) FROM `foo`"
+        }
     };
 
     for (String[] s : sqlValidator) {

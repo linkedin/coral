@@ -14,26 +14,13 @@ import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.hadoop.hive.ql.Driver;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
-import org.apache.hadoop.hive.ql.parse.ASTNode;
-import org.apache.hadoop.hive.ql.parse.ParseDriver;
-import org.apache.hadoop.hive.ql.parse.ParseException;
 import org.apache.hadoop.hive.ql.processors.CommandProcessorResponse;
 import org.apache.hadoop.hive.ql.session.SessionState;
-
-import static com.google.common.base.Preconditions.*;
 
 
 public class TestUtils {
 
-  public static ASTNode toAST(String sql){
-    checkNotNull(sql);
-    ParseDriver pd = new ParseDriver();
-    try {
-      return pd.parse(sql);
-    } catch (ParseException e) {
-      throw  new RuntimeException(e);
-    }
-  }
+  static TestHive hive;
 
   public static class TestHive {
     private final HiveConf conf;
@@ -76,8 +63,12 @@ public class TestUtils {
   }
 
   public static TestHive setupDefaultHive() throws IOException {
+    if (hive != null) {
+      return hive;
+    }
+
     HiveConf conf = loadResourceHiveConf();
-    TestHive hive = new TestHive(conf);
+    TestHive testHive = new TestHive(conf);
     SessionState.start(conf);
     Driver driver = new Driver(conf);
     try {
@@ -94,20 +85,20 @@ public class TestUtils {
       if (response.getResponseCode() != 0) {
         throw new RuntimeException("Failed to setup view");
       }
-      hive.databases = ImmutableList.of(
+      testHive.databases = ImmutableList.of(
           new TestHive.DB("test", ImmutableList.of("tableOne", "tableTwo", "tableOneView")),
           new TestHive.DB("default", ImmutableList.of("foo", "bar", "complex", "foo_view"))
       );
 
       // add some Dali functions to table properties
-      IMetaStoreClient msc = hive.getMetastoreClient();
+      IMetaStoreClient msc = testHive.getMetastoreClient();
       Table fooViewTable = msc.getTable("default", "foo_view");
       setOrUpdateDaliFunction(fooViewTable, "IsTestMemberId", "com.linkedin.dali.udf.istestmemberid.hive.IsTestMemberId");
       msc.alter_table("default", "foo_view", fooViewTable);
       Table tableOneView = msc.getTable("test", "tableOneView");
       setOrUpdateDaliFunction(tableOneView, "LessThanHundred", "com.linkedin.coral.hive.hive2rel.CoralTestUDF");
       msc.alter_table("test", "tableOneView", tableOneView);
-
+      hive = testHive;
       return hive;
     } catch (Exception e) {
       throw new RuntimeException("Failed to setup database", e);

@@ -109,4 +109,17 @@ public class HiveFunction {
       }
     }
   };
+
+  public static final HiveFunction NAMED_STRUCT = new HiveFunction("named_struct", SqlStdOperatorTable.CAST) {
+    @Override
+    public SqlCall createCall(List<SqlNode> operands) {
+      checkNotNull(operands);
+      checkArgument(!operands.isEmpty() && operands.size() % 2 == 0);
+
+      for (int i = 0; i < operands.size() - 1; i += 2) {
+
+      }
+      return null;
+    }
+  };
 }

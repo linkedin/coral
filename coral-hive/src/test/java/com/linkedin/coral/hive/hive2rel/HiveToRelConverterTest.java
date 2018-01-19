@@ -1,53 +1,47 @@
 package com.linkedin.coral.hive.hive2rel;
 
 import com.google.common.collect.ImmutableList;
-import com.linkedin.coral.hive.hive2rel.TestUtils.TestHive;
 import com.linkedin.coral.hive.hive2rel.functions.UnknownSqlFunctionException;
 import java.io.IOException;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.rel2sql.RelToSqlConverter;
+import org.apache.calcite.sql.SqlDialect;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.tools.RelBuilder;
-import org.apache.hadoop.hive.metastore.IMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.thrift.TException;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import static com.linkedin.coral.hive.hive2rel.ToRelConverter.*;
 import static org.testng.Assert.*;
 
 
 public class HiveToRelConverterTest {
 
-  private static TestHive hive;
+  /*private static TestHive hive;
   private static IMetaStoreClient msc;
   private static HiveToRelConverter converter;
-  private static RelContextProvider relContextProvider;
+  private static RelContextProvider relContextProvider;*/
 
   @BeforeClass
   public static void beforeClass() throws IOException, HiveException, MetaException {
-    hive = TestUtils.setupDefaultHive();
-    msc = hive.getMetastoreClient();
-    HiveMscAdapter mscAdapter = new HiveMscAdapter(msc);
-    converter = HiveToRelConverter.create(mscAdapter);
-    // for validation
-    HiveSchema schema = new HiveSchema(mscAdapter);
-    relContextProvider = new RelContextProvider(schema);
+    ToRelConverter.setup();
   }
 
   @Test
   public void testBasic() {
-    {
-      String sql = "SELECT * from foo";
-      RelNode rel = converter.convertSql(sql);
-      RelBuilder relBuilder = createRelBuilder();
-      RelNode expected = relBuilder.scan(ImmutableList.of("hive", "default", "foo"))
-          .project(ImmutableList.of(relBuilder.field("a"), relBuilder.field("b"), relBuilder.field("c")),
-              ImmutableList.of(), true)
-          .build();
-      verifyRel(rel, expected);
-    }
+    String sql = "SELECT * from foo";
+    RelNode rel = converter.convertSql(sql);
+    RelBuilder relBuilder = createRelBuilder();
+    RelNode expected = relBuilder.scan(ImmutableList.of("hive", "default", "foo"))
+        .project(ImmutableList.of(relBuilder.field("a"),
+            relBuilder.field("b"), relBuilder.field("c")),
+            ImmutableList.of(), true)
+        .build();
+    verifyRel(rel, expected);
   }
 
   @Test
@@ -71,6 +65,7 @@ public class HiveToRelConverterTest {
       final String sql = "SELECT if(a > 10, null, null) FROM foo";
       String expected = "LogicalProject(EXPR$0=[if(>($0, 10), null, null)])\n" +
           "  LogicalTableScan(table=[[hive, default, foo]])\n";
+      assertEquals(relToString(sql), expected);
     }
   }
 
@@ -120,18 +115,41 @@ public class HiveToRelConverterTest {
     }
   }
 
-  private String relToString(String sql) {
-    return RelOptUtil.toString(converter.convertSql(sql));
-  }
-  private RelBuilder createRelBuilder() {
-    return RelBuilder.create(relContextProvider.getConfig());
+  @Test
+  public void testArrayType() {
+    final String sql = "SELECT array(1,2,3)";
+    final String expected = "LogicalProject(EXPR$0=[ARRAY(1, 2, 3)])\n" +
+        "  LogicalValues(tuples=[[{ 0 }]])\n";
+    assertEquals(RelOptUtil.toString(converter.convertSql(sql)), expected);
   }
 
-  private void verifyRel(RelNode input, RelNode expected) {
-    assertEquals(input.getInputs().size(), expected.getInputs().size());
-    for (int i = 0; i < input.getInputs().size(); i++) {
-      verifyRel(input.getInput(i), expected.getInput(i));
-    }
-    RelOptUtil.areRowTypesEqual(input.getRowType(), expected.getRowType(), true);
+  @Test
+  public void testMapType() {
+    final String sql = "SELECT map('abc', 123, 'def', 567)";
+    String generated = relToString(sql);
+    final String expected =
+        "LogicalProject(EXPR$0=[MAP('abc', 123, 'def', 567)])\n" + "  LogicalValues(tuples=[[{ 0 }]])\n";
+    assertEquals(generated, expected);
+  }
+
+  @Test
+  public void testStructType() {
+    final String sql = "SELECT struct(10, 15, 20.23)";
+    String generated = relToString(sql);
+    final String expected = "LogicalProject(EXPR$0=[ROW(10, 15, 20.23)])\n" +
+        "  LogicalValues(tuples=[[{ 0 }]])\n";
+    assertEquals(generated, expected);
+  }
+
+  @Test
+  public void testNamedStruct() {
+    final String sql = "SELECT named_struct('abc', cast(NULL as int), 'def', 150)";
+    String generated = relToString(sql);
+    System.out.println(generated);
+    System.out.println(new RelToSqlConverter(SqlDialect.DatabaseProduct.POSTGRESQL.getDialect()).visitChild(0, converter.convertSql(sql)).asStatement());
+  }
+
+  private String relToString(String sql) {
+    return RelOptUtil.toString(converter.convertSql(sql));
   }
 }

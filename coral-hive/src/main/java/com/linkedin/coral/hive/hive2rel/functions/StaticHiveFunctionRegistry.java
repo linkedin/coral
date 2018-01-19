@@ -69,9 +69,14 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
             null));
 
     addFunctionEntry("coalesce", SqlStdOperatorTable.COALESCE);
-
     // cast operator
     addCastOperatorEntries();
+
+    // Complex type constructors
+    addFunctionEntry("array", SqlStdOperatorTable.ARRAY_VALUE_CONSTRUCTOR);
+    addFunctionEntry("struct", SqlStdOperatorTable.ROW);
+    addFunctionEntry("map", SqlStdOperatorTable.MAP_VALUE_CONSTRUCTOR);
+    addFunctionEntry("named_struct", HiveNamedStructFunction.NAMED_STRUCT);
 
     // string functions
     // TODO: operand types are not strictly true since these functions can take null literal

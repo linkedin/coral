@@ -21,7 +21,6 @@ import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.util.ChainedSqlOperatorTable;
 import org.apache.calcite.sql.validate.SqlConformanceEnum;
 import org.apache.calcite.sql2rel.SqlToRelConverter;
-import org.apache.calcite.sql2rel.StandardConvertletTable;
 import org.apache.calcite.tools.FrameworkConfig;
 import org.apache.calcite.tools.Frameworks;
 import org.apache.calcite.tools.Programs;
@@ -43,6 +42,7 @@ class RelContextProvider {
   private HiveSqlValidator sqlValidator;
   private RelOptCluster cluster;
   private SqlToRelConverter relConverter;
+  private final HiveConvertletTable convertletTable = new HiveConvertletTable();
   private Driver driver;
 
   /**
@@ -61,6 +61,7 @@ class RelContextProvider {
     // if the service uses its own service loader (see Presto)
     driver = new Driver();
     config = Frameworks.newConfigBuilder()
+        .convertletTable(convertletTable)
         .defaultSchema(schemaPlus)
         .typeSystem(new HiveTypeSystem())
         .traitDefs((List<RelTraitDef>) null)
@@ -169,7 +170,7 @@ class RelContextProvider {
           getHiveSqlValidator(),
           getCalciteCatalogReader(),
           getRelOptCluster(),
-          StandardConvertletTable.INSTANCE,
+          convertletTable,
           SqlToRelConverter.configBuilder().build());
     }
     return relConverter;

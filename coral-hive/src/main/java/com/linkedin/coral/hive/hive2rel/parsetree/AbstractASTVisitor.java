@@ -163,7 +163,7 @@ public abstract class AbstractASTVisitor<R, C> {
 
       case HiveParser.EOF:
         return null;
-
+      // add function names here
       case HiveParser.TOK_ISNOTNULL:
       case HiveParser.TOK_ISNULL:
       case HiveParser.KW_CASE:
@@ -172,6 +172,9 @@ public abstract class AbstractASTVisitor<R, C> {
       case HiveParser.KW_IN:
       case HiveParser.KW_EXISTS:
       case HiveParser.KW_IF:
+      case HiveParser.KW_ARRAY:
+      case HiveParser.KW_MAP:
+      case HiveParser.KW_STRUCT:
         return visitStringLiteral(node, ctx);
 
       case HiveParser.TOK_BOOLEAN:
