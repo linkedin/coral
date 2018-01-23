@@ -16,10 +16,15 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import org.apache.calcite.sql.JoinConditionType;
+import org.apache.calcite.sql.JoinType;
+import org.apache.calcite.sql.SqlAsOperator;
 import org.apache.calcite.sql.SqlBasicCall;
 import org.apache.calcite.sql.SqlBinaryOperator;
+import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlDataTypeSpec;
 import org.apache.calcite.sql.SqlIdentifier;
+import org.apache.calcite.sql.SqlJoin;
 import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlNodeList;
@@ -121,12 +126,65 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
 
   @Override
   protected SqlNode visitTabAlias(ASTNode node, ParseContext ctx) {
-    throw new RuntimeException(String.format("%s, %s, %s", node.getType(), node.getText(), node.dump()));
+    List<SqlNode> sqlNodes = visitChildren(node, ctx);
+    checkState(sqlNodes.size() == 1);
+    return sqlNodes.get(0);
   }
 
   @Override
   protected SqlNode visitLateralView(ASTNode node, ParseContext ctx) {
-    throw new RuntimeException(String.format("%s, %s, %s", node.getType(), node.getText(), node.dump()));
+    return visitLateralViewInternal(node, ctx, false);
+  }
+
+  @Override
+  protected SqlNode visitLateralViewOuter(ASTNode node, ParseContext ctx) {
+    return visitLateralViewInternal(node, ctx, true);
+  }
+
+  // lateral views are turned to:
+  // "...FROM table, lateral (select col FROM UNNEST(table.col) as t(col))" query
+  // For lateral outer, we need to replace UNNEST with
+  //    UNNEST(if(table.col is null or cadinality(table.col) == 0, [null], table.col))
+  private SqlNode visitLateralViewInternal(ASTNode node, ParseContext ctx, boolean isOuter) {
+    List<SqlNode> sqlNodes = visitChildren(node, ctx);
+    checkState(sqlNodes.size() == 2 && sqlNodes.get(0) instanceof SqlNodeList);
+
+    // rightNode is AS.createCall(unnest, t, col)
+    SqlNode rightNode = ((SqlNodeList) sqlNodes.get(0)).get(0);
+    checkState(rightNode instanceof SqlCall);
+    SqlCall aliasCall = (SqlCall) rightNode;
+    checkState(aliasCall.getOperator() instanceof SqlAsOperator);
+    List<SqlNode> aliasOperands = aliasCall.getOperandList();
+    checkState(aliasOperands.size() == 3 && aliasOperands.get(0) instanceof SqlCall);
+    SqlCall unnestCall = (SqlCall) aliasOperands.get(0);
+    SqlNode unnestOperand = unnestCall.operand(0);
+    // colNode is the column name in aliased table relation
+    SqlNode colNode = aliasCall.operand(2);
+
+    if (isOuter) {
+      // transforms unnest(b) to unnest( if(b is null or cardinality(b) = 0, [null], b))
+      SqlNode operandIsNull = SqlStdOperatorTable.IS_NOT_NULL.createCall(ZERO, unnestOperand);
+      SqlNode emptyArray = SqlStdOperatorTable.GREATER_THAN.createCall(ZERO,
+          SqlStdOperatorTable.CARDINALITY.createCall(ZERO, unnestOperand),
+          SqlLiteral.createExactNumeric("0", ZERO));
+      SqlNode ifCondition = SqlStdOperatorTable.AND.createCall(ZERO, operandIsNull, emptyArray);
+      // array of [null] should be 3rd param to if function. With our type inference, calcite acts
+      // smart and for unnest(array[null]) determines return type to be null
+      SqlNode arrOfNull = SqlStdOperatorTable.ARRAY_VALUE_CONSTRUCTOR.createCall(ZERO, SqlLiteral.createNull(ZERO));
+      HiveFunction hiveIfFunction = functionResolver.tryResolve("if", false, null);
+      SqlCall ifFunctionCall = hiveIfFunction.createCall(SqlLiteral.createCharString("if", ZERO),
+          ImmutableList.of(ifCondition, unnestOperand, arrOfNull));
+      unnestCall = SqlStdOperatorTable.UNNEST.createCall(ZERO, ifFunctionCall);
+    }
+
+    SqlNode rightSelect = new SqlSelect(ZERO, null,
+        new SqlNodeList(ImmutableList.of(SqlIdentifier.star(ZERO)), ZERO), unnestCall, null, null,
+            null, null, null, null, null);
+    SqlNode lateralCall = SqlStdOperatorTable.LATERAL.createCall(ZERO, rightSelect);
+    aliasCall = SqlStdOperatorTable.AS.createCall(ZERO, lateralCall, aliasOperands.get(1), aliasOperands.get(2));
+    SqlNode joinNode = new SqlJoin(ZERO, sqlNodes.get(1), SqlLiteral.createBoolean(false, ZERO),
+        JoinType.COMMA.symbol(ZERO), aliasCall, JoinConditionType.NONE.symbol(ZERO), null);
+    return joinNode;
   }
 
   @Override
@@ -338,6 +396,10 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
       return sqlNodes.get(0);
     } else if (sqlNodes.size() == 2) {
       return new SqlBasicCall(SqlStdOperatorTable.AS, sqlNodes.toArray(new SqlNode[0]), ZERO);
+    } else if (sqlNodes.size() == 3) {
+      // lateral view alias have 3 args
+      SqlNode[] nodes = new SqlNode[] { sqlNodes.get(0), sqlNodes.get(2), sqlNodes.get(1) };
+      return new SqlBasicCall(SqlStdOperatorTable.AS, nodes, ZERO);
     } else {
       throw new UnhandledASTTokenException(node);
     }
@@ -346,11 +408,11 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
   @Override
   protected SqlNode visitSelectDistinct(ASTNode node, ParseContext ctx) {
     ctx.keywords = new SqlNodeList(ImmutableList.of(SqlLiteral.createCharString("DISTINCT", ZERO)), ZERO);
-    return visitSelects(node, ctx);
+    return visitSelect(node, ctx);
   }
 
   @Override
-  protected SqlNode visitSelects(ASTNode node, ParseContext ctx) {
+  protected SqlNode visitSelect(ASTNode node, ParseContext ctx) {
     List<SqlNode> sqlNodes = visitChildren(node, ctx);
     ctx.selects = new SqlNodeList(sqlNodes, ZERO);
     return ctx.selects;

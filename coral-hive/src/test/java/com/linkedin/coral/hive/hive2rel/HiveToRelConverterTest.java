@@ -7,6 +7,9 @@ import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.rel2sql.RelToSqlConverter;
 import org.apache.calcite.sql.SqlDialect;
+import org.apache.calcite.sql.SqlNode;
+import org.apache.calcite.sql.parser.SqlParseException;
+import org.apache.calcite.sql.parser.SqlParser;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.tools.RelBuilder;
 import org.apache.hadoop.hive.metastore.api.MetaException;
@@ -20,11 +23,6 @@ import static org.testng.Assert.*;
 
 
 public class HiveToRelConverterTest {
-
-  /*private static TestHive hive;
-  private static IMetaStoreClient msc;
-  private static HiveToRelConverter converter;
-  private static RelContextProvider relContextProvider;*/
 
   @BeforeClass
   public static void beforeClass() throws IOException, HiveException, MetaException {
@@ -147,6 +145,80 @@ public class HiveToRelConverterTest {
     String generated = relToString(sql);
     System.out.println(generated);
     System.out.println(new RelToSqlConverter(SqlDialect.DatabaseProduct.POSTGRESQL.getDialect()).visitChild(0, converter.convertSql(sql)).asStatement());
+  }
+
+  // TODO: move lateral tests to separate class. We've already done the necessary refactoring
+  // that's pending on RB approval.
+  @Test
+  public void testLateralView() {
+    final String sql = "SELECT a, ccol from complex lateral view explode(complex.c) t as ccol";
+    HiveToRelConverter rel2sql = HiveToRelConverter.create(new HiveMscAdapter(ToRelConverter.getMsc()));
+    RelNode relNode = rel2sql.convertSql(sql);
+    String expected = "LogicalProject(a=[$0], ccol=[$5])\n" +
+        "  LogicalCorrelate(correlation=[$cor0], joinType=[inner], requiredColumns=[{2}])\n" +
+        "    LogicalTableScan(table=[[hive, default, complex]])\n" +
+        "    LogicalProject(EXPR$0=[$0])\n" +
+        "      Uncollect\n" +
+        "        LogicalProject(c=[$cor0.c])\n" +
+        "          LogicalValues(tuples=[[{ 0 }]])\n";
+    assertEquals(RelOptUtil.toString(relNode), expected);
+  }
+
+  @Test
+  public void testLateralViewOuter() {
+    final String sql = "SELECT a, t.ccol from complex lateral view outer explode(complex.c) t as ccol";
+    HiveToRelConverter rel2sql = HiveToRelConverter.create(new HiveMscAdapter(ToRelConverter.getMsc()));
+    RelNode relNode = rel2sql.convertSql(sql);
+    String expected = "LogicalProject(a=[$0], ccol=[$5])\n" +
+        "  LogicalCorrelate(correlation=[$cor0], joinType=[inner], requiredColumns=[{2}])\n" +
+        "    LogicalTableScan(table=[[hive, default, complex]])\n" +
+        "    LogicalProject(EXPR$0=[$0])\n" +
+        "      Uncollect\n" +
+        "        LogicalProject(EXPR$0=[if(AND(IS NOT NULL($cor0.c), >(CARDINALITY($cor0.c), 0)), $cor0.c, ARRAY(null))])\n"+
+        "          LogicalValues(tuples=[[{ 0 }]])\n";
+
+    assertEquals(RelOptUtil.toString(relNode), expected);
+  }
+
+  @Test
+  public void testCalciteLateral() throws SqlParseException {
+    final String sql = "SELECT a, t.c from complex, lateral (select * from unnest(complex.c) ) as t(c)";
+    SqlParser parser = SqlParser.create(sql, SqlParser.Config.DEFAULT);
+    SqlNode sqlNode = parser.parseQuery();
+    HiveToRelConverter hive2Rel = HiveToRelConverter.create(new HiveMscAdapter(ToRelConverter.getMsc()));
+    RelNode relNode = hive2Rel.toRel(sqlNode);
+    System.out.println(RelOptUtil.toString(relNode));
+  }
+
+  @Test
+  public void testMultipleMixedLateralClauses() {
+    final String sql = "SELECT a, ccol, r.anotherCCol from complex " +
+        " lateral view outer explode(complex.c) t as ccol " +
+        " lateral view explode(complex.c) r as anotherCCol";
+    HiveToRelConverter rel2sql = HiveToRelConverter.create(new HiveMscAdapter(ToRelConverter.getMsc()));
+    RelNode relNode = rel2sql.convertSql(sql);
+    String expected = "LogicalProject(a=[$0], ccol=[$5], anotherCCol=[$6])\n" +
+        "  LogicalCorrelate(correlation=[$cor3], joinType=[inner], requiredColumns=[{2}])\n" +
+        "    LogicalCorrelate(correlation=[$cor0], joinType=[inner], requiredColumns=[{2}])\n" +
+        "      LogicalTableScan(table=[[hive, default, complex]])\n" +
+        "      LogicalProject(EXPR$0=[$0])\n" +
+        "        Uncollect\n" +
+        "          LogicalProject(EXPR$0=[if(AND(IS NOT NULL($cor0.c), >(CARDINALITY($cor0.c), 0)), $cor0.c, ARRAY(null))])\n" +
+        "            LogicalValues(tuples=[[{ 0 }]])\n" +
+        "    LogicalProject(EXPR$0=[$0])\n" +
+        "      Uncollect\n" +
+        "        LogicalProject(c=[$cor3.c])\n" +
+        "          LogicalValues(tuples=[[{ 0 }]])\n";
+    assertEquals(RelOptUtil.toString(relNode), expected);
+  }
+
+  // TODO: Enable me. This is dependent on another RB being approved. And this may fail
+  // Such usages are rare so pushing this to make progress
+  @Test(enabled = false)
+  public void testComplexLateralExplodeOperand() {
+    final String sql = "SELECT a, ccol from complex lateral view " +
+        " explode(if(size(complex.c) > 5, array(10.5), complex.c)) t as ccol";
+    System.out.println(relToString(sql));
   }
 
   private String relToString(String sql) {

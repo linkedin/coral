@@ -28,6 +28,10 @@ class ToRelConverter {
     relContextProvider = new RelContextProvider(schema);
   }
 
+  public static IMetaStoreClient getMsc() {
+    return msc;
+  }
+
   static String relToString(String sql) {
     return RelOptUtil.toString(converter.convertSql(sql));
   }

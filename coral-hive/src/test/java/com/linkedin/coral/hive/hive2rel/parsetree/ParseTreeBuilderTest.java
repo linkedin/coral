@@ -42,11 +42,6 @@ public class ParseTreeBuilderTest {
   }
 
   @Test
-  public void testParser() throws SqlParseException {
-    convertAndValidate("SELECT cast(a as double) from foo");
-  }
-
-  @Test
   public void testBasicSql() throws SqlParseException {
     String[] sql = {
         "SELECT a, -c, a+c, (c>10), (c > 10 AND a < 25) from test.tableOne where c > 10 AND a < 15 OR b = 'abc'",
@@ -86,6 +81,7 @@ public class ParseTreeBuilderTest {
         "SELECT cast(a as date) from foo",
         "SELECT cast(a as timestamp) from foo",
         "SELECT cast(a as float) from foo",
+        "SELECT a as acol from foo"
     };
 
     for (String s : sql) {
@@ -101,6 +97,14 @@ public class ParseTreeBuilderTest {
             "SELECT CASE `a` + 10 when 20 then 5 when 30 then 10 else 1 END from `foo`" },
         { "SELECT CASE WHEN a THEN 10 WHEN b THEN 20 ELSE 30 END from foo",
             "SELECT CASE WHEN `a` THEN 10 WHEN `b` THEN 20 ELSE 30 END from `foo`"},
+        { "SELECT a, bcol from foo lateral view explode(foo.b) t as bcol",
+            "SELECT `a`, `bcol` from `foo`, lateral (SELECT * from unnest(`foo`.`b`)) as `t` (`bcol`)"
+        },
+        {
+            "SELECT a, bcol from foo lateral view outer explode(foo.b) t as bcol",
+            "SELECT `a`, `bcol` from `foo`, lateral (SELECT * from " +
+                "unnest(`if`(`foo`.`b` is not null and cardinality(`foo`.`b`) > 0, `foo`.`b`, array[null]))) as `t` (`bcol`)"
+        },
         {
           "SELECT named_struct('abc', 123, 'def', 234.23) FROM foo",
             "SELECT `named_struct`('abc', 123, 'def', 234.23) FROM `foo`"

@@ -140,6 +140,11 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
     addFunctionEntry("upper", SqlStdOperatorTable.UPPER);
     addFunctionEntry("ucase", SqlStdOperatorTable.UPPER);
 
+    // Collection functions
+    addFunctionEntry("size", SqlStdOperatorTable.CARDINALITY);
+    createAddUserDefinedFunction("array_contains", ReturnTypes.BOOLEAN,
+        OperandTypes.family(SqlTypeFamily.ARRAY, SqlTypeFamily.ANY));
+    createAddUserDefinedFunction("sort_array", ReturnTypes.ARG0, OperandTypes.ARRAY);
     // LinkedIn UDFs: Dali stores mapping from UDF name to the implementing Java class as table properties
     // in the HCatalog. So, an UDF implementation may be referred by different names by different views.
     // We register these UDFs by the implementing class name to create a single entry for each UDF.
@@ -148,6 +153,8 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
     createAddUserDefinedFunction("com.linkedin.dali.udf.urnextractor.hive.UrnExtractor", explicit(SqlTypeName.ARRAY),
         or(STRING, ARRAY));
 
+    // UDTFs
+    addFunctionEntry("explode", SqlStdOperatorTable.UNNEST);
     // FOR UNIT TESTING
     createAddUserDefinedFunction("com.linkedin.coral.hive.hive2rel.CoralTestUDF", ReturnTypes.BOOLEAN,
         family(SqlTypeFamily.INTEGER));

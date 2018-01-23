@@ -221,19 +221,30 @@ public class RelToPrestoConverterTest {
     testConversion(sql, "");
   }
 
+
+  // Lateral and Unnest unit tests have incorrect looking sql as expected sql. That's because
+  // we use calcite parser and sql2rel converters which generate incorrect plan.
+  // TODO: Replace these with more reliable tests
   @Test
   public void testLateralView() {
+    // we need multiple lateral clauses and projection of columns
+    // other than those from lateral view for more robust testing
     final String sql = ""
-        + "select icol, i_plusOne "
+        + "select icol, i_plusOne, d_plusTen, tcol, acol "
         + "from tableOne as t, "
         + "     lateral (select t.icol + 1 as i_plusOne"
-        + "              from (values(true)))";
+        + "              from (values(true))), "
+        + "     lateral (select t.dcol + 10 as d_plusTen"
+        + "               from (values(true)))";
 
     final String expected = ""
-        + "SELECT \"$cor0\".\"icol\" AS \"ICOL\", \"t0\".\"I_PLUSONE\"\n"
-        + "FROM \"tableOne\" AS \"$cor0\"\n"
+        + "SELECT \"$cor1\".\"icol\" AS \"ICOL\", \"$cor1\".\"I_PLUSONE\", "
+        + "\"$cor1\".\"D_PLUSTEN\", \"$cor1\".\"tcol\" AS \"TCOL\", \"$cor1\".\"acol\" AS \"ACOL\"\n"
+        + "FROM (\"tableOne\" AS \"$cor0\"\n"
         + "CROSS JOIN (SELECT \"$cor0\".\"icol_0\" + 1 AS \"I_PLUSONE\"\n"
-        + "FROM (VALUES  (TRUE))) AS \"t0\"";
+        + "FROM (VALUES  (TRUE))) AS \"t0\") AS \"$cor1\"\n"
+        + "CROSS JOIN (SELECT \"$cor1\".\"dcol_1\" + 10 AS \"D_PLUSTEN\"\n"
+        + "FROM (VALUES  (TRUE))) AS \"t2\"";
     testConversion(sql, expected);
   }
 
@@ -249,12 +260,15 @@ public class RelToPrestoConverterTest {
     testConversion(sql, expected);
   }
 
+  // Expected SQL has badly aliased names and column names because of errors in calcite
+  // SQL parser. We need to replace this with more reliable test. For now, this is better than
+  // not having any test.
   @Test
   public void testLateralViewUnnest() {
     String sql = "select icol, acol_elem from tableOne as t cross join unnest(t.acol) as t1(acol_elem)";
     System.out.println(RelOptUtil.toString(toRel(sql, config)));
     String expectedSql = ""
-        + "SELECT \"$cor0\".\"icol\" AS \"ICOL\", \"t0\".\"acol\" AS \"ACOL_ELEM\"\n"
+        + "SELECT \"$cor0\".\"icol\" AS \"ICOL\", \"$cor0\".\"acol0\" AS \"ACOL_ELEM\"\n"
         + "FROM \"tableOne\" AS \"$cor0\"\n"
         + "CROSS JOIN UNNEST(\"$cor0\".\"acol_4\") AS \"t0\" (\"acol\")";
     testConversion(sql, expectedSql);

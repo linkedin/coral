@@ -73,7 +73,7 @@ public class RelToPrestoConverter extends RelToSqlConverter {
     final Result x = visitChild(0, e.getInput());
     final Builder builder = x.builder(e, Clause.SELECT);
 
-    // Buil <unnestColumns>
+    // Build <unnestColumns>
     final List<SqlNode> unnestOperands = new ArrayList<>();
     for (RexNode unnestCol : ((Project) e.getInput()).getChildExps()) {
       unnestOperands.add(builder.context.toSql(null, unnestCol));
@@ -113,20 +113,17 @@ public class RelToPrestoConverter extends RelToSqlConverter {
   }
 
   public Result visit(Correlate e) {
-    final Result leftResult = visitChild(0, e.getLeft());
-    final SqlNode leftLateral = SqlStdOperatorTable.AS.createCall(POS, leftResult.node,
-        new SqlIdentifier(e.getCorrelVariable(), POS));
-
+    final Result leftResult = visitChild(0, e.getLeft()).resetAlias(e.getCorrelVariable(), e.getRowType());
     final Result rightResult = visitChild(1, e.getRight());
     SqlNode rightLateral = rightResult.node;
     if (rightLateral.getKind() != SqlKind.AS) {
-      rightLateral = SqlStdOperatorTable.AS.createCall(POS, rightResult.node,
+      rightLateral = SqlStdOperatorTable.AS.createCall(POS, rightLateral,
           new SqlIdentifier(rightResult.neededAlias, POS));
     }
 
     final SqlNode join =
         new SqlJoin(POS,
-            leftLateral,
+            leftResult.asFrom(),
             SqlLiteral.createBoolean(false, POS),
             JoinType.CROSS.symbol(POS),
             rightLateral,

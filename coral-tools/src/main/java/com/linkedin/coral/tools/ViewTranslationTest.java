@@ -4,6 +4,7 @@ import com.facebook.presto.sql.parser.ParsingOptions;
 import com.facebook.presto.sql.parser.SqlParser;
 import com.facebook.presto.sql.tree.Statement;
 import com.google.common.collect.ImmutableList;
+import com.linkedin.coral.com.google.common.base.Preconditions;
 import com.linkedin.coral.converters.HiveToPrestoConverter;
 import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
 import com.linkedin.coral.hive.hive2rel.functions.UnknownSqlFunctionException;
@@ -69,7 +70,8 @@ public class ViewTranslationTest {
     HiveToPrestoConverter converter = HiveToPrestoConverter.create(msc);
     OutputStream ostr = System.out;
     //translateTable("access_log_mp_versioned", "datavault_resource_access_event_base_0_3_1", msc, converter);
-    translateAllViews(msc, converter, ostr);
+    translateTable("foundation_enterprise_mp.fact_leap_broadcast_action_event", converter);
+    //translateAllViews(msc, converter, ostr);
   }
 
   // for debugging
@@ -133,7 +135,7 @@ public class ViewTranslationTest {
           ++stats.views;
           isDaliView = table.getOwner().equalsIgnoreCase("daliview");
           stats.daliviews += isDaliView ? 1 : 0;
-          convertToPrestoAndValidate(table, converter);
+          convertToPrestoAndValidate(db, tableName, converter);
 
         } catch (Exception e) {
           ++stats.failures;
@@ -290,21 +292,20 @@ public class ViewTranslationTest {
     return views;
   }
 
-  public static void translateTable(String db, String tableName, HiveMetastoreClient msc,
-      HiveToPrestoConverter converter) {
-    Table table = msc.getTable(db, tableName);
-    convertToPrestoAndValidate(table, converter);
+  public static void translateTable(String dbTable, HiveToPrestoConverter converter) {
+    String[] dbTableParts = dbTable.split("\\.");
+    Preconditions.checkState(dbTableParts.length == 2,
+        String.format("<db>.<table> format is required. Provided %s", dbTable));
+    convertToPrestoAndValidate(dbTableParts[0], dbTableParts[1], converter);
   }
 
-  private static void convertToPrestoAndValidate(Table table, HiveToPrestoConverter converter) {
-    validatePrestoSql(toPrestoSql(table, converter));
+  private static void convertToPrestoAndValidate(String db, String table, HiveToPrestoConverter converter) {
+    validatePrestoSql(toPrestoSql(db, table, converter));
   }
 
-  private static String toPrestoSql(Table table, HiveToPrestoConverter converter) {
+  private static String toPrestoSql(String db, String table, HiveToPrestoConverter converter) {
     checkNotNull(table);
-    checkArgument(table.getTableType().equalsIgnoreCase("virtual_view"));
-    String viewText = table.getViewExpandedText();
-    return converter.toPrestoSql(viewText);
+    return converter.toPrestoSql(db, table);
   }
 
   private static void validatePrestoSql(String sql) {

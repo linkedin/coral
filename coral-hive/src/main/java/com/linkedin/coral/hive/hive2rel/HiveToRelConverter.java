@@ -1,5 +1,6 @@
 package com.linkedin.coral.hive.hive2rel;
 
+import com.linkedin.coral.com.google.common.annotations.VisibleForTesting;
 import com.linkedin.coral.hive.hive2rel.parsetree.ParseTreeBuilder;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelRoot;
@@ -74,7 +75,9 @@ public class HiveToRelConverter {
     return new ParseTreeBuilder(relContextProvider.getHiveSchema().getHiveMetastoreClient(),
         relContextProvider.getParseTreeBuilderConfig());
   }
-  private RelNode toRel(SqlNode sqlNode) {
+
+  @VisibleForTesting
+  RelNode toRel(SqlNode sqlNode) {
     RelRoot root = relContextProvider.getSqlToRelConverter().convertQuery(sqlNode, true, true);
     return root.rel;
   }

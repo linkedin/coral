@@ -83,7 +83,7 @@ public abstract class AbstractASTVisitor<R, C> {
         return visitLimit(node, ctx);
 
       case HiveParser.TOK_SELECT:
-        return visitSelects(node, ctx);
+        return visitSelect(node, ctx);
 
       case HiveParser.TOK_SELEXPR:
         return visitSelectExpr(node, ctx);
@@ -241,6 +241,9 @@ public abstract class AbstractASTVisitor<R, C> {
       case HiveParser.TOK_LATERAL_VIEW:
         return visitLateralView(node, ctx);
 
+      case HiveParser.TOK_LATERAL_VIEW_OUTER:
+        return visitLateralViewOuter(node, ctx);
+
       case HiveParser.TOK_TABALIAS:
         return visitTabAlias(node, ctx);
 
@@ -274,6 +277,10 @@ public abstract class AbstractASTVisitor<R, C> {
   }
 
   protected R visitLateralView(ASTNode node, C ctx) {
+    return visitChildren(node, ctx).get(0);
+  }
+
+  protected R visitLateralViewOuter(ASTNode node, C ctx) {
     return visitChildren(node, ctx).get(0);
   }
 
@@ -385,7 +392,7 @@ public abstract class AbstractASTVisitor<R, C> {
     return visitChildren(node, ctx).get(0);
   }
 
-  protected R visitSelects(ASTNode node, C ctx) {
+  protected R visitSelect(ASTNode node, C ctx) {
     return visitChildren(node, ctx).get(0);
   }
 
