@@ -554,6 +554,11 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     return SqlLiteral.createCharString("is not null", ZERO);
   }
 
+  @Override
+  protected SqlNode visitKeywordLiteral(ASTNode node, ParseContext ctx) {
+    return SqlLiteral.createCharString(node.getText(), ZERO);
+  }
+
   private SqlDataTypeSpec createTypeSpec(String type) {
     return new SqlDataTypeSpec(new SqlIdentifier(type, ZERO), -1, -1, null, null, ZERO);
   }

@@ -175,7 +175,7 @@ public abstract class AbstractASTVisitor<R, C> {
       case HiveParser.KW_ARRAY:
       case HiveParser.KW_MAP:
       case HiveParser.KW_STRUCT:
-        return visitStringLiteral(node, ctx);
+        return visitKeywordLiteral(node, ctx);
 
       case HiveParser.TOK_BOOLEAN:
         return visitBoolean(node, ctx);
@@ -248,6 +248,10 @@ public abstract class AbstractASTVisitor<R, C> {
         // return visitChildren(node, ctx);
         throw new UnhandledASTTokenException(node);
     }
+  }
+
+  protected R visitKeywordLiteral(ASTNode node, C ctx) {
+    return visitChildren(node, ctx).get(0);
   }
 
   protected List<R> visitChildren(ASTNode node, C ctx) {
