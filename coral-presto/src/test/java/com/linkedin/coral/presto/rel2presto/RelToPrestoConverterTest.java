@@ -317,6 +317,12 @@ public class RelToPrestoConverterTest {
   }
 
   @Test
+  public void testVarcharCast() {
+    final String sql = "SELECT cast(icol as varchar(1000)) FROM " + tableOne;
+    testConversion(sql, "SELECT CAST(\"icol\" AS VARCHAR(1000))\nFROM \"" + tableOne + "\"");
+  }
+
+  @Test
   public void testRand() throws Exception {
     String sql1 = "SELECT icol, rand() "
         + "FROM " + TABLE_ONE.getTableName();

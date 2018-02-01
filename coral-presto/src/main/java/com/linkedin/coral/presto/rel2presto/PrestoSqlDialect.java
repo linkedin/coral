@@ -10,4 +10,8 @@ public class PrestoSqlDialect extends SqlDialect {
     super(DatabaseProduct.UNKNOWN, "Presto", "\"", NullCollation.LAST);
   }
 
+  @Override
+  public boolean supportsCharSet() {
+    return false;
+  }
 }
