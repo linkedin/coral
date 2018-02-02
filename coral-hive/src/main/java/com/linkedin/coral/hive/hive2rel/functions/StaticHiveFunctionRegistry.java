@@ -154,7 +154,7 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
         or(STRING, ARRAY));
 
     // UDTFs
-    addFunctionEntry("explode", SqlStdOperatorTable.UNNEST);
+    addFunctionEntry("explode", HiveExplodeOperator.EXPLODE);
     // FOR UNIT TESTING
     createAddUserDefinedFunction("com.linkedin.coral.hive.hive2rel.CoralTestUDF", ReturnTypes.BOOLEAN,
         family(SqlTypeFamily.INTEGER));

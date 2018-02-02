@@ -49,7 +49,7 @@ public class HiveTableTest {
     rowType = complexTable.getRowType(typeFactory);
     assertNotNull(rowType);
     assertTrue(rowType.isStruct());
-    assertEquals(rowType.getFieldCount(), 5);
+    assertEquals(rowType.getFieldCount(), 6);
     RelDataTypeField colC = rowType.getField("c", false, false);
     assertEquals(colC.getType().getSqlTypeName(), SqlTypeName.ARRAY);
     assertEquals(colC.getType().getComponentType().getSqlTypeName(), SqlTypeName.DOUBLE);

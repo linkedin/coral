@@ -3,6 +3,7 @@ package com.linkedin.coral.hive.hive2rel.parsetree;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
+import com.linkedin.coral.hive.hive2rel.functions.HiveExplodeOperator;
 import com.linkedin.coral.hive.hive2rel.functions.HiveFunction;
 import com.linkedin.coral.hive.hive2rel.functions.HiveFunctionResolver;
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
@@ -174,7 +175,7 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
       HiveFunction hiveIfFunction = functionResolver.tryResolve("if", false, null);
       SqlCall ifFunctionCall = hiveIfFunction.createCall(SqlLiteral.createCharString("if", ZERO),
           ImmutableList.of(ifCondition, unnestOperand, arrOfNull));
-      unnestCall = SqlStdOperatorTable.UNNEST.createCall(ZERO, ifFunctionCall);
+      unnestCall = HiveExplodeOperator.EXPLODE.createCall(ZERO, ifFunctionCall);
     }
 
     SqlNode rightSelect = new SqlSelect(ZERO, null,
