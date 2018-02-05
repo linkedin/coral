@@ -1,5 +1,6 @@
 package com.linkedin.coral.presto.rel2presto;
 
+import com.linkedin.coral.functions.HiveRLikeOperator;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
@@ -25,6 +26,8 @@ public class CalcitePrestoUDFMap {
     // String Functions
     createUDFMapEntry(UDF_MAP, SqlStdOperatorTable.SUBSTRING, 2, "SUBSTR");
     createUDFMapEntry(UDF_MAP, SqlStdOperatorTable.SUBSTRING, 3, "SUBSTR");
+    createUDFMapEntry(UDF_MAP, HiveRLikeOperator.RLIKE, 2, "REGEXP_LIKE");
+    createUDFMapEntry(UDF_MAP, HiveRLikeOperator.REGEXP, 2, "REGEXP_LIKE");
   }
 
   /**

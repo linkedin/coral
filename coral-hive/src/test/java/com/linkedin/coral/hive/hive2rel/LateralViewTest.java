@@ -8,7 +8,6 @@ import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import static com.linkedin.coral.hive.hive2rel.ToRelConverter.*;
 import static org.testng.Assert.*;
 
 
@@ -64,7 +63,7 @@ public class LateralViewTest {
         "      HiveUncollect\n" +
         "        LogicalProject(c=[$cor3.c])\n" +
         "          LogicalValues(tuples=[[{ 0 }]])\n";
-    assertEquals(relToString(sql), expected);
+    assertEquals(toRelStr(sql), expected);
   }
 
   @Test

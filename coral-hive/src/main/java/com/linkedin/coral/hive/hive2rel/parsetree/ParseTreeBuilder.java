@@ -1,7 +1,7 @@
 package com.linkedin.coral.hive.hive2rel.parsetree;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
+import com.linkedin.coral.com.google.common.collect.Iterables;
 import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
 import com.linkedin.coral.hive.hive2rel.functions.HiveExplodeOperator;
 import com.linkedin.coral.hive.hive2rel.functions.HiveFunction;
@@ -21,7 +21,6 @@ import org.apache.calcite.sql.JoinConditionType;
 import org.apache.calcite.sql.JoinType;
 import org.apache.calcite.sql.SqlAsOperator;
 import org.apache.calcite.sql.SqlBasicCall;
-import org.apache.calcite.sql.SqlBinaryOperator;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlDataTypeSpec;
 import org.apache.calcite.sql.SqlIdentifier;
@@ -30,7 +29,6 @@ import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlNodeList;
 import org.apache.calcite.sql.SqlOperator;
-import org.apache.calcite.sql.SqlPrefixOperator;
 import org.apache.calcite.sql.SqlSelect;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.type.SqlTypeName;
@@ -318,44 +316,37 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
 
   private SqlNode visitUnaryOperator(ASTNode node, ParseContext ctx) {
     SqlNode operand = visit((ASTNode) node.getChildren().get(0), ctx);
-    List<SqlOperator> operators = SqlStdOperatorTable.instance()
-        .getOperatorList()
-        .stream()
-        .filter(o -> o.getName().toUpperCase().equals(node.getText().toUpperCase()) && o instanceof SqlPrefixOperator)
-        .collect(Collectors.toList());
-    checkState(operators.size() == 1, "%s operator %s, tree: %s", operators.isEmpty() ? "Unknown" : "Ambiguous",
-        node.getText(), node.dump());
-    return operators.get(0).createCall(ZERO, operand);
+    SqlOperator operator = functionResolver.resolveUnaryOperator(node.getText());
+    return operator.createCall(ZERO, operand);
   }
 
   private SqlNode visitBinaryOperator(ASTNode node, ParseContext ctx) {
     List<SqlNode> sqlNodes = visitChildren(node, ctx);
     checkState(sqlNodes.size() == 2);
-    List<SqlOperator> operators = SqlStdOperatorTable.instance()
-        .getOperatorList()
-        .stream()
-        .filter(o -> o.getName().toUpperCase().equals(node.getText().toUpperCase()) && o instanceof SqlBinaryOperator)
-        .collect(Collectors.toList());
-    checkState(operators.size() == 1, "%s operator %s, tree: %s", operators.isEmpty() ? "Unknown" : "Ambiguous",
-        node.getText(), node.dump());
-    return operators.get(0).createCall(ZERO, sqlNodes);
+    return functionResolver.resolveBinaryOperator(node.getText())
+        .createCall(ZERO, sqlNodes);
   }
 
   @Override
   protected SqlNode visitDotOperator(ASTNode node, ParseContext ctx) {
     List<SqlNode> sqlNodes = visitChildren(node, ctx);
     checkState(sqlNodes != null && sqlNodes.size() == 2);
-    SqlIdentifier left = (SqlIdentifier) sqlNodes.get(0);
-    SqlIdentifier right = (SqlIdentifier) sqlNodes.get(1);
-    Iterable<String> names = Iterables.concat(left.names, right.names);
-    return new SqlIdentifier(ImmutableList.copyOf(names), ZERO);
+    // return SqlStdOperatorTable.DOT.createCall(ZERO, sqlNodes);
+    if (sqlNodes.get(0) instanceof SqlIdentifier) {
+      SqlIdentifier left = (SqlIdentifier) sqlNodes.get(0);
+      SqlIdentifier right = (SqlIdentifier) sqlNodes.get(1);
+      Iterable<String> names = Iterables.concat(left.names, right.names);
+      return new SqlIdentifier(ImmutableList.copyOf(names), ZERO);
+    } else {
+      return SqlStdOperatorTable.DOT.createCall(ZERO, sqlNodes);
+    }
   }
 
   @Override
   protected SqlNode visitLParen(ASTNode node, ParseContext ctx) {
     List<SqlNode> sqlNodes = visitChildren(node, ctx);
     checkState(sqlNodes.size() == 2);
-    return new SqlBasicCall(SqlStdOperatorTable.ITEM, new SqlNode[]{sqlNodes.get(0), sqlNodes.get(1)}, ZERO);
+    return SqlStdOperatorTable.ITEM.createCall(ZERO, sqlNodes);
   }
 
   @Override

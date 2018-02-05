@@ -141,6 +141,8 @@ public abstract class AbstractASTVisitor<R, C> {
       case HiveParser.EQUAL_NS:
       case HiveParser.KW_NOT:
       case HiveParser.KW_LIKE:
+      case HiveParser.KW_RLIKE:
+      case HiveParser.KW_REGEXP:
         return visitOperator(node, ctx);
 
       case HiveParser.LSQUARE:

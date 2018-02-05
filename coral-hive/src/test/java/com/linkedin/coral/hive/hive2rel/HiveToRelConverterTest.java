@@ -5,8 +5,6 @@ import com.linkedin.coral.hive.hive2rel.functions.UnknownSqlFunctionException;
 import java.io.IOException;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rel.rel2sql.RelToSqlConverter;
-import org.apache.calcite.sql.SqlDialect;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.tools.RelBuilder;
 import org.apache.hadoop.hive.metastore.api.MetaException;
@@ -37,6 +35,13 @@ public class HiveToRelConverterTest {
             ImmutableList.of(), true)
         .build();
     verifyRel(rel, expected);
+  }
+
+  // disabled because this is not supported by calcite
+  @Test (enabled = false)
+  public void testSelectNull() {
+    final String sql = "SELECT NULL as f";
+    System.out.println(relToString(sql));
   }
 
   @Test
@@ -119,12 +124,44 @@ public class HiveToRelConverterTest {
   }
 
   @Test
+  public void testSelectArrayElement() {
+    final String sql = "SELECT c[0] from complex";
+    final String expectedRel = "LogicalProject(EXPR$0=[ITEM($2, 0)])\n" +
+        "  LogicalTableScan(table=[[hive, default, complex]])\n";
+    assertEquals(relToString(sql), expectedRel);
+  }
+
+  @Test
+  public void testSelectArrayElemComplex() {
+    final String sql = "SELECT split(b, ',')[0] FROM complex";
+    final String expected = "LogicalProject(EXPR$0=[ITEM(split($1, ','), 0)])\n" +
+        "  LogicalTableScan(table=[[hive, default, complex]])\n";
+    assertEquals(relToString(sql), expected);
+  }
+
+  @Test
   public void testMapType() {
     final String sql = "SELECT map('abc', 123, 'def', 567)";
     String generated = relToString(sql);
     final String expected =
         "LogicalProject(EXPR$0=[MAP('abc', 123, 'def', 567)])\n" + "  LogicalValues(tuples=[[{ 0 }]])\n";
     assertEquals(generated, expected);
+  }
+
+  @Test
+  public void testMapItem() {
+    final String sql = "SELECT m[a] FROM complex";
+    final String expected = "LogicalProject(EXPR$0=[ITEM($4, $0)])\n" +
+        "  LogicalTableScan(table=[[hive, default, complex]])\n";
+    assertEquals(relToString(sql), expected);
+  }
+
+  @Test
+  public void testArrayMapItemOperator() {
+    final String sql = "SELECT array(map('abc', 123, 'def', 567),map('pqr', 65, 'xyz', 89))[0]['abc']";
+    final String expected = "LogicalProject(EXPR$0=[ITEM(ITEM(ARRAY(MAP('abc', 123, 'def', 567), MAP('pqr', 65, 'xyz', 89)), 0), 'abc')])\n" +
+        "  LogicalValues(tuples=[[{ 0 }]])\n";
+    assertEquals(relToString(sql), expected);
   }
 
   @Test
@@ -139,9 +176,11 @@ public class HiveToRelConverterTest {
   @Test
   public void testNamedStruct() {
     final String sql = "SELECT named_struct('abc', cast(NULL as int), 'def', 150)";
-    String generated = relToString(sql);
-    System.out.println(generated);
-    System.out.println(new RelToSqlConverter(SqlDialect.DatabaseProduct.POSTGRESQL.getDialect()).visitChild(0, converter.convertSql(sql)).asStatement());
+    final String expectedRel = "LogicalProject(EXPR$0=[CAST(ROW(null, 150)):RecordType(INTEGER 'abc', INTEGER NOT NULL 'def') NOT NULL])\n" +
+        "  LogicalValues(tuples=[[{ 0 }]])\n";
+    RelNode rel = toRel(sql);
+
+    assertEquals(relToStr(rel), expectedRel);
   }
 
   private String relToString(String sql) {

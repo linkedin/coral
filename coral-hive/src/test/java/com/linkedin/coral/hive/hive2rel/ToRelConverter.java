@@ -3,6 +3,8 @@ package com.linkedin.coral.hive.hive2rel;
 import java.io.IOException;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.rel2sql.RelToSqlConverter;
+import org.apache.calcite.sql.SqlDialect;
 import org.apache.calcite.tools.RelBuilder;
 import org.apache.hadoop.hive.metastore.IMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.MetaException;
@@ -32,8 +34,16 @@ class ToRelConverter {
     return msc;
   }
 
-  static String relToString(String sql) {
-    return RelOptUtil.toString(converter.convertSql(sql));
+  static RelNode toRel(String sql) {
+    return converter.convertSql(sql);
+  }
+
+  static String relToStr(RelNode rel) {
+    return RelOptUtil.toString(rel);
+  }
+
+  static String sqlToRelStr(String sql) {
+    return relToStr(toRel(sql));
   }
 
   static RelBuilder createRelBuilder() {
@@ -46,5 +56,12 @@ class ToRelConverter {
       verifyRel(input.getInput(i), expected.getInput(i));
     }
     RelOptUtil.areRowTypesEqual(input.getRowType(), expected.getRowType(), true);
+  }
+
+  static String relToSql(RelNode rel) {
+    RelToSqlConverter rel2sql = new RelToSqlConverter(SqlDialect.DatabaseProduct.POSTGRESQL.getDialect());
+    return rel2sql.visitChild(0, rel)
+        .asStatement()
+        .toSqlString(SqlDialect.DatabaseProduct.POSTGRESQL.getDialect()).getSql();
   }
 }

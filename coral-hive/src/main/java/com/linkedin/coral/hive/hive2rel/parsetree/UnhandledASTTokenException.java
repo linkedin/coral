@@ -11,4 +11,8 @@ public class UnhandledASTTokenException extends RuntimeException {
     super(String.format("Unhandled Hive AST token %s, tree: %s", node.getText(), node.dump()));
     this.node = node;
   }
+
+  public ASTNode getNode() {
+    return node;
+  }
 }
