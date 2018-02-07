@@ -65,6 +65,8 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
     FUNCTION_MAP.put("case", HiveFunction.CASE);
     FUNCTION_MAP.put("between", HiveFunction.BETWEEN);
     addFunctionEntry("nullif", SqlStdOperatorTable.NULLIF);
+    addFunctionEntry("isnull", IS_NULL);
+    addFunctionEntry("isnotnull", IS_NOT_NULL);
 
     // TODO: this should be arg1 or arg2 nullable
     createAddUserDefinedFunction("nvl", HiveReturnTypes.ARG1_OR_ARG2, ANY);
@@ -137,7 +139,7 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
     createAddUserDefinedFunction("regexp_replace", HiveReturnTypes.STRING, STRING_STRING_STRING);
     createAddUserDefinedFunction("repeat", HiveReturnTypes.STRING, family(SqlTypeFamily.STRING, SqlTypeFamily.INTEGER));
     addFunctionEntry("replace", SqlStdOperatorTable.REPLACE);
-    createAddUserDefinedFunction("reverse", ARG0, STRING);
+    createAddUserDefinedFunction("reverse", ARG0, or(STRING, NULLABLE_LITERAL));
     createAddUserDefinedFunction("rpad", HiveReturnTypes.STRING,
         family(SqlTypeFamily.STRING, SqlTypeFamily.INTEGER, SqlTypeFamily.STRING));
     createAddUserDefinedFunction("rtrim", HiveReturnTypes.STRING, STRING);

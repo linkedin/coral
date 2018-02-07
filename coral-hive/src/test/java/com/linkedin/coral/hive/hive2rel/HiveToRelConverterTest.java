@@ -37,11 +37,39 @@ public class HiveToRelConverterTest {
     verifyRel(rel, expected);
   }
 
-  // disabled because this is not supported by calcite
-  @Test (enabled = false)
+  @Test
   public void testSelectNull() {
     final String sql = "SELECT NULL as f";
-    System.out.println(relToString(sql));
+    RelNode rel = toRel(sql);
+    final String expected = "LogicalProject(f=[null])\n" +
+        "  LogicalValues(tuples=[[{ 0 }]])\n";
+    assertEquals(relToStr(rel), expected);
+    final String expectedSql = "SELECT NULL AS \"f\"\nFROM (VALUES  (0))";
+    assertEquals(relToSql(rel), expectedSql);
+  }
+
+  @Test
+  public void testNullOperand() {
+    {
+      // reverse returns ARG0 as return type
+      final String sql = "SELECT reverse(NULL)";
+      RelNode rel = toRel(sql);
+      String expectedRel = "LogicalProject(EXPR$0=[reverse(null)])\n"
+          + "  LogicalValues(tuples=[[{ 0 }]])\n";
+      assertEquals(relToStr(rel), expectedRel);
+    }
+    {
+      final String sql = "SELECT isnull(NULL)";
+      String expectedRel = "LogicalProject(EXPR$0=[IS NULL(null)])\n"
+          + "  LogicalValues(tuples=[[{ 0 }]])\n";
+      assertEquals(relToStr(toRel(sql)), expectedRel);
+    }
+    {
+      final String sql = "SELECT isnull(reverse(NULL))";
+      String expectedRel = "LogicalProject(EXPR$0=[IS NULL(reverse(null))])\n" +
+          "  LogicalValues(tuples=[[{ 0 }]])\n";
+      assertEquals(relToStr(toRel(sql)), expectedRel);
+    }
   }
 
   @Test
