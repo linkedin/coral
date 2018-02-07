@@ -8,6 +8,7 @@ import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlNodeList;
 import org.apache.calcite.sql.SqlOperator;
+import org.apache.calcite.sql.SqlSelect;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.util.Util;
 
@@ -110,16 +111,23 @@ public class HiveFunction {
     }
   };
 
-  public static final HiveFunction NAMED_STRUCT = new HiveFunction("named_struct", SqlStdOperatorTable.CAST) {
+  public static final HiveFunction IN = new HiveFunction("in", HiveInOperator.IN) {
     @Override
     public SqlCall createCall(List<SqlNode> operands) {
-      checkNotNull(operands);
-      checkArgument(!operands.isEmpty() && operands.size() % 2 == 0);
-
-      for (int i = 0; i < operands.size() - 1; i += 2) {
-
+      checkState(operands.size() >= 2);
+      SqlNode lhs = operands.get(0);
+      SqlNode firstRhs = operands.get(1);
+      if (firstRhs instanceof SqlSelect) {
+        // for IN subquery use Calcite IN operator. Calcite IN operator
+        // will turn it into inner join, which not ideal but that's better
+        // tested.
+        return SqlStdOperatorTable.IN.createCall(ZERO, operands);
+      } else {
+        // column IN values () clause
+        List<SqlNode> rhsList = operands.subList(1, operands.size());
+        SqlNodeList rhs = new SqlNodeList(rhsList, ZERO);
+        return getSqlOperator().createCall(ZERO, lhs, rhs);
       }
-      return null;
     }
   };
 }

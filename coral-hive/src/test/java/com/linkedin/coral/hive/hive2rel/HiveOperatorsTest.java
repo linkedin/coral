@@ -11,7 +11,7 @@ import static com.linkedin.coral.hive.hive2rel.ToRelConverter.*;
 import static org.testng.Assert.*;
 
 
-public class TestHiveOperators {
+public class HiveOperatorsTest {
 
   @BeforeClass
   public void beforeClass() throws HiveException, IOException, MetaException {
@@ -47,9 +47,35 @@ public class TestHiveOperators {
     testLikeFamilyOperators("REGEXP");
   }
 
+  @Test
+  public void testInValues() {
+    final String sql = "SELECT a, c FROM foo WHERE b IN ('abc', 'pqr', 'mno')";
+    RelNode rel = toRel(sql);
+    final String expected = "LogicalProject(a=[$0], c=[$2])\n" +
+        "  LogicalFilter(condition=[IN($1, 'abc', 'pqr', 'mno')])\n" +
+        "    LogicalTableScan(table=[[hive, default, foo]])\n";
+    assertEquals(relToStr(rel), expected);
+    final String expectedSql = "SELECT \"a\", \"c\"\nFROM \"hive\".\"default\".\"foo\"\n"
+        + "WHERE \"b\" IN ('abc', 'pqr', 'mno')";
+    assertEquals(relToSql(rel), expectedSql);
+  }
+
+  @Test
+  public void testNotInValues() {
+    final String sql = "SELECT a, b FROM foo WHERE b NOT IN ('abc', 'xyz')";
+    RelNode rel = toRel(sql);
+    final String expected = "LogicalProject(a=[$0], b=[$1])\n" +
+        "  LogicalFilter(condition=[NOT(IN($1, 'abc', 'xyz'))])\n" +
+        "    LogicalTableScan(table=[[hive, default, foo]])\n";
+    assertEquals(relToStr(rel), expected);
+    final String expectedSql = "SELECT \"a\", \"b\"\nFROM \"hive\".\"default\".\"foo\"\n" +
+        "WHERE NOT \"b\" IN ('abc', 'xyz')";
+    assertEquals(relToSql(rel), expectedSql);
+  }
+
   public void testLikeFamilyOperators(String operator) {
     final String sql = "SELECT a, b FROM foo WHERE b " + operator + " 'abc%'";
-     String expectedRel = "LogicalProject(a=[$0], b=[$1])\n" +
+    String expectedRel = "LogicalProject(a=[$0], b=[$1])\n" +
         "  LogicalFilter(condition=[" + operator.toUpperCase()  +"($1, 'abc%')])\n" +
         "    LogicalTableScan(table=[[hive, default, foo]])\n";
     RelNode rel = toRel(sql);

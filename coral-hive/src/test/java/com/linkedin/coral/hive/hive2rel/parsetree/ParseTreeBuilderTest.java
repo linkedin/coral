@@ -1,26 +1,18 @@
 package com.linkedin.coral.hive.hive2rel.parsetree;
 
-import com.google.common.collect.ImmutableList;
 import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
 import com.linkedin.coral.hive.hive2rel.HiveMscAdapter;
 import java.io.IOException;
 import org.apache.calcite.avatica.util.Casing;
-import org.apache.calcite.sql.SqlIdentifier;
-import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlNode;
-import org.apache.calcite.sql.SqlNodeList;
-import org.apache.calcite.sql.SqlSelect;
-import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.parser.SqlParser;
-import org.apache.calcite.util.Litmus;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import static com.linkedin.coral.hive.hive2rel.TestUtils.*;
-import static org.apache.calcite.sql.parser.SqlParserPos.*;
 import static org.testng.Assert.*;
 
 // TODO: Add tests for lateral views and joins (and many more)
@@ -114,32 +106,6 @@ public class ParseTreeBuilderTest {
     for (String[] s : sqlValidator) {
       validateSql(s[0], s[1]);
     }
-  }
-
-  @Test
-  public void validateInList() {
-    String sql = "SELECT a from foo where b in (10, 15, 20)";
-    SqlIdentifier identifierA = new SqlIdentifier("a", ZERO);
-    SqlIdentifier identifierB = new SqlIdentifier("b", ZERO);
-    SqlNodeList projects = new SqlNodeList(ImmutableList.of(identifierA), ZERO);
-    SqlIdentifier table = new SqlIdentifier("foo", ZERO);
-    SqlNode inOperator = SqlStdOperatorTable.IN.createCall(ZERO,
-        ImmutableList.of(
-            identifierB,
-            SqlLiteral.createExactNumeric("10", ZERO),
-            SqlLiteral.createExactNumeric("15", ZERO),
-            SqlLiteral.createExactNumeric("20", ZERO)
-            ));
-    SqlSelect expected = new SqlSelect(ZERO, null, projects, table, inOperator, null, null, null, null, null, null);
-    SqlNode input = convert(sql);
-    assertTrue(input.equalsDeep(expected, Litmus.THROW));
-
-    sql = "SELECT a from foo where b NOT IN (10, 15, 20)";
-    // hive turns 'b not in <List>' to 'not (b in <List>)'
-    SqlNode notInOperator = SqlStdOperatorTable.NOT.createCall(ZERO, inOperator);
-    expected = new SqlSelect(ZERO, null, projects, table, notInOperator, null, null, null, null, null, null);
-    input = convert(sql);
-    assertTrue(input.equalsDeep(expected, Litmus.THROW));
   }
 
   private void validateSql(String input, String expected) throws SqlParseException {

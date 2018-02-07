@@ -50,7 +50,10 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
     addFunctionEntry("min", MIN);
     addFunctionEntry("max", MAX);
 
-    addFunctionEntry("in", IN);
+    //addFunctionEntry("in", HiveInOperator.IN);
+    FUNCTION_MAP.put("in", HiveFunction.IN);
+
+    //addFunctionEntry("in", SqlStdOperatorTable.IN);
 
     // operators
     addFunctionEntry("RLIKE", HiveRLikeOperator.RLIKE);
