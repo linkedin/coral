@@ -3,6 +3,7 @@ package com.linkedin.coral.hive.hive2rel.parsetree;
 import com.google.common.collect.ImmutableList;
 import com.linkedin.coral.com.google.common.collect.Iterables;
 import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
+import com.linkedin.coral.hive.hive2rel.functions.FunctionFieldReferenceOperator;
 import com.linkedin.coral.hive.hive2rel.functions.HiveExplodeOperator;
 import com.linkedin.coral.hive.hive2rel.functions.HiveFunction;
 import com.linkedin.coral.hive.hive2rel.functions.HiveFunctionResolver;
@@ -338,7 +339,7 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
       Iterable<String> names = Iterables.concat(left.names, right.names);
       return new SqlIdentifier(ImmutableList.copyOf(names), ZERO);
     } else {
-      return SqlStdOperatorTable.DOT.createCall(ZERO, sqlNodes);
+      return FunctionFieldReferenceOperator.DOT.createCall(ZERO, sqlNodes);
     }
   }
 

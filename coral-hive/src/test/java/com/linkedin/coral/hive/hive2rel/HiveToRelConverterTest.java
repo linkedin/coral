@@ -5,6 +5,7 @@ import com.linkedin.coral.hive.hive2rel.functions.UnknownSqlFunctionException;
 import java.io.IOException;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.runtime.CalciteContextException;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.tools.RelBuilder;
 import org.apache.hadoop.hive.metastore.api.MetaException;
@@ -201,14 +202,45 @@ public class HiveToRelConverterTest {
     assertEquals(generated, expected);
   }
 
-  @Test
-  public void testNamedStruct() {
-    final String sql = "SELECT named_struct('abc', cast(NULL as int), 'def', 150)";
-    final String expectedRel = "LogicalProject(EXPR$0=[CAST(ROW(null, 150)):RecordType(INTEGER 'abc', INTEGER NOT NULL 'def') NOT NULL])\n" +
-        "  LogicalValues(tuples=[[{ 0 }]])\n";
-    RelNode rel = toRel(sql);
+  @Test (enabled = false)
+  public void testStructFieldAccess() {
+    {
+      final String sql = "SELECT s.name from complex";
+      final String expectedRel =
+          "LogicalProject(name=[$3.name])\n" + "  LogicalTableScan(table=[[hive, default, complex]])\n";
+      RelNode rel = toRel(sql);
+      assertEquals(relToStr(rel), expectedRel);
+      final String expectedSql = "SELECT \"s\".\"name\"\nFROM \"hive\".\"default\".\"complex\"";
+      assertEquals(relToSql(rel), expectedSql);
+    }
+    {
+      final String sql = "SELECT complex.s.name FROM complex";
 
+      RelNode rel = toRel(sql);
+      System.out.println(relToStr(rel));
+      System.out.println(relToSql(rel));
+    }
+  }
+
+  // Calcite supports PEEK_FIELDS to peek into struct fields
+  // That is not suitable for our usecase. This test is to ensure
+  // we don't inadvertently introduce that change
+  @Test (expectedExceptions = CalciteContextException.class)
+  public void testStructPeekDisallowed() {
+    final String sql = "SELECT name from complex";
+    RelNode rel = toRel(sql);
+  }
+
+  @Test
+  public void testStructReturnFieldAccess() {
+    final String sql = "select named_struct('field_a', 10, 'field_b', 'abc').field_b";
+    RelNode rel = toRel(sql);
+    final String expectedRel = "LogicalProject(EXPR$0=[CAST(ROW(10, 'abc')):"
+        + "RecordType(INTEGER NOT NULL field_a, CHAR(3) CHARACTER SET \"ISO-8859-1\" COLLATE \"ISO-8859-1$en_US$primary\" NOT NULL field_b) NOT NULL.field_b])\n"
+        + "  LogicalValues(tuples=[[{ 0 }]])\n";
     assertEquals(relToStr(rel), expectedRel);
+    final String expectedSql = "SELECT CAST(ROW(10, 'abc') AS ROW).\"field_b\"\nFROM (VALUES  (0))";
+    assertEquals(relToSql(rel), expectedSql);
   }
 
   private String relToString(String sql) {

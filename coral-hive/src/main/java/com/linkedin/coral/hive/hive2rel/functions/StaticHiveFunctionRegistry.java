@@ -72,7 +72,9 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
     addFunctionEntry("isnotnull", IS_NOT_NULL);
 
     // TODO: this should be arg1 or arg2 nullable
-    createAddUserDefinedFunction("nvl", HiveReturnTypes.ARG1_OR_ARG2, ANY);
+    createAddUserDefinedFunction("nvl", ReturnTypes.ARG0_NULLABLE,
+        and(family(SqlTypeFamily.ANY, SqlTypeFamily.ANY), SAME_SAME));
+
     // calcite models 'if' function as CASE operator. We can use CASE but that will cause translation
     // to SQL to be odd although correct. So, we add 'if' as UDF
     // TODO: add check to verify 2nd and 3rd operands are same
@@ -156,6 +158,7 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
     addFunctionEntry("substring", SqlStdOperatorTable.SUBSTRING);
     createAddUserDefinedFunction("substring_index", HiveReturnTypes.STRING, STRING_STRING_INTEGER);
     createAddUserDefinedFunction("translate", HiveReturnTypes.STRING, STRING_STRING_STRING);
+    createAddUserDefinedFunction("trim", HiveReturnTypes.STRING, STRING);
     addFunctionEntry("trim", SqlStdOperatorTable.TRIM);
     createAddUserDefinedFunction("unbase64", explicit(SqlTypeName.VARBINARY), or(STRING, NULLABLE_LITERAL));
     addFunctionEntry("upper", SqlStdOperatorTable.UPPER);
@@ -173,7 +176,7 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
     createAddUserDefinedFunction("month", ReturnTypes.INTEGER, OperandTypes.STRING);
     createAddUserDefinedFunction("day", ReturnTypes.INTEGER, OperandTypes.STRING);
     createAddUserDefinedFunction("dayofmonth", ReturnTypes.INTEGER, OperandTypes.STRING);
-    createAddUserDefinedFunction("hour", ReturnTypes.INTEGER, OperandTypes.STRING);
+    createAddUserDefinedFunction("hour", ReturnTypes.INTEGER, or(OperandTypes.STRING, OperandTypes.DATETIME));
     createAddUserDefinedFunction("minute", ReturnTypes.INTEGER, OperandTypes.STRING);
     createAddUserDefinedFunction("second", ReturnTypes.INTEGER, OperandTypes.STRING);
     createAddUserDefinedFunction("weekofyear", ReturnTypes.INTEGER, OperandTypes.STRING);

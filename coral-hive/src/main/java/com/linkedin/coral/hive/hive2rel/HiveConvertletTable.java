@@ -3,6 +3,7 @@ package com.linkedin.coral.hive.hive2rel;
 import com.google.common.base.Preconditions;
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import com.linkedin.coral.hive.hive2rel.functions.HiveInOperator;
+import com.linkedin.coral.hive.hive2rel.functions.FunctionFieldReferenceOperator;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.calcite.rel.type.RelDataType;
@@ -50,13 +51,21 @@ public class HiveConvertletTable implements SqlRexConvertletTable {
           for (int i = 0; i < rhsNodes.size(); i++) {
             rexNodes.add(cx.convertExpression(rhsNodes.get(i)));
           }
-          
+
           RelDataType retType = cx.getValidator().getValidatedNodeType(call);
           return cx.getRexBuilder().makeCall(retType, HiveInOperator.IN, rexNodes.build());
         }
       };
+    } else if (operator instanceof FunctionFieldReferenceOperator) {
+      return new SqlRexConvertlet() {
+        @Override
+        public RexNode convertCall(SqlRexContext cx, SqlCall call) {
+          RexNode funcExpr = cx.convertExpression(call.operand(0));
+          String fieldName = FunctionFieldReferenceOperator.fieldNameStripQuotes(call.operand(1));
+          return cx.getRexBuilder().makeFieldAccess(funcExpr, fieldName, false);
+        }
+      };
     }
-
     return StandardConvertletTable.INSTANCE.get(call);
   }
 }

@@ -66,7 +66,7 @@ public class TestUtils {
     if (hive != null) {
       return hive;
     }
-
+    System.out.println(System.getProperty("java.io.tmpdir"));
     HiveConf conf = loadResourceHiveConf();
     TestHive testHive = new TestHive(conf);
     SessionState.start(conf);

@@ -1,6 +1,5 @@
 package com.linkedin.coral.hive.hive2rel.functions;
 
-import com.google.common.base.Preconditions;
 import java.util.AbstractList;
 import java.util.List;
 import java.util.Map;
@@ -21,6 +20,8 @@ import org.apache.calcite.sql.validate.SqlValidator;
 import org.apache.calcite.util.Pair;
 import org.apache.calcite.util.Static;
 
+import static com.google.common.base.Preconditions.*;
+
 
 public class HiveNamedStructFunction extends SqlUserDefinedFunction {
   public static final HiveNamedStructFunction NAMED_STRUCT = new HiveNamedStructFunction();
@@ -32,7 +33,8 @@ public class HiveNamedStructFunction extends SqlUserDefinedFunction {
 
   @Override
   public RelDataType inferReturnType(final SqlOperatorBinding opBinding) {
-    Preconditions.checkState(opBinding instanceof SqlCallBinding);
+    checkState(opBinding instanceof SqlCallBinding);
+    final SqlCallBinding callBinding = (SqlCallBinding) opBinding;
     return opBinding.getTypeFactory().createStructType(
         new AbstractList<Map.Entry<String, RelDataType>>() {
           @Override
@@ -42,8 +44,12 @@ public class HiveNamedStructFunction extends SqlUserDefinedFunction {
 
           @Override
           public Map.Entry<String, RelDataType> get(int index) {
-            Comparable colName = opBinding.getOperandLiteralValue(2 * index);
-            return Pair.of(colName.toString(),
+            String fieldName = callBinding.operand(2 * index).toString();
+            // strip quotes
+            String fieldNameNoQuotes = fieldName.substring(1, fieldName.length() - 1);
+            //Comparable colName = opBinding.getOperandLiteralValue(2 * index);
+
+            return Pair.of(fieldNameNoQuotes,
                 opBinding.getOperandType(2 * index + 1));
           }
         }

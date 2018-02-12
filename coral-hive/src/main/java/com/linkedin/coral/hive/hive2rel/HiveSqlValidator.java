@@ -1,8 +1,10 @@
 package com.linkedin.coral.hive.hive2rel;
 
+import com.linkedin.coral.hive.hive2rel.functions.FunctionFieldReferenceOperator;
 import org.apache.calcite.adapter.java.JavaTypeFactory;
 import org.apache.calcite.prepare.CalciteCatalogReader;
 import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.sql.SqlBasicCall;
 import org.apache.calcite.sql.SqlInsert;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlOperatorTable;
@@ -41,5 +43,16 @@ class HiveSqlValidator extends SqlValidatorImpl {
       return;
     }
     super.inferUnknownTypes(inferredType, scope, node);
+  }
+
+  @Override
+  public SqlNode expand(SqlNode expr, SqlValidatorScope scope) {
+    if (expr instanceof SqlBasicCall && ((SqlBasicCall) expr).getOperator().equals(FunctionFieldReferenceOperator.DOT)) {
+      SqlBasicCall dotCall = (SqlBasicCall) expr;
+      if (dotCall.operand(0) instanceof SqlBasicCall) {
+        return expr;
+      }
+    }
+    return super.expand(expr, scope);
   }
 }
