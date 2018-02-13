@@ -218,7 +218,8 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
         RelDataTypeFactory typeFactory = opBinding.getTypeFactory();
         return typeFactory.createArrayType(operandType.getValueType(), -1);
       }
-    });
+    }, family(SqlTypeFamily.MAP));
+
     createAddUserDefinedFunction("array_contains", ReturnTypes.BOOLEAN, family(SqlTypeFamily.ARRAY, SqlTypeFamily.ANY));
     createAddUserDefinedFunction("sort_array", ReturnTypes.ARG0, OperandTypes.ARRAY);
 
@@ -245,8 +246,6 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
                 SqlTypeFamily.STRING, SqlTypeFamily.STRING, SqlTypeFamily.STRING)));
     createAddUserDefinedFunction("com.linkedin.dali.udf.portallookup.hive.PortalLookup",
         HiveReturnTypes.STRING, OperandTypes.STRING_STRING_STRING);
-    createAddUserDefinedFunction("com.linkedin.dali.udf.date.hive.EpochToDateFormat",
-        HiveReturnTypes.STRING, family(SqlTypeFamily.NUMERIC, SqlTypeFamily.STRING, SqlTypeFamily.STRING));
     createAddUserDefinedFunction("com.linkedin.dali.udf.useragentparser.hive.UserAgentParser",
         HiveReturnTypes.STRING, OperandTypes.STRING_STRING);
     createAddUserDefinedFunction("com.linkedin.dali.udf.maplookup.hive.MapLookup",
@@ -257,6 +256,16 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
         HiveReturnTypes.STRING, OperandTypes.ANY);
     createAddUserDefinedFunction("com.linkedin.tscp.reporting.dali.udfs.UrnToID",
         HiveReturnTypes.STRING, OperandTypes.STRING);
+
+    createAddUserDefinedFunction("com.linkedin.dali.udf.date.hive.DateFormatToEpoch",
+        ReturnTypes.BIGINT_NULLABLE,
+        OperandTypes.STRING_STRING_STRING);
+    createAddUserDefinedFunction("com.linkedin.dali.udf.date.hive.EpochToEpochMilliseconds",
+        ReturnTypes.BIGINT_NULLABLE, OperandTypes.NUMERIC);
+    createAddUserDefinedFunction("com.linkedin.dali.udf.date.hive.EpochToDateFormat",
+        HiveReturnTypes.STRING, family(SqlTypeFamily.NUMERIC, SqlTypeFamily.STRING, SqlTypeFamily.STRING));
+    createAddUserDefinedFunction("com.linkedin.dali.udf.sanitize.hive.Sanitize", HiveReturnTypes.STRING,
+        OperandTypes.STRING);
 
     // UDTFs
     addFunctionEntry("explode", HiveExplodeOperator.EXPLODE);
