@@ -147,21 +147,24 @@ public class HiveTypeSystem extends RelDataTypeSystemImpl {
   public RelDataType deriveSumType(RelDataTypeFactory typeFactory, RelDataType argumentType) {
     switch (argumentType.getSqlTypeName()) {
       case TINYINT:
-        return typeFactory.createSqlType(SqlTypeName.INTEGER);
       case SMALLINT:
-        return typeFactory.createSqlType(SqlTypeName.INTEGER);
+        return nullableType(typeFactory, SqlTypeName.INTEGER);
       case INTEGER:
-        return typeFactory.createSqlType(SqlTypeName.BIGINT);
+        return nullableType(typeFactory, SqlTypeName.BIGINT);
       case BIGINT:
-        return argumentType;
+        return nullableType(typeFactory, SqlTypeName.BIGINT);
       case REAL:
       case FLOAT:
       case DOUBLE:
-        return typeFactory.createSqlType(SqlTypeName.DOUBLE);
+        return nullableType(typeFactory, SqlTypeName.DOUBLE);
       case DECIMAL:
-        return typeFactory.createSqlType(SqlTypeName.DECIMAL);
+        return nullableType(typeFactory, SqlTypeName.DECIMAL);
       default:
         return argumentType;
     }
+  }
+
+  private RelDataType nullableType(RelDataTypeFactory typeFactory, SqlTypeName typeName) {
+    return typeFactory.createTypeWithNullability(typeFactory.createSqlType(typeName), true);
   }
 }
