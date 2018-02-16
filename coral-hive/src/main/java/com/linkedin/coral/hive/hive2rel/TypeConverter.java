@@ -131,13 +131,15 @@ public class TypeConverter {
 
   public static RelDataType convert(ListTypeInfo lstType, RelDataTypeFactory dtFactory) {
     RelDataType elemType = convert(lstType.getListElementTypeInfo(), dtFactory);
-    return dtFactory.createArrayType(elemType, -1);
+    RelDataType arrayType = dtFactory.createArrayType(elemType, -1);
+    return dtFactory.createTypeWithNullability(arrayType, true);
   }
 
   public static RelDataType convert(MapTypeInfo mapType, RelDataTypeFactory dtFactory) {
     RelDataType keyType = convert(mapType.getMapKeyTypeInfo(), dtFactory);
     RelDataType valueType = convert(mapType.getMapValueTypeInfo(), dtFactory);
-    return dtFactory.createMapType(keyType, valueType);
+    RelDataType type = dtFactory.createMapType(keyType, valueType);
+    return dtFactory.createTypeWithNullability(type, true);
   }
 
   public static RelDataType convert(StructTypeInfo structType, final RelDataTypeFactory dtFactory) {
@@ -145,7 +147,13 @@ public class TypeConverter {
     for (TypeInfo ti : structType.getAllStructFieldTypeInfos()) {
       fTypes.add(convert(ti, dtFactory));
     }
-    return dtFactory.createStructType(fTypes, structType.getAllStructFieldNames());
+    RelDataType rowType = dtFactory.createStructType(fTypes, structType.getAllStructFieldNames());
+    // TODO: Return nullable record type.
+    // All types in Hive are effectively nullable since the data is injected from external source.
+    // Calcite does not support nullable record type and since we don't create our own type factory
+    // ... we've problem! The call below only makes the fields of the struct nullable which is
+    // not the same as nullable struct.
+    return dtFactory.createTypeWithNullability(rowType, true);
   }
 
   public static RelDataType convert(UnionTypeInfo unionType, RelDataTypeFactory dtFactory) {

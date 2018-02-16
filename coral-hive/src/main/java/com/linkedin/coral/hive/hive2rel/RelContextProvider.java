@@ -2,6 +2,7 @@ package com.linkedin.coral.hive.hive2rel;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.linkedin.coral.com.google.common.base.Function;
 import com.linkedin.coral.hive.hive2rel.parsetree.ParseTreeBuilder;
 import java.util.List;
 import java.util.Properties;
@@ -16,6 +17,7 @@ import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelTraitDef;
 import org.apache.calcite.plan.volcano.VolcanoPlanner;
 import org.apache.calcite.prepare.CalciteCatalogReader;
+import org.apache.calcite.runtime.Hook;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.util.ChainedSqlOperatorTable;
@@ -97,9 +99,24 @@ class RelContextProvider {
    */
   RelBuilder getRelBuilder() {
     if (relBuilder == null) {
+      turnOffRelSimplification();
       relBuilder = RelBuilder.create(config);
     }
     return relBuilder;
+  }
+
+  private void turnOffRelSimplification() {
+    // Rel simplification can statically interpret boolean conditions in
+    // OR, AND, CASE clauses and simplify those. This has two problems:
+    // 1. Our type system is not perfect replication of Hive so this can be incorrect
+    // 2. Converted expression is harder to validate for correctness(because it appears different from input)
+    Hook.REL_BUILDER_SIMPLIFY.add(new Function<Object, Object>() {
+      @Override
+      public Object apply(Object o) {
+        ((org.apache.calcite.util.Holder) o).set(false);
+        return null;
+      }
+    });
   }
 
   /**
