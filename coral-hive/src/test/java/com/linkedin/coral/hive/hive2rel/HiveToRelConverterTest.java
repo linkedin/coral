@@ -132,11 +132,14 @@ public class HiveToRelConverterTest {
     {
       String sql = "SELECT avg(sum_c) from foo_view";
       RelNode rel = converter.convertSql(sql);
+      // we don't do rel to rel comparison for this method because of casting operation and expression naming rules
+      // it's easier to compare strings
       String expectedPlan = "LogicalAggregate(group=[{}], EXPR$0=[AVG($0)])\n" +
           "  LogicalProject(sum_c=[$1])\n" +
-          "    LogicalAggregate(group=[{0}], sum_c=[SUM($1)])\n" +
-          "      LogicalProject(bcol=[$1], c=[$2])\n" +
-          "        LogicalTableScan(table=[[hive, default, foo]])\n";
+          "    LogicalProject(bcol=[$0], sum_c=[CAST($1):DOUBLE])\n" +
+          "      LogicalAggregate(group=[{0}], sum_c=[SUM($1)])\n" +
+          "        LogicalProject(bcol=[$1], c=[$2])\n" +
+          "          LogicalTableScan(table=[[hive, default, foo]])\n";
       assertEquals(RelOptUtil.toString(rel), expectedPlan);
     }
   }
