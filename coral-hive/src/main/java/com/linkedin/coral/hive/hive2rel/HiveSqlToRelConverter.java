@@ -9,11 +9,19 @@ import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.prepare.Prepare;
+import org.apache.calcite.rel.RelCollation;
+import org.apache.calcite.rel.RelCollations;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.RelRoot;
 import org.apache.calcite.rel.core.Uncollect;
 import org.apache.calcite.rel.logical.LogicalValues;
+import org.apache.calcite.rel.metadata.JaninoRelMetadataProvider;
+import org.apache.calcite.rel.metadata.RelMetadataQuery;
+import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.SqlCall;
+import org.apache.calcite.sql.SqlExplainFormat;
+import org.apache.calcite.sql.SqlExplainLevel;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlUnnestOperator;
 import org.apache.calcite.sql.validate.SqlValidator;
@@ -31,6 +39,35 @@ class HiveSqlToRelConverter extends SqlToRelConverter {
       Prepare.CatalogReader catalogReader, RelOptCluster cluster, SqlRexConvertletTable convertletTable,
       Config config) {
     super(viewExpander, validator, catalogReader, cluster, convertletTable, config);
+  }
+
+  // This differs from base class in two ways:
+  // 1. This does not validate the type of converted rel rowType with that of validated node. This is because
+  //    hive is lax in enforcing view schemas.
+  // 2. This skips calling some methods because (1) those are private, and (2) not required for our usecase
+  public RelRoot convertQuery(
+      SqlNode query,
+      final boolean needsValidation,
+      final boolean top) {
+    if (needsValidation) {
+      query = validator.validate(query);
+    }
+
+    RelMetadataQuery.THREAD_PROVIDERS.set(
+        JaninoRelMetadataProvider.of(cluster.getMetadataProvider()));
+    RelNode result = convertQueryRecursive(query, top, null).rel;
+    RelCollation collation = RelCollations.EMPTY;
+
+    if (SQL2REL_LOGGER.isDebugEnabled()) {
+      SQL2REL_LOGGER.debug(
+          RelOptUtil.dumpPlan("Plan after converting SqlNode to RelNode",
+              result, SqlExplainFormat.TEXT,
+              SqlExplainLevel.EXPPLAN_ATTRIBUTES));
+    }
+
+    final RelDataType validatedRowType = validator.getValidatedNodeType(query);
+    return RelRoot.of(result, validatedRowType, query.getKind())
+        .withCollation(collation);
   }
 
   @Override
