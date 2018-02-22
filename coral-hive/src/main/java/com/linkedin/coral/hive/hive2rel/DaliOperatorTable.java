@@ -1,9 +1,9 @@
 package com.linkedin.coral.hive.hive2rel;
 
 import com.google.common.collect.ImmutableList;
-import com.linkedin.coral.hive.hive2rel.functions.HiveFunction;
+import com.linkedin.coral.functions.HiveFunction;
+import com.linkedin.coral.functions.StaticHiveFunctionRegistry;
 import com.linkedin.coral.hive.hive2rel.functions.HiveFunctionResolver;
-import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;

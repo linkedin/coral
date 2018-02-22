@@ -239,7 +239,7 @@ public class RelToPrestoConverterTest {
 
     final String expected = ""
         + "SELECT \"$cor1\".\"icol\" AS \"ICOL\", \"$cor1\".\"I_PLUSONE\", "
-        + "\"$cor1\".\"D_PLUSTEN\", \"$cor1\".\"tcol\" AS \"TCOL\", \"$cor1\".\"acol\" AS \"ACOL\"\n"
+        + "\"t2\".\"D_PLUSTEN\", \"$cor1\".\"tcol\" AS \"TCOL\", \"$cor1\".\"acol\" AS \"ACOL\"\n"
         + "FROM (\"tableOne\" AS \"$cor0\"\n"
         + "CROSS JOIN (SELECT \"$cor0\".\"icol_0\" + 1 AS \"I_PLUSONE\"\n"
         + "FROM (VALUES  (TRUE))) AS \"t0\") AS \"$cor1\"\n"
@@ -255,7 +255,7 @@ public class RelToPrestoConverterTest {
         + "FROM UNNEST(ARRAY[(1, 1),(2, 2), (3, 3)]) as t(c1, c2)";
 
     final String expected = ""
-        + "SELECT \"col_0\" + 2\n"
+        + "SELECT \"t00\".\"col_0\" + 2\n"
         + "FROM UNNEST(ARRAY[ROW(1, 1), ROW(2, 2), ROW(3, 3)]) AS \"t0\" (\"col_0\", \"col_1\")";
     testConversion(sql, expected);
   }
@@ -266,9 +266,8 @@ public class RelToPrestoConverterTest {
   @Test
   public void testLateralViewUnnest() {
     String sql = "select icol, acol_elem from tableOne as t cross join unnest(t.acol) as t1(acol_elem)";
-    System.out.println(RelOptUtil.toString(toRel(sql, config)));
     String expectedSql = ""
-        + "SELECT \"$cor0\".\"icol\" AS \"ICOL\", \"$cor0\".\"acol0\" AS \"ACOL_ELEM\"\n"
+        + "SELECT \"$cor0\".\"icol\" AS \"ICOL\", \"t0\".\"acol\" AS \"ACOL_ELEM\"\n"
         + "FROM \"tableOne\" AS \"$cor0\"\n"
         + "CROSS JOIN UNNEST(\"$cor0\".\"acol_4\") AS \"t0\" (\"acol\")";
     testConversion(sql, expectedSql);

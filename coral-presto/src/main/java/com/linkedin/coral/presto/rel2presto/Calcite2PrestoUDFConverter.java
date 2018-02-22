@@ -1,7 +1,7 @@
 package com.linkedin.coral.presto.rel2presto;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelShuttle;
 import org.apache.calcite.rel.RelShuttleImpl;
@@ -26,20 +26,16 @@ public class Calcite2PrestoUDFConverter {
   public static RelNode convertRel(RelNode calciteNode) {
     RelShuttle converter = new RelShuttleImpl() {
       @Override
-      public RelNode visit(RelNode relNode) {
-        final RelNode newRel = super.visit(relNode);
-        if (newRel instanceof Project) {
-          Project oldProject = (Project) newRel;
-          final List<RexNode> newProjections = new ArrayList<>();
-          for (RexNode rexNode : oldProject.getProjects()) {
-            newProjections.add(new PrestoRexConverter(oldProject.getCluster().getRexBuilder()).apply(rexNode));
-          }
-          return LogicalProject.create(oldProject.getInput(), newProjections, oldProject.getRowType().getFieldNames());
-        }
-        return newRel;
+      public RelNode visit(LogicalProject project) {
+        Project oldProject = (Project) super.visit(project);
+        PrestoRexConverter prestoRexConverter = new PrestoRexConverter(oldProject.getCluster().getRexBuilder());
+        List<RexNode> newProjections = oldProject.getProjects().stream()
+            .map(prestoRexConverter::apply)
+            .collect(Collectors.toList());
+        return LogicalProject.create(oldProject.getInput(), newProjections, oldProject.getRowType().getFieldNames());
       }
     };
-    return converter.visit(calciteNode);
+    return calciteNode.accept(converter);
   }
 
   /**

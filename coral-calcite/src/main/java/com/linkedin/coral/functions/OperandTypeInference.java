@@ -1,4 +1,4 @@
-package com.linkedin.coral.hive.hive2rel.functions;
+package com.linkedin.coral.functions;
 
 import com.google.common.base.Preconditions;
 import java.util.List;

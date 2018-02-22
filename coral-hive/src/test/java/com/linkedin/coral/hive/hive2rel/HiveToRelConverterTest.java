@@ -1,7 +1,7 @@
 package com.linkedin.coral.hive.hive2rel;
 
 import com.google.common.collect.ImmutableList;
-import com.linkedin.coral.hive.hive2rel.functions.UnknownSqlFunctionException;
+import com.linkedin.coral.functions.UnknownSqlFunctionException;
 import java.io.IOException;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;

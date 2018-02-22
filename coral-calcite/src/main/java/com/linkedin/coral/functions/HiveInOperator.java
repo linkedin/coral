@@ -1,6 +1,6 @@
-package com.linkedin.coral.hive.hive2rel.functions;
+package com.linkedin.coral.functions;
 
-import com.linkedin.coral.com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.calcite.rel.type.RelDataType;

@@ -1,4 +1,4 @@
-package com.linkedin.coral.hive.hive2rel;
+package com.linkedin.coral.functions;
 
 public class Utils {
   private Utils() {

@@ -4,6 +4,8 @@ import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Correlate;
 import org.apache.calcite.rel.core.Project;
@@ -11,6 +13,8 @@ import org.apache.calcite.rel.core.Uncollect;
 import org.apache.calcite.rel.core.Values;
 import org.apache.calcite.rel.core.Window;
 import org.apache.calcite.rel.rel2sql.RelToSqlConverter;
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.JoinConditionType;
@@ -21,6 +25,9 @@ import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
+import org.apache.calcite.util.Util;
+
+import static com.linkedin.coral.presto.rel2presto.Calcite2PrestoUDFConverter.*;
 
 
 public class RelToPrestoConverter extends RelToSqlConverter {
@@ -40,7 +47,8 @@ public class RelToPrestoConverter extends RelToSqlConverter {
    * @return SQL string
    */
   public String convert(RelNode relNode) {
-    return convertToSqlNode(relNode)
+    RelNode rel = convertRel(relNode);
+    return convertToSqlNode(rel)
         .toSqlString(PRESTO_DIALECT)
         .toString();
   }
@@ -113,7 +121,7 @@ public class RelToPrestoConverter extends RelToSqlConverter {
   }
 
   public Result visit(Correlate e) {
-    final Result leftResult = visitChild(0, e.getLeft()).resetAlias(e.getCorrelVariable(), e.getRowType());
+    final Result leftResult = visitChild(0, e.getLeft()).resetAlias(e.getCorrelVariable(), e.getLeft().getRowType());
     final Result rightResult = visitChild(1, e.getRight());
     SqlNode rightLateral = rightResult.node;
     if (rightLateral.getKind() != SqlKind.AS) {
@@ -130,5 +138,50 @@ public class RelToPrestoConverter extends RelToSqlConverter {
             JoinConditionType.NONE.symbol(POS),
             null);
     return result(join, leftResult, rightResult);
+  }
+
+  protected class RelToPrestoAliasContext extends AliasContext {
+
+    protected RelToPrestoAliasContext(Map<String, RelDataType> aliases, boolean qualified) {
+      super(aliases, qualified);
+    }
+
+
+  }
+
+  @Override
+  public Context aliasContext(Map<String, RelDataType> aliases, boolean qualified) {
+    // easier to keep inner class for accessing 'aliases' and 'qualified' variables as closure
+    return new AliasContext(aliases, qualified) {
+      @Override
+      public SqlNode field(int ordinal) {
+        for (Map.Entry<String, RelDataType> alias : aliases.entrySet()) {
+          final List<RelDataTypeField> fields = alias.getValue().getFieldList();
+          if (ordinal < fields.size()) {
+            RelDataTypeField field = fields.get(ordinal);
+            final SqlNode mappedSqlNode = ordinalMap.get(field.getName().toLowerCase(Locale.ROOT));
+            if (mappedSqlNode != null) {
+              return ensureAliasedNode(alias.getKey(), mappedSqlNode);
+            }
+            return new SqlIdentifier(
+                !qualified ? ImmutableList.of(field.getName()) : ImmutableList.of(alias.getKey(), field.getName()),
+                POS);
+          }
+          ordinal -= fields.size();
+        }
+        throw new AssertionError("field ordinal " + ordinal + " out of range " + aliases);
+      }
+
+      protected SqlNode ensureAliasedNode(String alias, SqlNode id) {
+        if (!(id instanceof SqlIdentifier)) {
+          return id;
+        }
+        ImmutableList<String> names = ((SqlIdentifier) id).names;
+        if (names.size() > 1) {
+          return id;
+        }
+        return new SqlIdentifier(ImmutableList.of(alias, Util.last(names)), POS);
+      }
+    };
   }
 }

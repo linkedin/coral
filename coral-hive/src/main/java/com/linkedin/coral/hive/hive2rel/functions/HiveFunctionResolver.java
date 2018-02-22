@@ -1,8 +1,11 @@
 package com.linkedin.coral.hive.hive2rel.functions;
 
-import com.google.common.base.Preconditions;
+import com.linkedin.coral.com.google.common.base.Preconditions;
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
+import com.linkedin.coral.functions.HiveFunction;
+import com.linkedin.coral.functions.HiveFunctionRegistry;
 import com.linkedin.coral.functions.HiveRLikeOperator;
+import com.linkedin.coral.functions.UnknownSqlFunctionException;
 import com.linkedin.coral.hive.hive2rel.HiveTable;
 import java.util.ArrayList;
 import java.util.Collection;

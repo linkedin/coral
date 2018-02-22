@@ -1,32 +1,29 @@
- package com.linkedin.coral.hive.hive2rel.functions;
+ package com.linkedin.coral.functions;
 
  import com.google.common.collect.HashMultimap;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Multimap;
-import com.linkedin.coral.functions.HiveRLikeOperator;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import org.apache.calcite.rel.type.RelDataType;
-import org.apache.calcite.rel.type.RelDataTypeFactory;
-import org.apache.calcite.runtime.PredicateImpl;
-import org.apache.calcite.sql.SqlIdentifier;
-import org.apache.calcite.sql.SqlOperator;
-import org.apache.calcite.sql.SqlOperatorBinding;
-import org.apache.calcite.sql.fun.SqlStdOperatorTable;
-import org.apache.calcite.sql.parser.SqlParserPos;
-import org.apache.calcite.sql.type.OperandTypes;
-import org.apache.calcite.sql.type.ReturnTypes;
-import org.apache.calcite.sql.type.SqlOperandTypeChecker;
-import org.apache.calcite.sql.type.SqlOperandTypeInference;
-import org.apache.calcite.sql.type.SqlReturnTypeInference;
-import org.apache.calcite.sql.type.SqlTypeFamily;
-import org.apache.calcite.sql.type.SqlTypeName;
-import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
+ import com.google.common.collect.ImmutableList;
+ import com.google.common.collect.Multimap;
+ import java.util.Collection;
+ import java.util.Collections;
+ import java.util.List;
+ import org.apache.calcite.rel.type.RelDataType;
+ import org.apache.calcite.rel.type.RelDataTypeFactory;
+ import org.apache.calcite.runtime.PredicateImpl;
+ import org.apache.calcite.sql.SqlIdentifier;
+ import org.apache.calcite.sql.SqlOperator;
+ import org.apache.calcite.sql.SqlOperatorBinding;
+ import org.apache.calcite.sql.parser.SqlParserPos;
+ import org.apache.calcite.sql.type.ReturnTypes;
+ import org.apache.calcite.sql.type.SqlOperandTypeChecker;
+ import org.apache.calcite.sql.type.SqlOperandTypeInference;
+ import org.apache.calcite.sql.type.SqlReturnTypeInference;
+ import org.apache.calcite.sql.type.SqlTypeFamily;
+ import org.apache.calcite.sql.type.SqlTypeName;
+ import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
 
-import static org.apache.calcite.sql.fun.SqlStdOperatorTable.*;
-import static org.apache.calcite.sql.type.OperandTypes.*;
-import static org.apache.calcite.sql.type.ReturnTypes.*;
+ import static org.apache.calcite.sql.fun.SqlStdOperatorTable.*;
+ import static org.apache.calcite.sql.type.OperandTypes.*;
+ import static org.apache.calcite.sql.type.ReturnTypes.*;
 
 
 /**
@@ -58,8 +55,8 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
     // operators
     addFunctionEntry("RLIKE", HiveRLikeOperator.RLIKE);
     addFunctionEntry("REGEXP", HiveRLikeOperator.REGEXP);
-    addFunctionEntry("!=", SqlStdOperatorTable.NOT_EQUALS);
-    addFunctionEntry("==", SqlStdOperatorTable.EQUALS);
+    addFunctionEntry("!=", NOT_EQUALS);
+    addFunctionEntry("==", EQUALS);
 
     // conditional function
     addFunctionEntry("tok_isnull", IS_NULL);
@@ -67,12 +64,12 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
     FUNCTION_MAP.put("when", HiveFunction.WHEN);
     FUNCTION_MAP.put("case", HiveFunction.CASE);
     FUNCTION_MAP.put("between", HiveFunction.BETWEEN);
-    addFunctionEntry("nullif", SqlStdOperatorTable.NULLIF);
+    addFunctionEntry("nullif", NULLIF);
     addFunctionEntry("isnull", IS_NULL);
     addFunctionEntry("isnotnull", IS_NOT_NULL);
 
     // TODO: this should be arg1 or arg2 nullable
-    createAddUserDefinedFunction("nvl", ReturnTypes.ARG0_NULLABLE,
+    createAddUserDefinedFunction("nvl", ARG0_NULLABLE,
         and(family(SqlTypeFamily.ANY, SqlTypeFamily.ANY), SAME_SAME));
 
     // calcite models 'if' function as CASE operator. We can use CASE but that will cause translation
@@ -83,14 +80,14 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
             new SameOperandTypeExceptFirstOperandChecker(3, SqlTypeName.BOOLEAN),
             null));
 
-    addFunctionEntry("coalesce", SqlStdOperatorTable.COALESCE);
+    addFunctionEntry("coalesce", COALESCE);
     // cast operator
     addCastOperatorEntries();
 
     // Complex type constructors
-    addFunctionEntry("array", SqlStdOperatorTable.ARRAY_VALUE_CONSTRUCTOR);
-    addFunctionEntry("struct", SqlStdOperatorTable.ROW);
-    addFunctionEntry("map", SqlStdOperatorTable.MAP_VALUE_CONSTRUCTOR);
+    addFunctionEntry("array", ARRAY_VALUE_CONSTRUCTOR);
+    addFunctionEntry("struct", ROW);
+    addFunctionEntry("map", MAP_VALUE_CONSTRUCTOR);
     addFunctionEntry("named_struct", HiveNamedStructFunction.NAMED_STRUCT);
 
     // conversion functions
@@ -116,7 +113,7 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
     createAddUserDefinedFunction("context_ngrams", LEAST_RESTRICTIVE,
         family(SqlTypeFamily.ARRAY, SqlTypeFamily.ARRAY, SqlTypeFamily.INTEGER, SqlTypeFamily.INTEGER));
     createAddUserDefinedFunction("decode", HiveReturnTypes.STRING, family(SqlTypeFamily.BINARY, SqlTypeFamily.STRING));
-    createAddUserDefinedFunction("elt", HiveReturnTypes.STRING, OperandTypes.VARIADIC);
+    createAddUserDefinedFunction("elt", HiveReturnTypes.STRING, VARIADIC);
     createAddUserDefinedFunction("encode", HiveReturnTypes.BINARY, STRING_STRING);
     createAddUserDefinedFunction("field", INTEGER, VARIADIC);
     createAddUserDefinedFunction("find_in_set", INTEGER, STRING_STRING);
@@ -129,8 +126,8 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
     createAddUserDefinedFunction("levenshtein", INTEGER, STRING_STRING);
     createAddUserDefinedFunction("locate", HiveReturnTypes.STRING,
         family(ImmutableList.of(SqlTypeFamily.STRING, SqlTypeFamily.STRING, SqlTypeFamily.INTEGER), optionalOrd(2)));
-    addFunctionEntry("lower", SqlStdOperatorTable.LOWER);
-    addFunctionEntry("lcase", SqlStdOperatorTable.LOWER);
+    addFunctionEntry("lower", LOWER);
+    addFunctionEntry("lcase", LOWER);
     createAddUserDefinedFunction("lpad", HiveReturnTypes.STRING,
         family(SqlTypeFamily.STRING, SqlTypeFamily.INTEGER, SqlTypeFamily.STRING));
     createAddUserDefinedFunction("ltrim", HiveReturnTypes.STRING, STRING);
@@ -143,45 +140,45 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
     createAddUserDefinedFunction("regexp_extract", ARG0, STRING_STRING_INTEGER);
     createAddUserDefinedFunction("regexp_replace", HiveReturnTypes.STRING, STRING_STRING_STRING);
     createAddUserDefinedFunction("repeat", HiveReturnTypes.STRING, family(SqlTypeFamily.STRING, SqlTypeFamily.INTEGER));
-    addFunctionEntry("replace", SqlStdOperatorTable.REPLACE);
+    addFunctionEntry("replace", REPLACE);
     createAddUserDefinedFunction("reverse", ARG0, or(STRING, NULLABLE_LITERAL));
     createAddUserDefinedFunction("rpad", HiveReturnTypes.STRING,
         family(SqlTypeFamily.STRING, SqlTypeFamily.INTEGER, SqlTypeFamily.STRING));
     createAddUserDefinedFunction("rtrim", HiveReturnTypes.STRING, STRING);
-    createAddUserDefinedFunction("sentences", ReturnTypes.LEAST_RESTRICTIVE, STRING_STRING_STRING);
+    createAddUserDefinedFunction("sentences", LEAST_RESTRICTIVE, STRING_STRING_STRING);
     createAddUserDefinedFunction("soundex", HiveReturnTypes.STRING, STRING);
-    createAddUserDefinedFunction("space", HiveReturnTypes.STRING, OperandTypes.NUMERIC);
+    createAddUserDefinedFunction("space", HiveReturnTypes.STRING, NUMERIC);
     createAddUserDefinedFunction("split", HiveReturnTypes.arrayOfType(SqlTypeName.VARCHAR), STRING_STRING);
     createAddUserDefinedFunction("str_to_map", HiveReturnTypes.mapOfType(SqlTypeName.VARCHAR, SqlTypeName.VARCHAR),
         family(Collections.nCopies(3, SqlTypeFamily.STRING), optionalOrd(ImmutableList.of(1, 2))));
-    addFunctionEntry("substr", SqlStdOperatorTable.SUBSTRING);
-    addFunctionEntry("substring", SqlStdOperatorTable.SUBSTRING);
+    addFunctionEntry("substr", SUBSTRING);
+    addFunctionEntry("substring", SUBSTRING);
     createAddUserDefinedFunction("substring_index", HiveReturnTypes.STRING, STRING_STRING_INTEGER);
     createAddUserDefinedFunction("translate", HiveReturnTypes.STRING, STRING_STRING_STRING);
     createAddUserDefinedFunction("trim", HiveReturnTypes.STRING, STRING);
-    addFunctionEntry("trim", SqlStdOperatorTable.TRIM);
+    addFunctionEntry("trim", TRIM);
     createAddUserDefinedFunction("unbase64", explicit(SqlTypeName.VARBINARY), or(STRING, NULLABLE_LITERAL));
-    addFunctionEntry("upper", SqlStdOperatorTable.UPPER);
-    addFunctionEntry("ucase", SqlStdOperatorTable.UPPER);
+    addFunctionEntry("upper", UPPER);
+    addFunctionEntry("ucase", UPPER);
 
     // Date Functions
     createAddUserDefinedFunction("from_unixtime", HiveReturnTypes.STRING,
         family(ImmutableList.of(SqlTypeFamily.NUMERIC, SqlTypeFamily.STRING), optionalOrd(1)));
-    createAddUserDefinedFunction("unix_timestamp", ReturnTypes.BIGINT,
+    createAddUserDefinedFunction("unix_timestamp", BIGINT,
         family(ImmutableList.of(SqlTypeFamily.STRING, SqlTypeFamily.STRING), optionalOrd(ImmutableList.of(0, 1))));
     createAddUserDefinedFunction("to_date", HiveReturnTypes.STRING,
-        or(OperandTypes.STRING, OperandTypes.DATETIME));
-    createAddUserDefinedFunction("year", ReturnTypes.INTEGER, OperandTypes.STRING);
-    createAddUserDefinedFunction("quarter", ReturnTypes.INTEGER, OperandTypes.STRING);
-    createAddUserDefinedFunction("month", ReturnTypes.INTEGER, OperandTypes.STRING);
-    createAddUserDefinedFunction("day", ReturnTypes.INTEGER, OperandTypes.STRING);
-    createAddUserDefinedFunction("dayofmonth", ReturnTypes.INTEGER, OperandTypes.STRING);
-    createAddUserDefinedFunction("hour", ReturnTypes.INTEGER, or(OperandTypes.STRING, OperandTypes.DATETIME));
-    createAddUserDefinedFunction("minute", ReturnTypes.INTEGER, OperandTypes.STRING);
-    createAddUserDefinedFunction("second", ReturnTypes.INTEGER, OperandTypes.STRING);
-    createAddUserDefinedFunction("weekofyear", ReturnTypes.INTEGER, OperandTypes.STRING);
+        or(STRING, DATETIME));
+    createAddUserDefinedFunction("year", INTEGER, STRING);
+    createAddUserDefinedFunction("quarter", INTEGER, STRING);
+    createAddUserDefinedFunction("month", INTEGER, STRING);
+    createAddUserDefinedFunction("day", INTEGER, STRING);
+    createAddUserDefinedFunction("dayofmonth", INTEGER, STRING);
+    createAddUserDefinedFunction("hour", INTEGER, or(STRING, DATETIME));
+    createAddUserDefinedFunction("minute", INTEGER, STRING);
+    createAddUserDefinedFunction("second", INTEGER, STRING);
+    createAddUserDefinedFunction("weekofyear", INTEGER, STRING);
     //TODO: add extract UDF
-    createAddUserDefinedFunction("datediff", ReturnTypes.INTEGER, OperandTypes.STRING_STRING);
+    createAddUserDefinedFunction("datediff", INTEGER, STRING_STRING);
     createAddUserDefinedFunction("date_add", HiveReturnTypes.STRING,
         or(family(SqlTypeFamily.DATE, SqlTypeFamily.INTEGER), family(SqlTypeFamily.TIMESTAMP, SqlTypeFamily.INTEGER),
             family(SqlTypeFamily.STRING, SqlTypeFamily.INTEGER)));
@@ -191,23 +188,23 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
             family(SqlTypeFamily.STRING, SqlTypeFamily.INTEGER)));
     createAddUserDefinedFunction("from_utc_timestamp", explicit(SqlTypeName.TIMESTAMP),
         family(SqlTypeFamily.ANY, SqlTypeFamily.STRING));
-    addFunctionEntry("current_date", SqlStdOperatorTable.CURRENT_DATE);
-    addFunctionEntry("current_timestamp", SqlStdOperatorTable.CURRENT_TIMESTAMP);
+    addFunctionEntry("current_date", CURRENT_DATE);
+    addFunctionEntry("current_timestamp", CURRENT_TIMESTAMP);
     createAddUserDefinedFunction("add_months", HiveReturnTypes.STRING,
         family(SqlTypeFamily.STRING, SqlTypeFamily.INTEGER));
-    createAddUserDefinedFunction("last_day", HiveReturnTypes.STRING, OperandTypes.STRING);
-    createAddUserDefinedFunction("next_day", HiveReturnTypes.STRING, OperandTypes.STRING_STRING);
-    createAddUserDefinedFunction("trunc", HiveReturnTypes.STRING, OperandTypes.STRING_STRING);
-    createAddUserDefinedFunction("months_between", ReturnTypes.DOUBLE,
+    createAddUserDefinedFunction("last_day", HiveReturnTypes.STRING, STRING);
+    createAddUserDefinedFunction("next_day", HiveReturnTypes.STRING, STRING_STRING);
+    createAddUserDefinedFunction("trunc", HiveReturnTypes.STRING, STRING_STRING);
+    createAddUserDefinedFunction("months_between", DOUBLE,
         family(SqlTypeFamily.DATE, SqlTypeFamily.DATE));
     createAddUserDefinedFunction("date_format", HiveReturnTypes.STRING,
         or(family(SqlTypeFamily.DATE, SqlTypeFamily.INTEGER), family(SqlTypeFamily.TIMESTAMP, SqlTypeFamily.INTEGER),
             family(SqlTypeFamily.STRING, SqlTypeFamily.INTEGER)));
 
     // Collection functions
-    addFunctionEntry("size", SqlStdOperatorTable.CARDINALITY);
+    addFunctionEntry("size", CARDINALITY);
     createAddUserDefinedFunction("array_contains", ReturnTypes.BOOLEAN,
-        OperandTypes.family(SqlTypeFamily.ARRAY, SqlTypeFamily.ANY));
+        family(SqlTypeFamily.ARRAY, SqlTypeFamily.ANY));
     createAddUserDefinedFunction("map_keys", new SqlReturnTypeInference() {
       @Override
       public RelDataType inferReturnType(SqlOperatorBinding opBinding) {
@@ -227,7 +224,7 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
     }, family(SqlTypeFamily.MAP));
 
     createAddUserDefinedFunction("array_contains", ReturnTypes.BOOLEAN, family(SqlTypeFamily.ARRAY, SqlTypeFamily.ANY));
-    createAddUserDefinedFunction("sort_array", ReturnTypes.ARG0, OperandTypes.ARRAY);
+    createAddUserDefinedFunction("sort_array", ARG0, ARRAY);
 
     // LinkedIn UDFs: Dali stores mapping from UDF name to the implementing Java class as table properties
     // in the HCatalog. So, an UDF implementation may be referred by different names by different views.
@@ -237,10 +234,9 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
     createAddUserDefinedFunction("com.linkedin.dali.udf.urnextractor.hive.UrnExtractor",
         HiveReturnTypes.ARRAY_OF_STR_STR_MAP,
         or(STRING, ARRAY));
-    createAddUserDefinedFunction("com.linkedin.udf.hdfs.GetDatasetNameFromPathUDF", HiveReturnTypes.STRING,
-        OperandTypes.STRING);
+    createAddUserDefinedFunction("com.linkedin.udf.hdfs.GetDatasetNameFromPathUDF", HiveReturnTypes.STRING, STRING);
     createAddUserDefinedFunction("com.linkedin.dali.udf.isguestmemberid.hive.IsGuestMemberId", ReturnTypes.BOOLEAN,
-        OperandTypes.NUMERIC);
+        NUMERIC);
     createAddUserDefinedFunction("com.linkedin.dali.udf.watbotcrawlerlookup.hive.WATBotCrawlerLookup",
         HiveReturnTypes.rowOf(ImmutableList.of("iscrawler", "crawlerid"), ImmutableList.of(SqlTypeName.BOOLEAN, SqlTypeName.VARCHAR)),
         family(ImmutableList.of(SqlTypeFamily.STRING, SqlTypeFamily.STRING, SqlTypeFamily.STRING, SqlTypeFamily.STRING),
@@ -251,27 +247,23 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
             family(SqlTypeFamily.STRING, SqlTypeFamily.STRING, SqlTypeFamily.STRING, SqlTypeFamily.STRING, SqlTypeFamily.NUMERIC,
                 SqlTypeFamily.STRING, SqlTypeFamily.STRING, SqlTypeFamily.STRING)));
     createAddUserDefinedFunction("com.linkedin.dali.udf.portallookup.hive.PortalLookup",
-        HiveReturnTypes.STRING, OperandTypes.STRING_STRING_STRING);
+        HiveReturnTypes.STRING, STRING_STRING_STRING);
     createAddUserDefinedFunction("com.linkedin.dali.udf.useragentparser.hive.UserAgentParser",
-        HiveReturnTypes.STRING, OperandTypes.STRING_STRING);
+        HiveReturnTypes.STRING, STRING_STRING);
     createAddUserDefinedFunction("com.linkedin.dali.udf.maplookup.hive.MapLookup",
         HiveReturnTypes.STRING, family(SqlTypeFamily.MAP, SqlTypeFamily.STRING, SqlTypeFamily.STRING));
-    createAddUserDefinedFunction("com.linkedin.dali.udf.monarch.UrnGenerator", HiveReturnTypes.STRING,
-        OperandTypes.VARIADIC);
+    createAddUserDefinedFunction("com.linkedin.dali.udf.monarch.UrnGenerator", HiveReturnTypes.STRING, VARIADIC);
     createAddUserDefinedFunction("com.linkedin.dali.udf.genericlookup.hive.GenericLookup",
-        HiveReturnTypes.STRING, OperandTypes.ANY);
+        HiveReturnTypes.STRING, ANY);
     createAddUserDefinedFunction("com.linkedin.tscp.reporting.dali.udfs.UrnToID",
-        HiveReturnTypes.STRING, OperandTypes.STRING);
+        HiveReturnTypes.STRING, STRING);
 
-    createAddUserDefinedFunction("com.linkedin.dali.udf.date.hive.DateFormatToEpoch",
-        ReturnTypes.BIGINT_NULLABLE,
-        OperandTypes.STRING_STRING_STRING);
-    createAddUserDefinedFunction("com.linkedin.dali.udf.date.hive.EpochToEpochMilliseconds",
-        ReturnTypes.BIGINT_NULLABLE, OperandTypes.NUMERIC);
+    createAddUserDefinedFunction("com.linkedin.dali.udf.date.hive.DateFormatToEpoch", BIGINT_NULLABLE,
+        STRING_STRING_STRING);
+    createAddUserDefinedFunction("com.linkedin.dali.udf.date.hive.EpochToEpochMilliseconds", BIGINT_NULLABLE, NUMERIC);
     createAddUserDefinedFunction("com.linkedin.dali.udf.date.hive.EpochToDateFormat",
         HiveReturnTypes.STRING, family(SqlTypeFamily.NUMERIC, SqlTypeFamily.STRING, SqlTypeFamily.STRING));
-    createAddUserDefinedFunction("com.linkedin.dali.udf.sanitize.hive.Sanitize", HiveReturnTypes.STRING,
-        OperandTypes.STRING);
+    createAddUserDefinedFunction("com.linkedin.dali.udf.sanitize.hive.Sanitize", HiveReturnTypes.STRING, STRING);
 
     // UDTFs
     addFunctionEntry("explode", HiveExplodeOperator.EXPLODE);

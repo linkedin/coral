@@ -1,6 +1,6 @@
-package com.linkedin.coral.hive.hive2rel.functions;
+package com.linkedin.coral.functions;
 
-import com.linkedin.coral.com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.calcite.sql.SqlCall;
@@ -12,7 +12,7 @@ import org.apache.calcite.sql.SqlSelect;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.util.Util;
 
-import static com.linkedin.coral.com.google.common.base.Preconditions.*;
+import static com.google.common.base.Preconditions.*;
 import static org.apache.calcite.sql.parser.SqlParserPos.*;
 
 

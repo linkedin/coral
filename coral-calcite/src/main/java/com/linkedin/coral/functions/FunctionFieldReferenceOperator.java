@@ -1,7 +1,6 @@
-package com.linkedin.coral.hive.hive2rel.functions;
+package com.linkedin.coral.functions;
 
-import com.linkedin.coral.com.google.common.base.Preconditions;
-import com.linkedin.coral.hive.hive2rel.Utils;
+import com.google.common.base.Preconditions;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.sql.SqlBasicCall;
 import org.apache.calcite.sql.SqlBinaryOperator;

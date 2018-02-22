@@ -2,8 +2,8 @@ package com.linkedin.coral.hive.hive2rel;
 
 import com.google.common.base.Preconditions;
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
-import com.linkedin.coral.hive.hive2rel.functions.HiveInOperator;
-import com.linkedin.coral.hive.hive2rel.functions.FunctionFieldReferenceOperator;
+import com.linkedin.coral.functions.FunctionFieldReferenceOperator;
+import com.linkedin.coral.functions.HiveInOperator;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.calcite.rel.type.RelDataType;
