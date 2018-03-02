@@ -156,7 +156,6 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
     createAddUserDefinedFunction("substring_index", HiveReturnTypes.STRING, STRING_STRING_INTEGER);
     createAddUserDefinedFunction("translate", HiveReturnTypes.STRING, STRING_STRING_STRING);
     createAddUserDefinedFunction("trim", HiveReturnTypes.STRING, STRING);
-    addFunctionEntry("trim", TRIM);
     createAddUserDefinedFunction("unbase64", explicit(SqlTypeName.VARBINARY), or(STRING, NULLABLE_LITERAL));
     addFunctionEntry("upper", UPPER);
     addFunctionEntry("ucase", UPPER);
