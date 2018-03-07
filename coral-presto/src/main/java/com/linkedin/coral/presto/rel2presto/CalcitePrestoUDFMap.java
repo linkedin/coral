@@ -36,9 +36,12 @@ public class CalcitePrestoUDFMap {
 
     // map various hive functions
     createUDFMapEntry(UDF_MAP, hiveToCalciteOp("base64"), 1, "to_base64");
-    createUDFMapEntry(UDF_MAP, hiveToCalciteOp("regexp_extract"), 3, "regexp_extract");
+    createUDFMapEntry(UDF_MAP, hiveToCalciteOp("regexp_extract"), 3, "regexp_extract",
+       "[{\"input\": 1}, {\"op\": \"hive_pattern_to_presto\", \"operands\":[{\"input\": 2}]}, {\"input\": 3}]",
+        null);
     // FIXME: this is incorrect. Adding this to test correctness of the overall system
     createUDFMapEntry(UDF_MAP, hiveToCalciteOp("concat_ws"), 3, "concat_ws");
+
   }
 
   /**

@@ -5,6 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
+import com.linkedin.coral.functions.HiveReturnTypes;
 import com.linkedin.coral.javax.annotation.Nonnull;
 import com.linkedin.coral.javax.annotation.Nullable;
 import java.util.ArrayList;
@@ -13,8 +14,12 @@ import java.util.List;
 import java.util.Map;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
+import org.apache.calcite.sql.parser.SqlParserPos;
+import org.apache.calcite.sql.type.OperandTypes;
+import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
 
 
 /**
@@ -76,6 +81,13 @@ public class UDFTransformer {
     OP_MAP.put("*", SqlStdOperatorTable.MULTIPLY);
     OP_MAP.put("/", SqlStdOperatorTable.DIVIDE);
     OP_MAP.put("^", SqlStdOperatorTable.POWER);
+    OP_MAP.put("hive_pattern_to_presto", new SqlUserDefinedFunction(
+        new SqlIdentifier("hive_pattern_to_presto", SqlParserPos.ZERO),
+        HiveReturnTypes.STRING,
+        null,
+        OperandTypes.STRING,
+        null,
+        null));
   }
 
   public static final String OPERATOR = "op";

@@ -69,8 +69,149 @@ public class ViewTranslationTest {
     HiveMetastoreClient msc = new HiveMetaStoreClientAdapter(metastoreClient);
     HiveToPrestoConverter converter = HiveToPrestoConverter.create(msc);
     OutputStream ostr = System.out;
-    //translateTable("access_log_mp_versioned", "datavault_resource_access_event_base_0_3_1", msc, converter);
-    translateTable("foundation_enterprise_mp.fact_leap_broadcast_action_event", converter);
+    String[] views = {
+        "foundation_enterprise_mp.fact_leap_broadcast_action_event",
+        // "foundation_enterprise_mp.fact_leap_topics_impression_event"
+        // access log failures: missing functions or fuzzy union
+        // "access_log_mp_versioned.unified_access_log_event_base_0_6_1",
+        // "access_log_mp_versioned.hdfs_access_log_event_base_0_6_1",
+        // "access_log_mp_versioned.aws_cloudtrail_event_base_0_6_1",
+        // "access_log_mp_versioned.presto_access_event_base_0_6_1",
+        // Union type is not support
+        // "adoptimizationevent_mp_versioned.adoptimizationevent_private_0_1_1",
+        // extract_union function... probably, union type
+        // "adoptimizationevent_mp_versioned.adoptimizationevent_0_1_1",
+        // dali function: epochToFormat
+        // "ads_mp_versioned.user_conversion_event_0_1_14",
+        //ads_mp_versioned_ad_consolidation_external_bidder_request_0_1_14_is_guest_member
+        //"ads_mp_versioned.ad_consolidation_external_bidder_request_0_1_14",
+        // Unknown function name: ads_mp_versioned_ad_consolidation_request_bidder_selection_0_1_14_is_guest_member
+        // "ads_mp_versioned.ad_consolidation_request_bidder_selection_0_1_14",
+        // Unknown function name: ads_mp_versioned_video_ads_action_event_0_1_14_user_interface
+        // "ads_mp_versioned.video_ads_action_event_0_1_14",
+        // ads_mp_versioned_fact_sas_ad_lead_0_1_14_user_interface
+        // "ads_mp_versioned.fact_sas_ad_lead_0_1_14",
+        //  Unknown function name: ads_mp_versioned_fact_sas_ad_click_hourly_0_1_14_user_interface
+        // "ads_mp_versioned.fact_sas_ad_click_hourly_0_1_14",
+        // Unknown function name: from_utc_timestamp
+        // "ads_mp_versioned.follow_event_0_1_14",
+        // Unknown function name: ads_mp_versioned_fact_sas_ad_click_0_1_14_user_interface
+        //"ads_mp_versioned.fact_sas_ad_click_0_1_14",
+        // Unknown function name: ads_mp_versioned_fact_sas_ad_request_hourly_0_1_14_user_interface
+        // "ads_mp_versioned.fact_sas_ad_request_hourly_0_1_14",
+        // Unknown function name: ads_mp_versioned_fact_sas_ad_impr_hourly_0_1_14_user_interface
+        // "ads_mp_versioned.fact_sas_ad_impr_hourly_0_1_14",
+        // Unknown function name: ads_mp_versioned_fact_sas_ad_impr_0_1_14_user_interface
+        // "ads_mp_versioned.fact_sas_ad_impr_0_1_14",
+        // "automated_sourcing_mp_versioned.automated_sourcing_stream_refinement_response_event_0_0_15",
+        // "automated_sourcing_mp_versioned.automated_sourcing_stream_exhausted_event_0_0_15",
+        // "automated_sourcing_mp_versioned.automated_sourcing_candidate_rating_action_event_0_0_15",
+        // "automated_sourcing_mp_versioned.automated_sourcing_candidate_not_fit_feedback_event_0_0_15",
+        // "automated_sourcing_mp_versioned.automated_sourcing_stream_create_event_0_0_15",
+        // "automated_sourcing_mp_versioned.automated_sourcing_stream_close_event_0_0_15",
+        // "automated_sourcing_mp_versioned.recruiter_message_send_event_0_0_15",
+        // "automated_sourcing_mp_versioned.automated_sourcing_profile_view_event_0_0_15",
+        //"company_insights_mp_versioned.premium_insights_teaser_click_event_0_0_5",
+        //"company_insights_mp_versioned.premium_insights_module_click_event_0_0_5",
+        //"company_insights_mp_versioned.premium_insights_module_impression_event_0_0_5",
+        //"company_insights_mp_versioned.premium_insights_teaser_impression_event_0_0_5",
+        //"company_mp_versioned.company_view_event_career_0_1_18",
+        //"company_mp_versioned.company_view_event_0_1_18",
+        //"company_mp_versioned.company_action_event_other_0_1_18",
+        //"company_mp_versioned.company_view_event_voyager_0_1_18",
+        //"company_mp_versioned.company_view_event_organization_0_1_18",
+        //"company_mp_versioned.company_action_event_0_1_18",
+        //"company_mp_versioned.company_view_event_other_0_1_18",
+        //"company_mp_versioned.company_action_event_organization_0_1_18",
+        //"company_mp_versioned.company_view_event_showcase_0_1_18",
+        //"compliance_mp_versioned.offline_compliance_request_event_ei_0_1_4",
+        //"compliance_mp_versioned.offline_compliance_request_event_0_1_4",
+        //"connectifier_account_mp_versioned.account_0_1_3",
+        //"connectifier_account_mp_versioned.account_private_0_1_3",
+        // "connectifier_contactevent_mp_versioned.contactevent_0_1_3",
+        //"connectifier_contactevent_mp_versioned.contactevent_private_0_1_3",
+        //"connectifier_pageviewevent_mp_versioned.pageviewevent_0_1_1",
+        //"connectifier_pageviewevent_mp_versioned.pageviewevent_private_0_1_1",
+        //"connectifier_profileviewevent_mp_versioned.profileviewevent_0_1_3",
+        //"connectifier_profileviewevent_mp_versioned.profileviewevent_private_0_1_3",
+        //"connectifier_searchevent_mp_versioned.searchevent_private_0_1_4",
+        //"connectifier_searchevent_mp_versioned.searchevent_0_1_4",
+        //"connectifier_user_mp_versioned.user_0_1_3",
+        //"connectifier_user_mp_versioned.user_private_0_1_3",
+        //"controlinteractionevent_mp.controlinteractionevent_mcm",
+        //"controlinteractionevent_mp_versioned.controlinteractionevent_mcm_0_1_8",
+        //"data_derived_adclickevent_mp_versioned.adclickevent_daily_private_0_0_6",
+        //"data_derived_adclickevent_mp_versioned.ads_35112_adclickevent_daily_0_0_3",
+        //"data_derived_adclickevent_mp_versioned.ads_35112_adclickevent_daily_private_0_0_3",
+        //"data_derived_inpages_company_profiles_avro_mp_versioned.inpages_company_profiles_avro_0_1_3",
+        //"data_derived_inpages_company_profiles_avro_mp_versioned.inpages_company_profiles_avro_private_0_1_3",
+        //"data_derived_mentorshipservedevent_mp_versioned.mentorship_mentorshipservedevent_daily_0_0_4",
+        //"data_derived_mentorshipservedevent_mp_versioned.mentorship_mentorshipservedevent_daily_private_0_0_4",
+        //"data_derived_userconversionevent_mp_versioned.userconversionevent_0_0_1",
+        //"data_derived_userconversionevent_mp_versioned.userconversionevent_private_0_0_1",
+        //"dbchanges_identity_profile_mp_versioned.profile_0_1_13",
+        //"dbchanges_identity_profile_mp_versioned.profile_private_0_1_13",
+        //"dbchanges_notificationdb_notifications_mp_versioned.notifications_0_1_6",
+        //"dbchanges_notificationdb_notifications_mp_versioned.notifications_private_0_1_6",
+        //"dbchanges_notificationdb_notificationsettings_mp_versioned.notificationsettings_0_1_3",
+        //"dbchanges_notificationdb_notificationsettings_mp_versioned.notificationsettings_private_0_1_3",
+        //"derived_conversion_tracking_userconversionevent_mp.conversion_tracking_userconversionevent_daily",
+        //"derived_conversion_tracking_userconversionevent_mp.conversion_tracking_userconversionevent_daily_private",
+        //"derived_conversion_tracking_userconversionevent_mp_versioned.conversion_tracking_userconversionevent_daily_0_1_5",
+        //"derived_conversion_tracking_userconversionevent_mp_versioned.conversion_tracking_userconversionevent_daily_private_0_1_5",
+        //"foundation_lms_mp.fact_f_sas_ad_impr",
+        //"foundation_lms_mp.fact_f_sas_ad_click",
+        //"foundation_lms_mp.fact_f_sas_ad_request",
+        // non-dali function
+        //"entity_handles_mp_versioned.phone_member_handles_0_1_16",
+        // non-dali function
+        //"feed_mp_versioned.decorated_feed_action_event_company_old_0_2_37",
+        // fuzzy union
+        //"feed_mp_versioned.feed_impression_event_0_2_37",
+        // non-dali function
+        //"feed_mp_versioned.decorated_feed_action_event_other_old_0_2_37",
+        // outer join
+        // "foundation_core_entity_mp_versioned.dim_msg_open_click_dedup_0_1_48",
+        //"foundation_core_entity_mp_versioned.dim_msg_email_open_dedup_0_1_48",
+        // window spec
+        //"foundation_enterprise_mp_versioned.dim_leap_shares_0_1_6",
+        // error parsing view definition  Column 'date_sk' not found
+        // "foundation_lms_mp_versioned.fact_detail_ad_impressions_0_1_13",
+        // Column 'contract_id' not found in table
+        //"foundation_lss_mp_versioned.sales_navigator_seat_metrics_private_0_1_7",
+        // Column 'seat_id' not found
+        //"foundation_lts_mp_versioned.agg_daily_cap_activity_0_1_24",
+        // fuzzy union
+        //"job_mp_versioned.job_view_event_jve_0_2_18",
+        // fuzzy union
+        //"profile_mp_versioned.profile_view_event_deduped_0_2_2",
+        // cast conversion from bigint to timestamp
+        //"salesforcecore_mp_versioned.opportunitylineitem_0_1_30",
+    };
+    for (String view : views) {
+      try {
+        translateTable(view, converter);
+      } catch (Throwable t) {
+        System.out.println(view);
+        t.printStackTrace(System.out);
+      }
+    }
+
+    /*translateTable("searchinputfocusevent_mp_versioned", "search_input_focus_event_lite_deduped_0_1_7",
+        msc, converter);
+    */
+    // translateTable("foundation_enterprise_mp.fact_leap_broadcast_action_event", converter);
+    // translateTable("foundation_enterprise_mp.fact_leap_employee_feed_impression_event", converter);
+    // translateTable("foundation_enterprise_mp.fact_leap_follow_action_event", converter);
+    // Hive to rel error
+    // translateTable("foundation_enterprise_mp.fact_leap_profile_impression_event", converter);
+    //translateTable("foundation_enterprise_mp.fact_leap_seat_action_event", converter);
+    // translateTable("foundation_enterprise_mp.fact_leap_share_action_event", converter);
+    // translateTable("foundation_enterprise_mp.fact_leap_topics_impression_event", converter);
+    // translateTable("foundation_enterprise_mp.dim_leap_broadcast_tags", converter);
+
+    //translateTable("access_log_mp_versioned", "aws_cloudtrail_event_base_0_3_1", msc, converter);
+    //translateTable("ads_mp_versioned.follow_event_0_1_14", msc, converter);
     //translateAllViews(msc, converter, ostr);
   }
 
@@ -309,6 +450,7 @@ public class ViewTranslationTest {
   }
 
   private static void validatePrestoSql(String sql) {
+    System.out.println(sql);
     SqlParser parser = new SqlParser();
     Statement statement = parser.createStatement(sql, new ParsingOptions());
     if (statement == null) {

@@ -48,8 +48,9 @@ public class TestUtils {
       SqlNode sn = planner.parse(sql);
       SqlNode validate = planner.validate(sn);
       RelRoot rel = planner.rel(validate);
-      RelNode relNode = rel.project();
-      return Calcite2PrestoUDFConverter.convertRel(relNode);
+      //RelNode relNode = rel.project();
+      return rel.project();
+      //return Calcite2PrestoUDFConverter.convertRel(relNode);
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
