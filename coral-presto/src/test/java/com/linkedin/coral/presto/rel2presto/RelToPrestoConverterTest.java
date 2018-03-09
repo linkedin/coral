@@ -3,7 +3,6 @@ package com.linkedin.coral.presto.rel2presto;
 import com.facebook.presto.sql.parser.ParsingOptions;
 import com.facebook.presto.sql.parser.SqlParser;
 import com.facebook.presto.sql.tree.Statement;
-import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.tools.FrameworkConfig;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
@@ -106,7 +105,6 @@ public class RelToPrestoConverterTest {
   public void testRowSelection() {
     String sql = "SELECT ROW(1, 2.5, 'abc')";
     String expected = "SELECT ROW(1, 2.5, 'abc')\nFROM (VALUES  (0))";
-    System.out.println(RelOptUtil.toString(toRel(sql, config)));
     testConversion(sql, expected);
   }
 
@@ -115,7 +113,6 @@ public class RelToPrestoConverterTest {
     // TODO: This statement does not parse in calcite Sql. Fix syntax
     String sql = "SELECT MAP(ARRAY['a', 'b'], ARRAY[1, 2])";
     String expected = "SELECT MAP(ARRAY['a', 'b'], ARRAY[1, 2])\nFROM (VALUES  (0))";
-    System.out.println(RelOptUtil.toString(toRel(sql, config)));
     testConversion(sql, expected);
   }
 
@@ -140,7 +137,6 @@ public class RelToPrestoConverterTest {
     {
       String sql = "SELECT icol from tableOne where icol is not null";
       String expected = formatSql("select icol from tableOne where icol IS NOT NULL");
-      System.out.println(RelOptUtil.toString(toRel(sql, config)));
       testConversion(sql, expected);
     }
   }
@@ -196,7 +192,6 @@ public class RelToPrestoConverterTest {
         + "INNER JOIN (select ifield as ifield\n" + "from " + tableTwo + "\n" + "where ifield < 10\n"
         + "group by ifield) as \"t1\" on tableOne.icol != \"t1\".\"IFIELD\"";
     String expectedSql = quoteColumns(upcaseKeywords(s));
-    System.out.println(RelOptUtil.toString(toRel(sql, config)));
     testConversion(sql, expectedSql);
   }
 
@@ -210,14 +205,12 @@ public class RelToPrestoConverterTest {
   @Test (enabled = false)
   public void testScalarSubquery() {
     String sql = "SELECT icol from tableOne where icol > (select sum(ifield) from tableTwo)";
-    System.out.println(RelOptUtil.toString(toRel(sql, config)));
     testConversion(sql, "");
   }
 
   @Test (enabled = false)
   public void testCorrelatedSubquery() {
     String sql = "select dcol from tableOne where dcol > (select sum(dfield) from tableTwo where dfield < tableOne.icol)";
-    System.out.println(RelOptUtil.toString(toRel(sql, config)));
     testConversion(sql, "");
   }
 
@@ -273,11 +266,10 @@ public class RelToPrestoConverterTest {
     testConversion(sql, expectedSql);
   }
 
-  @Test
+  @Test (enabled = false)
   public void testMultipleNestedQueries() {
     String sql = "select icol from tableOne where dcol > (select avg(dfield) from tableTwo where dfield > " +
         "   (select sum(ifield) from tableOne) )";
-    System.out.println(RelOptUtil.toString(toRel(sql, config)));
   }
 
   // set queries
@@ -349,6 +341,13 @@ public class RelToPrestoConverterTest {
     String expectedSql2 = formatSql("SELECT \"RANDOM\"(icol)" +
         " from " + tableOne);
     testConversion(sql2, expectedSql2);
+    {
+      final String sql = "SELECT icol FROM " + TABLE_ONE.getTableName()
+          + " WHERE rand_integer(icol) > 10";
+      final String expected = "SELECT \"icol\" AS \"ICOL\"\nFROM \"" + TABLE_ONE.getTableName() + "\""
+          + "\nWHERE \"RANDOM\"(\"icol\") > 10";
+      testConversion(sql, expected);
+    }
   }
 
   @Test

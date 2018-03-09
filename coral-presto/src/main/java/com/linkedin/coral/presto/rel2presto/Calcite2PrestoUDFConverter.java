@@ -1,12 +1,22 @@
 package com.linkedin.coral.presto.rel2presto;
 
-import java.util.List;
-import java.util.stream.Collectors;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelShuttle;
 import org.apache.calcite.rel.RelShuttleImpl;
-import org.apache.calcite.rel.core.Project;
+import org.apache.calcite.rel.core.TableFunctionScan;
+import org.apache.calcite.rel.core.TableScan;
+import org.apache.calcite.rel.logical.LogicalAggregate;
+import org.apache.calcite.rel.logical.LogicalCorrelate;
+import org.apache.calcite.rel.logical.LogicalExchange;
+import org.apache.calcite.rel.logical.LogicalFilter;
+import org.apache.calcite.rel.logical.LogicalIntersect;
+import org.apache.calcite.rel.logical.LogicalJoin;
+import org.apache.calcite.rel.logical.LogicalMatch;
+import org.apache.calcite.rel.logical.LogicalMinus;
 import org.apache.calcite.rel.logical.LogicalProject;
+import org.apache.calcite.rel.logical.LogicalSort;
+import org.apache.calcite.rel.logical.LogicalUnion;
+import org.apache.calcite.rel.logical.LogicalValues;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexNode;
@@ -27,12 +37,81 @@ public class Calcite2PrestoUDFConverter {
     RelShuttle converter = new RelShuttleImpl() {
       @Override
       public RelNode visit(LogicalProject project) {
-        Project oldProject = (Project) super.visit(project);
-        PrestoRexConverter prestoRexConverter = new PrestoRexConverter(oldProject.getCluster().getRexBuilder());
-        List<RexNode> newProjections = oldProject.getProjects().stream()
-            .map(prestoRexConverter::apply)
-            .collect(Collectors.toList());
-        return LogicalProject.create(oldProject.getInput(), newProjections, oldProject.getRowType().getFieldNames());
+        return super.visit(project).accept(getPrestoRexConverter(project));
+      }
+
+      @Override
+      public RelNode visit(LogicalFilter inputFilter) {
+        return super.visit(inputFilter).accept(getPrestoRexConverter(inputFilter));
+      }
+
+      @Override
+      public RelNode visit(LogicalAggregate aggregate) {
+        return super.visit(aggregate).accept(getPrestoRexConverter(aggregate));
+      }
+
+      @Override
+      public RelNode visit(LogicalMatch match) {
+        return super.visit(match).accept(getPrestoRexConverter(match));
+      }
+
+      @Override
+      public RelNode visit(TableScan scan) {
+        return super.visit(scan).accept(getPrestoRexConverter(scan));
+      }
+
+      @Override
+      public RelNode visit(TableFunctionScan scan) {
+        return super.visit(scan).accept(getPrestoRexConverter(scan));
+      }
+
+      @Override
+      public RelNode visit(LogicalValues values) {
+        return super.visit(values).accept(getPrestoRexConverter(values));
+      }
+
+      @Override
+      public RelNode visit(LogicalJoin join) {
+        return super.visit(join).accept(getPrestoRexConverter(join));
+      }
+
+      @Override
+      public RelNode visit(LogicalCorrelate correlate) {
+        return super.visit(correlate).accept(getPrestoRexConverter(correlate));
+      }
+
+      @Override
+      public RelNode visit(LogicalUnion union) {
+        return super.visit(union).accept(getPrestoRexConverter(union));
+      }
+
+      @Override
+      public RelNode visit(LogicalIntersect intersect) {
+        return super.visit(intersect).accept(getPrestoRexConverter(intersect));
+      }
+
+      @Override
+      public RelNode visit(LogicalMinus minus) {
+        return super.visit(minus).accept(getPrestoRexConverter(minus));
+      }
+
+      @Override
+      public RelNode visit(LogicalSort sort) {
+        return super.visit(sort).accept(getPrestoRexConverter(sort));
+      }
+
+      @Override
+      public RelNode visit(LogicalExchange exchange) {
+        return super.visit(exchange).accept(getPrestoRexConverter(exchange));
+      }
+
+      @Override
+      public RelNode visit(RelNode other) {
+        return super.visit(other).accept(getPrestoRexConverter(other));
+      }
+
+      private PrestoRexConverter getPrestoRexConverter(RelNode node) {
+        return new PrestoRexConverter(node.getCluster().getRexBuilder());
       }
     };
     return calciteNode.accept(converter);

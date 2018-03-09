@@ -55,7 +55,20 @@ public class HiveToRelConverter {
    */
   public RelNode convertSql(String sql) {
     SqlNode sqlNode = getTreeBuilder().processSql(sql);
-    return toRel(sqlNode);
+    RelNode rel = toRel(sqlNode);
+    return standardizeRel(rel);
+  }
+
+  /**
+   * Apply series of transforms to convert Hive relnode to
+   * standardized intermediate representation. What is "standard"
+   * is vague right now but we try to be closer to ANSI standard.
+   * TODO: define standard intermediate representation
+   * @param relNode calcite relnode representing hive query
+   * @return standard representation of input query as relnode
+   */
+  private RelNode standardizeRel(RelNode relNode) {
+    return new HiveRelConverter().convert(relNode);
   }
 
   /**

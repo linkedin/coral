@@ -152,7 +152,7 @@ public class HiveToRelConverterTest {
   @Test
   public void testSelectArrayElement() {
     final String sql = "SELECT c[0] from complex";
-    final String expectedRel = "LogicalProject(EXPR$0=[ITEM($2, 0)])\n" +
+    final String expectedRel = "LogicalProject(EXPR$0=[ITEM($2, 1)])\n" +
         "  LogicalTableScan(table=[[hive, default, complex]])\n";
     assertEquals(relToString(sql), expectedRel);
   }
@@ -160,7 +160,7 @@ public class HiveToRelConverterTest {
   @Test
   public void testSelectArrayElemComplex() {
     final String sql = "SELECT split(b, ',')[0] FROM complex";
-    final String expected = "LogicalProject(EXPR$0=[ITEM(split($1, ','), 0)])\n" +
+    final String expected = "LogicalProject(EXPR$0=[ITEM(split($1, ','), 1)])\n" +
         "  LogicalTableScan(table=[[hive, default, complex]])\n";
     assertEquals(relToString(sql), expected);
   }
@@ -185,7 +185,8 @@ public class HiveToRelConverterTest {
   @Test
   public void testArrayMapItemOperator() {
     final String sql = "SELECT array(map('abc', 123, 'def', 567),map('pqr', 65, 'xyz', 89))[0]['abc']";
-    final String expected = "LogicalProject(EXPR$0=[ITEM(ITEM(ARRAY(MAP('abc', 123, 'def', 567), MAP('pqr', 65, 'xyz', 89)), 0), 'abc')])\n" +
+    // indexes are 1-based in relnodes
+    final String expected = "LogicalProject(EXPR$0=[ITEM(ITEM(ARRAY(MAP('abc', 123, 'def', 567), MAP('pqr', 65, 'xyz', 89)), 1), 'abc')])\n" +
         "  LogicalValues(tuples=[[{ 0 }]])\n";
     assertEquals(relToString(sql), expected);
   }
