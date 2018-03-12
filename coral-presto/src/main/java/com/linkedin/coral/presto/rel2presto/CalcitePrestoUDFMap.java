@@ -1,5 +1,8 @@
 package com.linkedin.coral.presto.rel2presto;
 
+import com.linkedin.coral.com.google.common.base.CaseFormat;
+import com.linkedin.coral.com.google.common.base.Converter;
+import com.linkedin.coral.com.google.common.collect.ImmutableMultimap;
 import com.linkedin.coral.functions.HiveFunction;
 import com.linkedin.coral.functions.HiveRLikeOperator;
 import com.linkedin.coral.functions.StaticHiveFunctionRegistry;
@@ -42,6 +45,25 @@ public class CalcitePrestoUDFMap {
     // FIXME: this is incorrect. Adding this to test correctness of the overall system
     createUDFMapEntry(UDF_MAP, hiveToCalciteOp("concat_ws"), 3, "concat_ws");
 
+    addDaliUDFs();
+  }
+
+  private static void addDaliUDFs() {
+    ImmutableMultimap<String, HiveFunction> registry = HIVE_REGISTRY.getRegistry();
+    Converter<String, String> caseConverter = CaseFormat.UPPER_CAMEL.converterTo(CaseFormat.LOWER_UNDERSCORE);
+    for (Map.Entry<String, HiveFunction> entry : registry.entries()) {
+      if (!entry.getKey().startsWith("com.linkedin")) {
+        continue;
+      }
+      String[] nameSplit = entry.getKey().split("\\.");
+      // filter above guarantees we've atleast 2 entries
+      String className = nameSplit[nameSplit.length - 1];
+      String funcName = caseConverter.convert(className);
+      SqlOperator op = entry.getValue().getSqlOperator();
+      for (int i = op.getOperandCountRange().getMin(); i <= op.getOperandCountRange().getMax(); i++) {
+        createUDFMapEntry(UDF_MAP, op, i, funcName);
+      }
+    }
   }
 
   /**

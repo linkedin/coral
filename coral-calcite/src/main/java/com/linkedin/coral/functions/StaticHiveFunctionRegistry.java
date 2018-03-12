@@ -2,6 +2,7 @@
 
  import com.google.common.collect.HashMultimap;
  import com.google.common.collect.ImmutableList;
+ import com.google.common.collect.ImmutableMultimap;
  import com.google.common.collect.Multimap;
  import java.util.Collection;
  import java.util.Collections;
@@ -36,6 +37,7 @@
  */
 public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
 
+  // TODO: Make this immutable using builder
   static final Multimap<String, HiveFunction> FUNCTION_MAP = HashMultimap.create();
   // NOTE: all function names should be lowercase for case-insensitive comparison
   static {
@@ -281,6 +283,13 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
   public Collection<HiveFunction> lookup(String functionName, boolean isCaseSensitive) {
     String name = isCaseSensitive ? functionName : functionName.toLowerCase();
     return FUNCTION_MAP.get(name);
+  }
+
+  /**
+   * Returns immutable copy of internal function registry
+   */
+  public ImmutableMultimap<String, HiveFunction> getRegistry() {
+    return ImmutableMultimap.copyOf(FUNCTION_MAP);
   }
 
   private static void addFunctionEntry(String functionName, SqlOperator operator) {
