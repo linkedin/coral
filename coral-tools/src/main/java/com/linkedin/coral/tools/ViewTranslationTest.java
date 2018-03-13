@@ -70,7 +70,7 @@ public class ViewTranslationTest {
     HiveToPrestoConverter converter = HiveToPrestoConverter.create(msc);
     OutputStream ostr = System.out;
     String[] views = {
-        "foundation_enterprise_mp.fact_leap_broadcast_action_event",
+        // "foundation_enterprise_mp.fact_leap_broadcast_action_event",
         // "foundation_enterprise_mp.fact_leap_topics_impression_event"
         // access log failures: missing functions or fuzzy union
         // "access_log_mp_versioned.unified_access_log_event_base_0_6_1",
@@ -175,8 +175,9 @@ public class ViewTranslationTest {
         //"foundation_core_entity_mp_versioned.dim_msg_email_open_dedup_0_1_48",
         // window spec
         //"foundation_enterprise_mp_versioned.dim_leap_shares_0_1_6",
+        "foundation_core_entity_mp.dim_position",
         // error parsing view definition  Column 'date_sk' not found
-        // "foundation_lms_mp_versioned.fact_detail_ad_impressions_0_1_13",
+        "foundation_lms_mp_versioned.fact_detail_ad_impressions_0_1_13",
         // Column 'contract_id' not found in table
         //"foundation_lss_mp_versioned.sales_navigator_seat_metrics_private_0_1_7",
         // Column 'seat_id' not found

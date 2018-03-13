@@ -17,8 +17,13 @@ import org.apache.calcite.schema.Statistic;
 import org.apache.calcite.schema.Statistics;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlNode;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hive.metastore.MetaStoreUtils;
 import org.apache.hadoop.hive.metastore.TableType;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
+import org.apache.hadoop.hive.metastore.api.MetaException;
+import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
+import org.apache.hadoop.hive.serde2.Deserializer;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
 
@@ -33,6 +38,7 @@ import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
 public class HiveTable implements ScannableTable {
 
   protected final org.apache.hadoop.hive.metastore.api.Table hiveTable;
+  private Deserializer deserializer;
 
   /**
    * Constructor to create bridge from hive table to calcite table
@@ -71,7 +77,7 @@ public class HiveTable implements ScannableTable {
 
   @Override
   public RelDataType getRowType(RelDataTypeFactory typeFactory) {
-    List<FieldSchema> cols = hiveTable.getSd().getCols();
+    List<FieldSchema> cols = getColumns();
     List<RelDataType> fieldTypes = new ArrayList<>(cols.size());
     List<String> fieldNames = new ArrayList<>(cols.size());
     Iterable<FieldSchema> allCols = Iterables.concat(cols, hiveTable.getPartitionKeys());
@@ -82,6 +88,40 @@ public class HiveTable implements ScannableTable {
       fieldTypes.add(relType);
     });
     return typeFactory.createStructType(fieldTypes, fieldNames);
+  }
+
+  private List<FieldSchema> getColumns() {
+    StorageDescriptor sd = hiveTable.getSd();
+    String serDeLib = getSerializationLib();
+    if (serDeLib == null || serDeLib.isEmpty()) {
+      // views don't have serde library
+      return sd.getCols();
+    } else {
+      try {
+        return MetaStoreUtils.getFieldsFromDeserializer(hiveTable.getTableName(), getDeserializer());
+      } catch (Exception e) {
+        throw new RuntimeException("Failed to get columns using deserializer", e);
+      }
+    }
+  }
+
+  private String getSerializationLib() {
+    return hiveTable.getSd().getSerdeInfo().getSerializationLib();
+  }
+
+  private Deserializer getDeserializer() {
+    if (deserializer == null) {
+      deserializer = getDeserializerFromMetaStore();
+    }
+    return deserializer;
+  }
+
+  private Deserializer getDeserializerFromMetaStore() {
+    try {
+      return MetaStoreUtils.getDeserializer(new Configuration(false), hiveTable, false);
+    } catch (MetaException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   @Override

@@ -21,6 +21,8 @@ dependencies {
     // avro-tools brings in whole bunch of hadoop classes causing duplicates and conflicts
     exclude group: 'org.apache.avro', module: 'avro-tools'
   }
+  compile spec.product.hadoop.'hadoop-common'
+
   // required for hiveSQL parser code
   compile spec.external.'antlr-runtime'
 
