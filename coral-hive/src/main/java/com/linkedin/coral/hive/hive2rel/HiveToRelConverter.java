@@ -55,8 +55,7 @@ public class HiveToRelConverter {
    */
   public RelNode convertSql(String sql) {
     SqlNode sqlNode = getTreeBuilder().processSql(sql);
-    RelNode rel = toRel(sqlNode);
-    return standardizeRel(rel);
+    return toRel(sqlNode);
   }
 
   /**
@@ -92,6 +91,6 @@ public class HiveToRelConverter {
   @VisibleForTesting
   RelNode toRel(SqlNode sqlNode) {
     RelRoot root = relContextProvider.getSqlToRelConverter().convertQuery(sqlNode, true, true);
-    return root.rel;
+    return standardizeRel(root.rel);
   }
 }
