@@ -2,6 +2,7 @@ package com.linkedin.coral.hive.hive2rel;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
+import com.linkedin.coral.com.google.common.base.Throwables;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -100,6 +101,7 @@ public class HiveTable implements ScannableTable {
       try {
         return MetaStoreUtils.getFieldsFromDeserializer(hiveTable.getTableName(), getDeserializer());
       } catch (Exception e) {
+        Throwables.propagateIfInstanceOf(e, RuntimeException.class);
         throw new RuntimeException("Failed to get columns using deserializer", e);
       }
     }

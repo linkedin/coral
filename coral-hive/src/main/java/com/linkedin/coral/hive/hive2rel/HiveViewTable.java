@@ -1,6 +1,7 @@
 package com.linkedin.coral.hive.hive2rel;
 
 import com.linkedin.coral.com.google.common.base.Preconditions;
+import com.linkedin.coral.com.google.common.base.Throwables;
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import java.util.List;
 import org.apache.calcite.plan.RelOptTable;
@@ -44,6 +45,7 @@ public class HiveViewTable extends HiveTable implements TranslatableTable {
       //root = root.withRel(RelOptUtil.createCastRel(root.rel, relOptTable.getRowType()));
       return root.rel;
     } catch (Exception e) {
+      Throwables.propagateIfInstanceOf(e, RuntimeException.class);
       throw new RuntimeException("Error while parsing view definition", e);
     }
   }
