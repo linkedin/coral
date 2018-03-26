@@ -70,6 +70,29 @@ public class ViewTranslationTest {
     HiveToPrestoConverter converter = HiveToPrestoConverter.create(msc);
     OutputStream ostr = System.out;
     String[] views = {
+        //"foundation_premium_mp.fact_oms_receipt",
+        "foundation_marketing_mp.fact_resp_send_event",
+        "foundation_marketing_mp.fact_resp_send_event",
+        "foundation_marketing_mp.fact_resp_open_event",
+        "foundation_marketing_mp.fact_resp_click_event",
+        "foundation_lts_mp.fact_mcm_page_view",
+        "foundation_lts_mp.fact_job_views",
+        "foundation_lts_mp.fact_job_views_hourly",
+        "foundation_lts_mp.fact_job_offsite_apply_click",
+        "foundation_lts_mp.fact_job_offsite_apply_click_ump",
+        "foundation_lts_mp.fact_job_action",
+        "foundation_lts_mp.fact_job_action_ump",
+        "foundation_lts_mp.fact_job_action_hourly",
+        "foundation_lts_mp.fact_cap_search",
+        "foundation_lts_mp.fact_cap_search_results",
+        "foundation_lts_mp.fact_cap_search_maps",
+        "foundation_lls_mp.fact_lynda_b2c_subscription_details",
+        "foundation_core_entity_mp.fact_company_page_view",
+        //"foundation_core_tracking_mp.fact_decorated_me_notification_event",
+        //"foundation_lts_mp.fact_det_cap_inmail_tmplt"
+        // "foundation_core_entity_mp_versioned.dim_member_all_1_0_8"
+        // "foundation_core_entity_mp.dim_lu_quarter",
+        // "foundation_core_entity_mp.dim_company_products"
         // "foundation_enterprise_mp.fact_leap_broadcast_action_event",
         // "foundation_enterprise_mp.fact_leap_topics_impression_event"
         // access log failures: missing functions or fuzzy union
@@ -175,9 +198,9 @@ public class ViewTranslationTest {
         //"foundation_core_entity_mp_versioned.dim_msg_email_open_dedup_0_1_48",
         // window spec
         //"foundation_enterprise_mp_versioned.dim_leap_shares_0_1_6",
-        "foundation_core_entity_mp.dim_position",
+        //"foundation_core_entity_mp.dim_position",
         // error parsing view definition  Column 'date_sk' not found
-        "foundation_lms_mp_versioned.fact_detail_ad_impressions_0_1_13",
+        //"foundation_lms_mp_versioned.fact_detail_ad_impressions_0_1_13",
         // Column 'contract_id' not found in table
         //"foundation_lss_mp_versioned.sales_navigator_seat_metrics_private_0_1_7",
         // Column 'seat_id' not found
@@ -278,7 +301,6 @@ public class ViewTranslationTest {
           isDaliView = table.getOwner().equalsIgnoreCase("daliview");
           stats.daliviews += isDaliView ? 1 : 0;
           convertToPrestoAndValidate(db, tableName, converter);
-
         } catch (Exception e) {
           ++stats.failures;
           failures.add(db + "." + tableName);
@@ -287,11 +309,14 @@ public class ViewTranslationTest {
             ++stats.sqlFnErrors;
             sqlFunctions.merge(((UnknownSqlFunctionException) e).getFunctionName(), 1, (i, j) -> i + j);
           }
-          errorCategories.merge(e.getClass().getName(), 1, (i, j) -> i + j);
+          if (e instanceof RuntimeException && e.getCause() != null) {
+            errorCategories.merge(e.getCause().getClass().getName(), 1, (i, j) -> i + j);
+          } else {
+            errorCategories.merge(e.getClass().getName(), 1, (i, j) -> i + j);
+          }
         } catch (Throwable t) {
           writer.println(String.format("Unexpected error translating %s.%s, text: %s", db, tableName,
-              (table == null ? "null" : table.getViewOriginalText()))
-          );
+              (table == null ? "null" : table.getViewOriginalText())));
           ++stats.failures;
           failures.add(db + "." + tableName);
         }
@@ -310,7 +335,8 @@ public class ViewTranslationTest {
     writer.println("Error categories");
     errorCategories.forEach((x, y) -> writer.println(x + " : " + y));
     writer.println("Unknown functions");
-    sqlFunctions.entrySet().stream()
+    sqlFunctions.entrySet()
+        .stream()
         .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
         .forEach(e -> writer.println(String.format("%s:%d", e.getKey(), e.getValue())));
     writer.println(stats);

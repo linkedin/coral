@@ -24,6 +24,7 @@ import org.apache.calcite.sql.SqlJoin;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlNode;
+import org.apache.calcite.sql.SqlNodeList;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.util.Util;
 
@@ -48,9 +49,7 @@ public class RelToPrestoConverter extends RelToSqlConverter {
    */
   public String convert(RelNode relNode) {
     RelNode rel = convertRel(relNode);
-    return convertToSqlNode(rel)
-        .toSqlString(PRESTO_DIALECT)
-        .toString();
+    return convertToSqlNode(rel).toSqlString(PRESTO_DIALECT).toString();
   }
 
   /**
@@ -59,8 +58,7 @@ public class RelToPrestoConverter extends RelToSqlConverter {
    * @return calcite SqlNode representation for input
    */
   public SqlNode convertToSqlNode(RelNode relNode) {
-    return visitChild(0, relNode)
-        .asStatement();
+    return visitChild(0, relNode).asStatement();
   }
 
   /**
@@ -70,6 +68,23 @@ public class RelToPrestoConverter extends RelToSqlConverter {
    */
   public Result visit(Window window) {
     return null;
+  }
+
+  @Override
+  public Result visit(Project e) {
+    e.getVariablesSet();
+    Result x = visitChild(0, e.getInput());
+    parseCorrelTable(e, x);
+    final Builder builder =
+        x.builder(e, Clause.SELECT);
+    final List<SqlNode> selectList = new ArrayList<>();
+    for (RexNode ref : e.getChildExps()) {
+      SqlNode sqlExpr = builder.context.toSql(null, ref);
+      addSelect(selectList, sqlExpr, e.getRowType());
+    }
+
+    builder.setSelect(new SqlNodeList(selectList, POS));
+    return builder.result();
   }
 
   public Result visit(Uncollect e) {
@@ -125,18 +140,13 @@ public class RelToPrestoConverter extends RelToSqlConverter {
     final Result rightResult = visitChild(1, e.getRight());
     SqlNode rightLateral = rightResult.node;
     if (rightLateral.getKind() != SqlKind.AS) {
-      rightLateral = SqlStdOperatorTable.AS.createCall(POS, rightLateral,
-          new SqlIdentifier(rightResult.neededAlias, POS));
+      rightLateral =
+          SqlStdOperatorTable.AS.createCall(POS, rightLateral, new SqlIdentifier(rightResult.neededAlias, POS));
     }
 
     final SqlNode join =
-        new SqlJoin(POS,
-            leftResult.asFrom(),
-            SqlLiteral.createBoolean(false, POS),
-            JoinType.CROSS.symbol(POS),
-            rightLateral,
-            JoinConditionType.NONE.symbol(POS),
-            null);
+        new SqlJoin(POS, leftResult.asFrom(), SqlLiteral.createBoolean(false, POS), JoinType.CROSS.symbol(POS),
+            rightLateral, JoinConditionType.NONE.symbol(POS), null);
     return result(join, leftResult, rightResult);
   }
 
@@ -145,8 +155,6 @@ public class RelToPrestoConverter extends RelToSqlConverter {
     protected RelToPrestoAliasContext(Map<String, RelDataType> aliases, boolean qualified) {
       super(aliases, qualified);
     }
-
-
   }
 
   @Override
