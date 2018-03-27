@@ -22,6 +22,8 @@ public class CalcitePrestoUDFMap {
   private static final Map<String, UDFTransformer> UDF_MAP = new HashMap();
   private static final StaticHiveFunctionRegistry HIVE_REGISTRY = new StaticHiveFunctionRegistry();
   static {
+    // conditional functions
+    createUDFMapEntry(UDF_MAP, hiveToCalciteOp("nvl"), 2, "coalesce");
     // Math Functions
     createUDFMapEntry(UDF_MAP, SqlStdOperatorTable.RAND, 0, "RANDOM");
     createUDFMapEntry(UDF_MAP, SqlStdOperatorTable.RAND, 1, "RANDOM", "[]", null);
@@ -42,6 +44,7 @@ public class CalcitePrestoUDFMap {
     createUDFMapEntry(UDF_MAP, hiveToCalciteOp("regexp_extract"), 3, "regexp_extract",
        "[{\"input\": 1}, {\"op\": \"hive_pattern_to_presto\", \"operands\":[{\"input\": 2}]}, {\"input\": 3}]",
         null);
+
     // FIXME: this is incorrect. Adding this to test correctness of the overall system
     createUDFMapEntry(UDF_MAP, hiveToCalciteOp("concat_ws"), 3, "concat_ws");
 
