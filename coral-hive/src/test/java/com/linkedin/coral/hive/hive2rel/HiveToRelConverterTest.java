@@ -237,7 +237,7 @@ public class HiveToRelConverterTest {
         + "RecordType(INTEGER NOT NULL field_a, CHAR(3) CHARACTER SET \"ISO-8859-1\" COLLATE \"ISO-8859-1$en_US$primary\" NOT NULL field_b) NOT NULL.field_b])\n"
         + "  LogicalValues(tuples=[[{ 0 }]])\n";
     assertEquals(relToStr(rel), expectedRel);
-    final String expectedSql = "SELECT CAST(ROW(10, 'abc') AS ROW(\"field_a\" INTEGER, \"field_b\" CHAR(3) CHARACTER SET \"ISO-8859-1\")).\"field_b\"\nFROM (VALUES  (0))";
+    final String expectedSql = "SELECT CAST(ROW(10, 'abc') AS ROW(\"field_a\" INTEGER, \"field_b\" CHAR(3))).\"field_b\"\nFROM (VALUES  (0))";
     assertEquals(relToSql(rel), expectedSql);
   }
 
