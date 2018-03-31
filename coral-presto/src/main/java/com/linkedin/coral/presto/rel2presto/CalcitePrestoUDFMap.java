@@ -47,6 +47,7 @@ public class CalcitePrestoUDFMap {
 
     // FIXME: this is incorrect. Adding this to test correctness of the overall system
     createUDFMapEntry(UDF_MAP, hiveToCalciteOp("concat_ws"), 3, "concat_ws");
+    createUDFMapEntry(UDF_MAP, hiveToCalciteOp("from_unixtime"), 1, "unixtime_to_str");
 
     addDaliUDFs();
   }
