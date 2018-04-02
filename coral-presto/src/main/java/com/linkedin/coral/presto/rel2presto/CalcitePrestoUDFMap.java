@@ -49,6 +49,8 @@ public class CalcitePrestoUDFMap {
     createUDFMapEntry(UDF_MAP, hiveToCalciteOp("concat_ws"), 3, "concat_ws");
     createUDFMapEntry(UDF_MAP, hiveToCalciteOp("from_unixtime"), 1, "unixtime_to_str");
 
+    // DALI functions
+    createUDFMapEntry(UDF_MAP, hiveToCalciteOp(StaticHiveFunctionRegistry.IS_TEST_MEMBER_ID_CLASS), 2, "is_test_member_id");
     addDaliUDFs();
   }
 
