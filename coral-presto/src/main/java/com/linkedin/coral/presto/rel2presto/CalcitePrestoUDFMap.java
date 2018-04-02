@@ -49,6 +49,8 @@ public class CalcitePrestoUDFMap {
     createUDFMapEntry(UDF_MAP, hiveToCalciteOp("concat_ws"), 3, "concat_ws");
     createUDFMapEntry(UDF_MAP, hiveToCalciteOp("from_unixtime"), 1, "unixtime_to_str");
 
+    // DALI functions
+    // This may not work for all but works for now...
     addDaliUDFs();
   }
 
@@ -84,5 +86,9 @@ public class CalcitePrestoUDFMap {
     Collection<HiveFunction> lookup = HIVE_REGISTRY.lookup(functionName, false);
     // TODO: provide overloaded function resolution
     return lookup.iterator().next().getSqlOperator();
+  }
+
+  private static SqlOperator daliToCalciteOp(String className) {
+    return HIVE_REGISTRY.lookup(className, true).iterator().next().getSqlOperator();
   }
 }

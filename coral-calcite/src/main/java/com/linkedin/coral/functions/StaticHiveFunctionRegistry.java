@@ -37,6 +37,8 @@
  */
 public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
 
+  public static final String IS_TEST_MEMBER_ID_CLASS = "com.linkedin.dali.udf.istestmemberid.hive.IsTestMemberId";
+
   // TODO: Make this immutable using builder
   static final Multimap<String, HiveFunction> FUNCTION_MAP = HashMultimap.create();
   // NOTE: all function names should be lowercase for case-insensitive comparison
@@ -230,8 +232,7 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
     // LinkedIn UDFs: Dali stores mapping from UDF name to the implementing Java class as table properties
     // in the HCatalog. So, an UDF implementation may be referred by different names by different views.
     // We register these UDFs by the implementing class name to create a single entry for each UDF.
-    createAddUserDefinedFunction("com.linkedin.dali.udf.istestmemberid.hive.IsTestMemberId", ReturnTypes.BOOLEAN,
-        family(SqlTypeFamily.NUMERIC, SqlTypeFamily.CHARACTER));
+    createAddUserDefinedFunction(IS_TEST_MEMBER_ID_CLASS, ReturnTypes.BOOLEAN, family(SqlTypeFamily.NUMERIC, SqlTypeFamily.CHARACTER));
     createAddUserDefinedFunction("com.linkedin.dali.udf.urnextractor.hive.UrnExtractor",
         HiveReturnTypes.ARRAY_OF_STR_STR_MAP,
         or(STRING, ARRAY));
