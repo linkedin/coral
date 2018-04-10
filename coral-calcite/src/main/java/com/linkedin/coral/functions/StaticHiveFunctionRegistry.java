@@ -101,6 +101,7 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
     // mathematical functions
     createAddUserDefinedFunction("hex", HiveReturnTypes.STRING,
         or(family(SqlTypeFamily.STRING), family(SqlTypeFamily.NUMERIC), family(SqlTypeFamily.BINARY)));
+    createAddUserDefinedFunction("unhex", HiveReturnTypes.BINARY, STRING);
 
     // string functions
     // TODO: operand types are not strictly true since these functions can take null literal
