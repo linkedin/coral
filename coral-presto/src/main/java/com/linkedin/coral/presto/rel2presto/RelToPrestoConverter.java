@@ -75,6 +75,16 @@ public class RelToPrestoConverter extends RelToSqlConverter {
     e.getVariablesSet();
     Result x = visitChild(0, e.getInput());
     parseCorrelTable(e, x);
+    // base class method will return x if isStar(). That causes problems if any of the views
+    // alias column names - returning x will make it pass through to the base table and the aliasing
+    // information is lost which causes problems.
+    // Removing isStar() check caused regression with lateral views. Removing isStar() will
+    // create SELECT x from UNNEST(..). Presto does not like SELECT around UNNEST. Hence, we return
+    // 'x' for unnest() clauses without adding select around it.
+    if (isStar(e.getChildExps(), e.getInput().getRowType()) && e.getInput() instanceof Uncollect) {
+      return x;
+    }
+
     final Builder builder =
         x.builder(e, Clause.SELECT);
     final List<SqlNode> selectList = new ArrayList<>();
