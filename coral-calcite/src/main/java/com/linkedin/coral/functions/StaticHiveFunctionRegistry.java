@@ -204,6 +204,8 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
     createAddUserDefinedFunction("date_format", HiveReturnTypes.STRING,
         or(family(SqlTypeFamily.DATE, SqlTypeFamily.INTEGER), family(SqlTypeFamily.TIMESTAMP, SqlTypeFamily.INTEGER),
             family(SqlTypeFamily.STRING, SqlTypeFamily.INTEGER)));
+    createAddUserDefinedFunction("to_utc_timestamp", HiveReturnTypes.STRING, or(STRING_STRING,
+        family(SqlTypeFamily.NUMERIC, SqlTypeFamily.STRING)));
 
     // Collection functions
     addFunctionEntry("size", CARDINALITY);
