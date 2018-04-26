@@ -160,6 +160,11 @@ public class RelToPrestoConverter extends RelToSqlConverter {
     return result(join, leftResult, rightResult);
   }
 
+  @Override
+  protected RexNode stripCastFromString(RexNode node) {
+    return node;
+  }
+
   protected class RelToPrestoAliasContext extends AliasContext {
 
     protected RelToPrestoAliasContext(Map<String, RelDataType> aliases, boolean qualified) {
@@ -199,6 +204,11 @@ public class RelToPrestoConverter extends RelToSqlConverter {
           return id;
         }
         return new SqlIdentifier(ImmutableList.of(alias, Util.last(names)), POS);
+      }
+
+      private RexNode stripCastFromString(RexNode node) {
+        // DO NOT strip
+        return node;
       }
     };
   }

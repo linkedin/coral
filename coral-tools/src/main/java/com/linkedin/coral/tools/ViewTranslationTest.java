@@ -70,6 +70,9 @@ public class ViewTranslationTest {
     HiveToPrestoConverter converter = HiveToPrestoConverter.create(msc);
     OutputStream ostr = System.out;
     String[] views = {
+        // "foundation_enterprise_mp_versioned.fact_leap_topics_impression_event_0_1_7",
+        // "foundation_enterprise_mp.fact_leap_broadcast_action_event"
+        "foundation_lms_mp_versioned.dsm_proposals_0_1_45",
         //"foundation_premium_mp.fact_oms_receipt",
         "foundation_marketing_mp.fact_resp_send_event",
         "foundation_marketing_mp.fact_resp_send_event",

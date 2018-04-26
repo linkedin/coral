@@ -50,6 +50,12 @@ public class HiveToRelConverterTest {
   }
 
   @Test
+  public void testCast() {
+    final String sql = "SELECT CASE WHEN '1.5' = 1 THEN 'abc' ELSE 'def' END";
+    System.out.println(relToString(sql));
+  }
+
+  @Test
   public void testNullOperand() {
     {
       // reverse returns ARG0 as return type

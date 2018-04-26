@@ -1,5 +1,6 @@
 package com.linkedin.coral.presto.rel2presto;
 
+import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelShuttle;
 import org.apache.calcite.rel.RelShuttleImpl;
@@ -21,6 +22,9 @@ import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexShuttle;
+import org.apache.calcite.sql.SqlKind;
+import org.apache.calcite.sql.SqlOperator;
+import org.apache.calcite.sql.type.SqlTypeFamily;
 
 
 public class Calcite2PrestoUDFConverter {
@@ -129,12 +133,35 @@ public class Calcite2PrestoUDFConverter {
 
     @Override
     public RexNode visitCall(RexCall call) {
-      final UDFTransformer transformer = CalcitePrestoUDFMap.getUDFTransformer(call.getOperator().getName(), call.operands.size());
+      final UDFTransformer transformer =
+          CalcitePrestoUDFMap.getUDFTransformer(call.getOperator().getName(), call.operands.size());
       if (transformer != null) {
         return transformer.transformCall(rexBuilder, call.getOperands());
       }
-      return super.visitCall(call);
+      RexCall modifiedCall = adjustInconsistentTypesToEqualityOperator(call);
+      return super.visitCall(modifiedCall);
+    }
+
+    // [CORAL-18] Hive is inconsistent and allows everything to be string so we make
+    // this adjustment for common case. Ideally, we should use Rel collation to
+    // check if this is HiveCollation before applying such rules but we don't use
+    // Collation here.
+    private RexCall adjustInconsistentTypesToEqualityOperator(RexCall call) {
+      SqlOperator op = call.getOperator();
+      if (op.getKind() != SqlKind.EQUALS) {
+        return call;
+      }
+
+      RexNode leftOperand = call.getOperands().get(0);
+      RexNode rightOperand = call.getOperands().get(1);
+      if (leftOperand.getType().getSqlTypeName().getFamily() == SqlTypeFamily.CHARACTER
+          && rightOperand.getType().getSqlTypeName().getFamily() == SqlTypeFamily.NUMERIC) {
+
+        RexNode tryCastNode =
+            rexBuilder.makeCall(rightOperand.getType(), PrestoTryCastFunction.INSTANCE, ImmutableList.of(leftOperand));
+        return (RexCall) rexBuilder.makeCall(op, tryCastNode, rightOperand);
+      }
+      return call;
     }
   }
-
 }
