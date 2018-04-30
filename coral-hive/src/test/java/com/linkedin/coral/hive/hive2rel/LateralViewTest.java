@@ -24,9 +24,9 @@ public class LateralViewTest {
     String expected = "LogicalProject(a=[$0], ccol=[$6])\n" +
         "  LogicalCorrelate(correlation=[$cor0], joinType=[inner], requiredColumns=[{2}])\n" +
         "    LogicalTableScan(table=[[hive, default, complex]])\n" +
-        "    LogicalProject(EXPR$0=[$0])\n" +
+        "    LogicalProject(ccol=[$0])\n" +
         "      HiveUncollect\n" +
-        "        LogicalProject(c=[$cor0.c])\n" +
+        "        LogicalProject(ccol=[$cor0.c])\n" +
         "          LogicalValues(tuples=[[{ 0 }]])\n";
     assertEquals(toRelStr(sql), expected);
   }
@@ -38,9 +38,9 @@ public class LateralViewTest {
     String expected = "LogicalProject(a=[$0], ccol=[$6])\n" +
         "  LogicalCorrelate(correlation=[$cor0], joinType=[inner], requiredColumns=[{2}])\n" +
         "    LogicalTableScan(table=[[hive, default, complex]])\n" +
-        "    LogicalProject(EXPR$0=[$0])\n" +
+        "    LogicalProject(ccol=[$0])\n" +
         "      HiveUncollect\n" +
-        "        LogicalProject(EXPR$0=[if(AND(IS NOT NULL($cor0.c), >(CARDINALITY($cor0.c), 0)), $cor0.c, ARRAY(null))])\n"+
+        "        LogicalProject(ccol=[if(AND(IS NOT NULL($cor0.c), >(CARDINALITY($cor0.c), 0)), $cor0.c, ARRAY(null))])\n"+
         "          LogicalValues(tuples=[[{ 0 }]])\n";
 
     assertEquals(toRelStr(sql), expected);
@@ -55,13 +55,13 @@ public class LateralViewTest {
         "  LogicalCorrelate(correlation=[$cor3], joinType=[inner], requiredColumns=[{2}])\n" +
         "    LogicalCorrelate(correlation=[$cor0], joinType=[inner], requiredColumns=[{2}])\n" +
         "      LogicalTableScan(table=[[hive, default, complex]])\n" +
-        "      LogicalProject(EXPR$0=[$0])\n" +
+        "      LogicalProject(ccol=[$0])\n" +
         "        HiveUncollect\n" +
-        "          LogicalProject(EXPR$0=[if(AND(IS NOT NULL($cor0.c), >(CARDINALITY($cor0.c), 0)), $cor0.c, ARRAY(null))])\n" +
+        "          LogicalProject(ccol=[if(AND(IS NOT NULL($cor0.c), >(CARDINALITY($cor0.c), 0)), $cor0.c, ARRAY(null))])\n" +
         "            LogicalValues(tuples=[[{ 0 }]])\n" +
-        "    LogicalProject(EXPR$0=[$0])\n" +
+        "    LogicalProject(anotherCCol=[$0])\n" +
         "      HiveUncollect\n" +
-        "        LogicalProject(c=[$cor3.c])\n" +
+        "        LogicalProject(anotherCCol=[$cor3.c])\n" +
         "          LogicalValues(tuples=[[{ 0 }]])\n";
     assertEquals(toRelStr(sql), expected);
   }
@@ -73,9 +73,9 @@ public class LateralViewTest {
     String expected = "LogicalProject(a=[$0], sarr=[$5], flat_s=[$6])\n" +
         "  LogicalCorrelate(correlation=[$cor0], joinType=[inner], requiredColumns=[{5}])\n" +
         "    LogicalTableScan(table=[[hive, default, complex]])\n" +
-        "    LogicalProject(EXPR$0=[$0])\n" +
+        "    LogicalProject(flat_s=[$0])\n" +
         "      HiveUncollect\n" +
-        "        LogicalProject(EXPR$0=[if(AND(IS NOT NULL($cor0.sarr), >(CARDINALITY($cor0.sarr), 0)), $cor0.sarr, ARRAY(null))])\n" +
+        "        LogicalProject(flat_s=[if(AND(IS NOT NULL($cor0.sarr), >(CARDINALITY($cor0.sarr), 0)), $cor0.sarr, ARRAY(null))])\n" +
         "          LogicalValues(tuples=[[{ 0 }]])\n";
     assertEquals(toRelStr(sql), expected);
   }
@@ -87,9 +87,9 @@ public class LateralViewTest {
     final String expected = "LogicalProject(a=[$0], ccol=[$6])\n" +
         "  LogicalCorrelate(correlation=[$cor0], joinType=[inner], requiredColumns=[{2}])\n" +
         "    LogicalTableScan(table=[[hive, default, complex]])\n" +
-        "    LogicalProject(EXPR$0=[$0])\n" +
+        "    LogicalProject(ccol=[$0])\n" +
         "      HiveUncollect\n" +
-        "        LogicalProject(EXPR$0=[if(>(CARDINALITY($cor0.c), 5), ARRAY(10.5), $cor0.c)])\n" +
+        "        LogicalProject(ccol=[if(>(CARDINALITY($cor0.c), 5), ARRAY(10.5), $cor0.c)])\n" +
         "          LogicalValues(tuples=[[{ 0 }]])\n";
     assertEquals(toRelStr(sql), expected);
   }

@@ -165,8 +165,7 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
       // transforms unnest(b) to unnest( if(b is null or cardinality(b) = 0, [null], b))
       SqlNode operandIsNull = SqlStdOperatorTable.IS_NOT_NULL.createCall(ZERO, unnestOperand);
       SqlNode emptyArray = SqlStdOperatorTable.GREATER_THAN.createCall(ZERO,
-          SqlStdOperatorTable.CARDINALITY.createCall(ZERO, unnestOperand),
-          SqlLiteral.createExactNumeric("0", ZERO));
+          SqlStdOperatorTable.CARDINALITY.createCall(ZERO, unnestOperand), SqlLiteral.createExactNumeric("0", ZERO));
       SqlNode ifCondition = SqlStdOperatorTable.AND.createCall(ZERO, operandIsNull, emptyArray);
       // array of [null] should be 3rd param to if function. With our type inference, calcite acts
       // smart and for unnest(array[null]) determines return type to be null
@@ -177,13 +176,18 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
       unnestCall = HiveExplodeOperator.EXPLODE.createCall(ZERO, ifFunctionCall);
     }
 
-    SqlNode rightSelect = new SqlSelect(ZERO, null,
-        new SqlNodeList(ImmutableList.of(SqlIdentifier.star(ZERO)), ZERO), unnestCall, null, null,
-            null, null, null, null, null);
+    unnestCall = HiveExplodeOperator.EXPLODE.createCall(ZERO,
+        SqlStdOperatorTable.AS.createCall(ZERO, unnestCall.operand(0), aliasOperands.get(2)));
+    SqlNode unnestAlias =
+        SqlStdOperatorTable.AS.createCall(ZERO, unnestCall, aliasOperands.get(1), aliasOperands.get(2));
+    SqlNode rightSelect =
+        new SqlSelect(ZERO, null, new SqlNodeList(ImmutableList.of(SqlIdentifier.star(ZERO)), ZERO), unnestAlias, null,
+            null, null, null, null, null, null);
     SqlNode lateralCall = SqlStdOperatorTable.LATERAL.createCall(ZERO, rightSelect);
     aliasCall = SqlStdOperatorTable.AS.createCall(ZERO, lateralCall, aliasOperands.get(1), aliasOperands.get(2));
-    SqlNode joinNode = new SqlJoin(ZERO, sqlNodes.get(1), SqlLiteral.createBoolean(false, ZERO),
-        JoinType.COMMA.symbol(ZERO), aliasCall, JoinConditionType.NONE.symbol(ZERO), null);
+    SqlNode joinNode =
+        new SqlJoin(ZERO, sqlNodes.get(1), SqlLiteral.createBoolean(false, ZERO), JoinType.COMMA.symbol(ZERO), aliasCall/*lateralCall*/,
+            JoinConditionType.NONE.symbol(ZERO), null);
     return joinNode;
   }
 
@@ -324,8 +328,7 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
   private SqlNode visitBinaryOperator(ASTNode node, ParseContext ctx) {
     List<SqlNode> sqlNodes = visitChildren(node, ctx);
     checkState(sqlNodes.size() == 2);
-    return functionResolver.resolveBinaryOperator(node.getText())
-        .createCall(ZERO, sqlNodes);
+    return functionResolver.resolveBinaryOperator(node.getText()).createCall(ZERO, sqlNodes);
   }
 
   @Override
@@ -391,7 +394,7 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
       return new SqlBasicCall(SqlStdOperatorTable.AS, sqlNodes.toArray(new SqlNode[0]), ZERO);
     } else if (sqlNodes.size() == 3) {
       // lateral view alias have 3 args
-      SqlNode[] nodes = new SqlNode[] { sqlNodes.get(0), sqlNodes.get(2), sqlNodes.get(1) };
+      SqlNode[] nodes = new SqlNode[]{sqlNodes.get(0), sqlNodes.get(2), sqlNodes.get(1)};
       return new SqlBasicCall(SqlStdOperatorTable.AS, nodes, ZERO);
     } else {
       throw new UnhandledASTTokenException(node);
