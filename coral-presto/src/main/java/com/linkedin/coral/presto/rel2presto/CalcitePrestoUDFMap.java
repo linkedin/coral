@@ -54,6 +54,8 @@ public class CalcitePrestoUDFMap {
 
     // DALI functions
     // This may not work for all but works for now...
+    createUDFMapEntry(UDF_MAP, daliToCalciteOp("com.linkedin.dali.udf.watbotcrawlerlookup.hive.WATBotCrawlerLookup"),
+        3, "wat_bot_crawler_lookup");
     addDaliUDFs();
   }
 
@@ -61,7 +63,8 @@ public class CalcitePrestoUDFMap {
     ImmutableMultimap<String, HiveFunction> registry = HIVE_REGISTRY.getRegistry();
     Converter<String, String> caseConverter = CaseFormat.UPPER_CAMEL.converterTo(CaseFormat.LOWER_UNDERSCORE);
     for (Map.Entry<String, HiveFunction> entry : registry.entries()) {
-      if (!entry.getKey().startsWith("com.linkedin")) {
+      if (!entry.getKey().startsWith("com.linkedin")
+          || entry.getKey().contains("WATBotCrawlerLookup")) {
         continue;
       }
       String[] nameSplit = entry.getKey().split("\\.");
