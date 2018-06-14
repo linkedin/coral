@@ -47,6 +47,7 @@ shadowJar {
   relocate 'org.apache.commons', "${shadeBase}.org.apache.commons"
   relocate 'org.slf4j', "${shadeBase}.org.slf4j"
   relocate 'javax.annotation', "${shadeBase}.javax.annotation"
+  relocate 'com.esri', "${shadeBase}.com.esri"
 
   //relocate 'org.codehaus', "${shadeBase}.org.codehaus"
   relocate 'org.pentaho', "${shadeBase}.org.pentaho"
