@@ -92,6 +92,7 @@ public class ViewTranslationTest {
         "foundation_lts_mp.fact_cap_search_maps",
         "foundation_lls_mp.fact_lynda_b2c_subscription_details",
         "foundation_core_entity_mp.fact_company_page_view",
+        "foundation_lts_mp_versioned.agg_monthly_influenced_hires_0_1_110",
         //"foundation_core_tracking_mp.fact_decorated_me_notification_event",
         //"foundation_lts_mp.fact_det_cap_inmail_tmplt"
         // "foundation_core_entity_mp_versioned.dim_member_all_1_0_8"

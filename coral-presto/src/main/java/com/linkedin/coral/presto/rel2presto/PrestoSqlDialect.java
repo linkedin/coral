@@ -14,4 +14,9 @@ public class PrestoSqlDialect extends SqlDialect {
   public boolean supportsCharSet() {
     return false;
   }
+
+  @Override
+  public boolean supportsOffsetFetch() {
+    return false;
+  }
 }

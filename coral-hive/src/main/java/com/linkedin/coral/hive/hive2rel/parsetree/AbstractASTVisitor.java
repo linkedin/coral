@@ -70,6 +70,9 @@ public abstract class AbstractASTVisitor<R, C> {
       case HiveParser.StringLiteral:
         return visitStringLiteral(node, ctx);
 
+      case HiveParser.BigintLiteral:
+        return visitBigintLiteral(node, ctx);
+
       case HiveParser.TOK_INSERT:
         return visitInsert(node, ctx);
 
@@ -427,6 +430,10 @@ public abstract class AbstractASTVisitor<R, C> {
   }
 
   protected R visitStringLiteral(ASTNode node, C ctx) {
+    return visitChildren(node, ctx).get(0);
+  }
+
+  protected R visitBigintLiteral(ASTNode node, C ctx) {
     return visitChildren(node, ctx).get(0);
   }
 

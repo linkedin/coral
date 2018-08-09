@@ -519,13 +519,20 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
   }
 
   @Override
+  protected SqlNode visitBigintLiteral(ASTNode node, ParseContext ctx) {
+    String text = node.getText();
+    checkState(text.length() >= 2);
+    return SqlLiteral.createExactNumeric(text.substring(0, text.length() - 1), ZERO);
+  }
+
+  @Override
   protected SqlNode visitQueryNode(ASTNode node, ParseContext ctx) {
     ArrayList<Node> children = node.getChildren();
     checkState(children != null && !children.isEmpty());
     ParseContext qc = new ParseContext(ctx.getHiveTable().orElse(null));
     List<SqlNode> sqlNodes = visitChildren(node, qc);
     return new SqlSelect(ZERO, qc.keywords, qc.selects, qc.from, qc.where, qc.grpBy, qc.having, null, qc.orderBy, null,
-        ctx.fetch);
+        qc.fetch);
   }
 
   protected SqlNode visitNil(ASTNode node, ParseContext ctx) {

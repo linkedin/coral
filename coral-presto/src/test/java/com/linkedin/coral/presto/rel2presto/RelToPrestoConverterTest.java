@@ -382,4 +382,13 @@ public class RelToPrestoConverterTest {
         " from " + tableOne);
     testConversion(sql, expectedSql);
   }
+
+  @Test
+  public void testLimit() {
+    String sql = "SELECT icol "
+        + "FROM " + TABLE_ONE.getTableName() + " LIMIT 100";
+    String expectedSql = formatSql("SELECT icol AS ICOL" +
+        " from " + tableOne + "\nLIMIT 100");
+    testConversion(sql, expectedSql);
+  }
 }

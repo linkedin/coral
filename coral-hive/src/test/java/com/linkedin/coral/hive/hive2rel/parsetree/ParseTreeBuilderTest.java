@@ -73,7 +73,10 @@ public class ParseTreeBuilderTest {
         "SELECT cast(a as date) from foo",
         "SELECT cast(a as timestamp) from foo",
         "SELECT cast(a as float) from foo",
-        "SELECT a as acol from foo"
+        "SELECT a as acol from foo",
+
+        // limit
+        "SELECT * from foo LIMIT 100"
     };
 
     for (String s : sql) {
@@ -92,7 +95,8 @@ public class ParseTreeBuilderTest {
         {
           "SELECT named_struct('abc', 123, 'def', 234.23) FROM foo",
             "SELECT `named_struct`('abc', 123, 'def', 234.23) FROM `foo`"
-        }
+        },
+        {"SELECT 0L from foo", "SELECT 0 from `foo`"}
     };
 
     for (String[] s : sqlValidator) {
