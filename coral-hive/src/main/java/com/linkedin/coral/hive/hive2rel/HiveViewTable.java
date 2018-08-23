@@ -14,8 +14,9 @@ import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexUtil;
 import org.apache.calcite.schema.TranslatableTable;
-import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.hadoop.hive.metastore.api.Table;
+
+import static org.apache.calcite.sql.type.SqlTypeName.*;
 
 
 /**
@@ -58,68 +59,74 @@ public class HiveViewTable extends HiveTable implements TranslatableTable {
 
     RelDataType rowType = rel.getRowType();
     if (isRowCastRequired(rowType, castRowType)) {
-      // nothing to do
+      final RexBuilder rexBuilder = rel.getCluster().getRexBuilder();
+      final List<RexNode> castExps = RexUtil.generateCastExpressions(rexBuilder, castRowType, rowType);
+      return projectFactory.createProject(rel, castExps, rowType.getFieldNames());
+    } else {
       return rel;
     }
-    final RexBuilder rexBuilder = rel.getCluster().getRexBuilder();
-    final List<RexNode> castExps =
-        RexUtil.generateCastExpressions(rexBuilder, castRowType, rowType);
-      return projectFactory.createProject(rel, castExps,
-          rowType.getFieldNames());
   }
 
   // [LIHADOOP-34428]: Dali allow extra fields on struct type columns to flow through. We
   // try to match that behavior. Dali does not allow top level columns to flow through
+  // Returns true if an explicit cast is required from rowType to castRowType, false otherwise
   private static boolean isRowCastRequired(RelDataType rowType, RelDataType castRowType) {
     if (rowType == castRowType) {
-      return true;
+      return false;
     }
     List<RelDataTypeField> relFields = rowType.getFieldList();
     List<RelDataTypeField> castFields = castRowType.getFieldList();
     if (relFields.size() != castFields.size()) {
-      return false;
-    }
-    return isRelStructAllowed(relFields, castFields);
-  }
-
-  private static boolean isFieldCastRequired(RelDataTypeField relField, RelDataTypeField castField) {
-    if (relField.getType().getSqlTypeName() == SqlTypeName.ANY
-        || castField.getType().getSqlTypeName() == SqlTypeName.ANY) {
       return true;
     }
-    if (relField.getType().isStruct()) {
-      if (relField.getType().isStruct() != castField.getType().isStruct()) {
-        return false;
-      }
-      if (!isRelStructAllowed(relField.getType().getFieldList(), castField.getType().getFieldList())) {
-        return false;
-      }
-    } else {
-      // Hive has string type which is varchar(65k). This results in lot of redundant
-      // cast operations due to different precision(length) of varchar.
-      // Also, all projections of string literals are of type CHAR but the hive schema
-      // may mark that column as string. This again results in unnecessary cast operations.
-      // We avoid all these casts
-      if ((relField.getType().getSqlTypeName() == SqlTypeName.CHAR
-          || relField.getType().getSqlTypeName() == SqlTypeName.VARCHAR)
-          && castField.getType().getSqlTypeName() == SqlTypeName.VARCHAR) {
-        return true;
-      }
-      if (!relField.equals(castField)) {
-        return false;
-      }
+    return !isRelStructAllowed(relFields, castFields);
+  }
+
+  // Returns true if an explicit cast is required from relDataType to castDataType, false otherwise
+  private static boolean isFieldCastRequired(RelDataType relDataType, RelDataType castDataType) {
+    if (relDataType == castDataType) {
+      return false;
     }
-    return true;
+    if (relDataType.getSqlTypeName() == ANY || castDataType.getSqlTypeName() == ANY) {
+      return false;
+    }
+    // Hive has string type which is varchar(65k). This results in lot of redundant
+    // cast operations due to different precision(length) of varchar.
+    // Also, all projections of string literals are of type CHAR but the hive schema
+    // may mark that column as string. This again results in unnecessary cast operations.
+    // We avoid all these casts
+    if ((relDataType.getSqlTypeName() == CHAR || relDataType.getSqlTypeName() == VARCHAR)
+        && castDataType.getSqlTypeName() == VARCHAR) {
+      return false;
+    }
+
+    // Make sure both source and target has same root SQL Type
+    if (relDataType.getSqlTypeName() != castDataType.getSqlTypeName()) {
+      return true;
+    }
+
+    switch (relDataType.getSqlTypeName()) {
+      case ARRAY:
+        return isFieldCastRequired(relDataType.getComponentType(), castDataType.getComponentType());
+      case MAP:
+        return isFieldCastRequired(relDataType.getKeyType(), castDataType.getKeyType())
+            || isFieldCastRequired(relDataType.getValueType(), relDataType.getValueType());
+      case ROW:
+        return !isRelStructAllowed(relDataType.getFieldList(), castDataType.getFieldList());
+      default:
+        return !relDataType.equals(castDataType);
+    }
   }
 
   private static boolean isRelStructAllowed(List<RelDataTypeField> relFields, List<RelDataTypeField> castFields) {
     if (relFields.size() < castFields.size()) {
       return false;
     }
+
     for (int i = 0; i < castFields.size(); i++) {
       RelDataTypeField relField = relFields.get(i);
       RelDataTypeField castField = castFields.get(i);
-      if (!isFieldCastRequired(relField, castField)) {
+      if (isFieldCastRequired(relField.getType(), castField.getType())) {
         return false;
       }
     }

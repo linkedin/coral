@@ -94,6 +94,7 @@ public class ViewTranslationTest {
         "foundation_core_entity_mp.fact_company_page_view",
         "foundation_lts_mp_versioned.agg_monthly_influenced_hires_0_1_110",
         "foundation_core_entity_mp_versioned.dim_lin_employees_info_1_0_102",
+        "standardizationwaterloomembersstddata_mp_versioned.standardization_waterloo_members_std_data_0_1_9",
         //"foundation_core_tracking_mp.fact_decorated_me_notification_event",
         //"foundation_lts_mp.fact_det_cap_inmail_tmplt"
         // "foundation_core_entity_mp_versioned.dim_member_all_1_0_8"
