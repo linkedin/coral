@@ -31,6 +31,7 @@ import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlNodeList;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.SqlSelect;
+import org.apache.calcite.sql.SqlSelectKeyword;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.hadoop.hive.metastore.api.Table;
@@ -172,7 +173,7 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
       SqlNode arrOfNull = SqlStdOperatorTable.ARRAY_VALUE_CONSTRUCTOR.createCall(ZERO, SqlLiteral.createNull(ZERO));
       HiveFunction hiveIfFunction = functionResolver.tryResolve("if", false, null);
       SqlCall ifFunctionCall = hiveIfFunction.createCall(SqlLiteral.createCharString("if", ZERO),
-          ImmutableList.of(ifCondition, unnestOperand, arrOfNull));
+          ImmutableList.of(ifCondition, unnestOperand, arrOfNull), null);
       unnestCall = HiveExplodeOperator.EXPLODE.createCall(ZERO, ifFunctionCall);
     }
 
@@ -203,22 +204,44 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
 
   @Override
   protected SqlNode visitFullOuterJoin(ASTNode node, ParseContext ctx) {
-    throw new RuntimeException(String.format("%s, %s, %s", node.getType(), node.getText(), node.dump()));
+    return processJoin(node, ctx, JoinType.FULL);
   }
 
   @Override
   protected SqlNode visitRightOuterJoin(ASTNode node, ParseContext ctx) {
-    throw new RuntimeException(String.format("%s, %s, %s", node.getType(), node.getText(), node.dump()));
+    return processJoin(node, ctx, JoinType.RIGHT);
   }
 
   @Override
   protected SqlNode visitJoin(ASTNode node, ParseContext ctx) {
-    throw new RuntimeException(String.format("%s, %s, %s", node.getType(), node.getText(), node.dump()));
+    return processJoin(node, ctx, JoinType.INNER);
   }
 
   @Override
   protected SqlNode visitLeftOuterJoin(ASTNode node, ParseContext ctx) {
-    throw new RuntimeException(String.format("%s, %s, %s", node.getType(), node.getText(), node.dump()));
+    return processJoin(node, ctx, JoinType.LEFT);
+  }
+
+  private SqlNode processJoin(ASTNode node, ParseContext ctx, JoinType joinType) {
+    List<SqlNode> children = visitChildren(node, ctx);
+    checkState(children.size() == 2 || children.size() == 3);
+    JoinConditionType conditionType;
+    SqlNode condition = null;
+    if (children.size() == 2) {
+      conditionType = JoinConditionType.NONE;
+    } else {
+      conditionType = JoinConditionType.ON;
+      condition = children.get(2);
+    }
+
+    return new SqlJoin(ZERO,
+        children.get(0),
+        SqlLiteral.createBoolean(false, ZERO),
+        joinType.symbol(ZERO),
+        children.get(1),
+        conditionType.symbol(ZERO),
+        condition
+    );
   }
 
   @Override
@@ -367,7 +390,7 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
 
   @Override
   protected SqlNode visitFunctionDistinct(ASTNode node, ParseContext ctx) {
-    return visitFunctionInternal(node, ctx, SqlLiteral.createCharString("DISTINCT", ZERO));
+    return visitFunctionInternal(node, ctx, SqlSelectKeyword.DISTINCT.symbol(ZERO));
   }
 
   @Override
@@ -382,7 +405,7 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     String functionName = functionNode.getText();
     List<SqlNode> sqlOperands = visitChildren(children, ctx);
     HiveFunction hiveFunction = functionResolver.tryResolve(functionName, false, ctx.hiveTable.orElse(null));
-    return hiveFunction.createCall(sqlOperands.get(0), sqlOperands.subList(1, sqlOperands.size()));
+    return hiveFunction.createCall(sqlOperands.get(0), sqlOperands.subList(1, sqlOperands.size()), quantifier);
   }
 
   @Override
@@ -403,7 +426,7 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
 
   @Override
   protected SqlNode visitSelectDistinct(ASTNode node, ParseContext ctx) {
-    ctx.keywords = new SqlNodeList(ImmutableList.of(SqlLiteral.createCharString("DISTINCT", ZERO)), ZERO);
+    ctx.keywords = new SqlNodeList(ImmutableList.of(SqlSelectKeyword.DISTINCT.symbol(ZERO)), ZERO);
     return visitSelect(node, ctx);
   }
 

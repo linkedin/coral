@@ -391,4 +391,57 @@ public class RelToPrestoConverterTest {
         " from " + tableOne + "\nLIMIT 100");
     testConversion(sql, expectedSql);
   }
+
+  @Test
+  public void testDistinct() {
+    String sql = "SELECT distinct icol FROM " + TABLE_ONE.getTableName();
+    String expectedSql = formatSql("SELECT icol AS ICOL" + " from " + tableOne +" GROUP BY icol");
+    testConversion(sql, expectedSql);
+  }
+
+  @Test
+  public void testGroupDistinct() {
+    String sql = "SELECT scol, count(distinct icol) FROM " + TABLE_ONE.getTableName() + " GROUP BY scol";
+    String expectedSql = formatSql("SELECT scol AS SCOL, COUNT(DISTINCT icol) FROM " + tableOne + " GROUP BY scol");
+    testConversion(sql, expectedSql);
+  }
+
+  @Test
+  public void testJoin() {
+    String sql = "SELECT a.icol, b.dfield  FROM " + tableOne + " a JOIN " + tableTwo + " b ON a.scol = b.sfield";
+    String expectedSql = formatSql(
+        "SELECT tableOne.icol AS ICOL, tableTwo.dfield as DFIELD\nFROM " + tableOne + "\nINNER JOIN "
+            + tableTwo + " ON tableOne.scol = tableTwo.sfield");
+    testConversion(sql, expectedSql);
+  }
+
+  @Test
+  public void testLeftJoin() {
+    String sql =
+        "SELECT a.icol, b.dfield  FROM " + tableOne + " a LEFT JOIN " + tableTwo + " b ON a.scol = b.sfield";
+    String expectedSql = formatSql(
+        "SELECT tableOne.icol AS ICOL, tableTwo.dfield as DFIELD\nFROM " + tableOne + "\nLEFT JOIN "
+            + tableTwo + " ON tableOne.scol = tableTwo.sfield");
+    testConversion(sql, expectedSql);
+  }
+
+  @Test
+  public void testRightJoin() {
+    String sql =
+        "SELECT a.icol, b.dfield  FROM " + tableOne + " a RIGHT JOIN " + tableTwo + " b ON a.scol = b.sfield";
+    String expectedSql = formatSql(
+        "SELECT tableOne.icol AS ICOL, tableTwo.dfield as DFIELD\nFROM " + tableOne + "\nRIGHT JOIN "
+            + tableTwo + " ON tableOne.scol = tableTwo.sfield");
+    testConversion(sql, expectedSql);
+  }
+
+  @Test
+  public void testOuterJoin() {
+    String sql =
+        "SELECT a.icol, b.dfield  FROM " + tableOne + " a FULL OUTER JOIN " + tableTwo + " b ON a.scol = b.sfield";
+    String expectedSql = formatSql(
+        "SELECT tableOne.icol AS ICOL, tableTwo.dfield as DFIELD\nFROM " + tableOne + "\nFULL JOIN "
+            + tableTwo + " ON tableOne.scol = tableTwo.sfield");
+    testConversion(sql, expectedSql);
+  }
 }

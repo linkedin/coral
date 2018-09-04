@@ -41,12 +41,8 @@ public class HiveFunction {
     return sqlOperator;
   }
 
-  public SqlCall createCall(SqlNode function, List<SqlNode> operands) {
-    return createCall(operands);
-  }
-
-  protected SqlCall createCall(List<SqlNode> operands) {
-    return sqlOperator.createCall(ZERO, operands);
+  public SqlCall createCall(SqlNode function, List<SqlNode> operands, SqlLiteral qualifier) {
+    return sqlOperator.createCall(qualifier, ZERO, operands.toArray(new SqlNode[operands.size()]));
   }
 
   // Specific instances of HiveFunction to override default behavior
@@ -55,10 +51,10 @@ public class HiveFunction {
    */
   public static final HiveFunction CAST = new HiveFunction("cast", SqlStdOperatorTable.CAST) {
     @Override
-    public SqlCall createCall(SqlNode function, List<SqlNode> operands) {
+    public SqlCall createCall(SqlNode function, List<SqlNode> operands, SqlLiteral qualifier) {
       checkNotNull(operands);
       checkArgument(operands.size() == 1);
-      return super.createCall(ImmutableList.of(operands.get(0), function));
+      return super.createCall(null, ImmutableList.of(operands.get(0), function), null);
     }
   };
 
@@ -67,7 +63,7 @@ public class HiveFunction {
    */
   public static final HiveFunction CASE = new HiveFunction("case", SqlStdOperatorTable.CASE) {
     @Override
-    public SqlCall createCall(List<SqlNode> operands) {
+    public SqlCall createCall(SqlNode function, List<SqlNode> operands, SqlLiteral qualifier) {
       checkNotNull(operands);
       List<SqlNode> whenNodes = new ArrayList<>();
       List<SqlNode> thenNodes = new ArrayList<>();
@@ -82,7 +78,7 @@ public class HiveFunction {
 
   public static final HiveFunction WHEN = new HiveFunction("when", SqlStdOperatorTable.CASE) {
     @Override
-    public SqlCall createCall(List<SqlNode> operands) {
+    public SqlCall createCall(SqlNode function, List<SqlNode> operands, SqlLiteral qualifier) {
       checkNotNull(operands);
       List<SqlNode> whenNodes = new ArrayList<>();
       List<SqlNode> thenNodes = new ArrayList<>();
@@ -98,7 +94,7 @@ public class HiveFunction {
   // this handles both between and not_between...it's odd because hive parse tree for between operator is odd!
   public static final HiveFunction BETWEEN = new HiveFunction("between", SqlStdOperatorTable.BETWEEN) {
     @Override
-    public SqlCall createCall(List<SqlNode> operands) {
+    public SqlCall createCall(SqlNode function, List<SqlNode> operands, SqlLiteral qualifier) {
       checkNotNull(operands);
       checkArgument(operands.size() >= 3 && operands.get(0) instanceof SqlLiteral);
       SqlLiteral opType = (SqlLiteral) operands.get(0);
@@ -113,7 +109,7 @@ public class HiveFunction {
 
   public static final HiveFunction IN = new HiveFunction("in", HiveInOperator.IN) {
     @Override
-    public SqlCall createCall(List<SqlNode> operands) {
+    public SqlCall createCall(SqlNode function, List<SqlNode> operands, SqlLiteral qualifier) {
       checkState(operands.size() >= 2);
       SqlNode lhs = operands.get(0);
       SqlNode firstRhs = operands.get(1);
