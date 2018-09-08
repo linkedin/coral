@@ -10,11 +10,15 @@
  import org.apache.calcite.rel.type.RelDataType;
  import org.apache.calcite.rel.type.RelDataTypeFactory;
  import org.apache.calcite.runtime.PredicateImpl;
+ import org.apache.calcite.sql.SqlCallBinding;
  import org.apache.calcite.sql.SqlIdentifier;
+ import org.apache.calcite.sql.SqlOperandCountRange;
  import org.apache.calcite.sql.SqlOperator;
  import org.apache.calcite.sql.SqlOperatorBinding;
  import org.apache.calcite.sql.parser.SqlParserPos;
  import org.apache.calcite.sql.type.ReturnTypes;
+ import org.apache.calcite.sql.type.SameOperandTypeChecker;
+ import org.apache.calcite.sql.type.SqlOperandCountRanges;
  import org.apache.calcite.sql.type.SqlOperandTypeChecker;
  import org.apache.calcite.sql.type.SqlOperandTypeInference;
  import org.apache.calcite.sql.type.SqlReturnTypeInference;
@@ -112,9 +116,38 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
     createAddUserDefinedFunction("character_length", INTEGER, STRING);
     createAddUserDefinedFunction("chr", HiveReturnTypes.STRING, NUMERIC);
     createAddUserDefinedFunction("concat", HiveReturnTypes.STRING, SAME_VARIADIC);
-    createAddUserDefinedFunction("concat_ws", HiveReturnTypes.STRING,
-        family(SqlTypeFamily.STRING, SqlTypeFamily.ARRAY));
-    createAddUserDefinedFunction("concat_ws", HiveReturnTypes.STRING, SAME_VARIADIC);
+    // [CORAL-24] Tried setting this to
+    // or(family(SqlTypeFamily.STRING, SqlTypeFamily.ARRAY),
+    // and(variadic(SqlOperandCountRanges.from(2)), repeat(SqlOperandCountRanges.from(2), STRING)))
+    // but calcite's composeable operand checker does not handle variadic operator counts correctly.
+    createAddUserDefinedFunction("concat_ws", HiveReturnTypes.STRING, new SqlOperandTypeChecker() {
+          @Override
+          public boolean checkOperandTypes(SqlCallBinding callBinding, boolean throwOnFailure) {
+            return family(SqlTypeFamily.STRING, SqlTypeFamily.ARRAY).checkOperandTypes(callBinding, throwOnFailure)
+                || new SameOperandTypeChecker(-1).checkOperandTypes(callBinding, throwOnFailure);
+          }
+
+          @Override
+          public SqlOperandCountRange getOperandCountRange() {
+            return SqlOperandCountRanges.from(2);
+          }
+
+          @Override
+          public String getAllowedSignatures(SqlOperator op, String opName) {
+            return opName + "(STRING, ARRAY|STRING, ...)";
+          }
+
+          @Override
+          public Consistency getConsistency() {
+            return Consistency.NONE;
+          }
+
+          @Override
+          public boolean isOptional(int i) {
+            return false;
+          }
+        });
+
     createAddUserDefinedFunction("context_ngrams", LEAST_RESTRICTIVE,
         family(SqlTypeFamily.ARRAY, SqlTypeFamily.ARRAY, SqlTypeFamily.INTEGER, SqlTypeFamily.INTEGER));
     createAddUserDefinedFunction("decode", HiveReturnTypes.STRING, family(SqlTypeFamily.BINARY, SqlTypeFamily.STRING));

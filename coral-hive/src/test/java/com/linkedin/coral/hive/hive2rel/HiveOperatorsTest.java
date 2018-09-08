@@ -73,7 +73,23 @@ public class HiveOperatorsTest {
     assertEquals(relToSql(rel), expectedSql);
   }
 
-  public void testLikeFamilyOperators(String operator) {
+  @Test
+  public void testConcatWs() {
+    {
+      final String sql = "SELECT concat_ws(',', 'abc', b, 'd') from foo";
+      final String expectedRel = "LogicalProject(EXPR$0=[concat_ws(',', 'abc', $1, 'd')])\n"
+          + "  LogicalTableScan(table=[[hive, default, foo]])\n";
+      assertEquals(sqlToRelStr(sql), expectedRel);
+    }
+    {
+      final String sql = "SELECT concat_ws(',', array('abc', 'def', b)) from foo";
+      final String expectedRel = "LogicalProject(EXPR$0=[concat_ws(',', ARRAY('abc', 'def', $1))])\n"
+          + "  LogicalTableScan(table=[[hive, default, foo]])\n";
+      assertEquals(sqlToRelStr(sql), expectedRel);
+    }
+  }
+
+  private void testLikeFamilyOperators(String operator) {
     final String sql = "SELECT a, b FROM foo WHERE b " + operator + " 'abc%'";
     String expectedRel = "LogicalProject(a=[$0], b=[$1])\n" +
         "  LogicalFilter(condition=[" + operator.toUpperCase()  +"($1, 'abc%')])\n" +
