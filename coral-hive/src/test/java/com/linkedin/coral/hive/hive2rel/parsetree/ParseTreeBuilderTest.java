@@ -43,6 +43,7 @@ public class ParseTreeBuilderTest {
         "SELECT ''",
         "SELECT 1",
         "SELECT 1+10 * 30",
+        "SELECT 1 - 2",
         "SELECT a, b from foo where 33 < 35",
         "SELECT a from foo where a between 10 and 30",
         "SELECT a from foo where b NOT BETWEEN 20 and 40",

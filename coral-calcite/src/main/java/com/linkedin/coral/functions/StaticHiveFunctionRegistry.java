@@ -197,6 +197,7 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
     createAddUserDefinedFunction("unbase64", explicit(SqlTypeName.VARBINARY), or(STRING, NULLABLE_LITERAL));
     addFunctionEntry("upper", UPPER);
     addFunctionEntry("ucase", UPPER);
+    addFunctionEntry("initcap", INITCAP);
 
     // Date Functions
     createAddUserDefinedFunction("from_unixtime", HiveReturnTypes.STRING,

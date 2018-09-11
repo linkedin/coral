@@ -79,6 +79,12 @@ public class HiveFunctionResolver {
       }
     }
 
+    // CORAL-23: For `-` we have 2 matching operators; SqlMonotonicBinaryOperator and SqlDatetimeSubtractionOperator
+    // Hive does not support the 2nd operator, so we return SqlMonotonicBinaryOperator by default.
+    if (lowerCaseOperator.equals("-")) {
+      return SqlStdOperatorTable.MINUS;
+    }
+
     checkState(matches.size() == 1, "%s operator %s",
         operators.isEmpty() ? "Unknown" : "Ambiguous", name);
     return matches.get(0);

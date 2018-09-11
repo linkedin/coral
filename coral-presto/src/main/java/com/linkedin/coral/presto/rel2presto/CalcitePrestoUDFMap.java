@@ -47,6 +47,7 @@ public class CalcitePrestoUDFMap {
     createUDFMapEntry(UDF_MAP, hiveToCalciteOp("regexp_extract"), 3, "regexp_extract",
        "[{\"input\": 1}, {\"op\": \"hive_pattern_to_presto\", \"operands\":[{\"input\": 2}]}, {\"input\": 3}]",
         null);
+    createUDFMapEntry(UDF_MAP, hiveToCalciteOp("instr"), 2, "strpos");
 
     // FIXME: this is incorrect. Adding this to test correctness of the overall system
     createUDFMapEntry(UDF_MAP, hiveToCalciteOp("concat_ws"), 3, "concat_ws");
