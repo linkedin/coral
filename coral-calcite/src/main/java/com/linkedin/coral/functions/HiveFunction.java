@@ -71,8 +71,10 @@ public class HiveFunction {
         whenNodes.add(operands.get(i));
         thenNodes.add(operands.get(i + 1));
       }
+      // 1 node for case, 2n for when/then nodes, and optionally 1 else node
+      SqlNode elseNode = operands.size() % 2 == 1 ? SqlLiteral.createNull(ZERO) : Util.last(operands);
       return getSqlOperator().createCall(ZERO, operands.get(0), new SqlNodeList(whenNodes, ZERO),
-          new SqlNodeList(thenNodes, ZERO), Util.last(operands));
+          new SqlNodeList(thenNodes, ZERO), elseNode);
     }
   };
 
@@ -86,8 +88,10 @@ public class HiveFunction {
         whenNodes.add(operands.get(i));
         thenNodes.add(operands.get(i + 1));
       }
+      // 2n for when/then nodes, and optionally 1 else node
+      SqlNode elseNode = operands.size() % 2 == 0 ? SqlLiteral.createNull(ZERO) : Util.last(operands);
       return getSqlOperator().createCall(ZERO, null, new SqlNodeList(whenNodes, ZERO), new SqlNodeList(thenNodes, ZERO),
-          Util.last(operands));
+          elseNode);
     }
   };
 

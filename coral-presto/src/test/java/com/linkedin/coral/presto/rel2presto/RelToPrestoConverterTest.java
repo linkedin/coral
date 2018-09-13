@@ -444,4 +444,15 @@ public class RelToPrestoConverterTest {
             + tableTwo + " ON tableOne.scol = tableTwo.sfield");
     testConversion(sql, expectedSql);
   }
+
+  @Test
+  public void testCase() {
+    String sql = "SELECT case when icol = 0 then scol else 'other' end from " + tableOne;
+    String expected = formatSql("SELECT CASE WHEN icol = 0 THEN scol ELSE 'other' END FROM " + tableOne);
+    testConversion(sql, expected);
+
+    String sqlNull = "SELECT case when icol = 0 then scol end from " + tableOne;
+    String expectedNull = formatSql("SELECT CASE WHEN icol = 0 THEN CAST(scol AS VARCHAR) ELSE NULL END FROM " + tableOne);
+    testConversion(sqlNull, expectedNull);
+  }
 }

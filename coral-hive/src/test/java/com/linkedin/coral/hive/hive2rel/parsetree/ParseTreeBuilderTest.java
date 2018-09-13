@@ -66,6 +66,9 @@ public class ParseTreeBuilderTest {
         // is null, is not null
         "SELECT a from foo where a is null",
         "SELECT a from foo where a IS NOT NULL",
+        // Case with and without null else
+        "SELECT case when a = b then c end from foo",
+        "SELECT case when a = b then c else d end from foo",
 
         // [NOT] exists
         "SELECT a,b from foo f where exists (select x from bar)",
