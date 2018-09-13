@@ -77,7 +77,7 @@ public class TestUtils {
     String kw = "SELECT FROM WHERE AS IN GROUP BY HAVING ORDER ASC DSC JOIN"
         + " INNER OUTER CROSS UNNEST LEFT RIGHT SUM COUNT MAX MIN AVG CAST IN EXCEPT IS NULL NOT OVER AND OR ON";
     SQL_KEYWORDS = ImmutableList.copyOf(kw.toLowerCase().split("\\s+"));
-    KW_PATTERN = Pattern.compile("\\b" + String.join("|", SQL_KEYWORDS));
+    KW_PATTERN = Pattern.compile("\\b(" + String.join("|", SQL_KEYWORDS) + ")");
   }
 
   private static String addLineBreaks(String s) {
@@ -95,7 +95,8 @@ public class TestUtils {
 
   public static String quoteColumns(String sql) {
     Iterable<String> concat = Iterables.concat(TABLE_ONE.getColumnNames(), TABLE_TWO.getColumnNames(),
-        ImmutableList.of(TABLE_ONE.getTableName(), TABLE_TWO.getTableName()));
+        TABLE_THREE.getColumnNames(),
+        ImmutableList.of(TABLE_ONE.getTableName(), TABLE_TWO.getTableName(), TABLE_THREE.getTableName()));
     Pattern colPattern = Pattern.compile(String.join("|", concat));
     return quoteColumns(sql, colPattern);
   }
@@ -124,7 +125,9 @@ public class TestUtils {
       String alias = m.group(1);
       if (alias.equalsIgnoreCase("integer") ||
           alias.equalsIgnoreCase("double") ||
-          alias.equalsIgnoreCase("varchar")) {
+          alias.equalsIgnoreCase("varchar") ||
+          alias.equalsIgnoreCase("real") ||
+          alias.equalsIgnoreCase("varbinary")) {
         replacement = "AS " + alias.toUpperCase();
       } else {
         replacement = "AS \"" + m.group(1).toUpperCase() + "\"";

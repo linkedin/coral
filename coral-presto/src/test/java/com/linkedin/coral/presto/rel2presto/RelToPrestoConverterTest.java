@@ -25,10 +25,11 @@ public class RelToPrestoConverterTest {
   static SqlParser prestoParser = new SqlParser();
   static final String tableOne = TABLE_ONE.getTableName();
   static final String tableTwo = TABLE_TWO.getTableName();
+  static final String tableThree = TABLE_THREE.getTableName();
 
   @BeforeTest
   public static void beforeTest() {
-    config = TestUtils.createFrameworkConfig(TABLE_ONE, TABLE_TWO);
+    config = TestUtils.createFrameworkConfig(TABLE_ONE, TABLE_TWO, TABLE_THREE);
   }
 
   private void testConversion(String inputSql, String expectedSql) {
@@ -454,5 +455,26 @@ public class RelToPrestoConverterTest {
     String sqlNull = "SELECT case when icol = 0 then scol end from " + tableOne;
     String expectedNull = formatSql("SELECT CASE WHEN icol = 0 THEN CAST(scol AS VARCHAR) ELSE NULL END FROM " + tableOne);
     testConversion(sqlNull, expectedNull);
+  }
+
+  @Test
+  public void testDataTypeSpecRewrite() {
+    String sql1 =
+        "SELECT CAST(icol AS FLOAT) FROM " + tableOne;
+    String expectedSql1 = formatSql(
+        "SELECT CAST(icol AS REAL) FROM " + tableOne);
+    testConversion(sql1, expectedSql1);
+
+    String sql2 =
+        "SELECT CAST(binaryfield AS BINARY(123)) FROM " + tableThree;
+    String expectedSql2 = formatSql(
+        "SELECT CAST(binaryfield AS VARBINARY) FROM " + tableThree);
+    testConversion(sql2, expectedSql2);
+
+    String sql3 =
+        "SELECT CAST(varbinaryfield AS VARBINARY(123)) FROM " + tableThree;
+    String expectedSql3 = formatSql(
+        "SELECT CAST(varbinaryfield AS VARBINARY) FROM " + tableThree);
+    testConversion(sql3, expectedSql3);
   }
 }

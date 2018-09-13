@@ -49,7 +49,7 @@ public class RelToPrestoConverter extends RelToSqlConverter {
    */
   public String convert(RelNode relNode) {
     RelNode rel = convertRel(relNode);
-    return convertToSqlNode(rel).toSqlString(PRESTO_DIALECT).toString();
+    return convertToSqlNode(rel).accept(new PrestoSqlRewriter()).toSqlString(PRESTO_DIALECT).toString();
   }
 
   /**

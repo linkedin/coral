@@ -38,6 +38,12 @@ public class TestTable implements Table {
           "decfield", SqlTypeName.DECIMAL
       ));
 
+  public static final TestTable TABLE_THREE = new TestTable("tableThree",
+      ImmutableMap.of(
+          "binaryfield", SqlTypeName.BINARY,
+          "varbinaryfield", SqlTypeName.VARBINARY
+      ));
+
   private final ImmutableMap<String, SqlTypeName> columns;
   private final String tableName;
 
