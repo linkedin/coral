@@ -1,8 +1,10 @@
 package com.linkedin.coral.spark;
 
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
+import com.linkedin.coral.functions.HiveNamedStructFunction;
 import com.linkedin.coral.spark.containers.SparkRelInfo;
 import com.linkedin.coral.spark.containers.SparkUDFInfo;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -23,14 +25,21 @@ import org.apache.calcite.rel.logical.LogicalProject;
 import org.apache.calcite.rel.logical.LogicalSort;
 import org.apache.calcite.rel.logical.LogicalUnion;
 import org.apache.calcite.rel.logical.LogicalValues;
+import org.apache.calcite.rel.type.RelDataTypeField;
+import org.apache.calcite.rel.type.RelRecordType;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexCall;
+import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexShuttle;
 import org.apache.calcite.sql.SqlIdentifier;
+import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOperator;
+import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParserPos;
+import org.apache.calcite.sql.type.ArraySqlType;
 import org.apache.calcite.sql.type.SqlReturnTypeInference;
+import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
 
 
@@ -160,8 +169,11 @@ class IRRelToSparkRelTransformer {
 
     @Override
     public RexNode visitCall(RexCall call) {
-      return convertDaliUDF(call)
-              .orElseGet(() -> super.visitCall(call));
+      return convertToZeroBasedArrayIndex(call)
+          .orElseGet(() -> convertToNamedStruct(call)
+          .orElseGet(() -> convertDaliUDF(call)
+          .orElseGet(() -> convertBuiltInUDF(call)
+          .orElseGet(() -> super.visitCall(call)))));
     }
 
     private Optional<RexNode> convertDaliUDF(RexCall call) {
@@ -173,6 +185,51 @@ class IRRelToSparkRelTransformer {
                   createUDF(sparkUDFInfo1.getFunctionName(), call.getOperator().getReturnTypeInference()),
                   call.getOperands())
           );
+    }
+
+    private Optional<RexNode> convertBuiltInUDF(RexCall call) {
+      return BuiltinUDFMap
+          .lookup(call.getOperator().getName())
+          .map(name ->
+              rexBuilder.makeCall(
+                  createUDF(name, call.getOperator().getReturnTypeInference()),
+                  call.getOperands())
+          );
+    }
+
+    // Coral RelNode Stores array indexes as +1, this fixes the behavior on spark side
+    private Optional<RexNode> convertToZeroBasedArrayIndex(RexCall call) {
+      if (call.getOperator().equals(SqlStdOperatorTable.ITEM)) {
+        RexNode columnRef = call.getOperands().get(0);
+        RexNode itemRef = call.getOperands().get(1);
+        if (columnRef.getType() instanceof ArraySqlType
+            && itemRef.isA(SqlKind.LITERAL)
+            && itemRef.getType().getSqlTypeName().equals(SqlTypeName.INTEGER)) {
+          Integer val = ((RexLiteral) itemRef).getValueAs(Integer.class);
+          RexLiteral newItemRef = rexBuilder.makeExactLiteral(new BigDecimal(val - 1), itemRef.getType());
+          return Optional.of(rexBuilder.makeCall(call.op, columnRef, newItemRef));
+        }
+      }
+      return Optional.empty();
+    }
+
+    // Convert CAST(ROW: RECORD_TYPE) to named_struct
+    private Optional<RexNode> convertToNamedStruct(RexCall call) {
+      if (call.getOperator().equals(SqlStdOperatorTable.CAST)) {
+        RexNode operand = call.getOperands().get(0);
+        if (operand instanceof RexCall && ((RexCall) operand).getOperator().equals(SqlStdOperatorTable.ROW)) {
+          RelRecordType recordType = (RelRecordType) call.getType();
+          List<RexNode> rowOperands = ((RexCall) operand).getOperands();
+          List<RexNode> newOperands = new ArrayList<>(recordType.getFieldCount() * 2);
+          for (int i = 0; i < recordType.getFieldCount(); i += 1) {
+            RelDataTypeField dataTypeField = recordType.getFieldList().get(i);
+            newOperands.add(rexBuilder.makeLiteral(dataTypeField.getKey()));
+            newOperands.add(rexBuilder.makeCast(dataTypeField.getType(), rowOperands.get(i)));
+          }
+          return Optional.of(rexBuilder.makeCall(call.getType(), new HiveNamedStructFunction(), newOperands));
+        }
+      }
+      return Optional.empty();
     }
 
     private static SqlOperator createUDF(String udfName, SqlReturnTypeInference typeInference) {

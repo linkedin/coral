@@ -36,19 +36,44 @@ public class TestUtils {
     hiveToRelConverter = HiveToRelConverter.create(hiveMetastoreClient);
     run(driver, "CREATE TABLE IF NOT EXISTS foo(a int, b varchar(30), c double)");
     run(driver, "CREATE TABLE IF NOT EXISTS bar(x int, y double)");
-    run(driver, "CREATE VIEW IF NOT EXISTS foo_view AS "
-        + "SELECT b as bcol, sum(c) as sum_c from foo group by b");
-    run(driver,"CREATE VIEW IF NOT EXISTS foo_bar_view AS "
-        + "SELECT foo_view.bcol, bar.x from foo_view join bar on bar.y=foo_view.sum_c");
+    run(driver, "CREATE TABLE IF NOT EXISTS complex(a int, b string, c array<double>, s struct<name:string, age:int>, m map<int, string>, sarr array<struct<name:string, age:int>>)");
     run(driver, "CREATE FUNCTION default_foo_dali_udf_LessThanHundred as 'com.linkedin.coral.hive.hive2rel.CoralTestUDF'");
-    run(driver, "CREATE VIEW IF NOT EXISTS foo_dali_udf "
-        + "tblproperties('functions' = 'LessThanHundred com.linkedin.coral.hive.hive2rel.CoralTestUDF',"
-        + " 'dependencies' = 'com.linkedin:udf:1.0') AS "
-        + "SELECT default_foo_dali_udf_LessThanHundred(a) from foo");
+    run(driver, String.join("\n","",
+        "CREATE VIEW IF NOT EXISTS foo_view",
+        "AS",
+        "SELECT b AS bcol, sum(c) AS sum_c",
+        "FROM foo",
+        "GROUP BY b"
+    ));
+    run(driver,String.join("\n","",
+        "CREATE VIEW IF NOT EXISTS foo_bar_view",
+        "AS",
+        "SELECT foo_view.bcol, bar.x",
+        "FROM foo_view JOIN bar",
+        "ON bar.y = foo_view.sum_c"
+    ));
+    run(driver, String.join("\n","",
+        "CREATE VIEW IF NOT EXISTS foo_dali_udf",
+        "tblproperties('functions' = 'LessThanHundred com.linkedin.coral.hive.hive2rel.CoralTestUDF',",
+        "              'dependencies' = 'com.linkedin:udf:1.0')",
+        "AS",
+        "SELECT default_foo_dali_udf_LessThanHundred(a)",
+        "FROM foo"
+    ));
+    run(driver, String.join("\n","",
+        "CREATE VIEW IF NOT EXISTS named_struct_view",
+        "AS",
+        "SELECT named_struct('abc', 123, 'def', 'xyz') AS named_struc",
+        "FROM bar"
+    ));
   }
 
   public static RelNode toRelNode(String db, String view) {
     return hiveToRelConverter.convertView(db, view);
+  }
+
+  public static RelNode toRelNode(String sql) {
+    return hiveToRelConverter.convertSql(sql);
   }
 
   private static HiveConf loadResourceHiveConf() {

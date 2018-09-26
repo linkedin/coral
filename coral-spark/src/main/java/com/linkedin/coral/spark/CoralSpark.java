@@ -2,12 +2,12 @@ package com.linkedin.coral.spark;
 
 import com.linkedin.coral.spark.containers.SparkRelInfo;
 import com.linkedin.coral.spark.containers.SparkUDFInfo;
+import com.linkedin.coral.spark.dialect.SparkSqlDialect;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.sql.SqlDialect;
 
 
 /**
@@ -20,7 +20,7 @@ import org.apache.calcite.sql.SqlDialect;
  *
  * This class converts a IR RelNode to a Spark SQL by
  *  1) Transforming it to a Spark RelNode with Spark details [[IRRelToSparkRelTransformer]]
- *  2) Constructing a Spark SQL AST by using [[SparkRelToSparkSQLConverter]]
+ *  2) Constructing a Spark SQL AST by using [[SparkRelToSparkSqlConverter]]
  *
  */
 public class CoralSpark {
@@ -28,14 +28,14 @@ public class CoralSpark {
   private RelNode sparkRelNode;
   private List<String> baseTables;
   private List<SparkUDFInfo> sparkUDFInfoList;
-  private String sparkSQL;
+  private String sparkSql;
 
   private CoralSpark(RelNode sparkRelNode, List<String> baseTables, List<SparkUDFInfo> sparkUDFInfoList,
-      String sparkSQL) {
+      String sparkSql) {
     this.sparkRelNode = sparkRelNode;
     this.baseTables = baseTables;
     this.sparkUDFInfoList = sparkUDFInfoList;
-    this.sparkSQL = sparkSQL;
+    this.sparkSql = sparkSql;
   }
 
   /**
@@ -66,7 +66,7 @@ public class CoralSpark {
    *
    * A SQL statement is 'completely expanded' if it doesn't depend
    * on (or selects from) Hive views, but instead, just on base tables.
-   * This function internally calls [[SparkRelToSparkSQLConverter]] module to
+   * This function internally calls [[SparkRelToSparkSqlConverter]] module to
    * convert CoralSpark to SparkSQL.
    *
    * Converts Spark RelNode to Spark SQL
@@ -76,10 +76,11 @@ public class CoralSpark {
    * @return SQL String in HiveQL dialect which is 'completely expanded'
    */
   private static String constructSparkSQL(RelNode sparkRelNode) {
-    SparkRelToSparkSQLConverter rel2sql = new SparkRelToSparkSQLConverter();
+    SparkRelToSparkSqlConverter rel2sql = new SparkRelToSparkSqlConverter();
     return rel2sql.visitChild(0, sparkRelNode)
         .asStatement()
-        .toSqlString(SqlDialect.DatabaseProduct.HIVE.getDialect()).getSql();
+        .accept(new SparkSqlRewriter())
+        .toSqlString(SparkSqlDialect.INSTANCE).getSql();
   }
 
   /**
@@ -129,7 +130,7 @@ public class CoralSpark {
    *
    * @return String : SQL string in HiveQL dialect which is 'completely expanded'
    */
-  public String getSparkSQL() {
-    return sparkSQL;
+  public String getSparkSql() {
+    return sparkSql;
   }
 }
