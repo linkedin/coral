@@ -1,5 +1,6 @@
 package com.linkedin.coral.hive.hive2rel;
 
+import com.linkedin.coral.hive.hive2rel.test.HiveMscAdapter;
 import java.io.IOException;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
