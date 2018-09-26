@@ -1,4 +1,4 @@
-def modules = ['coral-calcite', 'coral-hive', 'coral-presto', 'coral-converters', 'coral-tests', 'coral-tools']
+def modules = ['coral-calcite', 'coral-hive', 'coral-presto', 'coral-converters', 'coral-tests', 'coral-tools','coral-spark']
 
 modules.each { module ->
   if (!file(module).directory) {
