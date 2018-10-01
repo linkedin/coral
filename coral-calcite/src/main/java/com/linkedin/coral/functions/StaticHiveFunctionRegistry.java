@@ -103,9 +103,54 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
         or(family(SqlTypeFamily.STRING), family(SqlTypeFamily.BINARY)));
 
     // mathematical functions
+    // we need to define new strategy for hive to allow null operands by defauly for everything
+    createAddUserDefinedFunction("round", DOUBLE_NULLABLE,
+        family(ImmutableList.of(SqlTypeFamily.NUMERIC, SqlTypeFamily.INTEGER), optionalOrd(1)));
+    createAddUserDefinedFunction("bround", DOUBLE_NULLABLE,
+        family(ImmutableList.of(SqlTypeFamily.NUMERIC, SqlTypeFamily.INTEGER), optionalOrd(1)));
+    createAddUserDefinedFunction("floor", BIGINT_FORCE_NULLABLE, family(SqlTypeFamily.NUMERIC));
+    createAddUserDefinedFunction("ceil", BIGINT_FORCE_NULLABLE, family(SqlTypeFamily.NUMERIC));
+    createAddUserDefinedFunction("ceiling", BIGINT_FORCE_NULLABLE, family(SqlTypeFamily.NUMERIC));
+    createAddUserDefinedFunction("rand", DOUBLE_NULLABLE,
+        family(ImmutableList.of(SqlTypeFamily.INTEGER), optionalOrd(0)));
+    createAddUserDefinedFunction("exp", DOUBLE_NULLABLE, NUMERIC);
+    createAddUserDefinedFunction("ln", DOUBLE_NULLABLE, NUMERIC);
+    createAddUserDefinedFunction("log10", DOUBLE_NULLABLE, NUMERIC);
+    createAddUserDefinedFunction("log2", DOUBLE_NULLABLE, NUMERIC);
+    createAddUserDefinedFunction("log", DOUBLE_NULLABLE, NUMERIC_NUMERIC);
+    createAddUserDefinedFunction("pow", DOUBLE_NULLABLE, NUMERIC_NUMERIC);
+    createAddUserDefinedFunction("power", DOUBLE_NULLABLE, NUMERIC_NUMERIC);
+    createAddUserDefinedFunction("sqrt", DOUBLE_NULLABLE, NUMERIC);
     createAddUserDefinedFunction("hex", HiveReturnTypes.STRING,
         or(family(SqlTypeFamily.STRING), family(SqlTypeFamily.NUMERIC), family(SqlTypeFamily.BINARY)));
     createAddUserDefinedFunction("unhex", HiveReturnTypes.BINARY, STRING);
+    createAddUserDefinedFunction("conv", HiveReturnTypes.STRING,
+        or(family(SqlTypeFamily.EXACT_NUMERIC, SqlTypeFamily.INTEGER, SqlTypeFamily.INTEGER),
+            family(SqlTypeFamily.STRING, SqlTypeFamily.INTEGER, SqlTypeFamily.INTEGER)));
+    createAddUserDefinedFunction("abs", DOUBLE_NULLABLE, NUMERIC);
+    createAddUserDefinedFunction("sin", DOUBLE_NULLABLE, NUMERIC);
+    createAddUserDefinedFunction("asin", DOUBLE_NULLABLE, NUMERIC);
+    createAddUserDefinedFunction("cos", DOUBLE_NULLABLE, NUMERIC);
+    createAddUserDefinedFunction("acos", DOUBLE_NULLABLE, NUMERIC);
+    createAddUserDefinedFunction("tan", DOUBLE_NULLABLE, NUMERIC);
+    createAddUserDefinedFunction("atan", DOUBLE_NULLABLE, NUMERIC);
+    createAddUserDefinedFunction("degrees", DOUBLE_NULLABLE, NUMERIC);
+    createAddUserDefinedFunction("radians", DOUBLE_NULLABLE, NUMERIC);
+    createAddUserDefinedFunction("positive", ARG0_NULLABLE, NUMERIC);
+    createAddUserDefinedFunction("negative", ARG0_NULLABLE, NUMERIC);
+    createAddUserDefinedFunction("sign", ARG0_NULLABLE, NUMERIC);
+    createAddUserDefinedFunction("e", DOUBLE, NILADIC);
+    createAddUserDefinedFunction("pi", DOUBLE, NILADIC);
+    createAddUserDefinedFunction("factorial", BIGINT_NULLABLE, family(SqlTypeFamily.INTEGER));
+    createAddUserDefinedFunction("cbrt", DOUBLE_NULLABLE, NUMERIC);
+    createAddUserDefinedFunction("shiftleft", ARG0_NULLABLE, EXACT_NUMERIC_EXACT_NUMERIC);
+    createAddUserDefinedFunction("shiftright", ARG0_NULLABLE, EXACT_NUMERIC_EXACT_NUMERIC);
+    createAddUserDefinedFunction("shiftrightunsigned", ARG0_NULLABLE, EXACT_NUMERIC_EXACT_NUMERIC);
+    createAddUserDefinedFunction("greatest", ARG0_NULLABLE, ANY);
+    createAddUserDefinedFunction("least", ARG0_NULLABLE, ANY);
+    createAddUserDefinedFunction("width_bucket", INTEGER_NULLABLE,
+        family(SqlTypeFamily.NUMERIC, SqlTypeFamily.NUMERIC, SqlTypeFamily.NUMERIC, SqlTypeFamily.INTEGER));
+
 
     // string functions
     // TODO: operand types are not strictly true since these functions can take null literal
@@ -175,9 +220,12 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
     createAddUserDefinedFunction("parse_url", HiveReturnTypes.STRING,
         family(Collections.nCopies(3, SqlTypeFamily.STRING), optionalOrd(2)));
     createAddUserDefinedFunction("printf", HiveReturnTypes.STRING, VARIADIC);
-    createAddUserDefinedFunction("regexp_extract", ARG0, STRING_STRING_INTEGER);
+    createAddUserDefinedFunction("regexp_extract", ARG0,
+        family(ImmutableList.of(SqlTypeFamily.STRING, SqlTypeFamily.STRING, SqlTypeFamily.INTEGER),
+            optionalOrd(2)));
     createAddUserDefinedFunction("regexp_replace", HiveReturnTypes.STRING, STRING_STRING_STRING);
-    createAddUserDefinedFunction("repeat", HiveReturnTypes.STRING, family(SqlTypeFamily.STRING, SqlTypeFamily.INTEGER));
+    createAddUserDefinedFunction("repeat", HiveReturnTypes.STRING,
+        family(SqlTypeFamily.STRING, SqlTypeFamily.INTEGER));
     addFunctionEntry("replace", REPLACE);
     createAddUserDefinedFunction("reverse", ARG0, or(STRING, NULLABLE_LITERAL));
     createAddUserDefinedFunction("rpad", HiveReturnTypes.STRING,
