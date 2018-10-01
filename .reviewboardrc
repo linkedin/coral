@@ -1,4 +1,5 @@
 REPOSITORY = "coral"
-TARGET_PEOPLE='atumbde,khtran,wmoustaf,rratti'
+TARGET_PEOPLE='atumbde,khtran,wmoustaf,rratti,smahadik'
+TARGET_GROUPS='dali-reviewers'
 GUESS_FIELDS='yes'
 TRACKING_BRANCH='origin/master'
