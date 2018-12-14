@@ -2,7 +2,7 @@ package com.linkedin.coral.hive.hive2rel.parsetree;
 
 import com.google.common.collect.ImmutableList;
 import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
-import com.linkedin.coral.hive.hive2rel.test.HiveMscAdapter;
+import com.linkedin.coral.hive.hive2rel.HiveMscAdapter;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
