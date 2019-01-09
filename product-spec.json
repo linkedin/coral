@@ -14,7 +14,7 @@
     },
     "toolchains": {
       "gradle": {
-        "version": "4.10.3",
+        "version": "4.*",
         "plugins": {
           "ligradle-jvm": {
             "libraries": [
