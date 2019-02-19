@@ -40,7 +40,26 @@ public class UDFMapUtils {
       String prestoUDFName, String operandTransformer, String resultTransformer) {
     SqlOperator prestoUDF = createUDF(prestoUDFName, calciteOp.getReturnTypeInference());
     udfMap.put(getKey(calciteOp.getName(), numOperands),
-        UDFTransformer.of(prestoUDF, operandTransformer, resultTransformer));
+        UDFTransformer.of(calciteOp.getName(), prestoUDF, operandTransformer, resultTransformer,
+            null));
+  }
+
+  /**
+   * Creates a mapping from a Calcite SQL operator to a Presto UDF determined at runtime
+   * by the values of input parameters with operand and result transformers.
+   *
+   * @param udfMap Map to store the result
+   * @param calciteOp Calcite SQL operator
+   * @param numOperands Number of operands
+   * @param operatorTransformers Operator transformers as a JSON string.
+   * @param operandTransformer Operand transformers, null for identity transformation
+   * @param resultTransformer Result transformer, null for identity transformation
+   */
+  static void createRuntimeUDFMapEntry(Map<String, UDFTransformer> udfMap, SqlOperator calciteOp, int numOperands,
+      String operatorTransformers, String operandTransformer, String resultTransformer) {
+    udfMap.put(getKey(calciteOp.getName(), numOperands),
+        UDFTransformer.of(calciteOp.getName(), createUDF("", calciteOp.getReturnTypeInference()),
+            operandTransformer, resultTransformer, operatorTransformers));
   }
 
   /**

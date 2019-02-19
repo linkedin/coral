@@ -79,7 +79,7 @@ public class TestUtils {
       driver.run("CREATE TABLE IF NOT EXISTS bar(x int, y double)");
       driver.run("CREATE VIEW IF NOT EXISTS foo_view AS SELECT b as bcol, sum(c) as sum_c from foo group by b");
       driver.run(
-          "CREATE TABLE IF NOT EXISTS complex(a int, b string, c array<double>, s struct<name:string, age:int>, m map<int, string>, sarr array<struct<name:string, age:int>>)");
+          "CREATE TABLE IF NOT EXISTS complex(a int, b string, c array<double>, s struct<name:string, age:int>, m map<string, string>, sarr array<struct<name:string, age:int>>)");
       CommandProcessorResponse response = driver.run("create function test_tableOneView_LessThanHundred as 'com.linkedin.coral.hive.hive2rel.CoralTestUDF'");
       response = driver.run("CREATE VIEW IF NOT EXISTS test.tableOneView as SELECT test_tableOneView_LessThanHundred(a) from test.tableOne");
       if (response.getResponseCode() != 0) {

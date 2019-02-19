@@ -182,8 +182,8 @@ public class HiveToRelConverterTest {
 
   @Test
   public void testMapItem() {
-    final String sql = "SELECT m[a] FROM complex";
-    final String expected = "LogicalProject(EXPR$0=[ITEM($4, $0)])\n" +
+    final String sql = "SELECT m['a'] FROM complex";
+    final String expected = "LogicalProject(EXPR$0=[ITEM($4, 'a')])\n" +
         "  LogicalTableScan(table=[[hive, default, complex]])\n";
     assertEquals(relToString(sql), expected);
   }
