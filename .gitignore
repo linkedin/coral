@@ -14,3 +14,4 @@ target/
 *target/
 derby.log
 ligradle
+.DS_Store

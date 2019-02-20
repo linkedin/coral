@@ -75,7 +75,7 @@ public class HiveToRelConverter {
    * in the hive metastore to corresponding {@link RelNode} implementation.
    * This sets up the initial context for resolving Dali function names using table parameters.
    * @param hiveDbName hive database name
-   * @param hiveViewName hive view name whose definition to convert
+   * @param hiveViewName hive view name whose definition to convert.  Table name is allowed.
    * @return Calcite {@link RelNode} representation of hive view definition
    */
   public RelNode convertView(String hiveDbName, String hiveViewName) {

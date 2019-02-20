@@ -44,7 +44,7 @@ public class HiveViewExpander implements RelOptTable.ViewExpander {
     }
     ParseTreeBuilder treeBuilder = new ParseTreeBuilder(msc,
         relContextProvider.getParseTreeBuilderConfig());
-    SqlNode viewNode = treeBuilder.processView(table);
+    SqlNode viewNode = treeBuilder.processViewOrTable(table);
     return relContextProvider.getSqlToRelConverter().convertQuery(viewNode, true, true);
   }
 }

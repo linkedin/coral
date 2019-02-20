@@ -42,6 +42,14 @@ public class CoralSparkTest {
   }
 
   @Test
+  public void testAllowBaseTableInView(){
+    RelNode relNode = TestUtils.toRelNode("default","foo");
+    CoralSpark coralSpark = CoralSpark.create(relNode);
+    List<String> base_tables = coralSpark.getBaseTables();
+    assertTrue(base_tables.contains("default.foo"));
+  }
+
+  @Test
   public void testDaliUdf() {
     RelNode relNode = TestUtils.toRelNode("default","foo_dali_udf");
     CoralSpark coralSpark = CoralSpark.create(relNode);

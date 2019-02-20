@@ -81,23 +81,31 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
   /**
    * Creates a parse tree for a hive view using the expanded view text from hive metastore.
    * This table name is required for handling dali function name resolution.
-   * @param hiveView hive table handle to read expanded text from
+   * @param hiveView hive table handle to read expanded text from.  Table name is also allowed.
    * @return Calcite SqlNode representing parse tree that calcite framework can understand
    */
-  public SqlNode processView(@Nonnull Table hiveView) {
+  public SqlNode processViewOrTable(@Nonnull Table hiveView) {
     checkNotNull(hiveView);
-    return process(hiveView.getViewExpandedText(), hiveView);
+    String stringViewExpandedText = null;
+    if (hiveView.getTableType().equals("VIRTUAL_VIEW")) {
+      stringViewExpandedText = hiveView.getViewExpandedText();
+    } else {
+      // It is a table, not a view.
+      stringViewExpandedText = "SELECT * FROM " + hiveView.getDbName() + "." + hiveView.getTableName();
+    }
+
+    return process(stringViewExpandedText, hiveView);
   }
 
   /**
-   * Gets the hive table handle for db and table and calls {@link #processView(Table)}
+   * Gets the hive table handle for db and table and calls {@link #processViewOrTable(Table)}
    */
   public SqlNode processView(String dbName, String tableName) {
     Table table = getMscOrThrow().getTable(dbName, tableName);
     if (table == null) {
       throw new RuntimeException(String.format("Unknown table %s.%s", dbName, tableName));
     }
-    return processView(table);
+    return processViewOrTable(table);
   }
 
   /**
