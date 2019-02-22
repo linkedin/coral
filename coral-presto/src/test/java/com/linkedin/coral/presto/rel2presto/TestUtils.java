@@ -125,6 +125,7 @@ public class TestUtils {
       String alias = m.group(1);
       if (alias.equalsIgnoreCase("integer") ||
           alias.equalsIgnoreCase("double") ||
+          alias.equalsIgnoreCase("boolean") ||
           alias.equalsIgnoreCase("varchar") ||
           alias.equalsIgnoreCase("real") ||
           alias.equalsIgnoreCase("varbinary")) {

@@ -1,6 +1,8 @@
 package com.linkedin.coral.presto.rel2presto;
 
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
+import com.linkedin.coral.com.google.common.collect.ImmutableMultimap;
+import com.linkedin.coral.com.google.common.collect.Multimap;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelShuttle;
 import org.apache.calcite.rel.RelShuttleImpl;
@@ -127,6 +129,15 @@ public class Calcite2PrestoUDFConverter {
   public static class PrestoRexConverter extends RexShuttle {
     private final RexBuilder rexBuilder;
 
+    // SUPPORTED_TYPE_CAST_MAP is a static mapping that maps a SqlTypeFamily key to its set of
+    // type-castable SqlTypeFamilies.
+    private static final Multimap<SqlTypeFamily, SqlTypeFamily> SUPPORTED_TYPE_CAST_MAP;
+    static {
+      SUPPORTED_TYPE_CAST_MAP = ImmutableMultimap.<SqlTypeFamily, SqlTypeFamily>builder()
+          .putAll(SqlTypeFamily.CHARACTER, SqlTypeFamily.NUMERIC, SqlTypeFamily.BOOLEAN)
+          .build();
+    }
+
     public PrestoRexConverter(RexBuilder rexBuilder) {
       this.rexBuilder = rexBuilder;
     }
@@ -154,9 +165,8 @@ public class Calcite2PrestoUDFConverter {
 
       RexNode leftOperand = call.getOperands().get(0);
       RexNode rightOperand = call.getOperands().get(1);
-      if (leftOperand.getType().getSqlTypeName().getFamily() == SqlTypeFamily.CHARACTER
-          && rightOperand.getType().getSqlTypeName().getFamily() == SqlTypeFamily.NUMERIC) {
-
+      if (SUPPORTED_TYPE_CAST_MAP.containsEntry(leftOperand.getType().getSqlTypeName().getFamily(),
+          rightOperand.getType().getSqlTypeName().getFamily())) {
         RexNode tryCastNode =
             rexBuilder.makeCall(rightOperand.getType(), PrestoTryCastFunction.INSTANCE, ImmutableList.of(leftOperand));
         return (RexCall) rexBuilder.makeCall(op, tryCastNode, rightOperand);

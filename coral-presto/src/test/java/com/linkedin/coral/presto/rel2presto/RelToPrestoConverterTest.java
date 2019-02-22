@@ -447,6 +447,24 @@ public class RelToPrestoConverterTest {
   }
 
   @Test
+  public void testTryCastIntPresto() {
+    String sql =
+        "SELECT CASE WHEN a.scol= 0 THEN TRUE ELSE FALSE END AS testcol FROM " + tableOne + " a WHERE a.scol = 1";
+    String expectedSql = formatSql("SELECT TRY_CAST(scol AS INTEGER) = 0 AS TESTCOL\nFROM " + tableOne + "\nWHERE "
+        + "TRY_CAST(scol AS INTEGER) = 1");
+    testConversion(sql, expectedSql);
+  }
+
+  @Test
+  public void testTryCastBooleanPresto() {
+    String sql = "SELECT CASE WHEN a.scol= TRUE THEN TRUE ELSE FALSE END AS testcol FROM " + tableOne
+        + " a WHERE a.scol = FALSE";
+    String expectedSql = formatSql("SELECT TRY_CAST(scol AS BOOLEAN) = TRUE AS TESTCOL\nFROM " + tableOne + "\nWHERE "
+        + "TRY_CAST(scol AS BOOLEAN) = FALSE");
+    testConversion(sql, expectedSql);
+  }
+
+  @Test
   public void testCase() {
     String sql = "SELECT case when icol = 0 then scol else 'other' end from " + tableOne;
     String expected = formatSql("SELECT CASE WHEN icol = 0 THEN scol ELSE 'other' END FROM " + tableOne);
