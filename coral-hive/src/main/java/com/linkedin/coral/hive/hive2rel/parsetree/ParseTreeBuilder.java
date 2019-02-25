@@ -75,7 +75,7 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     checkState(config.catalogName.isEmpty() || !config.defaultDBName.isEmpty(),
         "Default DB is required if catalog name is not empty");
     this.config = config;
-    this.functionResolver = new HiveFunctionResolver(new StaticHiveFunctionRegistry());
+    this.functionResolver = new HiveFunctionResolver(StaticHiveFunctionRegistry.getInstance());
   }
 
   /**

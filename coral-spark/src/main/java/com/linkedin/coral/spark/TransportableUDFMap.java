@@ -12,9 +12,9 @@ import java.util.Optional;
  *
  * Add new mappings here
  */
-class TansportableUDFMap {
+class TransportableUDFMap {
 
-  private TansportableUDFMap() {
+  private TransportableUDFMap() {
   }
 
   private static final Map<String, SparkUDFInfo> UDF_MAP = new HashMap();

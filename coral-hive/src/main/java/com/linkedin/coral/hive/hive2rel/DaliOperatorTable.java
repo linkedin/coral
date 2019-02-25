@@ -23,7 +23,7 @@ public class DaliOperatorTable implements SqlOperatorTable {
   private final HiveSchema schema;
   // TODO: support injection framework to inject same function resolver here and ParseTreeBuilder.
   // For now, we create another instance since the function registry is simple.
-  private final HiveFunctionResolver funcResolver = new HiveFunctionResolver(new StaticHiveFunctionRegistry());
+  private final HiveFunctionResolver funcResolver = new HiveFunctionResolver(StaticHiveFunctionRegistry.getInstance());
 
   public DaliOperatorTable(HiveSchema schema) {
     this.schema = schema;

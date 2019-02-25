@@ -38,6 +38,7 @@ public class TestUtils {
     run(driver, "CREATE TABLE IF NOT EXISTS bar(x int, y double)");
     run(driver, "CREATE TABLE IF NOT EXISTS complex(a int, b string, c array<double>, s struct<name:string, age:int>, m map<int, string>, sarr array<struct<name:string, age:int>>)");
     run(driver, "CREATE FUNCTION default_foo_dali_udf_LessThanHundred as 'com.linkedin.coral.hive.hive2rel.CoralTestUDF'");
+    run(driver, "CREATE FUNCTION default_foo_dali_udf2_GreaterThanHundred as 'com.linkedin.coral.hive.hive2rel.CoralTestUDF2'");
     run(driver, String.join("\n","",
         "CREATE VIEW IF NOT EXISTS foo_view",
         "AS",
@@ -58,6 +59,14 @@ public class TestUtils {
         "              'dependencies' = 'com.linkedin:udf:1.0')",
         "AS",
         "SELECT default_foo_dali_udf_LessThanHundred(a)",
+        "FROM foo"
+    ));
+    run(driver, String.join("\n","",
+        "CREATE VIEW IF NOT EXISTS foo_dali_udf2",
+        "tblproperties('functions' = 'GreaterThanHundred com.linkedin.coral.hive.hive2rel.CoralTestUDF2',",
+        "              'dependencies' = 'com.linkedin:udf:1.0')",
+        "AS",
+        "SELECT default_foo_dali_udf2_GreaterThanHundred(a)",
         "FROM foo"
     ));
     run(driver, String.join("\n","",
@@ -85,4 +94,5 @@ public class TestUtils {
     hiveConf.set("_hive.local.session.path", "/tmp/coral/spark");
     return hiveConf;
   }
+
 }

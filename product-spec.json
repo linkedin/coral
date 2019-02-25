@@ -51,6 +51,8 @@
     "gson": "com.google.code.gson:gson:2.8.1",
     "presto-parser": "com.facebook.presto:presto-parser:0.157.1.30",
     "protobuf-java": "com.google.protobuf:protobuf-java:3.3.0",
+    "slf4j-api": "org.slf4j:slf4j-api:1.7.25",
+    "slf4j-log4j12": "org.slf4j:slf4j-log4j12:1.7.25",
     "testng": "org.testng:testng:6.4"
   },
   "product": {

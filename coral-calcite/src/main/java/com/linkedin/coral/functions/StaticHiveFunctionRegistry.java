@@ -36,17 +36,19 @@
  * function names. This has a major disadvantage that the user defined functions are
  * not available to the registry without manually adding the entry here and uploading
  * a new version of library.
- *
  * TODO: Provide function registry catalog
+ *
+ * Note that this is a singleton class.  We need to make a thread-safe instantiation.
  */
-public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
+public final class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
 
   public static final String IS_TEST_MEMBER_ID_CLASS = "com.linkedin.dali.udf.istestmemberid.hive.IsTestMemberId";
 
   // TODO: Make this immutable using builder
   static final Multimap<String, HiveFunction> FUNCTION_MAP = HashMultimap.create();
-  // NOTE: all function names should be lowercase for case-insensitive comparison
-  static {
+
+  private StaticHiveFunctionRegistry() {
+    // NOTE: all function names should be lowercase for case-insensitive comparison
     // FIXME: This mapping is currently incomplete
     // aggregation functions
     addFunctionEntry("sum", SUM);
@@ -354,11 +356,30 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
 
     // UDTFs
     addFunctionEntry("explode", HiveExplodeOperator.EXPLODE);
-    // FOR UNIT TESTING
+    // A KLUDGE FOR UNIT TESTING
     createAddUserDefinedFunction("com.linkedin.coral.hive.hive2rel.CoralTestUDF", ReturnTypes.BOOLEAN,
+        family(SqlTypeFamily.INTEGER));
+    createAddUserDefinedFunction("com.linkedin.coral.hive.hive2rel.CoralTestUDF2", ReturnTypes.BOOLEAN,
         family(SqlTypeFamily.INTEGER));
   }
 
+  /**
+   * The purpose of this class is to implement lazy-loaded singleton (a.k.a initialization-on-demand holder idiom).
+   * Since the initialization phase writes the static variable INSTANCE in a sequential operation, all subsequent concurrent
+   * invocations of the getInstance will return the same INSTANCE value without incurring any additional synchronization overhead.
+   * See https://en.wikipedia.org/wiki/Initialization-on-demand_holder_idiom
+   */
+  private static class LazyHolder {
+    static final StaticHiveFunctionRegistry INSTANCE = new StaticHiveFunctionRegistry();
+  }
+
+  /**
+   * This method returns the instance of StaticHiveFunctionRegistry singleton object.
+   * @return the instance of StaticHiveFunctionRegistry singleton object.
+   */
+  public static StaticHiveFunctionRegistry getInstance() {
+    return LazyHolder.INSTANCE;
+  }
   /**
    * Returns a list of functions matching given name. This returns empty list if the
    * function name is not found

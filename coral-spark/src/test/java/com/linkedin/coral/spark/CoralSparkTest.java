@@ -3,6 +3,7 @@ package com.linkedin.coral.spark;
 import com.linkedin.coral.hive.hive2rel.parsetree.UnhandledASTTokenException;
 import com.linkedin.coral.spark.containers.SparkUDFInfo;
 import java.util.List;
+import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
@@ -58,6 +59,14 @@ public class CoralSparkTest {
   }
 
   @Test
+  public void testDaliUdf2() {
+    RelNode relNode = TestUtils.toRelNode("default","foo_dali_udf2");
+    CoralSpark coralSpark = CoralSpark.create(relNode);
+    List<SparkUDFInfo> udfJars = coralSpark.getSparkUDFInfoList();
+    assertEquals(1, udfJars.size());
+  }
+
+  @Test
   public void testNoUdf() {
     RelNode relNode = TestUtils.toRelNode("default","foo_bar_view");
     CoralSpark coralSpark = CoralSpark.create(relNode);
@@ -86,6 +95,10 @@ public class CoralSparkTest {
         "FROM complex",
         "LATERAL VIEW OUTER explode(complex.c) t as ccol"
     ));
+    String relNodePlan = RelOptUtil.toString(relNode);
+    System.out.println(relNodePlan);
+    String convertToSparkSql = CoralSpark.create(relNode).getSparkSql();
+
     String targetSql = String.join("\n",
         "SELECT complex.a, t1.ccol",
         "FROM default.complex "+
@@ -94,7 +107,7 @@ public class CoralSparkTest {
             "if(complex.c IS NOT NULL AND size(complex.c) > 0, complex.c, ARRAY (NULL))"+
         ") t1 AS ccol"
     );
-    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+    assertEquals(convertToSparkSql, targetSql);
   }
 
   @Test

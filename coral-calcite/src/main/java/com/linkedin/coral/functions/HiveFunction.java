@@ -30,11 +30,15 @@ import static org.apache.calcite.sql.parser.SqlParserPos.*;
 public class HiveFunction {
 
   private final String hiveName;
-  private SqlOperator sqlOperator;
+  private final SqlOperator sqlOperator;
 
   public HiveFunction(String functionName, SqlOperator sqlOperator) {
     this.hiveName = functionName;
     this.sqlOperator = sqlOperator;
+  }
+
+  public String getHiveFunctionName() {
+    return hiveName;
   }
 
   public SqlOperator getSqlOperator() {
