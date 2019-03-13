@@ -2,9 +2,12 @@ package com.linkedin.coral.spark;
 
 
 import java.util.TimeZone;
+import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlDataTypeSpec;
 import org.apache.calcite.sql.SqlIdentifier;
+import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlNode;
+import org.apache.calcite.sql.SqlRowTypeSpec;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.util.SqlShuttle;
 
@@ -15,6 +18,28 @@ import org.apache.calcite.sql.util.SqlShuttle;
  * There may be AST manipulation logic here.
  */
 public class SparkSqlRewriter extends SqlShuttle {
+
+  /**
+   *  [LIHADOOP-43199] Spark SQL doesn't support CASTING the named_struct function to a row/struct.
+   *  Sushant suggests that we remove this behavior here.
+   *
+   *  For example:
+   *
+   *  @code SELECT CAST(named_struct(.....) to ROW)
+   *   is translated to
+   *  @code SELECT named_struct(.....)
+   *
+   */
+  @Override
+  public SqlNode visit(SqlCall call) {
+    // Spark SQL doesn't support CASTING the named_struct function TO A ROW.
+    // Keeping the expression inside CAST operator seems sufficient.
+    if (call.getOperator().getKind() == SqlKind.CAST
+        && call.getOperandList().get(1) instanceof SqlRowTypeSpec) {
+      return call.getOperandList().get(0).accept(this);
+    }
+    return super.visit(call);
+  }
 
   /**
    *  Spark SQL historically supported VARCHAR but latest documentation doesn't support it.

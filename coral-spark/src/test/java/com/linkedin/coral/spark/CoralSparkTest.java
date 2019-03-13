@@ -166,6 +166,26 @@ public class CoralSparkTest {
     assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
   }
 
+  @Test
+  public void testNamedStructViewWithSelectSupported() {
+    RelNode relNode = TestUtils.toRelNode(String.join("\n","",
+        "SELECT named_struct_view.named_struc",
+        "FROM named_struct_view"
+    ));
+    String relNodePlan = RelOptUtil.toString(relNode);
+    System.out.println(relNodePlan);
+    String convertToSparkSql = CoralSpark.create(relNode).getSparkSql();
+
+    /*  [LIHADOOP-43199] the test query is translated to:
+     *  SELECT named_struct('abc', 123, 'def', 'xyz') named_struc FROM default.bar;
+     */
+    String targetSql = String.join("\n",
+        "SELECT named_struct('abc', 123, 'def', 'xyz') named_struc",
+        "FROM default.bar"
+    );
+    assertEquals(convertToSparkSql, targetSql);
+  }
+
   /**
    * Following Queries are not supported
    */
@@ -188,25 +208,6 @@ public class CoralSparkTest {
         "LATERAL VIEW explode(complex.m) t as ccol1, ccol2"
     ));
     CoralSpark.create(relNode);
-  }
-
-  @Test(expectedExceptions = AssertionError.class)
-  public void testNamedStructViewWithSelectNotSupported() {
-    RelNode relNode = TestUtils.toRelNode(String.join("\n","",
-        "SELECT named_struct_view.named_struc",
-        "FROM named_struct_view"
-    ));
-
-    /*  Produces following SQL which is incorrect
-     *
-     *  SELECT CAST(named_struct('abc', 123, 'def', 'xyz')AS ROW(abc INTEGER, def VARCHAR(2147483647))) named_struc
-     *  FROM default.bar
-     */
-    String targetSql = String.join("\n",
-        "SELECT named_struct('abc', 123, 'def', 'xyz') named_struc",
-        "FROM default.bar"
-    );
-    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
   }
 
   @Test(expectedExceptions = AssertionError.class)
