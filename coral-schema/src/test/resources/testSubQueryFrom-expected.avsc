@@ -1,0 +1,16 @@
+{
+  "type" : "record",
+  "name" : "v",
+  "namespace" : "default.v",
+  "fields" : [ {
+    "name" : "Id",
+    "type" : "int"
+  }, {
+    "name" : "Map_Col",
+    "type" : [ "null", {
+      "type" : "map",
+      "values" : [ "null", "string" ]
+    } ],
+    "default" : null
+  } ]
+}

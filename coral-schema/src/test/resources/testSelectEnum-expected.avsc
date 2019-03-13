@@ -1,0 +1,14 @@
+{
+  "type" : "record",
+  "name" : "v",
+  "namespace" : "default.v",
+  "fields" : [ {
+    "name" : "Enum_Top_Col",
+    "type" : {
+      "type" : "enum",
+      "name" : "Enum_Top_col",
+      "namespace" : "default.v.v",
+      "symbols" : [ "Spark", "Pig", "Hive", "MR" ]
+    }
+  } ]
+}
