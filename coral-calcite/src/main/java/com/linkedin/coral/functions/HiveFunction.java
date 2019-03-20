@@ -31,10 +31,18 @@ public class HiveFunction {
 
   private final String hiveName;
   private final SqlOperator sqlOperator;
+  private final String udfDependency;
 
   public HiveFunction(String functionName, SqlOperator sqlOperator) {
     this.hiveName = functionName;
     this.sqlOperator = sqlOperator;
+    this.udfDependency = null;
+  }
+
+  public HiveFunction(String functionName, SqlOperator sqlOperator, String udfDependency) {
+    this.hiveName = functionName;
+    this.sqlOperator = sqlOperator;
+    this.udfDependency = udfDependency;
   }
 
   public String getHiveFunctionName() {
@@ -43,6 +51,13 @@ public class HiveFunction {
 
   public SqlOperator getSqlOperator() {
     return sqlOperator;
+  }
+
+  /*
+   * [LIHADOOP-44515] need to provide ivy coordinates for UDF
+   */
+  public String getUdfDependency() {
+    return udfDependency;
   }
 
   public SqlCall createCall(SqlNode function, List<SqlNode> operands, SqlLiteral qualifier) {

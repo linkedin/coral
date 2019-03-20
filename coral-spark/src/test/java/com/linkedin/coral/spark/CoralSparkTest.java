@@ -1,14 +1,21 @@
 package com.linkedin.coral.spark;
 
+import com.linkedin.coral.functions.StaticHiveFunctionRegistry;
 import com.linkedin.coral.hive.hive2rel.parsetree.UnhandledASTTokenException;
 import com.linkedin.coral.spark.containers.SparkUDFInfo;
+import com.linkedin.coral.spark.TransportableUDFMap;
+import java.util.LinkedList;
 import java.util.List;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.sql.type.ReturnTypes;
+import org.apache.calcite.sql.type.SqlTypeFamily;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+
+import static org.apache.calcite.sql.type.OperandTypes.*;
 import static org.testng.Assert.*;
 
 
@@ -17,6 +24,26 @@ public class CoralSparkTest {
   @BeforeClass
   public void beforeClass() throws HiveException, MetaException {
     TestUtils.initializeViews();
+
+    // add the following 3 test UDF to StaticHiveFunctionRegistry for testing purpose.
+    StaticHiveFunctionRegistry.createAddUserDefinedFunction("com.linkedin.coral.hive.hive2rel.CoralTestUDF", ReturnTypes.BOOLEAN,
+        family(SqlTypeFamily.INTEGER), "com.linkedin:udf:1.0");
+    StaticHiveFunctionRegistry.createAddUserDefinedFunction("com.linkedin.coral.hive.hive2rel.CoralTestUDF2", ReturnTypes.BOOLEAN,
+        family(SqlTypeFamily.INTEGER), "com.linkedin:udf:1.0");
+    StaticHiveFunctionRegistry.createAddUserDefinedFunction("com.linkedin.coral.hive.hive2rel.CoralTestUdfSquare", ReturnTypes.INTEGER,
+        family(SqlTypeFamily.INTEGER), "com.linkedin:udf:1.1");
+
+    // add the following 2 test UDF to TransportableUDFMap for testing purpose.
+    TransportableUDFMap.add("com.linkedin.coral.hive.hive2rel.CoralTestUDF",
+        "coralTestUDF",
+        "com.linkedin.coral.spark.CoralTestUDF",
+        "ivy://com.linkedin:udf:1.0");
+
+    TransportableUDFMap.add("com.linkedin.coral.hive.hive2rel.CoralTestUdfSquare",
+        "coralTestUdfSquare",
+        "com.linkedin.coral.spark.CoralTestUdfSquare",
+        "ivy://com.linkedin:udf:1.1");
+
   }
 
   @Test
@@ -52,18 +79,55 @@ public class CoralSparkTest {
 
   @Test
   public void testDaliUdf() {
+    // Dali view foo_dali_udf contains a UDF defined in TransportableUDFMap.
     RelNode relNode = TestUtils.toRelNode("default","foo_dali_udf");
     CoralSpark coralSpark = CoralSpark.create(relNode);
     List<SparkUDFInfo> udfJars = coralSpark.getSparkUDFInfoList();
     assertEquals(1, udfJars.size());
+    String udfUriString = udfJars.get(0).getArtifactoryUrl().toString();
+    String targetArtifactoryUrl = "ivy://com.linkedin:udf:1.0";
+    assertEquals(udfUriString, targetArtifactoryUrl);
   }
 
   @Test
-  public void testDaliUdf2() {
+  public void testFallbackToHiveUdf() {
+    // Dali view foo_dali_udf2 contains a UDF not defined in BuiltinUDFMap and TransportableUDFMap.
+    // We need to fall back to the udf initially defined in HiveFunctionRegistry.
     RelNode relNode = TestUtils.toRelNode("default","foo_dali_udf2");
     CoralSpark coralSpark = CoralSpark.create(relNode);
     List<SparkUDFInfo> udfJars = coralSpark.getSparkUDFInfoList();
     assertEquals(1, udfJars.size());
+    String udfUriString = udfJars.get(0).getArtifactoryUrl().toString();
+    String targetArtifactoryUrl = "ivy://com.linkedin:udf:1.0";
+    assertEquals(udfUriString, targetArtifactoryUrl);
+  }
+
+  @Test
+  public void testTwoFunctionsWithDependencies() {
+    // Dali view foo_dali_udf3 contains 2 UDFs.  One UDF is defined in TransportableUDFMap.  The other one is not.
+    // We need to fall back the second one to the udf initially defined in HiveFunctionRegistry.
+    RelNode relNode = TestUtils.toRelNode("default","foo_dali_udf3");
+    CoralSpark coralSpark = CoralSpark.create(relNode);
+    List<SparkUDFInfo> udfJars = coralSpark.getSparkUDFInfoList();
+    assertEquals(2, udfJars.size());
+    List<String> udfUrls = new LinkedList();
+    udfUrls.add(udfJars.get(0).getArtifactoryUrl().toString());
+    udfUrls.add(udfJars.get(1).getArtifactoryUrl().toString());
+    assertTrue(udfUrls.contains("ivy://com.linkedin:udf:1.1"));
+    assertTrue(udfUrls.contains("ivy://com.linkedin:udf:1.0"));
+  }
+
+  @Test
+  public void testExtraSpaceInDependencyParam() {
+    // Dali view foo_dali_udf4 is same as foo_dali_udf2, except it contains extra space in dependencies parameter
+    // inside TBLPROPERTIES clause.
+    RelNode relNode = TestUtils.toRelNode("default","foo_dali_udf4");
+    CoralSpark coralSpark = CoralSpark.create(relNode);
+    List<SparkUDFInfo> udfJars = coralSpark.getSparkUDFInfoList();
+    assertEquals(1, udfJars.size());
+    String udfUriString = udfJars.get(0).getArtifactoryUrl().toString();
+    String targetArtifactoryUrl = "ivy://com.linkedin:udf:1.0";
+    assertEquals(udfUriString, targetArtifactoryUrl);
   }
 
   @Test

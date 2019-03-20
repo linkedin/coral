@@ -20,11 +20,6 @@ class TransportableUDFMap {
   private static final Map<String, SparkUDFInfo> UDF_MAP = new HashMap();
 
   static {
-    add("com.linkedin.coral.hive.hive2rel.CoralTestUDF",
-        "coralTestUDF",
-        "com.linkedin.coral.spark.CoralTestUDF",
-        "ivy://com.linkedin.coral.spark.CoralTestUDF");
-
     add("com.linkedin.dali.udf.date.hive.EpochToDateFormat",
         "epochToDateFormat",
         "com.linkedin.stdudfs.spark.daliudfs.EpochToDateFormatFunctionWrapper",
@@ -51,7 +46,7 @@ class TransportableUDFMap {
     return Optional.ofNullable(UDF_MAP.get(className));
   }
 
-  private static void add(String className, String sparkFunctionName, String sparkClassName, String artifcatoryUrl) {
+  public static void add(String className, String sparkFunctionName, String sparkClassName, String artifcatoryUrl) {
     try {
       URI url = new URI(artifcatoryUrl);
       UDF_MAP.put(className, new SparkUDFInfo(sparkClassName, sparkFunctionName, url));

@@ -39,6 +39,9 @@ public class TestUtils {
     run(driver, "CREATE TABLE IF NOT EXISTS complex(a int, b string, c array<double>, s struct<name:string, age:int>, m map<int, string>, sarr array<struct<name:string, age:int>>)");
     run(driver, "CREATE FUNCTION default_foo_dali_udf_LessThanHundred as 'com.linkedin.coral.hive.hive2rel.CoralTestUDF'");
     run(driver, "CREATE FUNCTION default_foo_dali_udf2_GreaterThanHundred as 'com.linkedin.coral.hive.hive2rel.CoralTestUDF2'");
+    run(driver, "CREATE FUNCTION default_foo_dali_udf3_GreaterThanHundred as 'com.linkedin.coral.hive.hive2rel.CoralTestUDF2'");
+    run(driver, "CREATE FUNCTION default_foo_dali_udf3_FuncSquare as 'com.linkedin.coral.hive.hive2rel.CoralTestUdfSquare'");
+    run(driver, "CREATE FUNCTION default_foo_dali_udf4_GreaterThanHundred as 'com.linkedin.coral.hive.hive2rel.CoralTestUDF2'");
     run(driver, String.join("\n","",
         "CREATE VIEW IF NOT EXISTS foo_view",
         "AS",
@@ -55,18 +58,36 @@ public class TestUtils {
     ));
     run(driver, String.join("\n","",
         "CREATE VIEW IF NOT EXISTS foo_dali_udf",
-        "tblproperties('functions' = 'LessThanHundred com.linkedin.coral.hive.hive2rel.CoralTestUDF',",
-        "              'dependencies' = 'com.linkedin:udf:1.0')",
+        "tblproperties('functions' = 'LessThanHundred:com.linkedin.coral.hive.hive2rel.CoralTestUDF',",
+        "              'dependencies' = 'ivy://com.linkedin:udf:1.0')",
         "AS",
         "SELECT default_foo_dali_udf_LessThanHundred(a)",
         "FROM foo"
     ));
     run(driver, String.join("\n","",
         "CREATE VIEW IF NOT EXISTS foo_dali_udf2",
-        "tblproperties('functions' = 'GreaterThanHundred com.linkedin.coral.hive.hive2rel.CoralTestUDF2',",
-        "              'dependencies' = 'com.linkedin:udf:1.0')",
+        "tblproperties('functions' = 'GreaterThanHundred:com.linkedin.coral.hive.hive2rel.CoralTestUDF2',",
+        "              'dependencies' = 'ivy://com.linkedin:udf:1.0')",
         "AS",
         "SELECT default_foo_dali_udf2_GreaterThanHundred(a)",
+        "FROM foo"
+    ));
+    run(driver, String.join("\n","",
+        "CREATE VIEW IF NOT EXISTS foo_dali_udf3",
+        "tblproperties('functions' = ",
+        "'FuncSquare:com.linkedin.coral.hive.hive2rel.CoralTestUdfSquare GreaterThanHundred:com.linkedin.coral.hive.hive2rel.CoralTestUDF2',",
+        "              'dependencies' = 'ivy://com.linkedin:udf:1.1 ivy://com.linkedin:udf:1.0')",
+        "AS",
+        "SELECT default_foo_dali_udf3_FuncSquare(a), default_foo_dali_udf3_GreaterThanHundred(a) ",
+        "FROM foo"
+    ));
+    // foo_dali_udf4 is same as foo_dali_udf2, except we add extra space in dependencies parameter
+    run(driver, String.join("\n","",
+        "CREATE VIEW IF NOT EXISTS foo_dali_udf4",
+        "tblproperties('functions' = 'GreaterThanHundred:com.linkedin.coral.hive.hive2rel.CoralTestUDF2',",
+        "              'dependencies' = '  ivy://com.linkedin:udf:1.0  ')",
+        "AS",
+        "SELECT default_foo_dali_udf4_GreaterThanHundred(a)",
         "FROM foo"
     ));
     run(driver, String.join("\n","",

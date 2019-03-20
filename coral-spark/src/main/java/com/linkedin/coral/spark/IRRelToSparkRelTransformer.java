@@ -236,13 +236,16 @@ class IRRelToSparkRelTransformer {
         // We get SparkUDFInfo object for Dali UDF only which has '.' in the function class name.
         // We do not need to handle the  keyword built-in functions.
         String functionName = functions.iterator().next().getHiveFunctionName();
-        // TODO: need to revise dependencyString after fixing LIHADOOP-44515
-        String dependencyString = "com.linkedin:udf:1.0";
+
+        //[LIHADOOP-44515] need to provide UDF dependency with ivy coordinates
+        String dependencyString = functions.iterator().next().getUdfDependency();
         try {
           URI artifactoryUri = new URI(dependencyString);
           SparkUDFInfo sparkUdfOne = new SparkUDFInfo(functionClassName, functionName, artifactoryUri);
           sparkUDFInfo = Optional.of(sparkUdfOne);
-          LOG.info("Function " + functionName + " is not a Builtin UDF or Transportable UDF.  We fall back to its Hive function.");
+          LOG.info("Function: " + functionName
+              + " is not a Builtin UDF or Transportable UDF.  We fall back to its Hive function with ivy dependency: "
+              + dependencyString);
         } catch (URISyntaxException e) {
           throw new RuntimeException(String.format("Artifactory URL is malformed: %s", dependencyString), e);
         }

@@ -1,11 +1,14 @@
 package com.linkedin.coral.hive.hive2rel;
 
 import com.google.common.collect.ImmutableList;
+import com.linkedin.coral.functions.StaticHiveFunctionRegistry;
 import com.linkedin.coral.functions.UnknownSqlFunctionException;
 import java.io.IOException;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.runtime.CalciteContextException;
+import org.apache.calcite.sql.type.ReturnTypes;
+import org.apache.calcite.sql.type.SqlTypeFamily;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.tools.RelBuilder;
 import org.apache.hadoop.hive.metastore.api.MetaException;
@@ -15,6 +18,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import static com.linkedin.coral.hive.hive2rel.ToRelConverter.*;
+import static org.apache.calcite.sql.type.OperandTypes.*;
 import static org.testng.Assert.*;
 
 
@@ -23,6 +27,15 @@ public class HiveToRelConverterTest {
   @BeforeClass
   public static void beforeClass() throws IOException, HiveException, MetaException {
     ToRelConverter.setup();
+
+    // add the following 3 test UDF to StaticHiveFunctionRegistry for testing purpose.
+    StaticHiveFunctionRegistry.createAddUserDefinedFunction("com.linkedin.coral.hive.hive2rel.CoralTestUDF", ReturnTypes.BOOLEAN,
+        family(SqlTypeFamily.INTEGER), "com.linkedin:udf:1.0");
+    StaticHiveFunctionRegistry.createAddUserDefinedFunction("com.linkedin.coral.hive.hive2rel.CoralTestUDF2", ReturnTypes.BOOLEAN,
+        family(SqlTypeFamily.INTEGER), "com.linkedin:udf:1.0");
+    StaticHiveFunctionRegistry.createAddUserDefinedFunction("com.linkedin.coral.hive.hive2rel.CoralTestUdfSquare", ReturnTypes.INTEGER,
+        family(SqlTypeFamily.INTEGER), "com.linkedin:udf:1.1");
+
   }
 
   @Test

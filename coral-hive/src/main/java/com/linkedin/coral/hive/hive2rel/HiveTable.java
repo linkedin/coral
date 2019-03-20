@@ -1,12 +1,14 @@
 package com.linkedin.coral.hive.hive2rel;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
 import com.linkedin.coral.com.google.common.base.Throwables;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 import org.apache.calcite.DataContext;
 import org.apache.calcite.config.CalciteConnectionConfig;
 import org.apache.calcite.linq4j.Enumerable;
@@ -42,6 +44,34 @@ public class HiveTable implements ScannableTable {
   private Deserializer deserializer;
 
   /**
+   * Any functions the user registers during view creation should also be
+   * specified in the table properties of the created view under the key
+   * {@value #TBLPROPERTIES_FUNCTIONS_KEY}
+   *
+   * e.g 'functions' = 'f:c1 g:c2'
+   */
+  static final String TBLPROPERTIES_FUNCTIONS_KEY = "functions";
+
+  /**
+   * Any dependencies the user adds during view creation can be
+   * specified in the table properties of the created view under the key
+   * {@value #TBLPROPERTIES_DEPENDENCIES_KEY} or under
+   * [fn].{@value #TBLPROPERTIES_DEPENDENCIES_KEY} for function specific
+   * dependencies
+   *
+   * e.g 'dependencies' = 'o1:m1:v1 o2:m2:v2?transitive=false'
+   */
+  static final String TBLPROPERTIES_DEPENDENCIES_KEY = "dependencies";
+
+  private static Splitter tblpropertiesSplitter = Splitter
+      .on(Pattern.compile("\\s+"))
+      .omitEmptyStrings()
+      .trimResults();
+
+  private static Splitter.MapSplitter functionsKeyValueSplitter = tblpropertiesSplitter
+      .withKeyValueSeparator(Splitter.on(":").limit(2));
+
+  /**
    * Constructor to create bridge from hive table to calcite table
    * @param hiveTable Hive table
    */
@@ -51,20 +81,40 @@ public class HiveTable implements ScannableTable {
   }
 
   /**
-   * Get dali function params from table parameters
+   * Get dali function params from table TBLPROPERTIES clause parameters.
+   * The 'functions' parameter in TBLPROPERTIES clause is a whitespace-separated list of function base name
+   * used in the view, followed by colon(:), followed by the corresponding full class names.  Example:
+   * 'functions' = 'func_1:com.linkedin.Func1 func_2:com.linkedin.Func2'
    * @return returns a mapping of function name to class name as stored in the
    * {@code functions} parameter key of table parameters
    */
   public Map<String, String> getDaliFunctionParams() {
     checkDaliTable();
-    String[] funcEntries = hiveTable.getParameters()
-        .getOrDefault("functions", "")
-        .split(" |:");
+    final String functionsValue = hiveTable.getParameters().get(TBLPROPERTIES_FUNCTIONS_KEY);
     Map<String, String> params = new HashMap<>();
-    for (int i = 0; i < funcEntries.length - 1; i += 2) {
-      params.put(funcEntries[i], funcEntries[i + 1]);
+    if (functionsValue != null) {
+      params = functionsKeyValueSplitter.split(functionsValue);
     }
     return params;
+  }
+
+  /**
+   * Get dali dependencies params from table TBLPROPERTIES clause.
+   * The 'dependencies' parameter in TBLPROPERTIES clause is a whitespace-separated list of the ivy coordinates
+   * of the jars a UDF comes from.  Example:
+   * 'dependencies' = 'ivy://com.linkedin.foo:foo1:0.0.1 ivy://com.linkedin.foo:foo2:0.0.1'
+   * @return returns a string list of the ivy coordinates as stored in the
+   * {@code dependencies} parameter key of table parameters.  The return value is null if
+   * {@code dependencies} is not configured.
+   */
+  public List<String> getDaliFunctionDependency() {
+    checkDaliTable();
+    final String dependenciesValue = hiveTable.getParameters().get(TBLPROPERTIES_DEPENDENCIES_KEY);
+    List<String> funcDependencies = null;
+    if (dependenciesValue != null) {
+      funcDependencies = tblpropertiesSplitter.splitToList(dependenciesValue);
+    }
+    return funcDependencies;
   }
 
   public boolean isDaliTable() {

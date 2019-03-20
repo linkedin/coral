@@ -48,7 +48,8 @@ public final class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
   static final Multimap<String, HiveFunction> FUNCTION_MAP = HashMultimap.create();
 
   private StaticHiveFunctionRegistry() {
-    // NOTE: all function names should be lowercase for case-insensitive comparison
+    // NOTE: all built-in keyword-based function names should be lowercase for case-insensitive comparison.
+    // All Dali UDFs should have case sensitive function class names when we do comparison to look up.
     // FIXME: This mapping is currently incomplete
     // aggregation functions
     addFunctionEntry("sum", SUM);
@@ -357,11 +358,6 @@ public final class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
 
     // UDTFs
     addFunctionEntry("explode", HiveExplodeOperator.EXPLODE);
-    // A KLUDGE FOR UNIT TESTING
-    createAddUserDefinedFunction("com.linkedin.coral.hive.hive2rel.CoralTestUDF", ReturnTypes.BOOLEAN,
-        family(SqlTypeFamily.INTEGER));
-    createAddUserDefinedFunction("com.linkedin.coral.hive.hive2rel.CoralTestUDF2", ReturnTypes.BOOLEAN,
-        family(SqlTypeFamily.INTEGER));
   }
 
   /**
@@ -404,12 +400,25 @@ public final class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
     FUNCTION_MAP.put(functionName, new HiveFunction(functionName, operator));
   }
 
-  private static void createAddUserDefinedFunction(String functionName, SqlReturnTypeInference returnTypeInference,
+  private static void addFunctionEntry(String functionName, SqlOperator operator, String dependency) {
+    FUNCTION_MAP.put(functionName, new HiveFunction(functionName, operator, dependency));
+  }
+
+  public static void createAddUserDefinedFunction(String functionName, SqlReturnTypeInference returnTypeInference,
       SqlOperandTypeChecker operandTypeChecker) {
     addFunctionEntry(functionName, createCalciteUDF(functionName, returnTypeInference, operandTypeChecker));
   }
 
-  private static void createAddUserDefinedFunction(String functionName, SqlReturnTypeInference returnTypeInference) {
+  public static void createAddUserDefinedFunction(String functionName, SqlReturnTypeInference returnTypeInference,
+      SqlOperandTypeChecker operandTypeChecker, String dependency) {
+    String depPrefix  = dependency.substring(0, 5).toLowerCase();
+    if (!depPrefix.equals("ivy://")) {
+      dependency = "ivy://" + dependency;
+    }
+    addFunctionEntry(functionName, createCalciteUDF(functionName, returnTypeInference, operandTypeChecker), dependency);
+  }
+
+  public static void createAddUserDefinedFunction(String functionName, SqlReturnTypeInference returnTypeInference) {
     addFunctionEntry(functionName, createCalciteUDF(functionName, returnTypeInference));
   }
 
