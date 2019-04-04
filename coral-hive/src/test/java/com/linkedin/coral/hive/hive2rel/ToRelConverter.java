@@ -6,6 +6,7 @@ import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.rel2sql.RelToSqlConverter;
 import org.apache.calcite.sql.SqlDialect;
+import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.tools.RelBuilder;
 import org.apache.hadoop.hive.metastore.IMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.MetaException;
@@ -35,6 +36,8 @@ class ToRelConverter {
     return msc;
   }
 
+  public static RelContextProvider getRelContextProvider() { return relContextProvider; }
+
   static RelNode toRel(String sql) {
     return converter.convertSql(sql);
   }
@@ -45,6 +48,15 @@ class ToRelConverter {
 
   static String sqlToRelStr(String sql) {
     return relToStr(toRel(sql));
+  }
+
+  static SqlNode viewToSqlNode(String database, String table) {
+    return converter.getTreeBuilder().processView(database, table);
+  }
+
+  static String viewToRelStr(String database, String table) {
+    RelNode rel = converter.convertView(database, table);
+    return relToStr(rel);
   }
 
   static RelBuilder createRelBuilder() {

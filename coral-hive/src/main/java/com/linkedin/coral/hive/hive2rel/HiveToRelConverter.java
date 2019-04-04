@@ -2,9 +2,11 @@ package com.linkedin.coral.hive.hive2rel;
 
 import com.linkedin.coral.com.google.common.annotations.VisibleForTesting;
 import com.linkedin.coral.hive.hive2rel.parsetree.ParseTreeBuilder;
+import javax.annotation.Nullable;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelRoot;
 import org.apache.calcite.sql.SqlNode;
+import org.apache.hadoop.hive.metastore.api.Table;
 
 import static com.google.common.base.Preconditions.*;
 
@@ -55,6 +57,7 @@ public class HiveToRelConverter {
    */
   public RelNode convertSql(String sql) {
     SqlNode sqlNode = getTreeBuilder().processSql(sql);
+    // TODO(ralam): Switch toRel to use the FuzzyUnion version with a null table
     return toRel(sqlNode);
   }
 
@@ -80,17 +83,41 @@ public class HiveToRelConverter {
    */
   public RelNode convertView(String hiveDbName, String hiveViewName) {
     SqlNode sqlNode = getTreeBuilder().processView(hiveDbName, hiveViewName);
+
+    // TODO(ralam): Remove the if statement and switch toRel to use the FuzzyUnion version
+    if (false) {
+      HiveMetastoreClient msc = relContextProvider.getHiveSchema().getHiveMetastoreClient();
+      Table table = msc.getTable(hiveDbName, hiveViewName);
+    }
+
     return toRel(sqlNode);
   }
 
-  private ParseTreeBuilder getTreeBuilder() {
+  @VisibleForTesting
+  protected ParseTreeBuilder getTreeBuilder() {
     return new ParseTreeBuilder(relContextProvider.getHiveSchema().getHiveMetastoreClient(),
         relContextProvider.getParseTreeBuilderConfig());
   }
 
+  // TODO(ralam): Remove this toRel and use the toRel method that takes in a table input.
   @VisibleForTesting
   RelNode toRel(SqlNode sqlNode) {
     RelRoot root = relContextProvider.getSqlToRelConverter().convertQuery(sqlNode, true, true);
+    return standardizeRel(root.rel);
+  }
+
+  @VisibleForTesting
+  RelNode toRel(SqlNode sqlNode, @Nullable Table table) {
+    RelRoot root;
+    try {
+      root = relContextProvider.getSqlToRelConverter().convertQuery(sqlNode, true, true);
+    } catch (Exception e) {
+      if (table == null) {
+        throw e;
+      }
+      sqlNode.accept(new FuzzyUnionSqlRewriter(table, relContextProvider));
+      root = relContextProvider.getSqlToRelConverter().convertQuery(sqlNode, true, true);
+    }
     return standardizeRel(root.rel);
   }
 }
