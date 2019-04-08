@@ -83,18 +83,11 @@ public class HiveToRelConverter {
    */
   public RelNode convertView(String hiveDbName, String hiveViewName) {
     SqlNode sqlNode = getTreeBuilder().processView(hiveDbName, hiveViewName);
-
-    // TODO(ralam): Remove the if statement and switch toRel to use the FuzzyUnion version
-    if (false) {
-      HiveMetastoreClient msc = relContextProvider.getHiveSchema().getHiveMetastoreClient();
-      Table table = msc.getTable(hiveDbName, hiveViewName);
-    }
-
     return toRel(sqlNode);
   }
 
   @VisibleForTesting
-  protected ParseTreeBuilder getTreeBuilder() {
+  ParseTreeBuilder getTreeBuilder() {
     return new ParseTreeBuilder(relContextProvider.getHiveSchema().getHiveMetastoreClient(),
         relContextProvider.getParseTreeBuilderConfig());
   }
@@ -108,16 +101,8 @@ public class HiveToRelConverter {
 
   @VisibleForTesting
   RelNode toRel(SqlNode sqlNode, @Nullable Table table) {
-    RelRoot root;
-    try {
-      root = relContextProvider.getSqlToRelConverter().convertQuery(sqlNode, true, true);
-    } catch (Exception e) {
-      if (table == null) {
-        throw e;
-      }
-      sqlNode.accept(new FuzzyUnionSqlRewriter(table, relContextProvider));
-      root = relContextProvider.getSqlToRelConverter().convertQuery(sqlNode, true, true);
-    }
+    sqlNode.accept(new FuzzyUnionSqlRewriter(table, relContextProvider));
+    RelRoot root = relContextProvider.getSqlToRelConverter().convertQuery(sqlNode, true, true);
     return standardizeRel(root.rel);
   }
 }

@@ -1,6 +1,8 @@
 package com.linkedin.coral.hive.hive2rel;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+import com.linkedin.coral.functions.GenericProjectFunction;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -12,6 +14,7 @@ import org.apache.calcite.sql.SqlBasicCall;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlKind;
+import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlNodeList;
 import org.apache.calcite.sql.SqlSelect;
@@ -44,7 +47,7 @@ import org.apache.hadoop.hive.metastore.api.Table;
  *   FROM a
  *   UNION ALL
  *   SELECT *
- *   FROM b'
+ *   FROM b
  *
  * This view will be initially deployed successfully because both branches of the union are the same.
  * Let's name the view, 'view_c', and assume it was deployed in a database, 'database_d'.
@@ -60,14 +63,18 @@ import org.apache.hadoop.hive.metastore.api.Table;
  *   SELECT *
  *   FROM a
  *   UNION ALL
- *   SELECT view_c.f, generic_project(view_c.b, database_d.view_c.b)
+ *   SELECT view_c.f, generic_project(view_c.f1, 'view_c.f1') as f1
  *   FROM (
  *     SELECT * from b
- *   ) as view_c'
+ *   ) as view_c
  *
- * It is up to the coral modules for a specific engine (spark/presto) to resolve the schema for database_d.view_c.b.
+ * The expected schema will be inserted as the return type of the generic_project SQL function.
+ * The first parameter will be a reference to the column to be fixed.
+ * The second parameter will be a string literal containing the name of the column.
+ *
+ * It is up to the coral modules for a specific engine (spark/presto) to resolve the schema of b.f1.
  */
-public class FuzzyUnionSqlRewriter extends SqlShuttle {
+class FuzzyUnionSqlRewriter extends SqlShuttle {
 
   private final Table table;
   private final RelDataType tableDataType;
@@ -79,14 +86,36 @@ public class FuzzyUnionSqlRewriter extends SqlShuttle {
     this.relContextProvider = relContextProvider;
     HiveTable hiveTable = new HiveTable(table);
     this.tableDataType = hiveTable.getRowType(relContextProvider.getHiveSqlValidator().getTypeFactory());
-    this.columnNames = table.getSd().getCols().stream().map(
-        field -> field.getName().toLowerCase()).collect(Collectors.toList());
+    this.columnNames = Lists.transform(table.getSd().getCols(), field -> field.getName().toLowerCase());
+  }
+
+  @Override
+  public SqlNode visit(SqlCall call) {
+    if (call.getOperator().getKind() == SqlKind.UNION) {
+      call = addFuzzyUnionToUnionCall(call);
+    }
+    ArgHandler<SqlNode> argHandler = new CallCopyingArgHandler(call, false);
+    call.getOperator().acceptCall(this, call, false, argHandler);
+    return argHandler.result();
   }
 
   /**
-   * TODO(ralam): Leave it as an empty void function for now. Implement this function.
+   * Create a SqlNode that calls GenericProject for the given column
+   * @param columnName The name of the column that is to be fixed
    */
-  private void createGenericProject(String columnName) {
+  private SqlNode createGenericProject(String columnName) {
+    SqlNode[] genericProjectOperands = new SqlNode[2];
+    genericProjectOperands[0] =
+        new SqlIdentifier(ImmutableList.of(table.getTableName(), columnName), SqlParserPos.ZERO);
+    genericProjectOperands[1] = SqlLiteral.createCharString(columnName, SqlParserPos.ZERO);
+    RelDataTypeField columnField = tableDataType.getField(columnName, false, true);
+    SqlBasicCall genericProjectCall = new SqlBasicCall(new GenericProjectFunction(columnField.getType()),
+        genericProjectOperands, SqlParserPos.ZERO);
+    SqlNode[] castAsColumnOperands = new SqlNode[2];
+    castAsColumnOperands[0] = genericProjectCall;
+    castAsColumnOperands[1] = new SqlIdentifier(columnName, SqlParserPos.ZERO);
+    SqlBasicCall castAsCall = new SqlBasicCall(new SqlAsOperator(), castAsColumnOperands, SqlParserPos.ZERO);
+    return castAsCall;
   }
 
   /**
@@ -105,13 +134,11 @@ public class FuzzyUnionSqlRewriter extends SqlShuttle {
     SqlNodeList projectedFields = new SqlNodeList(SqlParserPos.ZERO);
     for (FieldSchema field : table.getSd().getCols()) {
       SqlNode projectedField;
-      RelDataTypeField schemaDataTypeField = tableDataType.getField(field.getName(), false, true);
-      RelDataTypeField inputDataTypeField = fromNodeDataType.getField(field.getName(), false, true);
+      RelDataTypeField schemaDataTypeField = tableDataType.getField(field.getName(), false, false);
+      RelDataTypeField inputDataTypeField = fromNodeDataType.getField(field.getName(), false, false);
       if (field.getType().contains("struct")
           && !schemaDataTypeField.equals(inputDataTypeField)) {
-        // TODO(ralam): Placeholder. Create an actual node that is a SqlBasicCall of a GenericProject SqlOperator
-        projectedField = new SqlIdentifier(ImmutableList.of(table.getDbName(), table.getTableName(),
-            field.getName(), "genericPROJECT"), SqlParserPos.ZERO);
+        projectedField = createGenericProject(field.getName());
       } else {
         projectedField = new SqlIdentifier(ImmutableList.of(
             table.getTableName(), field.getName()), SqlParserPos.ZERO);
@@ -176,35 +203,30 @@ public class FuzzyUnionSqlRewriter extends SqlShuttle {
   private SqlCall addFuzzyUnionToUnionCall(SqlCall unionCall) {
     for (int i = 0; i < unionCall.operandCount(); ++i) {
       SqlNode operand = unionCall.operand(i);
-      if (operand instanceof SqlCall) {
-        SqlCall operandCall = (SqlCall) operand;
-
-        // Since a union is represented as a binary operator in calcite, chaining unions would have an AST like:
-        // Given A UNION B UNION C, the SqlNode AST would look something like:
-        //      U
-        //     / \
-        //    A   U
-        //       / \
-        //      B   C
-        // From the root node, we can see that one of the operands is another union.
-        // In this case, we do not need to apply fuzzy union semantics to the union itself.
-        // The fuzzy union semantics only need to be applied to the children of ths union.
-        if (operandCall.getOperator().getKind() == SqlKind.UNION) {
-          continue;
-        }
+      // Since a union is represented as a binary operator in calcite, chaining unions would have an AST like:
+      // Given A UNION B UNION C, the SqlNode AST would look something like:
+      //      U
+      //     / \
+      //    A   U
+      //       / \
+      //      B   C
+      // From the root node, we can see that one of the operands is another union.
+      // In this case, we do not need to apply fuzzy union semantics to the union itself.
+      // The fuzzy union semantics only need to be applied to the children of ths union.
+      if (!isUnionOperator(operand)) {
+        unionCall.setOperand(i, addFuzzyUnionToUnionBranch(operand));
       }
-      unionCall.setOperand(i, addFuzzyUnionToUnionBranch(operand));
     }
     return unionCall;
   }
 
-  @Override
-  public SqlNode visit(SqlCall call) {
-    if (call.getOperator().getKind() == SqlKind.UNION) {
-      call = addFuzzyUnionToUnionCall(call);
-    }
-    ArgHandler<SqlNode> argHandler = new CallCopyingArgHandler(call, false);
-    call.getOperator().acceptCall(this, call, false, argHandler);
-    return argHandler.result();
+  /**
+   * Determines if the SqlNode is a UNION call
+   * @param node a given SqlNode to evaluate
+   * @return true if the SqlNode is a UNION call; false otherwise
+   */
+  private boolean isUnionOperator(SqlNode node) {
+    return (node instanceof SqlCall)
+        && ((SqlCall) node).getOperator().getKind() == SqlKind.UNION;
   }
 }

@@ -54,6 +54,11 @@ class ToRelConverter {
     return converter.getTreeBuilder().processView(database, table);
   }
 
+  static String nodeToStr(SqlNode sqlNode) {
+    RelNode relNode = converter.toRel(sqlNode);
+    return relToSql(relNode);
+  }
+
   static String viewToRelStr(String database, String table) {
     RelNode rel = converter.convertView(database, table);
     return relToStr(rel);
