@@ -10,6 +10,16 @@ dependencies {
   compile spec.external.gson
 
   testCompile spec.external.'presto-parser'
+
+  testCompile project(path: ':coral-hive')
+
+  testCompile (spec.product.hive.'hive-exec') {
+    exclude group: 'org.apache.avro', module: 'avro-tools'
+    // These exclusions are required to prevent duplicate classes since we include
+    // shaded jar above
+    exclude group: 'org.apache.calcite', module: 'calcite-core'
+    exclude group: 'org.apache.calcite', module: 'calcite-avatica'
+  }
 }
 
 def pomPath = "$buildDir/${name}.pom"

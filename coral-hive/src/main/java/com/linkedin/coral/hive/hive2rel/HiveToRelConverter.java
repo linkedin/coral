@@ -86,6 +86,16 @@ public class HiveToRelConverter {
     return toRel(sqlNode);
   }
 
+  /**
+   * TODO(ralam): Temporary function that is used for unit tests. Make this body the convertView function
+   */
+  public RelNode convertViewWithFuzzyUnion(String hiveDbName, String hiveViewName) {
+    SqlNode sqlNode = getTreeBuilder().processView(hiveDbName, hiveViewName);
+    HiveMetastoreClient msc = relContextProvider.getHiveSchema().getHiveMetastoreClient();
+    Table table = msc.getTable(hiveDbName, hiveViewName);
+    return toRel(sqlNode, table);
+  }
+
   @VisibleForTesting
   ParseTreeBuilder getTreeBuilder() {
     return new ParseTreeBuilder(relContextProvider.getHiveSchema().getHiveMetastoreClient(),

@@ -1,0 +1,228 @@
+package com.linkedin.coral.presto.rel2presto.functions;
+
+import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.Multimap;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeField;
+import org.apache.calcite.rel.type.RelDataTypeFieldImpl;
+import org.apache.calcite.rel.type.RelDataTypeSystem;
+import org.apache.calcite.rel.type.RelRecordType;
+import org.apache.calcite.sql.type.ArraySqlType;
+import org.apache.calcite.sql.type.BasicSqlType;
+import org.apache.calcite.sql.type.MapSqlType;
+import org.apache.calcite.sql.type.SqlTypeName;
+import org.testng.annotations.Test;
+
+import static org.testng.Assert.*;
+
+public class RelDataTypeToPrestoTypeStringConverterTest {
+
+  private static final String CHAR = "char";
+  private static final String VARCHAR = "varchar";
+  private static final String INTEGER = "integer";
+  private static final String SMALLINT = "smallint";
+  private static final String TINYINT = "tinyint";
+  private static final String BIGINT = "bigint";
+  private static final String DOUBLE = "double";
+  private static final String REAL = "real";
+  private static final String BOOLEAN = "boolean";
+  private static final String DATE = "date";
+  private static final String TIMESTAMP = "timestamp";
+  private static final String TIME = "time";
+  private static final String VARBINARY = "varbinary";
+
+  @Test
+  public void testPrimitiveRelDataType() {
+    Multimap<String, SqlTypeName> prestoTypeCastStringToSqlTypeNameMap =
+        new ImmutableMultimap.Builder<String, SqlTypeName>()
+            .put(CHAR, SqlTypeName.CHAR)
+            .put(VARCHAR, SqlTypeName.VARCHAR)
+            .put(INTEGER, SqlTypeName.INTEGER)
+            .put(SMALLINT, SqlTypeName.SMALLINT)
+            .put(TINYINT, SqlTypeName.TINYINT)
+            .put(BIGINT, SqlTypeName.BIGINT)
+            .put(DOUBLE, SqlTypeName.DOUBLE)
+            .put(REAL, SqlTypeName.REAL)
+            .put(REAL, SqlTypeName.FLOAT)
+            .put(BOOLEAN, SqlTypeName.BOOLEAN)
+            .put(DATE, SqlTypeName.DATE)
+            .put(TIMESTAMP, SqlTypeName.TIMESTAMP)
+            .put(TIME, SqlTypeName.TIME)
+            .put(VARBINARY, SqlTypeName.BINARY)
+            .put(VARBINARY, SqlTypeName.VARBINARY)
+            .build();
+    for (Map.Entry<String, SqlTypeName> entry : prestoTypeCastStringToSqlTypeNameMap.entries()) {
+      String expectedPrestoTypeCastString = entry.getKey();
+      SqlTypeName sqlTypeName = entry.getValue();
+      RelDataType relDataType = new BasicSqlType(RelDataTypeSystem.DEFAULT, sqlTypeName);
+      String prestoTypeCastString = RelDataTypeToPrestoTypeStringConverter.buildPrestoTypeString(relDataType);
+      assertEquals(prestoTypeCastString, expectedPrestoTypeCastString);
+    }
+  }
+
+  @Test
+  public void testStructRelDataType() {
+    String expectedPrestoTypeCastString = "row(str varchar, int integer)";
+
+    List<RelDataTypeField> fields = new ArrayList();
+    fields.add(new RelDataTypeFieldImpl("str", 0, new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.VARCHAR)));
+    fields.add(new RelDataTypeFieldImpl("int", 0, new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.INTEGER)));
+
+    RelRecordType relRecordType = new RelRecordType(fields);
+    String prestoTypeCastString = RelDataTypeToPrestoTypeStringConverter.buildPrestoTypeString(relRecordType);
+    assertEquals(prestoTypeCastString, expectedPrestoTypeCastString);
+  }
+
+  @Test
+  public void testArrayRelDataType() {
+    String expectedPrestoTypeCastString = "array(integer)";
+
+    ArraySqlType arraySqlType = new ArraySqlType(
+        new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.INTEGER), true);
+    String prestoTypeCastString = RelDataTypeToPrestoTypeStringConverter.buildPrestoTypeString(arraySqlType);
+
+    assertEquals(prestoTypeCastString, expectedPrestoTypeCastString);
+  }
+
+  @Test
+  public void testMapRelDataType() {
+    String expectedPrestoTypeCastString = "map(integer, integer)";
+
+    MapSqlType mapSqlType = new MapSqlType(new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.INTEGER),
+      new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.INTEGER),true);
+    String prestoTypeCastString = RelDataTypeToPrestoTypeStringConverter.buildPrestoTypeString(mapSqlType);
+
+    assertEquals(prestoTypeCastString, expectedPrestoTypeCastString);
+  }
+
+  @Test
+  public void testNestedStructRelDataType() {
+    String expectedPrestoTypeCastString = "row(str varchar, struct row(str varchar, int integer))";
+
+    List<RelDataTypeField> nestedFields = new ArrayList();
+    nestedFields.add(new RelDataTypeFieldImpl("str", 0,
+        new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.VARCHAR)));
+    nestedFields.add(new RelDataTypeFieldImpl("int", 0,
+        new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.INTEGER)));
+
+    RelRecordType nestedRelRecordType = new RelRecordType(nestedFields);
+
+    List<RelDataTypeField> fields = new ArrayList();
+    fields.add(new RelDataTypeFieldImpl("str", 0,
+        new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.VARCHAR)));
+    fields.add(new RelDataTypeFieldImpl("struct", 0,
+        nestedRelRecordType));
+
+    RelRecordType relRecordType = new RelRecordType(fields);
+    String prestoTypeCastString = RelDataTypeToPrestoTypeStringConverter.buildPrestoTypeString(relRecordType);
+    assertEquals(prestoTypeCastString, expectedPrestoTypeCastString);
+  }
+
+  @Test
+  public void testMapWithStructValueRelDataType() {
+    String expectedPrestoTypeCastString = "map(integer, row(str varchar, int integer))";
+
+    List<RelDataTypeField> fields = new ArrayList();
+    fields.add(new RelDataTypeFieldImpl("str", 0,
+        new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.VARCHAR)));
+    fields.add(new RelDataTypeFieldImpl("int", 0,
+        new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.INTEGER)));
+
+    RelRecordType relRecordType = new RelRecordType(fields);
+
+    MapSqlType mapSqlType = new MapSqlType(new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.INTEGER),
+        relRecordType, true);
+    String prestoTypeCastString = RelDataTypeToPrestoTypeStringConverter.buildPrestoTypeString(mapSqlType);
+
+    assertEquals(prestoTypeCastString, expectedPrestoTypeCastString);
+  }
+
+  @Test
+  public void testArrayWithStructEleRelDataType() {
+    String expectedPrestoTypeCastString = "array(row(str varchar, int integer))";
+
+    List<RelDataTypeField> fields = new ArrayList();
+    fields.add(new RelDataTypeFieldImpl("str", 0,
+        new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.VARCHAR)));
+    fields.add(new RelDataTypeFieldImpl("int", 0,
+        new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.INTEGER)));
+
+    RelRecordType relRecordType = new RelRecordType(fields);
+
+    ArraySqlType arraySqlType = new ArraySqlType(relRecordType, true);
+    String prestoTypeCastString = RelDataTypeToPrestoTypeStringConverter.buildPrestoTypeString(arraySqlType);
+
+    assertEquals(prestoTypeCastString, expectedPrestoTypeCastString);
+  }
+
+  @Test
+  public void testComplexRelDataType() {
+    String expectedPrestoTypeCastString = "map(integer, array(row(str varchar, struct row(str varchar, int integer))))";
+
+    List<RelDataTypeField> nestedFields = new ArrayList();
+    nestedFields.add(new RelDataTypeFieldImpl("str", 0,
+        new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.VARCHAR)));
+    nestedFields.add(new RelDataTypeFieldImpl("int", 0,
+        new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.INTEGER)));
+
+    RelRecordType nestedRelRecordType = new RelRecordType(nestedFields);
+
+    List<RelDataTypeField> fields = new ArrayList();
+    fields.add(new RelDataTypeFieldImpl("str", 0,
+        new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.VARCHAR)));
+    fields.add(new RelDataTypeFieldImpl("struct", 0,
+        nestedRelRecordType));
+
+    RelRecordType relRecordType = new RelRecordType(fields);
+
+    ArraySqlType arraySqlType = new ArraySqlType(relRecordType, true);
+
+    MapSqlType mapSqlType = new MapSqlType(new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.INTEGER),
+        arraySqlType, true);
+    String prestoTypeCastString = RelDataTypeToPrestoTypeStringConverter.buildPrestoTypeString(mapSqlType);
+
+    assertEquals(prestoTypeCastString, expectedPrestoTypeCastString);
+  }
+
+  @Test
+  public void testDifferentTypeStructRelDataType() {
+    String expectedPrestoTypeCastString = "row("
+        + "int integer, "
+        + "small smallint, "
+        + "tiny tinyint, "
+        + "big bigint, "
+        + "rea real, "
+        + "flo real, "
+        + "bool boolean, "
+        + "ch char, "
+        + "vch varchar, "
+        + "dat date, "
+        + "tstamp timestamp, "
+        + "tim time, "
+        + "bin varbinary, "
+        + "vbin varbinary)";
+
+    List<RelDataTypeField> fields = new ArrayList();
+    fields.add(new RelDataTypeFieldImpl("int", 0, new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.INTEGER)));
+    fields.add(new RelDataTypeFieldImpl("small", 0, new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.SMALLINT)));
+    fields.add(new RelDataTypeFieldImpl("tiny", 0, new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.TINYINT)));
+    fields.add(new RelDataTypeFieldImpl("big", 0, new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.BIGINT)));
+    fields.add(new RelDataTypeFieldImpl("rea", 0, new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.REAL)));
+    fields.add(new RelDataTypeFieldImpl("flo", 0, new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.FLOAT)));
+    fields.add(new RelDataTypeFieldImpl("bool", 0, new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.BOOLEAN)));
+    fields.add(new RelDataTypeFieldImpl("ch", 0, new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.CHAR)));
+    fields.add(new RelDataTypeFieldImpl("vch", 0, new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.VARCHAR)));
+    fields.add(new RelDataTypeFieldImpl("dat", 0, new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.DATE)));
+    fields.add(new RelDataTypeFieldImpl("tstamp", 0, new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.TIMESTAMP)));
+    fields.add(new RelDataTypeFieldImpl("tim", 0, new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.TIME)));
+    fields.add(new RelDataTypeFieldImpl("bin", 0, new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.BINARY)));
+    fields.add(new RelDataTypeFieldImpl("vbin", 0, new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.VARBINARY)));
+
+    RelRecordType relRecordType = new RelRecordType(fields);
+    String prestoTypeCastString = RelDataTypeToPrestoTypeStringConverter.buildPrestoTypeString(relRecordType);
+    assertEquals(prestoTypeCastString, expectedPrestoTypeCastString);
+  }
+}

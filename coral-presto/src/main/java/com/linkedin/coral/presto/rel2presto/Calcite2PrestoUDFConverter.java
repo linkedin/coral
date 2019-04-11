@@ -3,6 +3,8 @@ package com.linkedin.coral.presto.rel2presto;
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import com.linkedin.coral.com.google.common.collect.ImmutableMultimap;
 import com.linkedin.coral.com.google.common.collect.Multimap;
+import com.linkedin.coral.functions.GenericProjectFunction;
+import com.linkedin.coral.presto.rel2presto.functions.GenericProjectToPrestoConverter;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelShuttle;
 import org.apache.calcite.rel.RelShuttleImpl;
@@ -144,6 +146,15 @@ public class Calcite2PrestoUDFConverter {
 
     @Override
     public RexNode visitCall(RexCall call) {
+      // GenericProject requires a nontrivial function rewrite because of the following:
+      //   - makes use of Presto built-in UDFs transform_values for map objects and transform for array objects
+      //     which has lambda functions as parameters
+      //     - syntax is difficult for Calcite to parse
+      //   - the return type varies based on a desired schema to be projected
+      if (call.getOperator() instanceof GenericProjectFunction) {
+        return GenericProjectToPrestoConverter.convertGenericProject(rexBuilder, call);
+      }
+
       final UDFTransformer transformer =
           CalcitePrestoUDFMap.getUDFTransformer(call.getOperator().getName(), call.operands.size());
       if (transformer != null) {
