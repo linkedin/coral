@@ -1,15 +1,11 @@
 package com.linkedin.coral.presto.rel2presto;
 
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.sql.SqlNode;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
-import org.apache.thrift.TException;
-import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
-import static com.linkedin.coral.presto.rel2presto.TestUtils.*;
 import static org.testng.Assert.*;
 
 public class FuzzyUnionViewTest {
@@ -26,7 +22,7 @@ public class FuzzyUnionViewTest {
   public void testNoSchemaEvolution() {
     String database = "fuzzy_union";
     String view = "union_view";
-    RelNode relNode = TestUtils.toRelNodeFuzzyUnion(database, view);
+    RelNode relNode = TestUtils.convertView(database, view);
     String expandedSql = rel2Presto.convert(relNode);
 
     String expectedSql = ""
@@ -44,7 +40,7 @@ public class FuzzyUnionViewTest {
   public void testNoSchemaEvolutionWithMultipleTables() {
     String database = "fuzzy_union";
     String view = "union_view_with_more_than_two_tables";
-    RelNode relNode = TestUtils.toRelNodeFuzzyUnion(database, view);
+    RelNode relNode = TestUtils.convertView(database, view);
     String expandedSql = rel2Presto.convert(relNode);
 
     String expectedSql = ""
@@ -66,7 +62,7 @@ public class FuzzyUnionViewTest {
   public void testNoSchemaEvolutionWithAlias() {
     String database = "fuzzy_union";
     String view = "union_view_with_alias";
-    RelNode relNode = TestUtils.toRelNodeFuzzyUnion(database, view);
+    RelNode relNode = TestUtils.convertView(database, view);
     String expandedSql = rel2Presto.convert(relNode);
 
     String expectedSql = ""
@@ -84,7 +80,7 @@ public class FuzzyUnionViewTest {
   public void testSingleBranchSchemaEvolution() {
     String database = "fuzzy_union";
     String view = "union_view_single_branch_evolved";
-    RelNode relNode = TestUtils.toRelNodeFuzzyUnion(database, view);
+    RelNode relNode = TestUtils.convertView(database, view);
     String expandedSql = rel2Presto.convert(relNode);
 
     String expectedSql = ""
@@ -102,7 +98,7 @@ public class FuzzyUnionViewTest {
   public void testDoubleBranchSameSchemaEvolution() {
     String database = "fuzzy_union";
     String view = "union_view_double_branch_evolved_same";
-    RelNode relNode = TestUtils.toRelNodeFuzzyUnion(database, view);
+    RelNode relNode = TestUtils.convertView(database, view);
     String expandedSql = rel2Presto.convert(relNode);
 
     String expectedSql = ""
@@ -120,7 +116,7 @@ public class FuzzyUnionViewTest {
   public void testDoubleBranchDifferentSchemaEvolution() {
     String database = "fuzzy_union";
     String view = "union_view_double_branch_evolved_different";
-    RelNode relNode = TestUtils.toRelNodeFuzzyUnion(database, view);
+    RelNode relNode = TestUtils.convertView(database, view);
     String expandedSql = rel2Presto.convert(relNode);
 
     String expectedSql = ""
@@ -138,7 +134,7 @@ public class FuzzyUnionViewTest {
   public void testMoreThanTwoBranchesSchemaEvolution() {
     String database = "fuzzy_union";
     String view = "union_view_more_than_two_branches_evolved";
-    RelNode relNode = TestUtils.toRelNodeFuzzyUnion(database, view);
+    RelNode relNode = TestUtils.convertView(database, view);
     String expandedSql = rel2Presto.convert(relNode);
 
     String expectedSql = ""
@@ -160,7 +156,7 @@ public class FuzzyUnionViewTest {
   public void testMapWithStructValueSchemaEvolution() {
     String database = "fuzzy_union";
     String view = "union_view_map_with_struct_value_evolved";
-    RelNode relNode = TestUtils.toRelNodeFuzzyUnion(database, view);
+    RelNode relNode = TestUtils.convertView(database, view);
     String expandedSql = rel2Presto.convert(relNode);
 
     String expectedSql = ""
@@ -178,7 +174,7 @@ public class FuzzyUnionViewTest {
   public void testArrayWithStructValueSchemaEvolution() {
     String database = "fuzzy_union";
     String view = "union_view_array_with_struct_value_evolved";
-    RelNode relNode = TestUtils.toRelNodeFuzzyUnion(database, view);
+    RelNode relNode = TestUtils.convertView(database, view);
     String expandedSql = rel2Presto.convert(relNode);
 
     String expectedSql = ""
@@ -196,7 +192,7 @@ public class FuzzyUnionViewTest {
   public void testDeeplyNestedStructSchemaEvolution() {
     String database = "fuzzy_union";
     String view = "union_view_deeply_nested_struct_evolved";
-    RelNode relNode = TestUtils.toRelNodeFuzzyUnion(database, view);
+    RelNode relNode = TestUtils.convertView(database, view);
     String expandedSql = rel2Presto.convert(relNode);
 
     String expectedSql = ""
@@ -214,7 +210,7 @@ public class FuzzyUnionViewTest {
   public void testDeeplyNestedComplexStructSchemaEvolution() {
     String database = "fuzzy_union";
     String view = "union_view_deeply_nested_complex_struct_evolved";
-    RelNode relNode = TestUtils.toRelNodeFuzzyUnion(database, view);
+    RelNode relNode = TestUtils.convertView(database, view);
     String expandedSql = rel2Presto.convert(relNode);
 
     String expectedSql = ""

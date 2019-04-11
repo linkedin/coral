@@ -2,7 +2,6 @@ package com.linkedin.coral.hive.hive2rel;
 
 import com.linkedin.coral.com.google.common.annotations.VisibleForTesting;
 import com.linkedin.coral.hive.hive2rel.parsetree.ParseTreeBuilder;
-import javax.annotation.Nullable;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelRoot;
 import org.apache.calcite.sql.SqlNode;
@@ -57,7 +56,6 @@ public class HiveToRelConverter {
    */
   public RelNode convertSql(String sql) {
     SqlNode sqlNode = getTreeBuilder().processSql(sql);
-    // TODO(ralam): Switch toRel to use the FuzzyUnion version with a null table
     return toRel(sqlNode);
   }
 
@@ -83,17 +81,12 @@ public class HiveToRelConverter {
    */
   public RelNode convertView(String hiveDbName, String hiveViewName) {
     SqlNode sqlNode = getTreeBuilder().processView(hiveDbName, hiveViewName);
-    return toRel(sqlNode);
-  }
-
-  /**
-   * TODO(ralam): Temporary function that is used for unit tests. Make this body the convertView function
-   */
-  public RelNode convertViewWithFuzzyUnion(String hiveDbName, String hiveViewName) {
-    SqlNode sqlNode = getTreeBuilder().processView(hiveDbName, hiveViewName);
     HiveMetastoreClient msc = relContextProvider.getHiveSchema().getHiveMetastoreClient();
     Table table = msc.getTable(hiveDbName, hiveViewName);
-    return toRel(sqlNode, table);
+    if (table != null) {
+      sqlNode.accept(new FuzzyUnionSqlRewriter(table, relContextProvider));
+    }
+    return toRel(sqlNode);
   }
 
   @VisibleForTesting
@@ -102,16 +95,8 @@ public class HiveToRelConverter {
         relContextProvider.getParseTreeBuilderConfig());
   }
 
-  // TODO(ralam): Remove this toRel and use the toRel method that takes in a table input.
   @VisibleForTesting
   RelNode toRel(SqlNode sqlNode) {
-    RelRoot root = relContextProvider.getSqlToRelConverter().convertQuery(sqlNode, true, true);
-    return standardizeRel(root.rel);
-  }
-
-  @VisibleForTesting
-  RelNode toRel(SqlNode sqlNode, @Nullable Table table) {
-    sqlNode.accept(new FuzzyUnionSqlRewriter(table, relContextProvider));
     RelRoot root = relContextProvider.getSqlToRelConverter().convertQuery(sqlNode, true, true);
     return standardizeRel(root.rel);
   }

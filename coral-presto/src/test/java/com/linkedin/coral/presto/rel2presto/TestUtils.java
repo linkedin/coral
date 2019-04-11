@@ -390,16 +390,8 @@ public class TestUtils {
 
   }
 
-  public static RelNode toRelNode(String db, String view) {
+  public static RelNode convertView(String db, String view) {
     return hiveToRelConverter.convertView(db, view);
-  }
-
-  public static RelNode toRelNode(String sql) {
-    return hiveToRelConverter.convertSql(sql);
-  }
-
-  public static RelNode toRelNodeFuzzyUnion(String db, String view) {
-    return hiveToRelConverter.convertViewWithFuzzyUnion(db, view);
   }
 
   private static HiveConf loadResourceHiveConf() {
