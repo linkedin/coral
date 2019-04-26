@@ -6,6 +6,8 @@ dependencies {
   compile files("${project(':coral-calcite').buildDir.absolutePath}/libs/coral-calcite-${version}.jar") {
     builtBy project(':coral-calcite').tasks.getByName('shadowJar')
   }
+
+  compile spec.external.gson
   compile spec.external.'slf4j-api'
   compile spec.external.'slf4j-log4j12'
 

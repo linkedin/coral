@@ -2,10 +2,12 @@ package com.linkedin.coral.spark;
 
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import com.linkedin.coral.functions.HiveFunction;
+import com.linkedin.coral.functions.GenericProjectFunction;
 import com.linkedin.coral.functions.HiveNamedStructFunction;
 import com.linkedin.coral.functions.StaticHiveFunctionRegistry;
 import com.linkedin.coral.spark.containers.SparkRelInfo;
 import com.linkedin.coral.spark.containers.SparkUDFInfo;
+import com.linkedin.coral.spark.utils.RelDataTypeToSparkDataTypeStringConverter;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -30,6 +32,7 @@ import org.apache.calcite.rel.logical.LogicalProject;
 import org.apache.calcite.rel.logical.LogicalSort;
 import org.apache.calcite.rel.logical.LogicalUnion;
 import org.apache.calcite.rel.logical.LogicalValues;
+import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rel.type.RelRecordType;
 import org.apache.calcite.rex.RexBuilder;
@@ -193,10 +196,11 @@ class IRRelToSparkRelTransformer {
 
       RexNode convertToNewNode = convertToZeroBasedArrayIndex(updatedCall)
           .orElseGet(() -> convertToNamedStruct(updatedCall)
+          .orElseGet(() -> convertFuzzyUnionGenericProject(updatedCall)
           .orElseGet(() -> convertBuiltInUDF(updatedCall)  // try BuiltInUDF first since it is used more often
           .orElseGet(() -> convertDaliUDF(updatedCall)
           .orElseGet(() -> fallbackToHiveUdf(updatedCall)
-          .orElse(updatedCall)))));
+          .orElse(updatedCall))))));
 
       return convertToNewNode;
     }
@@ -292,6 +296,27 @@ class IRRelToSparkRelTransformer {
           }
           return Optional.of(rexBuilder.makeCall(call.getType(), new HiveNamedStructFunction(), newOperands));
         }
+      }
+      return Optional.empty();
+    }
+
+    /**
+     * Add the schema to GenericProject in Fuzzy Union
+     * @param call a given RexCall
+     * @return RexCall that resolves FuzzyUnion if its operator is GenericProject; otherwise, return empty
+     */
+    private Optional<RexNode> convertFuzzyUnionGenericProject(RexCall call) {
+      if (call.getOperator() instanceof GenericProjectFunction) {
+        RelDataType expectedRelDataType = call.getType();
+        String expectedRelDataTypeString =
+            RelDataTypeToSparkDataTypeStringConverter.convertRelDataType(expectedRelDataType);
+
+        List<RexNode> newOperands = new ArrayList<>();
+        newOperands.add(call.getOperands().get(0));
+        newOperands.add(rexBuilder.makeLiteral(expectedRelDataTypeString));
+
+        return Optional.of(rexBuilder.makeCall(expectedRelDataType,
+            new GenericProjectFunction(expectedRelDataType), newOperands));
       }
       return Optional.empty();
     }

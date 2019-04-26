@@ -1,6 +1,7 @@
 package com.linkedin.coral.hive.hive2rel;
 
 import java.io.IOException;
+import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.runtime.CalciteContextException;
 import org.apache.calcite.sql.SqlNode;
