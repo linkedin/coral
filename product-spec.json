@@ -21,7 +21,8 @@
               "product-plugins"
             ],
             "version": "3.*.*"
-          }
+          },
+          "shadow": "com.github.jengelman.gradle.plugins:shadow:4.0.4"
         }
       }
     },

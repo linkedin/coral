@@ -1,11 +1,5 @@
 apply plugin: 'li-product'
 
-buildscript {
-    dependencies {
-        classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.1'
-    }
-}
-
 configurations {
   provided
 }
