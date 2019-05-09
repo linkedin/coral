@@ -13,6 +13,9 @@ import org.apache.calcite.sql.type.BasicSqlType;
  * convertRelDataTypeToAvroType is the main API
  */
 class RelDataTypeToAvroType {
+  // private constructor for utility class
+  private RelDataTypeToAvroType() {
+  }
 
   /**
    * This method converts RelDataType to avro data type

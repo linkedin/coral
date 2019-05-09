@@ -24,6 +24,10 @@ class SchemaUtilities {
   private static final Logger LOG = LoggerFactory.getLogger(SchemaUtilities.class);
   private static final String DALI_ROW_SCHEMA = "dali.row.schema";
 
+  // private constructor for utility class
+  private SchemaUtilities() {
+  }
+
   /**
    * Returns case sensitive schema from table properties or null if not present
    *

@@ -243,6 +243,7 @@ public class TypeInfoToAvroSchemaConverter {
         break;
       default:
         wrappedSchema = Schema.createUnion(Arrays.asList(Schema.create(Schema.Type.NULL), schema));
+        break;
     }
     return wrappedSchema;
   }
