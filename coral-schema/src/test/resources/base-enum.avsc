@@ -1,0 +1,71 @@
+{
+  "type" : "record",
+  "name" : "baseenum",
+  "namespace" : "coral.schema.avro.base.enum",
+  "fields" : [ {
+    "name" : "Id",
+    "type" : "int"
+  }, {
+    "name" : "Array_Col",
+    "type" : [ "null", {
+      "type" : "array",
+      "items" : [ "null", "string" ]
+    } ],
+    "default" : null
+  }, {
+    "name" : "Map_Col",
+    "type" : [ "null", {
+      "type" : "map",
+      "values" : [ "null", "string" ]
+    } ],
+    "default" : null
+  }, {
+    "name" : "Enum_Top_Col",
+    "type" : {
+      "type" : "enum",
+      "name" : "Enum_Top_col",
+      "symbols" : [ "Spark", "Pig", "Hive", "MR" ]
+    }
+  }, {
+    "name" : "Struct_Col",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "Struct_col",
+      "namespace" : "coral.schema.avro.base.enum.baseenum",
+      "fields" : [ {
+        "name" : "Bool_Field",
+        "type" : "boolean"
+      }, {
+        "name" : "Int_Field",
+        "type" : [ "null", "int" ],
+        "default" : null
+      }, {
+        "name" : "Bigint_Field",
+        "type" : "long"
+      }, {
+        "name" : "Float_Field",
+        "type" : [ "null", "float" ],
+        "default" : null
+      }, {
+        "name" : "Enum_Inner_Col",
+        "type" : {
+          "type" : "enum",
+          "name" : "Enum_Inner_col",
+          "symbols" : [ "Red", "Blue", "Green" ]
+        }
+      }, {
+        "name" : "Double_Field",
+        "type" : "double"
+      }, {
+        "name" : "Date_String_Field",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "String_Field",
+        "type" : [ "null", "string" ],
+        "default" : null
+      } ]
+    } ],
+    "default" : null
+  } ]
+}
