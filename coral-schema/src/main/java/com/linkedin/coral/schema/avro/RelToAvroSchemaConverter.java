@@ -1,6 +1,7 @@
 package com.linkedin.coral.schema.avro;
 
 import com.linkedin.coral.com.google.common.base.Preconditions;
+import com.linkedin.coral.functions.GenericProjectFunction;
 import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
 import com.linkedin.coral.javax.annotation.Nonnull;
 import com.linkedin.coral.schema.avro.exceptions.SchemaNotFoundException;
@@ -368,8 +369,18 @@ public class RelToAvroSchemaConverter {
 
     @Override
     public RexNode visitCall(RexCall rexCall) {
-      // TODO: implement this method
-      return super.visitCall(rexCall);
+      /**
+       * For GenericProject RexCall, no need to handle it recursively and only the inputRef in the 1st operands
+       * is relevant to semantic schema generation
+       */
+      if (rexCall.getOperator() instanceof GenericProjectFunction) {
+        List<RexNode> rexNodes = rexCall.getOperands();
+        rexNodes.get(0).accept(this);
+
+        return rexCall;
+      } else {
+        return super.visitCall(rexCall);
+      }
     }
 
     @Override
