@@ -125,7 +125,7 @@ public class ParseTreeBuilderTest {
         {"SELECT cast(a as binary) from foo", "SELECT cast(`a` as varbinary) from `foo`"},
         {"SELECT cast(a as string) from foo", "SELECT cast(`a` as varchar) from `foo`"},
         {"SELECT a, c from foo union all select x, y from bar",
-            "SELECT * FROM (SELECT `a`, `c` from `foo` union SELECT `x`, `y` from `bar`) as `_u1`"},
+            "SELECT * FROM (SELECT `a`, `c` from `foo` union all SELECT `x`, `y` from `bar`) as `_u1`"},
         {"SELECT case (a + 10) when 20 then 5 when 30 then 10 else 1 END from foo",
             "SELECT CASE `a` + 10 when 20 then 5 when 30 then 10 else 1 END from `foo`"},
         {"SELECT CASE WHEN a THEN 10 WHEN b THEN 20 ELSE 30 END from foo",

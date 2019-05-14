@@ -28,7 +28,7 @@ public class FuzzyUnionViewTest {
     String expectedSql = ""
         + "SELECT *\n"
         + "FROM fuzzy_union.tablea\n"
-        + "UNION\n"
+        + "UNION ALL\n"
         + "SELECT *\n"
         + "FROM fuzzy_union.tablea";
 
@@ -47,10 +47,10 @@ public class FuzzyUnionViewTest {
         + "SELECT *\n"
         + "FROM (SELECT *\n"
         + "FROM fuzzy_union.tablea\n"
-        + "UNION\n"
+        + "UNION ALL\n"
         + "SELECT *\n"
         + "FROM fuzzy_union.tablea)\n"
-        + "UNION\n"
+        + "UNION ALL\n"
         + "SELECT *\n"
         + "FROM fuzzy_union.tablea";
 
@@ -69,7 +69,7 @@ public class FuzzyUnionViewTest {
     String expectedSql = ""
         + "SELECT *\n"
         + "FROM fuzzy_union.tablea\n"
-        + "UNION\n"
+        + "UNION ALL\n"
         + "SELECT *\n"
         + "FROM fuzzy_union.tablea";
 
@@ -87,7 +87,7 @@ public class FuzzyUnionViewTest {
     String expectedSql = ""
         + "SELECT *\n"
         + "FROM fuzzy_union.tableb\n"
-        + "UNION\n"
+        + "UNION ALL\n"
         + "SELECT a, generic_project(b, '{\"type\":\"struct\",\"fields\":[{\"type\":\"string\",\"name\":\"b1\",\"nullable\":true,\"metadata\":{}}]}') b\n"
         + "FROM fuzzy_union.tablec";
 
@@ -111,7 +111,7 @@ public class FuzzyUnionViewTest {
     String expectedSql = ""
         + "SELECT a, generic_project(b, '{\"type\":\"struct\",\"fields\":[{\"type\":\"string\",\"name\":\"b1\",\"nullable\":true,\"metadata\":{}}]}') b\n"
         + "FROM fuzzy_union.tabled\n"
-        + "UNION\n"
+        + "UNION ALL\n"
         + "SELECT a, generic_project(b, '{\"type\":\"struct\",\"fields\":[{\"type\":\"string\",\"name\":\"b1\",\"nullable\":true,\"metadata\":{}}]}') b\n"
         + "FROM fuzzy_union.tablee";
 
@@ -129,7 +129,7 @@ public class FuzzyUnionViewTest {
     String expectedSql = ""
         + "SELECT a, generic_project(b, '{\"type\":\"struct\",\"fields\":[{\"type\":\"string\",\"name\":\"b1\",\"nullable\":true,\"metadata\":{}}]}') b\n"
         + "FROM fuzzy_union.tablef\n"
-        + "UNION\n"
+        + "UNION ALL\n"
         + "SELECT a, generic_project(b, '{\"type\":\"struct\",\"fields\":[{\"type\":\"string\",\"name\":\"b1\",\"nullable\":true,\"metadata\":{}}]}') b\n"
         + "FROM fuzzy_union.tableg";
 
@@ -148,10 +148,10 @@ public class FuzzyUnionViewTest {
         + "SELECT *\n"
         + "FROM (SELECT a, generic_project(b, '{\"type\":\"struct\",\"fields\":[{\"type\":\"string\",\"name\":\"b1\",\"nullable\":true,\"metadata\":{}}]}') b\n"
         + "FROM fuzzy_union.tablef\n"
-        + "UNION\n"
+        + "UNION ALL\n"
         + "SELECT a, generic_project(b, '{\"type\":\"struct\",\"fields\":[{\"type\":\"string\",\"name\":\"b1\",\"nullable\":true,\"metadata\":{}}]}') b\n"
         + "FROM fuzzy_union.tableg)\n"
-        + "UNION\n"
+        + "UNION ALL\n"
         + "SELECT a, generic_project(b, '{\"type\":\"struct\",\"fields\":[{\"type\":\"string\",\"name\":\"b1\",\"nullable\":true,\"metadata\":{}}]}') b\n"
         + "FROM fuzzy_union.tablef";
 
@@ -169,7 +169,7 @@ public class FuzzyUnionViewTest {
     String expectedSql = ""
         + "SELECT a, generic_project(b, '{\"type\":\"map\",\"valueContainsNull\":true,\"keyType\":\"string\",\"valueType\":{\"type\":\"struct\",\"fields\":[{\"type\":\"string\",\"name\":\"b1\",\"nullable\":true,\"metadata\":{}}]}}') b\n"
         + "FROM fuzzy_union.tableh\n"
-        + "UNION\n"
+        + "UNION ALL\n"
         + "SELECT *\n"
         + "FROM fuzzy_union.tablei";
 
@@ -187,7 +187,7 @@ public class FuzzyUnionViewTest {
     String expectedSql = ""
         + "SELECT a, generic_project(b, '{\"type\":\"array\",\"containsNull\":true,\"elementType\":{\"type\":\"struct\",\"fields\":[{\"type\":\"string\",\"name\":\"b1\",\"nullable\":true,\"metadata\":{}}]}}') b\n"
         + "FROM fuzzy_union.tablej\n"
-        + "UNION\n"
+        + "UNION ALL\n"
         + "SELECT *\n"
         + "FROM fuzzy_union.tablek";
 
@@ -205,7 +205,7 @@ public class FuzzyUnionViewTest {
     String expectedSql = ""
         + "SELECT a, generic_project(b, '{\"type\":\"struct\",\"fields\":[{\"type\":\"string\",\"name\":\"b1\",\"nullable\":true,\"metadata\":{}},{\"type\":{\"type\":\"struct\",\"fields\":[{\"type\":\"string\",\"name\":\"b3\",\"nullable\":true,\"metadata\":{}},{\"type\":{\"type\":\"struct\",\"fields\":[{\"type\":\"string\",\"name\":\"b5\",\"nullable\":true,\"metadata\":{}}]},\"name\":\"b4\",\"nullable\":true,\"metadata\":{}}]},\"name\":\"b2\",\"nullable\":true,\"metadata\":{}}]}') b\n"
         + "FROM fuzzy_union.tablel\n"
-        + "UNION\n"
+        + "UNION ALL\n"
         + "SELECT *\n"
         + "FROM fuzzy_union.tablem";
 

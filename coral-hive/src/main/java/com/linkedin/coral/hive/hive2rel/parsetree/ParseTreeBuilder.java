@@ -276,7 +276,9 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
   @Override
   protected SqlNode visitUnion(ASTNode node, ParseContext ctx) {
     List<SqlNode> sqlNodes = visitChildren(node, ctx);
-    return new SqlBasicCall(SqlStdOperatorTable.UNION, sqlNodes.toArray(new SqlNode[0]), ZERO);
+    // We use Hive 1.1 in which UNION defaults to UNION_ALL
+    // ALERT: This behavior is different in Hive version > 1.2
+    return new SqlBasicCall(SqlStdOperatorTable.UNION_ALL, sqlNodes.toArray(new SqlNode[0]), ZERO);
   }
 
   @Override

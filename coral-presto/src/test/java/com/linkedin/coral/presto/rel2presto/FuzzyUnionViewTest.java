@@ -29,7 +29,7 @@ public class FuzzyUnionViewTest {
         + "SELECT \"a\", \"b\"\n"
         + "FROM (SELECT \"a\", \"b\"\n"
         + "FROM \"hive\".\"fuzzy_union\".\"tablea\"\n"
-        + "UNION\n"
+        + "UNION ALL\n"
         + "SELECT \"a\", \"b\"\n"
         + "FROM \"hive\".\"fuzzy_union\".\"tablea\")";
 
@@ -48,10 +48,10 @@ public class FuzzyUnionViewTest {
         + "FROM (SELECT *\n"
         + "FROM (SELECT \"a\", \"b\"\n"
         + "FROM \"hive\".\"fuzzy_union\".\"tablea\"\n"
-        + "UNION\n"
+        + "UNION ALL\n"
         + "SELECT \"a\", \"b\"\n"
         + "FROM \"hive\".\"fuzzy_union\".\"tablea\")\n"
-        + "UNION\n"
+        + "UNION ALL\n"
         + "SELECT \"a\", \"b\"\n"
         + "FROM \"hive\".\"fuzzy_union\".\"tablea\")";
 
@@ -69,7 +69,7 @@ public class FuzzyUnionViewTest {
         + "SELECT \"a\", \"b\"\n"
         + "FROM (SELECT \"a\", \"b\"\n"
         + "FROM \"hive\".\"fuzzy_union\".\"tablea\"\n"
-        + "UNION\n"
+        + "UNION ALL\n"
         + "SELECT \"a\", \"b\"\n"
         + "FROM \"hive\".\"fuzzy_union\".\"tablea\")";
 
@@ -87,7 +87,7 @@ public class FuzzyUnionViewTest {
         + "SELECT \"a\", \"b\"\n"
         + "FROM (SELECT \"a\", \"b\"\n"
         + "FROM \"hive\".\"fuzzy_union\".\"tableb\"\n"
-        + "UNION\n"
+        + "UNION ALL\n"
         + "SELECT \"a\", CAST(row(b.b1) as row(b1 varchar)) AS \"b\"\n"
         + "FROM \"hive\".\"fuzzy_union\".\"tablec\")";
 
@@ -105,7 +105,7 @@ public class FuzzyUnionViewTest {
         + "SELECT \"a\", \"b\"\n"
         + "FROM (SELECT \"a\", CAST(row(b.b1) as row(b1 varchar)) AS \"b\"\n"
         + "FROM \"hive\".\"fuzzy_union\".\"tabled\"\n"
-        + "UNION\n"
+        + "UNION ALL\n"
         + "SELECT \"a\", CAST(row(b.b1) as row(b1 varchar)) AS \"b\"\n"
         + "FROM \"hive\".\"fuzzy_union\".\"tablee\")";
 
@@ -123,7 +123,7 @@ public class FuzzyUnionViewTest {
         + "SELECT \"a\", \"b\"\n"
         + "FROM (SELECT \"a\", CAST(row(b.b1) as row(b1 varchar)) AS \"b\"\n"
         + "FROM \"hive\".\"fuzzy_union\".\"tablef\"\n"
-        + "UNION\n"
+        + "UNION ALL\n"
         + "SELECT \"a\", CAST(row(b.b1) as row(b1 varchar)) AS \"b\"\n"
         + "FROM \"hive\".\"fuzzy_union\".\"tableg\")";
 
@@ -142,10 +142,10 @@ public class FuzzyUnionViewTest {
         + "FROM (SELECT *\n"
         + "FROM (SELECT \"a\", CAST(row(b.b1) as row(b1 varchar)) AS \"b\"\n"
         + "FROM \"hive\".\"fuzzy_union\".\"tablef\"\n"
-        + "UNION\n"
+        + "UNION ALL\n"
         + "SELECT \"a\", CAST(row(b.b1) as row(b1 varchar)) AS \"b\"\n"
         + "FROM \"hive\".\"fuzzy_union\".\"tableg\")\n"
-        + "UNION\n"
+        + "UNION ALL\n"
         + "SELECT \"a\", CAST(row(b.b1) as row(b1 varchar)) AS \"b\"\n"
         + "FROM \"hive\".\"fuzzy_union\".\"tablef\")";
 
@@ -163,7 +163,7 @@ public class FuzzyUnionViewTest {
         + "SELECT \"a\", \"b\"\n"
         + "FROM (SELECT \"a\", TRANSFORM_VALUES(b, (k, v) -> cast(row(v.b1) as row(b1 varchar))) AS \"b\"\n"
         + "FROM \"hive\".\"fuzzy_union\".\"tableh\"\n"
-        + "UNION\n"
+        + "UNION ALL\n"
         + "SELECT \"a\", \"b\"\n"
         + "FROM \"hive\".\"fuzzy_union\".\"tablei\")";
 
@@ -181,7 +181,7 @@ public class FuzzyUnionViewTest {
         + "SELECT \"a\", \"b\"\n"
         + "FROM (SELECT \"a\", TRANSFORM(b, x -> cast(row(x.b1) as row(b1 varchar))) AS \"b\"\n"
         + "FROM \"hive\".\"fuzzy_union\".\"tablej\"\n"
-        + "UNION\n"
+        + "UNION ALL\n"
         + "SELECT \"a\", \"b\"\n"
         + "FROM \"hive\".\"fuzzy_union\".\"tablek\")";
 
@@ -199,7 +199,7 @@ public class FuzzyUnionViewTest {
         + "SELECT \"a\", \"b\"\n"
         + "FROM (SELECT \"a\", CAST(row(b.b1, cast(row(b.b2.b3, cast(row(b.b2.b4.b5) as row(b5 varchar))) as row(b3 varchar, b4 row(b5 varchar)))) as row(b1 varchar, b2 row(b3 varchar, b4 row(b5 varchar)))) AS \"b\"\n"
         + "FROM \"hive\".\"fuzzy_union\".\"tablel\"\n"
-        + "UNION\n"
+        + "UNION ALL\n"
         + "SELECT \"a\", \"b\"\n"
         + "FROM \"hive\".\"fuzzy_union\".\"tablem\")";
 
@@ -217,7 +217,7 @@ public class FuzzyUnionViewTest {
         + "SELECT \"a\", \"b\"\n"
         + "FROM (SELECT \"a\", CAST(row(b.b1, transform_values(b.m1, (k, v) -> cast(row(v.b1, transform(v.a1, x -> cast(row(x.b1) as row(b1 varchar)))) as row(b1 varchar, a1 array(row(b1 varchar)))))) as row(b1 varchar, m1 map(varchar, row(b1 varchar, a1 array(row(b1 varchar)))))) AS \"b\"\n"
         + "FROM \"hive\".\"fuzzy_union\".\"tablen\"\n"
-        + "UNION\n"
+        + "UNION ALL\n"
         + "SELECT \"a\", \"b\"\n"
         + "FROM \"hive\".\"fuzzy_union\".\"tableo\")";
 

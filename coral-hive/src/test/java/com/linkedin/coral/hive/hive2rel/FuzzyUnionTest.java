@@ -1,9 +1,6 @@
 package com.linkedin.coral.hive.hive2rel;
 
 import java.io.IOException;
-import org.apache.calcite.plan.RelOptUtil;
-import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.runtime.CalciteContextException;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.metastore.api.Table;
@@ -38,7 +35,7 @@ public class FuzzyUnionTest {
     String expectedSql = ""
         + "SELECT *\n"
         + "FROM \"hive\".\"fuzzy_union\".\"tablea\"\n"
-        + "UNION\n"
+        + "UNION ALL\n"
         + "SELECT *\n"
         + "FROM \"hive\".\"fuzzy_union\".\"tablea\"";
 
@@ -57,9 +54,9 @@ public class FuzzyUnionTest {
         + "SELECT *\n"
         + "FROM (SELECT *\n"
         + "FROM \"hive\".\"fuzzy_union\".\"tablea\"\n"
-        + "UNION\n" + "SELECT *\n"
+        + "UNION ALL\n" + "SELECT *\n"
         + "FROM \"hive\".\"fuzzy_union\".\"tablea\")\n"
-        + "UNION\n"
+        + "UNION ALL\n"
         + "SELECT *\n"
         + "FROM \"hive\".\"fuzzy_union\".\"tablea\"";
 
@@ -77,7 +74,7 @@ public class FuzzyUnionTest {
     String expectedSql = ""
         + "SELECT *\n"
         + "FROM \"hive\".\"fuzzy_union\".\"tablea\"\n"
-        + "UNION\n"
+        + "UNION ALL\n"
         + "SELECT *\n"
         + "FROM \"hive\".\"fuzzy_union\".\"tablea\"";
 
@@ -95,7 +92,7 @@ public class FuzzyUnionTest {
     String expectedSql = ""
         + "SELECT *\n"
         + "FROM \"hive\".\"fuzzy_union\".\"tableb\"\n"
-        + "UNION\n"
+        + "UNION ALL\n"
         + "SELECT \"a\", \"generic_project\"(\"b\", 'b') AS \"b\"\n"
         + "FROM \"hive\".\"fuzzy_union\".\"tablec\"";
 
@@ -113,7 +110,7 @@ public class FuzzyUnionTest {
     String expectedSql = ""
         + "SELECT \"a\", \"generic_project\"(\"b\", 'b') AS \"b\"\n"
         + "FROM \"hive\".\"fuzzy_union\".\"tabled\"\n"
-        + "UNION\n"
+        + "UNION ALL\n"
         + "SELECT \"a\", \"generic_project\"(\"b\", 'b') AS \"b\"\n"
         + "FROM \"hive\".\"fuzzy_union\".\"tablee\"";
 
@@ -131,7 +128,7 @@ public class FuzzyUnionTest {
     String expectedSql = ""
         + "SELECT \"a\", \"generic_project\"(\"b\", 'b') AS \"b\"\n"
         + "FROM \"hive\".\"fuzzy_union\".\"tablef\"\n"
-        + "UNION\n"
+        + "UNION ALL\n"
         + "SELECT \"a\", \"generic_project\"(\"b\", 'b') AS \"b\"\n"
         + "FROM \"hive\".\"fuzzy_union\".\"tableg\"";
 
@@ -150,10 +147,10 @@ public class FuzzyUnionTest {
         + "SELECT *\n"
         + "FROM (SELECT \"a\", \"generic_project\"(\"b\", 'b') AS \"b\"\n"
         + "FROM \"hive\".\"fuzzy_union\".\"tablef\"\n"
-        + "UNION\n"
+        + "UNION ALL\n"
         + "SELECT \"a\", \"generic_project\"(\"b\", 'b') AS \"b\"\n"
         + "FROM \"hive\".\"fuzzy_union\".\"tableg\")\n"
-        + "UNION\n"
+        + "UNION ALL\n"
         + "SELECT \"a\", \"generic_project\"(\"b\", 'b') AS \"b\"\n"
         + "FROM \"hive\".\"fuzzy_union\".\"tablef\"";
 
@@ -171,7 +168,7 @@ public class FuzzyUnionTest {
     String expectedSql = ""
         + "SELECT \"a\", \"generic_project\"(\"b\", 'b') AS \"b\"\n"
         + "FROM \"hive\".\"fuzzy_union\".\"tableh\"\n"
-        + "UNION\n"
+        + "UNION ALL\n"
         + "SELECT *\n"
         + "FROM \"hive\".\"fuzzy_union\".\"tablei\"";
 
@@ -189,7 +186,7 @@ public class FuzzyUnionTest {
     String expectedSql = ""
         + "SELECT \"a\", \"generic_project\"(\"b\", 'b') AS \"b\"\n"
         + "FROM \"hive\".\"fuzzy_union\".\"tablej\"\n"
-        + "UNION\n"
+        + "UNION ALL\n"
         + "SELECT *\n"
         + "FROM \"hive\".\"fuzzy_union\".\"tablek\"";
 
@@ -207,7 +204,7 @@ public class FuzzyUnionTest {
     String expectedSql = ""
         + "SELECT \"a\", \"generic_project\"(\"b\", 'b') AS \"b\"\n"
         + "FROM \"hive\".\"fuzzy_union\".\"tablel\"\n"
-        + "UNION\n"
+        + "UNION ALL\n"
         + "SELECT *\n"
         + "FROM \"hive\".\"fuzzy_union\".\"tablem\"";
 
