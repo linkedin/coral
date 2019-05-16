@@ -1,0 +1,79 @@
+{
+  "type" : "record",
+  "name" : "v",
+  "namespace" : "default.v",
+  "fields" : [ {
+    "name" : "Id_View_Col",
+    "type" : "int"
+  }, {
+    "name" : "Array_Struct_View_Col",
+    "type" : [ "null", {
+      "type" : "array",
+      "items" : {
+        "type" : "record",
+        "name" : "Struct_Col",
+        "namespace" : "default.v.v",
+        "fields" : [ {
+          "name" : "Bool_Field",
+          "type" : "boolean"
+        }, {
+          "name" : "Int_Field",
+          "type" : [ "null", "int" ],
+          "default" : null
+        }, {
+          "name" : "Bigint_Field",
+          "type" : "long"
+        }, {
+          "name" : "Float_Field",
+          "type" : [ "null", "float" ],
+          "default" : null
+        }, {
+          "name" : "Double_Field",
+          "type" : "double"
+        }, {
+          "name" : "Date_String_Field",
+          "type" : [ "null", "string" ],
+          "default" : null
+        }, {
+          "name" : "String_Field",
+          "type" : [ "null", "string" ],
+          "default" : null
+        } ]
+      }
+    } ],
+    "default" : null
+  }, {
+    "name" : "Array_Col_Struct_Flatten",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "Array_Col_Struct_Flatten",
+      "namespace" : "default.v.v",
+      "fields" : [ {
+        "name" : "Bool_Field",
+        "type" : "boolean"
+      }, {
+        "name" : "Int_Field",
+        "type" : [ "null", "int" ],
+        "default" : null
+      }, {
+        "name" : "Bigint_Field",
+        "type" : "long"
+      }, {
+        "name" : "Float_Field",
+        "type" : [ "null", "float" ],
+        "default" : null
+      }, {
+        "name" : "Double_Field",
+        "type" : "double"
+      }, {
+        "name" : "Date_String_Field",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "String_Field",
+        "type" : [ "null", "string" ],
+        "default" : null
+      } ]
+    } ]
+  } ]
+}

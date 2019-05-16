@@ -1,6 +1,7 @@
 package com.linkedin.coral.schema.avro;
 
 import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
+import com.linkedin.coral.hive.hive2rel.parsetree.UnhandledASTTokenException;
 import org.apache.avro.Schema;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
@@ -157,7 +158,101 @@ public class ViewToAvroSchemaConverterTests {
 
   @Test
   public void testLateralView() {
-    // TODO: implement this test
+    String viewSql = "CREATE VIEW v AS "
+        + "SELECT bc.Id AS Id_View_Col, t.Array_Lateral_View_Col "
+        + "FROM basecomplex bc "
+        + "LATERAL VIEW explode(bc.Array_Col) t as Array_Lateral_View_Col";
+
+    TestUtils.executeCreateViewQuery("default", "v", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v");
+
+    Assert.assertEquals(actualSchema.toString(true),
+        TestUtils.loadSchema("testLateralView-expected.avsc"));
+  }
+
+  @Test
+  public void testLateralViewOuter() {
+    String viewSql = "CREATE VIEW v AS "
+        + "SELECT bc.Id AS Id_View_Col, t.Array_Lateral_View_Col "
+        + "FROM basecomplex bc "
+        + "LATERAL VIEW OUTER explode(bc.Array_Col) t as Array_Lateral_View_Col";
+
+    TestUtils.executeCreateViewQuery("default", "v", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v");
+
+    Assert.assertEquals(actualSchema.toString(true),
+        TestUtils.loadSchema("testLateralViewOuter-expected.avsc"));
+  }
+
+  @Test
+  public void testMultipleLateralView() {
+    String viewSql = "CREATE VIEW v AS "
+        + "SELECT bc.Id AS Id_View_Col, t1.Array_Lateral_View_Col_1, t2.Array_Lateral_View_Col_2 "
+        + "FROM basecomplex bc "
+        + "LATERAL VIEW explode(bc.Array_Col) t1 as Array_Lateral_View_Col_1 "
+        + "LATERAL VIEW explode(bc.Array_Col) t2 as Array_Lateral_View_Col_2";
+
+    TestUtils.executeCreateViewQuery("default", "v", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v");
+
+    Assert.assertEquals(actualSchema.toString(true),
+        TestUtils.loadSchema("testMultipleLateralView-expected.avsc"));
+  }
+
+  @Test
+  public void testMultipleLateralViewDifferentArrayType() {
+    String viewSql = "CREATE VIEW v AS "
+        + "SELECT bl.Id AS Id_View_Col, t1.Array_Lateral_View_String_Col, t2.Array_Lateral_View_Double_Col "
+        + "FROM baselateralview bl "
+        + "LATERAL VIEW explode(bl.Array_Col_String) t1 as Array_Lateral_View_String_Col "
+        + "LATERAL VIEW explode(bl.Array_Col_Double) t2 as Array_Lateral_View_Double_Col";
+
+    TestUtils.executeCreateViewQuery("default", "v", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v");
+
+    Assert.assertEquals(actualSchema.toString(true),
+        TestUtils.loadSchema("testMultipleLateralViewDifferentArrayType-expected.avsc"));
+  }
+
+  // TODO: handle complex type (Array[Struct] in lateral view:  LIHADOOP-46695)
+  @Test(enabled = false)
+  public void testLateralViewArrayWithComplexType() {
+    String viewSql = "CREATE VIEW v AS "
+        + "SELECT bl.Id AS Id_View_Col, bl.Array_Col_Struct AS Array_Struct_View_Col, "
+        + "t.Array_Col_Struct_Flatten "
+        + "FROM baselateralview bl "
+        + "LATERAL VIEW explode(bl.Array_Col_Struct) t as Array_Col_Struct_Flatten";
+
+    TestUtils.executeCreateViewQuery("default", "v", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v");
+
+    Assert.assertEquals(actualSchema.toString(true),
+        TestUtils.loadSchema("testLateralViewArrayWithComplexType-expected.avsc"));
+  }
+
+  // Currently coral-hive does not support lateral view on map type and
+  // it throws UnhandledASTTokenException while converting it to RelNode
+  @Test(expectedExceptions = UnhandledASTTokenException.class)
+  public void testLateralViewMap() {
+    String viewSql = "CREATE VIEW v AS "
+        + "SELECT bl.Id AS Id_View_Col, t.Col1, t.Col2 "
+        + "FROM baselateralview bl "
+        + "LATERAL VIEW explode(bl.Map_Col_String) t as Col1, Col2";
+
+    TestUtils.executeCreateViewQuery("default", "v", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    viewToAvroSchemaConverter.toAvroSchema("default", "v");
   }
 
   @Test

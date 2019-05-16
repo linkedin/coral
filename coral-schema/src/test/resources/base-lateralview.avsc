@@ -1,0 +1,73 @@
+{
+  "type" : "record",
+  "name" : "baselateralview",
+  "namespace" : "coral.schema.avro.base.lateralview",
+  "fields" : [ {
+    "name" : "Id",
+    "type" : "int"
+  }, {
+    "name" : "Array_Col_String",
+    "type" : [ "null", {
+      "type" : "array",
+      "items" : [ "null", "string" ]
+    } ],
+    "default" : null
+  }, {
+    "name" : "Array_Col_Double",
+    "type" : [ "null", {
+      "type" : "array",
+      "items" : [ "null", "double" ]
+    } ],
+    "default" : null
+  }, {
+    "name" : "Array_Col_Struct",
+    "type" : [ "null", {
+      "type" : "array",
+      "items" : {
+        "type" : "record",
+        "name" : "Struct_Col",
+        "fields" : [ {
+          "name" : "Bool_Field",
+          "type" : "boolean"
+        }, {
+          "name" : "Int_Field",
+          "type" : [ "null", "int" ],
+          "default" : null
+        }, {
+          "name" : "Bigint_Field",
+          "type" : "long"
+        }, {
+          "name" : "Float_Field",
+          "type" : [ "null", "float" ],
+          "default" : null
+        }, {
+          "name" : "Double_Field",
+          "type" : "double"
+        }, {
+          "name" : "Date_String_Field",
+          "type" : [ "null", "string" ],
+          "default" : null
+        }, {
+          "name" : "String_Field",
+          "type" : [ "null", "string" ],
+          "default" : null
+        } ]
+      }
+    } ],
+    "default" : null
+  }, {
+    "name" : "Map_Col_String",
+    "type" : [ "null", {
+      "type" : "map",
+      "values" : [ "null", "string" ]
+    } ],
+    "default" : null
+  }, {
+    "name" : "Map_Col_Int",
+    "type" : [ "null", {
+      "type" : "map",
+      "values" : [ "null", "int" ]
+    } ],
+    "default" : null
+  } ]
+}

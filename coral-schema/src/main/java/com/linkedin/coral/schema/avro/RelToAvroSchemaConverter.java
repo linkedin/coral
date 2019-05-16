@@ -3,6 +3,7 @@ package com.linkedin.coral.schema.avro;
 import com.linkedin.coral.com.google.common.base.Preconditions;
 import com.linkedin.coral.functions.GenericProjectFunction;
 import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
+import com.linkedin.coral.hive.hive2rel.rel.HiveUncollect;
 import com.linkedin.coral.javax.annotation.Nonnull;
 import com.linkedin.coral.schema.avro.exceptions.SchemaNotFoundException;
 import java.util.ArrayList;
@@ -214,8 +215,14 @@ public class RelToAvroSchemaConverter {
 
     @Override
     public RelNode visit(LogicalCorrelate logicalCorrelate) {
-      // TODO: implement this method
-      return super.visit(logicalCorrelate);
+      RelNode relNode = super.visit(logicalCorrelate);
+
+      Schema leftSchema = schemaMap.get(logicalCorrelate.getLeft());
+      Schema rightSchema = schemaMap.get(logicalCorrelate.getRight());
+      Schema logicalCorrelateSchema = SchemaUtilities.joinSchemas(leftSchema, rightSchema);
+      schemaMap.put(logicalCorrelate, logicalCorrelateSchema);
+
+      return relNode;
     }
 
     @Override
@@ -297,8 +304,22 @@ public class RelToAvroSchemaConverter {
 
     @Override
     public RelNode visit(RelNode relNode) {
-      // TODO: implement this method
-      return super.visit(relNode);
+      // Handles lateral views here
+      if (relNode instanceof HiveUncollect) {
+        SchemaBuilder.FieldAssembler<Schema> hiveUncollectFieldAssembler = SchemaBuilder.record("LateralViews")
+            .namespace("LateralViews")
+            .fields();
+
+        for (RelDataTypeField field : relNode.getRowType().getFieldList()) {
+          SchemaUtilities.appendField(field.getName(), field.getType(), hiveUncollectFieldAssembler);
+        }
+
+        schemaMap.put(relNode, hiveUncollectFieldAssembler.endRecord());
+
+        return relNode;
+      } else {
+        return super.visit(relNode);
+      }
     }
 
     /**

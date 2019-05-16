@@ -4,13 +4,14 @@ import com.linkedin.coral.com.google.common.base.Preconditions;
 import com.linkedin.coral.javax.annotation.Nonnull;
 import org.apache.avro.Schema;
 import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.sql.type.ArraySqlType;
 import org.apache.calcite.sql.type.BasicSqlType;
 
 
 /**
  * This class provides RelDataType to avro data type mapping
  *
- * convertRelDataTypeToAvroType is the main API
+ * relDataTypeToAvroType is the main API
  */
 class RelDataTypeToAvroType {
   // private constructor for utility class
@@ -23,21 +24,25 @@ class RelDataTypeToAvroType {
    * @param relDataType
    * @return Schema of Avro data type corresponding to input RelDataType
    */
-  static Schema convertRelDataTypeToAvroType(@Nonnull RelDataType relDataType) {
+  static Schema relDataTypeToAvroType(@Nonnull RelDataType relDataType) {
     Preconditions.checkNotNull(relDataType);
 
     if (relDataType instanceof BasicSqlType) {
-      return basicSqlTypeToAvroDataType((BasicSqlType) relDataType);
+      return basicSqlTypeToAvroType((BasicSqlType) relDataType);
+    }
+
+    if (relDataType instanceof ArraySqlType) {
+      return Schema.createArray(relDataTypeToAvroType(relDataType.getComponentType()));
     }
 
     // TODO: support more RelDataType if necessary
-    // For example: MultisetSqlType, ArraySqlType, RelRecordType, DynamicRecordType, MapSqlType
+    // For example: MultisetSqlType, RelRecordType, DynamicRecordType, MapSqlType
 
     // TODO: improve logging
     throw new UnsupportedOperationException("Unsupported RelDataType: " + relDataType.toString());
   }
 
-  private static Schema basicSqlTypeToAvroDataType(BasicSqlType relType) {
+  private static Schema basicSqlTypeToAvroType(BasicSqlType relType) {
     switch (relType.getSqlTypeName()) {
       case BOOLEAN:
         return Schema.create(Schema.Type.BOOLEAN);

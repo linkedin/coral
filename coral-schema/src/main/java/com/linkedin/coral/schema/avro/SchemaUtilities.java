@@ -87,7 +87,7 @@ class SchemaUtilities {
     Preconditions.checkNotNull(fieldRelDataType);
     Preconditions.checkNotNull(fieldAssembler);
 
-    Schema fieldSchema = RelDataTypeToAvroType.convertRelDataTypeToAvroType(fieldRelDataType);
+    Schema fieldSchema = RelDataTypeToAvroType.relDataTypeToAvroType(fieldRelDataType);
 
     // TODO: currently mark everything field transformed by Rel operators and udfs as nullable for now
     // Should handle nullability properly later
@@ -212,6 +212,37 @@ class SchemaUtilities {
     Schema schmeWithProperNamespace = setupNestedNamespaceForRecord(schemaWithProperName, schemaNamespace);
 
     return schmeWithProperNamespace;
+  }
+
+  static Schema joinSchemas(@Nonnull Schema leftSchema, @Nonnull Schema rightSchema) {
+    Preconditions.checkNotNull(leftSchema);
+    Preconditions.checkNotNull(rightSchema);
+
+    List<Schema.Field> combinedSchemaFields = new ArrayList<>();
+
+    for (Schema.Field field : leftSchema.getFields()) {
+      combinedSchemaFields.add(new Schema.Field(field.name(),
+          field.schema(),
+          field.doc(),
+          field.defaultValue(),
+          field.order()));
+    }
+
+    for (Schema.Field field : rightSchema.getFields()) {
+      combinedSchemaFields.add(new Schema.Field(field.name(),
+          field.schema(),
+          field.doc(),
+          field.defaultValue(),
+          field.order()));
+    }
+
+    Schema combinedSchema = Schema.createRecord(leftSchema.getName(),
+        leftSchema.getDoc(),
+        leftSchema.getNamespace(),
+        leftSchema.isError());
+    combinedSchema.setFields(combinedSchemaFields);
+
+    return combinedSchema;
   }
 
   private static void appendFieldWithNewNamespace(@Nonnull Schema.Field field,

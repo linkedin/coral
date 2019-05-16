@@ -43,9 +43,11 @@ public class TestUtils {
   private static void initializeTables() {
     String baseComplexSchema = loadSchema("base-complex.avsc");
     String baseEnumSchema = loadSchema("base-enum.avsc");
+    String baseLateralViewSchema = loadSchema("base-lateralview.avsc");
 
     executeCreateTableQuery("default", "basecomplex", baseComplexSchema);
     executeCreateTableQuery("default", "baseenum", baseEnumSchema);
+    executeCreateTableQuery("default", "baselateralview", baseLateralViewSchema);
   }
 
 

@@ -1,0 +1,12 @@
+{
+  "type" : "record",
+  "name" : "v",
+  "namespace" : "default.v",
+  "fields" : [ {
+    "name" : "Id_View_Col",
+    "type" : "int"
+  }, {
+    "name" : "Array_Lateral_View_Col",
+    "type" : [ "null", "string" ]
+  } ]
+}
