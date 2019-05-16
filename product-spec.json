@@ -14,7 +14,7 @@
     },
     "toolchains": {
       "gradle": {
-        "version": "4.*",
+        "version": "5.2.1",
         "plugins": {
           "ligradle-jvm": {
             "libraries": [
@@ -22,7 +22,8 @@
             ],
             "version": "3.*.*"
           },
-          "shadow": "com.github.jengelman.gradle.plugins:shadow:4.0.4"
+          "shadow": "com.github.jengelman.gradle.plugins:shadow:4.0.4",
+          "buildScans": "com.gradle:build-scan-plugin:2.1"
         }
       }
     },
