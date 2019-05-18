@@ -89,6 +89,24 @@ public class HiveOperatorsTest {
     }
   }
 
+  @Test
+  public void testCast() {
+    {
+      final String sql = "SELECT a, CAST(NULL as int) FROM foo";
+      RelNode rel = toRel(sql);
+      final String expectedSql = "SELECT \"a\", CAST(NULL AS INTEGER)\n" +
+          "FROM \"hive\".\"default\".\"foo\"";
+      assertEquals(relToSql(rel), expectedSql);
+    }
+    {
+      final String sql = "SELECT cast(a as double) FROM foo";
+      RelNode rel = toRel(sql);
+      final String expectedSql = "SELECT CAST(\"a\" AS DOUBLE)\n" +
+          "FROM \"hive\".\"default\".\"foo\"";
+      assertEquals(relToSql(rel), expectedSql);
+    }
+  }
+
   private void testLikeFamilyOperators(String operator) {
     final String sql = "SELECT a, b FROM foo WHERE b " + operator + " 'abc%'";
     String expectedRel = "LogicalProject(a=[$0], b=[$1])\n" +

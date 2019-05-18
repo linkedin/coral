@@ -34,7 +34,7 @@ public class NamedStructTest {
   public void testNullFieldValue() {
     final String sql = "SELECT named_struct('abc', cast(NULL as int), 'def', 150)";
     final String generated = sqlToRelStr(sql);
-    final String expected = "LogicalProject(EXPR$0=[CAST(ROW(null, 150)):RecordType(INTEGER abc, INTEGER NOT NULL def) NOT NULL])\n" +
+    final String expected = "LogicalProject(EXPR$0=[CAST(ROW(CAST(null):INTEGER, 150)):RecordType(INTEGER abc, INTEGER NOT NULL def) NOT NULL])\n" +
          "  LogicalValues(tuples=[[{ 0 }]])\n";
     assertEquals(generated, expected);
   }
@@ -43,7 +43,7 @@ public class NamedStructTest {
   public void testAllNullValues() {
     final String sql = "SELECT named_struct('abc', cast(NULL as int), 'def', cast(NULL as double))";
     final String generated = sqlToRelStr(sql);
-    final String expected = "LogicalProject(EXPR$0=[CAST(ROW(null, null)):RecordType(INTEGER abc, DOUBLE def) NOT NULL])\n" +
+    final String expected = "LogicalProject(EXPR$0=[CAST(ROW(CAST(null):INTEGER, CAST(null):DOUBLE)):RecordType(INTEGER abc, DOUBLE def) NOT NULL])\n" +
         "  LogicalValues(tuples=[[{ 0 }]])\n";
     assertEquals(generated, expected);
   }
