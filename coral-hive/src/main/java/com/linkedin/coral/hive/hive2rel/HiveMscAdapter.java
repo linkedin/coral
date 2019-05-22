@@ -1,7 +1,6 @@
-package com.linkedin.coral.hive.hive2rel.test;
+package com.linkedin.coral.hive.hive2rel;
 
 import com.google.common.collect.ImmutableList;
-import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
 import java.util.List;
 import org.apache.hadoop.hive.metastore.IMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.Database;

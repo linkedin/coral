@@ -1,7 +1,7 @@
 package com.linkedin.coral.schema.avro;
 
 import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
-import com.linkedin.coral.hive.hive2rel.test.HiveMscAdapter;
+import com.linkedin.coral.hive.hive2rel.HiveMscAdapter;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;

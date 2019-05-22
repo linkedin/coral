@@ -93,7 +93,7 @@ public class HiveSchema implements Schema {
   /**
    * Returns Hive metastore client
    */
-  public @Nonnull HiveMetastoreClient getHiveMetastoreClient() {
-    return msc;
-  }
+  public @Nonnull
+  HiveMetastoreClient getHiveMetastoreClient() {
+    return msc; }
 }

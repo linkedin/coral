@@ -5,7 +5,7 @@ import com.google.common.collect.Iterables;
 import com.linkedin.coral.com.google.common.base.Function;
 import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
 import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
-import com.linkedin.coral.hive.hive2rel.test.HiveMscAdapter;
+import com.linkedin.coral.hive.hive2rel.HiveMscAdapter;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;

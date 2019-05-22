@@ -3,11 +3,11 @@ package com.linkedin.coral.tools;
 import com.facebook.presto.sql.parser.ParsingOptions;
 import com.facebook.presto.sql.parser.SqlParser;
 import com.facebook.presto.sql.tree.Statement;
-import com.google.common.collect.ImmutableList;
 import com.linkedin.coral.com.google.common.base.Preconditions;
 import com.linkedin.coral.converters.HiveToPrestoConverter;
 import com.linkedin.coral.functions.UnknownSqlFunctionException;
 import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
+import com.linkedin.coral.hive.hive2rel.HiveMscAdapter;
 import com.linkedin.coral.tests.MetastoreProvider;
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,11 +26,9 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.naming.ConfigurationException;
 import org.apache.hadoop.hive.metastore.IMetaStoreClient;
-import org.apache.hadoop.hive.metastore.api.Database;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.metastore.api.Table;
-import org.apache.thrift.TException;
 
 import static com.google.common.base.Preconditions.*;
 
@@ -66,7 +64,7 @@ public class ViewTranslationTest {
     props.load(hiveConfStream);
 
     IMetaStoreClient metastoreClient = MetastoreProvider.getGridMetastoreClient(props);
-    HiveMetastoreClient msc = new HiveMetaStoreClientAdapter(metastoreClient);
+    HiveMetastoreClient msc = new HiveMscAdapter(metastoreClient);
     HiveToPrestoConverter converter = HiveToPrestoConverter.create(msc);
     OutputStream ostr = System.out;
     String[] views = {
@@ -492,48 +490,4 @@ public class ViewTranslationTest {
     }
   }
 
-  static class HiveMetaStoreClientAdapter implements HiveMetastoreClient {
-
-    final IMetaStoreClient client;
-
-    HiveMetaStoreClientAdapter(IMetaStoreClient client) {
-      this.client = client;
-    }
-
-    @Override
-    public List<String> getAllDatabases() {
-      try {
-        return client.getAllDatabases();
-      } catch (TException e) {
-        return ImmutableList.of();
-      }
-    }
-
-    @Override
-    public Database getDatabase(String dbName) {
-      try {
-        return client.getDatabase(dbName);
-      } catch (TException e) {
-        return null;
-      }
-    }
-
-    @Override
-    public List<String> getAllTables(String dbName) {
-      try {
-        return client.getAllTables(dbName);
-      } catch (TException e) {
-        return ImmutableList.of();
-      }
-    }
-
-    @Override
-    public Table getTable(String dbName, String tableName) {
-      try {
-        return client.getTable(dbName, tableName);
-      } catch (TException e) {
-        return null;
-      }
-    }
-  }
 }

@@ -2,7 +2,7 @@ package com.linkedin.coral.spark;
 
 import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
 import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
-import com.linkedin.coral.hive.hive2rel.test.HiveMscAdapter;
+import com.linkedin.coral.hive.hive2rel.HiveMscAdapter;
 import java.io.InputStream;
 import org.apache.calcite.rel.RelNode;
 import org.apache.hadoop.hive.conf.HiveConf;
