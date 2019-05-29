@@ -113,7 +113,7 @@
          or(family(SqlTypeFamily.STRING), family(SqlTypeFamily.BINARY)));
 
      // mathematical functions
-     // we need to define new strategy for hive to allow null operands by defauly for everything
+     // we need to define new strategy for hive to allow null operands by default for everything
      createAddUserDefinedFunction("round", DOUBLE_NULLABLE,
          family(ImmutableList.of(SqlTypeFamily.NUMERIC, SqlTypeFamily.INTEGER), optionalOrd(1)));
      createAddUserDefinedFunction("bround", DOUBLE_NULLABLE,

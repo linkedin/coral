@@ -1,0 +1,12 @@
+{
+  "type" : "record",
+  "name" : "foo_dali_udf2",
+  "namespace" : "default.foo_dali_udf2",
+  "fields" : [ {
+    "name" : "Id_Viewc_Col",
+    "type" : "int"
+  }, {
+    "name" : "Id_View_GreaterThanHundred_Col",
+    "type" : [ "null", "boolean" ]
+  } ]
+}

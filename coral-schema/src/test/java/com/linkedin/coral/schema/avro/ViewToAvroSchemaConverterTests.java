@@ -21,6 +21,7 @@ public class ViewToAvroSchemaConverterTests {
   @BeforeClass
   public void beforeClass() throws HiveException, MetaException {
     hiveMetastoreClient = TestUtils.setup();
+    TestUtils.registerUdfs();
   }
 
   @Test
@@ -157,8 +158,104 @@ public class ViewToAvroSchemaConverterTests {
   }
 
   @Test
-  public void testUdf() {
-    // TODO: implement this test
+  public void testUdfLessThanHundred() {
+    String viewSql = "CREATE VIEW foo_dali_udf "
+        + "tblproperties('functions' = 'LessThanHundred:com.linkedin.coral.hive.hive2rel.CoralTestUDF1', "
+        + "              'dependencies' = 'ivy://com.linkedin:udf:1.0') "
+        + "AS "
+        + "SELECT Id AS Id_Viewc_Col, default_foo_dali_udf_LessThanHundred(Id) AS Id_View_LessThanHundred_Col "
+        + "FROM basecomplex";
+
+    TestUtils.executeCreateViewQuery("default", "foo_dali_udf", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "foo_dali_udf");
+
+    Assert.assertEquals(actualSchema.toString(true),
+        TestUtils.loadSchema("testUdfLessThanHundred-expected.avsc"));
+  }
+
+  @Test
+  public void testUdfGreaterThanHundred() {
+    String viewSql = "CREATE VIEW foo_dali_udf2 "
+        + "tblproperties('functions' = 'GreaterThanHundred:com.linkedin.coral.hive.hive2rel.CoralTestUDF2', "
+        + "              'dependencies' = 'ivy://com.linkedin:udf:1.0') "
+        + "AS "
+        + "SELECT Id AS Id_Viewc_Col, default_foo_dali_udf2_GreaterThanHundred(Id) AS Id_View_GreaterThanHundred_Col "
+        + "FROM basecomplex";
+
+    TestUtils.executeCreateViewQuery("default", "foo_dali_udf2", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "foo_dali_udf2");
+
+    Assert.assertEquals(actualSchema.toString(true),
+        TestUtils.loadSchema("testUdfGreaterThanHundred-expected.avsc"));
+  }
+
+  @Test
+  public void testUdfSquare() {
+    String viewSql = "CREATE VIEW foo_dali_udf3 "
+        + "tblproperties('functions' = 'FuncSquare:com.linkedin.coral.hive.hive2rel.CoralTestUDF3', "
+        + "              'dependencies' = 'ivy://com.linkedin:udf:1.0') "
+        + "AS "
+        + "SELECT Id AS Id_Viewc_Col, default_foo_dali_udf3_FuncSquare(Id) AS Id_View_FuncSquare_Col "
+        + "FROM basecomplex";
+
+    TestUtils.executeCreateViewQuery("default", "foo_dali_udf3", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "foo_dali_udf3");
+
+    Assert.assertEquals(actualSchema.toString(true),
+        TestUtils.loadSchema("testUdfSquare-expected.avsc"));
+  }
+
+  @Test
+  public void testMultipleUdfs() {
+    String viewSql = "CREATE VIEW foo_dali_multiple_udfs "
+        + "tblproperties('functions' = 'LessThanHundred:com.linkedin.coral.hive.hive2rel.CoralTestUDF1 GreaterThanHundred:com.linkedin.coral.hive.hive2rel.CoralTestUDF2 FuncSquare:com.linkedin.coral.hive.hive2rel.CoralTestUDF3', "
+        + "              'dependencies' = 'ivy://com.linkedin:udf:1.0 ivy://com.linkedin:udf:1.0 ivy://com.linkedin:udf:1.0') "
+        + "AS "
+        + "SELECT Id AS Id_Viewc_Col, "
+        + "default_foo_dali_multiple_udfs_LessThanHundred(Id) AS Id_View_LessThanHundred_Col,"
+        + "default_foo_dali_multiple_udfs_GreaterThanHundred(Id) AS Id_View_GreaterThanHundred_Col, "
+        + "default_foo_dali_multiple_udfs_FuncSquare(Id) AS Id_View_FuncSquare_Col "
+        + "FROM basecomplex";
+
+    TestUtils.executeCreateViewQuery("default", "foo_dali_multiple_udfs", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "foo_dali_multiple_udfs");
+
+    Assert.assertEquals(actualSchema.toString(true),
+        TestUtils.loadSchema("testMultipleUdfs-expected.avsc"));
+  }
+
+  @Test
+  public void testUdfWithOperator() {
+    String viewSql = "CREATE VIEW foo_dali_udf_with_operator "
+        + "tblproperties('functions' = 'LessThanHundred:com.linkedin.coral.hive.hive2rel.CoralTestUDF1 GreaterThanHundred:com.linkedin.coral.hive.hive2rel.CoralTestUDF2 FuncSquare:com.linkedin.coral.hive.hive2rel.CoralTestUDF3', "
+        + "              'dependencies' = 'ivy://com.linkedin:udf:1.0 ivy://com.linkedin:udf:1.0 ivy://com.linkedin:udf:1.0') "
+        + "AS "
+        + "SELECT Id AS Id_Viewc_Col, "
+        + "default_foo_dali_udf_with_operator_LessThanHundred(Id),"
+        + "default_foo_dali_udf_with_operator_GreaterThanHundred(Id), "
+        + "default_foo_dali_udf_with_operator_FuncSquare(Id), "
+        + "1 + 1, "
+        + "Id + 1, "
+        + "default_foo_dali_udf_with_operator_FuncSquare(Id) + 1, "
+        + "default_foo_dali_udf_with_operator_FuncSquare(Id + 1) + 1, "
+        + "Id + default_foo_dali_udf_with_operator_FuncSquare(Id) "
+        + "FROM basecomplex";
+
+    TestUtils.executeCreateViewQuery("default", "foo_dali_udf_with_operator", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "foo_dali_udf_with_operator");
+
+    Assert.assertEquals(actualSchema.toString(true),
+        TestUtils.loadSchema("testUdfWithOperator-expected.avsc"));
   }
 
   @Test

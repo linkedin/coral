@@ -1,0 +1,33 @@
+{
+  "type" : "record",
+  "name" : "foo_dali_udf_with_operator",
+  "namespace" : "default.foo_dali_udf_with_operator",
+  "fields" : [ {
+    "name" : "Id_Viewc_Col",
+    "type" : "int"
+  }, {
+    "name" : "EXPR",
+    "type" : [ "null", "boolean" ]
+  }, {
+    "name" : "EXPR",
+    "type" : [ "null", "boolean" ]
+  }, {
+    "name" : "EXPR",
+    "type" : [ "null", "int" ]
+  }, {
+    "name" : "EXPR",
+    "type" : [ "null", "int" ]
+  }, {
+    "name" : "EXPR",
+    "type" : [ "null", "int" ]
+  }, {
+    "name" : "EXPR",
+    "type" : [ "null", "int" ]
+  }, {
+    "name" : "EXPR",
+    "type" : [ "null", "int" ]
+  }, {
+    "name" : "EXPR",
+    "type" : [ "null", "int" ]
+  } ]
+}

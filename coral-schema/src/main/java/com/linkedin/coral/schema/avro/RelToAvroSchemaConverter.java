@@ -6,7 +6,6 @@
 package com.linkedin.coral.schema.avro;
 
 import com.linkedin.coral.com.google.common.base.Preconditions;
-import com.linkedin.coral.hive.hive2rel.functions.GenericProjectFunction;
 import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
 import com.linkedin.coral.hive.hive2rel.rel.HiveUncollect;
 import com.linkedin.coral.schema.avro.exceptions.SchemaNotFoundException;
@@ -50,6 +49,8 @@ import org.apache.calcite.rex.RexRangeRef;
 import org.apache.calcite.rex.RexShuttle;
 import org.apache.calcite.rex.RexSubQuery;
 import org.apache.calcite.rex.RexTableInputRef;
+import org.apache.calcite.sql.SqlOperator;
+import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
 import org.apache.hadoop.hive.metastore.api.Table;
 
 
@@ -395,13 +396,16 @@ public class RelToAvroSchemaConverter {
 
     @Override
     public RexNode visitCall(RexCall rexCall) {
-      /**
-       * For GenericProject RexCall, no need to handle it recursively and only the inputRef in the 1st operands
-       * is relevant to semantic schema generation
-       */
-      if (rexCall.getOperator() instanceof GenericProjectFunction) {
-        List<RexNode> rexNodes = rexCall.getOperands();
-        rexNodes.get(0).accept(this);
+      if (rexCall.getOperator() instanceof SqlUserDefinedFunction
+      || rexCall.getOperator() instanceof SqlOperator) {
+        /**
+         * For SqlUserDefinedFunction and SqlOperator RexCall, no need to handle it recursively
+         * and only return type of udf or sql operator is relevant
+         */
+        // TODO: handle deduplication of field name
+        String fieldName = "EXPR";
+        RelDataType fieldType = rexCall.getType();
+        SchemaUtilities.appendField(fieldName, fieldType, fieldAssembler);
 
         return rexCall;
       } else {

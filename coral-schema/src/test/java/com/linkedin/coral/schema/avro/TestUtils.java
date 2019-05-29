@@ -5,12 +5,17 @@
  */
 package com.linkedin.coral.schema.avro;
 
+import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
 import com.linkedin.coral.hive.hive2rel.HiveMscAdapter;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Collectors;
+import org.apache.calcite.sql.type.ReturnTypes;
+import org.apache.calcite.sql.type.SqlTypeFamily;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.ql.CommandNeedRetryException;
@@ -18,6 +23,8 @@ import org.apache.hadoop.hive.ql.Driver;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.session.SessionState;
+
+import static org.apache.calcite.sql.type.OperandTypes.*;
 
 
 public class TestUtils {
@@ -31,6 +38,7 @@ public class TestUtils {
     HiveMetastoreClient metastoreClient = new HiveMscAdapter(Hive.get(conf).getMSC());
 
     initializeTables();
+    initializeUdfs();
 
     return metastoreClient;
   }
@@ -45,6 +53,16 @@ public class TestUtils {
     return new BufferedReader(new InputStreamReader(inputStream)).lines().collect(Collectors.joining("\n"));
   }
 
+  public static void registerUdfs() {
+    // add the following 3 test UDF to StaticHiveFunctionRegistry for testing purpose.
+    StaticHiveFunctionRegistry.createAddUserDefinedFunction("com.linkedin.coral.hive.hive2rel.CoralTestUDF1", ReturnTypes.BOOLEAN,
+        family(SqlTypeFamily.INTEGER), "com.linkedin:udf:1.0");
+    StaticHiveFunctionRegistry.createAddUserDefinedFunction("com.linkedin.coral.hive.hive2rel.CoralTestUDF2", ReturnTypes.BOOLEAN,
+        family(SqlTypeFamily.INTEGER), "com.linkedin:udf:1.0");
+    StaticHiveFunctionRegistry.createAddUserDefinedFunction("com.linkedin.coral.hive.hive2rel.CoralTestUDF3", ReturnTypes.INTEGER,
+        family(SqlTypeFamily.INTEGER), "com.linkedin:udf:1.0");
+  }
+
   private static void initializeTables() {
     String baseComplexSchema = loadSchema("base-complex.avsc");
     String baseEnumSchema = loadSchema("base-enum.avsc");
@@ -55,7 +73,34 @@ public class TestUtils {
     executeCreateTableQuery("default", "baselateralview", baseLateralViewSchema);
   }
 
+  private static void initializeUdfs() {
+    List<String> viewsToCreateLessThanHundred = Arrays.asList(
+        "foo_dali_udf",
+        "foo_dali_multiple_udfs",
+        "foo_dali_udf_with_operator");
+    executeCreateFunctionQuery("default",
+        viewsToCreateLessThanHundred,
+        "LessThanHundred",
+        "com.linkedin.coral.hive.hive2rel.CoralTestUDF1");
 
+    List<String> viewsToCreateGreaterThanHundred = Arrays.asList(
+        "foo_dali_udf2",
+        "foo_dali_multiple_udfs",
+        "foo_dali_udf_with_operator");
+    executeCreateFunctionQuery("default",
+        viewsToCreateGreaterThanHundred,
+        "GreaterThanHundred",
+        "com.linkedin.coral.hive.hive2rel.CoralTestUDF2");
+
+    List<String> viewsToCreateFuncSquare = Arrays.asList(
+        "foo_dali_udf3",
+        "foo_dali_multiple_udfs",
+        "foo_dali_udf_with_operator");
+    executeCreateFunctionQuery("default",
+        viewsToCreateFuncSquare,
+        "FuncSquare",
+        "com.linkedin.coral.hive.hive2rel.CoralTestUDF3");
+  }
 
   private static void executeCreateTableQuery(String dbName, String tableName, String schema) {
     executeQuery("DROP TABLE IF EXISTS " + dbName + "." + tableName);
@@ -67,7 +112,15 @@ public class TestUtils {
         + "TBLPROPERTIES ('" + AVRO_SCHEMA_LITERAL + "'='" + schema + "')");
   }
 
-  private static void executeQuery(String sql){
+  private static void executeCreateFunctionQuery(String dbName, List<String> viewNames, String functionName, String functionClass) {
+    for (String viewName : viewNames) {
+      String expandedFunctionName = dbName + "_" + viewName + "_" + functionName;
+      executeQuery("DROP FUNCTION IF EXISTS " + dbName + "." + expandedFunctionName);
+      executeQuery("CREATE FUNCTION " + expandedFunctionName + " as '" + functionClass + "'");
+    }
+  }
+
+  private static void executeQuery(String sql) {
     while(true){
       try {
         driver.run(sql);
