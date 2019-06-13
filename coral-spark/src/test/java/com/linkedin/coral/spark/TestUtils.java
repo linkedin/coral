@@ -49,6 +49,15 @@ public class TestUtils {
         "FROM foo",
         "GROUP BY b"
     ));
+    // [LIHADOOP-47172 test date literal in view definition
+    run(driver, "DROP VIEW IF EXITS foo_v1");
+    run(driver,String.join("\n","",
+        "CREATE VIEW IF NOT EXISTS foo_v1 ",
+        "AS ",
+        "SELECT DATE '2013-01-01', '2017-08-22 01:02:03', CAST(123 AS SMALLINT), CAST(123 AS TINYINT) ",
+        "FROM foo",
+        "LIMIT 1"
+    ));
     run(driver,String.join("\n","",
         "CREATE VIEW IF NOT EXISTS foo_bar_view",
         "AS",

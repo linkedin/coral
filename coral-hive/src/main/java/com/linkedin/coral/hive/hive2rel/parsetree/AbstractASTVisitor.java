@@ -221,6 +221,9 @@ public abstract class AbstractASTVisitor<R, C> {
       case HiveParser.TOK_DATE:
         return visitDate(node, ctx);
 
+      case HiveParser.TOK_DATELITERAL:
+        return visitDateLiteral(node, ctx);
+
       case HiveParser.TOK_TIMESTAMP:
         return visitTimestamp(node, ctx);
 
@@ -495,6 +498,10 @@ public abstract class AbstractASTVisitor<R, C> {
 
   protected R visitDate(ASTNode node, C ctx) {
     return visitChildren(node, ctx).get(0);
+  }
+
+  protected R visitDateLiteral(ASTNode node, C ctx) {
+      return visitChildren(node, ctx).get(0);
   }
 
   protected R visitTimestamp(ASTNode node, C ctx) {

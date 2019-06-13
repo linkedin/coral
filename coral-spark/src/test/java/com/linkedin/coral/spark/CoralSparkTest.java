@@ -56,6 +56,19 @@ public class CoralSparkTest {
   }
 
   @Test
+  public void testLiteralColumnsFromView(){
+    // [LIHADOOP-47172] use date literal in view definition
+    String targetSql = String.join("\n",
+        "SELECT '2013-01-01', '2017-08-22 01:02:03', 123, 123",
+        "FROM default.foo",
+        "LIMIT 1");
+    RelNode relNode = TestUtils.toRelNode("default","foo_v1");
+    CoralSpark coralSpark = CoralSpark.create(relNode);
+    String expandedSql = coralSpark.getSparkSql();
+    assertEquals(expandedSql, targetSql);
+  }
+
+  @Test
   public void testGetSQLFromView(){
     String targetSql = String.join("\n",
         "SELECT t0.bcol, bar.x",

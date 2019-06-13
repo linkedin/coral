@@ -559,6 +559,13 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
   }
 
   @Override
+  protected SqlNode visitDateLiteral(ASTNode node, ParseContext ctx) {
+    String text = node.getText();
+    checkState(text.length() >= 2);
+    return SqlLiteral.createCharString(text.substring(1, text.length() - 1), ZERO);
+  }
+
+  @Override
   protected SqlNode visitQueryNode(ASTNode node, ParseContext ctx) {
     ArrayList<Node> children = node.getChildren();
     checkState(children != null && !children.isEmpty());
