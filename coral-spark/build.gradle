@@ -1,5 +1,6 @@
 apply plugin:'li-java'
 apply plugin: 'maven-publish'
+apply plugin: 'com.github.johnrengelman.shadow'
 
 dependencies {
   // see :coral-hive build.gradle for why we add depedency this way
@@ -20,4 +21,14 @@ dependencies {
     exclude group: 'org.apache.calcite', module: 'calcite-core'
     exclude group: 'org.apache.calcite', module: 'calcite-avatica'
   }
+}
+
+// need to create a seprate fat shadowJar for dali-spark integration purpose
+shadowJar {
+  classifier = 'all'
+  zip64 true
+}
+
+artifacts {
+  archives shadowJar, jar, javadocJar, sourcesJar
 }
