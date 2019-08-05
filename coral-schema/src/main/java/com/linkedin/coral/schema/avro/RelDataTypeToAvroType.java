@@ -1,7 +1,7 @@
 package com.linkedin.coral.schema.avro;
 
 import com.linkedin.coral.com.google.common.base.Preconditions;
-import com.linkedin.coral.javax.annotation.Nonnull;
+import javax.annotation.Nonnull;
 import org.apache.avro.Schema;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.sql.type.ArraySqlType;

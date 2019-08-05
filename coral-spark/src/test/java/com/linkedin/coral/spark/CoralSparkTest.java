@@ -280,15 +280,20 @@ public class CoralSparkTest {
     CoralSpark.create(relNode);
   }
 
-  @Test(expectedExceptions = AssertionError.class)
-  public void testLateralViewGroupByNotSupported() {
+  @Test
+  public void testLateralViewGroupBy() {
     RelNode relNode = TestUtils.toRelNode(String.join("\n", "",
         "SELECT adid, count(1)",
         "FROM complex",
         "LATERAL VIEW explode(c) t as adid",
         "GROUP BY adid"
     ));
-    CoralSpark.create(relNode);
+    String targetSql = String.join("\n",
+        "SELECT t1.adid, COUNT(*)",
+        "FROM default.complex LATERAL VIEW EXPLODE(complex.c) t1 AS adid",
+        "GROUP BY t1.adid"
+    );
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
   }
 
 }

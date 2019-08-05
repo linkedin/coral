@@ -128,16 +128,20 @@ public class HiveTable implements ScannableTable {
 
   @Override
   public RelDataType getRowType(RelDataTypeFactory typeFactory) {
-    List<FieldSchema> cols = getColumns();
-    List<RelDataType> fieldTypes = new ArrayList<>(cols.size());
-    List<String> fieldNames = new ArrayList<>(cols.size());
-    Iterable<FieldSchema> allCols = Iterables.concat(cols, hiveTable.getPartitionKeys());
+    final List<FieldSchema> cols = getColumns();
+    final List<RelDataType> fieldTypes = new ArrayList<>(cols.size());
+    final List<String> fieldNames = new ArrayList<>(cols.size());
+    final Iterable<FieldSchema> allCols = Iterables.concat(cols, hiveTable.getPartitionKeys());
     allCols.forEach(col -> {
-      TypeInfo typeInfo = TypeInfoUtils.getTypeInfoFromTypeString(col.getType());
-      RelDataType relType = TypeConverter.convert(typeInfo, typeFactory);
-      fieldNames.add(col.getName());
-      fieldTypes.add(relType);
+      final TypeInfo typeInfo = TypeInfoUtils.getTypeInfoFromTypeString(col.getType());
+      final RelDataType relType = TypeConverter.convert(typeInfo, typeFactory);
+      final String colName = col.getName();
+      if (!fieldNames.contains(colName)) {
+        fieldNames.add(colName);
+        fieldTypes.add(relType);
+      }
     });
+
     return typeFactory.createStructType(fieldTypes, fieldNames);
   }
 

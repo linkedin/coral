@@ -8,6 +8,7 @@ dependencies {
   }
 
   compile spec.external.gson
+  compile spec.external.'javax-annotation'
 
   testCompile spec.external.'presto-parser'
 

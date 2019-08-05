@@ -7,9 +7,9 @@
  import java.util.Collection;
  import java.util.Collections;
  import java.util.List;
+ import java.util.function.Predicate;
  import org.apache.calcite.rel.type.RelDataType;
  import org.apache.calcite.rel.type.RelDataTypeFactory;
- import org.apache.calcite.runtime.PredicateImpl;
  import org.apache.calcite.sql.SqlCallBinding;
  import org.apache.calcite.sql.SqlIdentifier;
  import org.apache.calcite.sql.SqlOperandCountRange;
@@ -160,9 +160,9 @@ public final class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
     // TODO: operand types are not strictly true since these functions can take null literal
     // and most of these entries don't allow null literals. This will work for most common usages
     // but it's easy to write HiveQL to make these fail
-    createAddUserDefinedFunction("ascii", INTEGER, STRING);
+    createAddUserDefinedFunction("ascii", ReturnTypes.INTEGER, STRING);
     createAddUserDefinedFunction("base64", HiveReturnTypes.STRING, BINARY);
-    createAddUserDefinedFunction("character_length", INTEGER, STRING);
+    createAddUserDefinedFunction("character_length", ReturnTypes.INTEGER, STRING);
     createAddUserDefinedFunction("chr", HiveReturnTypes.STRING, NUMERIC);
     createAddUserDefinedFunction("concat", HiveReturnTypes.STRING, SAME_VARIADIC);
     // [CORAL-24] Tried setting this to
@@ -202,15 +202,15 @@ public final class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
     createAddUserDefinedFunction("decode", HiveReturnTypes.STRING, family(SqlTypeFamily.BINARY, SqlTypeFamily.STRING));
     createAddUserDefinedFunction("elt", HiveReturnTypes.STRING, VARIADIC);
     createAddUserDefinedFunction("encode", HiveReturnTypes.BINARY, STRING_STRING);
-    createAddUserDefinedFunction("field", INTEGER, VARIADIC);
-    createAddUserDefinedFunction("find_in_set", INTEGER, STRING_STRING);
+    createAddUserDefinedFunction("field", ReturnTypes.INTEGER, VARIADIC);
+    createAddUserDefinedFunction("find_in_set", ReturnTypes.INTEGER, STRING_STRING);
     createAddUserDefinedFunction("format_number", HiveReturnTypes.STRING, NUMERIC_INTEGER);
     createAddUserDefinedFunction("get_json_object", HiveReturnTypes.STRING, STRING_STRING);
     createAddUserDefinedFunction("in_file", ReturnTypes.BOOLEAN, STRING_STRING);
     createAddUserDefinedFunction("initcap", HiveReturnTypes.STRING, STRING);
-    createAddUserDefinedFunction("instr", INTEGER, STRING_STRING);
+    createAddUserDefinedFunction("instr", ReturnTypes.INTEGER, STRING_STRING);
     createAddUserDefinedFunction("length", INTEGER_NULLABLE, STRING);
-    createAddUserDefinedFunction("levenshtein", INTEGER, STRING_STRING);
+    createAddUserDefinedFunction("levenshtein", ReturnTypes.INTEGER, STRING_STRING);
     createAddUserDefinedFunction("locate", HiveReturnTypes.STRING,
         family(ImmutableList.of(SqlTypeFamily.STRING, SqlTypeFamily.STRING, SqlTypeFamily.INTEGER), optionalOrd(2)));
     addFunctionEntry("lower", LOWER);
@@ -220,7 +220,7 @@ public final class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
     createAddUserDefinedFunction("ltrim", HiveReturnTypes.STRING, STRING);
     createAddUserDefinedFunction("ngrams", LEAST_RESTRICTIVE,
         family(SqlTypeFamily.ARRAY, SqlTypeFamily.INTEGER, SqlTypeFamily.INTEGER, SqlTypeFamily.INTEGER));
-    createAddUserDefinedFunction("octet_length", INTEGER, STRING);
+    createAddUserDefinedFunction("octet_length", ReturnTypes.INTEGER, STRING);
     createAddUserDefinedFunction("parse_url", HiveReturnTypes.STRING,
         family(Collections.nCopies(3, SqlTypeFamily.STRING), optionalOrd(2)));
     createAddUserDefinedFunction("printf", HiveReturnTypes.STRING, VARIADIC);
@@ -258,17 +258,17 @@ public final class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
         family(ImmutableList.of(SqlTypeFamily.STRING, SqlTypeFamily.STRING), optionalOrd(ImmutableList.of(0, 1))));
     createAddUserDefinedFunction("to_date", HiveReturnTypes.STRING,
         or(STRING, DATETIME));
-    createAddUserDefinedFunction("year", INTEGER, STRING);
-    createAddUserDefinedFunction("quarter", INTEGER, STRING);
-    createAddUserDefinedFunction("month", INTEGER, STRING);
-    createAddUserDefinedFunction("day", INTEGER, STRING);
-    createAddUserDefinedFunction("dayofmonth", INTEGER, STRING);
-    createAddUserDefinedFunction("hour", INTEGER, or(STRING, DATETIME));
-    createAddUserDefinedFunction("minute", INTEGER, STRING);
-    createAddUserDefinedFunction("second", INTEGER, STRING);
-    createAddUserDefinedFunction("weekofyear", INTEGER, STRING);
+    createAddUserDefinedFunction("year", ReturnTypes.INTEGER, STRING);
+    createAddUserDefinedFunction("quarter", ReturnTypes.INTEGER, STRING);
+    createAddUserDefinedFunction("month", ReturnTypes.INTEGER, STRING);
+    createAddUserDefinedFunction("day", ReturnTypes.INTEGER, STRING);
+    createAddUserDefinedFunction("dayofmonth", ReturnTypes.INTEGER, STRING);
+    createAddUserDefinedFunction("hour", ReturnTypes.INTEGER, or(STRING, DATETIME));
+    createAddUserDefinedFunction("minute", ReturnTypes.INTEGER, STRING);
+    createAddUserDefinedFunction("second", ReturnTypes.INTEGER, STRING);
+    createAddUserDefinedFunction("weekofyear", ReturnTypes.INTEGER, STRING);
     //TODO: add extract UDF
-    createAddUserDefinedFunction("datediff", INTEGER, STRING_STRING);
+    createAddUserDefinedFunction("datediff", ReturnTypes.INTEGER, STRING_STRING);
     createAddUserDefinedFunction("date_add", HiveReturnTypes.STRING,
         or(family(SqlTypeFamily.DATE, SqlTypeFamily.INTEGER), family(SqlTypeFamily.TIMESTAMP, SqlTypeFamily.INTEGER),
             family(SqlTypeFamily.STRING, SqlTypeFamily.INTEGER)));
@@ -475,21 +475,11 @@ public final class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
    * @param ordinal parameter ordinal number
    * @return predicate to test if the parameter is optional
    */
-  private static PredicateImpl<Integer> optionalOrd(final int ordinal) {
-    return new PredicateImpl<Integer>() {
-      @Override
-      public boolean test(Integer input) {
-        return input == ordinal;
-      }
-    };
+  private static Predicate<Integer> optionalOrd(final int ordinal) {
+    return input -> input == ordinal;
   }
 
-  private static PredicateImpl<Integer> optionalOrd(final List<Integer> ordinals) {
-    return new PredicateImpl<Integer>() {
-      @Override
-      public boolean test(Integer input) {
-        return ordinals.contains(input);
-      }
-    };
+  private static Predicate<Integer> optionalOrd(final List<Integer> ordinals) {
+    return ordinals::contains;
   }
 }

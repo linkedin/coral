@@ -101,7 +101,7 @@ public class HiveOperatorsTest {
     {
       final String sql = "SELECT cast(a as double) FROM foo";
       RelNode rel = toRel(sql);
-      final String expectedSql = "SELECT CAST(\"a\" AS DOUBLE)\n" +
+      final String expectedSql = "SELECT CAST(\"a\" AS DOUBLE PRECISION)\n" +
           "FROM \"hive\".\"default\".\"foo\"";
       assertEquals(relToSql(rel), expectedSql);
     }

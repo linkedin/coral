@@ -55,10 +55,10 @@ public class HiveToRelConverterTest {
   public void testSelectNull() {
     final String sql = "SELECT NULL as f";
     RelNode rel = toRel(sql);
-    final String expected = "LogicalProject(f=[null])\n" +
+    final String expected = "LogicalProject(f=[null:NULL])\n" +
         "  LogicalValues(tuples=[[{ 0 }]])\n";
     assertEquals(relToStr(rel), expected);
-    final String expectedSql = "SELECT NULL AS \"f\"\nFROM (VALUES  (0))";
+    final String expectedSql = "SELECT NULL AS \"f\"\nFROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
     assertEquals(relToSql(rel), expectedSql);
   }
 
@@ -74,19 +74,19 @@ public class HiveToRelConverterTest {
       // reverse returns ARG0 as return type
       final String sql = "SELECT reverse(NULL)";
       RelNode rel = toRel(sql);
-      String expectedRel = "LogicalProject(EXPR$0=[reverse(null)])\n"
+      String expectedRel = "LogicalProject(EXPR$0=[reverse(null:NULL)])\n"
           + "  LogicalValues(tuples=[[{ 0 }]])\n";
       assertEquals(relToStr(rel), expectedRel);
     }
     {
       final String sql = "SELECT isnull(NULL)";
-      String expectedRel = "LogicalProject(EXPR$0=[IS NULL(null)])\n"
+      String expectedRel = "LogicalProject(EXPR$0=[IS NULL(null:NULL)])\n"
           + "  LogicalValues(tuples=[[{ 0 }]])\n";
       assertEquals(relToStr(toRel(sql)), expectedRel);
     }
     {
       final String sql = "SELECT isnull(reverse(NULL))";
-      String expectedRel = "LogicalProject(EXPR$0=[IS NULL(reverse(null))])\n" +
+      String expectedRel = "LogicalProject(EXPR$0=[IS NULL(reverse(null:NULL))])\n" +
           "  LogicalValues(tuples=[[{ 0 }]])\n";
       assertEquals(relToStr(toRel(sql)), expectedRel);
     }
@@ -96,7 +96,7 @@ public class HiveToRelConverterTest {
   public void testIFUDF() {
     {
       final String sql = "SELECT if( a > 10, null, 15) FROM foo";
-      String expected = "LogicalProject(EXPR$0=[if(>($0, 10), null, 15)])\n" +
+      String expected = "LogicalProject(EXPR$0=[if(>($0, 10), null:NULL, 15)])\n" +
           "  LogicalTableScan(table=[[hive, default, foo]])\n";
       RelNode rel = converter.convertSql(sql);
       assertEquals(RelOptUtil.toString(rel), expected);
@@ -111,7 +111,7 @@ public class HiveToRelConverterTest {
     }
     {
       final String sql = "SELECT if(a > 10, null, null) FROM foo";
-      String expected = "LogicalProject(EXPR$0=[if(>($0, 10), null, null)])\n" +
+      String expected = "LogicalProject(EXPR$0=[if(>($0, 10), null:NULL, null:NULL)])\n" +
           "  LogicalTableScan(table=[[hive, default, foo]])\n";
       assertEquals(relToString(sql), expected);
     }
@@ -214,7 +214,7 @@ public class HiveToRelConverterTest {
   public void testStructType() {
     final String sql = "SELECT struct(10, 15, 20.23)";
     String generated = relToString(sql);
-    final String expected = "LogicalProject(EXPR$0=[ROW(10, 15, 20.23)])\n" +
+    final String expected = "LogicalProject(EXPR$0=[ROW(10, 15, 20.23:DECIMAL(4, 2))])\n" +
         "  LogicalValues(tuples=[[{ 0 }]])\n";
     assertEquals(generated, expected);
   }
@@ -253,11 +253,12 @@ public class HiveToRelConverterTest {
     final String sql = "select named_struct('field_a', 10, 'field_b', 'abc').field_b";
     RelNode rel = toRel(sql);
     final String expectedRel = "LogicalProject(EXPR$0=[CAST(ROW(10, 'abc')):"
-        + "RecordType(INTEGER NOT NULL field_a, CHAR(3) CHARACTER SET \"ISO-8859-1\" COLLATE \"ISO-8859-1$en_US$primary\" NOT NULL field_b) NOT NULL.field_b])\n"
+        + "RecordType(INTEGER NOT NULL field_a, CHAR(3) NOT NULL field_b) NOT NULL.field_b])\n"
         + "  LogicalValues(tuples=[[{ 0 }]])\n";
     assertEquals(relToStr(rel), expectedRel);
-    final String expectedSql = "SELECT CAST(ROW(10, 'abc') AS ROW(\"field_a\" INTEGER, \"field_b\" CHAR(3))).\"field_b\"\nFROM (VALUES  (0))";
-    assertEquals(relToSql(rel), expectedSql);
+    final String expectedSql = "SELECT CAST(ROW(10, 'abc') AS ROW(field_a INTEGER, field_b CHAR(3))).field_b\n"
+        + "FROM (VALUES  (0)) t (ZERO)";
+    assertEquals(relToHql(rel), expectedSql);
   }
 
   private String relToString(String sql) {

@@ -6,14 +6,14 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
 import com.linkedin.coral.functions.HiveReturnTypes;
-import com.linkedin.coral.javax.annotation.Nonnull;
-import com.linkedin.coral.javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.SqlIdentifier;
@@ -276,7 +276,7 @@ public class UDFTransformer {
       int index = transformer.get(INPUT).getAsInt();
       if (index < 0 || index >= sourceOperands.size() || sourceOperands.get(index) == null) {
         throw new IllegalArgumentException("Invalid input value: " + index
-        + ". Number of source operands: " + sourceOperands.size());
+            + ". Number of source operands: " + sourceOperands.size());
       }
       return sourceOperands.get(index);
     }

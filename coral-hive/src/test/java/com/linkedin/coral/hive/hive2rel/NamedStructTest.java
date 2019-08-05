@@ -24,9 +24,9 @@ public class NamedStructTest {
     final String sql = "SELECT named_struct('abc', 123, 'def', 'xyz')";
     RelNode rel = toRel(sql);
     final String generated = relToStr(rel);
-    final String expected = "LogicalProject(EXPR$0=[CAST(ROW(123, 'xyz')):RecordType(INTEGER NOT NULL abc,"
-        + " CHAR(3) CHARACTER SET \"ISO-8859-1\" COLLATE \"ISO-8859-1$en_US$primary\" NOT NULL def) NOT NULL])\n" +
-        "  LogicalValues(tuples=[[{ 0 }]])\n";
+    final String expected = ""
+        + "LogicalProject(EXPR$0=[CAST(ROW(123, 'xyz')):RecordType(INTEGER NOT NULL abc, CHAR(3) NOT NULL def) NOT NULL])\n"
+        + "  LogicalValues(tuples=[[{ 0 }]])\n";
     assertEquals(generated, expected);
   }
 
@@ -34,8 +34,8 @@ public class NamedStructTest {
   public void testNullFieldValue() {
     final String sql = "SELECT named_struct('abc', cast(NULL as int), 'def', 150)";
     final String generated = sqlToRelStr(sql);
-    final String expected = "LogicalProject(EXPR$0=[CAST(ROW(CAST(null):INTEGER, 150)):RecordType(INTEGER abc, INTEGER NOT NULL def) NOT NULL])\n" +
-         "  LogicalValues(tuples=[[{ 0 }]])\n";
+    final String expected = "LogicalProject(EXPR$0=[CAST(ROW(CAST(null:NULL):INTEGER, 150)):RecordType(INTEGER abc, INTEGER NOT NULL def) NOT NULL])\n" +
+        "  LogicalValues(tuples=[[{ 0 }]])\n";
     assertEquals(generated, expected);
   }
 
@@ -43,7 +43,7 @@ public class NamedStructTest {
   public void testAllNullValues() {
     final String sql = "SELECT named_struct('abc', cast(NULL as int), 'def', cast(NULL as double))";
     final String generated = sqlToRelStr(sql);
-    final String expected = "LogicalProject(EXPR$0=[CAST(ROW(CAST(null):INTEGER, CAST(null):DOUBLE)):RecordType(INTEGER abc, DOUBLE def) NOT NULL])\n" +
+    final String expected = "LogicalProject(EXPR$0=[CAST(ROW(CAST(null:NULL):INTEGER, CAST(null:NULL):DOUBLE)):RecordType(INTEGER abc, DOUBLE def) NOT NULL])\n" +
         "  LogicalValues(tuples=[[{ 0 }]])\n";
     assertEquals(generated, expected);
   }
@@ -52,7 +52,7 @@ public class NamedStructTest {
   public void testNestedComplexTypes() {
     final String sql = "SELECT named_struct('arr', array(10, 15), 's', named_struct('f1', 123, 'f2', array(20.5)))";
     final String generated = sqlToRelStr(sql);
-    final String expected = "LogicalProject(EXPR$0=[CAST(ROW(ARRAY(10, 15), CAST(ROW(123, ARRAY(20.5))):"
+    final String expected = "LogicalProject(EXPR$0=[CAST(ROW(ARRAY(10, 15), CAST(ROW(123, ARRAY(20.5:DECIMAL(3, 1)))):"
         + "RecordType(INTEGER NOT NULL f1, DECIMAL(3, 1) NOT NULL ARRAY NOT NULL f2) NOT NULL)):"
         + "RecordType(INTEGER NOT NULL ARRAY NOT NULL arr, RecordType(INTEGER NOT NULL f1, DECIMAL(3, 1) NOT NULL ARRAY NOT NULL f2) NOT NULL s) NOT NULL])\n"
         + "  LogicalValues(tuples=[[{ 0 }]])\n";

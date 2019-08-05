@@ -1,6 +1,5 @@
 package com.linkedin.coral.hive.hive2rel;
 
-import com.linkedin.coral.hive.hive2rel.HiveMscAdapter;
 import java.io.IOException;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
@@ -41,7 +40,7 @@ public class LateralViewTest {
         "    LogicalTableScan(table=[[hive, default, complex]])\n" +
         "    LogicalProject(ccol=[$0])\n" +
         "      HiveUncollect\n" +
-        "        LogicalProject(ccol=[if(AND(IS NOT NULL($cor0.c), >(CARDINALITY($cor0.c), 0)), $cor0.c, ARRAY(null))])\n"+
+        "        LogicalProject(ccol=[if(AND(IS NOT NULL($cor0.c), >(CARDINALITY($cor0.c), 0)), $cor0.c, ARRAY(null:NULL))])\n"+
         "          LogicalValues(tuples=[[{ 0 }]])\n";
 
     assertEquals(toRelStr(sql), expected);
@@ -58,7 +57,7 @@ public class LateralViewTest {
         "      LogicalTableScan(table=[[hive, default, complex]])\n" +
         "      LogicalProject(ccol=[$0])\n" +
         "        HiveUncollect\n" +
-        "          LogicalProject(ccol=[if(AND(IS NOT NULL($cor0.c), >(CARDINALITY($cor0.c), 0)), $cor0.c, ARRAY(null))])\n" +
+        "          LogicalProject(ccol=[if(AND(IS NOT NULL($cor0.c), >(CARDINALITY($cor0.c), 0)), $cor0.c, ARRAY(null:NULL))])\n" +
         "            LogicalValues(tuples=[[{ 0 }]])\n" +
         "    LogicalProject(anotherCCol=[$0])\n" +
         "      HiveUncollect\n" +
@@ -76,7 +75,7 @@ public class LateralViewTest {
         "    LogicalTableScan(table=[[hive, default, complex]])\n" +
         "    LogicalProject(flat_s=[$0])\n" +
         "      HiveUncollect\n" +
-        "        LogicalProject(flat_s=[if(AND(IS NOT NULL($cor0.sarr), >(CARDINALITY($cor0.sarr), 0)), $cor0.sarr, ARRAY(null))])\n" +
+        "        LogicalProject(flat_s=[if(AND(IS NOT NULL($cor0.sarr), >(CARDINALITY($cor0.sarr), 0)), $cor0.sarr, ARRAY(null:NULL))])\n" +
         "          LogicalValues(tuples=[[{ 0 }]])\n";
     assertEquals(toRelStr(sql), expected);
   }
@@ -90,7 +89,7 @@ public class LateralViewTest {
         "    LogicalTableScan(table=[[hive, default, complex]])\n" +
         "    LogicalProject(ccol=[$0])\n" +
         "      HiveUncollect\n" +
-        "        LogicalProject(ccol=[if(>(CARDINALITY($cor0.c), 5), ARRAY(10.5), $cor0.c)])\n" +
+        "        LogicalProject(ccol=[if(>(CARDINALITY($cor0.c), 5), ARRAY(10.5:DECIMAL(3, 1)), $cor0.c)])\n" +
         "          LogicalValues(tuples=[[{ 0 }]])\n";
     assertEquals(toRelStr(sql), expected);
   }

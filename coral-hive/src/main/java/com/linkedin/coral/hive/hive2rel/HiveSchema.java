@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Set;
 import javax.annotation.Nonnull;
 import org.apache.calcite.linq4j.tree.Expression;
+import org.apache.calcite.rel.type.RelProtoDataType;
 import org.apache.calcite.schema.Function;
 import org.apache.calcite.schema.Schema;
 import org.apache.calcite.schema.SchemaPlus;
@@ -50,6 +51,16 @@ public class HiveSchema implements Schema {
   @Override
   public Set<String> getTableNames() {
     return ImmutableSet.of();
+  }
+
+  @Override
+  public RelProtoDataType getType(String s) {
+    return null;
+  }
+
+  @Override
+  public Set<String> getTypeNames() {
+    return null;
   }
 
   @Override

@@ -12,6 +12,7 @@ import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.SqlOperatorTable;
 import org.apache.calcite.sql.SqlSyntax;
+import org.apache.calcite.sql.validate.SqlNameMatcher;
 import org.apache.calcite.util.Util;
 
 
@@ -39,13 +40,14 @@ public class DaliOperatorTable implements SqlOperatorTable {
    */
   @Override
   public void lookupOperatorOverloads(SqlIdentifier sqlIdentifier, SqlFunctionCategory sqlFunctionCategory,
-      SqlSyntax sqlSyntax, List<SqlOperator> list) {
+      SqlSyntax sqlSyntax, List<SqlOperator> list, SqlNameMatcher sqlNameMatcher) {
     String functionName = Util.last(sqlIdentifier.names);
     Collection<HiveFunction> functions = funcResolver.resolve(functionName, true);
     functions.stream()
         .map(HiveFunction::getSqlOperator)
         .collect(Collectors.toCollection(() -> list));
   }
+
 
   @Override
   public List<SqlOperator> getOperatorList() {

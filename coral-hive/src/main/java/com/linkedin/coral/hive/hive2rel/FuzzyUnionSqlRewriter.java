@@ -86,7 +86,7 @@ class FuzzyUnionSqlRewriter extends SqlShuttle {
     this.relContextProvider = relContextProvider;
     HiveTable hiveTable = new HiveTable(table);
     this.tableDataType = hiveTable.getRowType(relContextProvider.getHiveSqlValidator().getTypeFactory());
-    this.columnNames = Lists.transform(table.getSd().getCols(), field -> field.getName().toLowerCase());
+    this.columnNames = Lists.transform(table.getSd().getCols(), field -> field.getName());
   }
 
   @Override
@@ -177,7 +177,7 @@ class FuzzyUnionSqlRewriter extends SqlShuttle {
     // The table schema will be projected over a branch if and only if the branch contains a superset of the
     // fields in the provided table schema and does not have the same schema as the table schema.
     Set<String> fromNodeFieldNames = fromNodeDataType.getFieldList().stream().map(
-        f -> f.getName().toLowerCase()).collect(Collectors.toSet());
+        f -> f.getName()).collect(Collectors.toSet());
 
     if (!fromNodeFieldNames.containsAll(columnNames)) {
       return unionBranch;

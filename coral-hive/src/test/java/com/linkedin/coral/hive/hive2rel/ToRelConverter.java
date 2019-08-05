@@ -1,6 +1,5 @@
 package com.linkedin.coral.hive.hive2rel;
 
-import com.linkedin.coral.hive.hive2rel.HiveMscAdapter;
 import java.io.IOException;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
@@ -81,5 +80,12 @@ class ToRelConverter {
     return rel2sql.visitChild(0, rel)
         .asStatement()
         .toSqlString(SqlDialect.DatabaseProduct.POSTGRESQL.getDialect()).getSql();
+  }
+
+  static String relToHql(RelNode rel) {
+    RelToSqlConverter rel2sql = new RelToSqlConverter(SqlDialect.DatabaseProduct.HIVE.getDialect());
+    return rel2sql.visitChild(0, rel)
+        .asStatement()
+        .toSqlString(SqlDialect.DatabaseProduct.HIVE.getDialect()).getSql();
   }
 }

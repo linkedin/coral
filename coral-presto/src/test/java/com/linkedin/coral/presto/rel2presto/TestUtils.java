@@ -45,8 +45,8 @@ public class TestUtils {
 
     SqlParser.Config parserConfig =
         SqlParser.configBuilder()
-            .setCaseSensitive(false).
-            setConformance(SqlConformanceEnum.STRICT_2003)
+            .setCaseSensitive(false)
+            .setConformance(SqlConformanceEnum.DEFAULT)
             .build();
 
     return Frameworks.newConfigBuilder()
@@ -180,13 +180,7 @@ public class TestUtils {
     // OR, AND, CASE clauses and simplify those. This has two problems:
     // 1. Our type system is not perfect replication of Hive so this can be incorrect
     // 2. Converted expression is harder to validate for correctness(because it appears different from input)
-    Hook.REL_BUILDER_SIMPLIFY.add(new Function<Object, Object>() {
-      @Override
-      public Object apply(Object o) {
-        ((org.apache.calcite.util.Holder) o).set(false);
-        return null;
-      }
-    });
+    Hook.REL_BUILDER_SIMPLIFY.add(Hook.propertyJ(false));
   }
 
   public static void initializeViews() throws HiveException, MetaException {

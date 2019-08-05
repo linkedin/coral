@@ -15,6 +15,7 @@ import org.apache.calcite.rel.core.Window;
 import org.apache.calcite.rel.rel2sql.RelToSqlConverter;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
+import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.JoinConditionType;
@@ -33,13 +34,11 @@ import static com.linkedin.coral.presto.rel2presto.Calcite2PrestoUDFConverter.*;
 
 public class RelToPrestoConverter extends RelToSqlConverter {
 
-  public static final PrestoSqlDialect PRESTO_DIALECT = new PrestoSqlDialect();
-
   /**
    * Creates a RelToSqlConverter.
    */
   public RelToPrestoConverter() {
-    super(PRESTO_DIALECT);
+    super(PrestoSqlDialect.INSTANCE);
   }
 
   /**
@@ -49,7 +48,7 @@ public class RelToPrestoConverter extends RelToSqlConverter {
    */
   public String convert(RelNode relNode) {
     RelNode rel = convertRel(relNode);
-    return convertToSqlNode(rel).accept(new PrestoSqlRewriter()).toSqlString(PRESTO_DIALECT).toString();
+    return convertToSqlNode(rel).accept(new PrestoSqlRewriter()).toSqlString(PrestoSqlDialect.INSTANCE).toString();
   }
 
   /**
@@ -81,7 +80,7 @@ public class RelToPrestoConverter extends RelToSqlConverter {
     // Removing isStar() check caused regression with lateral views. Removing isStar() will
     // create SELECT x from UNNEST(..). Presto does not like SELECT around UNNEST. Hence, we return
     // 'x' for unnest() clauses without adding select around it.
-    if (isStar(e.getChildExps(), e.getInput().getRowType()) && e.getInput() instanceof Uncollect) {
+    if (isUnnestAll(e)) {
       return x;
     }
 
@@ -95,6 +94,23 @@ public class RelToPrestoConverter extends RelToSqlConverter {
 
     builder.setSelect(new SqlNodeList(selectList, POS));
     return builder.result();
+  }
+
+  private boolean isUnnestAll(Project project) {
+    final List<RexNode> projExps = project.getChildExps();
+
+    if (projExps.size() != project.getInput().getRowType().getFieldCount()
+        || !(project.getInput() instanceof Uncollect)) {
+      return false;
+    }
+
+    for (int i = 0; i < projExps.size(); i++) {
+      if (!(projExps.get(i) instanceof RexInputRef)
+        || ((RexInputRef) projExps.get(i)).getIndex() != i) {
+        return false;
+      }
+    }
+    return true;
   }
 
   public Result visit(Uncollect e) {
@@ -147,6 +163,7 @@ public class RelToPrestoConverter extends RelToSqlConverter {
 
   public Result visit(Correlate e) {
     final Result leftResult = visitChild(0, e.getLeft()).resetAlias(e.getCorrelVariable(), e.getLeft().getRowType());
+    parseCorrelTable(e, leftResult);
     final Result rightResult = visitChild(1, e.getRight());
     SqlNode rightLateral = rightResult.node;
     if (rightLateral.getKind() != SqlKind.AS) {
@@ -161,21 +178,9 @@ public class RelToPrestoConverter extends RelToSqlConverter {
   }
 
   @Override
-  protected RexNode stripCastFromString(RexNode node) {
-    return node;
-  }
-
-  protected class RelToPrestoAliasContext extends AliasContext {
-
-    protected RelToPrestoAliasContext(Map<String, RelDataType> aliases, boolean qualified) {
-      super(aliases, qualified);
-    }
-  }
-
-  @Override
   public Context aliasContext(Map<String, RelDataType> aliases, boolean qualified) {
     // easier to keep inner class for accessing 'aliases' and 'qualified' variables as closure
-    return new AliasContext(aliases, qualified) {
+    return new AliasContext(PrestoSqlDialect.INSTANCE, aliases, qualified) {
       @Override
       public SqlNode field(int ordinal) {
         for (Map.Entry<String, RelDataType> alias : aliases.entrySet()) {

@@ -78,18 +78,18 @@ public class RelToPrestoConverterTest {
     }
     {
       String sql = "select ARRAY[1,2,3]";
-      String expected = "SELECT ARRAY[1, 2, 3]\nFROM (VALUES  (0))";
+      String expected = "SELECT ARRAY[1, 2, 3]\nFROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
       testConversion(sql, expected);
     }
     // date and timestamp
     {
       String sql = "SELECT date '2017-10-21'";
-      String expected = "SELECT DATE '2017-10-21'\nFROM (VALUES  (0))";
+      String expected = "SELECT DATE '2017-10-21'\nFROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
       testConversion(sql, expected);
     }
     {
       String sql = "SELECT time '13:45:21.011'";
-      String expected = "SELECT TIME '13:45:21.011'\nFROM (VALUES  (0))";
+      String expected = "SELECT TIME '13:45:21.011'\nFROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
       testConversion(sql, expected);
     }
     // TODO: Test disabled: Calcite parser does not support time with timezone. Check Hive
@@ -122,12 +122,12 @@ public class RelToPrestoConverterTest {
   public void testConstantExpressions() {
     {
       String sql = "SELECT 1";
-      String expected = formatSql("SELECT 1 FROM (VALUES  (0))");
+      String expected = formatSql("SELECT 1 FROM (VALUES  (0)) AS \"t\" (\"ZERO\")");
       testConversion(sql, expected);
     }
     {
       String sql = "SELECT 5 + 2 * 10 / 4";
-      String expected = formatSql("SELECT 5 + 2 * 10 / 4 FROM (VALUES  (0))");
+      String expected = formatSql("SELECT 5 + 2 * 10 / 4 FROM (VALUES  (0)) AS \"t\" (\"ZERO\")");
       testConversion(sql, expected);
     }
   }
@@ -155,8 +155,8 @@ public class RelToPrestoConverterTest {
         "FROM tableOne\n" +
         "LEFT JOIN (SELECT MIN(TRUE) AS \"$f0\"\n"+
         "FROM tableTwo\n" +
-        "WHERE dfield > 32.00) AS \"t2\" ON TRUE\n" +
-        "WHERE \"t2\".\"$f0\" IS NOT NULL");
+        "WHERE dfield > 32.00) AS \"t1\" ON TRUE\n" +
+        "WHERE \"t1\".\"$f0\" IS NOT NULL");
     testConversion(sql, expected);
   }
 
@@ -167,8 +167,8 @@ public class RelToPrestoConverterTest {
     "FROM tableOne\n" +
     "LEFT JOIN (SELECT MIN(TRUE) AS \"$f0\"\n" +
     "FROM tableTwo\n" +
-    "WHERE dfield > 32.00) AS \"t2\" ON TRUE\n" +
-    "WHERE NOT \"t2\".\"$f0\" IS NOT NULL");
+    "WHERE dfield > 32.00) AS \"t1\" ON TRUE\n" +
+    "WHERE NOT \"t1\".\"$f0\" IS NOT NULL");
     testConversion(sql, expected);
   }
 
@@ -217,9 +217,6 @@ public class RelToPrestoConverterTest {
   }
 
 
-  // Lateral and Unnest unit tests have incorrect looking sql as expected sql. That's because
-  // we use calcite parser and sql2rel converters which generate incorrect plan.
-  // TODO: Replace these with more reliable tests
   @Test
   public void testLateralView() {
     // we need multiple lateral clauses and projection of columns
@@ -236,10 +233,10 @@ public class RelToPrestoConverterTest {
         + "SELECT \"$cor1\".\"icol\" AS \"ICOL\", \"$cor1\".\"I_PLUSONE\", "
         + "\"t2\".\"D_PLUSTEN\", \"$cor1\".\"tcol\" AS \"TCOL\", \"$cor1\".\"acol\" AS \"ACOL\"\n"
         + "FROM (\"tableOne\" AS \"$cor0\"\n"
-        + "CROSS JOIN (SELECT \"$cor0\".\"icol_0\" + 1 AS \"I_PLUSONE\"\n"
-        + "FROM (VALUES  (TRUE))) AS \"t0\") AS \"$cor1\"\n"
-        + "CROSS JOIN (SELECT \"$cor1\".\"dcol_1\" + 10 AS \"D_PLUSTEN\"\n"
-        + "FROM (VALUES  (TRUE))) AS \"t2\"";
+        + "CROSS JOIN (SELECT \"$cor0\".\"icol\" + 1 AS \"I_PLUSONE\"\n"
+        + "FROM (VALUES  (TRUE)) AS \"t\" (\"EXPR$0\")) AS \"t0\") AS \"$cor1\"\n"
+        + "CROSS JOIN (SELECT \"$cor1\".\"dcol\" + 10 AS \"D_PLUSTEN\"\n"
+        + "FROM (VALUES  (TRUE)) AS \"t\" (\"EXPR$0\")) AS \"t2\"";
     testConversion(sql, expected);
   }
 
@@ -255,16 +252,13 @@ public class RelToPrestoConverterTest {
     testConversion(sql, expected);
   }
 
-  // Expected SQL has badly aliased names and column names because of errors in calcite
-  // SQL parser. We need to replace this with more reliable test. For now, this is better than
-  // not having any test.
   @Test
   public void testLateralViewUnnest() {
     String sql = "select icol, acol_elem from tableOne as t cross join unnest(t.acol) as t1(acol_elem)";
     String expectedSql = ""
         + "SELECT \"$cor0\".\"icol\" AS \"ICOL\", \"t0\".\"acol\" AS \"ACOL_ELEM\"\n"
         + "FROM \"tableOne\" AS \"$cor0\"\n"
-        + "CROSS JOIN UNNEST(\"$cor0\".\"acol_4\") AS \"t0\" (\"acol\")";
+        + "CROSS JOIN UNNEST(\"$cor0\".\"acol\") AS \"t0\" (\"acol\")";
     testConversion(sql, expectedSql);
   }
 
@@ -362,7 +356,7 @@ public class RelToPrestoConverterTest {
 
     String sql2 = "SELECT truncate(dcol, 2) "
         + "FROM " + TABLE_ONE.getTableName();
-    String expectedSql2 = formatSql("SELECT \"TRUNCATE\"(dcol * POWER(10, 2)) / POWER(10, 2)" +
+    String expectedSql2 = formatSql("SELECT TRUNCATE(dcol * POWER(10, 2)) / POWER(10, 2)" +
         " from " + tableOne);
     testConversion(sql2, expectedSql2);
   }

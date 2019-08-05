@@ -64,7 +64,7 @@ public class FunctionFieldReferenceOperator extends SqlBinaryOperator {
     writer.setNeedWhitespace(false);
       // strip quotes from fieldName
     String fieldName = fieldNameStripQuotes(call.operand(1));
-    writer.identifier(fieldName);
+    writer.identifier(fieldName, true);
   }
 
   @Override
