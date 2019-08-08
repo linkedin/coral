@@ -32,18 +32,6 @@ public class CoralSparkTest {
         family(SqlTypeFamily.INTEGER), "com.linkedin:udf:1.0");
     StaticHiveFunctionRegistry.createAddUserDefinedFunction("com.linkedin.coral.hive.hive2rel.CoralTestUdfSquare", ReturnTypes.INTEGER,
         family(SqlTypeFamily.INTEGER), "com.linkedin:udf:1.1");
-
-    // add the following 2 test UDF to TransportableUDFMap for testing purpose.
-    TransportableUDFMap.add("com.linkedin.coral.hive.hive2rel.CoralTestUDF",
-        "coralTestUDF",
-        "com.linkedin.coral.spark.CoralTestUDF",
-        "ivy://com.linkedin:udf:1.0");
-
-    TransportableUDFMap.add("com.linkedin.coral.hive.hive2rel.CoralTestUdfSquare",
-        "coralTestUdfSquare",
-        "com.linkedin.coral.spark.CoralTestUdfSquare",
-        "ivy://com.linkedin:udf:1.1");
-
   }
 
   @Test
@@ -97,9 +85,14 @@ public class CoralSparkTest {
     CoralSpark coralSpark = CoralSpark.create(relNode);
     List<SparkUDFInfo> udfJars = coralSpark.getSparkUDFInfoList();
     assertEquals(1, udfJars.size());
+
     String udfUriString = udfJars.get(0).getArtifactoryUrl().toString();
     String targetArtifactoryUrl = "ivy://com.linkedin:udf:1.0";
     assertEquals(udfUriString, targetArtifactoryUrl);
+    // LIHADOOP-48379: need to check the UDF type
+    SparkUDFInfo.UDFTYPE testUdfType = udfJars.get(0).getUdfType();
+    SparkUDFInfo.UDFTYPE targetUdfType = SparkUDFInfo.UDFTYPE.HIVE_CUSTOM_UDF;
+    assertEquals(testUdfType, targetUdfType);
   }
 
   @Test

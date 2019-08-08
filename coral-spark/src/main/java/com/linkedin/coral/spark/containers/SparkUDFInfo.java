@@ -8,9 +8,14 @@ import java.net.URI;
  *
  */
 public class SparkUDFInfo {
+  public enum UDFTYPE {
+    HIVE_BUILTIN_FUNCTION, HIVE_CUSTOM_UDF, TRANSPORTABLE_UDF
+  }
+
   private String className;
   private String functionName;
   private URI artifactoryUrl;
+  private UDFTYPE udfType;
 
   /**
    * @param className Class name of a Spark UDF
@@ -20,12 +25,15 @@ public class SparkUDFInfo {
    *                      Example: epochToDateFormat
    * @param artifactoryUrl Artifactory Url to download all dependencies for this UDF.
    *                       Example: ivy://com.linkedin.standard-udfs-dali-udfs:standard-udfs-dali-udfs-spark:0.0.8
+   * @param udfType  the type of the UDF to be registered.
+   *                      Example: HIVE_CUSTOM_UDF
    *
    */
-  public SparkUDFInfo(String className, String functionName, URI artifactoryUrl) {
+  public SparkUDFInfo(String className, String functionName, URI artifactoryUrl, UDFTYPE udfType) {
     this.className = className;
     this.functionName = functionName;
     this.artifactoryUrl = artifactoryUrl;
+    this.udfType = udfType;
   }
 
   /**
@@ -59,9 +67,20 @@ public class SparkUDFInfo {
     return artifactoryUrl;
   }
 
+  /**
+   * Get type of the UDF, which will be needed while registering UDF.
+   * Note: Different UDF type will require different mechnism to register a UDF.
+   *
+   * @return  UDF_TYPE  the UDF type of the function
+   *                  Example: HIVE_CUSTOM_UDF
+   */
+  public UDFTYPE getUdfType() {
+    return udfType;
+  }
+
   @Override
   public String toString() {
     return "SparkUDFInfo{" + "className='" + className + '\'' + ", functionName='" + functionName + '\''
-        + ", artifactoryUrl='" + artifactoryUrl + '\'' + '}';
+        + ", artifactoryUrl='" + artifactoryUrl + '\'' + ", udfType='" + udfType + '\'' + '}';
   }
 }

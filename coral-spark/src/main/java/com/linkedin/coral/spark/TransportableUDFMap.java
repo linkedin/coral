@@ -49,7 +49,7 @@ class TransportableUDFMap {
   public static void add(String className, String sparkFunctionName, String sparkClassName, String artifcatoryUrl) {
     try {
       URI url = new URI(artifcatoryUrl);
-      UDF_MAP.put(className, new SparkUDFInfo(sparkClassName, sparkFunctionName, url));
+      UDF_MAP.put(className, new SparkUDFInfo(sparkClassName, sparkFunctionName, url, SparkUDFInfo.UDFTYPE.TRANSPORTABLE_UDF));
     } catch (URISyntaxException e) {
       throw new RuntimeException(String.format("Artifactory URL is malformed %s", artifcatoryUrl), e);
     }

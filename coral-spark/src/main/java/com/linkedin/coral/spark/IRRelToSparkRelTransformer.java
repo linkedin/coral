@@ -245,7 +245,7 @@ class IRRelToSparkRelTransformer {
         String dependencyString = functions.iterator().next().getUdfDependency();
         try {
           URI artifactoryUri = new URI(dependencyString);
-          SparkUDFInfo sparkUdfOne = new SparkUDFInfo(functionClassName, functionName, artifactoryUri);
+          SparkUDFInfo sparkUdfOne = new SparkUDFInfo(functionClassName, functionName, artifactoryUri, SparkUDFInfo.UDFTYPE.HIVE_CUSTOM_UDF);
           sparkUDFInfo = Optional.of(sparkUdfOne);
           LOG.info("Function: " + functionName
               + " is not a Builtin UDF or Transportable UDF.  We fall back to its Hive function with ivy dependency: "
