@@ -197,8 +197,8 @@ class IRRelToSparkRelTransformer {
       RexNode convertToNewNode = convertToZeroBasedArrayIndex(updatedCall)
           .orElseGet(() -> convertToNamedStruct(updatedCall)
           .orElseGet(() -> convertFuzzyUnionGenericProject(updatedCall)
-          .orElseGet(() -> convertBuiltInUDF(updatedCall)  // try BuiltInUDF first since it is used more often
           .orElseGet(() -> convertDaliUDF(updatedCall)
+          .orElseGet(() -> convertBuiltInUDF(updatedCall)
           .orElseGet(() -> fallbackToHiveUdf(updatedCall)
           .orElse(updatedCall))))));
 

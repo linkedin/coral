@@ -351,10 +351,31 @@ public final class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
 
     createAddUserDefinedFunction("com.linkedin.dali.udf.date.hive.DateFormatToEpoch", BIGINT_NULLABLE,
         STRING_STRING_STRING);
-    createAddUserDefinedFunction("com.linkedin.dali.udf.date.hive.EpochToEpochMilliseconds", BIGINT_NULLABLE, NUMERIC);
     createAddUserDefinedFunction("com.linkedin.dali.udf.date.hive.EpochToDateFormat",
         HiveReturnTypes.STRING, family(SqlTypeFamily.NUMERIC, SqlTypeFamily.STRING, SqlTypeFamily.STRING));
+    createAddUserDefinedFunction("com.linkedin.dali.udf.date.hive.EpochToEpochMilliseconds", BIGINT_NULLABLE, NUMERIC);
     createAddUserDefinedFunction("com.linkedin.dali.udf.sanitize.hive.Sanitize", HiveReturnTypes.STRING, STRING);
+
+    // LIHADOOP-48502: The following UDFs are already defined using Transport UDF.
+    // The class name is the corresponding Hive UDF.
+    // We point their class files to the corresponding Spark jar file in TransportableUDFMap.
+    createAddUserDefinedFunction("com.linkedin.stdudfs.daliudfs.hive.DateFormatToEpoch", BIGINT_NULLABLE,
+        STRING_STRING_STRING);
+    createAddUserDefinedFunction("com.linkedin.stdudfs.daliudfs.hive.EpochToDateFormat",
+        HiveReturnTypes.STRING, family(SqlTypeFamily.NUMERIC, SqlTypeFamily.STRING, SqlTypeFamily.STRING));
+    createAddUserDefinedFunction("com.linkedin.stdudfs.daliudfs.hive.EpochToEpochMilliseconds", BIGINT_NULLABLE, NUMERIC);
+    createAddUserDefinedFunction("com.linkedin.stdudfs.daliudfs.hive.IsGuestMemberId", ReturnTypes.BOOLEAN,
+        NUMERIC);
+    createAddUserDefinedFunction("com.linkedin.stdudfs.daliudfs.hive.MapLookup",
+        HiveReturnTypes.STRING, family(SqlTypeFamily.MAP, SqlTypeFamily.STRING, SqlTypeFamily.STRING));
+    createAddUserDefinedFunction("com.linkedin.stdudfs.daliudfs.hive.PortalLookup",
+        HiveReturnTypes.STRING, STRING_STRING_STRING);
+    createAddUserDefinedFunction("com.linkedin.stdudfs.daliudfs.hive.Sanitize", HiveReturnTypes.STRING, STRING);
+
+    // This is a Hive Custom UDF which is a simplified version of 'date-converter' package.
+    // This UDF is not converted to a transport UDF.
+    createAddUserDefinedFunction("com.linkedin.dali.customudf.date.hive.DateFormatToEpoch", BIGINT_NULLABLE,
+        STRING_STRING_STRING, "ivy://com.linkedin.date-converter-rhu:date-converter-rhu:0.0.2");
 
     // UDTFs
     addFunctionEntry("explode", HiveExplodeOperator.EXPLODE);
@@ -411,7 +432,7 @@ public final class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
 
   public static void createAddUserDefinedFunction(String functionName, SqlReturnTypeInference returnTypeInference,
       SqlOperandTypeChecker operandTypeChecker, String dependency) {
-    String depPrefix  = dependency.substring(0, 5).toLowerCase();
+    String depPrefix  = dependency.substring(0, 6).toLowerCase();
     if (!depPrefix.equals("ivy://")) {
       dependency = "ivy://" + dependency;
     }
