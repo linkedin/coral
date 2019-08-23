@@ -4,6 +4,8 @@ import com.linkedin.coral.spark.containers.SparkUDFInfo;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -110,6 +112,11 @@ class TransportableUDFMap {
         "com.linkedin.stdudfs.daliudfs.spark.Sanitize",
         STANDARD_UDFS_DALI_UDFS_URL);
 
+    add("com.linkedin.stdudfs.userinterfacelookup.hive.UserInterfaceLookup",
+        "userInterfaceLookup",
+        "com.linkedin.stdudfs.userinterfacelookup.spark.UserInterfaceLookup",
+        STANDARD_UDFS_DALI_UDFS_URL);
+
     add("com.linkedin.stdudfs.daliudfs.hive.WatBotCrawlerLookup",
         "watBotCrawlerLookup",
         "com.linkedin.stdudfs.daliudfs.spark.WatBotCrawlerLookup",
@@ -130,7 +137,11 @@ class TransportableUDFMap {
   public static void add(String className, String sparkFunctionName, String sparkClassName, String artifcatoryUrl) {
     try {
       URI url = new URI(artifcatoryUrl);
-      UDF_MAP.put(className, new SparkUDFInfo(sparkClassName, sparkFunctionName, url, SparkUDFInfo.UDFTYPE.TRANSPORTABLE_UDF));
+      List<URI> listOfUris = new LinkedList<>();
+      listOfUris.add(url);
+
+      UDF_MAP.put(className, new SparkUDFInfo(sparkClassName, sparkFunctionName, listOfUris,
+          SparkUDFInfo.UDFTYPE.TRANSPORTABLE_UDF));
     } catch (URISyntaxException e) {
       throw new RuntimeException(String.format("Artifactory URL is malformed %s", artifcatoryUrl), e);
     }

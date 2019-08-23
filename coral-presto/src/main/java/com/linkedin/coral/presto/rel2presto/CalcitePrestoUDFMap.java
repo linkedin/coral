@@ -20,7 +20,7 @@ public class CalcitePrestoUDFMap {
   }
 
   private static final Map<String, UDFTransformer> UDF_MAP = new HashMap();
-  private static final StaticHiveFunctionRegistry HIVE_REGISTRY = StaticHiveFunctionRegistry.getInstance();
+  private static final StaticHiveFunctionRegistry HIVE_REGISTRY = new StaticHiveFunctionRegistry();
   static {
     // conditional functions
     createUDFMapEntry(UDF_MAP, hiveToCalciteOp("nvl"), 2, "coalesce");

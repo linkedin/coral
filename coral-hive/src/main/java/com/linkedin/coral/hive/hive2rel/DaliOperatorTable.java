@@ -2,7 +2,7 @@ package com.linkedin.coral.hive.hive2rel;
 
 import com.google.common.collect.ImmutableList;
 import com.linkedin.coral.functions.HiveFunction;
-import com.linkedin.coral.functions.StaticHiveFunctionRegistry;
+import com.linkedin.coral.functions.HiveFunctionRegistry;
 import com.linkedin.coral.hive.hive2rel.functions.HiveFunctionResolver;
 import java.util.Collection;
 import java.util.List;
@@ -24,10 +24,11 @@ public class DaliOperatorTable implements SqlOperatorTable {
   private final HiveSchema schema;
   // TODO: support injection framework to inject same function resolver here and ParseTreeBuilder.
   // For now, we create another instance since the function registry is simple.
-  private final HiveFunctionResolver funcResolver = new HiveFunctionResolver(StaticHiveFunctionRegistry.getInstance());
+  private HiveFunctionResolver funcResolver;
 
-  public DaliOperatorTable(HiveSchema schema) {
+  public DaliOperatorTable(HiveSchema schema, HiveFunctionRegistry registry) {
     this.schema = schema;
+    this.funcResolver =  new HiveFunctionResolver(registry);
   }
 
   /**

@@ -92,7 +92,7 @@ public class HiveToRelConverter {
   @VisibleForTesting
   ParseTreeBuilder getTreeBuilder() {
     return new ParseTreeBuilder(relContextProvider.getHiveSchema().getHiveMetastoreClient(),
-        relContextProvider.getParseTreeBuilderConfig());
+        relContextProvider.getParseTreeBuilderConfig(), relContextProvider.getHiveFunctionRegistry());
   }
 
   @VisibleForTesting

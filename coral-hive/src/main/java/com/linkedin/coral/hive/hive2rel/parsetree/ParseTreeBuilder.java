@@ -5,6 +5,7 @@ import com.linkedin.coral.com.google.common.collect.Iterables;
 import com.linkedin.coral.functions.FunctionFieldReferenceOperator;
 import com.linkedin.coral.functions.HiveExplodeOperator;
 import com.linkedin.coral.functions.HiveFunction;
+import com.linkedin.coral.functions.HiveFunctionRegistry;
 import com.linkedin.coral.functions.StaticHiveFunctionRegistry;
 import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
 import com.linkedin.coral.hive.hive2rel.functions.HiveFunctionResolver;
@@ -63,6 +64,21 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
   private final Optional<HiveMetastoreClient> msc;
   private final Config config;
   private final HiveFunctionResolver functionResolver;
+  private HiveFunctionRegistry registry;
+
+  /**
+   * Constructs a parse tree builder to use hive metatstore and user provided configuration
+   * @param msc optional HiveMetastore client. This is required to decode view definitions
+   * @param config parse configuration to use
+   */
+  public ParseTreeBuilder(@Nullable HiveMetastoreClient msc, Config config, HiveFunctionRegistry registry) {
+    this.msc = Optional.of(msc);
+    checkNotNull(config);
+    checkState(config.catalogName.isEmpty() || !config.defaultDBName.isEmpty(),
+        "Default DB is required if catalog name is not empty");
+    this.config = config;
+    this.functionResolver = new HiveFunctionResolver(registry);
+  }
 
   /**
    * Constructs a parse tree builder to use hive metatstore and user provided configuration
@@ -75,7 +91,7 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     checkState(config.catalogName.isEmpty() || !config.defaultDBName.isEmpty(),
         "Default DB is required if catalog name is not empty");
     this.config = config;
-    this.functionResolver = new HiveFunctionResolver(StaticHiveFunctionRegistry.getInstance());
+    this.functionResolver = new HiveFunctionResolver(new StaticHiveFunctionRegistry());
   }
 
   /**

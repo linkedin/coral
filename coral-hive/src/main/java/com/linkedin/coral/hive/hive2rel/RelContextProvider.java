@@ -2,6 +2,8 @@ package com.linkedin.coral.hive.hive2rel;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.linkedin.coral.functions.HiveFunctionRegistry;
+import com.linkedin.coral.functions.StaticHiveFunctionRegistry;
 import com.linkedin.coral.hive.hive2rel.parsetree.ParseTreeBuilder;
 import java.util.List;
 import java.util.Properties;
@@ -46,6 +48,10 @@ class RelContextProvider {
   private final HiveConvertletTable convertletTable = new HiveConvertletTable();
   private Driver driver;
 
+  // maintain a mutable copy of Hive function registry in order to save some UDF information
+  // resolved at run time.  For example, dependencies information.
+  private HiveFunctionRegistry registry;
+
   /**
    * Instantiates a new Rel context provider.
    *
@@ -56,6 +62,7 @@ class RelContextProvider {
     this.schema = schema;
     SchemaPlus schemaPlus = Frameworks.createRootSchema(false);
     schemaPlus.add(HiveSchema.ROOT_SCHEMA, schema);
+    this.registry = new StaticHiveFunctionRegistry();
     // this is to ensure that jdbc:calcite driver is correctly registered
     // before initializing framework (which needs it)
     // We don't want each engine to register the driver. It may not also load correctly
@@ -66,9 +73,18 @@ class RelContextProvider {
         .defaultSchema(schemaPlus)
         .typeSystem(new HiveTypeSystem())
         .traitDefs((List<RelTraitDef>) null)
-        .operatorTable(ChainedSqlOperatorTable.of(SqlStdOperatorTable.instance(), new DaliOperatorTable(schema)))
+        .operatorTable(ChainedSqlOperatorTable.of(SqlStdOperatorTable.instance(), new DaliOperatorTable(schema, this.registry)))
         .programs(Programs.ofRules(Programs.RULE_SET))
         .build();
+  }
+
+  /**
+   * Gets the local copy of HiveFunctionRegistry for current query.
+   *
+   * @return HiveFunctionRegistry map
+   */
+  public HiveFunctionRegistry getHiveFunctionRegistry() {
+    return this.registry;
   }
 
   /**

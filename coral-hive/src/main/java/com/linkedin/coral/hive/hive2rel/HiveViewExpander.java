@@ -43,7 +43,7 @@ public class HiveViewExpander implements RelOptTable.ViewExpander {
       throw new RuntimeException(String.format("Table %s.%s not found", dbName, tableName));
     }
     ParseTreeBuilder treeBuilder = new ParseTreeBuilder(msc,
-        relContextProvider.getParseTreeBuilderConfig());
+        relContextProvider.getParseTreeBuilderConfig(), relContextProvider.getHiveFunctionRegistry());
     SqlNode viewNode = treeBuilder.processViewOrTable(table);
     return relContextProvider.getSqlToRelConverter().convertQuery(viewNode, true, true);
   }

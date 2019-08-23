@@ -6,6 +6,7 @@
  import com.google.common.collect.Multimap;
  import java.util.Collection;
  import java.util.Collections;
+ import java.util.LinkedList;
  import java.util.List;
  import java.util.function.Predicate;
  import org.apache.calcite.rel.type.RelDataType;
@@ -38,16 +39,17 @@
  * a new version of library.
  * TODO: Provide function registry catalog
  *
- * Note that this is a singleton class.  We need to make a thread-safe instantiation.
+ * Note that Coral maintains a copy of StaticHiveFunctionRegistry for read only at run time.
+ * For individual query, we create a copy of function registry in a RelConTextProvider object.
  */
-public final class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
+public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
 
   public static final String IS_TEST_MEMBER_ID_CLASS = "com.linkedin.dali.udf.istestmemberid.hive.IsTestMemberId";
 
   // TODO: Make this immutable using builder
   static final Multimap<String, HiveFunction> FUNCTION_MAP = HashMultimap.create();
 
-  private StaticHiveFunctionRegistry() {
+  static {
     // NOTE: all built-in keyword-based function names should be lowercase for case-insensitive comparison.
     // All Dali UDFs should have case sensitive function class names when we do comparison to look up.
     // FIXME: This mapping is currently incomplete
@@ -375,29 +377,12 @@ public final class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
     // This is a Hive Custom UDF which is a simplified version of 'date-converter' package.
     // This UDF is not converted to a transport UDF.
     createAddUserDefinedFunction("com.linkedin.dali.customudf.date.hive.DateFormatToEpoch", BIGINT_NULLABLE,
-        STRING_STRING_STRING, "ivy://com.linkedin.date-converter-rhu:date-converter-rhu:0.0.2");
+        STRING_STRING_STRING);
 
     // UDTFs
     addFunctionEntry("explode", HiveExplodeOperator.EXPLODE);
   }
 
-  /**
-   * The purpose of this class is to implement lazy-loaded singleton (a.k.a initialization-on-demand holder idiom).
-   * Since the initialization phase writes the static variable INSTANCE in a sequential operation, all subsequent concurrent
-   * invocations of the getInstance will return the same INSTANCE value without incurring any additional synchronization overhead.
-   * See https://en.wikipedia.org/wiki/Initialization-on-demand_holder_idiom
-   */
-  private static class LazyHolder {
-    static final StaticHiveFunctionRegistry INSTANCE = new StaticHiveFunctionRegistry();
-  }
-
-  /**
-   * This method returns the instance of StaticHiveFunctionRegistry singleton object.
-   * @return the instance of StaticHiveFunctionRegistry singleton object.
-   */
-  public static StaticHiveFunctionRegistry getInstance() {
-    return LazyHolder.INSTANCE;
-  }
   /**
    * Returns a list of functions matching given name. This returns empty list if the
    * function name is not found
@@ -417,12 +402,22 @@ public final class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
     return ImmutableMultimap.copyOf(FUNCTION_MAP);
   }
 
+  /**
+   * Replaces an internal function registry.  It is used by an instantiated HiveFunctionRegistry.
+   */
+  public void replaceFunctionEntry(String functionName, HiveFunction oldFunc, HiveFunction newFunc) {
+    FUNCTION_MAP.remove(functionName, oldFunc);
+    FUNCTION_MAP.put(functionName, newFunc);
+  }
+
   private static void addFunctionEntry(String functionName, SqlOperator operator) {
     FUNCTION_MAP.put(functionName, new HiveFunction(functionName, operator));
   }
 
   private static void addFunctionEntry(String functionName, SqlOperator operator, String dependency) {
-    FUNCTION_MAP.put(functionName, new HiveFunction(functionName, operator, dependency));
+    List<String> listOfDep = new LinkedList<String>();
+    listOfDep.add(dependency);
+    FUNCTION_MAP.put(functionName, new HiveFunction(functionName, operator, listOfDep));
   }
 
   public static void createAddUserDefinedFunction(String functionName, SqlReturnTypeInference returnTypeInference,
@@ -452,8 +447,8 @@ public final class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
 
   private static SqlOperator createCalciteUDF(String functionName, SqlReturnTypeInference returnTypeInference,
       SqlOperandTypeChecker operandTypeChecker) {
-    return new SqlUserDefinedFunction(new SqlIdentifier(functionName, SqlParserPos.ZERO), returnTypeInference, null,
-        operandTypeChecker, null, null);
+    return new DaliSqlUserDefinedFunction(functionName, returnTypeInference, operandTypeChecker, null,
+        null, null, null);
   }
 
   private static SqlOperator createCalciteUDF(String functionName, SqlReturnTypeInference returnTypeInference) {

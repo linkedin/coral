@@ -4,6 +4,7 @@ import com.linkedin.coral.functions.StaticHiveFunctionRegistry;
 import com.linkedin.coral.hive.hive2rel.parsetree.UnhandledASTTokenException;
 import com.linkedin.coral.spark.containers.SparkUDFInfo;
 import com.linkedin.coral.spark.TransportableUDFMap;
+import java.net.URI;
 import java.util.LinkedList;
 import java.util.List;
 import org.apache.calcite.plan.RelOptUtil;
@@ -18,7 +19,6 @@ import org.testng.annotations.Test;
 import static org.apache.calcite.sql.type.OperandTypes.*;
 import static org.testng.Assert.*;
 
-
 public class CoralSparkTest {
 
   @BeforeClass
@@ -29,9 +29,16 @@ public class CoralSparkTest {
     StaticHiveFunctionRegistry.createAddUserDefinedFunction("com.linkedin.coral.hive.hive2rel.CoralTestUDF", ReturnTypes.BOOLEAN,
         family(SqlTypeFamily.INTEGER), "com.linkedin:udf:1.0");
     StaticHiveFunctionRegistry.createAddUserDefinedFunction("com.linkedin.coral.hive.hive2rel.CoralTestUDF2", ReturnTypes.BOOLEAN,
-        family(SqlTypeFamily.INTEGER), "com.linkedin:udf:1.0");
+        family(SqlTypeFamily.INTEGER));
     StaticHiveFunctionRegistry.createAddUserDefinedFunction("com.linkedin.coral.hive.hive2rel.CoralTestUdfSquare", ReturnTypes.INTEGER,
         family(SqlTypeFamily.INTEGER), "com.linkedin:udf:1.1");
+
+    TransportableUDFMap.add(
+        "com.linkedin.coral.hive.hive2rel.CoralTestUDF",
+        "coralTestUDF",
+        "com.linkedin.coral.spark.CoralTestUDF",
+        "ivy://com.linkedin.coral.spark.CoralTestUDF"
+        );
   }
 
   @Test
@@ -81,31 +88,57 @@ public class CoralSparkTest {
   @Test
   public void testDaliUdf() {
     // Dali view foo_dali_udf contains a UDF defined in TransportableUDFMap.
+    // The actual values are determined by the parameter values of TransportableUDFMap.add() call.
     RelNode relNode = TestUtils.toRelNode("default","foo_dali_udf");
     CoralSpark coralSpark = CoralSpark.create(relNode);
     List<SparkUDFInfo> udfJars = coralSpark.getSparkUDFInfoList();
     assertEquals(1, udfJars.size());
 
-    String udfUriString = udfJars.get(0).getArtifactoryUrl().toString();
-    String targetArtifactoryUrl = "ivy://com.linkedin:udf:1.0";
-    assertEquals(udfUriString, targetArtifactoryUrl);
+    String udfClassName = udfJars.get(0).getClassName();
+    String targetClassName = "com.linkedin.coral.spark.CoralTestUDF";
+    assertEquals(udfClassName, targetClassName);
+    String udfFunctionName = udfJars.get(0).getFunctionName();
+    String targetFunctionName = "coralTestUDF";
+    assertEquals(udfFunctionName, targetFunctionName);
+    // check if CoralSpark can fetch artifactory url from TransportableUDFMap
+    List<String> listOfUriStrings = convertToListOfUriStrings(udfJars.get(0).getArtifactoryUrls());
+    String targetArtifactoryUrl = "ivy://com.linkedin.coral.spark.CoralTestUDF";
+    assertTrue(listOfUriStrings.contains(targetArtifactoryUrl));
     // LIHADOOP-48379: need to check the UDF type
     SparkUDFInfo.UDFTYPE testUdfType = udfJars.get(0).getUdfType();
-    SparkUDFInfo.UDFTYPE targetUdfType = SparkUDFInfo.UDFTYPE.HIVE_CUSTOM_UDF;
+    SparkUDFInfo.UDFTYPE targetUdfType = SparkUDFInfo.UDFTYPE.TRANSPORTABLE_UDF;
     assertEquals(testUdfType, targetUdfType);
+    String sparkSqlStmt = coralSpark.getSparkSql();
+    String targetSqlStmt = "SELECT coralTestUDF(a)\nFROM default.foo";
+    assertEquals(sparkSqlStmt, targetSqlStmt);
   }
 
   @Test
   public void testFallbackToHiveUdf() {
     // Dali view foo_dali_udf2 contains a UDF not defined in BuiltinUDFMap and TransportableUDFMap.
     // We need to fall back to the udf initially defined in HiveFunctionRegistry.
+    // Then the function Name comes from Hive metastore in the format dbName_viewName_funcBaseName.
     RelNode relNode = TestUtils.toRelNode("default","foo_dali_udf2");
     CoralSpark coralSpark = CoralSpark.create(relNode);
     List<SparkUDFInfo> udfJars = coralSpark.getSparkUDFInfoList();
-    assertEquals(1, udfJars.size());
-    String udfUriString = udfJars.get(0).getArtifactoryUrl().toString();
+
+    String udfClassName = udfJars.get(0).getClassName();
+    String targetClassName = "com.linkedin.coral.hive.hive2rel.CoralTestUDF2";
+    assertEquals(udfClassName, targetClassName);
+    String udfFunctionName = udfJars.get(0).getFunctionName();
+    String targetFunctionName = "default_foo_dali_udf2_GreaterThanHundred";
+    assertEquals(udfFunctionName, targetFunctionName);
+    // LIHADOOP-48635: check if CoralSpark can fetch artifactory url from Dali View definition.
+    List<String> listOfUriStrings = convertToListOfUriStrings(udfJars.get(0).getArtifactoryUrls());
     String targetArtifactoryUrl = "ivy://com.linkedin:udf:1.0";
-    assertEquals(udfUriString, targetArtifactoryUrl);
+    assertTrue(listOfUriStrings.contains(targetArtifactoryUrl));
+    // LIHADOOP-48379: need to check the UDF type
+    SparkUDFInfo.UDFTYPE testUdfType = udfJars.get(0).getUdfType();
+    SparkUDFInfo.UDFTYPE targetUdfType = SparkUDFInfo.UDFTYPE.HIVE_CUSTOM_UDF;
+    assertEquals(testUdfType, targetUdfType);
+    String sparkSqlStmt = coralSpark.getSparkSql();
+    String targetSqlStmt = "SELECT default_foo_dali_udf2_GreaterThanHundred(a)\nFROM default.foo";
+    assertEquals(sparkSqlStmt, targetSqlStmt);
   }
 
   @Test
@@ -116,11 +149,9 @@ public class CoralSparkTest {
     CoralSpark coralSpark = CoralSpark.create(relNode);
     List<SparkUDFInfo> udfJars = coralSpark.getSparkUDFInfoList();
     assertEquals(2, udfJars.size());
-    List<String> udfUrls = new LinkedList();
-    udfUrls.add(udfJars.get(0).getArtifactoryUrl().toString());
-    udfUrls.add(udfJars.get(1).getArtifactoryUrl().toString());
-    assertTrue(udfUrls.contains("ivy://com.linkedin:udf:1.1"));
-    assertTrue(udfUrls.contains("ivy://com.linkedin:udf:1.0"));
+    List<String> listOfUriStrings = convertToListOfUriStrings(udfJars.get(0).getArtifactoryUrls());
+    // contains only one dependency as added by StaticHiveFunctionRegistry.createAddUserDefinedFunction.
+    assertTrue(listOfUriStrings.contains("ivy://com.linkedin:udf:1.1"));
   }
 
   @Test
@@ -131,9 +162,9 @@ public class CoralSparkTest {
     CoralSpark coralSpark = CoralSpark.create(relNode);
     List<SparkUDFInfo> udfJars = coralSpark.getSparkUDFInfoList();
     assertEquals(1, udfJars.size());
-    String udfUriString = udfJars.get(0).getArtifactoryUrl().toString();
+    List<String> listOfUriStrings = convertToListOfUriStrings(udfJars.get(0).getArtifactoryUrls());
     String targetArtifactoryUrl = "ivy://com.linkedin:udf:1.0";
-    assertEquals(udfUriString, targetArtifactoryUrl);
+    assertTrue(listOfUriStrings.contains(targetArtifactoryUrl));
   }
 
   @Test
@@ -294,6 +325,14 @@ public class CoralSparkTest {
         "GROUP BY t1.adid"
     );
     assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+  }
+
+  private List<String> convertToListOfUriStrings(List<URI> listOfUris) {
+    List<String> listOfUriStrings = new LinkedList<>();
+    for (URI uri : listOfUris) {
+      listOfUriStrings.add(uri.toString());
+    }
+    return listOfUriStrings;
   }
 
 }

@@ -1,6 +1,7 @@
 package com.linkedin.coral.spark.containers;
 
 import java.net.URI;
+import java.util.List;
 
 
 /**
@@ -17,7 +18,7 @@ public class SparkUDFInfo {
 
   private String className;
   private String functionName;
-  private URI artifactoryUrl;
+  private List<URI> artifactoryUrls;
   private UDFTYPE udfType;
 
   /**
@@ -26,16 +27,16 @@ public class SparkUDFInfo {
    * @param functionName  Function name of the Spark UDF to be registered. Usually it is the function name defined
    *                      in the function parameter in TBLPROPERTIES of a CREATE VIEW SQL statement.
    *                      Example: epochToDateFormat
-   * @param artifactoryUrl Artifactory Url to download all dependencies for this UDF.  Example:
+   * @param artifactoryUrls list of Artifactory Urls to download all dependencies for this UDF.  Example:
    *            ivy://com.linkedin.standard-udfs-dali-udfs:standard-udfs-dali-udfs:1.0.2?classifier=spark
    * @param udfType  the type of the UDF to be registered.
    *                      Example: HIVE_CUSTOM_UDF
    *
    */
-  public SparkUDFInfo(String className, String functionName, URI artifactoryUrl, UDFTYPE udfType) {
+  public SparkUDFInfo(String className, String functionName, List<URI> artifactoryUrls, UDFTYPE udfType) {
     this.className = className;
     this.functionName = functionName;
-    this.artifactoryUrl = artifactoryUrl;
+    this.artifactoryUrls = artifactoryUrls;
     this.udfType = udfType;
   }
 
@@ -66,8 +67,8 @@ public class SparkUDFInfo {
    * @return  URI  Artifactory Url to download all dependencies for this UDF
    *                  Example: ivy://com.linkedin.standard-udfs-dali-udfs:standard-udfs-dali-udfs-spark:0.0.8
    */
-  public URI getArtifactoryUrl() {
-    return artifactoryUrl;
+  public List<URI> getArtifactoryUrls() {
+    return artifactoryUrls;
   }
 
   /**
@@ -84,6 +85,6 @@ public class SparkUDFInfo {
   @Override
   public String toString() {
     return "SparkUDFInfo{" + "className='" + className + '\'' + ", functionName='" + functionName + '\''
-        + ", artifactoryUrl='" + artifactoryUrl + '\'' + ", udfType='" + udfType + '\'' + '}';
+        + ", artifactoryUrls='" + artifactoryUrls + '\'' + ", udfType='" + udfType + '\'' + '}';
   }
 }
