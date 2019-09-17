@@ -164,6 +164,11 @@ public class HiveTypeSystem extends RelDataTypeSystemImpl {
     }
   }
 
+  @Override
+  public boolean shouldConvertRaggedUnionTypesToVarying() {
+    return true;
+  }
+
   private RelDataType nullableType(RelDataTypeFactory typeFactory, SqlTypeName typeName) {
     return typeFactory.createTypeWithNullability(typeFactory.createSqlType(typeName), true);
   }
