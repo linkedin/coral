@@ -3,7 +3,6 @@ package com.linkedin.coral.converters;
 import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
 import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
 import com.linkedin.coral.presto.rel2presto.RelToPrestoConverter;
-import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
 
 import static com.google.common.base.Preconditions.*;
@@ -46,7 +45,6 @@ public class HiveToPrestoConverter {
    */
   public String toPrestoSql(String dbName, String viewName) {
     RelNode rel = hiveToRelConverter.convertView(dbName, viewName);
-    System.out.println(RelOptUtil.toString(rel));
     return relToPrestoConverter.convert(rel);
   }
 }
