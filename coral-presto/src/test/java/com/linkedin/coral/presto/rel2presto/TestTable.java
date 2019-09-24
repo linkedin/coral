@@ -44,6 +44,13 @@ public class TestTable implements Table {
           "varbinaryfield", SqlTypeName.VARBINARY
       ));
 
+  public static final TestTable TABLE_FOUR = new TestTable("tableFour", ImmutableMap.of(
+      "icol", SqlTypeName.INTEGER,
+      "scol", SqlTypeName.VARCHAR,
+      "acol", SqlTypeName.ARRAY,
+      "mcol", SqlTypeName.MAP
+  ));
+
   private final ImmutableMap<String, SqlTypeName> columns;
   private final String tableName;
 
@@ -72,6 +79,16 @@ public class TestTable implements Table {
     if (type.equals(SqlTypeName.ARRAY)) {
       // TODO: default array type...
       return typeFactory.createArrayType(typeFactory.createSqlType(SqlTypeName.INTEGER), -1);
+    }
+    if (type.equals(SqlTypeName.MAP)) {
+      RelDataType keyType = typeFactory.createSqlType(SqlTypeName.VARCHAR);
+      List<RelDataType> valueFieldTypes = ImmutableList.of(
+          typeFactory.createSqlType(SqlTypeName.INTEGER),
+          typeFactory.createSqlType(SqlTypeName.VARCHAR)
+      );
+      List<String> valueFieldNames = ImmutableList.of("iField", "sField");
+      RelDataType valueType = typeFactory.createStructType(valueFieldTypes, valueFieldNames);
+      return typeFactory.createMapType(keyType, valueType);
     }
     return typeFactory.createSqlType(type);
   }

@@ -109,9 +109,16 @@ public class TestUtils {
   }
 
   public static String quoteColumns(String sql) {
-    Iterable<String> concat = Iterables.concat(TABLE_ONE.getColumnNames(), TABLE_TWO.getColumnNames(),
+    Iterable<String> concat = Iterables.concat(
+        TABLE_ONE.getColumnNames(),
+        TABLE_TWO.getColumnNames(),
         TABLE_THREE.getColumnNames(),
-        ImmutableList.of(TABLE_ONE.getTableName(), TABLE_TWO.getTableName(), TABLE_THREE.getTableName()));
+        TABLE_FOUR.getColumnNames(),
+        ImmutableList.of(
+            TABLE_ONE.getTableName(),
+            TABLE_TWO.getTableName(),
+            TABLE_THREE.getTableName(),
+            TABLE_FOUR.getTableName()));
     Pattern colPattern = Pattern.compile(String.join("|", concat));
     return quoteColumns(sql, colPattern);
   }

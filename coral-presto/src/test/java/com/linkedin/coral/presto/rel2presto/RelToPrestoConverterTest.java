@@ -26,11 +26,12 @@ public class RelToPrestoConverterTest {
   static final String tableOne = TABLE_ONE.getTableName();
   static final String tableTwo = TABLE_TWO.getTableName();
   static final String tableThree = TABLE_THREE.getTableName();
+  static final String tableFour = TABLE_FOUR.getTableName();
 
   @BeforeTest
   public static void beforeTest() {
     TestUtils.turnOffRelSimplification();
-    config = TestUtils.createFrameworkConfig(TABLE_ONE, TABLE_TWO, TABLE_THREE);
+    config = TestUtils.createFrameworkConfig(TABLE_ONE, TABLE_TWO, TABLE_THREE, TABLE_FOUR);
   }
 
   private void testConversion(String inputSql, String expectedSql) {
@@ -64,6 +65,19 @@ public class RelToPrestoConverterTest {
         + "group by scol\n"
         + "having sum(icol) > 10\n"
         + "order by scol");
+    testConversion(sql, expectedSql);
+  }
+
+  @Test
+  public void testMapStructAccess() {
+    // This test reproduces the bug in APA-6771
+    String sql = String.format("SELECT mcol[scol].iField as mapStructAccess from %s where icol < 5",
+        tableFour);
+
+    String expectedSql =
+        "SELECT \"mcol\"[\"scol\"].\"iField\" AS \"MAPSTRUCTACCESS\"\n"
+            + "FROM \"tableFour\"\n"
+            + "WHERE \"icol\" < 5";
     testConversion(sql, expectedSql);
   }
 
