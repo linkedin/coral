@@ -4,7 +4,7 @@ import com.facebook.presto.sql.parser.ParsingOptions;
 import com.facebook.presto.sql.parser.SqlParser;
 import com.facebook.presto.sql.tree.Statement;
 import com.linkedin.coral.com.google.common.base.Preconditions;
-import com.linkedin.coral.converters.HiveToPrestoConverter;
+import com.linkedin.coral.presto.rel2presto.HiveToPrestoConverter;
 import com.linkedin.coral.functions.UnknownSqlFunctionException;
 import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
 import com.linkedin.coral.hive.hive2rel.HiveMscAdapter;

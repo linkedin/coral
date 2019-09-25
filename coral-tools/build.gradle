@@ -1,7 +1,7 @@
 apply plugin: 'li-java'
 
 dependencies {
-  compile project(':coral-converters')
+  compile project(':coral-presto')
   compile project(':coral-tests')
   compile spec.external.'presto-parser'
 }

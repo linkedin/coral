@@ -1,4 +1,4 @@
-apply plugin:'li-java'
+apply plugin: 'li-java'
 apply plugin: 'maven-publish'
 
 dependencies {
@@ -9,10 +9,9 @@ dependencies {
 
   compile spec.external.gson
   compile spec.external.'javax-annotation'
+  compile project(path: ':coral-hive')
 
   testCompile spec.external.'presto-parser'
-
-  testCompile project(path: ':coral-hive')
 
   testCompile (spec.product.hive.'hive-exec') {
     exclude group: 'org.apache.avro', module: 'avro-tools'

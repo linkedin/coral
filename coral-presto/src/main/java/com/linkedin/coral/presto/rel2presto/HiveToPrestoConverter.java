@@ -1,8 +1,7 @@
-package com.linkedin.coral.converters;
+package com.linkedin.coral.presto.rel2presto;
 
 import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
 import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
-import com.linkedin.coral.presto.rel2presto.RelToPrestoConverter;
 import org.apache.calcite.rel.RelNode;
 
 import static com.google.common.base.Preconditions.*;
