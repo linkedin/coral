@@ -20,6 +20,7 @@ import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.JoinConditionType;
 import org.apache.calcite.sql.JoinType;
+import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlJoin;
 import org.apache.calcite.sql.SqlKind;
@@ -27,6 +28,7 @@ import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlNodeList;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
+import org.apache.calcite.sql.validate.SqlValidatorUtil;
 import org.apache.calcite.util.Util;
 
 import static com.linkedin.coral.presto.rel2presto.Calcite2PrestoUDFConverter.*;
@@ -94,6 +96,30 @@ public class RelToPrestoConverter extends RelToSqlConverter {
 
     builder.setSelect(new SqlNodeList(selectList, POS));
     return builder.result();
+  }
+
+  @Override
+  public void addSelect(List<SqlNode> selectList, SqlNode node, RelDataType rowType) {
+    // APA-7366 Override this method from parent class RelToSqlConverter to always add "as"
+    // when accessing nested struct.
+    // In parent class "as" is skipped for "select a.b as b", here we will keep the "a.b as b"
+    SqlNode selectNode = node;
+    final String name = rowType.getFieldNames().get(selectList.size());
+    final String alias = SqlValidatorUtil.getAlias(selectNode, -1);
+    final String lowerName = name.toLowerCase(Locale.ROOT);
+    final boolean nestedFieldAccess =
+        selectNode instanceof SqlIdentifier && ((SqlIdentifier) selectNode).names.size() > 1;
+    if (lowerName.startsWith("expr$")) {
+      ordinalMap.put(lowerName, selectNode);
+    } else if (alias == null || !alias.equals(name) || nestedFieldAccess) {
+      selectNode = as(selectNode, name);
+    }
+    selectList.add(selectNode);
+  }
+
+  private SqlCall as(SqlNode e, String alias) {
+    return SqlStdOperatorTable.AS.createCall(POS, e,
+        new SqlIdentifier(alias, POS));
   }
 
   private boolean isUnnestAll(Project project) {

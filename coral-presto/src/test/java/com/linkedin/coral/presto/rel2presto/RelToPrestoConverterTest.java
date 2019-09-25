@@ -70,12 +70,13 @@ public class RelToPrestoConverterTest {
 
   @Test
   public void testMapStructAccess() {
-    // This test reproduces the bug in APA-6771
-    String sql = String.format("SELECT mcol[scol].iField as mapStructAccess from %s where icol < 5",
+    // This test reproduces the bug in APA-6771, APA-7366
+    String sql = String.format(
+        "SELECT mcol[scol].IFIELD as mapStructAccess, mcol[scol].SFIELD as sField from %s where icol < 5",
         tableFour);
 
     String expectedSql =
-        "SELECT \"mcol\"[\"scol\"].\"iField\" AS \"MAPSTRUCTACCESS\"\n"
+        "SELECT \"mcol\"[\"scol\"].\"IFIELD\" AS \"MAPSTRUCTACCESS\", \"mcol\"[\"scol\"].\"SFIELD\" AS \"SFIELD\"\n"
             + "FROM \"tableFour\"\n"
             + "WHERE \"icol\" < 5";
     testConversion(sql, expectedSql);
@@ -244,8 +245,8 @@ public class RelToPrestoConverterTest {
         + "               from (values(true)))";
 
     final String expected = ""
-        + "SELECT \"$cor1\".\"icol\" AS \"ICOL\", \"$cor1\".\"I_PLUSONE\", "
-        + "\"t2\".\"D_PLUSTEN\", \"$cor1\".\"tcol\" AS \"TCOL\", \"$cor1\".\"acol\" AS \"ACOL\"\n"
+        + "SELECT \"$cor1\".\"icol\" AS \"ICOL\", \"$cor1\".\"I_PLUSONE\" AS \"I_PLUSONE\", "
+        + "\"t2\".\"D_PLUSTEN\" AS \"D_PLUSTEN\", \"$cor1\".\"tcol\" AS \"TCOL\", \"$cor1\".\"acol\" AS \"ACOL\"\n"
         + "FROM (\"tableOne\" AS \"$cor0\"\n"
         + "CROSS JOIN (SELECT \"$cor0\".\"icol\" + 1 AS \"I_PLUSONE\"\n"
         + "FROM (VALUES  (TRUE)) AS \"t\" (\"EXPR$0\")) AS \"t0\") AS \"$cor1\"\n"

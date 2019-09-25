@@ -82,15 +82,19 @@ public class TestTable implements Table {
     }
     if (type.equals(SqlTypeName.MAP)) {
       RelDataType keyType = typeFactory.createSqlType(SqlTypeName.VARCHAR);
-      List<RelDataType> valueFieldTypes = ImmutableList.of(
-          typeFactory.createSqlType(SqlTypeName.INTEGER),
-          typeFactory.createSqlType(SqlTypeName.VARCHAR)
-      );
-      List<String> valueFieldNames = ImmutableList.of("iField", "sField");
-      RelDataType valueType = typeFactory.createStructType(valueFieldTypes, valueFieldNames);
+      RelDataType valueType = createStructType(typeFactory);
       return typeFactory.createMapType(keyType, valueType);
     }
     return typeFactory.createSqlType(type);
+  }
+
+  private static RelDataType createStructType(RelDataTypeFactory typeFactory) {
+    List<RelDataType> fieldTypes = ImmutableList.of(
+        typeFactory.createSqlType(SqlTypeName.INTEGER),
+        typeFactory.createSqlType(SqlTypeName.VARCHAR)
+    );
+    List<String> fieldNames = ImmutableList.of("IFIELD", "SFIELD");
+    return typeFactory.createStructType(fieldTypes, fieldNames);
   }
 
   public Statistic getStatistic() {
