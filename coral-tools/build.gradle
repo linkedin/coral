@@ -9,3 +9,28 @@ dependencies {
 artifacts {
   archives jar, javadocJar, sourcesJar
 }
+
+task translate(type: JavaExec) {
+  main = "com.linkedin.coral.tools.SingleViewTranslation"
+  classpath = sourceSets.main.runtimeClasspath
+  if (project.hasProperty('view')) {
+    systemProperty "view", "$view"
+  }
+}
+
+task translateAll(type: JavaExec) {
+  main = "com.linkedin.coral.tools.AllViewTranslation"
+  classpath = sourceSets.main.runtimeClasspath
+
+  if (project.hasProperty('resultDir')) {
+    systemProperty "resultDir", "$resultDir"
+  }
+
+  if (project.hasProperty('exclude')) {
+    systemProperty "exclude", "$exclude"
+  }
+
+  if (project.hasProperty('include')) {
+    systemProperty "include", "$include"
+  }
+}

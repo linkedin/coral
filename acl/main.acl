@@ -1,3 +1,2 @@
-whitelist: [atumbde, wmoustaf, smahadik, rratti, wyzhang]
-owners: [ atumbde, wmoustaf, smahadik, rratti, wyzhang]
+owners: [ atumbde, wmoustaf, smahadik, rratti]
 paths: [ '.*' ]
