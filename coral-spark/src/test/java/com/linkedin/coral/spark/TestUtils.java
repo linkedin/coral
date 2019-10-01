@@ -76,7 +76,7 @@ public class TestUtils {
     run(driver, String.join("\n","",
         "CREATE VIEW IF NOT EXISTS foo_dali_udf2",
         "tblproperties('functions' = 'GreaterThanHundred:com.linkedin.coral.hive.hive2rel.CoralTestUDF2',",
-        "              'dependencies' = 'ivy://com.linkedin:udf:1.0')",
+        "              'dependencies' = 'com.linkedin:udf:1.0')",
         "AS",
         "SELECT default_foo_dali_udf2_GreaterThanHundred(a)",
         "FROM foo"

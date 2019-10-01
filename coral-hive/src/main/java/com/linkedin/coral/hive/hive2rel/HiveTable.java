@@ -6,6 +6,7 @@ import com.google.common.collect.Iterables;
 import com.linkedin.coral.com.google.common.base.Throwables;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -114,7 +115,22 @@ public class HiveTable implements ScannableTable {
     if (dependenciesValue != null) {
       funcDependencies = tblpropertiesSplitter.splitToList(dependenciesValue);
     }
-    return funcDependencies;
+
+    // LIHADOOP-49208: make dependency string in URI format
+    LinkedList<String> uriDependencies = new LinkedList<>();
+    if (funcDependencies != null) {
+      for (String funcDependency : funcDependencies) {
+        String uriDependency;
+        if (funcDependency.toLowerCase().startsWith("ivy://")) {
+          uriDependency = funcDependency;
+        } else {
+          uriDependency = "ivy://" + funcDependency;
+        }
+
+        uriDependencies.add(uriDependency);
+      }
+    }
+    return uriDependencies;
   }
 
   public boolean isDaliTable() {

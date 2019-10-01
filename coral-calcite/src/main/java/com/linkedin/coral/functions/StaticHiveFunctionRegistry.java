@@ -427,8 +427,7 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
 
   public static void createAddUserDefinedFunction(String functionName, SqlReturnTypeInference returnTypeInference,
       SqlOperandTypeChecker operandTypeChecker, String dependency) {
-    String depPrefix  = dependency.substring(0, 6).toLowerCase();
-    if (!depPrefix.equals("ivy://")) {
+    if (!dependency.toLowerCase().startsWith("ivy://")) {
       dependency = "ivy://" + dependency;
     }
     addFunctionEntry(functionName, createCalciteUDF(functionName, returnTypeInference, operandTypeChecker), dependency);
