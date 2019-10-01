@@ -27,7 +27,40 @@ public class UDFMapUtils {
   }
 
   /**
-   * Creates a mapping for Calcite SQL operator to Presto UDF with operand and result transformers.
+   * Creates a mapping from Calcite SQL operator to Presto UDF with Presto SqlOperator, operands transformer, and result transformers.
+   *
+   * @param udfMap Map to store the result
+   * @param calciteOp Calcite SQL operator
+   * @param numOperands Number of operands
+   * @param prestoSqlOperator The Presto Sql Operator that is used as the target operator in the map
+   * @param operandTransformer Operand transformers, null for identity transformation
+   * @param resultTransformer Result transformer, null for identity transformation
+   */
+  static void createUDFMapEntry(Map<String, UDFTransformer> udfMap, SqlOperator calciteOp, int numOperands,
+      SqlOperator prestoSqlOperator, String operandTransformer, String resultTransformer) {
+
+    udfMap.put(getKey(calciteOp.getName(), numOperands),
+        UDFTransformer.of(calciteOp.getName(), prestoSqlOperator, operandTransformer, resultTransformer,
+            null));
+  }
+
+  /**
+   * Creates a mapping from Calcite SQL operator to Presto UDF with Presto SqlOperator.
+   *
+   * @param udfMap Map to store the result
+   * @param calciteOp Calcite SQL operator
+   * @param numOperands Number of operands
+   * @param prestoSqlOperator The Presto Sql Operator that is used as the target operator in the map
+   */
+  static void createUDFMapEntry(Map<String, UDFTransformer> udfMap, SqlOperator calciteOp, int numOperands,
+      SqlOperator prestoSqlOperator) {
+    createUDFMapEntry(udfMap, calciteOp, numOperands, prestoSqlOperator, null, null);
+  }
+
+  /**
+   * Creates a mapping from Calcite SQL operator to Presto UDF with Presto UDF name, operands transformer, and result transformers.
+   * To construct Presto SqlOperator from Presto UDF name, this method reuses the return type inference from calciteOp,
+   * assuming equivalence.
    *
    * @param udfMap Map to store the result
    * @param calciteOp Calcite SQL operator
@@ -38,10 +71,14 @@ public class UDFMapUtils {
    */
   static void createUDFMapEntry(Map<String, UDFTransformer> udfMap, SqlOperator calciteOp, int numOperands,
       String prestoUDFName, String operandTransformer, String resultTransformer) {
-    SqlOperator prestoUDF = createUDF(prestoUDFName, calciteOp.getReturnTypeInference());
-    udfMap.put(getKey(calciteOp.getName(), numOperands),
-        UDFTransformer.of(calciteOp.getName(), prestoUDF, operandTransformer, resultTransformer,
-            null));
+    createUDFMapEntry(
+        udfMap,
+        calciteOp,
+        numOperands,
+        createUDF(prestoUDFName, calciteOp.getReturnTypeInference()),
+        operandTransformer,
+        resultTransformer
+    );
   }
 
   /**
@@ -57,9 +94,14 @@ public class UDFMapUtils {
    */
   static void createRuntimeUDFMapEntry(Map<String, UDFTransformer> udfMap, SqlOperator calciteOp, int numOperands,
       String operatorTransformers, String operandTransformer, String resultTransformer) {
-    udfMap.put(getKey(calciteOp.getName(), numOperands),
-        UDFTransformer.of(calciteOp.getName(), createUDF("", calciteOp.getReturnTypeInference()),
-            operandTransformer, resultTransformer, operatorTransformers));
+    createUDFMapEntry(
+        udfMap,
+        calciteOp,
+        numOperands,
+        createUDF("", calciteOp.getReturnTypeInference()),
+        operandTransformer,
+        resultTransformer
+    );
   }
 
   /**

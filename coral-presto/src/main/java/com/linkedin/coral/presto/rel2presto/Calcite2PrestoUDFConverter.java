@@ -158,7 +158,7 @@ public class Calcite2PrestoUDFConverter {
       final UDFTransformer transformer =
           CalcitePrestoUDFMap.getUDFTransformer(call.getOperator().getName(), call.operands.size());
       if (transformer != null) {
-        return transformer.transformCall(rexBuilder, call.getOperands());
+        return super.visitCall((RexCall) transformer.transformCall(rexBuilder, call.getOperands()));
       }
       RexCall modifiedCall = adjustInconsistentTypesToEqualityOperator(call);
       return super.visitCall(modifiedCall);

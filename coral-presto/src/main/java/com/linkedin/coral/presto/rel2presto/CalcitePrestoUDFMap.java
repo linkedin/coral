@@ -6,6 +6,7 @@ import com.linkedin.coral.com.google.common.collect.ImmutableMultimap;
 import com.linkedin.coral.functions.HiveFunction;
 import com.linkedin.coral.functions.HiveRLikeOperator;
 import com.linkedin.coral.functions.StaticHiveFunctionRegistry;
+import com.linkedin.coral.presto.rel2presto.functions.PrestoElementAtFunction;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -24,6 +25,9 @@ public class CalcitePrestoUDFMap {
   static {
     // conditional functions
     createUDFMapEntry(UDF_MAP, hiveToCalciteOp("nvl"), 2, "coalesce");
+    // Array and map functions
+    createUDFMapEntry(UDF_MAP, SqlStdOperatorTable.ITEM, 2, PrestoElementAtFunction.INSTANCE);
+
     // Math Functions
     createUDFMapEntry(UDF_MAP, SqlStdOperatorTable.RAND, 0, "RANDOM");
     createUDFMapEntry(UDF_MAP, SqlStdOperatorTable.RAND, 1, "RANDOM", "[]", null);

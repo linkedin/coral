@@ -76,7 +76,7 @@ public class RelToPrestoConverterTest {
         tableFour);
 
     String expectedSql =
-        "SELECT \"mcol\"[\"scol\"].\"IFIELD\" AS \"MAPSTRUCTACCESS\", \"mcol\"[\"scol\"].\"SFIELD\" AS \"SFIELD\"\n"
+        "SELECT element_at(\"mcol\", \"scol\").\"IFIELD\" AS \"MAPSTRUCTACCESS\", element_at(\"mcol\", \"scol\").\"SFIELD\" AS \"SFIELD\"\n"
             + "FROM \"tableFour\"\n"
             + "WHERE \"icol\" < 5";
     testConversion(sql, expectedSql);
@@ -88,7 +88,7 @@ public class RelToPrestoConverterTest {
     // Array
     {
       String sql = "select acol[10] from tableOne";
-      String expected = "SELECT \"acol\"[10]\nFROM \"tableOne\"";
+      String expected = "SELECT element_at(\"acol\", 10)\nFROM \"tableOne\"";
       testConversion(sql, expected);
     }
     {
