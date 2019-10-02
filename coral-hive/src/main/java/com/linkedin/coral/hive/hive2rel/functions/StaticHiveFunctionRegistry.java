@@ -366,12 +366,13 @@
      createAddUserDefinedFunction("com.linkedin.stdudfs.daliudfs.hive.EpochToDateFormat",
          HiveReturnTypes.STRING, family(SqlTypeFamily.NUMERIC, SqlTypeFamily.STRING, SqlTypeFamily.STRING));
      createAddUserDefinedFunction("com.linkedin.stdudfs.daliudfs.hive.EpochToEpochMilliseconds", BIGINT_NULLABLE, NUMERIC);
+     createAddUserDefinedFunction("com.linkedin.stdudfs.stringudfs.hive.InitCap", HiveReturnTypes.STRING, STRING);
      createAddUserDefinedFunction("com.linkedin.stdudfs.daliudfs.hive.IsGuestMemberId", ReturnTypes.BOOLEAN,
          NUMERIC);
      createAddUserDefinedFunction("com.linkedin.stdudfs.daliudfs.hive.MapLookup",
          HiveReturnTypes.STRING, family(SqlTypeFamily.MAP, SqlTypeFamily.STRING, SqlTypeFamily.STRING));
      createAddUserDefinedFunction("com.linkedin.stdudfs.daliudfs.hive.PortalLookup",
-         HiveReturnTypes.STRING, STRING_STRING_STRING);
+         HiveReturnTypes.STRING, STRING_STRING);
      createAddUserDefinedFunction("com.linkedin.stdudfs.daliudfs.hive.Sanitize", HiveReturnTypes.STRING, STRING);
 
      // This is a Hive Custom UDF which is a simplified version of 'date-converter' package.

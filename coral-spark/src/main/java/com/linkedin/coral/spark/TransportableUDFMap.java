@@ -87,6 +87,11 @@ class TransportableUDFMap {
         "com.linkedin.stdudfs.daliudfs.spark.GetProfileSections",
         STANDARD_UDFS_DALI_UDFS_URL);
 
+    add("com.linkedin.stdudfs.stringudfs.hive.InitCap",
+        "initCap",
+        "com.linkedin.stdudfs.stringudfs.spark.InitCap",
+        "ivy://com.linkedin.standard-udfs-common-sql-udfs:standard-udfs-string-udfs:0.0.7?classifier=spark");
+
     add("com.linkedin.stdudfs.daliudfs.hive.IsGuestMemberId",
         "isGuestMemberId",
         "com.linkedin.stdudfs.daliudfs.spark.IsGuestMemberId",
@@ -115,7 +120,7 @@ class TransportableUDFMap {
     add("com.linkedin.stdudfs.userinterfacelookup.hive.UserInterfaceLookup",
         "userInterfaceLookup",
         "com.linkedin.stdudfs.userinterfacelookup.spark.UserInterfaceLookup",
-        STANDARD_UDFS_DALI_UDFS_URL);
+        "ivy://com.linkedin.standard-udf-userinterfacelookup:userinterfacelookup-std-udf:0.0.8?classifier=spark");
 
     add("com.linkedin.stdudfs.daliudfs.hive.WatBotCrawlerLookup",
         "watBotCrawlerLookup",
