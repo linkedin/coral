@@ -1,4 +1,4 @@
-package com.linkedin.coral.functions;
+package com.linkedin.coral.hive.hive2rel.functions;
 
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
@@ -21,7 +21,8 @@ import org.apache.calcite.sql.type.SqlOperandCountRanges;
  */
 public class HiveExplodeOperator extends SqlUnnestOperator {
 
-  public static final HiveExplodeOperator EXPLODE = new HiveExplodeOperator();
+  public static final HiveExplodeOperator
+      EXPLODE = new HiveExplodeOperator();
 
   public HiveExplodeOperator() {
     // keep same same as base class 'UNNEST' operator

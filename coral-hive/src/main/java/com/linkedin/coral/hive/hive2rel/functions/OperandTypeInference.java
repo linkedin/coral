@@ -1,4 +1,4 @@
-package com.linkedin.coral.functions;
+package com.linkedin.coral.hive.hive2rel.functions;
 
 import com.google.common.base.Preconditions;
 import java.util.List;
@@ -8,6 +8,7 @@ import org.apache.calcite.sql.SqlCallBinding;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.type.SqlOperandTypeInference;
 import org.apache.calcite.sql.type.SqlTypeName;
+
 
 // TODO: move this to calcite code
 public class OperandTypeInference {

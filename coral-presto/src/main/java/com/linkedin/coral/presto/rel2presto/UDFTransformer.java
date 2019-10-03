@@ -5,7 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
-import com.linkedin.coral.functions.HiveReturnTypes;
+import com.linkedin.coral.hive.hive2rel.functions.HiveReturnTypes;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;

@@ -1,6 +1,6 @@
 package com.linkedin.coral.spark;
 
-import com.linkedin.coral.functions.StaticHiveFunctionRegistry;
+import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 import com.linkedin.coral.hive.hive2rel.parsetree.UnhandledASTTokenException;
 import com.linkedin.coral.spark.containers.SparkUDFInfo;
 import com.linkedin.coral.spark.TransportableUDFMap;

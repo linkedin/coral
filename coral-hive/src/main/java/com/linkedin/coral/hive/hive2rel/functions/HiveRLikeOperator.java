@@ -1,4 +1,4 @@
-package com.linkedin.coral.functions;
+package com.linkedin.coral.hive.hive2rel.functions;
 
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlCallBinding;

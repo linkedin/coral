@@ -1,4 +1,4 @@
-package com.linkedin.coral.functions;
+package com.linkedin.coral.hive.hive2rel.functions;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;

@@ -1,7 +1,7 @@
 package com.linkedin.coral.schema.avro;
 
 import com.linkedin.coral.com.google.common.base.Preconditions;
-import com.linkedin.coral.functions.GenericProjectFunction;
+import com.linkedin.coral.hive.hive2rel.functions.GenericProjectFunction;
 import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
 import com.linkedin.coral.hive.hive2rel.rel.HiveUncollect;
 import com.linkedin.coral.schema.avro.exceptions.SchemaNotFoundException;

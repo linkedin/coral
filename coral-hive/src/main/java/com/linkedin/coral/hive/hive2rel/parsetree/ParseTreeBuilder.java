@@ -2,11 +2,11 @@ package com.linkedin.coral.hive.hive2rel.parsetree;
 
 import com.google.common.collect.ImmutableList;
 import com.linkedin.coral.com.google.common.collect.Iterables;
-import com.linkedin.coral.functions.FunctionFieldReferenceOperator;
-import com.linkedin.coral.functions.HiveExplodeOperator;
-import com.linkedin.coral.functions.HiveFunction;
-import com.linkedin.coral.functions.HiveFunctionRegistry;
-import com.linkedin.coral.functions.StaticHiveFunctionRegistry;
+import com.linkedin.coral.hive.hive2rel.functions.FunctionFieldReferenceOperator;
+import com.linkedin.coral.hive.hive2rel.functions.HiveExplodeOperator;
+import com.linkedin.coral.hive.hive2rel.functions.HiveFunction;
+import com.linkedin.coral.hive.hive2rel.functions.HiveFunctionRegistry;
+import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
 import com.linkedin.coral.hive.hive2rel.functions.HiveFunctionResolver;
 import com.linkedin.coral.hive.hive2rel.parsetree.parser.ASTNode;

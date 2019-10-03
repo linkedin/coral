@@ -1,4 +1,4 @@
-package com.linkedin.coral.functions;
+package com.linkedin.coral.hive.hive2rel.functions;
 
 import java.util.AbstractList;
 import java.util.List;

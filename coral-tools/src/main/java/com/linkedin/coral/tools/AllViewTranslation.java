@@ -1,6 +1,6 @@
 package com.linkedin.coral.tools;
 
-import com.linkedin.coral.functions.UnknownSqlFunctionException;
+import com.linkedin.coral.hive.hive2rel.functions.UnknownSqlFunctionException;
 import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
 import com.linkedin.coral.presto.rel2presto.HiveToPrestoConverter;
 import java.io.File;

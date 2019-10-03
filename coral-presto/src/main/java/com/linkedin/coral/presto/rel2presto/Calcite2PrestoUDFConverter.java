@@ -3,7 +3,7 @@ package com.linkedin.coral.presto.rel2presto;
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import com.linkedin.coral.com.google.common.collect.ImmutableMultimap;
 import com.linkedin.coral.com.google.common.collect.Multimap;
-import com.linkedin.coral.functions.GenericProjectFunction;
+import com.linkedin.coral.hive.hive2rel.functions.GenericProjectFunction;
 import com.linkedin.coral.presto.rel2presto.functions.GenericProjectToPrestoConverter;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelShuttle;

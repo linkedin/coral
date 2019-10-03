@@ -1,4 +1,4 @@
-package com.linkedin.coral.functions;
+package com.linkedin.coral.hive.hive2rel.functions;
 
 import com.google.common.base.Preconditions;
 import org.apache.calcite.rel.type.RelDataType;
@@ -31,7 +31,8 @@ import org.apache.calcite.sql.validate.SqlValidatorScope;
  *
  */
 public class FunctionFieldReferenceOperator extends SqlBinaryOperator {
-  public static final FunctionFieldReferenceOperator DOT = new FunctionFieldReferenceOperator();
+  public static final FunctionFieldReferenceOperator
+      DOT = new FunctionFieldReferenceOperator();
 
   public FunctionFieldReferenceOperator() {
     super(".", SqlKind.DOT,

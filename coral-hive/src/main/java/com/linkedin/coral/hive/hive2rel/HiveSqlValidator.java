@@ -1,6 +1,6 @@
 package com.linkedin.coral.hive.hive2rel;
 
-import com.linkedin.coral.functions.FunctionFieldReferenceOperator;
+import com.linkedin.coral.hive.hive2rel.functions.FunctionFieldReferenceOperator;
 import org.apache.calcite.adapter.java.JavaTypeFactory;
 import org.apache.calcite.prepare.CalciteCatalogReader;
 import org.apache.calcite.rel.type.RelDataType;

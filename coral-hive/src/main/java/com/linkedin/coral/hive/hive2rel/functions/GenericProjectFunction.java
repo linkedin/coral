@@ -1,4 +1,4 @@
-package com.linkedin.coral.functions;
+package com.linkedin.coral.hive.hive2rel.functions;
 
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.sql.SqlCall;
@@ -34,7 +34,8 @@ import org.apache.calcite.util.Static;
  * This is because it is difficult to derive the return type of an external GenericProject call in a Dali View.
  */
 public class GenericProjectFunction extends SqlUserDefinedFunction {
-  public static final GenericProjectFunction GENERIC_PROJECT = new GenericProjectFunction(null);
+  public static final GenericProjectFunction
+      GENERIC_PROJECT = new GenericProjectFunction(null);
 
   private final RelDataType tableDataType;
 

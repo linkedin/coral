@@ -2,7 +2,7 @@ package com.linkedin.coral.hive.hive2rel;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.linkedin.coral.functions.GenericProjectFunction;
+import com.linkedin.coral.hive.hive2rel.functions.GenericProjectFunction;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;

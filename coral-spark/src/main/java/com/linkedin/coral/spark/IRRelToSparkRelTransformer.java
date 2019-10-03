@@ -1,9 +1,9 @@
 package com.linkedin.coral.spark;
 
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
-import com.linkedin.coral.functions.DaliSqlUserDefinedFunction;
-import com.linkedin.coral.functions.GenericProjectFunction;
-import com.linkedin.coral.functions.HiveNamedStructFunction;
+import com.linkedin.coral.hive.hive2rel.functions.DaliSqlUserDefinedFunction;
+import com.linkedin.coral.hive.hive2rel.functions.GenericProjectFunction;
+import com.linkedin.coral.hive.hive2rel.functions.HiveNamedStructFunction;
 import com.linkedin.coral.spark.containers.SparkRelInfo;
 import com.linkedin.coral.spark.containers.SparkUDFInfo;
 import com.linkedin.coral.spark.utils.RelDataTypeToSparkDataTypeStringConverter;
