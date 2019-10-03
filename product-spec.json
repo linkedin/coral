@@ -84,6 +84,13 @@
         "hive-serde"
       ],
       "version": "1.1.0.136"
+    },
+    "pig": {
+      "libraries": [
+        "pig",
+        "pigunit"
+      ],
+      "version": "0.15.0.*"
     }
   },
   "trunkDev": {
