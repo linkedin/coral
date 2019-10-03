@@ -3,18 +3,7 @@ apply plugin: 'maven-publish'
 apply plugin: 'com.github.johnrengelman.shadow'
 
 dependencies {
-
-  // Adding this dependency as compile  project(path: ':coral-calcite', configuration: 'shadow')
-  // does not work well with IntelliJ. It break both, compilation and running of tests.
-  // Adding file based dependency makes IntelliJ happy. `builtBy` ensures that the shaded calcite
-  // jar is generated before running compile for this project.
-  // One suggestion was to add both - file() as below and compile  project(path: ':coral-calcite', configuration: 'shadow').
-  // That solves the compilation issue in intellij but break running of tests in IntelliJ. The compile directive
-  // will cause IntelliJ to transitively bring dependent jars on the classpath. This causes duplicate jars and fails test
-
-  compile files("${project(':coral-calcite').buildDir.absolutePath}/libs/coral-calcite-${version}.jar") {
-    builtBy project(':coral-calcite').tasks.getByName('shadowJar')
-  }
+  compile spec.product.'coral-calcite'.'coral-calcite'
 
   compile (spec.product.hive.'hive-metastore') {
     exclude group: 'com.linkedin.metastore-autometrics', module: 'autometrics-reporter'
@@ -54,18 +43,6 @@ publishing {
   publications {
     mavenJava(MavenPublication) {
       from components.java
-      // since we use file() dependency on shaded jar, we need to explicitly
-      // add coral-calcite dependency in pom
-      pom.withXml {
-        def depRoot = asNode().dependencies[0]
-        if (depRoot == null) {
-          depRoot = asNode().appendNode("dependencies")
-        }
-        def dep = asNode().dependencies[0].appendNode("dependency")
-        dep.appendNode("groupId", project.group)
-        dep.appendNode("artifactId", project(":coral-calcite").name)
-        dep.appendNode("version", version)
-      }
     }
   }
 }

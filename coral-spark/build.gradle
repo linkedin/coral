@@ -3,11 +3,7 @@ apply plugin: 'maven-publish'
 apply plugin: 'com.github.johnrengelman.shadow'
 
 dependencies {
-  // see :coral-hive build.gradle for why we add depedency this way
-  compile files("${project(':coral-calcite').buildDir.absolutePath}/libs/coral-calcite-${version}.jar") {
-    builtBy project(':coral-calcite').tasks.getByName('shadowJar')
-  }
-
+  compile spec.product.'coral-calcite'.'coral-calcite'
   compile spec.external.gson
   compile spec.external.'slf4j-api'
   compile spec.external.'slf4j-log4j12'
