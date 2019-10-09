@@ -6,36 +6,59 @@ import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.sql.SqlBinaryOperator;
+import org.apache.calcite.sql.SqlPrefixOperator;
+import org.apache.calcite.sql.SqlSpecialOperator;
 
 
-//TODO(ralam): Add comments and clean up code
+/**
+ * PigRexUtils provides utilities to translate SQL expressions represented as
+ * Calcite RexNode into Pig Latin.
+ */
 public class PigRexUtils {
 
   private PigRexUtils() {
 
   }
 
-  public static String convertRexNodePigExpression(RexNode rexNode, List<String> inputRefColumnNameList) {
+  /**
+   * Transforms a SQL expression represented as a RexNode to equivalent Pig Latin
+   * @param rexNode RexNode SQL expression to be transformed
+   * @param inputRelToPigFieldsMapping Column name accessors for input references
+   * @return Pig Latin equivalent of given rexNode
+   */
+  public static String convertRexNodePigExpression(RexNode rexNode, List<String> inputRelToPigFieldsMapping) {
     if (rexNode instanceof RexInputRef) {
-      return convertRexInputRef((RexInputRef) rexNode, inputRefColumnNameList);
+      return convertRexInputRef((RexInputRef) rexNode, inputRelToPigFieldsMapping);
     } else if (rexNode instanceof RexCall) {
-      return convertRexCall((RexCall) rexNode, inputRefColumnNameList);
+      return convertRexCall((RexCall) rexNode, inputRelToPigFieldsMapping);
     } else if (rexNode instanceof RexLiteral) {
       return convertRexLiteral((RexLiteral) rexNode);
     }
     return rexNode.toString();
   }
 
-  private static String convertRexInputRef(RexInputRef rexInputRef, List<String> inputRefColumnNameList) {
-    if (rexInputRef.getIndex() >= inputRefColumnNameList.size()) {
+  /**
+   * Resolves the Pig Latin accessor name of an input reference given by a RexInputRef
+   * @param rexInputRef Input reference to be resolved
+   * @param inputRelToPigFieldsMapping Mapping from list index to accessor name
+   * @return Pig Latin accessor name of the given rexInputRef
+   */
+  private static String convertRexInputRef(RexInputRef rexInputRef, List<String> inputRelToPigFieldsMapping) {
+    if (rexInputRef.getIndex() >= inputRelToPigFieldsMapping.size()) {
       //TODO(ralam): Create better exception messages
       throw new RuntimeException(String.format(
           "RexInputRef failed to access field at index %d with RexInputRef column name mapping of size %d",
-          rexInputRef.getIndex(), inputRefColumnNameList.size()));
+          rexInputRef.getIndex(), inputRelToPigFieldsMapping.size()));
     }
-    return inputRefColumnNameList.get(rexInputRef.getIndex());
+    return inputRelToPigFieldsMapping.get(rexInputRef.getIndex());
   }
 
+  /**
+   * Resolves the Pig Latin literal for a RexLiteral
+   * @param rexLiteral RexLiteral to be resolved
+   * @return Pig Latin literal of the given rexLiteral
+   */
   private static String convertRexLiteral(RexLiteral rexLiteral) {
     switch (rexLiteral.getTypeName()) {
       case CHAR:
@@ -45,16 +68,102 @@ public class PigRexUtils {
     }
   }
 
-  private static String convertRexCall(RexCall rexCall, List<String> inputRefColumnNameList) {
-    // TODO(ralam): Flesh out the RexCall function.
-
-    List<String> operandExpressions = new ArrayList<>();
-
-    for (RexNode operand : rexCall.getOperands()) {
-      operandExpressions.add(convertRexNodePigExpression(operand, inputRefColumnNameList));
+  /**
+   * Resolves the Pig Latin expression for a SQL expression given by a RexCall.
+   * @param rexCall RexCall to be resolved
+   * @param inputRelToPigFieldsMapping Mapping from list index to accessor name
+   * @return Pig Latin expression of the given rexCall
+   */
+  private static String convertRexCall(RexCall rexCall, List<String> inputRelToPigFieldsMapping) {
+    // TODO(ralam): Add more supported RexCall functions.
+    // TODO(ralam): CORAL-70 Refactor this code and create PigOperators for each SqlOperator with an unparse method.
+    if (rexCall.getOperator() instanceof SqlSpecialOperator) {
+      return convertSqlSpecialOperator(rexCall, inputRelToPigFieldsMapping);
+    } else if (rexCall.getOperator() instanceof SqlBinaryOperator) {
+      return convertSqlBinaryOperator(rexCall, inputRelToPigFieldsMapping);
+    } else if (rexCall.getOperator() instanceof SqlPrefixOperator) {
+      return convertSqlPrefixOperator(rexCall, inputRelToPigFieldsMapping);
     }
 
-    // TODO(ralam): Implement RexCall resolution. Throw an exception in the meantime.
-    throw new UnsupportedOperationException("Function calls are not supported.");
+    // TODO(ralam): Finish implementing RexCall resolution. Throw an unsupported exception in the meantime.
+    throw new UnsupportedOperationException(
+        String.format("Unsupported operator: %s", rexCall.getOperator().getName()));
+  }
+
+  /**
+   * The Pig Latin for a Calcite SqlPrefixOperator call
+   * @param rexCall RexCall to be resolved
+   * @param inputRelToPigFieldsMapping Mapping from list index to accessor name
+   * @return Pig Latin equivalent of the given sqlPrefixOperator applied to the given operands
+   */
+  private static String convertSqlPrefixOperator(RexCall rexCall, List<String> inputRelToPigFieldsMapping) {
+    // TODO(ralam): Do not generalize operand calls; we are likely to have special cases
+    String operand = convertRexNodePigExpression(rexCall.getOperands().get(0), inputRelToPigFieldsMapping);
+    switch (rexCall.getOperator().getKind()) {
+      case NOT:
+      default:
+        return String.format("%s %s", rexCall.getOperator().getName(), operand);
+    }
+  }
+
+  /**
+   * The Pig Latin for a Calcite SqlBinaryOperator call
+   * @param rexCall RexCall to be resolved
+   * @param inputRelToPigFieldsMapping Mapping from list index to accessor name
+   * @return Pig Latin equivalent of the given sqlBinaryOperator applied to the given operands
+   */
+  private static String convertSqlBinaryOperator(RexCall rexCall, List<String> inputRelToPigFieldsMapping) {
+    String operator = rexCall.getOperator().getName();
+
+    switch (rexCall.getOperator().getKind()) {
+      case EQUALS:
+        operator = "==";
+        break;
+      case NOT_EQUALS:
+        operator = "!=";
+        break;
+      default:
+    }
+
+    String leftOperand = convertRexNodePigExpression(rexCall.getOperands().get(0), inputRelToPigFieldsMapping);
+    String rightOperand = convertRexNodePigExpression(rexCall.getOperands().get(1), inputRelToPigFieldsMapping);
+
+    return String.format("(%s %s %s)", leftOperand, operator, rightOperand);
+  }
+
+  /**
+   * The Pig Latin for Calcite SqlSpecialOperator calls
+   * @param rexCall RexCall to be resolved
+   * @param inputRelToPigFieldsMapping Mapping from list index to accessor name
+   * @return Pig Latin of the special operator call for the given inputs
+   */
+  private static String convertSqlSpecialOperator(RexCall rexCall, List<String> inputRelToPigFieldsMapping) {
+    // TODO(ralam): Change this function to do a map-lookup from SQLSpecialOperator function name to Pig Latin.
+    if (rexCall.getOperator().getName().equalsIgnoreCase("in")) {
+      return convertHiveInOperatorCall(rexCall.getOperands(), inputRelToPigFieldsMapping);
+    }
+
+    throw new UnsupportedOperationException(String.format(
+        "Unsupported operator: %s", rexCall.getOperator().getName()));
+  }
+
+  /**
+   * Translates Hive In operator calls to Pig Latin.
+   * This is necessary because we do not use the Calcite IN operator in coral-hive.
+   * Instead we define a Hive IN operator with special input semantics.
+   * @param operands The operands of a Hive IN operator call
+   * @param inputRelToPigFieldsMapping Mapping from list index to accessor name
+   * @return Pig Latin of the Hive In operator call for the given inputs
+   */
+  private static String convertHiveInOperatorCall(List<RexNode> operands, List<String> inputRelToPigFieldsMapping) {
+    List<String> inArrayReferencesList = new ArrayList<>();
+    for (RexNode input : operands) {
+      inArrayReferencesList.add(convertRexNodePigExpression(input, inputRelToPigFieldsMapping));
+    }
+
+    String inArrayInput = inArrayReferencesList.remove(0);
+    String inArrayReferences = String.join(", ", inArrayReferencesList);
+
+    return String.format("%s IN (%s)", inArrayInput, inArrayReferences);
   }
 }

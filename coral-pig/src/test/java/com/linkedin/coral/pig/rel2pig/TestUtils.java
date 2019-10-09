@@ -3,7 +3,6 @@ package com.linkedin.coral.pig.rel2pig;
 import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
 import com.linkedin.coral.hive.hive2rel.HiveMscAdapter;
 import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
-import java.io.IOException;
 import java.io.InputStream;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.runtime.Hook;
@@ -14,10 +13,11 @@ import org.apache.hadoop.hive.ql.Driver;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.session.SessionState;
-import org.apache.pig.pigunit.PigTest;
-import org.apache.pig.tools.parameters.ParseException;
 
 
+/**
+ * Provides utility functions used in unit tests
+ */
 public class TestUtils {
 
   static final String TEST_JSON_FILE_DIR = "src/test/resources/data";

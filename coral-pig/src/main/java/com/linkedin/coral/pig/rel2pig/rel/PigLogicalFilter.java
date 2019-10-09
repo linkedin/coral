@@ -4,22 +4,31 @@ import java.util.List;
 import org.apache.calcite.rel.logical.LogicalFilter;
 
 
-//TODO(ralam): Add comments and clean up code
+/**
+ * PigLogicalProject translates a Calcite LogicalFilter into Pig Latin.
+ */
 public class PigLogicalFilter {
 
-  private static final String LOGICAL_PROJECT_TEMPLATE = "%s = FILTER %s BY (%s);";
+  private static final String LOGICAL_FILTER_TEMPLATE = "%s = FILTER %s BY %s;";
 
   private PigLogicalFilter() {
 
   }
 
-  //TODO(ralam): Implement this method
+  /**
+   * Translates a Calcite LogicalFilter into Pig Latin
+   * @param logicalFilter The Calcite LogicalFilter to be translated
+   * @param outputRelation The variable that stores the filtered output
+   * @param inputRelation The variable that stores the Pig relation after filtering
+   * @return The Pig Latin for the logicalFilter in the form of:
+   *           [outputRelation] = FILTER [inputRelation] BY [logicalFilter.expressions]
+   */
   public static String getScript(LogicalFilter logicalFilter, String outputRelation, String inputRelation) {
-
-    List<String> inputRefColumnNameList =
+    List<String> inputRelToPigFieldsMapping =
         PigRelUtils.convertInputColumnNameReferences(logicalFilter.getInput().getRowType());
 
-    // TODO(ralam): Implement LogicalFilter in Pig. Throw an exception in the meantime.
-    throw new UnsupportedOperationException("LogicalFilters are not supported.");
+    String conditionExpression =
+        PigRexUtils.convertRexNodePigExpression(logicalFilter.getCondition(), inputRelToPigFieldsMapping);
+    return String.format(LOGICAL_FILTER_TEMPLATE, outputRelation, inputRelation, conditionExpression);
   }
 }

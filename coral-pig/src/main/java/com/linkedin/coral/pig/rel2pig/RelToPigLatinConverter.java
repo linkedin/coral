@@ -24,11 +24,20 @@ import org.apache.calcite.rel.logical.LogicalValues;
  * RelToPigLatinConverter translates a SQL query expressed in Calcite Relational Algebra
  * into equivalent Pig Latin statement(s).
  *
+ * The interface to use RelToPigLatinConverter looks something like the following:
+ *   String outputRelation = "OUTPUT_RELATION";
+ *   PigLoadFunction loadFunc = (String db, String table) -> "LOAD_FUNCTION()";
+ *   TableToPigPathFunction pathFunc = (String db, String table) -> "PATH_THAT_LOAD_FUNCTION_CAN_READ";
+ *   RelToPigLatinConverter converter = new RelToPigLatinConverter(loadFunc, pathFunc);
+ *   String pigLatin = converter.convert(relNode, outputRelation);
+ *
+ * The returned "pigLatin" can be passed as a Pig Script to the Pig engine.
+ *
  * For example, if we use the following parameters:
  *   outputRelation         : "view"
- *   pigLoadFunction        : PigLoadFunction func =
+ *   pigLoadFunction        : PigLoadFunction loadFunc =
  *                              (String db, String table) -> "dali.data.pig.DaliStorage()";
- *   tableToPigPathFunction : TableToPigPathFunction func =
+ *   tableToPigPathFunction : TableToPigPathFunction pathFunc =
  *                              (String db, String table) -> String.format("dalids:///%s.%s", db, table);
  *
  * Assuming these SQL queries are correctly parsed as Calcite Relational Algebra,
