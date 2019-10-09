@@ -23,12 +23,12 @@ public class ViewTranslationUtils {
   public static void convertToPrestoAndValidate(String db, String table, HiveToPrestoConverter converter,
       PrintWriter outputWriter) {
     final String prestoSql = toPrestoSql(db, table, converter);
+    validatePrestoSql(prestoSql);
     if (outputWriter != null) {
       outputWriter.println(db + "." + table + ":");
       outputWriter.println(prestoSql);
       outputWriter.flush();
     }
-    validatePrestoSql(prestoSql);
   }
 
   public static String toViewString(Table table) {
