@@ -33,21 +33,10 @@ public class HiveFunction {
   // Example: "com.linkedin.dali.udf.date.hive.DateFormatToEpoch"
   private final String hiveName;
   private final SqlOperator sqlOperator;
-  // The list of dependencies information specified in TBLPROPERTIES clause.
-  // Example: "ivy://com.linkedin.identity-datasets:isb-get-profile-sections:0.1.8"
-  // We maintain a list of dependencies because it is possible to have multiple dependencies
-  // if a Dali view has multiple UDF.
-  private List<String> udfDependencies;
 
   public HiveFunction(String functionName, SqlOperator sqlOperator) {
     this.hiveName = functionName;
     this.sqlOperator = sqlOperator;
-  }
-
-  public HiveFunction(String functionName, SqlOperator sqlOperator, List<String> udfDependencies) {
-    this.hiveName = functionName;
-    this.sqlOperator = sqlOperator;
-    this.udfDependencies = udfDependencies;
   }
 
   public String getHiveFunctionName() {
@@ -56,13 +45,6 @@ public class HiveFunction {
 
   public SqlOperator getSqlOperator() {
     return sqlOperator;
-  }
-
-  /*
-   * [LIHADOOP-44515] need to provide ivy coordinates for UDF
-   */
-  public List<String> getUdfDependencies() {
-    return udfDependencies;
   }
 
   public SqlCall createCall(SqlNode function, List<SqlNode> operands, SqlLiteral qualifier) {
