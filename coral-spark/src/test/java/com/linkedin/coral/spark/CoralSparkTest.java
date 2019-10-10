@@ -27,11 +27,11 @@ public class CoralSparkTest {
 
     // add the following 3 test UDF to StaticHiveFunctionRegistry for testing purpose.
     StaticHiveFunctionRegistry.createAddUserDefinedFunction("com.linkedin.coral.hive.hive2rel.CoralTestUDF", ReturnTypes.BOOLEAN,
-        family(SqlTypeFamily.INTEGER), "com.linkedin:udf:1.0");
+        family(SqlTypeFamily.INTEGER));
     StaticHiveFunctionRegistry.createAddUserDefinedFunction("com.linkedin.coral.hive.hive2rel.CoralTestUDF2", ReturnTypes.BOOLEAN,
         family(SqlTypeFamily.INTEGER));
     StaticHiveFunctionRegistry.createAddUserDefinedFunction("com.linkedin.coral.hive.hive2rel.CoralTestUdfSquare", ReturnTypes.INTEGER,
-        family(SqlTypeFamily.INTEGER), "com.linkedin:udf:1.1");
+        family(SqlTypeFamily.INTEGER));
 
     TransportableUDFMap.add(
         "com.linkedin.coral.hive.hive2rel.CoralTestUDF",
