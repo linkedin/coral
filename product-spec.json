@@ -56,13 +56,6 @@
     "testng": "org.testng:testng:6.4"
   },
   "product": {
-    "calcite-mp": {
-      "libraries": [
-        "calcite-core"
-      ],
-      "version": "1.20.0.*",
-      "group": "com.linkedin.calcite"
-    },
     "coral-calcite": {
       "libraries": [
         "coral-calcite"

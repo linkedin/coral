@@ -67,7 +67,7 @@ public class HiveConvertletTable extends ReflectiveConvertletTable {
     if (SqlUtil.isNullLiteral(left, false)) {
       RexNode leftRex = cx.convertLiteral((SqlLiteral) left);
       SqlDataTypeSpec dataType = call.operand(1);
-      RelDataType castType = dataType.deriveType(cx.getTypeFactory(), true);
+      RelDataType castType = dataType.deriveType(cx.getValidator(), true);
       // can not call RexBuilder.makeCast() since that optimizes to remove the cast
       // we don't want to remove the cast
       return cx.getRexBuilder().makeAbstractCast(castType, leftRex);

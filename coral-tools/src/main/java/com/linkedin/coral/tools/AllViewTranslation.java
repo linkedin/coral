@@ -49,7 +49,6 @@ import static com.linkedin.coral.tools.ViewTranslationUtils.*;
  */
 public class AllViewTranslation {
   private final HiveMetastoreClient metaStoreClient;
-  private final HiveToPrestoConverter converter;
   private final List<String> includededDatasets;
   private final List<String> excludedDatasets;
   private final PrintWriter sqlWriter;
@@ -62,7 +61,6 @@ public class AllViewTranslation {
 
   public AllViewTranslation(String resultDir, String includedFile, String excludedFile) throws Exception {
     metaStoreClient = getMetastoreClient();
-    converter = HiveToPrestoConverter.create(metaStoreClient);
     sqlWriter = makeWriter(resultDir, "prestoSql.txt");
     successWriter = makeWriter(resultDir, "successes.txt");
     failureWriter = makeWriter(resultDir, "failures.txt");
@@ -177,7 +175,8 @@ public class AllViewTranslation {
       ++stats.views;
       isDaliView = table.getOwner().equalsIgnoreCase("daliview");
       stats.daliviews += isDaliView ? 1 : 0;
-      convertToPrestoAndValidate(table.getDbName(), table.getTableName(), converter, sqlWriter);
+      convertToPrestoAndValidate(table.getDbName(), table.getTableName(),
+          HiveToPrestoConverter.create(metaStoreClient), sqlWriter);
       successWriter.println(toViewString(table));
     } catch (Exception e) {
       failureWriter.println(toViewString(table));

@@ -1,14 +1,13 @@
 package com.linkedin.coral.spark;
 
-
-import java.util.TimeZone;
+import org.apache.calcite.sql.SqlBasicTypeNameSpec;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlDataTypeSpec;
-import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlRowTypeSpec;
 import org.apache.calcite.sql.parser.SqlParserPos;
+import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.sql.util.SqlShuttle;
 
 /**
@@ -51,16 +50,21 @@ public class SparkSqlRewriter extends SqlShuttle {
   @Override
   public SqlNode visit(SqlDataTypeSpec type) {
     // Spark Sql Types are listed here: https://spark.apache.org/docs/latest/sql-reference.html
-      int precision = type.getPrecision();
-      int scale = type.getScale();
-      String charSetName = type.getCharSetName();
-      TimeZone timeZone = type.getTimeZone();
-      SqlParserPos parserPos = type.getParserPosition();
-      switch (type.getTypeName().toString()) {
-        case "VARCHAR":
-          return new SqlDataTypeSpec(new SqlIdentifier("STRING", parserPos), precision, scale, charSetName, timeZone, parserPos);
-        default:
-          return type;
-      }
+    assert type.getTypeNameSpec() instanceof SqlBasicTypeNameSpec;
+    final SqlBasicTypeNameSpec typeNameSpec = (SqlBasicTypeNameSpec) type.getTypeNameSpec();
+    final SqlParserPos parserPos = type.getParserPosition();
+    switch (type.getTypeName().toString()) {
+      case "VARCHAR":
+        final SqlBasicTypeNameSpec stringTypeName = new SqlBasicTypeNameSpec(
+            "STRING",
+            SqlTypeName.VARCHAR,
+            -1,
+            typeNameSpec.getScale(),
+            typeNameSpec.getCharSetName(),
+            parserPos);
+        return new SqlDataTypeSpec(stringTypeName, type.getTimeZone(), parserPos);
+      default:
+        return type;
+    }
   }
 }

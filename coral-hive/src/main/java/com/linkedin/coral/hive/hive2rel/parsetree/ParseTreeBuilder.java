@@ -2,13 +2,13 @@ package com.linkedin.coral.hive.hive2rel.parsetree;
 
 import com.google.common.collect.ImmutableList;
 import com.linkedin.coral.com.google.common.collect.Iterables;
+import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
 import com.linkedin.coral.hive.hive2rel.functions.FunctionFieldReferenceOperator;
 import com.linkedin.coral.hive.hive2rel.functions.HiveExplodeOperator;
 import com.linkedin.coral.hive.hive2rel.functions.HiveFunction;
 import com.linkedin.coral.hive.hive2rel.functions.HiveFunctionRegistry;
-import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
-import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
 import com.linkedin.coral.hive.hive2rel.functions.HiveFunctionResolver;
+import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 import com.linkedin.coral.hive.hive2rel.parsetree.parser.ASTNode;
 import com.linkedin.coral.hive.hive2rel.parsetree.parser.Node;
 import com.linkedin.coral.hive.hive2rel.parsetree.parser.ParseDriver;
@@ -23,6 +23,7 @@ import org.apache.calcite.sql.JoinConditionType;
 import org.apache.calcite.sql.JoinType;
 import org.apache.calcite.sql.SqlAsOperator;
 import org.apache.calcite.sql.SqlBasicCall;
+import org.apache.calcite.sql.SqlBasicTypeNameSpec;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlDataTypeSpec;
 import org.apache.calcite.sql.SqlIdentifier;
@@ -33,6 +34,7 @@ import org.apache.calcite.sql.SqlNodeList;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.SqlSelect;
 import org.apache.calcite.sql.SqlSelectKeyword;
+import org.apache.calcite.sql.SqlTypeNameSpec;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.hadoop.hive.metastore.api.Table;
@@ -597,72 +599,72 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
 
   @Override
   protected SqlNode visitBoolean(ASTNode node, ParseContext ctx) {
-    return createTypeSpec(SqlTypeName.BOOLEAN.getName());
+    return createBasicTypeSpec(SqlTypeName.BOOLEAN);
   }
 
   @Override
   protected SqlNode visitInt(ASTNode node, ParseContext ctx) {
-    return createTypeSpec(SqlTypeName.INTEGER.getName());
+    return createBasicTypeSpec(SqlTypeName.INTEGER);
   }
 
   @Override
   protected SqlNode visitSmallInt(ASTNode node, ParseContext ctx) {
-    return createTypeSpec(SqlTypeName.SMALLINT.getName());
+    return createBasicTypeSpec(SqlTypeName.SMALLINT);
   }
 
   @Override
   protected SqlNode visitBigInt(ASTNode node, ParseContext ctx) {
-    return createTypeSpec(SqlTypeName.BIGINT.getName());
+    return createBasicTypeSpec(SqlTypeName.BIGINT);
   }
 
   @Override
   protected SqlNode visitTinyInt(ASTNode node, ParseContext ctx) {
-    return createTypeSpec(SqlTypeName.TINYINT.getName());
+    return createBasicTypeSpec(SqlTypeName.TINYINT);
   }
 
   @Override
   protected SqlNode visitFloat(ASTNode node, ParseContext ctx) {
-    return createTypeSpec(SqlTypeName.FLOAT.getName());
+    return createBasicTypeSpec(SqlTypeName.FLOAT);
   }
 
   @Override
   protected SqlNode visitDouble(ASTNode node, ParseContext ctx) {
-    return createTypeSpec(SqlTypeName.DOUBLE.getName());
+    return createBasicTypeSpec(SqlTypeName.DOUBLE);
   }
 
   @Override
   protected SqlNode visitVarchar(ASTNode node, ParseContext ctx) {
-    return createTypeSpec(SqlTypeName.VARCHAR.getName());
+    return createBasicTypeSpec(SqlTypeName.VARCHAR);
   }
 
   @Override
   protected SqlNode visitChar(ASTNode node, ParseContext ctx) {
-    return createTypeSpec(SqlTypeName.CHAR.getName());
+    return createBasicTypeSpec(SqlTypeName.CHAR);
   }
 
   @Override
   protected SqlNode visitString(ASTNode node, ParseContext ctx) {
-    return createTypeSpec(SqlTypeName.VARCHAR.getName());
+    return createBasicTypeSpec(SqlTypeName.VARCHAR);
   }
 
   @Override
   protected SqlNode visitBinary(ASTNode node, ParseContext ctx) {
-    return createTypeSpec(SqlTypeName.VARBINARY.getName());
+    return createBasicTypeSpec(SqlTypeName.VARBINARY);
   }
 
   @Override
   protected SqlNode visitDecimal(ASTNode node, ParseContext ctx) {
-    return createTypeSpec(SqlTypeName.DECIMAL.getName());
+    return createBasicTypeSpec(SqlTypeName.DECIMAL);
   }
 
   @Override
   protected SqlNode visitDate(ASTNode node, ParseContext ctx) {
-    return createTypeSpec(SqlTypeName.DATE.getName());
+    return createBasicTypeSpec(SqlTypeName.DATE);
   }
 
   @Override
   protected SqlNode visitTimestamp(ASTNode node, ParseContext ctx) {
-    return createTypeSpec(SqlTypeName.TIMESTAMP.getName());
+    return createBasicTypeSpec(SqlTypeName.TIMESTAMP);
   }
 
   @Override
@@ -680,8 +682,9 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     return SqlLiteral.createCharString(node.getText(), ZERO);
   }
 
-  private SqlDataTypeSpec createTypeSpec(String type) {
-    return new SqlDataTypeSpec(new SqlIdentifier(type, ZERO), -1, -1, null, null, ZERO);
+  private SqlDataTypeSpec createBasicTypeSpec(SqlTypeName type) {
+    final SqlTypeNameSpec typeNameSpec = new SqlBasicTypeNameSpec(type, ZERO);
+    return new SqlDataTypeSpec(typeNameSpec, ZERO);
   }
 
   @Override

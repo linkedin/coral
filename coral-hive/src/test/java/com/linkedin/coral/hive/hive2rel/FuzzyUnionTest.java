@@ -55,7 +55,7 @@ public class FuzzyUnionTest {
         + "FROM (SELECT *\n"
         + "FROM \"hive\".\"fuzzy_union\".\"tablea\"\n"
         + "UNION ALL\n" + "SELECT *\n"
-        + "FROM \"hive\".\"fuzzy_union\".\"tablea\")\n"
+        + "FROM \"hive\".\"fuzzy_union\".\"tablea\") AS \"t\"\n"
         + "UNION ALL\n"
         + "SELECT *\n"
         + "FROM \"hive\".\"fuzzy_union\".\"tablea\"";
@@ -149,7 +149,7 @@ public class FuzzyUnionTest {
         + "FROM \"hive\".\"fuzzy_union\".\"tablef\"\n"
         + "UNION ALL\n"
         + "SELECT \"a\", \"generic_project\"(\"b\", 'b') AS \"b\"\n"
-        + "FROM \"hive\".\"fuzzy_union\".\"tableg\")\n"
+        + "FROM \"hive\".\"fuzzy_union\".\"tableg\") AS \"t\"\n"
         + "UNION ALL\n"
         + "SELECT \"a\", \"generic_project\"(\"b\", 'b') AS \"b\"\n"
         + "FROM \"hive\".\"fuzzy_union\".\"tablef\"";

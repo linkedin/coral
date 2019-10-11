@@ -2,8 +2,10 @@ package com.linkedin.coral.presto.rel2presto;
 
 import org.apache.calcite.config.NullCollation;
 import org.apache.calcite.sql.SqlDialect;
+import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlWriter;
+import org.apache.calcite.sql.parser.SqlParserPos;
 
 
 public class PrestoSqlDialect extends SqlDialect {
@@ -38,6 +40,23 @@ public class PrestoSqlDialect extends SqlDialect {
       return name;
     }
     return IDENTIFIER_QUOTE_STRING + name + IDENTIFIER_QUOTE_STRING;
+  }
+
+  @Override
+  public void unparseIdentifier(SqlWriter writer, SqlIdentifier identifier) {
+    final SqlWriter.Frame frame =
+        writer.startList(SqlWriter.FrameTypeEnum.IDENTIFIER);
+    for (int i = 0; i < identifier.names.size(); i++) {
+      writer.sep(".");
+      final String name = identifier.names.get(i);
+      final SqlParserPos pos = identifier.getComponentParserPosition(i);
+      if (name.equals("")) {
+        writer.print("*");
+      } else {
+        writer.identifier(name, pos.isQuoted());
+      }
+    }
+    writer.endList(frame);
   }
 
   public boolean requireCastOnString() {

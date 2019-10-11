@@ -58,7 +58,7 @@ public class HiveToRelConverterTest {
     final String expected = "LogicalProject(f=[null:NULL])\n" +
         "  LogicalValues(tuples=[[{ 0 }]])\n";
     assertEquals(relToStr(rel), expected);
-    final String expectedSql = "SELECT NULL AS \"f\"\nFROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
+    final String expectedSql = "SELECT CAST(NULL AS NULL) AS \"f\"\nFROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
     assertEquals(relToSql(rel), expectedSql);
   }
 

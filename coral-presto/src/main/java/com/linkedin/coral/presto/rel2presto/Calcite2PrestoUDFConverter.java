@@ -169,16 +169,21 @@ public class Calcite2PrestoUDFConverter {
     // check if this is HiveCollation before applying such rules but we don't use
     // Collation here.
     private RexCall adjustInconsistentTypesToEqualityOperator(RexCall call) {
-      SqlOperator op = call.getOperator();
+      final SqlOperator op = call.getOperator();
       if (op.getKind() != SqlKind.EQUALS) {
         return call;
       }
 
       RexNode leftOperand = call.getOperands().get(0);
-      RexNode rightOperand = call.getOperands().get(1);
+      final RexNode rightOperand = call.getOperands().get(1);
+
+      if (leftOperand.getKind() == SqlKind.CAST) {
+        leftOperand = ((RexCall) leftOperand).getOperands().get(0);
+      }
+
       if (SUPPORTED_TYPE_CAST_MAP.containsEntry(leftOperand.getType().getSqlTypeName().getFamily(),
           rightOperand.getType().getSqlTypeName().getFamily())) {
-        RexNode tryCastNode =
+        final RexNode tryCastNode =
             rexBuilder.makeCall(rightOperand.getType(), PrestoTryCastFunction.INSTANCE, ImmutableList.of(leftOperand));
         return (RexCall) rexBuilder.makeCall(op, tryCastNode, rightOperand);
       }

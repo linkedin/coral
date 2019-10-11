@@ -3,12 +3,13 @@ package com.linkedin.coral.presto.rel2presto;
 import java.util.TimeZone;
 import java.util.stream.Collectors;
 import org.apache.calcite.sql.SqlArrayTypeSpec;
+import org.apache.calcite.sql.SqlBasicTypeNameSpec;
 import org.apache.calcite.sql.SqlDataTypeSpec;
-import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlMapTypeSpec;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlRowTypeSpec;
 import org.apache.calcite.sql.parser.SqlParserPos;
+import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.sql.util.SqlShuttle;
 
 
@@ -23,31 +24,36 @@ public class PrestoSqlRewriter extends SqlShuttle {
   private static SqlDataTypeSpec convertTypeSpec(SqlDataTypeSpec type) {
     if (type instanceof SqlArrayTypeSpec) {
       SqlArrayTypeSpec arrayType = (SqlArrayTypeSpec) type;
-      return new SqlArrayTypeSpec(convertTypeSpec(arrayType.getElementTypeSpec()), arrayType.getNullable(),
-          arrayType.getParserPosition());
+      return new SqlArrayTypeSpec(convertTypeSpec(arrayType.getElementTypeSpec()), arrayType.getParserPosition());
     } else if (type instanceof SqlMapTypeSpec) {
       SqlMapTypeSpec mapType = (SqlMapTypeSpec) type;
       return new SqlMapTypeSpec(convertTypeSpec(mapType.getKeyTypeSpec()), convertTypeSpec(mapType.getValueTypeSpec()),
-          mapType.getNullable(), mapType.getParserPosition());
+          mapType.getParserPosition());
     } else if (type instanceof SqlRowTypeSpec) {
       SqlRowTypeSpec rowType = (SqlRowTypeSpec) type;
       return new SqlRowTypeSpec(rowType.getFieldNames(),
           rowType.getFieldTypeSpecs().stream().map(PrestoSqlRewriter::convertTypeSpec).collect(Collectors.toList()),
-          rowType.getNullable(), rowType.getParserPosition());
+          rowType.getParserPosition());
     } else {
-      int precision = type.getPrecision();
-      int scale = type.getScale();
-      String charSetName = type.getCharSetName();
-      TimeZone timeZone = type.getTimeZone();
-      SqlParserPos parserPos = type.getParserPosition();
-      switch (type.getTypeName().toString()) {
+      assert type.getTypeNameSpec() instanceof SqlBasicTypeNameSpec;
+      final SqlBasicTypeNameSpec typeNameSpec = (SqlBasicTypeNameSpec) type.getTypeNameSpec();
+
+      int precision = typeNameSpec.getPrecision();
+      int scale = typeNameSpec.getScale();
+      final String charSetName = typeNameSpec.getCharSetName();
+      final TimeZone timeZone = type.getTimeZone();
+      final SqlParserPos parserPos = type.getParserPosition();
+
+      switch (typeNameSpec.getTypeName().toString()) {
         case "BINARY":
         case "VARBINARY":
-          return new SqlDataTypeSpec(new SqlIdentifier("VARBINARY", parserPos), -1, -1, charSetName, timeZone,
-              parserPos);
+          final SqlBasicTypeNameSpec binaryTypeName =
+              new SqlBasicTypeNameSpec(SqlTypeName.VARBINARY, -1, -1, charSetName, parserPos);
+          return new SqlDataTypeSpec(binaryTypeName, timeZone, parserPos);
         case "FLOAT":
-          return new SqlDataTypeSpec(new SqlIdentifier("REAL", parserPos), precision, scale, charSetName, timeZone,
-              parserPos);
+          final SqlBasicTypeNameSpec realTypeName =
+              new SqlBasicTypeNameSpec(SqlTypeName.REAL, precision, scale, charSetName, parserPos);
+          return new SqlDataTypeSpec(realTypeName, timeZone, parserPos);
         default:
           return type;
       }

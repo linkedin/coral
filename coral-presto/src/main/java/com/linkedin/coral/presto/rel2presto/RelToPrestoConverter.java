@@ -146,12 +146,11 @@ public class RelToPrestoConverter extends RelToSqlConverter {
     // Remove SELECT in  UNNEST(SELECT <unnestColumns> FROM (VALUES(0)))
     // and generate UNNEST(<unnestColumns>) AS <alias>(<columnList>) instead.
     final Result x = visitChild(0, e.getInput());
-    final Builder builder = x.builder(e, Clause.SELECT);
 
     // Build <unnestColumns>
     final List<SqlNode> unnestOperands = new ArrayList<>();
     for (RexNode unnestCol : ((Project) e.getInput()).getChildExps()) {
-      unnestOperands.add(builder.context.toSql(null, unnestCol));
+      unnestOperands.add(x.qualifiedContext().toSql(null, unnestCol));
     }
 
     // Build UNNEST(<unnestColumns>)
