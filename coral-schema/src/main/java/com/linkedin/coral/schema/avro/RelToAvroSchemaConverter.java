@@ -105,7 +105,7 @@ public class RelToAvroSchemaConverter {
    * This method generates a corresponding avro schema for calcite IR RelNode
    *
    * @param relNode
-   * @return avro schema for calicite IR RelNode
+   * @return avro schema for calcite IR RelNode
    * @throws RuntimeException if cannot find table in Hive metastore
    * @throws RuntimeException if cannot determine avro schema for tableScan
    */

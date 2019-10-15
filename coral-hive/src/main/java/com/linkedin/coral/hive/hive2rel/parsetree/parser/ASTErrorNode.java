@@ -27,9 +27,6 @@ import org.antlr.runtime.tree.CommonErrorNode;
 //CHECKSTYLE:OFF
 public class ASTErrorNode extends ASTNode {
 
-  /**
-   *
-   */
   private static final long serialVersionUID = 1L;
   CommonErrorNode delegate;
 

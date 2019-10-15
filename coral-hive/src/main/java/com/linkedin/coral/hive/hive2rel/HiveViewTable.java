@@ -67,8 +67,8 @@ public class HiveViewTable extends HiveTable implements TranslatableTable {
     }
   }
 
-  // [LIHADOOP-34428]: Dali allow extra fields on struct type columns to flow through. We
-  // try to match that behavior. Dali does not allow top level columns to flow through
+  // [LIHADOOP-34428]: Hive-based Dali readers allow extra fields on struct type columns to flow through. We
+  // try to match that behavior. Hive-based Dali readers do not allow top level columns to flow through
   // Returns true if an explicit cast is required from rowType to castRowType, false otherwise
   private static boolean isRowCastRequired(RelDataType rowType, RelDataType castRowType) {
     if (rowType == castRowType) {

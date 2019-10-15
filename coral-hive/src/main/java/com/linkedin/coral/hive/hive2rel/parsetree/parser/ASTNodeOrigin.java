@@ -32,7 +32,7 @@ package com.linkedin.coral.hive.hive2rel.parsetree.parser;
  *<p>
  *
  * So, when expanding the definition of v while analyzing the top-level query,
- * we tag each ASTNode with a reference to an ASTNodeOrign describing v and its
+ * we tag each ASTNode with a reference to an ASTNodeOrigin describing v and its
  * usage within the query.
  */
 

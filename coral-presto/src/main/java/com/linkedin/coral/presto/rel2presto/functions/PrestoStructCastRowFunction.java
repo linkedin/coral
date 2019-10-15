@@ -3,7 +3,7 @@ package com.linkedin.coral.presto.rel2presto.functions;
 import org.apache.calcite.rel.type.RelDataType;
 
 /**
- * PrestoMapTransformValuesFunctionrepresents the Presto built-in UDF, transform_values, defined to take a map input
+ * PrestoMapTransformValuesFunction represents the Presto built-in UDF, transform_values, defined to take a map input
  * and a lambda function to determine the new values of the map
  *
  * This UDF requires a special definition outside the CalcitePrestoUDFMap because of the following:
