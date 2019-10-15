@@ -6,6 +6,7 @@
  import com.linkedin.coral.com.google.common.collect.Multimap;
  import java.util.Collection;
  import java.util.Collections;
+ import java.util.LinkedList;
  import java.util.List;
  import java.util.function.Predicate;
  import org.apache.calcite.rel.type.RelDataType;
@@ -402,8 +403,22 @@
      return ImmutableMultimap.copyOf(FUNCTION_MAP);
    }
 
+   /**
+    * Replaces an internal function registry.  It is used by an instantiated HiveFunctionRegistry.
+    */
+   public void replaceFunctionEntry(String functionName, HiveFunction oldFunc, HiveFunction newFunc) {
+     FUNCTION_MAP.remove(functionName, oldFunc);
+     FUNCTION_MAP.put(functionName, newFunc);
+   }
+
    private static void addFunctionEntry(String functionName, SqlOperator operator) {
      FUNCTION_MAP.put(functionName, new HiveFunction(functionName, operator));
+   }
+
+   private static void addFunctionEntry(String functionName, SqlOperator operator, String dependency) {
+     List<String> listOfDep = new LinkedList<String>();
+     listOfDep.add(dependency);
+     FUNCTION_MAP.put(functionName, new HiveFunction(functionName, operator, listOfDep));
    }
 
    public static void createAddUserDefinedFunction(String functionName, SqlReturnTypeInference returnTypeInference,
@@ -417,7 +432,7 @@
      if (!depPrefix.equals("ivy://")) {
        dependency = "ivy://" + dependency;
      }
-     addFunctionEntry(functionName, createCalciteUDF(functionName, returnTypeInference, operandTypeChecker));
+     addFunctionEntry(functionName, createCalciteUDF(functionName, returnTypeInference, operandTypeChecker), dependency);
    }
 
    public static void createAddUserDefinedFunction(String functionName, SqlReturnTypeInference returnTypeInference) {
@@ -433,8 +448,8 @@
 
    private static SqlOperator createCalciteUDF(String functionName, SqlReturnTypeInference returnTypeInference,
        SqlOperandTypeChecker operandTypeChecker) {
-     return new SqlUserDefinedFunction(new SqlIdentifier(functionName, SqlParserPos.ZERO), returnTypeInference, null,
-         operandTypeChecker, null, null);
+     return new DaliSqlUserDefinedFunction(functionName, returnTypeInference, operandTypeChecker, null,
+         null, null, null);
    }
 
    private static SqlOperator createCalciteUDF(String functionName, SqlReturnTypeInference returnTypeInference) {

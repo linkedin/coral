@@ -2,15 +2,14 @@ package com.linkedin.coral.hive.hive2rel;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.linkedin.coral.com.google.common.base.Throwables;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import org.apache.calcite.DataContext;
 import org.apache.calcite.config.CalciteConnectionConfig;
 import org.apache.calcite.linq4j.Enumerable;
@@ -101,23 +100,37 @@ public class HiveTable implements ScannableTable {
   }
 
   /**
-   * Get Dali UDF dependencies from the "dependencies" Hive table property.
+   * Get dali dependencies params from table TBLPROPERTIES clause.
    * The 'dependencies' parameter in TBLPROPERTIES clause is a whitespace-separated list of the ivy coordinates
-   * of the artifacts a UDF requires.  Example:
+   * of the jars a UDF comes from.  Example:
    * 'dependencies' = 'ivy://com.linkedin.foo:foo1:0.0.1 ivy://com.linkedin.foo:foo2:0.0.1'
    * @return returns a string list of the ivy coordinates as stored in the
-   * {@code dependencies} table property.  The return value is null if
-   * {@code dependencies} is not set.
+   * {@code dependencies} parameter key of table parameters.  The return value is null if
+   * {@code dependencies} is not configured.
    */
-  public List<String> getDaliUdfDependencies() {
+  public List<String> getDaliFunctionDependency() {
     checkDaliTable();
-    final String propertyValue = hiveTable.getParameters().get(TBLPROPERTIES_DEPENDENCIES_KEY);
-    if (propertyValue != null) {
-      return tblpropertiesSplitter.splitToList(propertyValue).stream().map(
-          s -> s.toLowerCase().startsWith("ivy://") ? s : "ivy://" + s
-      ).collect(Collectors.toList());
+    final String dependenciesValue = hiveTable.getParameters().get(TBLPROPERTIES_DEPENDENCIES_KEY);
+    List<String> funcDependencies = null;
+    if (dependenciesValue != null) {
+      funcDependencies = tblpropertiesSplitter.splitToList(dependenciesValue);
     }
-    return ImmutableList.of();
+
+    // LIHADOOP-49208: make dependency string in URI format
+    LinkedList<String> uriDependencies = new LinkedList<>();
+    if (funcDependencies != null) {
+      for (String funcDependency : funcDependencies) {
+        String uriDependency;
+        if (funcDependency.toLowerCase().startsWith("ivy://")) {
+          uriDependency = funcDependency;
+        } else {
+          uriDependency = "ivy://" + funcDependency;
+        }
+
+        uriDependencies.add(uriDependency);
+      }
+    }
+    return uriDependencies;
   }
 
   public boolean isDaliTable() {

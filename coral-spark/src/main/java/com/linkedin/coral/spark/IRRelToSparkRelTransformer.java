@@ -1,7 +1,7 @@
 package com.linkedin.coral.spark;
 
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
-import com.linkedin.coral.hive.hive2rel.functions.VersionedSqlUserDefinedFunction;
+import com.linkedin.coral.hive.hive2rel.functions.DaliSqlUserDefinedFunction;
 import com.linkedin.coral.hive.hive2rel.functions.GenericProjectFunction;
 import com.linkedin.coral.hive.hive2rel.functions.HiveNamedStructFunction;
 import com.linkedin.coral.spark.containers.SparkRelInfo;
@@ -238,11 +238,11 @@ class IRRelToSparkRelTransformer {
       if (functionClassName.indexOf('.') >= 0) {
         // We get SparkUDFInfo object for Dali UDF only which has '.' in the function class name.
         // We do not need to handle the keyword built-in functions.
-        VersionedSqlUserDefinedFunction daliUdf = (VersionedSqlUserDefinedFunction) sqlOp;
-        String expandedFuncName = daliUdf.getViewDependentFunctionName();
+        DaliSqlUserDefinedFunction daliUdf = (DaliSqlUserDefinedFunction) sqlOp;
+        String expandedFuncName = daliUdf.getExpandedFunctionName();
 
         //[LIHADOOP-44515] need to provide UDF dependency with ivy coordinates
-        List<String> dependencies = daliUdf.getIvyDependencies();
+        List<String> dependencies = daliUdf.getDaliUdfDependencies();
         try {
           List<URI> listOfUris = new LinkedList<URI>();
           for (String dependency : dependencies) {

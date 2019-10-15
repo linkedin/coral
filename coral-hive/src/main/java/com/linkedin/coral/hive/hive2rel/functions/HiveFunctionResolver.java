@@ -5,6 +5,7 @@ import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import com.linkedin.coral.hive.hive2rel.HiveTable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -30,7 +31,7 @@ import static org.apache.calcite.sql.parser.SqlParserPos.*;
  */
 public class HiveFunctionResolver {
 
-  public final HiveFunctionRegistry registry;
+  public HiveFunctionRegistry registry;
   private final List<SqlOperator> operators;
 
   public HiveFunctionResolver(HiveFunctionRegistry registry) {
@@ -156,6 +157,8 @@ public class HiveFunctionResolver {
     if (funcClassName == null) {
       return ImmutableList.of();
     }
+    List<String> dependencies = hiveTable.getDaliFunctionDependency();
+
     final Collection<HiveFunction> hiveFunctions = registry.lookup(funcClassName, true);
     if (hiveFunctions.size() == 0) {
       // we want to see class name in the exception message for coverage testing
@@ -163,14 +166,26 @@ public class HiveFunctionResolver {
       throw new UnknownSqlFunctionException(funcClassName);
     }
 
-    return hiveFunctions.stream().map(f -> new HiveFunction(
-        f.getHiveFunctionName(),
-        new VersionedSqlUserDefinedFunction(
-            (SqlUserDefinedFunction) f.getSqlOperator(),
-            hiveTable.getDaliUdfDependencies(),
-            functionName
-        )
-    )).collect(Collectors.toList());
+    // As we have some information collected from Dali view definition (or hive table),
+    // we want to save them into a SqlOperator object for later reference.
+    // We need to replace the function entry in the local registry copy.
+    Collection<HiveFunction> resolvedHiveFuncs = new ArrayList<>();
+
+    // In order to avoid java.util.ConcurrentModificationException, we need to use another LinkedList
+    // as iterator in the for loop
+    LinkedList<HiveFunction> iteratorFuncs = new LinkedList<>();
+    for (HiveFunction hiveFunc : hiveFunctions) {
+      iteratorFuncs.add(hiveFunc);
+    }
+    for (int i = 0; i < iteratorFuncs.size(); ++i) {
+      HiveFunction hiveFunc = iteratorFuncs.get(i);
+      SqlUserDefinedFunction sqlUdf = (SqlUserDefinedFunction) hiveFunc.getSqlOperator();
+      SqlOperator resolvedDaliSqlUdf = new DaliSqlUserDefinedFunction(sqlUdf, dependencies, functionName);
+      HiveFunction resolvedHiveFunc = new HiveFunction(hiveFunc.getHiveFunctionName(), resolvedDaliSqlUdf, hiveFunc.getUdfDependencies());
+      resolvedHiveFuncs.add(resolvedHiveFunc);
+      ((StaticHiveFunctionRegistry) registry).replaceFunctionEntry(funcClassName, hiveFunc, resolvedHiveFunc);
+    }
+    return resolvedHiveFuncs;
   }
 
   private @Nonnull HiveFunction unresolvedFunction(String functionName, Table table) {
