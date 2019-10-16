@@ -30,7 +30,7 @@ public class RelToPigLatinConverterTest {
     String sql = "SELECT tableA.c FROM pig.tableA AS tableA";
     String[] expectedPigLatin = {
         "view = LOAD 'src/test/resources/data/pig/tablea.json' USING JsonLoader('a:int, b:int, c:int');",
-        "view = FOREACH view GENERATE c;"
+        "view = FOREACH view GENERATE c AS c;"
     };
     String[] expectedOutput = {
         "(100)",
@@ -58,7 +58,35 @@ public class RelToPigLatinConverterTest {
     String sql = "SELECT * FROM pig.tableA AS tableA";
     String[] expectedPigLatin = {
         "view = LOAD 'src/test/resources/data/pig/tablea.json' USING JsonLoader('a:int, b:int, c:int');",
-        "view = FOREACH view GENERATE a, b, c;"
+        "view = FOREACH view GENERATE a AS a, b AS b, c AS c;"
+    };
+    String[] expectedOutput = {
+        "(0,0,100)",
+        "(1,1,200)",
+        "(2,2,300)",
+        "(3,3,400)",
+        "(4,4,500)"
+    };
+
+    String[] translatedPigLatin = TestUtils.sqlToPigLatin(sql, OUTPUT_RELATION);
+
+    Assert.assertEquals(translatedPigLatin, expectedPigLatin);
+
+    PigTest pigTest = new PigTest(translatedPigLatin);
+    pigTest.assertOutput(OUTPUT_RELATION, expectedOutput);
+  }
+
+  /**
+   * Tests a projection of multiple columns with aliases that differ from its base table
+   * @throws IOException
+   * @throws ParseException
+   */
+  @Test
+  public static void testFieldsWithAliasesSelect() throws IOException, ParseException {
+    String sql = "SELECT tableA.a as f1, tableA.b as f2, tableA.c as f3 FROM pig.tableA AS tableA";
+    String[] expectedPigLatin = {
+        "view = LOAD 'src/test/resources/data/pig/tablea.json' USING JsonLoader('a:int, b:int, c:int');",
+        "view = FOREACH view GENERATE a AS f1, b AS f2, c AS f3;"
     };
     String[] expectedOutput = {
         "(0,0,100)",
@@ -85,7 +113,7 @@ public class RelToPigLatinConverterTest {
     String expectedPigLatinTemplate = String.join("\n",
         "view = LOAD 'src/test/resources/data/pig/tablea.json' USING JsonLoader('a:int, b:int, c:int');",
         "view = FILTER view BY (a %s 1);",
-        "view = FOREACH view GENERATE a;"
+        "view = FOREACH view GENERATE a AS a;"
     );
 
     String[] sqlOperators = {">", ">=", "<", "<=", "=", "!="};
@@ -126,7 +154,7 @@ public class RelToPigLatinConverterTest {
     String[] expectedPigLatin = {
         "view = LOAD 'src/test/resources/data/pig/tablea.json' USING JsonLoader('a:int, b:int, c:int');",
         "view = FILTER view BY a IN (2, 3, 4);",
-        "view = FOREACH view GENERATE a;"
+        "view = FOREACH view GENERATE a AS a;"
     };
     String[] expectedOutput = {
         "(2)",
@@ -153,7 +181,7 @@ public class RelToPigLatinConverterTest {
     String[] expectedPigLatin = {
         "view = LOAD 'src/test/resources/data/pig/tablea.json' USING JsonLoader('a:int, b:int, c:int');",
         "view = FILTER view BY NOT a IN (2, 3, 4);",
-        "view = FOREACH view GENERATE a;"
+        "view = FOREACH view GENERATE a AS a;"
     };
     String[] expectedOutput = {
         "(0)",
@@ -179,7 +207,7 @@ public class RelToPigLatinConverterTest {
     String[] expectedPigLatin = {
         "view = LOAD 'src/test/resources/data/pig/tablea.json' USING JsonLoader('a:int, b:int, c:int');",
         "view = FILTER view BY (((a > 2) AND (b > 3)) OR (c == 100));",
-        "view = FOREACH view GENERATE b;"
+        "view = FOREACH view GENERATE b AS b;"
     };
     String[] expectedOutput = {
         "(0)",

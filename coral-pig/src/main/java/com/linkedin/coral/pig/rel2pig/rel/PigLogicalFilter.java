@@ -19,16 +19,14 @@ public class PigLogicalFilter {
    * Translates a Calcite LogicalFilter into Pig Latin
    * @param logicalFilter The Calcite LogicalFilter to be translated
    * @param outputRelation The variable that stores the filtered output
-   * @param inputRelation The variable that stores the Pig relation after filtering
+   * @param inputRelation The variable that has stored the Pig relation to be filtered
    * @return The Pig Latin for the logicalFilter in the form of:
    *           [outputRelation] = FILTER [inputRelation] BY [logicalFilter.expressions]
    */
   public static String getScript(LogicalFilter logicalFilter, String outputRelation, String inputRelation) {
-    List<String> inputRelToPigFieldsMapping =
-        PigRelUtils.convertInputColumnNameReferences(logicalFilter.getInput().getRowType());
-
+    List<String> inputFieldNames = PigRelUtils.getOutputFieldNames(logicalFilter.getInput());
     String conditionExpression =
-        PigRexUtils.convertRexNodePigExpression(logicalFilter.getCondition(), inputRelToPigFieldsMapping);
+        PigRexUtils.convertRexNodePigExpression(logicalFilter.getCondition(), inputFieldNames);
     return String.format(LOGICAL_FILTER_TEMPLATE, outputRelation, inputRelation, conditionExpression);
   }
 }

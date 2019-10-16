@@ -1,6 +1,7 @@
 apply plugin: 'li-java'
 apply plugin: 'maven-publish'
 
+
 dependencies {
   compile spec.product.'coral-calcite'.'coral-calcite'
 

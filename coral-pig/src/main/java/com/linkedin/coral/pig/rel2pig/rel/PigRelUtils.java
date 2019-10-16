@@ -1,59 +1,41 @@
 package com.linkedin.coral.pig.rel2pig.rel;
 
-import java.util.ArrayList;
 import java.util.List;
-import org.apache.calcite.rel.type.RelDataType;
-import org.apache.calcite.rel.type.RelDataTypeField;
-import org.apache.calcite.rel.type.RelRecordType;
-import org.apache.calcite.sql.type.BasicSqlType;
+import java.util.stream.Collectors;
+import org.apache.calcite.rel.RelNode;
 
-
-//TODO(ralam): Add comments and clean up code
+/**
+ * PigRelUtils provides utilities to translate SQL relational operators represented as
+ * Calcite RelNodes into Pig Latin.
+ */
 public class PigRelUtils {
 
   private PigRelUtils() {
   }
 
-  public static List<String> convertInputColumnNameReferences(RelDataType relDataType) {
-    List<String> columnNameList = new ArrayList<>();
-    addInputColumnNamesReferences(relDataType, columnNameList, "");
-    return columnNameList;
-  }
-
-  public static List<String> convertInputColumnNameReferences(List<RelDataType> relDataTypes) {
-    List<String> columnNameList = new ArrayList<>();
-    for (RelDataType relDataType : relDataTypes) {
-      addInputColumnNamesReferences(relDataType, columnNameList, "");
-    }
-    return columnNameList;
-  }
-
-  private static void addInputColumnNamesReferences(RelDataType relDataType, List<String> columnNameList,
-      String key) {
-
-    if (relDataType instanceof RelRecordType) {
-      if (!key.isEmpty()) {
-        columnNameList.add(key);
-      }
-
-      for (RelDataTypeField field : relDataType.getFieldList()) {
-        String fieldKey = resolveKey(key, field.getKey());
-        addInputColumnNamesReferences(field.getType(), columnNameList, fieldKey);
-      }
-    } else if (relDataType instanceof BasicSqlType) {
-      columnNameList.add(key);
-    } else {
-      // TODO: Test how Calcite numbers fields in a RelDataType; add nested struct/map/array/etc support and tests
-      throw new UnsupportedOperationException("Only struct and primitive data types are supported.");
-    }
-
-  }
-
-  private static String resolveKey(String prefix, String key) {
-    if (prefix.isEmpty()) {
-      return key;
-    }
-
-    return String.join(".", prefix, key);
+  /**
+   * Returns a list-index-based map from Calcite indexed references to fully qualified field names for the given
+   * RelDataType.
+   *
+   * For example, if we had a RelNode with RelDataType as follows:
+   *   relRecordType = RelRecordType(a int, b int, c int)
+   *
+   * Calling getOutputFieldNames for relRecordType would return:
+   *   getOutputFieldNames(relRecordType) -> {"a", "b", "c"}
+   *
+   * Complex Types:
+   *   For complex types (nested structs, maps, arrays), input references are not flattened.
+   *   For example, suppose we had a data type as follows:
+   *     RelRecordType(a int, b RelRecordType(b1 int), c int)
+   *   Its output field-name map will be as follows:
+   *     {"a", "b", "c"}
+   *
+   * @param relNode RelNode whose Pig fields are to be derived
+   * @return Mapping from list-index field reference to its associated Pig alias.
+   */
+  public static List<String> getOutputFieldNames(RelNode relNode) {
+    return relNode.getRowType().getFieldList().stream()
+        .map(field -> field.getKey().replace('$', 'x'))
+        .collect(Collectors.toList());
   }
 }

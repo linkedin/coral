@@ -5,7 +5,7 @@ import java.util.List;
 
 
 /**
- * RelToPigBuilder is used to store the intermediary Pig Script state in the conversion of a
+ * RelToPigBuilder is used to store intermediary Pig Script state used in the conversion of a
  * SQL query from Calcite Relational Algebra to Pig Latin.
  */
 class RelToPigBuilder {
@@ -31,4 +31,5 @@ class RelToPigBuilder {
   public String getScript() {
     return String.join("\n", statements);
   }
+
 }

@@ -12,6 +12,7 @@ import org.apache.calcite.rex.RexNode;
 public class PigLogicalProject {
 
   private static final String LOGICAL_PROJECT_TEMPLATE = "%s = FOREACH %s GENERATE %s;";
+  private static final String FIELD_TEMPLATE = "%s AS %s";
 
   private PigLogicalProject() {
   }
@@ -20,18 +21,21 @@ public class PigLogicalProject {
    * Translates a Calcite LogicalProject into Pig Latin
    * @param logicalProject The Calcite LogicalProject to be translated
    * @param outputRelation The variable that stores the projection output
-   * @param inputRelation The variable that has stores the Pig relation after the projection
+   * @param inputRelation The variable that has stored the Pig relation to perform a projection over
    * @return The Pig Latin for the logicalProject in the form of:
    *           [outputRelation] = FOREACH [inputRelation] GENERATE [logicalProject.fields]
    */
   public static String getScript(LogicalProject logicalProject, String outputRelation, String inputRelation) {
-    List<String> inputRelToPigFieldsMapping =
-        PigRelUtils.convertInputColumnNameReferences(logicalProject.getInput().getRowType());
+
+    List<String> outputFieldNames = PigRelUtils.getOutputFieldNames(logicalProject);
+    List<String> inputFieldNames = PigRelUtils.getOutputFieldNames(logicalProject.getInput());
 
     List<String> projectList = new ArrayList<>();
-    for (RexNode rexNode : logicalProject.getChildExps()) {
-
-      projectList.add(PigRexUtils.convertRexNodePigExpression(rexNode, inputRelToPigFieldsMapping));
+    for (int i = 0; i < logicalProject.getChildExps().size(); ++i) {
+      RexNode rexNode = logicalProject.getChildExps().get(i);
+      projectList.add(String.format(FIELD_TEMPLATE,
+          PigRexUtils.convertRexNodePigExpression(rexNode, inputFieldNames),
+          outputFieldNames.get(i)));
     }
     String projectListString = String.join(", ", projectList);
 
