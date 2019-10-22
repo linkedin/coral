@@ -2,7 +2,6 @@ package com.linkedin.coral.tools;
 
 import com.linkedin.coral.hive.hive2rel.functions.UnknownSqlFunctionException;
 import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
-import com.linkedin.coral.presto.rel2presto.HiveToPrestoConverter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -22,25 +21,30 @@ import static com.linkedin.coral.tools.ViewTranslationUtils.*;
 
 
 /**
- * Gralde task to convert HQL of all Dali views into PrestoSQL and report the results. Hive properties
- * must be correctly configured before using this command. See {@link MetastoreProvider} for the
+ * Gradle task to convert HQL of all Dali views to a supported target language (PrestoSQL, PigLatin, etc.)
+ * and report the results.
+ * If no target language is specified, the view translation task defaults to PrestoSQL validation.
+ * Hive properties must be correctly configured before using this command. See {@link MetastoreProvider} for the
  * required configuration properties
  *
  * Run from console:
  * ligradle translateAll -PresultDir=<result dir> [-Pinclude=<File for included dataset>]
- *                   [-Pexclude=<File for excluded dataset>]
+ *                   [-Pexclude=<File for excluded dataset>] [-Planguage=<Target language for validation>]
  *   - PresultDir is the directory that contains all reports about success datasets (successes.txt),
  *   failure datasets (failures.txt), all translated PrestoSQL (prestoSql.txt), and the summary (summary.txt)
  *   - Pinclude process only datasets included in this file. If not specified, process all datasets
  *   available in metastore.
  *   - Pexclude is the file that contains all datasets (one for each line, normally reusing failures.txt)
  *   that we want to exclude in the translation process.
+ *   - Planguage is the query language that the DaliViews will be translated to and subsequently validated. If no
+ *   option is specified, the target validation language defaults to PrestoSQL.
+ *   Currently, we support the following languages: PrestoSQL (-Planguage="presto")
  *
  * This command:
  *   1. Reads all databases and all tables within the database
  *   2. If the table is a 'virtual_view', this will translate the
- *      view definition to Presto SQL dialect
- *   3. Verifies that Presto SQL parser can successfully parse translated SQL.
+ *      view definition to the target language dialect
+ *   3. Verifies that the target language parser can successfully parse translated SQL.
  *   4. Prints results into 4 reporting files in resultDir after processing every 10 datasets or 20 views
  * This is expected to continue through all kinds of translation failures.
  *
@@ -58,10 +62,11 @@ public class AllViewTranslation {
   private final Stats stats;
   private final Map<String, Integer> errorCategories;
   private final Map<String, Integer> sqlFunctions;
+  private final LanguageValidator validator;
 
-  public AllViewTranslation(String resultDir, String includedFile, String excludedFile) throws Exception {
+  public AllViewTranslation(String resultDir, String includedFile, String excludedFile, LanguageValidator validator) throws Exception {
     metaStoreClient = getMetastoreClient();
-    sqlWriter = makeWriter(resultDir, "prestoSql.txt");
+    sqlWriter = makeWriter(resultDir, validator.getCamelName() + ".txt");
     successWriter = makeWriter(resultDir, "successes.txt");
     failureWriter = makeWriter(resultDir, "failures.txt");
     summaryWriter = makeWriter(resultDir, "summary.txt");
@@ -70,13 +75,16 @@ public class AllViewTranslation {
     errorCategories = new HashMap<>();
     sqlFunctions = new HashMap<>();
     stats = new Stats();
+    this.validator = validator;
   }
 
   public static void main(String[] args) throws Exception {
     final String resultDir = System.getProperty("resultDir") != null ? System.getProperty("resultDir") : "results";
     FileUtils.forceMkdir(new File(resultDir));
+    final String queryLanguage = System.getProperty("language") != null ? System.getProperty("language") : "presto";
     final AllViewTranslation viewTranslater =
-        new AllViewTranslation(resultDir, System.getProperty("include"), System.getProperty("exclude"));
+        new AllViewTranslation(resultDir, System.getProperty("include"), System.getProperty("exclude"),
+            ViewTranslationUtils.getValidator(queryLanguage));
 
     viewTranslater.translateAllViews();
   }
@@ -175,8 +183,7 @@ public class AllViewTranslation {
       ++stats.views;
       isDaliView = table.getOwner().equalsIgnoreCase("daliview");
       stats.daliviews += isDaliView ? 1 : 0;
-      convertToPrestoAndValidate(table.getDbName(), table.getTableName(),
-          HiveToPrestoConverter.create(metaStoreClient), sqlWriter);
+      validator.convertAndValidate(table.getDbName(), table.getTableName(), metaStoreClient, sqlWriter);
       successWriter.println(toViewString(table));
     } catch (Exception e) {
       failureWriter.println(toViewString(table));

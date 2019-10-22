@@ -16,6 +16,10 @@ task translate(type: JavaExec) {
   if (project.hasProperty('view')) {
     systemProperty "view", "$view"
   }
+
+  if (project.hasProperty('language')) {
+    systemProperty "language", "$language"
+  }
 }
 
 task translateAll(type: JavaExec) {
@@ -32,5 +36,9 @@ task translateAll(type: JavaExec) {
 
   if (project.hasProperty('include')) {
     systemProperty "include", "$include"
+  }
+
+  if (project.hasProperty('language')) {
+    systemProperty "language", "$language"
   }
 }
