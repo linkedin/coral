@@ -1,5 +1,6 @@
 package com.linkedin.coral.pig.rel2pig;
 
+import com.linkedin.coral.pig.rel2pig.rel.PigLogicalAggregate;
 import com.linkedin.coral.pig.rel2pig.rel.PigLogicalFilter;
 import com.linkedin.coral.pig.rel2pig.rel.PigLogicalProject;
 import com.linkedin.coral.pig.rel2pig.rel.PigTableScan;
@@ -68,6 +69,7 @@ public class RelToPigLatinConverter {
   /**
    * Converts a SQL query represented in Calcite Relational Algebra, root, to Pig Latin
    * where the final output of the table is stored in the alias, outputRelation.
+   *
    * @param root Root node of the SQL query
    * @param outputRelation The alias of the variable that the SQL query is to be dumped
    * @return Pig Latin equivalent of the SQL query
@@ -80,6 +82,7 @@ public class RelToPigLatinConverter {
 
   /**
    * Delegates RelNodes to its specific RelNode type handler
+   *
    * @param var1 input RelNode
    * @param outputRelation variable where RelNode operation output will be stored
    * @return Pig Latin script for all operations in the DAG of RelNodes with root var1
@@ -93,11 +96,14 @@ public class RelToPigLatinConverter {
       visit(state, (LogicalFilter) var1, outputRelation);
     } else if (var1 instanceof LogicalProject) {
       visit(state, (LogicalProject) var1, outputRelation);
+    } else if (var1 instanceof LogicalAggregate) {
+      visit(state, (LogicalAggregate) var1, outputRelation);
     }
   }
 
   /**
    * Generates Pig Latin to perform a TableScan.
+   *
    * @param state Intermediate state of the query translation
    * @param tableScan TableScan node
    * @param outputRelation name of the variable to be outputted
@@ -116,6 +122,7 @@ public class RelToPigLatinConverter {
 
   /**
    * Generates Pig Latin to perform a TableScan.
+   *
    * @param state Intermediate state of the query translation
    * @param logicalFilter LogicalFilter node
    * @param outputRelation name of the variable to be outputted
@@ -126,7 +133,8 @@ public class RelToPigLatinConverter {
   }
 
   /**
-   * Generates Pig Latin to perform a TableScan.
+   * Generates Pig Latin to perform a LogicalProject.
+   *
    * @param state Intermediate state of the query translation
    * @param logicalProject LogicalProject node
    * @param outputRelation name of the variable to be outputted
@@ -156,8 +164,16 @@ public class RelToPigLatinConverter {
     //TODO(ralam): Implement function
   }
 
-  private void visit(RelToPigBuilder state, LogicalAggregate var1, String outputRelation) {
-    //TODO(ralam): Implement function
+  /**
+   * Generates Pig Latin to perform a LogicalAggregate.
+   *
+   * @param state Intermediary state of the query translation
+   * @param logicalAggregate LogicalAggregate node
+   * @param outputRelation name of the variable to be outputted
+   */
+  private void visit(RelToPigBuilder state, LogicalAggregate logicalAggregate, String outputRelation) {
+    visit(state, logicalAggregate.getInput(), outputRelation);
+    state.addStatement(PigLogicalAggregate.getScript(logicalAggregate, outputRelation, outputRelation));
   }
 
   private void visit(RelToPigBuilder state, LogicalMatch var1, String outputRelation) {

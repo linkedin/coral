@@ -44,6 +44,9 @@ public class TestUtils {
 
     run(driver, String.join("\n", "",
         "CREATE TABLE IF NOT EXISTS pig.tableA(a int, b int, c int)"));
+
+    run(driver, String.join("\n", "",
+        "CREATE TABLE IF NOT EXISTS pig.tableB(a int, b int)"));
   }
 
   /**
@@ -71,6 +74,10 @@ public class TestUtils {
 
       if (db.equalsIgnoreCase("pig") && t.equalsIgnoreCase("tableA")) {
         return "JsonLoader('a:int, b:int, c:int')";
+      }
+
+      if (db.equalsIgnoreCase("pig") && t.equalsIgnoreCase("tableB")) {
+        return "JsonLoader('a:int, b:int')";
       }
 
       return "JsonLoader()";
