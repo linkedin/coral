@@ -1,5 +1,6 @@
 apply plugin: 'li-java'
 apply plugin: 'maven-publish'
+apply plugin: 'shade'
 
 
 dependencies {
@@ -9,7 +10,7 @@ dependencies {
   // NOTE: jline is needed as testCompile for PigUnit tests because it is missing from Pig runtime
   testCompile 'jline:jline:0.9.94'
 
-  testCompile project(path: ':coral-hive')
+  compile project(path: ':coral-hive', configuration: 'shadow')
 
   testCompile(spec.product.pig.pig) { transitive = false }
   testCompile(spec.product.pig.pigunit) { transitive = false }
@@ -33,6 +34,16 @@ model {
   tasks.jar {
     dependsOn tasks.generatePomFileForMavenJavaPublication
   }
+}
+
+// Create a fat jar for Pig to pull.
+shadeJar {
+  doNotShade "com/linkedin/coral/**"
+  // force the JDBC classloader to use the shaded version of the JDBC Calcite driver
+  relocate "jdbc:calcite:", "jdbc:coralpig:"
+  // shade with prefix "coral_pig" for coral integration purposes.
+  shadePrefix "coral_pig"
+  mergeServiceFiles()
 }
 
 publishing {
