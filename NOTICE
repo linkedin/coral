@@ -1,0 +1,26 @@
+Copyright 2019 LinkedIn Corporation
+All Rights Reserved.
+
+Licensed under the BSD 2-Clause License (the "License").
+See License in the project root for license information.
+
+================================================================================
+
+This product includes components from the following projects:
+Apache Hive
+https://hive.apache.org/
+Copyright 2011-2014 Apache Software Foundation
+License: Apache-2.0
+
+Apache Calcite
+https://calcite.apache.org/
+Copyright 2019 Apache Software Foundation
+License: Apache-2.0
+
+================================================================================
+
+In addition, this product automatically loads third-party code from an
+external repository using the Gradle build system. Such third party
+code is subject to other license terms than as set forth above. In
+addition, such third party code may also depend on and load multiple
+tiers of dependencies.
