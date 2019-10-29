@@ -26,7 +26,7 @@ public class PigLogicalFilter {
   public static String getScript(LogicalFilter logicalFilter, String outputRelation, String inputRelation) {
     List<String> inputFieldNames = PigRelUtils.getOutputFieldNames(logicalFilter.getInput());
     String conditionExpression =
-        PigRexUtils.convertRexNodePigExpression(logicalFilter.getCondition(), inputFieldNames);
+        PigRexUtils.convertRexNodeToPigExpression(logicalFilter.getCondition(), inputFieldNames);
     return String.format(LOGICAL_FILTER_TEMPLATE, outputRelation, inputRelation, conditionExpression);
   }
 }

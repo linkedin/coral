@@ -34,7 +34,7 @@ public class PigLogicalProject {
     for (int i = 0; i < logicalProject.getChildExps().size(); ++i) {
       RexNode rexNode = logicalProject.getChildExps().get(i);
       projectList.add(String.format(FIELD_TEMPLATE,
-          PigRexUtils.convertRexNodePigExpression(rexNode, inputFieldNames),
+          PigRexUtils.convertRexNodeToPigExpression(rexNode, inputFieldNames),
           outputFieldNames.get(i)));
     }
     String projectListString = String.join(", ", projectList);

@@ -27,7 +27,7 @@ public class PigRexUtils {
    * @param inputFieldNames Column name accessors for input references
    * @return Pig Latin equivalent of given rexNode
    */
-  public static String convertRexNodePigExpression(RexNode rexNode, List<String> inputFieldNames) {
+  public static String convertRexNodeToPigExpression(RexNode rexNode, List<String> inputFieldNames) {
     if (rexNode instanceof RexInputRef) {
       return convertRexInputRef((RexInputRef) rexNode, inputFieldNames);
     } else if (rexNode instanceof RexCall) {
@@ -98,7 +98,7 @@ public class PigRexUtils {
    */
   private static String convertSqlPrefixOperator(RexCall rexCall, List<String> inputFieldNames) {
     // TODO(ralam): Do not generalize operand calls; we are likely to have special cases
-    String operand = convertRexNodePigExpression(rexCall.getOperands().get(0), inputFieldNames);
+    String operand = convertRexNodeToPigExpression(rexCall.getOperands().get(0), inputFieldNames);
     switch (rexCall.getOperator().getKind()) {
       case NOT:
       default:
@@ -125,8 +125,8 @@ public class PigRexUtils {
       default:
     }
 
-    String leftOperand = convertRexNodePigExpression(rexCall.getOperands().get(0), inputFieldNames);
-    String rightOperand = convertRexNodePigExpression(rexCall.getOperands().get(1), inputFieldNames);
+    String leftOperand = convertRexNodeToPigExpression(rexCall.getOperands().get(0), inputFieldNames);
+    String rightOperand = convertRexNodeToPigExpression(rexCall.getOperands().get(1), inputFieldNames);
 
     return String.format("(%s %s %s)", leftOperand, operator, rightOperand);
   }
@@ -158,7 +158,7 @@ public class PigRexUtils {
   private static String convertHiveInOperatorCall(List<RexNode> operands, List<String> inputFieldNames) {
     List<String> inArrayReferencesList = new ArrayList<>();
     for (RexNode input : operands) {
-      inArrayReferencesList.add(convertRexNodePigExpression(input, inputFieldNames));
+      inArrayReferencesList.add(convertRexNodeToPigExpression(input, inputFieldNames));
     }
 
     String inArrayInput = inArrayReferencesList.remove(0);
