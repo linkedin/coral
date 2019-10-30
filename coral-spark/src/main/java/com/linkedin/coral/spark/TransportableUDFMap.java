@@ -23,7 +23,7 @@ class TransportableUDFMap {
 
   private static final Map<String, SparkUDFInfo> UDF_MAP = new HashMap();
   public static final String STANDARD_UDFS_DALI_UDFS_URL =
-      "ivy://com.linkedin.standard-udfs-dali-udfs:standard-udfs-dali-udfs:1.0.2?classifier=spark";
+      "ivy://com.linkedin.standard-udfs-dali-udfs:standard-udfs-dali-udfs:1.0.4?classifier=spark";
 
   static {
 
@@ -49,6 +49,12 @@ class TransportableUDFMap {
         "com.linkedin.stdudfs.daliudfs.spark.IsGuestMemberId",
         STANDARD_UDFS_DALI_UDFS_URL);
 
+    // LIHADOOP-49851 add the transportudf spark version for lookup UDF
+    add("com.linkedin.dali.udf.istestmemberid.hive.IsTestMemberId",
+        "isTestMemberId",
+        "com.linkedin.stdudfs.daliudfs.spark.IsTestMemberId",
+        STANDARD_UDFS_DALI_UDFS_URL);
+
     add("com.linkedin.dali.udf.maplookup.hive.MapLookup",
         "mapLookup",
         "com.linkedin.stdudfs.daliudfs.spark.MapLookup",
@@ -62,6 +68,12 @@ class TransportableUDFMap {
     add("com.linkedin.dali.udf.sanitize.hive.Sanitize",
         "sanitize",
         "com.linkedin.stdudfs.daliudfs.spark.Sanitize",
+        STANDARD_UDFS_DALI_UDFS_URL);
+
+    // LIHADOOP-49851 add the transportudf spark version for lookup UDF
+    add("com.linkedin.dali.udf.watbotcrawlerlookup.hive.WATBotCrawlerLookup",
+        "watBotCrawlerLookup",
+        "com.linkedin.stdudfs.daliudfs.spark.WatBotCrawlerLookup",
         STANDARD_UDFS_DALI_UDFS_URL);
 
     // LIHADOOP-48502: The following UDFs are already defined using Transport UDF.
