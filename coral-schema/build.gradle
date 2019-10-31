@@ -2,15 +2,15 @@ apply plugin:'li-java'
 apply plugin: 'maven-publish'
 
 dependencies {
-  compile spec.product.'coral-calcite'.'coral-calcite'
-  compile spec.external.'slf4j-api'
-  compile spec.external.'slf4j-log4j12'
+  compile('com.linkedin.coral-calcite:coral-calcite:0.0.+')
+  compile('org.slf4j:slf4j-api:1.7.25')
+  compile('org.slf4j:slf4j-log4j12:1.7.25')
 
   compile project(path: ':coral-hive')
 
   testCompile project(path: ':coral-hive')
 
-  testCompile (spec.product.hive.'hive-exec') {
+  testCompile ('com.linkedin.hive:hive-exec:1.1.0.136:core') {
     exclude group: 'org.apache.avro', module: 'avro-tools'
     // These exclusions are required to prevent duplicate classes since we include
     // shaded jar above
