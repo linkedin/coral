@@ -17,6 +17,8 @@ public class ViewTranslationUtils {
     switch (queryLanguage.trim().toLowerCase()) {
       case "presto":
         return new PrestoValidator();
+      case "pig":
+        return new PigValidator();
       default:
         throw new IllegalArgumentException("Validator for %s is not supported.");
     }

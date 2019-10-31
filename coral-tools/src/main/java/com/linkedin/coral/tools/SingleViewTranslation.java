@@ -13,12 +13,26 @@ import static com.linkedin.coral.tools.ViewTranslationUtils.*;
  * Hive properties must be correctly configured before using this command. See {@link MetastoreProvider} for the
  * required configuration properties.
  *
- * Run from console:
- * ligradle translate -Pview=<view name> [-Planguage=<Target language for validation>]
- *   - Pview is the name of the view in the form of '[dbName].[tableName]'
- *   - Planguage is the query language that the DaliViews will be translated to and subsequently validated. If no
- *   option is specified, we validate translations to PrestoSQL by default.
- *   Currently, we support the following languages: PrestoSQL (-Planguage="presto")
+ * Run locally from console:
+ *   ligradle translate -Pview=<view name> [-Planguage=<Target language for validation>]
+ *     - Pview is the name of the view in the form of '[dbName].[tableName]'
+ *     - Planguage is the query language that the DaliViews will be translated to and subsequently validated. If no
+ *     option is specified, we validate translations to PrestoSQL by default.
+ *   Currently, we support local runs for the following languages:
+ *     - PrestoSQL (-Planguage="presto")
+ *
+ * Run from grid gateway:
+ *   To run on the gateway, we need the following JAR(s) on a gateway machine:
+ *     - coral-tools-[version]-all.jar
+ *   Then run:
+ *     java -Dview=<view name> [-Dlanguage=<Target language for validation>] \
+ *                       -cp coral-tools-[version]-all.jar com.linkedin.coral.tools.SingleViewTranslation
+ *       - Dview is the same as Pview above
+ *       - Dlanguage is the same as Planguage above
+ *   Currently, we support runs on a gateway for the following languages:
+ *     -Pig Latin (-Dlanguage="pig")
+ *     -PrestoSQL (-Dlanguage="presto")
+ *
  */
 public class SingleViewTranslation {
   private SingleViewTranslation() {

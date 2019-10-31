@@ -1,13 +1,22 @@
 apply plugin: 'li-java'
+apply plugin: 'com.github.johnrengelman.shadow'
 
 dependencies {
   compile project(':coral-presto')
+  compile project(':coral-pig')
   compile project(':coral-tests')
   compile spec.external.'presto-parser'
 }
 
+// Create a fat jar so that we can run the translate/translateAll tasks on the gateway machine without relying
+// on gradle to pull in dependencies.
+shadowJar {
+  classifier = 'all'
+  zip64 true
+}
+
 artifacts {
-  archives jar, javadocJar, sourcesJar
+  archives jar, javadocJar, sourcesJar, shadowJar
 }
 
 task translate(type: JavaExec) {

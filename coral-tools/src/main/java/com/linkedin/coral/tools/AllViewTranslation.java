@@ -28,17 +28,33 @@ import static com.linkedin.coral.tools.ViewTranslationUtils.*;
  * required configuration properties
  *
  * Run from console:
- * ligradle translateAll -PresultDir=<result dir> [-Pinclude=<File for included dataset>]
- *                   [-Pexclude=<File for excluded dataset>] [-Planguage=<Target language for validation>]
- *   - PresultDir is the directory that contains all reports about success datasets (successes.txt),
- *   failure datasets (failures.txt), all translated PrestoSQL (prestoSql.txt), and the summary (summary.txt)
- *   - Pinclude process only datasets included in this file. If not specified, process all datasets
- *   available in metastore.
- *   - Pexclude is the file that contains all datasets (one for each line, normally reusing failures.txt)
- *   that we want to exclude in the translation process.
- *   - Planguage is the query language that the DaliViews will be translated to and subsequently validated. If no
- *   option is specified, the target validation language defaults to PrestoSQL.
- *   Currently, we support the following languages: PrestoSQL (-Planguage="presto")
+ *   ligradle translateAll -PresultDir=<result dir> [-Pinclude=<File for included dataset>] \
+ *                     [-Pexclude=<File for excluded dataset>] [-Planguage=<Target language for validation>]
+ *     - PresultDir is the directory that contains all reports about success datasets (successes.txt),
+ *     failure datasets (failures.txt), all translated PrestoSQL (prestoSql.txt), and the summary (summary.txt)
+ *     - Pinclude process only datasets included in this file. If not specified, process all datasets
+ *     available in metastore.
+ *     - Pexclude is the file that contains all datasets (one for each line, normally reusing failures.txt)
+ *     that we want to exclude in the translation process.
+ *     - Planguage is the query language that the DaliViews will be translated to and subsequently validated. If no
+ *     option is specified, the target validation language defaults to PrestoSQL.
+ *   Currently, we support local runs for the following languages:
+ *     - PrestoSQL (-Planguage="presto")
+ *
+ * Run from grid gateway:
+ *   To run on the gateway, we need the following JAR(s) on a gateway machine:
+ *     - coral-tools-[version]-all.jar
+ *   Then run:
+ *     java -DresultDir=<result dir> [-Dinclude=<File for included dataset>]
+ *                       [-Dexclude=<File for excluded dataset>] [-Dlanguage=<Target language for validation>] \
+ *                       -cp coral-tools-[version]-all.jar com.linkedin.coral.tools.AllViewTranslation
+ *       - DresultDir is the same as PresultDir above
+ *       - Dinclude is same as Pinclude above
+ *       - Dexclude is same as Pexclude above
+ *       - Dlanguage is same as Planguage above
+ *   Currently, we support runs on a gateway for the following languages:
+ *     -Pig Latin (-Dlanguage="pig")
+ *     -PrestoSQL (-Dlanguage="presto")
  *
  * This command:
  *   1. Reads all databases and all tables within the database
