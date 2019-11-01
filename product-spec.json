@@ -52,51 +52,8 @@
   },
   "dependencyResolution": {},
   "external": {
-    "antlr-runtime": "org.antlr:antlr-runtime:3.4",
-    "calcite-avatica": "org.apache.calcite:calcite-avatica:1.6.0",
-    "gson": "com.google.code.gson:gson:2.8.1",
-    "javax-annotation": "com.google.code.findbugs:jsr305:3.0.2",
-    "presto-parser": "com.facebook.presto:presto-parser:0.157.1.30",
-    "slf4j-api": "org.slf4j:slf4j-api:1.7.25",
-    "slf4j-log4j12": "org.slf4j:slf4j-log4j12:1.7.25",
-    "testng": "org.testng:testng:6.4"
   },
-  "product": {
-    "coral-calcite": {
-      "libraries": [
-        "coral-calcite"
-      ],
-      "version": "0.0.*",
-      "group": "com.linkedin.coral-calcite"
-    },
-    "hadoop": {
-      "libraries": [
-        "hadoop-auth",
-        "hadoop-common",
-        "hadoop-mapreduce-client-common"
-      ],
-      "version": "2.6.1.*"
-    },
-    "hive": {
-      "libraries": [
-        "hive-common",
-        {
-          "name": "hive-exec",
-          "classifier": "core"
-        },
-        "hive-metastore",
-        "hive-serde"
-      ],
-      "version": "1.1.0.136"
-    },
-    "pig": {
-      "libraries": [
-        "pig",
-        "pigunit"
-      ],
-      "version": "0.15.0.*"
-    }
-  },
+  "product": {},
   "trunkDev": {
     "autoRevert": true
   },

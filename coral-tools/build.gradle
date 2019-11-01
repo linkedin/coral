@@ -5,7 +5,7 @@ dependencies {
   compile project(':coral-presto')
   compile project(':coral-pig')
   compile project(':coral-tests')
-  compile spec.external.'presto-parser'
+  compile deps.'presto-parser'
 }
 
 // Create a fat jar so that we can run the translate/translateAll tasks on the gateway machine without relying

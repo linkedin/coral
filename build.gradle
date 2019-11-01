@@ -26,12 +26,13 @@ subprojects {
 
   plugins.withType(JavaPlugin) {
     dependencies {
-      // dependency defined in product_spec.json
-      testCompile spec.external.testng
+      testCompile deps.'testing'
     }
 
     test {
       useTestNG()
     }
   }
+
+  apply from: "${rootDir}/gradle/dependencies.gradle"
 }

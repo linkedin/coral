@@ -2,20 +2,22 @@ apply plugin: 'li-java'
 apply plugin: 'maven-publish'
 
 dependencies {
-  compile spec.product.'coral-calcite'.'coral-calcite'
-  compile spec.external.gson
-  compile spec.external.'javax-annotation'
+  compile deps.'gson'
+  compile deps.'javax-annotation'
   compile project(path: ':coral-hive')
 
-  testCompile spec.external.'presto-parser'
+  testCompile deps.'presto-parser'
 
-  testCompile (spec.product.hive.'hive-exec') {
+  testCompile(deps.'hive'.'hive-exec-core') {
     exclude group: 'org.apache.avro', module: 'avro-tools'
     // These exclusions are required to prevent duplicate classes since we include
     // shaded jar above
     exclude group: 'org.apache.calcite', module: 'calcite-core'
     exclude group: 'org.apache.calcite', module: 'calcite-avatica'
   }
+
+  testCompile deps.'hadoop'.'hadoop-mapreduce-client-common'
+  testCompile deps.'kryo'
 }
 
 def pomPath = "$buildDir/${name}.pom"

@@ -1,9 +1,9 @@
 apply plugin: 'li-java'
 
 dependencies {
-  compile spec.product.hive.'hive-common'
-  compile spec.product.hive.'hive-metastore'
-  compile(spec.product.hive.'hive-exec') {
+  compile('com.linkedin.hive:hive-common:1.1.0.136')
+  compile('com.linkedin.hive:hive-metastore:1.1.0.136')
+  compile('com.linkedin.hive:hive-exec:1.1.0.136:core') {
     exclude group: 'jline', module: 'jline'
   }
 }

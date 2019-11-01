@@ -3,26 +3,29 @@ apply plugin: 'maven-publish'
 apply plugin: 'com.github.johnrengelman.shadow'
 
 dependencies {
-  compile spec.product.'coral-calcite'.'coral-calcite'
+  compile deps.'coral-calcite'
 
-  compile (spec.product.hive.'hive-metastore') {
+  compile(deps.'hive'.'hive-metastore') {
     exclude group: 'com.linkedin.metastore-autometrics', module: 'autometrics-reporter'
     exclude group: 'com.linkedin.metastore-audit', module: 'metastore-audit-logging'
     // avro-tools brings in whole bunch of hadoop classes causing duplicates and conflicts
     exclude group: 'org.apache.avro', module: 'avro-tools'
   }
-  compile spec.product.hadoop.'hadoop-common'
+  compile deps.'hadoop'.'hadoop-common'
 
   // required for hiveSQL parser code
-  compile spec.external.'antlr-runtime'
+  compile deps.'antlr-runtime'
 
-  testCompile (spec.product.hive.'hive-exec') {
+  testCompile(deps.'hive'.'hive-exec-core') {
     exclude group: 'org.apache.avro', module: 'avro-tools'
     // These exclusions are required to prevent duplicate classes since we include
     // shaded jar above
     exclude group: 'org.apache.calcite', module: 'calcite-core'
     exclude group: 'org.apache.calcite', module: 'calcite-avatica'
   }
+
+  testCompile deps.'hadoop'.'hadoop-mapreduce-client-core'
+  testCompile deps.'kryo'
 }
 
 // TODO: this is boilerplate code repeated in all modules. Can we move this to parent build subProjects ?
