@@ -42,6 +42,7 @@ public class TestUtils {
     run(driver, "CREATE FUNCTION default_foo_dali_udf3_GreaterThanHundred as 'com.linkedin.coral.hive.hive2rel.CoralTestUDF2'");
     run(driver, "CREATE FUNCTION default_foo_dali_udf3_FuncSquare as 'com.linkedin.coral.hive.hive2rel.CoralTestUdfSquare'");
     run(driver, "CREATE FUNCTION default_foo_dali_udf4_GreaterThanHundred as 'com.linkedin.coral.hive.hive2rel.CoralTestUDF2'");
+    run(driver, "CREATE FUNCTION default_foo_dali_udf5_UnsupportedUDF as 'com.linkedin.coral.hive.hive2rel.CoralTestUnsupportedUDF'");
     run(driver, String.join("\n","",
         "CREATE VIEW IF NOT EXISTS foo_view",
         "AS",
@@ -97,6 +98,14 @@ public class TestUtils {
         "              'dependencies' = '  ivy://com.linkedin:udf:1.0  ')",
         "AS",
         "SELECT default_foo_dali_udf4_GreaterThanHundred(a)",
+        "FROM foo"
+    ));
+    run(driver, String.join("\n","",
+        "CREATE VIEW IF NOT EXISTS foo_dali_udf5",
+        "tblproperties('functions' = 'UnsupportedUDF:com.linkedin.coral.hive.hive2rel.CoralTestUnsupportedUDF',",
+        "              'dependencies' = 'com.linkedin:udf:1.0')",
+        "AS",
+        "SELECT default_foo_dali_udf5_UnsupportedUDF(a)",
         "FROM foo"
     ));
     run(driver, String.join("\n","",

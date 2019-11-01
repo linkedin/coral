@@ -6,14 +6,14 @@ import com.linkedin.coral.hive.hive2rel.functions.GenericProjectFunction;
 import com.linkedin.coral.hive.hive2rel.functions.HiveNamedStructFunction;
 import com.linkedin.coral.spark.containers.SparkRelInfo;
 import com.linkedin.coral.spark.containers.SparkUDFInfo;
+import com.linkedin.coral.spark.exceptions.UnsupportedUDFException;
 import com.linkedin.coral.spark.utils.RelDataTypeToSparkDataTypeStringConverter;
 import java.math.BigDecimal;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelShuttle;
 import org.apache.calcite.rel.RelShuttleImpl;
@@ -236,28 +236,21 @@ class IRRelToSparkRelTransformer {
 
       Optional<SparkUDFInfo> sparkUDFInfo = Optional.empty();
       if (functionClassName.indexOf('.') >= 0) {
-        // We get SparkUDFInfo object for Dali UDF only which has '.' in the function class name.
-        // We do not need to handle the keyword built-in functions.
-        VersionedSqlUserDefinedFunction daliUdf = (VersionedSqlUserDefinedFunction) sqlOp;
-        String expandedFuncName = daliUdf.getViewDependentFunctionName();
-
-        //[LIHADOOP-44515] need to provide UDF dependency with ivy coordinates
-        List<String> dependencies = daliUdf.getIvyDependencies();
-        try {
-          List<URI> listOfUris = new LinkedList<URI>();
-          for (String dependency : dependencies) {
-            URI artifactoryUri = new URI(dependency);
-            listOfUris.add(artifactoryUri);
-          }
-          SparkUDFInfo sparkUdfOne = new SparkUDFInfo(functionClassName, expandedFuncName, listOfUris, SparkUDFInfo.UDFTYPE.HIVE_CUSTOM_UDF);
-          sparkUDFInfo = Optional.of(sparkUdfOne);
-          LOG.info("Function: " + functionClassName
-              + " is not a Builtin UDF or Transportable UDF.  We fall back to its Hive function with ivy dependency: ");
-          for (String dependency : dependencies) {
-            LOG.info(dependency);
-          }
-        } catch (URISyntaxException e) {
-          throw new RuntimeException(String.format("Artifactory URL is malformed: %s", dependencies), e);
+        if (UnsupportedHiveUDFsInSpark.contains(functionClassName)) {
+          throw new UnsupportedUDFException(functionClassName);
+        } else {
+          // We get SparkUDFInfo object for Dali UDF only which has '.' in the function class name.
+          // We do not need to handle the keyword built-in functions.
+          VersionedSqlUserDefinedFunction daliUdf = (VersionedSqlUserDefinedFunction) sqlOp;
+          String expandedFuncName = daliUdf.getViewDependentFunctionName();
+          //[LIHADOOP-44515] need to provide UDF dependency with ivy coordinates
+          List<String> dependencies = daliUdf.getIvyDependencies();
+          List<URI> listOfUris = dependencies.stream().map(URI::create).collect(Collectors.toList());
+          sparkUDFInfo = Optional.of(
+              new SparkUDFInfo(functionClassName, expandedFuncName, listOfUris, SparkUDFInfo.UDFTYPE.HIVE_CUSTOM_UDF)
+          );
+          LOG.info("Function: {} is not a Builtin UDF or Transportable UDF.  We fall back to its Hive "
+              + "function with ivy dependency: {}", functionClassName, String.join(",", dependencies));
         }
       }
 

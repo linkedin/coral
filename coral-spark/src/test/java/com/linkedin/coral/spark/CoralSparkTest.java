@@ -3,7 +3,7 @@ package com.linkedin.coral.spark;
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 import com.linkedin.coral.hive.hive2rel.parsetree.UnhandledASTTokenException;
 import com.linkedin.coral.spark.containers.SparkUDFInfo;
-import com.linkedin.coral.spark.TransportableUDFMap;
+import com.linkedin.coral.spark.exceptions.UnsupportedUDFException;
 import java.net.URI;
 import java.util.LinkedList;
 import java.util.List;
@@ -32,6 +32,10 @@ public class CoralSparkTest {
         family(SqlTypeFamily.INTEGER));
     StaticHiveFunctionRegistry.createAddUserDefinedFunction("com.linkedin.coral.hive.hive2rel.CoralTestUdfSquare", ReturnTypes.INTEGER,
         family(SqlTypeFamily.INTEGER));
+    StaticHiveFunctionRegistry.createAddUserDefinedFunction("com.linkedin.coral.hive.hive2rel.CoralTestUnsupportedUDF", ReturnTypes.INTEGER,
+        family(SqlTypeFamily.INTEGER));
+
+    UnsupportedHiveUDFsInSpark.add("com.linkedin.coral.hive.hive2rel.CoralTestUnsupportedUDF");
 
     TransportableUDFMap.add(
         "com.linkedin.coral.hive.hive2rel.CoralTestUDF",
@@ -139,6 +143,13 @@ public class CoralSparkTest {
     String sparkSqlStmt = coralSpark.getSparkSql();
     String targetSqlStmt = "SELECT default_foo_dali_udf2_GreaterThanHundred(a)\nFROM default.foo";
     assertEquals(sparkSqlStmt, targetSqlStmt);
+  }
+
+  @Test(expectedExceptions = UnsupportedUDFException.class)
+  public void testUnsupportedUdf() {
+    RelNode relNode = TestUtils.toRelNode("default","foo_dali_udf5");
+    // this step should proactively fail because UDF is not supported.
+    CoralSpark.create(relNode);
   }
 
   @Test
