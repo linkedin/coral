@@ -10,15 +10,18 @@ dependencies {
   // NOTE: jline is needed as testCompile for PigUnit tests because it is missing from Pig runtime
   testCompile 'jline:jline:0.9.94'
 
-  compile project(path: ':coral-hive', configuration: 'shadow')
+  compile(project(path: ':coral-hive'))
 
   testCompile(spec.product.pig.pig) { transitive = false }
   testCompile(spec.product.pig.pigunit) { transitive = false }
 
-  testCompile(spec.product.hive.'hive-exec') {
+  // Pull in hive-metastore transitively through hive-exec.
+  // Use shaded hive-exec/hive-metastore dependencies for Coral to prevent classpath
+  // conflicts with DaliStorage/PiggyBank.
+  compile(spec.product.hive.'hive-exec') {
     exclude group: 'org.apache.avro', module: 'avro-tools'
     // These exclusions are required to prevent duplicate classes since we include
-    // shaded jar above
+    // shaded coral-calcite jar above
     exclude group: 'org.apache.calcite', module: 'calcite-core'
     exclude group: 'org.apache.calcite', module: 'calcite-avatica'
     exclude group: 'jline', module: 'jline'
@@ -36,11 +39,14 @@ model {
   }
 }
 
-// Create a fat jar for Pig to pull.
+// Create a fat jar for the Pig engine to pull in as a dependency.
 shadeJar {
   doNotShade "com/linkedin/coral/**"
   // force the JDBC classloader to use the shaded version of the JDBC Calcite driver
   relocate "jdbc:calcite:", "jdbc:coralpig:"
+  // include hive-metastore and hive-exec dependencies in the jar
+  includeRestrictedDependencies "com.linkedin.hive:hive-metastore"
+  includeRestrictedDependencies "com.linkedin.hive:hive-exec"
   // shade with prefix "coral_pig" for coral integration purposes.
   shadePrefix "coral_pig"
   mergeServiceFiles()
