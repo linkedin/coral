@@ -2,6 +2,7 @@ package com.linkedin.coral.pig.rel2pig;
 
 import com.linkedin.coral.pig.rel2pig.rel.PigLogicalAggregate;
 import com.linkedin.coral.pig.rel2pig.rel.PigLogicalFilter;
+import com.linkedin.coral.pig.rel2pig.rel.PigLogicalJoin;
 import com.linkedin.coral.pig.rel2pig.rel.PigLogicalProject;
 import com.linkedin.coral.pig.rel2pig.rel.PigTableScan;
 import org.apache.calcite.rel.RelNode;
@@ -83,21 +84,23 @@ public class RelToPigLatinConverter {
   /**
    * Delegates RelNodes to its specific RelNode type handler
    *
-   * @param var1 input RelNode
+   * @param relNode input RelNode
    * @param outputRelation variable where RelNode operation output will be stored
-   * @return Pig Latin script for all operations in the DAG of RelNodes with root var1
+   * @return Pig Latin script for all operations in the DAG of RelNodes with root relNode
    */
-  private void visit(RelToPigBuilder state, RelNode var1, String outputRelation) {
+  private void visit(RelToPigBuilder state, RelNode relNode, String outputRelation) {
 
     //TODO(ralam): Add more supported types.
-    if (var1 instanceof TableScan) {
-      visit(state, (TableScan) var1, outputRelation);
-    } else if (var1 instanceof LogicalFilter) {
-      visit(state, (LogicalFilter) var1, outputRelation);
-    } else if (var1 instanceof LogicalProject) {
-      visit(state, (LogicalProject) var1, outputRelation);
-    } else if (var1 instanceof LogicalAggregate) {
-      visit(state, (LogicalAggregate) var1, outputRelation);
+    if (relNode instanceof TableScan) {
+      visit(state, (TableScan) relNode, outputRelation);
+    } else if (relNode instanceof LogicalFilter) {
+      visit(state, (LogicalFilter) relNode, outputRelation);
+    } else if (relNode instanceof LogicalProject) {
+      visit(state, (LogicalProject) relNode, outputRelation);
+    } else if (relNode instanceof LogicalAggregate) {
+      visit(state, (LogicalAggregate) relNode, outputRelation);
+    } else if (relNode instanceof LogicalJoin) {
+      visit(state, (LogicalJoin) relNode, outputRelation);
     }
   }
 
@@ -144,8 +147,21 @@ public class RelToPigLatinConverter {
     state.addStatement(PigLogicalProject.getScript(logicalProject, outputRelation, outputRelation));
   }
 
-  private void visit(RelToPigBuilder state, LogicalJoin var1, String outputRelation) {
-    //TODO(ralam): Implement function
+  /**
+   * Generates Pig Latin to perform a LogicalJoin.
+   *
+   * @param state Intermediate state of the query translation
+   * @param logicalJoin LogicalJoin node
+   * @param outputRelation name of the variable to be outputted
+   */
+  private void visit(RelToPigBuilder state, LogicalJoin logicalJoin, String outputRelation) {
+    final String leftInputRelation = state.getUniqueAlias();
+    visit(state, logicalJoin.getLeft(), leftInputRelation);
+
+    final String rightInputRelation = state.getUniqueAlias();
+    visit(state, logicalJoin.getRight(), rightInputRelation);
+
+    state.addStatement(PigLogicalJoin.getScript(logicalJoin, outputRelation, leftInputRelation, rightInputRelation));
   }
 
   private void visit(RelToPigBuilder state, LogicalCorrelate var1, String outputRelation) {

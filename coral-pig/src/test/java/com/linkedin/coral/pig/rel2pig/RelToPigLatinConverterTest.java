@@ -312,4 +312,104 @@ public class RelToPigLatinConverterTest {
     pigTest.assertOutput(OUTPUT_RELATION, expectedOutput);
   }
 
+  /**
+   * Tests a SELF-JOIN on a table with a single condition
+   */
+  @Test
+  public static void testSelfJoinSingleCondition() throws IOException, ParseException {
+    final String sql = "SELECT tl.a as a, tl.b as bl, tr.b as br FROM pig.tableLeft tl JOIN pig.tableLeft tr ON tl.a = tr.a";
+    final String[] expectedPigLatin = {
+        "CORAL_PIG_ALIAS_1 = LOAD 'src/test/resources/data/pig/tableleft.json' USING JsonLoader('a:int, b:int, c:int');",
+        "CORAL_PIG_ALIAS_2 = LOAD 'src/test/resources/data/pig/tableleft.json' USING JsonLoader('a:int, b:int, c:int');",
+        "view = JOIN CORAL_PIG_ALIAS_1 BY (a), CORAL_PIG_ALIAS_2 BY (a);",
+        "view = FOREACH view GENERATE CORAL_PIG_ALIAS_1::a AS a, CORAL_PIG_ALIAS_1::b AS b, CORAL_PIG_ALIAS_1::c AS c, CORAL_PIG_ALIAS_2::a AS a0, CORAL_PIG_ALIAS_2::b AS b0, CORAL_PIG_ALIAS_2::c AS c0;",
+        "view = FOREACH view GENERATE a AS a, b AS bl, b0 AS br;",
+    };
+    final String[] expectedOutput = {
+        "(0,2,2)",
+        "(0,2,1)",
+        "(0,1,2)",
+        "(0,1,1)",
+        "(1,4,4)",
+        "(1,4,3)",
+        "(1,3,4)",
+        "(1,3,3)"
+    };
+
+    final String[] translatedPigLatin = TestUtils.sqlToPigLatin(sql, OUTPUT_RELATION);
+
+    Assert.assertEquals(translatedPigLatin, expectedPigLatin);
+
+    final PigTest pigTest = new PigTest(translatedPigLatin);
+    pigTest.assertOutput(OUTPUT_RELATION, expectedOutput);
+  }
+
+  /**
+   * Tests a SELF-JOIN on a table with multiple conditions
+   */
+  @Test
+  public static void testSelfJoinMultipleConditions() throws IOException, ParseException {
+    final String sql = "SELECT * FROM pig.tableLeft tl JOIN pig.tableLeft tr ON tl.a = tr.a AND tl.b = tr.b AND tl.c = tr.c ";
+    final String[] expectedPigLatin = {
+        "CORAL_PIG_ALIAS_1 = LOAD 'src/test/resources/data/pig/tableleft.json' USING JsonLoader('a:int, b:int, c:int');",
+        "CORAL_PIG_ALIAS_2 = LOAD 'src/test/resources/data/pig/tableleft.json' USING JsonLoader('a:int, b:int, c:int');",
+        "view = JOIN CORAL_PIG_ALIAS_1 BY (a, b, c), CORAL_PIG_ALIAS_2 BY (a, b, c);",
+        "view = FOREACH view GENERATE CORAL_PIG_ALIAS_1::a AS a, CORAL_PIG_ALIAS_1::b AS b, CORAL_PIG_ALIAS_1::c AS c, CORAL_PIG_ALIAS_2::a AS a0, CORAL_PIG_ALIAS_2::b AS b0, CORAL_PIG_ALIAS_2::c AS c0;",
+        "view = FOREACH view GENERATE a AS a, b AS b, c AS c, a0 AS a0, b0 AS b0, c0 AS c0;"
+    };
+    final String[] expectedOutput = {
+        "(0,1,10,0,1,10)",
+        "(0,2,10,0,2,10)",
+        "(1,3,10,1,3,10)",
+        "(1,4,10,1,4,10)"
+    };
+
+    final String[] translatedPigLatin = TestUtils.sqlToPigLatin(sql, OUTPUT_RELATION);
+
+    Assert.assertEquals(translatedPigLatin, expectedPigLatin);
+
+    final PigTest pigTest = new PigTest(translatedPigLatin);
+    pigTest.assertOutput(OUTPUT_RELATION, expectedOutput);
+  }
+
+  /**
+   * Tests the following join types over two different tables:
+   *   INNER, FULL OUTER, LEFT OUTER, RIGHT OUTER
+   */
+  @Test
+  public static void testJoinTypes() throws IOException, ParseException {
+    final String sqlTemplate = "SELECT * FROM pig.tableLeft tl %s JOIN pig.tableRight tr ON tl.a = tr.d";
+    final String expectedPigLatinTemplate = String.join("\n",
+        "CORAL_PIG_ALIAS_1 = LOAD 'src/test/resources/data/pig/tableleft.json' USING JsonLoader('a:int, b:int, c:int');",
+        "CORAL_PIG_ALIAS_2 = LOAD 'src/test/resources/data/pig/tableright.json' USING JsonLoader('d:int, e:int');",
+        "view = JOIN CORAL_PIG_ALIAS_1 BY (a)%s, CORAL_PIG_ALIAS_2 BY (d);",
+        "view = FOREACH view GENERATE CORAL_PIG_ALIAS_1::a AS a, CORAL_PIG_ALIAS_1::b AS b, CORAL_PIG_ALIAS_1::c AS c, CORAL_PIG_ALIAS_2::d AS d, CORAL_PIG_ALIAS_2::e AS e;",
+        "view = FOREACH view GENERATE a AS a, b AS b, c AS c, d AS d, e AS e;"
+    );
+
+    final String[] sqlJoinTypes = {"", "FULL", "LEFT", "RIGHT"};
+
+    final String[] pigJoinTypes = {"", " FULL OUTER", " LEFT OUTER", " RIGHT OUTER"};
+
+    final String[] expectedOutputs = {
+        "(1,4,10,1,20);(1,4,10,1,10);(1,3,10,1,20);(1,3,10,1,10)",
+        "(0,2,10,,);(0,1,10,,);(1,4,10,1,20);(1,4,10,1,10);(1,3,10,1,20);(1,3,10,1,10);(,,,2,40);(,,,2,30)",
+        "(0,2,10,,);(0,1,10,,);(1,4,10,1,20);(1,4,10,1,10);(1,3,10,1,20);(1,3,10,1,10)",
+        "(1,4,10,1,20);(1,4,10,1,10);(1,3,10,1,20);(1,3,10,1,10);(,,,2,40);(,,,2,30)"
+    };
+
+    for (int i = 0; i < expectedOutputs.length; ++i) {
+      final String sql = String.format(sqlTemplate, sqlJoinTypes[i]);
+      final String[] expectedPigLatin = String.format(expectedPigLatinTemplate, pigJoinTypes[i]).split("\n");
+      final String[] expectedOutput = expectedOutputs[i].split(";");
+
+      final String[] translatedPigLatin = TestUtils.sqlToPigLatin(sql, OUTPUT_RELATION);
+
+      Assert.assertEquals(translatedPigLatin, expectedPigLatin);
+
+      final PigTest pigTest = new PigTest(translatedPigLatin);
+      pigTest.assertOutput(OUTPUT_RELATION, expectedOutput);
+    }
+  }
+
 }
