@@ -105,6 +105,52 @@ public class RelToPigLatinConverterTest {
   }
 
   /**
+   * Tests top-level and nested structs
+   */
+  @Test
+  public static void testStructType() throws IOException, ParseException {
+    String sql = "SELECT t.a as a, t.b.b0 as b0, t.c.c0.c00 as c00 FROM pig.tablestruct AS t";
+    String[] expectedPigLatin = {
+        "view = LOAD 'src/test/resources/data/pig/tablestruct.json' USING JsonLoader('a:int, b:(b0:int), c:(c0:(c00:int))');",
+        "view = FOREACH view GENERATE a AS a, b.b0 AS b0, c.c0.c00 AS c00;"
+    };
+    String[] expectedOutput = {
+        "(1,10,100)",
+        "(2,20,200)"
+    };
+
+    String[] translatedPigLatin = TestUtils.sqlToPigLatin(sql, OUTPUT_RELATION);
+
+    Assert.assertEquals(translatedPigLatin, expectedPigLatin);
+
+    PigTest pigTest = new PigTest(translatedPigLatin);
+    pigTest.assertOutput(OUTPUT_RELATION, expectedOutput);
+  }
+
+  /**
+   * Tests top-level map types
+   */
+  @Test
+  public static void testMapType() throws IOException, ParseException {
+    String sql = "SELECT t.m1['a'] AS a, t.m1['b'] AS b FROM pig.tablemap AS t";
+    String[] expectedPigLatin = {
+        "view = LOAD 'src/test/resources/data/pig/tablemap.json' USING JsonLoader('m1:map[int]');",
+        "view = FOREACH view GENERATE m1#'a' AS a, m1#'b' AS b;"
+    };
+    String[] expectedOutput = {
+        "(10,11)",
+        "(20,21)"
+    };
+
+    String[] translatedPigLatin = TestUtils.sqlToPigLatin(sql, OUTPUT_RELATION);
+
+    Assert.assertEquals(translatedPigLatin, expectedPigLatin);
+
+    PigTest pigTest = new PigTest(translatedPigLatin);
+    pigTest.assertOutput(OUTPUT_RELATION, expectedOutput);
+  }
+
+  /**
    * Tests comparison operators
    */
   @Test

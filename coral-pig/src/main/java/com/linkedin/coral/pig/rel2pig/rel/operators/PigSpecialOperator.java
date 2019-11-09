@@ -4,6 +4,8 @@ import com.linkedin.coral.pig.rel2pig.rel.PigRexUtils;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.apache.calcite.rex.RexCall;
+import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.sql.type.MapSqlType;
 
 
 /**
@@ -18,8 +20,11 @@ public class PigSpecialOperator extends PigOperator {
   @Override
   public String unparse() {
     // TODO(ralam): Change this function to do a map-lookup from SQLSpecialOperator function name to Pig Latin.
-    if (rexCall.getOperator().getName().equalsIgnoreCase("in")) {
+    final String operatorName = rexCall.getOperator().getName();
+    if (operatorName.equalsIgnoreCase("in")) {
       return convertHiveInOperatorCall();
+    } else if (operatorName.equalsIgnoreCase("item")) {
+      return convertItemOperatorCall();
     }
 
     throw new UnsupportedOperationException(String.format(
@@ -45,6 +50,37 @@ public class PigSpecialOperator extends PigOperator {
     final String inArrayReferences = String.join(", ", inArrayReferencesList);
 
     return String.format("%s IN (%s)", inArrayInput, inArrayReferences);
+  }
+
+  /**
+   * Translates ITEM operator calls to Pig Latin.
+   *
+   * @return Pig Latin of an ITEM operator call, which is implemented by:
+   *           - a map access for some given key
+   */
+  private String convertItemOperatorCall() {
+    final RexNode columnReference = rexCall.getOperands().get(0);
+    String itemOperatorCall;
+    if (columnReference.getType() instanceof MapSqlType) {
+      itemOperatorCall = convertMapOperatorCall();
+    } else {
+      throw new RuntimeException(String.format("SqlItemOperator is not supported for column of type '%s'",
+          columnReference.getType().getSqlTypeName().toString()));
+    }
+    return itemOperatorCall;
+  }
+
+  /**
+   * Translates MAP accesses for some given key to Pig Latin.
+   *
+   * @return Pig Latin of a map access for the given key
+   */
+  private String convertMapOperatorCall() {
+    final String key = PigRexUtils.convertRexNodeToPigExpression(rexCall.getOperands().get(1), inputFieldNames);
+    final String map = PigRexUtils.convertRexNodeToPigExpression(
+        rexCall.getOperands().get(0), inputFieldNames);
+
+    return String.format("%s#%s", map, key);
   }
 
 }

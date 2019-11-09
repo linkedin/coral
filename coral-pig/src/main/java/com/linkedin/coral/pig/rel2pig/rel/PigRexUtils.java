@@ -6,12 +6,14 @@ import com.linkedin.coral.pig.rel2pig.rel.operators.PigPrefixOperator;
 import com.linkedin.coral.pig.rel2pig.rel.operators.PigSpecialOperator;
 import java.util.List;
 import org.apache.calcite.rex.RexCall;
+import org.apache.calcite.rex.RexFieldAccess;
 import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.SqlBinaryOperator;
 import org.apache.calcite.sql.SqlPrefixOperator;
 import org.apache.calcite.sql.SqlSpecialOperator;
+import org.apache.calcite.util.NlsString;
 
 
 /**
@@ -36,6 +38,8 @@ public class PigRexUtils {
       return convertRexInputRef((RexInputRef) rexNode, inputFieldNames);
     } else if (rexNode instanceof RexCall) {
       return convertRexCall((RexCall) rexNode, inputFieldNames);
+    } else if (rexNode instanceof RexFieldAccess) {
+      return convertRexFieldAccess((RexFieldAccess) rexNode, inputFieldNames);
     } else if (rexNode instanceof RexLiteral) {
       return convertRexLiteral((RexLiteral) rexNode);
     }
@@ -68,10 +72,28 @@ public class PigRexUtils {
   private static String convertRexLiteral(RexLiteral rexLiteral) {
     switch (rexLiteral.getTypeName()) {
       case CHAR:
-        return String.format("'%s'", rexLiteral.toString());
+        Comparable value = rexLiteral.getValue();
+        // We need a special case for NlsString because it adds its charset information to its value.
+        if (rexLiteral.getValue() instanceof NlsString) {
+          value = ((NlsString) rexLiteral.getValue()).getValue();
+        }
+        return String.format("'%s'", value);
       default:
-        return rexLiteral.toString();
+        return String.valueOf(rexLiteral.getValue());
     }
+  }
+
+  /**
+   * Resolves the Pig Latin expression for a struct field access given by a RexCall.
+   *
+   * @param rexFieldAccess RexFieldAccess to be resolved
+   * @param inputFieldNames Mapping from list index to accessor name
+   * @return Pig Latin expression of the given rexCall
+   */
+  private static String convertRexFieldAccess(RexFieldAccess rexFieldAccess, List<String> inputFieldNames) {
+    final String parentFieldName = convertRexNodeToPigExpression(rexFieldAccess.getReferenceExpr(), inputFieldNames);
+    final String nestedFieldName = rexFieldAccess.getField().getName();
+    return String.join(".", parentFieldName, nestedFieldName);
   }
 
   /**

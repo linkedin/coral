@@ -53,6 +53,12 @@ public class TestUtils {
 
     run(driver, String.join("\n", "",
         "CREATE TABLE IF NOT EXISTS pig.tableRight(d int, e int)"));
+
+    run(driver, String.join("\n", "",
+        "CREATE TABLE IF NOT EXISTS pig.tablestruct(a int, b struct<b0:int>, c struct<c0:struct<c00:int>>)"));
+
+    run(driver, String.join("\n", "",
+        "CREATE TABLE IF NOT EXISTS pig.tablemap(m1 map<string,int>)"));
   }
 
   /**
@@ -92,6 +98,14 @@ public class TestUtils {
 
       if (db.equalsIgnoreCase("pig") && t.equalsIgnoreCase("tableRight")) {
         return "JsonLoader('d:int, e:int')";
+      }
+
+      if (db.equalsIgnoreCase("pig") && t.equalsIgnoreCase("tablestruct")) {
+        return "JsonLoader('a:int, b:(b0:int), c:(c0:(c00:int))')";
+      }
+
+      if (db.equalsIgnoreCase("pig") && t.equalsIgnoreCase("tablemap")) {
+        return "JsonLoader('m1:map[int]')";
       }
 
       return "JsonLoader()";
