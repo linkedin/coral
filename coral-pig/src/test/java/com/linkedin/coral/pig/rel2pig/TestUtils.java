@@ -59,6 +59,9 @@ public class TestUtils {
 
     run(driver, String.join("\n", "",
         "CREATE TABLE IF NOT EXISTS pig.tablemap(m1 map<string,int>)"));
+
+    run(driver, String.join("\n", "",
+        "CREATE TABLE IF NOT EXISTS pig.tablecast(i int, bi bigint, fl float, do double, str string, boo boolean)"));
   }
 
   /**
@@ -106,6 +109,10 @@ public class TestUtils {
 
       if (db.equalsIgnoreCase("pig") && t.equalsIgnoreCase("tablemap")) {
         return "JsonLoader('m1:map[int]')";
+      }
+
+      if (db.equalsIgnoreCase("pig") && t.equalsIgnoreCase("tablecast")) {
+        return "JsonLoader('i:int, bi:long, fl:float, do:double, str:chararray, boo:boolean')";
       }
 
       return "JsonLoader()";

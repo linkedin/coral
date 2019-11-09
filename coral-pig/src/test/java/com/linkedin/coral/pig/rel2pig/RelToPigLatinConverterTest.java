@@ -243,6 +243,58 @@ public class RelToPigLatinConverterTest {
   }
 
   /**
+   * Tests the CAST operator
+   */
+  @Test
+  public static void testCastOperator() throws IOException, ParseException {
+    final String sqlTemplate = "SELECT %s FROM pig.tablecast";
+    final String expectedPigLatinTemplate = String.join("\n",
+        "view = LOAD 'src/test/resources/data/pig/tablecast.json' USING JsonLoader('i:int, bi:long, fl:float, do:double, str:chararray, boo:boolean');",
+        "view = FOREACH view GENERATE %s;"
+    );
+
+    final String[] sqlCastFields = {
+        "CAST(i AS bigint) as l, CAST(i AS float) as fl, CAST(i AS double) as do, CAST(i AS string) as ca",
+        "CAST(bi AS int) as i, CAST(bi AS float) as fl, CAST(bi AS double) as do, CAST(bi AS string) as ca",
+        "CAST(fl AS int) as i, CAST(fl AS bigint) as l, CAST(fl AS double) as do, CAST(fl AS string) as ca",
+        "CAST(do AS int) as i, CAST(do AS bigint) as l, CAST(do AS float) as fl, CAST(do AS string) as ca",
+        "CAST(str AS int) as i, CAST(str AS bigint) as l, CAST(str AS float) as fl, CAST(str AS double) as do, CAST(str AS boolean) as boo",
+        "CAST(boo AS string) as ca"
+    };
+
+    final String[] pigCastFields = {
+        "(long)i AS l, (float)i AS fl, (double)i AS do, (chararray)i AS ca",
+        "(int)bi AS i, (float)bi AS fl, (double)bi AS do, (chararray)bi AS ca",
+        "(int)fl AS i, (long)fl AS l, (double)fl AS do, (chararray)fl AS ca",
+        "(int)do AS i, (long)do AS l, (float)do AS fl, (chararray)do AS ca",
+        "(int)str AS i, (long)str AS l, (float)str AS fl, (double)str AS do, (boolean)str AS boo",
+        "(chararray)boo AS ca",
+    };
+
+    final String[] expectedOutputs = {
+        "(1000000000,1.0E9,1.0E9,1000000000);(1,1.0,1.0,1)",
+        "(1410065408,1.0E10,1.0E10,10000000000);(1,1.0,1.0,1)",
+        "(0,0,0.12345679104328156,0.12345679);(1,1,1.0,1.0)",
+        "(0,0,0.12345679,0.12345678901234568);(1,1,1.0,1.0)",
+        "(1,1,1.0,1.0,);(,,,,true)",
+        "(true);(false)"
+    };
+
+    for (int i = 0; i < expectedOutputs.length; ++i) {
+      final String sql = String.format(sqlTemplate, sqlCastFields[i]);
+      final String[] expectedPigLatin = String.format(expectedPigLatinTemplate, pigCastFields[i]).split("\n");
+      final String[] expectedOutput = expectedOutputs[i].split(";");
+
+      final String[] translatedPigLatin = TestUtils.sqlToPigLatin(sql, OUTPUT_RELATION);
+
+      Assert.assertEquals(translatedPigLatin, expectedPigLatin);
+
+      final PigTest pigTest = new PigTest(translatedPigLatin);
+      pigTest.assertOutput(OUTPUT_RELATION, expectedOutput);
+    }
+  }
+
+  /**
    * Tests a filter with multiple conditions
    * @throws IOException
    * @throws ParseException
