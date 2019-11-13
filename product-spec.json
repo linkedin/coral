@@ -16,19 +16,12 @@
       "gradle": {
         "version": "5.2.1",
         "plugins": {
-          "dali-shade": {
-            "libraries": [
-              "dali-shade"
-            ],
-            "version": "0.5.*"
-          },
           "ligradle-jvm": {
             "libraries": [
               "product-plugins"
             ],
             "version": "4.*"
-          },
-          "shadow": "com.github.jengelman.gradle.plugins:shadow:4.0.4"
+          }
         }
       }
     },

@@ -1,6 +1,6 @@
 apply plugin: 'li-java'
 apply plugin: 'maven-publish'
-apply plugin: 'shade'
+apply plugin: 'com.github.johnrengelman.shadow'
 
 
 dependencies {
@@ -29,41 +29,12 @@ dependencies {
   testCompile deps.'kryo'
 }
 
-def pomPath = "$buildDir/${name}.pom"
-model {
-  tasks.generatePomFileForMavenJavaPublication {
-    destination = file("$pomPath")
-  }
-
-  tasks.jar {
-    dependsOn tasks.generatePomFileForMavenJavaPublication
-  }
+// need to create a separate fat shadowJar for DaliStorage integration purpose
+shadowJar {
+  classifier = 'all'
+  zip64 true
 }
 
-// Create a fat jar for the Pig engine to pull in as a dependency.
-shadeJar {
-  doNotShade "com/linkedin/coral/**"
-  // force the JDBC classloader to use the shaded version of the JDBC Calcite driver
-  relocate "jdbc:calcite:", "jdbc:coralpig:"
-  // include hive-metastore and hive-exec dependencies in the jar
-  includeRestrictedDependencies "com.linkedin.hive:hive-metastore"
-  includeRestrictedDependencies "com.linkedin.hive:hive-exec"
-  // shade with prefix "coral_pig" for coral integration purposes.
-  shadePrefix "coral_pig"
-  mergeServiceFiles()
-}
-
-publishing {
-  publications {
-    mavenJava(MavenPublication) {
-      from components.java
-    }
-  }
-}
-
-// need to explicitly set this because we are generating pom files
-generateModuleArtifactSpec.defaultArtifact = jar
 artifacts {
-  archives file: file("$pomPath"), name: "$name", type: "pom"
-  archives jar, javadocJar, sourcesJar
+  archives shadowJar, jar, javadocJar, sourcesJar
 }
