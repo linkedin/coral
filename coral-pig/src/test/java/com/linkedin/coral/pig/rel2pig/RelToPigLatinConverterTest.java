@@ -222,6 +222,65 @@ public class RelToPigLatinConverterTest {
   }
 
   /**
+   * Tests CASE statements with:
+   *   - different comparison operators
+   *   - AND and OR predicates in a single condition
+   *   - CASE with and without an ELSE(default) clause
+   *   - overlapping conditions
+   */
+  @Test
+  public static void testCaseOperator() throws IOException, ParseException {
+    final String sqlTemplate = "SELECT (CASE %s END) AS result FROM pig.tableA";
+    final String expectedPigLatinTemplate = String.join("\n",
+        "view = LOAD 'src/test/resources/data/pig/tablea.json' USING JsonLoader('a:int, b:int, c:int');",
+        "view = FOREACH view GENERATE (CASE %s END) AS result;"
+    );
+
+    final String[] sqlCases = {
+        // Tests multiple conditions with different comparison operators
+        "WHEN a <= 1 THEN 'LTE one' WHEN a = 2 THEN 'two' WHEN a > 3 THEN 'GT three' ELSE 'default'",
+        // Tests multiple predicates in a single case condition
+        "WHEN (a = 0 AND b = 0) THEN 'zero' WHEN (a = 1 OR a = 2) THEN 'one or two' ELSE 'default'",
+        // Tests CASE with and without an ELSE clause
+        "WHEN a = 0 THEN 'zero' ELSE 'default'",
+        "WHEN a = 0 THEN 'zero'",
+        // Tests overlapping conditions
+        "WHEN a < 1 THEN 'LT one' WHEN a < 2 THEN 'LT two' WHEN a < 4 THEN 'LT four' WHEN a < 3 THEN 'LT three' ELSE 'default'"};
+
+    final String[] pigCases = {
+        // Tests multiple conditions with different comparison operators
+        "WHEN (a <= 1) THEN 'LTE one' WHEN (a == 2) THEN 'two' WHEN (a > 3) THEN 'GT three' ELSE 'default'",
+        // Tests multiple predicates in a single case condition
+        "WHEN ((a == 0) AND (b == 0)) THEN 'zero' WHEN ((a == 1) OR (a == 2)) THEN 'one or two' ELSE 'default'",
+        // Tests CASE with and without an ELSE clause
+        "WHEN (a == 0) THEN 'zero' ELSE 'default'",
+        "WHEN (a == 0) THEN 'zero' ELSE null",
+        // Tests overlapping conditions
+        "WHEN (a < 1) THEN 'LT one' WHEN (a < 2) THEN 'LT two' WHEN (a < 4) THEN 'LT four' WHEN (a < 3) THEN 'LT three' ELSE 'default'"};
+
+    final String[] expectedOutputs = {
+        "(LTE one);(LTE one);(two);(default);(GT three)",
+        "(zero);(one or two);(one or two);(default);(default)",
+        "(zero);(default);(default);(default);(default)",
+        "(zero);();();();()",
+        "(LT one);(LT two);(LT four);(LT four);(default)"
+    };
+
+    for (int i = 0; i < expectedOutputs.length; ++i) {
+      final String sql = String.format(sqlTemplate, sqlCases[i]);
+      final String[] expectedPigLatin = String.format(expectedPigLatinTemplate, pigCases[i]).split("\n");
+      final String[] expectedOutput = expectedOutputs[i].split(";");
+
+      final String[] translatedPigLatin = TestUtils.sqlToPigLatin(sql, OUTPUT_RELATION);
+
+      Assert.assertEquals(translatedPigLatin, expectedPigLatin);
+
+      final PigTest pigTest = new PigTest(translatedPigLatin);
+      pigTest.assertOutput(OUTPUT_RELATION, expectedOutput);
+    }
+  }
+
+  /**
    * Tests the NOT Hive IN operator
    * @throws IOException
    * @throws ParseException

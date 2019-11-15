@@ -6,6 +6,7 @@
 package com.linkedin.coral.pig.rel2pig.rel;
 
 import com.linkedin.coral.pig.rel2pig.rel.operators.PigBinaryOperator;
+import com.linkedin.coral.pig.rel2pig.rel.operators.PigCaseOperator;
 import com.linkedin.coral.pig.rel2pig.rel.operators.PigCastFunction;
 import com.linkedin.coral.pig.rel2pig.rel.operators.PigOperator;
 import com.linkedin.coral.pig.rel2pig.rel.operators.PigPrefixOperator;
@@ -19,6 +20,7 @@ import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.SqlBinaryOperator;
 import org.apache.calcite.sql.SqlPrefixOperator;
 import org.apache.calcite.sql.SqlSpecialOperator;
+import org.apache.calcite.sql.fun.SqlCaseOperator;
 import org.apache.calcite.sql.fun.SqlCastFunction;
 import org.apache.calcite.util.NlsString;
 
@@ -77,16 +79,16 @@ public class PigRexUtils {
    * @return Pig Latin literal of the given rexLiteral
    */
   private static String convertRexLiteral(RexLiteral rexLiteral) {
+    Comparable value = rexLiteral.getValue();
     switch (rexLiteral.getTypeName()) {
       case CHAR:
-        Comparable value = rexLiteral.getValue();
         // We need a special case for NlsString because it adds its charset information to its value.
         if (rexLiteral.getValue() instanceof NlsString) {
-          value = ((NlsString) rexLiteral.getValue()).getValue();
+          value = ((NlsString) value).getValue();
         }
         return String.format("'%s'", value);
       default:
-        return String.valueOf(rexLiteral.getValue());
+        return String.valueOf(value);
     }
   }
 
@@ -120,6 +122,8 @@ public class PigRexUtils {
       pigOperator = new PigBinaryOperator(rexCall, inputFieldNames);
     } else if (rexCall.getOperator() instanceof SqlPrefixOperator) {
       pigOperator = new PigPrefixOperator(rexCall, inputFieldNames);
+    } else if (rexCall.getOperator() instanceof SqlCaseOperator) {
+      pigOperator = new PigCaseOperator(rexCall, inputFieldNames);
     } else if (rexCall.getOperator() instanceof SqlCastFunction) {
       pigOperator = new PigCastFunction(rexCall, inputFieldNames);
     } else {
