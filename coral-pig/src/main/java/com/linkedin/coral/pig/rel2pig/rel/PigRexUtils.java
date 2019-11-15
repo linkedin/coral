@@ -5,6 +5,8 @@
  */
 package com.linkedin.coral.pig.rel2pig.rel;
 
+import com.linkedin.coral.pig.rel2pig.exceptions.UnsupportedRexCallException;
+import com.linkedin.coral.pig.rel2pig.exceptions.UnsupportedRexNodeException;
 import com.linkedin.coral.pig.rel2pig.rel.operators.PigBinaryOperator;
 import com.linkedin.coral.pig.rel2pig.rel.operators.PigCaseOperator;
 import com.linkedin.coral.pig.rel2pig.rel.operators.PigCastFunction;
@@ -52,7 +54,8 @@ public class PigRexUtils {
     } else if (rexNode instanceof RexLiteral) {
       return convertRexLiteral((RexLiteral) rexNode);
     }
-    return rexNode.toString();
+
+    throw new UnsupportedRexNodeException(rexNode);
   }
 
   /**
@@ -64,8 +67,7 @@ public class PigRexUtils {
    */
   private static String convertRexInputRef(RexInputRef rexInputRef, List<String> inputFieldNames) {
     if (rexInputRef.getIndex() >= inputFieldNames.size()) {
-      //TODO(ralam): Create better exception messages
-      throw new RuntimeException(String.format(
+      throw new IllegalArgumentException(String.format(
           "RexInputRef failed to access field at index %d with RexInputRef column name mapping of size %d",
           rexInputRef.getIndex(), inputFieldNames.size()));
     }
@@ -127,9 +129,7 @@ public class PigRexUtils {
     } else if (rexCall.getOperator() instanceof SqlCastFunction) {
       pigOperator = new PigCastFunction(rexCall, inputFieldNames);
     } else {
-      // TODO(ralam): Finish implementing RexCall resolution. Throw an unsupported exception in the meantime.
-      throw new UnsupportedOperationException(
-          String.format("Unsupported operator: %s", rexCall.getOperator().getName()));
+      throw new UnsupportedRexCallException(rexCall);
     }
 
     return pigOperator.unparse();

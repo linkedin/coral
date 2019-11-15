@@ -5,6 +5,7 @@
  */
 package com.linkedin.coral.pig.rel2pig.rel;
 
+import com.linkedin.coral.pig.rel2pig.exceptions.UnsupportedRexCallException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -110,7 +111,7 @@ public class PigLogicalJoin {
             PigRexUtils.convertRexNodeToPigExpression(rexCall.getOperands().get(1), inputFieldNames));
         break;
       default:
-        throw new UnsupportedOperationException(String.format(
+        throw new UnsupportedRexCallException(String.format(
             "Invalid operator '%s'. Only EQUIJOINs with one or more AND conditions are supported. Found in query: %s",
             rexCall.getOperator().getName(), rexCall.toString()));
     }
@@ -165,7 +166,7 @@ public class PigLogicalJoin {
       case INNER:
         break;
       default:
-        throw new UnsupportedOperationException(String.format(
+        throw new UnsupportedRexCallException(String.format(
             "JOIN type '%s' is not supported. Found in query: %s",
             logicalJoin.getJoinType().name(), logicalJoin.toString()));
     }

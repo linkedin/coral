@@ -5,6 +5,7 @@
  */
 package com.linkedin.coral.pig.rel2pig;
 
+import com.linkedin.coral.pig.rel2pig.exceptions.UnsupportedRelNodeException;
 import com.linkedin.coral.pig.rel2pig.rel.PigLogicalAggregate;
 import com.linkedin.coral.pig.rel2pig.rel.PigLogicalFilter;
 import com.linkedin.coral.pig.rel2pig.rel.PigLogicalJoin;
@@ -120,12 +121,12 @@ public class RelToPigLatinConverter {
     state.addStatement(PigTableScan.getScript(tableScan, outputRelation, pigLoadFunction, tableToPigPathFunction));
   }
 
-  private void visit(RelToPigBuilder state, TableFunctionScan var1, String outputRelation) {
-    //TODO(ralam): Implement function
+  private void visit(RelToPigBuilder state, TableFunctionScan tableFunctionScan, String outputRelation) {
+    throw new UnsupportedRelNodeException(tableFunctionScan);
   }
 
-  private void visit(RelToPigBuilder state, LogicalValues var1, String outputRelation) {
-    //TODO(ralam): Implement function
+  private void visit(RelToPigBuilder state, LogicalValues logicalValues, String outputRelation) {
+    throw new UnsupportedRelNodeException(logicalValues);
   }
 
   /**
@@ -169,20 +170,20 @@ public class RelToPigLatinConverter {
     state.addStatement(PigLogicalJoin.getScript(logicalJoin, outputRelation, leftInputRelation, rightInputRelation));
   }
 
-  private void visit(RelToPigBuilder state, LogicalCorrelate var1, String outputRelation) {
-    //TODO(ralam): Implement function
+  private void visit(RelToPigBuilder state, LogicalCorrelate logicalCorrelate, String outputRelation) {
+    throw new UnsupportedRelNodeException(logicalCorrelate);
   }
 
-  private void visit(RelToPigBuilder state, LogicalUnion var1, String outputRelation) {
-    //TODO(ralam): Implement function
+  private void visit(RelToPigBuilder state, LogicalUnion logicalUnion, String outputRelation) {
+    throw new UnsupportedRelNodeException(logicalUnion);
   }
 
-  private void visit(RelToPigBuilder state, LogicalIntersect var1, String outputRelation) {
-    //TODO(ralam): Implement function
+  private void visit(RelToPigBuilder state, LogicalIntersect logicalIntersect, String outputRelation) {
+    throw new UnsupportedRelNodeException(logicalIntersect);
   }
 
-  private void visit(RelToPigBuilder state, LogicalMinus var1, String outputRelation) {
-    //TODO(ralam): Implement function
+  private void visit(RelToPigBuilder state, LogicalMinus logicalMinus, String outputRelation) {
+    throw new UnsupportedRelNodeException(logicalMinus);
   }
 
   /**
@@ -197,15 +198,15 @@ public class RelToPigLatinConverter {
     state.addStatement(PigLogicalAggregate.getScript(logicalAggregate, outputRelation, outputRelation));
   }
 
-  private void visit(RelToPigBuilder state, LogicalMatch var1, String outputRelation) {
-    //TODO(ralam): Implement function
+  private void visit(RelToPigBuilder state, LogicalMatch logicalMatch, String outputRelation) {
+    throw new UnsupportedRelNodeException(logicalMatch);
   }
 
-  private void visit(RelToPigBuilder state, LogicalSort var1, String outputRelation) {
-    //TODO(ralam): Implement function
+  private void visit(RelToPigBuilder state, LogicalSort logicalSort, String outputRelation) {
+    throw new UnsupportedRelNodeException(logicalSort);
   }
 
-  private void visit(RelToPigBuilder state, LogicalExchange var1, String outputRelation) {
-    //TODO(ralam): Implement function
+  private void visit(RelToPigBuilder state, LogicalExchange logicalExchange, String outputRelation) {
+    throw new UnsupportedRelNodeException(logicalExchange);
   }
 }

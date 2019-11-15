@@ -5,6 +5,8 @@
  */
 package com.linkedin.coral.pig.rel2pig.rel.operators;
 
+import com.linkedin.coral.hive.hive2rel.functions.UnknownSqlFunctionException;
+import com.linkedin.coral.pig.rel2pig.exceptions.UnsupportedRexCallException;
 import com.linkedin.coral.pig.rel2pig.rel.PigRexUtils;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -32,8 +34,7 @@ public class PigSpecialOperator extends PigOperator {
       return convertItemOperatorCall();
     }
 
-    throw new UnsupportedOperationException(String.format(
-        "Unsupported operator: %s", rexCall.getOperator().getName()));
+    throw new UnknownSqlFunctionException(rexCall.getOperator().getName() + "_pig");
   }
 
   /**
@@ -69,7 +70,7 @@ public class PigSpecialOperator extends PigOperator {
     if (columnReference.getType() instanceof MapSqlType) {
       itemOperatorCall = convertMapOperatorCall();
     } else {
-      throw new RuntimeException(String.format("SqlItemOperator is not supported for column of type '%s'",
+      throw new UnsupportedRexCallException(String.format("SqlItemOperator is not supported for column of type '%s'",
           columnReference.getType().getSqlTypeName().toString()));
     }
     return itemOperatorCall;

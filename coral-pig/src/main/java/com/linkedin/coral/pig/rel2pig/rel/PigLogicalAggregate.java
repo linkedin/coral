@@ -5,6 +5,7 @@
  */
 package com.linkedin.coral.pig.rel2pig.rel;
 
+import com.linkedin.coral.pig.rel2pig.exceptions.UnsupportedRexCallException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -41,7 +42,7 @@ public class PigLogicalAggregate {
 
     // TODO: Add support for GROUPING SETS using null literal projections and UNIONs
     if (logicalAggregate.getGroupSets().size() != 1) {
-      throw new UnsupportedOperationException("Only grouping sets of size 1 is supported");
+      throw new UnsupportedRexCallException("Only grouping sets of size 1 is supported");
     }
 
     final String groupBy = getGroupByStatement(logicalAggregate, outputRelation, inputRelation);

@@ -84,8 +84,11 @@ public class AllViewTranslation {
   private final Map<String, Integer> errorCategories;
   private final Map<String, Integer> sqlFunctions;
   private final LanguageValidator validator;
+  private final String resultDir;
+  private static final String RESULT_FILE_TEMPLATE = "%s-%s.log";
 
   public AllViewTranslation(String resultDir, String includedFile, String excludedFile, LanguageValidator validator) throws Exception {
+    this.resultDir = resultDir;
     metaStoreClient = getMetastoreClient();
     sqlWriter = makeWriter(resultDir, validator.getCamelName() + ".txt");
     successWriter = makeWriter(resultDir, "successes.txt");
@@ -207,6 +210,16 @@ public class AllViewTranslation {
       validator.convertAndValidate(table.getDbName(), table.getTableName(), metaStoreClient, sqlWriter);
       successWriter.println(toViewString(table));
     } catch (Exception e) {
+      try {
+        final PrintWriter viewFailureWriter = makeWriter(
+            resultDir, String.format(RESULT_FILE_TEMPLATE, table.getDbName(), table.getTableName()));
+        e.printStackTrace(viewFailureWriter);
+        viewFailureWriter.flush();
+        viewFailureWriter.close();
+      } catch (Exception ex) {
+        System.out.println(String.format("Cannot write log to %s/%s", resultDir, String.format(
+            RESULT_FILE_TEMPLATE, table.getDbName(), table.getTableName())));
+      }
       failureWriter.println(toViewString(table));
       ++stats.failures;
       stats.daliviewfailures += isDaliView ? 1 : 0;

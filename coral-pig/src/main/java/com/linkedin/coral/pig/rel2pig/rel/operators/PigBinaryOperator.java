@@ -5,6 +5,7 @@
  */
 package com.linkedin.coral.pig.rel2pig.rel.operators;
 
+import com.linkedin.coral.hive.hive2rel.functions.UnknownSqlFunctionException;
 import com.linkedin.coral.pig.rel2pig.rel.PigRexUtils;
 import java.util.List;
 import org.apache.calcite.rex.RexCall;
@@ -24,6 +25,13 @@ public class PigBinaryOperator extends PigOperator {
     String operator = rexCall.getOperator().getName();
 
     switch (rexCall.getOperator().getKind()) {
+      case GREATER_THAN:
+      case GREATER_THAN_OR_EQUAL:
+      case LESS_THAN:
+      case LESS_THAN_OR_EQUAL:
+      case AND:
+      case OR:
+        break;
       case EQUALS:
         operator = "==";
         break;
@@ -31,6 +39,7 @@ public class PigBinaryOperator extends PigOperator {
         operator = "!=";
         break;
       default:
+        throw new UnknownSqlFunctionException(rexCall.getOperator().getName() + "_pig");
     }
 
     final String leftOperand = PigRexUtils.convertRexNodeToPigExpression(rexCall.getOperands().get(0), inputFieldNames);

@@ -5,6 +5,7 @@
  */
 package com.linkedin.coral.pig.rel2pig.rel.operators;
 
+import com.linkedin.coral.hive.hive2rel.functions.UnknownSqlFunctionException;
 import com.linkedin.coral.pig.rel2pig.rel.PigRexUtils;
 import java.util.List;
 import org.apache.calcite.rex.RexCall;
@@ -25,8 +26,9 @@ public class PigPrefixOperator extends PigOperator {
     final String operand = PigRexUtils.convertRexNodeToPigExpression(rexCall.getOperands().get(0), inputFieldNames);
     switch (rexCall.getOperator().getKind()) {
       case NOT:
-      default:
         return String.format("%s %s", rexCall.getOperator().getName(), operand);
+      default:
+        throw new UnknownSqlFunctionException(rexCall.getOperator().getName() + "_pig");
     }
   }
 }
