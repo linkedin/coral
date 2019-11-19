@@ -24,7 +24,9 @@ class UnsupportedHiveUDFsInSpark {
    * Add hive UDFs that do not work with Spark.
    */
   static {
+    // Removing this blacklist in the long term can be tracked here: CORAL-78
     add("com.linkedin.dali.udf.userinterfacelookup.hive.UserInterfaceLookup");
+    add("com.linkedin.dali.udf.portallookup.hive.PortalLookup");
   }
 
   /**

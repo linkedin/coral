@@ -65,11 +65,6 @@ class TransportableUDFMap {
         "com.linkedin.stdudfs.daliudfs.spark.MapLookup",
         STANDARD_UDFS_DALI_UDFS_URL);
 
-    add("com.linkedin.dali.udf.portallookup.hive.PortalLookup",
-        "portalLookup",
-        "com.linkedin.stdudfs.daliudfs.spark.PortalLookup",
-        STANDARD_UDFS_DALI_UDFS_URL);
-
     add("com.linkedin.dali.udf.sanitize.hive.Sanitize",
         "sanitize",
         "com.linkedin.stdudfs.daliudfs.spark.Sanitize",
