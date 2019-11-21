@@ -574,4 +574,41 @@ public class RelToPigLatinConverterTest {
     }
   }
 
+  /**
+   * Tests that IS NOT NULL and IS NULL works
+   */
+  @Test
+  public static void testNullablilityOperators() throws IOException, ParseException {
+    final String sqlTemplate = "SELECT * FROM pig.tablenull WHERE nullableField %s";
+    final String expectedPigLatinTemplate = String.join("\n",
+        "view = LOAD 'src/test/resources/data/pig/tablenull.json' USING JsonLoader('nullablefield:chararray, field:chararray');",
+        "view = FILTER view BY nullablefield %s;",
+        "view = FOREACH view GENERATE nullablefield AS nullablefield, field AS field;"
+    );
+
+    final String[] nullabilityTypes = {
+        "IS NULL",
+        "IS NOT NULL"
+    };
+
+    final String[] expectedOutputs = {
+        "(,nullField)",
+        "(nonNullField,nonNullField)"
+    };
+
+    for (int i = 0; i < expectedOutputs.length; ++i) {
+      final String sql = String.format(sqlTemplate, nullabilityTypes[i]);
+      final String[] expectedPigLatin = String.format(expectedPigLatinTemplate, nullabilityTypes[i]).split("\n");
+      final String[] expectedOutput = expectedOutputs[i].split(";");
+
+      final String[] translatedPigLatin = TestUtils.sqlToPigLatin(sql, OUTPUT_RELATION);
+
+      Assert.assertEquals(translatedPigLatin, expectedPigLatin);
+
+      final PigTest pigTest = new PigTest(translatedPigLatin);
+      pigTest.assertOutput(OUTPUT_RELATION, expectedOutput);
+    }
+
+  }
+
 }

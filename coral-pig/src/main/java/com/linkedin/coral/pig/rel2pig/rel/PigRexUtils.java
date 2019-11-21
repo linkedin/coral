@@ -11,6 +11,7 @@ import com.linkedin.coral.pig.rel2pig.rel.operators.PigBinaryOperator;
 import com.linkedin.coral.pig.rel2pig.rel.operators.PigCaseOperator;
 import com.linkedin.coral.pig.rel2pig.rel.operators.PigCastFunction;
 import com.linkedin.coral.pig.rel2pig.rel.operators.PigOperator;
+import com.linkedin.coral.pig.rel2pig.rel.operators.PigPostfixOperator;
 import com.linkedin.coral.pig.rel2pig.rel.operators.PigPrefixOperator;
 import com.linkedin.coral.pig.rel2pig.rel.operators.PigSpecialOperator;
 import java.util.List;
@@ -20,6 +21,7 @@ import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.SqlBinaryOperator;
+import org.apache.calcite.sql.SqlPostfixOperator;
 import org.apache.calcite.sql.SqlPrefixOperator;
 import org.apache.calcite.sql.SqlSpecialOperator;
 import org.apache.calcite.sql.fun.SqlCaseOperator;
@@ -128,6 +130,8 @@ public class PigRexUtils {
       pigOperator = new PigCaseOperator(rexCall, inputFieldNames);
     } else if (rexCall.getOperator() instanceof SqlCastFunction) {
       pigOperator = new PigCastFunction(rexCall, inputFieldNames);
+    } else if (rexCall.getOperator() instanceof SqlPostfixOperator) {
+      pigOperator = new PigPostfixOperator(rexCall, inputFieldNames);
     } else {
       throw new UnsupportedRexCallException(rexCall);
     }

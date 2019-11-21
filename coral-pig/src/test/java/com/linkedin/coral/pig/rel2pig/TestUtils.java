@@ -67,6 +67,9 @@ public class TestUtils {
 
     run(driver, String.join("\n", "",
         "CREATE TABLE IF NOT EXISTS pig.tablecast(i int, bi bigint, fl float, do double, str string, boo boolean)"));
+
+    run(driver, String.join("\n", "",
+        "CREATE TABLE IF NOT EXISTS pig.tablenull(nullablefield string, field string)"));
   }
 
   /**
@@ -118,6 +121,10 @@ public class TestUtils {
 
       if (db.equalsIgnoreCase("pig") && t.equalsIgnoreCase("tablecast")) {
         return "JsonLoader('i:int, bi:long, fl:float, do:double, str:chararray, boo:boolean')";
+      }
+
+      if (db.equalsIgnoreCase("pig") && t.equalsIgnoreCase("tablenull")) {
+        return "JsonLoader('nullablefield:chararray, field:chararray')";
       }
 
       return "JsonLoader()";
