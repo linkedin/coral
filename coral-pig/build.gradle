@@ -1,6 +1,5 @@
 apply plugin: 'li-java'
 apply plugin: 'maven-publish'
-apply plugin: 'com.github.johnrengelman.shadow'
 
 
 dependencies {
@@ -29,12 +28,6 @@ dependencies {
   testCompile deps.'kryo'
 }
 
-// need to create a separate fat shadowJar for DaliStorage integration purpose
-shadowJar {
-  classifier = 'all'
-  zip64 true
-}
-
 artifacts {
-  archives shadowJar, jar, javadocJar, sourcesJar
+  archives jar, javadocJar, sourcesJar
 }
