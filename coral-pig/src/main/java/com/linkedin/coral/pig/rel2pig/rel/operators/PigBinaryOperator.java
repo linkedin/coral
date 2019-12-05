@@ -31,6 +31,10 @@ public class PigBinaryOperator extends PigOperator {
       case LESS_THAN_OR_EQUAL:
       case AND:
       case OR:
+      case MINUS:
+      case PLUS:
+      case TIMES:
+      case DIVIDE:
         break;
       case EQUALS:
         operator = "==";

@@ -195,6 +195,41 @@ public class RelToPigLatinConverterTest {
   }
 
   /**
+   * Tests arithmetic operators
+   */
+  @Test
+  public static void testArithmeticOperators() throws IOException, ParseException {
+    final String sqlTemplate = "SELECT tableA.a %s 2 AS a FROM pig.tableA AS tableA";
+    final String expectedPigLatinTemplate = String.join("\n",
+        "view = LOAD 'src/test/resources/data/pig/tablea.json' USING JsonLoader('a:int, b:int, c:int');",
+        "view = FOREACH view GENERATE (a %s 2) AS a;"
+    );
+
+    final String[] operators = {"+", "-", "/", "*"};
+
+    final String[] expectedOutputs = {
+        "(2),(3),(4),(5),(6)",
+        "(-2),(-1),(0),(1),(2)",
+        "(0),(0),(1),(1),(2)",
+        "(0),(2),(4),(6),(8)"
+    };
+
+    for (int i = 0; i < expectedOutputs.length; ++i) {
+      final String sql = String.format(sqlTemplate, operators[i]);
+      final String[] expectedPigLatin = String.format(expectedPigLatinTemplate, operators[i]).split("\n");
+      final String[] expectedOutput = expectedOutputs[i].split(",");
+
+      final String[] translatedPigLatin = TestUtils.sqlToPigLatin(sql, OUTPUT_RELATION);
+
+      Assert.assertEquals(translatedPigLatin, expectedPigLatin);
+
+      final PigTest pigTest = new PigTest(translatedPigLatin);
+      pigTest.assertOutput(OUTPUT_RELATION, expectedOutput);
+    }
+
+  }
+
+  /**
    * Tests the Hive IN operator
    * @throws IOException
    * @throws ParseException
