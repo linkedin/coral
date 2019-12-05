@@ -4,7 +4,11 @@ apply plugin: 'com.github.johnrengelman.shadow'
 dependencies {
   compile project(':coral-presto')
   compile project(':coral-pig')
-  compile project(':coral-tests')
+  compile(project(':coral-tests')) {
+    // These exclusions are required to prevent duplicate classes with coral-calcite
+    exclude group: 'org.apache.calcite', module: 'calcite-core'
+    exclude group: 'org.apache.calcite', module: 'calcite-avatica'
+  }
   compile deps.'presto-parser'
 }
 
