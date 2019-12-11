@@ -10,7 +10,10 @@ import com.linkedin.coral.pig.rel2pig.rel.PigLogicalAggregate;
 import com.linkedin.coral.pig.rel2pig.rel.PigLogicalFilter;
 import com.linkedin.coral.pig.rel2pig.rel.PigLogicalJoin;
 import com.linkedin.coral.pig.rel2pig.rel.PigLogicalProject;
+import com.linkedin.coral.pig.rel2pig.rel.PigLogicalUnion;
 import com.linkedin.coral.pig.rel2pig.rel.PigTableScan;
+import java.util.List;
+import java.util.stream.Collectors;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.TableFunctionScan;
 import org.apache.calcite.rel.core.TableScan;
@@ -107,6 +110,8 @@ public class RelToPigLatinConverter {
       visit(state, (LogicalAggregate) relNode, outputRelation);
     } else if (relNode instanceof LogicalJoin) {
       visit(state, (LogicalJoin) relNode, outputRelation);
+    } else if (relNode instanceof LogicalUnion) {
+      visit(state, (LogicalUnion) relNode, outputRelation);
     }
   }
 
@@ -174,8 +179,21 @@ public class RelToPigLatinConverter {
     throw new UnsupportedRelNodeException(logicalCorrelate);
   }
 
+  /**
+   * Generates Pig Latin to perform a LogicalUnion.
+   *
+   * @param state Intermediate state of the query translation
+   * @param logicalUnion LogicalUnion node
+   * @param outputRelation name of the variable to be outputted
+   */
   private void visit(RelToPigBuilder state, LogicalUnion logicalUnion, String outputRelation) {
-    throw new UnsupportedRelNodeException(logicalUnion);
+    List<String> inputRelations = logicalUnion.getInputs().stream()
+        .map(input -> {
+          String inputRelation = state.getUniqueAlias();
+          visit(state, input, inputRelation);
+          return inputRelation;
+        }).collect(Collectors.toList());
+    state.addStatement(PigLogicalUnion.getScript(logicalUnion, outputRelation, inputRelations));
   }
 
   private void visit(RelToPigBuilder state, LogicalIntersect logicalIntersect, String outputRelation) {

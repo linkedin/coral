@@ -643,7 +643,120 @@ public class RelToPigLatinConverterTest {
       final PigTest pigTest = new PigTest(translatedPigLatin);
       pigTest.assertOutput(OUTPUT_RELATION, expectedOutput);
     }
+  }
 
+  /**
+   * Tests UNION functionality on the same table a single time
+   */
+  @Test
+  public static void testUnionSameTableSingle() throws IOException, ParseException {
+    final String sql = "SELECT * FROM pig.tableA UNION ALL SELECT * FROM pig.tableA";
+    final String[] expectedPigLatin = {
+        "CORAL_PIG_ALIAS_1 = LOAD 'src/test/resources/data/pig/tablea.json' USING JsonLoader('a:int, b:int, c:int');",
+        "CORAL_PIG_ALIAS_1 = FOREACH CORAL_PIG_ALIAS_1 GENERATE a AS a, b AS b, c AS c;",
+        "CORAL_PIG_ALIAS_2 = LOAD 'src/test/resources/data/pig/tablea.json' USING JsonLoader('a:int, b:int, c:int');",
+        "CORAL_PIG_ALIAS_2 = FOREACH CORAL_PIG_ALIAS_2 GENERATE a AS a, b AS b, c AS c;",
+        "view = UNION CORAL_PIG_ALIAS_1, CORAL_PIG_ALIAS_2;",
+        "view = FOREACH view GENERATE a AS a, b AS b, c AS c;"
+    };
+    final String[] expectedOutput = {
+        "(0,0,100)",
+        "(1,1,200)",
+        "(2,2,300)",
+        "(3,3,400)",
+        "(4,4,500)",
+        "(0,0,100)",
+        "(1,1,200)",
+        "(2,2,300)",
+        "(3,3,400)",
+        "(4,4,500)"
+    };
+
+    final String[] translatedPigLatin = TestUtils.sqlToPigLatin(sql, OUTPUT_RELATION);
+
+    Assert.assertEquals(translatedPigLatin, expectedPigLatin);
+
+    final PigTest pigTest = new PigTest(translatedPigLatin);
+    pigTest.assertOutput(OUTPUT_RELATION, expectedOutput);
+  }
+
+  /**
+   * Tests UNION functionality on different tables with explicit aliasing
+   */
+  @Test
+  public static void testUnionDifferentTable() throws IOException, ParseException {
+    final String sql = "SELECT a, c FROM pig.tableA UNION ALL SELECT a, b AS c FROM pig.tableB";
+    final String[] expectedPigLatin = {
+        "CORAL_PIG_ALIAS_1 = LOAD 'src/test/resources/data/pig/tablea.json' USING JsonLoader('a:int, b:int, c:int');",
+        "CORAL_PIG_ALIAS_1 = FOREACH CORAL_PIG_ALIAS_1 GENERATE a AS a, c AS c;",
+        "CORAL_PIG_ALIAS_2 = LOAD 'src/test/resources/data/pig/tableb.json' USING JsonLoader('a:int, b:int');",
+        "CORAL_PIG_ALIAS_2 = FOREACH CORAL_PIG_ALIAS_2 GENERATE a AS a, b AS c;",
+        "view = UNION CORAL_PIG_ALIAS_1, CORAL_PIG_ALIAS_2;",
+        "view = FOREACH view GENERATE a AS a, c AS c;"
+    };
+    final String[] expectedOutput = {
+        "(0,0)",
+        "(0,10)",
+        "(1,1)",
+        "(1,2)",
+        "(1,2)",
+        "(0,100)",
+        "(1,200)",
+        "(2,300)",
+        "(3,400)",
+        "(4,500)"
+    };
+
+    final String[] translatedPigLatin = TestUtils.sqlToPigLatin(sql, OUTPUT_RELATION);
+
+    Assert.assertEquals(translatedPigLatin, expectedPigLatin);
+
+    final PigTest pigTest = new PigTest(translatedPigLatin);
+    pigTest.assertOutput(OUTPUT_RELATION, expectedOutput);
+  }
+
+  /**
+   * Tests UNION functionality on the same table multiple times
+   */
+  @Test
+  public static void testUnionSameTableMultiple() throws IOException, ParseException {
+    final String sql =
+        "SELECT * FROM pig.tableA UNION ALL SELECT * FROM pig.tableA UNION ALL SELECT * FROM pig.tableA";
+    final String[] expectedPigLatin = {
+        "CORAL_PIG_ALIAS_2 = LOAD 'src/test/resources/data/pig/tablea.json' USING JsonLoader('a:int, b:int, c:int');",
+        "CORAL_PIG_ALIAS_2 = FOREACH CORAL_PIG_ALIAS_2 GENERATE a AS a, b AS b, c AS c;",
+        "CORAL_PIG_ALIAS_3 = LOAD 'src/test/resources/data/pig/tablea.json' USING JsonLoader('a:int, b:int, c:int');",
+        "CORAL_PIG_ALIAS_3 = FOREACH CORAL_PIG_ALIAS_3 GENERATE a AS a, b AS b, c AS c;",
+        "CORAL_PIG_ALIAS_1 = UNION CORAL_PIG_ALIAS_2, CORAL_PIG_ALIAS_3;",
+        "CORAL_PIG_ALIAS_4 = LOAD 'src/test/resources/data/pig/tablea.json' USING JsonLoader('a:int, b:int, c:int');",
+        "CORAL_PIG_ALIAS_4 = FOREACH CORAL_PIG_ALIAS_4 GENERATE a AS a, b AS b, c AS c;",
+        "view = UNION CORAL_PIG_ALIAS_1, CORAL_PIG_ALIAS_4;",
+        "view = FOREACH view GENERATE a AS a, b AS b, c AS c;"
+    };
+    final String[] expectedOutput = {
+        "(0,0,100)",
+        "(1,1,200)",
+        "(2,2,300)",
+        "(3,3,400)",
+        "(4,4,500)",
+        "(0,0,100)",
+        "(1,1,200)",
+        "(2,2,300)",
+        "(3,3,400)",
+        "(4,4,500)",
+        "(0,0,100)",
+        "(1,1,200)",
+        "(2,2,300)",
+        "(3,3,400)",
+        "(4,4,500)"
+    };
+
+    final String[] translatedPigLatin = TestUtils.sqlToPigLatin(sql, OUTPUT_RELATION);
+
+    Assert.assertEquals(translatedPigLatin, expectedPigLatin);
+
+    final PigTest pigTest = new PigTest(translatedPigLatin);
+    pigTest.assertOutput(OUTPUT_RELATION, expectedOutput);
   }
 
 }
