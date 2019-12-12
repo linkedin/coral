@@ -7,7 +7,9 @@ dependencies {
   // NOTE: jline is needed as testCompile for PigUnit tests because it is missing from Pig runtime
   testCompile deps.'jline'
 
-  compile(project(path: ':coral-hive'))
+  compile(project(path: ':coral-hive')) {
+    exclude group: 'jline', module: 'jline'
+  }
 
   testCompile(deps.'pig'.'pig') { transitive = false }
   testCompile(deps.'pig'.'pigunit') { transitive = false }
@@ -22,6 +24,7 @@ dependencies {
     exclude group: 'org.apache.calcite', module: 'calcite-core'
     exclude group: 'org.apache.calcite', module: 'calcite-avatica'
     exclude group: 'jline', module: 'jline'
+    exclude group: 'org.codehaus.groovy', module: 'groovy-all'
   }
 
   testCompile deps.'hadoop'.'hadoop-mapreduce-client-common'
