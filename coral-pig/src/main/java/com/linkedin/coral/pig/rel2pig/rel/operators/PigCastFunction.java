@@ -35,7 +35,7 @@ public class PigCastFunction extends PigOperator {
           .put(SqlTypeName.SMALLINT, PigType.INT)
           .put(SqlTypeName.INTEGER, PigType.INT)
           .put(SqlTypeName.BIGINT, PigType.LONG)
-          .put(SqlTypeName.DECIMAL, PigType.DOUBLE)
+          .put(SqlTypeName.DECIMAL, PigType.BIGDECIMAL)
           .put(SqlTypeName.DOUBLE, PigType.DOUBLE)
           .put(SqlTypeName.FLOAT, PigType.FLOAT)
           .put(SqlTypeName.REAL, PigType.FLOAT)
@@ -56,56 +56,53 @@ public class PigCastFunction extends PigOperator {
   //   https://pig.apache.org/docs/r0.15.0/basic.html#cast
   private static final ImmutableMultimap<PigType, PigType> PIG_TYPE_CAST_MAP =
       ImmutableMultimap.<PigType, PigType>builder()
-          // BAG
-          .put(PigType.BAG, PigType.BYTEARRAY)
-          .put(PigType.BAG, PigType.BAG)
-          // TUPLE
-          .put(PigType.TUPLE, PigType.BYTEARRAY)
-          .put(PigType.TUPLE, PigType.TUPLE)
-          // MAP
-          .put(PigType.MAP, PigType.BYTEARRAY)
-          .put(PigType.MAP, PigType.MAP)
+          // TODO(ralam): Add BAG cast support
+          // TODO(ralam): Add TUPLE cast support
+          // TODO(ralam): Add MAP cast support
           // INT
           .put(PigType.INT, PigType.INT)
           .put(PigType.INT, PigType.LONG)
           .put(PigType.INT, PigType.FLOAT)
           .put(PigType.INT, PigType.DOUBLE)
           .put(PigType.INT, PigType.CHARARRAY)
-          .put(PigType.INT, PigType.BYTEARRAY)
           // LONG
           .put(PigType.LONG, PigType.INT)
           .put(PigType.LONG, PigType.LONG)
           .put(PigType.LONG, PigType.FLOAT)
           .put(PigType.LONG, PigType.DOUBLE)
           .put(PigType.LONG, PigType.CHARARRAY)
-          .put(PigType.LONG, PigType.BYTEARRAY)
           // FLOAT
           .put(PigType.FLOAT, PigType.INT)
           .put(PigType.FLOAT, PigType.LONG)
           .put(PigType.FLOAT, PigType.FLOAT)
           .put(PigType.FLOAT, PigType.DOUBLE)
           .put(PigType.FLOAT, PigType.CHARARRAY)
-          .put(PigType.FLOAT, PigType.BYTEARRAY)
           // DOUBLE
           .put(PigType.DOUBLE, PigType.INT)
           .put(PigType.DOUBLE, PigType.LONG)
           .put(PigType.DOUBLE, PigType.FLOAT)
           .put(PigType.DOUBLE, PigType.DOUBLE)
           .put(PigType.DOUBLE, PigType.CHARARRAY)
-          .put(PigType.DOUBLE, PigType.BYTEARRAY)
           // CHARARRAY
           .put(PigType.CHARARRAY, PigType.INT)
           .put(PigType.CHARARRAY, PigType.LONG)
           .put(PigType.CHARARRAY, PigType.FLOAT)
           .put(PigType.CHARARRAY, PigType.DOUBLE)
           .put(PigType.CHARARRAY, PigType.CHARARRAY)
-          .put(PigType.CHARARRAY, PigType.BYTEARRAY)
           .put(PigType.CHARARRAY, PigType.BOOLEAN)
           // BYTEARRAY
+          .put(PigType.BYTEARRAY, PigType.BAG)
+          .put(PigType.BYTEARRAY, PigType.TUPLE)
+          .put(PigType.BYTEARRAY, PigType.MAP)
+          .put(PigType.BYTEARRAY, PigType.INT)
+          .put(PigType.BYTEARRAY, PigType.LONG)
+          .put(PigType.BYTEARRAY, PigType.FLOAT)
+          .put(PigType.BYTEARRAY, PigType.DOUBLE)
+          .put(PigType.BYTEARRAY, PigType.CHARARRAY)
           .put(PigType.BYTEARRAY, PigType.BYTEARRAY)
+          .put(PigType.BYTEARRAY, PigType.BOOLEAN)
           // BOOLEAN
           .put(PigType.BOOLEAN, PigType.CHARARRAY)
-          .put(PigType.BOOLEAN, PigType.BYTEARRAY)
           .put(PigType.BOOLEAN, PigType.BOOLEAN)
           // DATETIME
           .put(PigType.DATETIME, PigType.DATETIME)
