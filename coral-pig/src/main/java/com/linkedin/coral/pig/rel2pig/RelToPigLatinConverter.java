@@ -11,7 +11,6 @@ import com.linkedin.coral.pig.rel2pig.rel.PigLogicalFilter;
 import com.linkedin.coral.pig.rel2pig.rel.PigLogicalJoin;
 import com.linkedin.coral.pig.rel2pig.rel.PigLogicalProject;
 import com.linkedin.coral.pig.rel2pig.rel.PigLogicalUnion;
-import com.linkedin.coral.pig.rel2pig.rel.PigRelUtils;
 import com.linkedin.coral.pig.rel2pig.rel.PigTableScan;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -86,8 +85,7 @@ public class RelToPigLatinConverter {
    * @return Pig Latin equivalent of the SQL query
    */
   public String convert(RelNode root, String outputRelation) {
-    final RelToPigBuilder context = new RelToPigBuilder();
-    context.addFunctionDefinitions(PigRelUtils.getAllFunctionDefinitions(root));
+    RelToPigBuilder context = new RelToPigBuilder();
     visit(context, root, outputRelation);
     return context.getScript();
   }
