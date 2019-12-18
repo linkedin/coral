@@ -48,6 +48,9 @@ public class TestUtils {
         "CREATE DATABASE IF NOT EXISTS pig"));
 
     run(driver, String.join("\n", "",
+        "CREATE DATABASE IF NOT EXISTS functions"));
+
+    run(driver, String.join("\n", "",
         "CREATE TABLE IF NOT EXISTS pig.tableA(a int, b int, c int)"));
 
     run(driver, String.join("\n", "",
@@ -70,6 +73,9 @@ public class TestUtils {
 
     run(driver, String.join("\n", "",
         "CREATE TABLE IF NOT EXISTS pig.tablenull(nullablefield string, field string)"));
+
+    run(driver, String.join("\n", "",
+        "CREATE TABLE IF NOT EXISTS functions.tablefields(i_1 int, i0 int, i1 int, i2 int, i3 int, fl1 double, fl2 double, fl3 double, str string, substr string, exstr string, bootrue boolean, boofalse boolean, bin binary)"));
   }
 
   /**
@@ -125,6 +131,10 @@ public class TestUtils {
 
       if (db.equalsIgnoreCase("pig") && t.equalsIgnoreCase("tablenull")) {
         return "JsonLoader('nullablefield:chararray, field:chararray')";
+      }
+
+      if (db.equalsIgnoreCase("functions") && t.equalsIgnoreCase("tablefields")) {
+        return "JsonLoader('i_1:int, i0:int, i1:int, i2:int, i3:int, fl1:double, fl2:double, fl3:double, str:chararray, substr:chararray, exstr:chararray, bootrue:boolean, boofalse:boolean, bin:bytearray')";
       }
 
       return "JsonLoader()";
