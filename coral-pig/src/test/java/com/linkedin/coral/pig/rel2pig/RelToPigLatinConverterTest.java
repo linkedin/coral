@@ -50,7 +50,7 @@ public class RelToPigLatinConverterTest {
     Assert.assertEquals(translatedPigLatin, expectedPigLatin);
 
     PigTest pigTest = new PigTest(translatedPigLatin);
-    pigTest.assertOutput(OUTPUT_RELATION, expectedOutput);
+    pigTest.assertOutputAnyOrder(OUTPUT_RELATION, expectedOutput);
   }
 
   /**
@@ -78,7 +78,7 @@ public class RelToPigLatinConverterTest {
     Assert.assertEquals(translatedPigLatin, expectedPigLatin);
 
     PigTest pigTest = new PigTest(translatedPigLatin);
-    pigTest.assertOutput(OUTPUT_RELATION, expectedOutput);
+    pigTest.assertOutputAnyOrder(OUTPUT_RELATION, expectedOutput);
   }
 
   /**
@@ -106,7 +106,7 @@ public class RelToPigLatinConverterTest {
     Assert.assertEquals(translatedPigLatin, expectedPigLatin);
 
     PigTest pigTest = new PigTest(translatedPigLatin);
-    pigTest.assertOutput(OUTPUT_RELATION, expectedOutput);
+    pigTest.assertOutputAnyOrder(OUTPUT_RELATION, expectedOutput);
   }
 
   /**
@@ -129,7 +129,7 @@ public class RelToPigLatinConverterTest {
     Assert.assertEquals(translatedPigLatin, expectedPigLatin);
 
     PigTest pigTest = new PigTest(translatedPigLatin);
-    pigTest.assertOutput(OUTPUT_RELATION, expectedOutput);
+    pigTest.assertOutputAnyOrder(OUTPUT_RELATION, expectedOutput);
   }
 
   /**
@@ -152,7 +152,7 @@ public class RelToPigLatinConverterTest {
     Assert.assertEquals(translatedPigLatin, expectedPigLatin);
 
     PigTest pigTest = new PigTest(translatedPigLatin);
-    pigTest.assertOutput(OUTPUT_RELATION, expectedOutput);
+    pigTest.assertOutputAnyOrder(OUTPUT_RELATION, expectedOutput);
   }
 
   /**
@@ -189,7 +189,7 @@ public class RelToPigLatinConverterTest {
       Assert.assertEquals(translatedPigLatin, expectedPigLatin);
 
       PigTest pigTest = new PigTest(translatedPigLatin);
-      pigTest.assertOutput(OUTPUT_RELATION, expectedOutput);
+      pigTest.assertOutputAnyOrder(OUTPUT_RELATION, expectedOutput);
     }
 
   }
@@ -224,7 +224,7 @@ public class RelToPigLatinConverterTest {
       Assert.assertEquals(translatedPigLatin, expectedPigLatin);
 
       final PigTest pigTest = new PigTest(translatedPigLatin);
-      pigTest.assertOutput(OUTPUT_RELATION, expectedOutput);
+      pigTest.assertOutputAnyOrder(OUTPUT_RELATION, expectedOutput);
     }
 
   }
@@ -253,7 +253,7 @@ public class RelToPigLatinConverterTest {
     Assert.assertEquals(translatedPigLatin, expectedPigLatin);
 
     PigTest pigTest = new PigTest(translatedPigLatin);
-    pigTest.assertOutput(OUTPUT_RELATION, expectedOutput);
+    pigTest.assertOutputAnyOrder(OUTPUT_RELATION, expectedOutput);
   }
 
   /**
@@ -311,7 +311,7 @@ public class RelToPigLatinConverterTest {
       Assert.assertEquals(translatedPigLatin, expectedPigLatin);
 
       final PigTest pigTest = new PigTest(translatedPigLatin);
-      pigTest.assertOutput(OUTPUT_RELATION, expectedOutput);
+      pigTest.assertOutputAnyOrder(OUTPUT_RELATION, expectedOutput);
     }
   }
 
@@ -338,7 +338,7 @@ public class RelToPigLatinConverterTest {
     Assert.assertEquals(translatedPigLatin, expectedPigLatin);
 
     PigTest pigTest = new PigTest(translatedPigLatin);
-    pigTest.assertOutput(OUTPUT_RELATION, expectedOutput);
+    pigTest.assertOutputAnyOrder(OUTPUT_RELATION, expectedOutput);
   }
 
   /**
@@ -389,7 +389,7 @@ public class RelToPigLatinConverterTest {
       Assert.assertEquals(translatedPigLatin, expectedPigLatin);
 
       final PigTest pigTest = new PigTest(translatedPigLatin);
-      pigTest.assertOutput(OUTPUT_RELATION, expectedOutput);
+      pigTest.assertOutputAnyOrder(OUTPUT_RELATION, expectedOutput);
     }
   }
 
@@ -416,7 +416,7 @@ public class RelToPigLatinConverterTest {
     Assert.assertEquals(translatedPigLatin, expectedPigLatin);
 
     PigTest pigTest = new PigTest(translatedPigLatin);
-    pigTest.assertOutput(OUTPUT_RELATION, expectedOutput);
+    pigTest.assertOutputAnyOrder(OUTPUT_RELATION, expectedOutput);
   }
 
   /**
@@ -452,7 +452,7 @@ public class RelToPigLatinConverterTest {
       Assert.assertEquals(translatedPigLatin, expectedPigLatin);
 
       final PigTest pigTest = new PigTest(translatedPigLatin);
-      pigTest.assertOutput(OUTPUT_RELATION, expectedOutput);
+      pigTest.assertOutputAnyOrder(OUTPUT_RELATION, expectedOutput);
     }
   }
 
@@ -477,7 +477,7 @@ public class RelToPigLatinConverterTest {
     Assert.assertEquals(translatedPigLatin, expectedPigLatin);
 
     final PigTest pigTest = new PigTest(translatedPigLatin);
-    pigTest.assertOutput(OUTPUT_RELATION, expectedOutput);
+    pigTest.assertOutputAnyOrder(OUTPUT_RELATION, expectedOutput);
   }
 
   /**
@@ -506,7 +506,7 @@ public class RelToPigLatinConverterTest {
     Assert.assertEquals(translatedPigLatin, expectedPigLatin);
 
     final PigTest pigTest = new PigTest(translatedPigLatin);
-    pigTest.assertOutput(OUTPUT_RELATION, expectedOutput);
+    pigTest.assertOutputAnyOrder(OUTPUT_RELATION, expectedOutput);
   }
 
   /**
@@ -538,7 +538,7 @@ public class RelToPigLatinConverterTest {
     Assert.assertEquals(translatedPigLatin, expectedPigLatin);
 
     final PigTest pigTest = new PigTest(translatedPigLatin);
-    pigTest.assertOutput(OUTPUT_RELATION, expectedOutput);
+    pigTest.assertOutputAnyOrder(OUTPUT_RELATION, expectedOutput);
   }
 
   /**
@@ -566,7 +566,7 @@ public class RelToPigLatinConverterTest {
     Assert.assertEquals(translatedPigLatin, expectedPigLatin);
 
     final PigTest pigTest = new PigTest(translatedPigLatin);
-    pigTest.assertOutput(OUTPUT_RELATION, expectedOutput);
+    pigTest.assertOutputAnyOrder(OUTPUT_RELATION, expectedOutput);
   }
 
   /**
@@ -605,7 +605,7 @@ public class RelToPigLatinConverterTest {
       Assert.assertEquals(translatedPigLatin, expectedPigLatin);
 
       final PigTest pigTest = new PigTest(translatedPigLatin);
-      pigTest.assertOutput(OUTPUT_RELATION, expectedOutput);
+      pigTest.assertOutputAnyOrder(OUTPUT_RELATION, expectedOutput);
     }
   }
 
@@ -641,7 +641,7 @@ public class RelToPigLatinConverterTest {
       Assert.assertEquals(translatedPigLatin, expectedPigLatin);
 
       final PigTest pigTest = new PigTest(translatedPigLatin);
-      pigTest.assertOutput(OUTPUT_RELATION, expectedOutput);
+      pigTest.assertOutputAnyOrder(OUTPUT_RELATION, expectedOutput);
     }
   }
 
@@ -677,7 +677,7 @@ public class RelToPigLatinConverterTest {
     Assert.assertEquals(translatedPigLatin, expectedPigLatin);
 
     final PigTest pigTest = new PigTest(translatedPigLatin);
-    pigTest.assertOutput(OUTPUT_RELATION, expectedOutput);
+    pigTest.assertOutputAnyOrder(OUTPUT_RELATION, expectedOutput);
   }
 
   /**
@@ -712,7 +712,7 @@ public class RelToPigLatinConverterTest {
     Assert.assertEquals(translatedPigLatin, expectedPigLatin);
 
     final PigTest pigTest = new PigTest(translatedPigLatin);
-    pigTest.assertOutput(OUTPUT_RELATION, expectedOutput);
+    pigTest.assertOutputAnyOrder(OUTPUT_RELATION, expectedOutput);
   }
 
   /**
@@ -756,7 +756,7 @@ public class RelToPigLatinConverterTest {
     Assert.assertEquals(translatedPigLatin, expectedPigLatin);
 
     final PigTest pigTest = new PigTest(translatedPigLatin);
-    pigTest.assertOutput(OUTPUT_RELATION, expectedOutput);
+    pigTest.assertOutputAnyOrder(OUTPUT_RELATION, expectedOutput);
   }
 
 }
