@@ -119,34 +119,20 @@ class SchemaUtilities {
     }
   }
 
-  static Schema renameColumns(@Nonnull List<String> columnNames, @Nonnull Schema schema) {
-    Preconditions.checkNotNull(columnNames);
-    Preconditions.checkNotNull(schema);
-    Preconditions.checkArgument(columnNames.size() == schema.getFields().size());
+  static String getFieldName(String oldName, String suggestedNewName) {
+    Preconditions.checkNotNull(oldName);
+    Preconditions.checkNotNull(suggestedNewName);
 
-    SchemaBuilder.FieldAssembler<Schema> fieldAssembler = SchemaBuilder.record(schema.getName())
-                                                                             .namespace(schema.getNamespace())
-                                                                             .fields();
-
-    for (int i = 0; i < columnNames.size(); i++) {
-      String newName = columnNames.get(i);
-      String oldName = schema.getFields().get(i).name();
-
-      appendField(isValidNewFieldName(newName, oldName) ? newName : oldName,
-                  schema.getFields().get(i),
-                  fieldAssembler);
+    String newName = suggestedNewName;
+    if (suggestedNewName.equals(oldName.toLowerCase())) {
+      // we do not allow renaming the field to all lower-casing compared to original name. Say Id to id
+      // since we cannot distinguish the lower-casing behavior introduced by users and engines
+      newName = oldName;
+    } else if (suggestedNewName.contains("$")) {
+      newName = toAvroQualifiedName(suggestedNewName);
     }
 
-    return fieldAssembler.endRecord();
-  }
-
-  static boolean isValidNewFieldName(@Nonnull String newName, @Nonnull String oldName) {
-    Preconditions.checkNotNull(newName);
-    Preconditions.checkNotNull(oldName);
-
-    // we do not allow renaming the field to all lower-casing compared to original name. Say Id to id
-    // since we cannot distinguish the lower-casing behavior introduced by users and engines
-    return !newName.equals(oldName.toLowerCase()) && !newName.contains("$");
+    return newName;
   }
 
   static String toAvroQualifiedName(@Nonnull String name) {

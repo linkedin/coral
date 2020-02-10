@@ -9,10 +9,11 @@ import com.linkedin.coral.com.google.common.base.Preconditions;
 import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
 import com.linkedin.coral.hive.hive2rel.rel.HiveUncollect;
 import com.linkedin.coral.schema.avro.exceptions.SchemaNotFoundException;
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import javax.annotation.Nonnull;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
@@ -193,22 +194,17 @@ public class RelToAvroSchemaConverter {
       RelNode relNode = super.visit(logicalProject);
       Schema inputSchema = schemaMap.get(logicalProject.getInput());
 
+      Queue<String> suggestedFieldNames = new LinkedList<>();
+      for (RelDataTypeField field : logicalProject.getRowType().getFieldList()) {
+        suggestedFieldNames.offer(field.getName());
+      }
+
       SchemaBuilder.FieldAssembler<Schema> logicalProjectFieldAssembler = SchemaBuilder.record(inputSchema.getName())
                                                                          .namespace(inputSchema.getNamespace())
                                                                          .fields();
-      logicalProject.accept(new SchemaRexShuttle(inputSchema, logicalProjectFieldAssembler));
+      logicalProject.accept(new SchemaRexShuttle(inputSchema, suggestedFieldNames, logicalProjectFieldAssembler));
 
-      // handle column renaming
-      List<String> columnNames = new ArrayList<>();
-      for (RelDataTypeField field : logicalProject.getRowType().getFieldList()) {
-        columnNames.add(field.getName());
-      }
-
-      Schema schemaWithRenamedColumns = SchemaUtilities.renameColumns(
-          columnNames,
-          logicalProjectFieldAssembler.endRecord());
-
-      schemaMap.put(logicalProject, schemaWithRenamedColumns);
+      schemaMap.put(logicalProject, logicalProjectFieldAssembler.endRecord());
 
       return relNode;
     }
@@ -279,8 +275,7 @@ public class RelToAvroSchemaConverter {
 
       // Handle aggCalls
       for (AggregateCall aggCall : logicalAggregate.getAggCallList()) {
-        // TODO: give the field a proper name
-        String fieldName = SchemaUtilities.toAvroQualifiedName(aggCall.getName());
+        String fieldName = "aggregate";
         RelDataType fieldType = aggCall.getType();
         SchemaUtilities.appendField(fieldName, fieldType, logicalAggregateFieldAssembler);
       }
@@ -359,11 +354,14 @@ public class RelToAvroSchemaConverter {
    */
   private class SchemaRexShuttle extends RexShuttle {
     private Schema inputSchema;
+    private Queue<String> suggestedFieldNames;
     private SchemaBuilder.FieldAssembler<Schema> fieldAssembler;
 
     public SchemaRexShuttle(Schema inputSchema,
+        Queue<String> suggestedFieldNames,
         SchemaBuilder.FieldAssembler<Schema> fieldAssembler) {
       this.inputSchema = inputSchema;
+      this.suggestedFieldNames = suggestedFieldNames;
       this.fieldAssembler = fieldAssembler;
     }
 
@@ -371,8 +369,12 @@ public class RelToAvroSchemaConverter {
     public RexNode visitInputRef(RexInputRef rexInputRef) {
       RexNode rexNode = super.visitInputRef(rexInputRef);
 
-      List<Schema.Field> inputSchemaFields = inputSchema.getFields();
-      SchemaUtilities.appendField(inputSchemaFields.get(rexInputRef.getIndex()), fieldAssembler);
+      Schema.Field field = inputSchema.getFields().get(rexInputRef.getIndex());
+      String oldFieldName = field.name();
+      String suggestNewFieldName = suggestedFieldNames.poll();
+      String newFieldName = SchemaUtilities.getFieldName(oldFieldName, suggestNewFieldName);
+
+      SchemaUtilities.appendField(newFieldName, field, fieldAssembler);
 
       return rexNode;
     }
@@ -386,10 +388,8 @@ public class RelToAvroSchemaConverter {
     @Override
     public RexNode visitLiteral(RexLiteral rexLiteral) {
       RexNode rexNode = super.visitLiteral(rexLiteral);
-      // TODO: handle deduplication of literal names (SELECT 1, 1, 1 etc)
-      String fieldName = "literal" + rexLiteral.getValue().toString();
       RelDataType fieldType = rexLiteral.getType();
-      SchemaUtilities.appendField(fieldName, fieldType, fieldAssembler);
+      appendField(fieldType);
 
       return rexNode;
     }
@@ -402,10 +402,8 @@ public class RelToAvroSchemaConverter {
          * For SqlUserDefinedFunction and SqlOperator RexCall, no need to handle it recursively
          * and only return type of udf or sql operator is relevant
          */
-        // TODO: handle deduplication of field name
-        String fieldName = "EXPR";
         RelDataType fieldType = rexCall.getType();
-        SchemaUtilities.appendField(fieldName, fieldType, fieldAssembler);
+        appendField(fieldType);
 
         return rexCall;
       } else {
@@ -460,6 +458,10 @@ public class RelToAvroSchemaConverter {
       // TODO: implement this method
       return super.visitPatternFieldRef(rexPatternFieldRef);
     }
-  }
 
+    private void appendField(RelDataType fieldType) {
+      String fieldName = SchemaUtilities.getFieldName("", suggestedFieldNames.poll());
+      SchemaUtilities.appendField(fieldName, fieldType, fieldAssembler);
+    }
+  }
 }

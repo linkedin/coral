@@ -74,11 +74,24 @@ public class ViewToAvroSchemaConverterTests {
     ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
     Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v");
 
-    // TODO: need to improve default name for literal later
     Assert.assertEquals(actualSchema.toString(true),
         TestUtils.loadSchema("testSelectWithLiterals-expected.avsc"));
   }
 
+  @Test
+  public void testSelectWithMultipleLiterals() {
+    String viewSql = "CREATE VIEW v AS "
+        + "SELECT 200, 1, bc.Id AS Id_View_Col, 100 AS Additional_Int, 200, 1, 1, 1, bc.Array_Col "
+        + "FROM basecomplex bc";
+
+    TestUtils.executeCreateViewQuery("default", "v", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v");
+
+    Assert.assertEquals(actualSchema.toString(true),
+        TestUtils.loadSchema("testSelectWithMultipleLiterals-expected.avsc"));
+  }
 
   @Test
   public void testAggregate() {
@@ -129,11 +142,6 @@ public class ViewToAvroSchemaConverterTests {
 
     Assert.assertEquals(actualSchema.toString(true),
         TestUtils.loadSchema("testSelectEnum-expected.avsc"));
-  }
-
-  @Test
-  public void testSelectSameLiterals() {
-    // TODO: implement deduplication of literal names (SELECT 1, 1, 1 etc)
   }
 
   @Test
