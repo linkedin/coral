@@ -21,20 +21,13 @@
               "product-plugins"
             ],
             "version": "4.*"
-          },
-          "gradle-scala": {
-            "libraries": [
-              "plugins"
-            ],
-            "version": "0.*"
           }
         }
       }
     },
     "type": "gradle",
     "versions": {
-      "java": "1.8.0_121",
-      "scala": "2.11.8"
+      "java": "1.8.0_121"
     }
   },
   "runtime": {},
