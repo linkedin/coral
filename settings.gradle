@@ -1,4 +1,5 @@
-def modules = ['coral-hive', 'coral-pig', 'coral-presto', 'coral-tests', 'coral-tools','coral-spark','coral-schema']
+def modules = ['coral-hive', 'coral-pig', 'coral-presto', 'coral-tests','coral-spark','coral-schema']
+def crossbuildmodules = ['coral-tools']
 
 modules.each { module ->
   if (!file(module).directory) {
@@ -9,4 +10,20 @@ modules.each { module ->
       include "${module}:${submodule.name}"
     }
   }
+}
+
+apply plugin: com.linkedin.ligradle.scala.LiScalaCrossBuildPlugin
+
+buildscript {
+  gradle.ext.addArtifactory(repositories)
+  gradle.ext.buildConfig()['linkedin.gradle.dependencies'].split(',').each { dep ->
+    dependencies { classpath dep }
+    configurations.classpath.resolutionStrategy.force(dep)
+  }
+}
+
+scalaCrossBuild {
+  defaultScalaVersion '2.11.8'
+  targetScalaVersions '2.11.8'
+  projectsToCrossBuild crossbuildmodules
 }

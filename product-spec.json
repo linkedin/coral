@@ -27,7 +27,8 @@
     },
     "type": "gradle",
     "versions": {
-      "java": "1.8.0_121"
+      "java": "1.8.0_121",
+      "scala": "2.11.8"
     }
   },
   "runtime": {},

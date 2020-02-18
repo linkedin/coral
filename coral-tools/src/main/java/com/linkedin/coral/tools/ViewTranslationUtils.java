@@ -24,6 +24,8 @@ public class ViewTranslationUtils {
         return new PrestoValidator();
       case "pig":
         return new PigValidator();
+      case "spark":
+        return new SparkValidator();
       default:
         throw new IllegalArgumentException("Validator for %s is not supported.");
     }
