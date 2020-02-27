@@ -25,6 +25,7 @@ ext.deps = [
     'kryo': "com.esotericsoftware.kryo:kryo:${versions['kryo']}",
     'testing': "org.testng:testng:${versions['testing']}",
 
+    // TODO: switch this to oss
     'coral-calcite': "com.linkedin.coral-calcite:coral-calcite:${versions['coral-calcite']}",
     'hive':[
         'hive-metastore': "org.apache.hive:hive-metastore:${versions['hive']}",

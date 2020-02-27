@@ -1,4 +1,4 @@
-apply plugin: 'li-java'
+apply plugin: 'java'
 apply plugin: 'maven-publish'
 
 
@@ -32,5 +32,5 @@ dependencies {
 }
 
 artifacts {
-  archives jar, javadocJar, sourcesJar
+  archives jar
 }

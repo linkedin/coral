@@ -10,18 +10,3 @@ modules.each { module ->
     }
   }
 }
-
-apply plugin: com.linkedin.ligradle.scala.LiScalaCrossBuildPlugin
-
-buildscript {
-  gradle.ext.addArtifactory(repositories)
-  gradle.ext.buildConfig()['linkedin.gradle.dependencies'].split(',').each { dep ->
-    dependencies { classpath dep }
-    configurations.classpath.resolutionStrategy.force(dep)
-  }
-}
-
-scalaCrossBuild {
-  defaultScalaVersion '2.11.8'
-  targetScalaVersions '2.11.8'
-}

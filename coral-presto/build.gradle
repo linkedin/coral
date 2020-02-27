@@ -1,4 +1,4 @@
-apply plugin: 'li-java'
+apply plugin: 'java'
 apply plugin: 'maven-publish'
 
 dependencies {
@@ -20,28 +20,6 @@ dependencies {
   testCompile deps.'kryo'
 }
 
-def pomPath = "$buildDir/${name}.pom"
-model {
-  tasks.generatePomFileForMavenJavaPublication {
-    destination = file("$pomPath")
-  }
-
-  tasks.jar {
-    dependsOn tasks.generatePomFileForMavenJavaPublication
-  }
-}
-
-publishing {
-  publications {
-    mavenJava(MavenPublication) {
-      from components.java
-    }
-  }
-}
-
-// need to explicitly set this because we are generating pom files
-generateModuleArtifactSpec.defaultArtifact = jar
 artifacts {
-  archives file: file("$pomPath"), name: "$name", type: "pom"
-  archives jar, javadocJar, sourcesJar
+  archives jar
 }
