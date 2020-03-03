@@ -3,7 +3,7 @@ def versions = [
     'jsr305': '3.0.2',
     'jline': '0.9.94',
     'gson': '2.8.1',
-    'presto-parser': '0.157.1.30',
+    'presto-parser': '0.185',
     'slf4j': '1.7.25',
     'kryo': '2.22',
     'testing': '6.4',
@@ -25,8 +25,6 @@ ext.deps = [
     'kryo': "com.esotericsoftware.kryo:kryo:${versions['kryo']}",
     'testing': "org.testng:testng:${versions['testing']}",
 
-    // TODO: switch this to oss
-    'coral-calcite': "com.linkedin.coral-calcite:coral-calcite:${versions['coral-calcite']}",
     'hive':[
         'hive-metastore': "org.apache.hive:hive-metastore:${versions['hive']}",
         'hive-exec-core': "org.apache.hive:hive-exec:${versions['hive']}:core",

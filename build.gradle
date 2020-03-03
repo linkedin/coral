@@ -18,14 +18,8 @@ buildscript {
 allprojects {
   repositories {
     mavenCentral()
-    // TODO: remove this after Calcite jar published to maven
-    ivy {
-      url 'http://artifactory.corp.linkedin.com:8081/artifactory/release'
-      layout 'pattern', {
-        ivy '[organisation]/[module]/[revision]/[module]-[revision].ivy'
-        artifact '[organisation]/[module]/[revision]/[artifact]-[revision](-[classifier]).[ext]'
-        m2compatible = true
-      }
+    maven {
+      url 'http://dl.bintray.com/funcheetah8/maven/'
     }
   }
 }

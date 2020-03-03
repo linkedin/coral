@@ -5,7 +5,6 @@
  */
 package com.linkedin.coral.presto.rel2presto;
 
-import com.facebook.presto.sql.parser.ParsingOptions;
 import com.facebook.presto.sql.parser.SqlParser;
 import com.facebook.presto.sql.tree.Statement;
 import org.apache.calcite.tools.FrameworkConfig;
@@ -46,7 +45,7 @@ public class RelToPrestoConverterTest {
 
   private void validate(String prestoSql, String expected) {
     try{
-      Statement statement = prestoParser.createStatement(prestoSql, new ParsingOptions());
+      Statement statement = prestoParser.createStatement(prestoSql);
       assertNotNull(statement);
     } catch (Exception e) {
       assertTrue(false, "Failed to parse sql: " + prestoSql);

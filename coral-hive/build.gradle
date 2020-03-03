@@ -2,7 +2,14 @@ apply plugin: 'java'
 apply plugin: 'maven-publish'
 
 dependencies {
-  compile deps.'coral-calcite'
+  compile('com.linkedin.calcite:calcite-core:1.21.1.0') {
+    artifact {
+      name = 'calcite-core'
+      extension = 'jar'
+      type = 'jar'
+      classifier = 'shaded'
+    }
+  }
 
   compile(deps.'hive'.'hive-metastore') {
     exclude group: 'com.linkedin.metastore-autometrics', module: 'autometrics-reporter'
