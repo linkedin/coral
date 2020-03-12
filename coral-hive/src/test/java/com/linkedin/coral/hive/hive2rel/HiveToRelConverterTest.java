@@ -137,6 +137,16 @@ public class HiveToRelConverterTest {
   }
 
   @Test
+  public void testTimestampConversion() {
+    final String sql = "SELECT cast(b AS timestamp) FROM complex";
+    String expected = String.join("\n",
+        "LogicalProject(EXPR$0=[CAST($1):TIMESTAMP])",
+        "  LogicalTableScan(table=[[hive, default, complex]])",
+        "");
+    assertEquals(relToString(sql), expected);
+  }
+
+  @Test
   public void testDaliUDFCall() {
     // TestUtils sets up this view with proper function parameters matching dali setup
     RelNode rel = converter.convertView("test", "tableOneView");

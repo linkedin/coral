@@ -74,7 +74,7 @@ public class HiveTypeSystem extends RelDataTypeSystemImpl {
       case VARBINARY:
       case TIME:
       case TIMESTAMP:
-        return getMaxPrecision(typeName);
+        return RelDataType.PRECISION_NOT_SPECIFIED;
       case CHAR:
         return DEFAULT_CHAR_PRECISION;
       case VARCHAR:
