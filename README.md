@@ -1,5 +1,8 @@
 # Coral
-![Coral logo](docs/coral-logo.png)
+<p align="center">
+ <img src="docs/coral-logo.png" width="400" title="Coral Logo">
+</p>
+
 **Coral** is a library for analyzing, processing, and rewriting views defined in the Hive Metastore, and sharing them 
 across multiple execution engines. It performs SQL translations to enable views expressed in HiveQL (and potentially 
 other languages) to be accessible in engines such as [Presto](https://prestodb.io/), 
