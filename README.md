@@ -1,23 +1,24 @@
 # Coral
-
-**Coral** performs SQL translations to enable views expressed in HiveQL (and potentially other languages) be accessible in engines such as [Presto](https://prestodb.io/), [Apache Spark](https://spark.apache.org/), and [Apache Pig](https://pig.apache.org/).
-
-## Why Coral?
-**Coral** provides several benefits:
-- Ensures the consistency and portability of business logic.
-- Enables native evaluation of datasets in various compute engines for better optimization.
-- Integrates natively with other open source projects such as [Transport UDF](https://github.com/linkedin/transport) for UDF portability.
-- Enables users with a repository of Hive views to immediately use those views in other engines.
+![Coral logo](docs/coral-logo.png)
+**Coral** is a library for analyzing, processing, and rewriting views defined in the Hive Metastore, and sharing them 
+across multiple execution engines. It performs SQL translations to enable views expressed in HiveQL (and potentially 
+other languages) to be accessible in engines such as [Presto](https://prestodb.io/), 
+[Apache Spark](https://spark.apache.org/), and [Apache Pig](https://pig.apache.org/).
+Coral not only translates view definitions between different SQL/non-SQL dialects, but also rewrites expressions to 
+produce semantically equivalent ones, taking into account the semantics of the target language or engine.
+For example, it automatically composes new built-in expressions that are equivalent to each built-in expression in the
+ source view definition. Additionally, it integrates with [Transport UDFs](https://github.com/linkedin/transport)
+to enable translating and executing user-defined functions (UDFs) across Hive, Presto, Spark, and Pig. Coral is under 
+active development. Currently, we are looking into expanding the set of input view language APIs beyond HiveQL, 
+and implementing query rewrite algorithms for data governance and query optimization.
 
 ## Modules
 **Coral** consists of following modules:
-- Coral-Hive: To convert Hive views with UDFs to standard intermediate representation (Coral IR) based on view logical plans.
-- Coral-Presto: To convert Coral IR to Presto SQL.
-- Coral-Spark: To convert Coral IR to Spark SQL.
-- Coral-Pig: To convert Coral IR to Pig scripts.
-- Coral-Schema: Derive avro schema of view using its Coral IR and input schemas of base tables.
-
-In the future, Coral will be extended to allow converting other SQL dialects (than HiveQL), or non-SQL views to Coral IR, allowing all target engines to execute view logic not necessarily expressed in SQL.
+- Coral-Hive: Converts definitions of Hive views with UDFs to equivalent view logical plan.
+- Coral-Presto: Converts view logical plan to Presto SQL.
+- Coral-Spark: Converts view logical plan to Spark SQL.
+- Coral-Pig: Converts view logical plan to Pig-latin.
+- Coral-Schema: Derives Avro schema of view using view logical plan and input Avro schemas of base tables.
 
 ## How to Build
 Clone the repository:
@@ -29,13 +30,9 @@ Build:
 ./gradlew build
 ```
 
-## How to Use
-How Coral integrates with various big data engine [TODO]
-
 ## Contributing
-Coral is under active development and we welcome contributions from the community.
-
-Please take a look at the [Contribution Agreement](CONTRIBUTING.md) if you'd like to contribute.
+The project is under active development and we welcome contributions of different forms. 
+Please see the [Contribution Agreement](CONTRIBUTING.md).
 
 ## Resources
-- Tech-talk: [Coral & Transport UDFs: Building Blocks of a Postmodern Data Warehouse](https://www.slideshare.net/walaa_eldin_moustafa/coral-transport-udfs-building-blocks-of-a-postmodern-data-warehouse-229545076)
+- [Coral & Transport UDFs: Building Blocks of a Postmodern Data Warehouse](https://www.slideshare.net/walaa_eldin_moustafa/coral-transport-udfs-building-blocks-of-a-postmodern-data-warehouse-229545076), Tech-talk, Facebook HQ, 2/28/2020.
