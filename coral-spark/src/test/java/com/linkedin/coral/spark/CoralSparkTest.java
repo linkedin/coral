@@ -356,6 +356,19 @@ public class CoralSparkTest {
     assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
   }
 
+  @Test
+  public void testSelectNullAs() {
+    RelNode relNode = TestUtils.toRelNode(String.join("\n", "",
+        "SELECT NULL AS alias",
+        "FROM complex"
+    ));
+    String targetSql = String.join("\n",
+        "SELECT NULL alias",
+        "FROM default.complex"
+    );
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+  }
+
   private List<String> convertToListOfUriStrings(List<URI> listOfUris) {
     List<String> listOfUriStrings = new LinkedList<>();
     for (URI uri : listOfUris) {
