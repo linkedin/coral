@@ -12,6 +12,8 @@ import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlUnnestOperator;
 import org.apache.calcite.sql.SqlWriter;
 import org.apache.calcite.sql.fun.SqlMultisetValueConstructor;
+import org.apache.calcite.sql.fun.SqlSubstringFunction;
+
 
 /**
  * This class represents the Spark SQL Dialect.
@@ -46,12 +48,34 @@ public class SparkSqlDialect extends SqlDialect {
   @Override
   public void unparseCall(SqlWriter writer, SqlCall call, int leftPrec, int rightPrec) {
     if (call.getOperator() instanceof SqlMultisetValueConstructor) {
-      unparseMapOrArray(writer, call, leftPrec, rightPrec);
+      unparseMapOrArray(writer, call);
     } else if (call.getOperator() instanceof SqlUnnestOperator) {
-      unparseUnnest(writer, call, leftPrec, rightPrec);
+      unparseUnnest(writer, call);
+    } else if (call.getOperator() instanceof SqlSubstringFunction) {
+      unparseSubstring(writer, call);
     } else {
       super.unparseCall(writer, call, leftPrec, rightPrec);
     }
+  }
+
+  /**
+   *  Default SQL operator for SUBSTRING(a, 1, 5)
+   *    unparses to "SUBSTRING(a FROM 1 FOR 5)"
+   *
+   *  SparkSQL doesn't support this translation
+   *  so the behaviour is overridden here with
+   *    "SUBSTRING(a, 1, 5)"
+   *
+   * */
+  private void unparseSubstring(SqlWriter writer, SqlCall call) {
+    writer.keyword("SUBSTRING");
+    final SqlWriter.Frame frame =
+        writer.startList(SqlWriter.FrameTypeEnum.FUN_CALL, "(", ")");
+    for (SqlNode operand : call.getOperandList()) {
+      writer.sep(",");
+      operand.unparse(writer, 0, 0);
+    }
+    writer.endList(frame);
   }
 
   /**
@@ -59,7 +83,7 @@ public class SparkSqlDialect extends SqlDialect {
    *
    *  Code referred from SqlFunctionalOperator.java
    * */
-  private void unparseUnnest(SqlWriter writer, SqlCall call, int leftPrec, int rightPrec) {
+  private void unparseUnnest(SqlWriter writer, SqlCall call) {
     writer.keyword("EXPLODE");
     final SqlWriter.Frame frame =
         writer.startList(SqlWriter.FrameTypeEnum.FUN_CALL, "(", ")");
@@ -76,14 +100,12 @@ public class SparkSqlDialect extends SqlDialect {
    * */
   private void unparseMapOrArray(
       SqlWriter writer,
-      SqlCall call,
-      int leftPrec,
-      int rightPrec) {
+      SqlCall call) {
     writer.keyword(call.getOperator().getName()); // "MULTISET" or "ARRAY"
     final SqlWriter.Frame frame = writer.startList("(", ")");
     for (SqlNode operand : call.getOperandList()) {
       writer.sep(",");
-      operand.unparse(writer, leftPrec, rightPrec);
+      operand.unparse(writer, 0, 0);
     }
     writer.endList(frame);
   }

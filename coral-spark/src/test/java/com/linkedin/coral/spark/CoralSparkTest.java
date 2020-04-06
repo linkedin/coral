@@ -369,6 +369,20 @@ public class CoralSparkTest {
     assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
   }
 
+  @Test
+  public void testSelectSubstring() {
+    RelNode relNode = TestUtils.toRelNode(String.join("\n", "",
+        "SELECT substring(b,1,2)",
+        "FROM complex"
+    ));
+    // Default operator SqlSubstringFunction would generate SUBSTRING(b FROM 1 for 2)
+    String targetSql = String.join("\n",
+        "SELECT SUBSTRING(b, 1, 2)",
+        "FROM default.complex"
+    );
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+  }
+
   private List<String> convertToListOfUriStrings(List<URI> listOfUris) {
     List<String> listOfUriStrings = new LinkedList<>();
     for (URI uri : listOfUris) {
