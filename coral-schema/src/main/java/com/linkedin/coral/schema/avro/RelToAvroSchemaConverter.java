@@ -211,8 +211,28 @@ public class RelToAvroSchemaConverter {
 
     @Override
     public RelNode visit(LogicalJoin logicalJoin) {
-      // TODO: implement this method
-      return super.visit(logicalJoin);
+      RelNode relNode = super.visit(logicalJoin);
+
+      Schema leftInputSchema = schemaMap.get(logicalJoin.getLeft());
+      Schema rightInputSchema = schemaMap.get(logicalJoin.getRight());
+
+      List<Schema.Field> leftInputSchemaFields = leftInputSchema.getFields();
+      List<Schema.Field> rightInputSchemaFields = rightInputSchema.getFields();
+
+      SchemaBuilder.FieldAssembler<Schema> logicalJoinFieldAssembler = SchemaBuilder.record(leftInputSchema.getName())
+          .namespace(leftInputSchema.getNamespace())
+          .fields();
+
+      for (int i = 0; i < leftInputSchemaFields.size(); i++) {
+          SchemaUtilities.appendField(leftInputSchemaFields.get(i), logicalJoinFieldAssembler);
+      }
+      for (int i = 0; i < rightInputSchemaFields.size(); i++) {
+        SchemaUtilities.appendField(rightInputSchemaFields.get(i), logicalJoinFieldAssembler);
+      }
+
+      schemaMap.put(logicalJoin, logicalJoinFieldAssembler.endRecord());
+
+      return relNode;
     }
 
     @Override

@@ -1,0 +1,51 @@
+{
+  "type" : "record",
+  "name" : "v",
+  "namespace" : "default.v",
+  "fields" : [ {
+    "name" : "Id",
+    "type" : "int"
+  }, {
+    "name" : "Struct_Col",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "Struct_col",
+      "namespace" : "default.v.v",
+      "fields" : [ {
+        "name" : "Bool_Field",
+        "type" : "boolean"
+      }, {
+        "name" : "Int_Field",
+        "type" : [ "null", "int" ],
+        "default" : null
+      }, {
+        "name" : "Bigint_Field",
+        "type" : "long"
+      }, {
+        "name" : "Float_Field",
+        "type" : [ "null", "float" ],
+        "default" : null
+      }, {
+        "name" : "Double_Field",
+        "type" : "double"
+      }, {
+        "name" : "Date_String_Field",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "String_Field",
+        "type" : [ "null", "string" ],
+        "default" : null
+      } ]
+    } ],
+    "default" : null
+  }, {
+    "name" : "Enum_Top_Col",
+    "type" : {
+      "type" : "enum",
+      "name" : "Enum_Top_col",
+      "namespace" : "default.v.v",
+      "symbols" : [ "Spark", "Pig", "Hive", "MR" ]
+    }
+  } ]
+}

@@ -332,6 +332,94 @@ public class ViewToAvroSchemaConverterTests {
         TestUtils.loadSchema("testMultipleLateralViewDifferentArrayType-expected.avsc"));
   }
 
+  @Test
+  public void testInnerJoin() {
+    String viewSql = "CREATE VIEW v AS "
+        + "SELECT bc.id, bc.struct_col, be.enum_top_col "
+        + "FROM basecomplex bc "
+        + "JOIN baseenum be ON bc.id = be.id "
+        + "WHERE bc.id > 0 AND bc.struct_col IS NOT NULL";
+
+    TestUtils.executeCreateViewQuery("default", "v", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v");
+
+    Assert.assertEquals(actualSchema.toString(true),
+        TestUtils.loadSchema("testJoin-expected.avsc"));
+
+  }
+
+  @Test
+  public void testLeftOuterJoin() {
+    String viewSql = "CREATE VIEW v AS "
+        + "SELECT bc.id, bc.struct_col, be.enum_top_col "
+        + "FROM basecomplex bc "
+        + "LEFT OUTER JOIN baseenum be ON bc.id = be.id "
+        + "WHERE bc.id > 0 AND bc.struct_col IS NOT NULL";
+
+    TestUtils.executeCreateViewQuery("default", "v", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v");
+
+    Assert.assertEquals(actualSchema.toString(true),
+        TestUtils.loadSchema("testJoin-expected.avsc"));
+
+  }
+
+  @Test
+  public void testRightOuterJoin() {
+    String viewSql = "CREATE VIEW v AS "
+        + "SELECT bc.id, bc.struct_col, be.enum_top_col "
+        + "FROM basecomplex bc "
+        + "RIGHT OUTER JOIN baseenum be ON bc.id = be.id "
+        + "WHERE bc.id > 0 AND bc.struct_col IS NOT NULL";
+
+    TestUtils.executeCreateViewQuery("default", "v", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v");
+
+    Assert.assertEquals(actualSchema.toString(true),
+        TestUtils.loadSchema("testJoin-expected.avsc"));
+
+  }
+
+  @Test
+  public void testFullOuterJoin() {
+    String viewSql = "CREATE VIEW v AS "
+        + "SELECT bc.id, bc.struct_col, be.enum_top_col "
+        + "FROM basecomplex bc "
+        + "FULL OUTER JOIN baseenum be ON bc.id = be.id "
+        + "WHERE bc.id > 0 AND bc.struct_col IS NOT NULL";
+
+    TestUtils.executeCreateViewQuery("default", "v", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v");
+
+    Assert.assertEquals(actualSchema.toString(true),
+        TestUtils.loadSchema("testJoin-expected.avsc"));
+  }
+
+  @Test
+  public void testSelfJoin() {
+    String viewSql = "CREATE VIEW v AS "
+        + "SELECT bc1.id, bc1.struct_col, bc2.array_col "
+        + "FROM basecomplex bc1 "
+        + "JOIN basecomplex bc2 ON bc1.id = bc2.id "
+        + "WHERE bc1.id > 0 AND bc1.struct_col IS NOT NULL";
+
+    TestUtils.executeCreateViewQuery("default", "v", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v");
+
+    Assert.assertEquals(actualSchema.toString(true),
+        TestUtils.loadSchema("testSelfJoin-expected.avsc"));
+  }
+
   // TODO: handle complex type (Array[Struct] in lateral view:  LIHADOOP-46695)
   @Test(enabled = false)
   public void testLateralViewArrayWithComplexType() {
@@ -367,11 +455,6 @@ public class ViewToAvroSchemaConverterTests {
 
   @Test
   public void testSubQueryWhere() {
-    // TODO: implement this test
-  }
-
-  @Test
-  public void testJoin() {
     // TODO: implement this test
   }
 
