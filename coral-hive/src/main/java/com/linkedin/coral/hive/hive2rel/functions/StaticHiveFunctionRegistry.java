@@ -378,6 +378,22 @@
      createAddUserDefinedFunction("com.linkedin.stdudfs.daliudfs.hive.PortalLookup",
          HiveReturnTypes.STRING, STRING_STRING);
      createAddUserDefinedFunction("com.linkedin.stdudfs.daliudfs.hive.Sanitize", HiveReturnTypes.STRING, STRING);
+     createAddUserDefinedFunction("com.linkedin.jemslookup.udf.hive.JemsLookup",
+         HiveReturnTypes.rowOfInference(ImmutableList.of("jobProductId", "jobProductName", "jobEntitlementIds",
+             "jobEntitlementNamesWithNamespace", "listingType", "subListingType"),
+             ImmutableList.of(HiveReturnTypes.BIGINT, HiveReturnTypes.STRING,
+                 HiveReturnTypes.arrayOfType(SqlTypeName.BIGINT), HiveReturnTypes.arrayOfType(SqlTypeName.VARCHAR),
+                 HiveReturnTypes.STRING, HiveReturnTypes.STRING)),
+         family(ImmutableList.of(SqlTypeFamily.NUMERIC, SqlTypeFamily.STRING, SqlTypeFamily.STRING,
+             SqlTypeFamily.STRING)));
+     createAddUserDefinedFunction("com.linkedin.stdudfs.userinterfacelookup.hive.UserInterfaceLookup",
+         HiveReturnTypes.STRING, or(family(Collections.nCopies(8, SqlTypeFamily.STRING)),
+             family(SqlTypeFamily.STRING, SqlTypeFamily.STRING, SqlTypeFamily.STRING, SqlTypeFamily.STRING, SqlTypeFamily.NUMERIC,
+                 SqlTypeFamily.STRING, SqlTypeFamily.STRING, SqlTypeFamily.STRING)));
+     createAddUserDefinedFunction("com.linkedin.stdudfs.parsing.hive.UserAgentParser",
+         HiveReturnTypes.STRING, family(Collections.nCopies(2, SqlTypeFamily.STRING)));
+     createAddUserDefinedFunction("com.linkedin.stdudfs.parsing.hive.Ip2Str",
+         HiveReturnTypes.STRING, or(family(SqlTypeFamily.STRING, SqlTypeFamily.NUMERIC, SqlTypeFamily.NUMERIC), family(SqlTypeFamily.STRING)));
 
      // This is a Hive Custom UDF which is a simplified version of 'date-converter' package.
      // This UDF is not converted to a transport UDF.

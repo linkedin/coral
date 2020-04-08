@@ -132,13 +132,27 @@ class TransportableUDFMap {
     add("com.linkedin.stdudfs.userinterfacelookup.hive.UserInterfaceLookup",
         "userInterfaceLookup",
         "com.linkedin.stdudfs.userinterfacelookup.spark.UserInterfaceLookup",
-        "ivy://com.linkedin.standard-udf-userinterfacelookup:userinterfacelookup-std-udf:0.0.8?classifier=spark");
+        "ivy://com.linkedin.standard-udf-userinterfacelookup:userinterfacelookup-std-udf:0.0.9?classifier=spark");
 
     add("com.linkedin.stdudfs.daliudfs.hive.WatBotCrawlerLookup",
         "watBotCrawlerLookup",
         "com.linkedin.stdudfs.daliudfs.spark.WatBotCrawlerLookup",
         STANDARD_UDFS_DALI_UDFS_URL);
 
+    add("com.linkedin.jemslookup.udf.hive.JemsLookup",
+        "jemsLookup",
+        "com.linkedin.jemslookup.udf.spark.JemsLookup",
+        "ivy://com.linkedin.jobs-udf:jems-udfs:0.0.1?classifier=spark");
+
+    add("com.linkedin.stdudfs.parsing.hive.UserAgentParser",
+        "userAgentParser",
+        "com.linkedin.stdudfs.parsing.spark.UserAgentParser",
+        "ivy://com.linkedin.standard-udfs-parsing:parsing-stdudfs:2.0.0?classifier=spark");
+
+    add("com.linkedin.stdudfs.parsing.hive.Ip2Str",
+        "ip2Str",
+        "com.linkedin.stdudfs.parsing.spark.Ip2Str",
+        "ivy://com.linkedin.standard-udfs-parsing:parsing-stdudfs:2.0.0?classifier=spark");
   }
 
   /**

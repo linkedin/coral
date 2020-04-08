@@ -37,6 +37,7 @@ public class HiveReturnTypes {
 
   public static final SqlReturnTypeInference STRING = ReturnTypes.explicit(SqlTypeName.VARCHAR);
   public static final SqlReturnTypeInference BINARY = ReturnTypes.explicit(SqlTypeName.BINARY);
+  public static final SqlReturnTypeInference BIGINT = ReturnTypes.explicit(SqlTypeName.BIGINT);
 
   public static final SqlReturnTypeInference ARRAY_OF_STR_STR_MAP = new SqlReturnTypeInference() {
     @Override
@@ -78,6 +79,26 @@ public class HiveReturnTypes {
         RelDataTypeFactory typeFactory = opBinding.getTypeFactory();
         List<RelDataType> relTypes = types.stream()
             .map(typeFactory::createSqlType)
+            .collect(Collectors.toList());
+        return typeFactory.createStructType(relTypes, fieldNames);
+      }
+    };
+  }
+
+  /**
+   * Creates a row type given the field names and {@link SqlReturnTypeInference} of the fields.
+   *
+   * This method is useful to create row types whose fields are complex types and hence cannot be represented through
+   * {@link SqlTypeName}s to be used in {@link #rowOf(ImmutableList, ImmutableList)}
+   */
+  public static SqlReturnTypeInference rowOfInference(ImmutableList<String> fieldNames,
+      ImmutableList<SqlReturnTypeInference> types) {
+    return new SqlReturnTypeInference() {
+      @Override
+      public RelDataType inferReturnType(SqlOperatorBinding opBinding) {
+        RelDataTypeFactory typeFactory = opBinding.getTypeFactory();
+        List<RelDataType> relTypes = types.stream()
+            .map(t -> t.inferReturnType(opBinding))
             .collect(Collectors.toList());
         return typeFactory.createStructType(relTypes, fieldNames);
       }
