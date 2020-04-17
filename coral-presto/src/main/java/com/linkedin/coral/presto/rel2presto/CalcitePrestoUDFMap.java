@@ -67,9 +67,20 @@ public class CalcitePrestoUDFMap {
     createUDFMapEntry(UDF_MAP, hiveToCalciteOp("from_unixtime"), 2, "unixtime_to_str");
 
     // DALI functions
-    // This may not work for all but works for now...
+    // Most "com.linkedin..." UDFs follow convention of having UDF names mapped from their class name by converting
+    // the classname to LOWER_UNDERSCORE. For example: For class name IsGuestMemberId, the conventional udf name would
+    // be is_guest_member_id.
+    // While this convention fits most UDFs it doesn't fit all. With the following mapping we override the conventional
+    // UDF name mapping behavior to a hardcoded one.
+    // For example instead of UserAgentParser getting mapped to user_agent_parser, we mapped it here to useragentparser
     createUDFMapEntry(UDF_MAP, daliToCalciteOp("com.linkedin.dali.udf.watbotcrawlerlookup.hive.WATBotCrawlerLookup"),
         3, "wat_bot_crawler_lookup");
+    createUDFMapEntry(UDF_MAP, daliToCalciteOp("com.linkedin.stdudfs.parsing.hive.Ip2Str"),
+        1, "ip2str");
+    createUDFMapEntry(UDF_MAP, daliToCalciteOp("com.linkedin.stdudfs.parsing.hive.Ip2Str"),
+        3, "ip2str");
+    createUDFMapEntry(UDF_MAP, daliToCalciteOp("com.linkedin.stdudfs.parsing.hive.UserAgentParser"),
+        2, "useragentparser");
     addDaliUDFs();
   }
 
@@ -77,8 +88,7 @@ public class CalcitePrestoUDFMap {
     ImmutableMultimap<String, HiveFunction> registry = HIVE_REGISTRY.getRegistry();
     Converter<String, String> caseConverter = CaseFormat.UPPER_CAMEL.converterTo(CaseFormat.LOWER_UNDERSCORE);
     for (Map.Entry<String, HiveFunction> entry : registry.entries()) {
-      if (!entry.getKey().startsWith("com.linkedin")
-          || entry.getKey().contains("WATBotCrawlerLookup")) {
+      if (!entry.getKey().startsWith("com.linkedin")) {
         continue;
       }
       String[] nameSplit = entry.getKey().split("\\.");
@@ -87,7 +97,9 @@ public class CalcitePrestoUDFMap {
       String funcName = caseConverter.convert(className);
       SqlOperator op = entry.getValue().getSqlOperator();
       for (int i = op.getOperandCountRange().getMin(); i <= op.getOperandCountRange().getMax(); i++) {
-        createUDFMapEntry(UDF_MAP, op, i, funcName);
+        if (!isDaliUDFAlreadyAdded(entry.getKey(), i)) {
+          createUDFMapEntry(UDF_MAP, op, i, funcName);
+        }
       }
     }
   }
@@ -100,6 +112,10 @@ public class CalcitePrestoUDFMap {
    */
   public static UDFTransformer getUDFTransformer(String calciteOpName, int numOperands) {
     return UDF_MAP.get(getKey(calciteOpName, numOperands));
+  }
+
+  private static Boolean isDaliUDFAlreadyAdded(String classString, int numOperands) {
+    return getUDFTransformer(classString, numOperands) != null;
   }
 
   private static SqlOperator hiveToCalciteOp(String functionName) {

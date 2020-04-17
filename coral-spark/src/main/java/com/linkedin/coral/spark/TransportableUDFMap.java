@@ -147,12 +147,12 @@ class TransportableUDFMap {
     add("com.linkedin.stdudfs.parsing.hive.UserAgentParser",
         "userAgentParser",
         "com.linkedin.stdudfs.parsing.spark.UserAgentParser",
-        "ivy://com.linkedin.standard-udfs-parsing:parsing-stdudfs:2.0.0?classifier=spark");
+        "ivy://com.linkedin.standard-udfs-parsing:parsing-stdudfs:2.0.1?classifier=spark");
 
     add("com.linkedin.stdudfs.parsing.hive.Ip2Str",
         "ip2Str",
         "com.linkedin.stdudfs.parsing.spark.Ip2Str",
-        "ivy://com.linkedin.standard-udfs-parsing:parsing-stdudfs:2.0.0?classifier=spark");
+        "ivy://com.linkedin.standard-udfs-parsing:parsing-stdudfs:2.0.1?classifier=spark");
   }
 
   /**
