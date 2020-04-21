@@ -53,6 +53,7 @@ public class CalcitePrestoUDFMap {
     createUDFMapEntry(UDF_MAP, hiveToCalciteOp("unbase64"), 1, "from_base64");
     createUDFMapEntry(UDF_MAP, hiveToCalciteOp("hex"), 1, "to_hex");
     createUDFMapEntry(UDF_MAP, hiveToCalciteOp("unhex"), 1, "from_hex");
+    createUDFMapEntry(UDF_MAP, hiveToCalciteOp("array_contains"), 2, "contains");
     createUDFMapEntry(UDF_MAP, hiveToCalciteOp("regexp_extract"), 3, "regexp_extract",
        "[{\"input\": 1}, {\"op\": \"hive_pattern_to_presto\", \"operands\":[{\"input\": 2}]}, {\"input\": 3}]",
         null);
