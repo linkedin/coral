@@ -127,7 +127,8 @@ public class ParseTreeBuilderTest {
   @DataProvider(name = "validateSql")
   public Object[][] getValidateSql(){
     return new Object[][]{
-        {"SELECT cast(a as binary) from foo", "SELECT cast(`a` as varbinary) from `foo`"},
+        // hive doesn't support casting as varbinary
+        {"SELECT cast(a as binary) from foo", "SELECT cast(`a` as binary) from `foo`"},
         {"SELECT cast(a as string) from foo", "SELECT cast(`a` as varchar) from `foo`"},
         {"SELECT a, c from foo union all select x, y from bar",
             "SELECT * FROM (SELECT `a`, `c` from `foo` union all SELECT `x`, `y` from `bar`) as `_u1`"},

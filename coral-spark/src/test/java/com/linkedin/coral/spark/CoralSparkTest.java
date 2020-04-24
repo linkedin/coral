@@ -383,6 +383,21 @@ public class CoralSparkTest {
     assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
   }
 
+  @Test
+  public void testCastAsBinary() {
+    RelNode relNode = TestUtils.toRelNode(String.join("\n", "",
+        "SELECT CAST(NULL AS BINARY)",
+        "FROM complex"
+    ));
+    // without fix in CORAL-120 the default translation is CAST(NULL AS VARBINARY)
+    // which is not supported in Spark
+    String targetSql = String.join("\n",
+        "SELECT CAST(NULL AS BINARY)",
+        "FROM default.complex"
+    );
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+  }
+
   private List<String> convertToListOfUriStrings(List<URI> listOfUris) {
     List<String> listOfUriStrings = new LinkedList<>();
     for (URI uri : listOfUris) {

@@ -654,7 +654,7 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
 
   @Override
   protected SqlNode visitBinary(ASTNode node, ParseContext ctx) {
-    return createBasicTypeSpec(SqlTypeName.VARBINARY);
+    return createBasicTypeSpec(SqlTypeName.BINARY);
   }
 
   @Override
