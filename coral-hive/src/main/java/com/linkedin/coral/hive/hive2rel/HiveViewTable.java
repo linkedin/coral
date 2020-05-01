@@ -14,6 +14,7 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelRoot;
 import org.apache.calcite.rel.core.RelFactories;
 import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexNode;
@@ -63,7 +64,8 @@ public class HiveViewTable extends HiveTable implements TranslatableTable {
     Preconditions.checkNotNull(projectFactory);
 
     RelDataType rowType = rel.getRowType();
-    if (isRowCastRequired(rowType, castRowType)) {
+    RelDataTypeFactory typeFactory = rel.getCluster().getTypeFactory();
+    if (isRowCastRequired(rowType, castRowType, typeFactory)) {
       final RexBuilder rexBuilder = rel.getCluster().getRexBuilder();
       final List<RexNode> castExps = RexUtil.generateCastExpressions(rexBuilder, castRowType, rowType);
       return projectFactory.createProject(rel, castExps, rowType.getFieldNames());
@@ -75,7 +77,7 @@ public class HiveViewTable extends HiveTable implements TranslatableTable {
   // [LIHADOOP-34428]: Hive-based Dali readers allow extra fields on struct type columns to flow through. We
   // try to match that behavior. Hive-based Dali readers do not allow top level columns to flow through
   // Returns true if an explicit cast is required from rowType to castRowType, false otherwise
-  private static boolean isRowCastRequired(RelDataType rowType, RelDataType castRowType) {
+  private static boolean isRowCastRequired(RelDataType rowType, RelDataType castRowType, RelDataTypeFactory typeFactory) {
     if (rowType == castRowType) {
       return false;
     }
@@ -84,15 +86,19 @@ public class HiveViewTable extends HiveTable implements TranslatableTable {
     if (relFields.size() != castFields.size()) {
       return true;
     }
-    return !isRelStructAllowed(relFields, castFields);
+    // the following method will return false if the schema evolution is backward compatible.
+    // i.e., when new fields are inserted to the middle or appended to the end of the field list.
+    return isFieldListCastRequired(relFields, castFields, typeFactory);
   }
 
-  // Returns true if an explicit cast is required from relDataType to castDataType, false otherwise
-  private static boolean isFieldCastRequired(RelDataType relDataType, RelDataType castDataType) {
-    if (relDataType == castDataType) {
+  // Returns true if an explicit cast is required from inputType to castToType, false otherwise
+  // From what we noticed, cast will be required when there's schema promotion
+  private static boolean isTypeCastRequired(RelDataType inputType, RelDataType castToType,
+      RelDataTypeFactory typeFactory) {
+    if (inputType == castToType) {
       return false;
     }
-    if (relDataType.getSqlTypeName() == ANY || castDataType.getSqlTypeName() == ANY) {
+    if (inputType.getSqlTypeName() == ANY || castToType.getSqlTypeName() == ANY) {
       return false;
     }
     // Hive has string type which is varchar(65k). This results in lot of redundant
@@ -100,42 +106,74 @@ public class HiveViewTable extends HiveTable implements TranslatableTable {
     // Also, all projections of string literals are of type CHAR but the hive schema
     // may mark that column as string. This again results in unnecessary cast operations.
     // We avoid all these casts
-    if ((relDataType.getSqlTypeName() == CHAR || relDataType.getSqlTypeName() == VARCHAR)
-        && castDataType.getSqlTypeName() == VARCHAR) {
+    if ((inputType.getSqlTypeName() == CHAR || inputType.getSqlTypeName() == VARCHAR)
+        && castToType.getSqlTypeName() == VARCHAR) {
       return false;
     }
 
     // Make sure both source and target has same root SQL Type
-    if (relDataType.getSqlTypeName() != castDataType.getSqlTypeName()) {
+    if (inputType.getSqlTypeName() != castToType.getSqlTypeName()) {
       return true;
     }
 
-    switch (relDataType.getSqlTypeName()) {
+    // Calcite gets the castToType from the view schema, and it's nullable by default, but the inputType
+    // is inferred from the view sql and for some columns where functions like named_strcut, ISNULL are applied,
+    // calcite will set the inputType to be non-nullable. Thus it generates unnecessary cast operators.
+    // we should ignore the nullability check when deciding whether to do field casting
+    RelDataType nullableFieldDataType = typeFactory.createTypeWithNullability(inputType, true);
+    switch (inputType.getSqlTypeName()) {
       case ARRAY:
-        return isFieldCastRequired(relDataType.getComponentType(), castDataType.getComponentType());
+        return isTypeCastRequired(inputType.getComponentType(), castToType.getComponentType(), typeFactory);
       case MAP:
-        return isFieldCastRequired(relDataType.getKeyType(), castDataType.getKeyType())
-            || isFieldCastRequired(relDataType.getValueType(), relDataType.getValueType());
+        return isTypeCastRequired(inputType.getKeyType(), castToType.getKeyType(), typeFactory)
+            || isTypeCastRequired(inputType.getValueType(), inputType.getValueType(), typeFactory);
       case ROW:
-        return !isRelStructAllowed(relDataType.getFieldList(), castDataType.getFieldList());
+        return isFieldListCastRequired(inputType.getFieldList(), castToType.getFieldList(), typeFactory);
       default:
-        return !relDataType.equals(castDataType);
+        return !nullableFieldDataType.equals(castToType);
     }
   }
 
-  private static boolean isRelStructAllowed(List<RelDataTypeField> relFields, List<RelDataTypeField> castFields) {
-    if (relFields.size() < castFields.size()) {
-      return false;
+  /**
+   * The method will check if the inputFields has to be casted to castToFields.
+   *
+   * e.g.
+   * (1) if castToFields = List(f1, f3), inputFields = List(f1, f2, f3), then return false.
+   * (2) if castToFields = List(f1, f3), inputFields = List(f1, f3, f4), then return false.
+   * (3) if castToFields = List(f1, f3), inputFields = List(f1, f4), then return true.
+   *
+   * @param inputFields a list of RelDataTypeField to cast from if required.
+   * @param castToFields a list of RelDataTypeField to cast to if required.
+   *
+   * @return if a CAST operator will be generated from inputFields to castToFields
+   */
+  private static boolean isFieldListCastRequired(List<RelDataTypeField> inputFields, List<RelDataTypeField> castToFields,
+      RelDataTypeFactory typeFactory) {
+    if (inputFields.size() < castToFields.size()) {
+      return true;
     }
 
-    for (int i = 0; i < castFields.size(); i++) {
-      RelDataTypeField relField = relFields.get(i);
-      RelDataTypeField castField = castFields.get(i);
-      if (isFieldCastRequired(relField.getType(), castField.getType())) {
-        return false;
+    int inputIndex = 0;
+    int inputFieldsSize = inputFields.size();
+    for (int i = 0; i < castToFields.size(); i++) {
+      RelDataTypeField castToField = castToFields.get(i);
+      while (inputIndex < inputFieldsSize) {
+        RelDataTypeField inputField = inputFields.get(inputIndex);
+        if (inputField.getName().equalsIgnoreCase(castToField.getName())) {
+          if (isTypeCastRequired(inputField.getType(), castToField.getType(), typeFactory)) {
+            return true;
+          }
+          break;
+        } else {
+          ++inputIndex;
+        }
+      }
+      // If there's no match for a field in castToFields to inputFields
+      if (inputIndex++ >= inputFieldsSize) {
+        return true;
       }
     }
-    return true;
+    return false;
   }
 }
 

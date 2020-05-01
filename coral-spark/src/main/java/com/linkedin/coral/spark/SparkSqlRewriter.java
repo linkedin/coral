@@ -6,12 +6,14 @@
 package com.linkedin.coral.spark;
 
 import com.linkedin.coral.spark.dialect.SparkSqlDialect;
+import org.apache.calcite.sql.SqlArrayTypeSpec;
 import org.apache.calcite.sql.SqlBasicTypeNameSpec;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlDataTypeSpec;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlRowTypeSpec;
+import org.apache.calcite.sql.SqlTypeNameSpec;
 import org.apache.calcite.sql.SqlUtil;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.SqlTypeName;
@@ -72,21 +74,26 @@ public class SparkSqlRewriter extends SqlShuttle {
   @Override
   public SqlNode visit(SqlDataTypeSpec type) {
     // Spark Sql Types are listed here: https://spark.apache.org/docs/latest/sql-reference.html
-    assert type.getTypeNameSpec() instanceof SqlBasicTypeNameSpec;
-    final SqlBasicTypeNameSpec typeNameSpec = (SqlBasicTypeNameSpec) type.getTypeNameSpec();
-    final SqlParserPos parserPos = type.getParserPosition();
-    switch (type.getTypeName().toString()) {
-      case "VARCHAR":
-        final SqlBasicTypeNameSpec stringTypeName = new SqlBasicTypeNameSpec(
-            "STRING",
-            SqlTypeName.VARCHAR,
-            -1,
-            typeNameSpec.getScale(),
-            typeNameSpec.getCharSetName(),
-            parserPos);
-        return new SqlDataTypeSpec(stringTypeName, type.getTimeZone(), parserPos);
-      default:
-        return type;
+    SqlTypeNameSpec typeNameSpec = type.getTypeNameSpec();
+    if (typeNameSpec instanceof SqlBasicTypeNameSpec) {
+      final SqlBasicTypeNameSpec basicTypeNameSpec = (SqlBasicTypeNameSpec) typeNameSpec;
+      final SqlParserPos parserPos = type.getParserPosition();
+      switch (type.getTypeName().toString()) {
+        case "VARCHAR":
+          final SqlBasicTypeNameSpec stringTypeName =
+              new SqlBasicTypeNameSpec("STRING", SqlTypeName.VARCHAR, -1,
+                  basicTypeNameSpec.getScale(), basicTypeNameSpec.getCharSetName(), parserPos);
+          return new SqlDataTypeSpec(stringTypeName, type.getTimeZone(), parserPos);
+        default:
+          return type;
+      }
+    } else if (type instanceof SqlArrayTypeSpec) {
+      final SqlParserPos parserPos = type.getParserPosition();
+      SqlDataTypeSpec componentSpec = type.getComponentTypeSpec();
+      SqlDataTypeSpec revisedSpec = (SqlDataTypeSpec) visit(componentSpec);
+      return new SqlArrayTypeSpec(revisedSpec, type.getNullable(), parserPos);
+    } else {
+      return type;
     }
   }
 }

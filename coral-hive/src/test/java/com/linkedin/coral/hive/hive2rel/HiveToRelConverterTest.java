@@ -276,6 +276,29 @@ public class HiveToRelConverterTest {
     assertEquals(relToHql(rel), expectedSql);
   }
 
+  // Should not generate case operator for functions like IS NULL -- the nullability check should be ignored
+  @Test
+  public void testNonNullFunctionView() {
+    final String sql = "SELECT * from null_check_wrapper";
+    RelNode rel = toRel(sql);
+    final String expectedRel = "LogicalProject(a=[$0], b_isnull=[IS NULL($1)])\n"
+        + "  LogicalTableScan(table=[[hive, default, foo]])\n";
+    assertEquals(relToStr(rel), expectedRel);
+    final String expectedSql = "SELECT a, b IS NULL b_isnull\n"
+        + "FROM hive.default.foo";
+    assertEquals(relToHql(rel), expectedSql);
+  }
+
+  // Should not generate case operator for schema evolution happening in the middle of a struct
+  @Test
+  public void testSchemaEvolvedInMiddleView() {
+    final String sql = "SELECT * from view_schema_evolve_wrapper";
+    RelNode rel = toRel(sql);
+    final String expectedSql = "SELECT *\n"
+        + "FROM hive.default.schema_evolve";
+    assertEquals(relToHql(rel), expectedSql);
+  }
+
   private String relToString(String sql) {
     return RelOptUtil.toString(converter.convertSql(sql));
   }

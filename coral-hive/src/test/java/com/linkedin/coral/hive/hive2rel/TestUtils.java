@@ -126,6 +126,15 @@ public class TestUtils {
       driver.run("CREATE VIEW IF NOT EXISTS foo_view AS SELECT b as bcol, sum(c) as sum_c from foo group by b");
       driver.run(
           "CREATE TABLE IF NOT EXISTS complex(a int, b string, c array<double>, s struct<name:string, age:int>, m map<string, string>, sarr array<struct<name:string, age:int>>)");
+
+      driver.run("CREATE VIEW IF NOT EXISTS null_check_view AS SELECT a, ISNULL(b) as b_isnull FROM foo");
+      driver.run("CREATE VIEW IF NOT EXISTS null_check_wrapper AS SELECT * FROM null_check_view");
+
+      driver.run("CREATE TABLE IF NOT EXISTS schema_evolve(a int, b array<struct<b1:string, b3:int>>)");
+      driver.run("CREATE VIEW IF NOT EXISTS view_schema_evolve AS SELECT * from schema_evolve");
+      driver.run("CREATE VIEW IF NOT EXISTS view_schema_evolve_wrapper AS SELECT * from view_schema_evolve");
+      driver.run("ALTER TABLE schema_evolve CHANGE COLUMN b b array<struct<b1:string, b2:double, b3:int>>");
+
       CommandProcessorResponse response = driver.run("create function test_tableOneView_LessThanHundred as 'com.linkedin.coral.hive.hive2rel.CoralTestUDF'");
       response = driver.run("CREATE VIEW IF NOT EXISTS test.tableOneView as SELECT test_tableOneView_LessThanHundred(a) from test.tableOne");
       if (response.getResponseCode() != 0) {
@@ -133,7 +142,9 @@ public class TestUtils {
       }
       testHive.databases = ImmutableList.of(
           new TestHive.DB("test", ImmutableList.of("tableOne", "tableTwo", "tableOneView")),
-          new TestHive.DB("default", ImmutableList.of("foo", "bar", "complex", "foo_view")),
+          new TestHive.DB("default", ImmutableList.of("bar", "complex", "foo", "foo_view",
+              "null_check_view", "null_check_wrapper", "schema_evolve", "view_schema_evolve",
+              "view_schema_evolve_wrapper")),
           new TestHive.DB("fuzzy_union", ImmutableList.of("tableA", "tableB", "tableC",
               "union_view", "union_view_with_more_than_two_tables", "union_view_with_alias",
               "union_view_single_branch_evolved", "union_view_double_branch_evolved_different",

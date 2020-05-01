@@ -292,7 +292,18 @@ public class TestUtils {
     run(driver, String.join("\n", "",
         "ALTER TABLE fuzzy_union.tableL CHANGE COLUMN b b struct<b1:string, b2:struct<b3:string, b4:struct<b5:string, b6:string>>>"
     ));
-
+    run(driver, String.join("\n", "",
+        "CREATE TABLE IF NOT EXISTS schema_promotion(a int, b array<int>)"
+    ));
+    run(driver, String.join("\n", "",
+        "CREATE VIEW IF NOT EXISTS view_schema_promotion AS SELECT * from schema_promotion"
+    ));
+    run(driver, String.join("\n", "",
+        "CREATE VIEW IF NOT EXISTS view_schema_promotion_wrapper AS SELECT * from view_schema_promotion"
+    ));
+    run(driver, String.join("\n", "",
+        "ALTER TABLE schema_promotion CHANGE COLUMN b b array<double>"
+    ));
   }
 
   public static RelNode toRelNode(String db, String view) {

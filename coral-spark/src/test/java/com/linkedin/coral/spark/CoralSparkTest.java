@@ -398,6 +398,19 @@ public class CoralSparkTest {
     assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
   }
 
+  @Test
+  public void testSchemaPromotionView() {
+    RelNode relNode = TestUtils.toRelNode(String.join("\n", "",
+        "SELECT * ",
+        "FROM view_schema_promotion_wrapper"
+    ));
+    String targetSql = String.join("\n",
+        "SELECT a, CAST(b AS ARRAY<INTEGER>) b",
+        "FROM default.schema_promotion"
+    );
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+  }
+
   private List<String> convertToListOfUriStrings(List<URI> listOfUris) {
     List<String> listOfUriStrings = new LinkedList<>();
     for (URI uri : listOfUris) {
