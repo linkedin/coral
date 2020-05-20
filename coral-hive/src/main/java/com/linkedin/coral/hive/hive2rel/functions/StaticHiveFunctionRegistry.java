@@ -379,11 +379,11 @@
          HiveReturnTypes.STRING, STRING_STRING);
      createAddUserDefinedFunction("com.linkedin.stdudfs.daliudfs.hive.Sanitize", HiveReturnTypes.STRING, STRING);
      createAddUserDefinedFunction("com.linkedin.jemslookup.udf.hive.JemsLookup",
-         HiveReturnTypes.rowOfInference(ImmutableList.of("jobProductId", "jobProductName", "jobEntitlementIds",
-             "jobEntitlementNamesWithNamespace", "listingType", "subListingType"),
+         HiveReturnTypes.rowOfInference(ImmutableList.of("jobproductid", "jobproductname", "jobentitlementids",
+             "jobentitlementnameswithnamespace", "listingtype", "sublistingtype", "istestjob"),
              ImmutableList.of(HiveReturnTypes.BIGINT, HiveReturnTypes.STRING,
                  HiveReturnTypes.arrayOfType(SqlTypeName.BIGINT), HiveReturnTypes.arrayOfType(SqlTypeName.VARCHAR),
-                 HiveReturnTypes.STRING, HiveReturnTypes.STRING)),
+                 HiveReturnTypes.STRING, HiveReturnTypes.STRING, HiveReturnTypes.STRING)),
          family(ImmutableList.of(SqlTypeFamily.NUMERIC, SqlTypeFamily.STRING, SqlTypeFamily.STRING,
              SqlTypeFamily.STRING)));
      createAddUserDefinedFunction("com.linkedin.stdudfs.userinterfacelookup.hive.UserInterfaceLookup",
