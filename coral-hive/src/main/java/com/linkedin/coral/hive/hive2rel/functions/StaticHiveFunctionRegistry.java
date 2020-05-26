@@ -351,7 +351,8 @@
          HiveReturnTypes.STRING, family(SqlTypeFamily.MAP, SqlTypeFamily.STRING, SqlTypeFamily.STRING));
      createAddUserDefinedFunction("com.linkedin.dali.udf.monarch.UrnGenerator", HiveReturnTypes.STRING, VARIADIC);
      createAddUserDefinedFunction("com.linkedin.dali.udf.genericlookup.hive.GenericLookup",
-         HiveReturnTypes.STRING, ANY);
+         HiveReturnTypes.STRING, or(family(SqlTypeFamily.STRING, SqlTypeFamily.STRING, SqlTypeFamily.STRING, SqlTypeFamily.ANY, SqlTypeFamily.ANY),
+             family(SqlTypeFamily.STRING, SqlTypeFamily.STRING, SqlTypeFamily.STRING, SqlTypeFamily.ANY, SqlTypeFamily.ANY, SqlTypeFamily.ANY)));
      createAddUserDefinedFunction("com.linkedin.tscp.reporting.dali.udfs.UrnToID",
          HiveReturnTypes.STRING, STRING);
 
