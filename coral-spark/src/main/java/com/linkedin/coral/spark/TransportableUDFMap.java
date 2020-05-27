@@ -142,7 +142,7 @@ class TransportableUDFMap {
     add("com.linkedin.jemslookup.udf.hive.JemsLookup",
         "jemsLookup",
         "com.linkedin.jemslookup.udf.spark.JemsLookup",
-        "ivy://com.linkedin.jobs-udf:jems-udfs:0.0.1?classifier=spark");
+        "ivy://com.linkedin.jobs-udf:jems-udfs:1.0.0?classifier=spark");
 
     add("com.linkedin.stdudfs.parsing.hive.UserAgentParser",
         "userAgentParser",
