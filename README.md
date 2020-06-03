@@ -5,7 +5,7 @@
 
 **Coral** is a library for analyzing, processing, and rewriting views defined in the Hive Metastore, and sharing them 
 across multiple execution engines. It performs SQL translations to enable views expressed in HiveQL (and potentially 
-other languages) to be accessible in engines such as [Presto](https://prestodb.io/), 
+other languages) to be accessible in engines such as [Presto](https://prestosql.io/),
 [Apache Spark](https://spark.apache.org/), and [Apache Pig](https://pig.apache.org/).
 Coral not only translates view definitions between different SQL/non-SQL dialects, but also rewrites expressions to 
 produce semantically equivalent ones, taking into account the semantics of the target language or engine.
