@@ -21,7 +21,7 @@ import org.apache.calcite.rel.RelNode;
  * Use `process` to get an instance of  CoralSparkInfo, which contains
  *  1) Spark SQL
  *  2) Base tables
- *  3) Spark UDF information objects, ie. List<SparkUDFInfo>
+ *  3) Spark UDF information objects, ie. List&lt;SparkUDFInfo&gt;
  *
  * This class converts a IR RelNode to a Spark SQL by
  *  1) Transforming it to a Spark RelNode with Spark details [[IRRelToSparkRelTransformer]]
@@ -51,7 +51,7 @@ public class CoralSpark {
    * It returns an instance of CoralSpark which contains
    *  1) Spark SQL
    *  2) Base tables
-   *  3) Spark UDF information objects, ie. List<SparkUDFInfo>
+   *  3) Spark UDF information objects, ie. List&lt;SparkUDFInfo&gt;
    *
    * @param irRelNode A IR RelNode for which CoralSpark will be constructed.
    *
@@ -111,7 +111,7 @@ public class CoralSpark {
   /**
    * Getter for list of base tables in the format "database_name.table_name".
    *
-   * @return List<String> : List of base table strings.
+   * @return List of base table strings.
    */
   public List<String> getBaseTables() {
     return baseTables;
@@ -121,7 +121,7 @@ public class CoralSpark {
    * Getter for Spark UDF information list:
    * Additional information required to use an UDF (for details, read [[SparkUDFInfo]])
    *
-   * @return List<SparkUDFInfo> : List of Spark UDF information
+   * @return List of Spark UDF information
    */
   public List<SparkUDFInfo> getSparkUDFInfoList() {
     return sparkUDFInfoList;
@@ -133,7 +133,7 @@ public class CoralSpark {
    * A SQL statement is 'completely expanded' if it doesn't depend
    * on (or selects from) Hive views, but instead, just on base tables.
    *
-   * @return String : SQL string in HiveQL dialect which is 'completely expanded'
+   * @return SQL string in HiveQL dialect which is 'completely expanded'
    */
   public String getSparkSql() {
     return sparkSql;

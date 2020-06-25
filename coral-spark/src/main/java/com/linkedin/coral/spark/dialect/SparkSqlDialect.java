@@ -121,7 +121,7 @@ public class SparkSqlDialect extends SqlDialect {
    *  Otherwise data types are accompanied with character sets
    *
    *  For ex:
-   *  @code VARCHAR(30) CHARACTER SET `ISO-8859-1`
+   *  VARCHAR(30) CHARACTER SET `ISO-8859-1`
    *
    * */
   @Override

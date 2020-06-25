@@ -19,7 +19,7 @@ package com.linkedin.coral.pig.rel2pig;
  *
  * In this case, we could define a TableToPigPathFunction as:
  *   TableToPigPathFunction func =
- *     (String db, String table) -> String.format("dalids:///%s.%s", db, table);
+ *     (String db, String table) -&gt; String.format("dalids:///%s.%s", db, table);
  */
 @FunctionalInterface
 public interface TableToPigPathFunction {

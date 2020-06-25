@@ -41,7 +41,7 @@ public class ViewToAvroSchemaConverter {
   /**
    * Use this method to create a new instance of ViewToAvroSchemaConverter
    *
-   * @param hiveMetastoreClient
+   * @param hiveMetastoreClient hiveMetastoreClient to connect to metastore
    * @return an instance of ViewToAvroSchemaConverter
    */
   public static ViewToAvroSchemaConverter create(HiveMetastoreClient hiveMetastoreClient) {
@@ -51,8 +51,8 @@ public class ViewToAvroSchemaConverter {
   /**
    * This is the main API to generate the avro schema for a given Dali view
    *
-   * @param dbName
-   * @param tableOrViewName
+   * @param dbName database name used to generate Avro schema
+   * @param tableOrViewName table or view to generate Avro schema
    * @return avro schema for a given Dali view [dbName, viewName]
    */
   public Schema toAvroSchema(String dbName, String tableOrViewName) {

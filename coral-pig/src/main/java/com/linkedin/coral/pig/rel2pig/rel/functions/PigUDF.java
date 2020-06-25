@@ -77,9 +77,9 @@ public class PigUDF extends Function {
    * Transforms a UDF call represented as a RexCall to a target language.
    *
    * The expression of the RexCall will be produced by a pipelined sequence as follows:
-   *     translateOperands -> Returns a comma separated list of operands (OPERANDS_STR)
-   *     translateFunctionName -> Returns the Pig Latin name for the operator in the RexCall (FUNCTION_STR)
-   *     translateFunctionCallOutput -> Returns the Pig Latin on operations after the function call with the
+   *     translateOperands -&gt; Returns a comma separated list of operands (OPERANDS_STR)
+   *     translateFunctionName -&gt; Returns the Pig Latin name for the operator in the RexCall (FUNCTION_STR)
+   *     translateFunctionCallOutput -&gt; Returns the Pig Latin on operations after the function call with the
    *                                    function call string passed as an input
    *
    * @param rexCall RexCall to be transformed
@@ -104,6 +104,8 @@ public class PigUDF extends Function {
    * Generates the Pig Latin to define the functions needed for the given rexCall.
    *
    * @param rexCall RexCall representing the function
+   * @param inputFieldNames List-index based mapping from Calcite index reference to field names of
+   *                        the input of the given RexCall.
    * @return List of Pig DEFINE statements needed for the Function.
    *         For example, to use the 'explode' function in Hive, it would need to be defined in Pig as follows:
    *             {

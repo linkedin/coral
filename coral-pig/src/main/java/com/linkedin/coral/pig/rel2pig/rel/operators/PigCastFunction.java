@@ -167,7 +167,7 @@ public class PigCastFunction extends PigOperator {
     }
 
     /**
-     * Returns the name of the PigType.
+     * @return Returns the name of the PigType.
      */
     public String getName() {
       return name;

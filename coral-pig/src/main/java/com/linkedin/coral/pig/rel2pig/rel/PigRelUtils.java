@@ -38,7 +38,7 @@ public class PigRelUtils {
    *   relRecordType = RelRecordType(a int, b int, c int)
    *
    * Calling getOutputFieldNames for relRecordType would return:
-   *   getOutputFieldNames(relRecordType) -> {"a", "b", "c"}
+   *   getOutputFieldNames(relRecordType) -&gt; {"a", "b", "c"}
    *
    * Complex Types:
    *   For complex types (nested structs, maps, arrays), input references are not flattened.

@@ -38,15 +38,15 @@ public class SparkSqlRewriter extends SqlShuttle {
    *
    *  For example:
    *
-   *  @code SELECT CAST(named_struct(.....) to ROW)
+   *  SELECT CAST(named_struct(.....) to ROW)
    *   is translated to
-   *  @code SELECT named_struct(.....)
+   *  SELECT named_struct(.....)
    *
    *  Also replaces:
    *
-   *  @code CAST(NULL AS NULL)
+   *  CAST(NULL AS NULL)
    *    to
-   *  @code NULL
+   *  NULL
    */
   @Override
   public SqlNode visit(SqlCall call) {

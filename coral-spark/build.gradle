@@ -19,6 +19,16 @@ dependencies {
   testCompile deps.'kryo'
 }
 
+task sourcesJar(type: Jar) {
+  from sourceSets.main.allSource
+  archiveClassifier = 'sources'
+}
+
+task javadocJar(type: Jar) {
+  from javadoc
+  archiveClassifier = 'javadoc'
+}
+
 artifacts {
-  archives jar
+  archives jar, javadocJar, sourcesJar
 }

@@ -20,3 +20,17 @@ dependencies {
   testCompile deps.'hadoop'.'hadoop-mapreduce-client-core'
   testCompile deps.'kryo'
 }
+
+task sourcesJar(type: Jar) {
+  from sourceSets.main.allSource
+  archiveClassifier = 'sources'
+}
+
+task javadocJar(type: Jar) {
+  from javadoc
+  archiveClassifier = 'javadoc'
+}
+
+artifacts {
+  archives jar, javadocJar, sourcesJar
+}

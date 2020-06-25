@@ -87,7 +87,7 @@ import org.apache.hadoop.hive.metastore.api.Table;
  * LogicalProject(Id_View_Col=[$0], Map_View_Col=[$1], Struct_Count=[$2], EXPR$3=[100])
  *   LogicalAggregate(group=[{0, 1}], Struct_Count=[COUNT()])
  *     LogicalProject(Id_View_Col=[$0], Map_View_Col=[$2], struct_col=[$3])
- *       LogicalFilter(condition=[AND(>($0, 0), IS NOT NULL($2), IS NOT NULL($3))])
+ *       LogicalFilter(condition=[AND(&gt;($0, 0), IS NOT NULL($2), IS NOT NULL($3))])
  *         LogicalTableScan(table=[[hive, default, basecomplex]])
  *
  *  1) LogicalTableScan reads base table schema from metastore
@@ -111,7 +111,7 @@ public class RelToAvroSchemaConverter {
   /**
    * This method generates a corresponding avro schema for calcite IR RelNode
    *
-   * @param relNode
+   * @param relNode RelNode to convert
    * @return avro schema for calcite IR RelNode
    * @throws RuntimeException if cannot find table in Hive metastore
    * @throws RuntimeException if cannot determine avro schema for tableScan

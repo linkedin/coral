@@ -13,7 +13,7 @@ package com.linkedin.coral.pig.rel2pig;
  *
  * We could define the PigLoadFunction as the following:
  *   PigLoadFunction func =
- *     (String db, String table) -> "dali.data.pig.DaliStorage()";
+ *     (String db, String table) -&gt; "dali.data.pig.DaliStorage()";
  */
 @FunctionalInterface
 public interface PigLoadFunction {

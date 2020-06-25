@@ -59,10 +59,10 @@ public class SparkRelToSparkSqlConverter extends RelToSqlConverter {
    *
    * This is necessary to handle SparkSession.sql() inability to handle table names in
    * the form of 'catalogname.dbname.tablename'. This is because Spark SQL parser doesn't support it and throws
-   * "org.apache.spark.sql.catalyst.parser.ParseException: mismatched input '.' expecting <EOF>" Error.
+   * "org.apache.spark.sql.catalyst.parser.ParseException: mismatched input '.' expecting &lt;EOF&gt;" Error.
    *
    * For Example:
-   *  hive.default.foo_bar -> default.foo_bar
+   *  hive.default.foo_bar -&gt; default.foo_bar
    */
   @Override
   public Result visit(TableScan e) {
