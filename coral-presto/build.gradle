@@ -20,6 +20,39 @@ dependencies {
   testCompile deps.'kryo'
 }
 
+def pomPath = "$buildDir/${name}.pom"
+
+model {
+  tasks.generatePomFileForMavenJavaPublication {
+    destination = file("$pomPath")
+  }
+
+  tasks.jar {
+    dependsOn tasks.generatePomFileForMavenJavaPublication
+  }
+}
+
+
+publishing {
+  publications {
+    mavenJava(MavenPublication) {
+      groupId = 'com.linkedin.coral'
+      from components.java
+    }
+  }
+}
+
+task sourcesJar(type: Jar) {
+  from sourceSets.main.output
+  archiveClassifier = 'sources'
+}
+
+task javadocJar(type: Jar) {
+  from javadoc
+  archiveClassifier = 'javadoc'
+}
+
 artifacts {
-  archives jar
+  archives file: file(pomPath), name: "$name", type: "pom"
+  archives jar, javadocJar, sourcesJar
 }

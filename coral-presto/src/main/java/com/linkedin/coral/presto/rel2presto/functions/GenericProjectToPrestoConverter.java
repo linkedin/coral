@@ -32,9 +32,9 @@ import org.apache.calcite.sql.type.MapSqlType;
  *   - struct/row
  *     - CAST(ROW([selected_row_field_references]) as ROW([selected_row_field_types]))
  *   - array
- *     - TRANSFORM([selected_array_field_reference], x -> [transform x as necessary])
+ *     - TRANSFORM([selected_array_field_reference], x -&gt; [transform x as necessary])
  *   - map
- *     - TRANSFORM_VALUES([selected_map_field_reference], (k, v) -> [transform v as necessary])
+ *     - TRANSFORM_VALUES([selected_map_field_reference], (k, v) -&gt; [transform v as necessary])
  *   - primitives/other
  *     - [selected_field_reference]
  *
@@ -58,7 +58,7 @@ import org.apache.calcite.sql.type.MapSqlType;
  *           array(struct(a:int))
  *         )
  *     - Presto rewrite
- *       - transform(col, x -> cast(row(x.a) as row(a int)))
+ *       - transform(col, x -&gt; cast(row(x.a) as row(a int)))
  *
  *   Example 3:
  *     - GenericProject call
@@ -67,7 +67,7 @@ import org.apache.calcite.sql.type.MapSqlType;
  *           map(string, struct(a:int))
  *         )
  *     - Presto rewrite
- *       - transform_values(col, (k, v) -> cast(row(v.a) as row(a int)))
+ *       - transform_values(col, (k, v) -&gt; cast(row(v.a) as row(a int)))
  *
  *   Example 4:
  *     - GenericProject call
@@ -85,8 +85,8 @@ import org.apache.calcite.sql.type.MapSqlType;
  *           map(string, array(struct(a:int, s:struct(b:int))))
  *         )
  *     - Presto rewrite
- *       - transform_values(col, (k, v) ->
- *           transform(v, x ->
+ *       - transform_values(col, (k, v) -&gt;
+ *           transform(v, x -&gt;
  *             cast(row(x.a, cast(row(x.s.b) as row(b int))) as row(a int, s row(b int)))
  *           )
  *         )

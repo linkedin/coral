@@ -133,8 +133,8 @@ public class UDFTransformer {
   public static final String OPERANDS = "operands";
   /**
    * For input node:
-   * - input = 0 refers to the result
-   * - input > 0 refers to the index of source operand (starting from 1)
+   * - input equals 0 refers to the result
+   * - input great than 0 refers to the index of source operand (starting from 1)
    */
   public static final String INPUT = "input";
   public static final String VALUE = "value";

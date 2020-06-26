@@ -1,0 +1,25 @@
+# More details on how to configure the Travis build
+# https://docs.travis-ci.com/user/customizing-the-build/
+
+language: java
+
+jdk:
+  - openjdk8
+
+#Skipping install step to avoid having Travis run arbitrary './gradlew assemble' task
+# https://docs.travis-ci.com/user/customizing-the-build/#Skipping-the-Installation-Step
+install:
+  - true
+
+#Don't build tags
+branches:
+  except:
+    - /^v\d/
+
+#Build and perform release (if needed)
+script:
+  # Print output every minute to avoid travis timeout
+  - while sleep 1m; do echo "=====[ $SECONDS seconds elapsed -- still running ]====="; done &
+  - ./gradlew build -s && ./gradlew ciPerformRelease -s
+  # Killing background sleep loop
+  - kill %1

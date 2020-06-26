@@ -29,7 +29,7 @@ import org.apache.calcite.sql.type.SqlTypeName;
 /**
  * PrestoElementAtFunction represents a SQL operator that maps to the subscript [] operator in SQL standard. In the
  * case of arrays it access the nth element of an array, and in case of maps it looks up the value corresponding to the
- * given key. The implementation is identical to the Calcite ITEM operator (from {@link org.apache.calcite.sql.fun.SqlItemOperator})
+ * given key. The implementation is identical to the Calcite ITEM operator (from {@link org.apache.calcite.sql.SqlSpecialOperator})
  * but uses the "element_at" name, and unparses to the element_at(map, key) syntax.
  */
 public class PrestoElementAtFunction extends SqlSpecialOperator {
