@@ -1,5 +1,4 @@
 apply plugin: 'java'
-apply plugin: 'maven-publish'
 
 dependencies {
   compile('com.linkedin.calcite:calcite-core:1.21.1.0') {
@@ -35,36 +34,6 @@ dependencies {
 }
 
 def pomPath = "$buildDir/${name}.pom"
-
-model {
-  tasks.generatePomFileForMavenJavaPublication {
-    destination = file("$pomPath")
-  }
-
-  tasks.jar {
-    dependsOn tasks.generatePomFileForMavenJavaPublication
-  }
-}
-
-
-publishing {
-  publications {
-    mavenJava(MavenPublication) {
-      groupId = 'com.linkedin.coral'
-      from components.java
-    }
-  }
-}
-
-task sourcesJar(type: Jar) {
-  from sourceSets.main.output
-  archiveClassifier = 'sources'
-}
-
-task javadocJar(type: Jar) {
-  from javadoc
-  archiveClassifier = 'javadoc'
-}
 
 artifacts {
   archives file: file(pomPath), name: "$name", type: "pom"

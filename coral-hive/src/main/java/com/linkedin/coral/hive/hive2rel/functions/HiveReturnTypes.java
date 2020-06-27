@@ -90,6 +90,11 @@ public class HiveReturnTypes {
    *
    * This method is useful to create row types whose fields are complex types and hence cannot be represented through
    * {@link SqlTypeName}s to be used in {@link #rowOf(ImmutableList, ImmutableList)}
+   *
+   * @param fieldNames List of field names
+   * @param types List of {@link SqlReturnTypeInference} corresponding to field names
+   * @return {@link SqlReturnTypeInference} object inferring struct type of field names and filed types baed on
+   * input {@link SqlReturnTypeInference} objects.
    */
   public static SqlReturnTypeInference rowOfInference(ImmutableList<String> fieldNames,
       ImmutableList<SqlReturnTypeInference> types) {

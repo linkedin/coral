@@ -172,7 +172,5 @@ public class PigCastFunction extends PigOperator {
     public String getName() {
       return name;
     }
-
   }
-
 }

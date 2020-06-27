@@ -1,7 +1,6 @@
 apply plugin: 'java'
 apply plugin: 'maven-publish'
 
-
 dependencies {
   compile deps.'javax-annotation'
   // NOTE: jline is needed as testCompile for PigUnit tests because it is missing from Pig runtime
@@ -29,16 +28,6 @@ dependencies {
 
   testCompile deps.'hadoop'.'hadoop-mapreduce-client-common'
   testCompile deps.'kryo'
-}
-
-task sourcesJar(type: Jar) {
-  from sourceSets.main.allSource
-  archiveClassifier = 'sources'
-}
-
-task javadocJar(type: Jar) {
-  from javadoc
-  archiveClassifier = 'javadoc'
 }
 
 artifacts {

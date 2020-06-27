@@ -21,7 +21,7 @@ import org.apache.calcite.rel.RelNode;
  * Use `process` to get an instance of  CoralSparkInfo, which contains
  *  1) Spark SQL
  *  2) Base tables
- *  3) Spark UDF information objects, ie. List&lt;SparkUDFInfo&gt;
+ *  3) Spark UDF information objects, ie. List of {@link SparkUDFInfo}
  *
  * This class converts a IR RelNode to a Spark SQL by
  *  1) Transforming it to a Spark RelNode with Spark details [[IRRelToSparkRelTransformer]]
@@ -51,7 +51,7 @@ public class CoralSpark {
    * It returns an instance of CoralSpark which contains
    *  1) Spark SQL
    *  2) Base tables
-   *  3) Spark UDF information objects, ie. List&lt;SparkUDFInfo&gt;
+   *  3) Spark UDF information objects, ie. List of {@link SparkUDFInfo}
    *
    * @param irRelNode A IR RelNode for which CoralSpark will be constructed.
    *
@@ -95,7 +95,7 @@ public class CoralSpark {
    * A 'base table' of a view, is the Hive table on which view is dependent on.
    *
    * @param relNode A RelNode (may or may not be Spark compatible)
-   * @return List<String> List of strings representing base tables on which a view
+   * @return List of {@link String} representing base tables on which a view
    * depends on.
    */
   private static List<String> constructBaseTables(RelNode relNode) {
@@ -121,7 +121,7 @@ public class CoralSpark {
    * Getter for Spark UDF information list:
    * Additional information required to use an UDF (for details, read [[SparkUDFInfo]])
    *
-   * @return List of Spark UDF information
+   * @return List of {@link SparkUDFInfo} : List of Spark UDF information
    */
   public List<SparkUDFInfo> getSparkUDFInfoList() {
     return sparkUDFInfoList;

@@ -160,10 +160,9 @@ public class ParseDriver {
    * Parses a command, optionally assigning the parser's token stream to the
    * given context.
    *
-   * @param command
-   *          command to parse
-   *
-   * @return parsed AST
+   * @param command command to parse
+   * @return {@link ASTNode} object for parsed AST
+   * @throws ParseException when parsing error is detected
    */
   public ASTNode parse(String command) throws ParseException {
     if (LOG.isDebugEnabled()) {

@@ -41,7 +41,7 @@ public class ViewToAvroSchemaConverter {
   /**
    * Use this method to create a new instance of ViewToAvroSchemaConverter
    *
-   * @param hiveMetastoreClient hiveMetastoreClient to connect to metastore
+   * @param hiveMetastoreClient {@link HiveMetastoreClient} object
    * @return an instance of ViewToAvroSchemaConverter
    */
   public static ViewToAvroSchemaConverter create(HiveMetastoreClient hiveMetastoreClient) {
