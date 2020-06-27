@@ -20,6 +20,6 @@ branches:
 script:
   # Print output every minute to avoid travis timeout
   - while sleep 1m; do echo "=====[ $SECONDS seconds elapsed -- still running ]====="; done &
-  - ./gradlew build -s && ./gradlew ciPerformRelease -s
+  - ./gradlew build -s
   # Killing background sleep loop
   - kill %1
