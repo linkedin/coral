@@ -1,6 +1,6 @@
 shipkit {
    gitHub.repository = "linkedin/coral"
-   gitHub.readOnlyAuthToken = "12e95c31c8688402daf5766b82fd3f188b470c65"
+   gitHub.readOnlyAuthToken = "c9d83cad97e76ead658eb366e0186ae329f77b96"
    gitHub.writeAuthToken = System.getenv("GH_WRITE_TOKEN")
 }
 
@@ -17,7 +17,7 @@ allprojects {
 
            pkg {
                repo = 'maven'
-               user = 'kxu'
+               user = 'linkedin-apa-dali'
                userOrg = 'linkedin'
                name = 'coral'
                licenses = ['BSD 2-Clause']
