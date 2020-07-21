@@ -45,7 +45,7 @@ public class HiveSchema implements Schema {
 
   /**
    * This always returns null as root hive schema does not have tables.
-   * @param name
+   * @param name Table name
    * @return get calcite table representation
    */
   @Override
@@ -107,7 +107,7 @@ public class HiveSchema implements Schema {
   }
 
   /**
-   * Returns Hive metastore client
+   * @return {@link HiveMetastoreClient} object
    */
   public @Nonnull
   HiveMetastoreClient getHiveMetastoreClient() {

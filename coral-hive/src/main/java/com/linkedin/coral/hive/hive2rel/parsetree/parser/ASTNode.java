@@ -91,8 +91,9 @@ public class ASTNode extends CommonTree implements Node, Serializable {
   }
 
   /**
-   * Tag this ASTNode with information about the object from which this node
-   * originated.
+   * Tag this ASTNode with information about the object from which this node originated.
+   *
+   * @param origin {@link ASTNodeOrigin} object
    */
   public void setOrigin(ASTNodeOrigin origin) {
     this.origin = origin;

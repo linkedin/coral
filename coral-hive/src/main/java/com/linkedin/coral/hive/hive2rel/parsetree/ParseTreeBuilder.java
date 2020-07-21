@@ -77,6 +77,7 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
    * Constructs a parse tree builder to use hive metatstore and user provided configuration
    * @param msc optional HiveMetastore client. This is required to decode view definitions
    * @param config parse configuration to use
+   * @param registry {@link HiveFunctionRegistry} object, which represents the Hive function registry
    */
   public ParseTreeBuilder(@Nullable HiveMetastoreClient msc, Config config, HiveFunctionRegistry registry) {
     this.msc = Optional.of(msc);
@@ -122,6 +123,10 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
 
   /**
    * Gets the hive table handle for db and table and calls {@link #processViewOrTable(Table)}
+   *
+   * @param dbName database name
+   * @param tableName table name
+   * @return {@link SqlNode} object
    */
   public SqlNode processView(String dbName, String tableName) {
     Table table = getMscOrThrow().getTable(dbName, tableName);

@@ -110,6 +110,7 @@ public class CalcitePrestoUDFMap {
    *
    * @param calciteOpName Name of Calcite SQL operator
    * @param numOperands Number of operands
+   * @return {@link UDFTransformer} object
    */
   public static UDFTransformer getUDFTransformer(String calciteOpName, int numOperands) {
     return UDF_MAP.get(getKey(calciteOpName, numOperands));

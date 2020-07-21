@@ -35,6 +35,7 @@ public class HiveToRelConverter {
    * Initializes converter with hive configuration at provided path
    * @param mscClient HiveMetaStoreClient. Hive metastore client provides small subset
    *                  of methods provided by Hive's metastore client interface.
+   * @return {@link HiveToRelConverter} object
    */
   public static HiveToRelConverter create(HiveMetastoreClient mscClient) {
     checkNotNull(mscClient);
