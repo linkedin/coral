@@ -19,6 +19,8 @@ dependencies {
   }
   compile deps.'hadoop'.'hadoop-common'
 
+  compile 'org.codehaus.groovy:groovy-all:2.4.4'
+
   // required for hiveSQL parser code
   compile deps.'antlr-runtime'
 

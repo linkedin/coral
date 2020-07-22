@@ -1,0 +1,46 @@
+<!--
+
+    Copyright 2020 LinkedIn Corporation. All rights reserved.
+    Licensed under the BSD-2 Clause license.
+    See LICENSE in the project root for license information.
+
+-->
+<ivysettings>
+  <property name="artifactory.base.url" value="http://artifactory.corp.linkedin.com:8081/artifactory"/>
+  <property name="artifactory.failover.url" value="http://artifactory-failover.corp.linkedin.com:8081/artifactory"/>
+  <caches lockStrategy="artifact-lock" />
+  <settings defaultResolver="downloadGrapes" />
+  <resolvers>
+    <chain name="downloadGrapes" returnFirst="true">
+
+      <dual name="artifactory-release-resolver">
+        <url name="public" m2compatible="true">
+          <ivy pattern="${artifactory.base.url}/release/[organization]/[module]/[revision]/[module]-[revision](-[classifier]).ivy" />
+        </url>
+        <ibiblio name="public" m2compatible="true" root="${artifactory.base.url}/release" />
+      </dual>
+
+      <dual name="artifactory-release-failover-resolver">
+        <url name="public" m2compatible="true">
+          <ivy pattern="${artifactory.failover.url}/release/[organization]/[module]/[revision]/[module]-[revision](-[classifier]).ivy" />
+        </url>
+        <ibiblio name="public" m2compatible="true" root="${artifactory.failover.url}/release" />
+      </dual>
+
+      <dual name="artifactory-snapshot-resolver">
+        <url name="public" m2compatible="true">
+          <ivy pattern="${artifactory.base.url}/snapshot/[organization]/[module]/[revision]/[module]-[revision](-[classifier]).ivy" />
+        </url>
+        <ibiblio name="public" m2compatible="true" root="${artifactory.base.url}/snapshot" />
+      </dual>
+
+      <dual name="artifactory-snapshot-failover-resolver">
+        <url name="public" m2compatible="true">
+          <ivy pattern="${artifactory.failover.url}/snapshot/[organization]/[module]/[revision]/[module]-[revision](-[classifier]).ivy" />
+        </url>
+        <ibiblio name="public" m2compatible="true" root="${artifactory.failover.url}/snapshot" />
+      </dual>
+
+    </chain>
+  </resolvers>
+</ivysettings>

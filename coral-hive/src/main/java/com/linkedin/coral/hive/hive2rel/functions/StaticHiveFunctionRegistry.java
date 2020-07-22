@@ -436,14 +436,12 @@
    public static void createAddUserDefinedFunction(String functionName, SqlReturnTypeInference returnTypeInference,
        SqlOperandTypeChecker operandTypeChecker, String dependency) {
      String depPrefix  = dependency.substring(0, 6).toLowerCase();
+
+     // TODO: dependency not used. Consider removing it (maybe this method completely).
      if (!depPrefix.equals("ivy://")) {
        dependency = "ivy://" + dependency;
      }
      addFunctionEntry(functionName, createCalciteUDF(functionName, returnTypeInference, operandTypeChecker));
-   }
-
-   public static void createAddUserDefinedFunction(String functionName, SqlReturnTypeInference returnTypeInference) {
-     addFunctionEntry(functionName, createCalciteUDF(functionName, returnTypeInference));
    }
 
    private static SqlOperator createCalciteUDF(String functionName, SqlReturnTypeInference returnTypeInference,

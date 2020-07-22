@@ -21,6 +21,7 @@ import com.linkedin.coral.hive.hive2rel.parsetree.parser.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -78,16 +79,20 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
    * @param msc optional HiveMetastore client. This is required to decode view definitions
    * @param config parse configuration to use
    */
-  public ParseTreeBuilder(@Nullable HiveMetastoreClient msc, Config config, HiveFunctionRegistry registry) {
+  public ParseTreeBuilder(@Nullable HiveMetastoreClient msc,
+      Config config,
+      HiveFunctionRegistry registry,
+      ConcurrentHashMap<String, HiveFunction> dynamicRegistry) {
     this.msc = Optional.of(msc);
     checkNotNull(config);
     checkState(config.catalogName.isEmpty() || !config.defaultDBName.isEmpty(),
         "Default DB is required if catalog name is not empty");
     this.config = config;
-    this.functionResolver = new HiveFunctionResolver(registry);
+    this.functionResolver = new HiveFunctionResolver(registry, dynamicRegistry);
   }
 
   /**
+   * This constructor is used for unit testing purpose
    * Constructs a parse tree builder to use hive metatstore and user provided configuration
    * @param msc optional HiveMetastore client. This is required to decode view definitions
    * @param config parse configuration to use
@@ -98,7 +103,7 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     checkState(config.catalogName.isEmpty() || !config.defaultDBName.isEmpty(),
         "Default DB is required if catalog name is not empty");
     this.config = config;
-    this.functionResolver = new HiveFunctionResolver(new StaticHiveFunctionRegistry());
+    this.functionResolver = new HiveFunctionResolver(new StaticHiveFunctionRegistry(), new ConcurrentHashMap<>());
   }
 
   /**
@@ -202,7 +207,7 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
       // array of [null] should be 3rd param to if function. With our type inference, calcite acts
       // smart and for unnest(array[null]) determines return type to be null
       SqlNode arrOfNull = SqlStdOperatorTable.ARRAY_VALUE_CONSTRUCTOR.createCall(ZERO, SqlLiteral.createNull(ZERO));
-      HiveFunction hiveIfFunction = functionResolver.tryResolve("if", false, null);
+      HiveFunction hiveIfFunction = functionResolver.tryResolve("if", false, null, 1);
       SqlCall ifFunctionCall = hiveIfFunction.createCall(SqlLiteral.createCharString("if", ZERO),
           ImmutableList.of(ifCondition, unnestOperand, arrOfNull), null);
       unnestCall = HiveExplodeOperator.EXPLODE.createCall(ZERO, ifFunctionCall);
@@ -437,7 +442,11 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     ASTNode functionNode = (ASTNode) children.get(0);
     String functionName = functionNode.getText();
     List<SqlNode> sqlOperands = visitChildren(children, ctx);
-    HiveFunction hiveFunction = functionResolver.tryResolve(functionName, false, ctx.hiveTable.orElse(null));
+    HiveFunction hiveFunction = functionResolver.tryResolve(functionName,
+        false,
+        ctx.hiveTable.orElse(null),
+        // The first element of sqlOperands is the operator itself. The actual # of operands is sqlOperands.size() - 1
+        sqlOperands.size() - 1);
     return hiveFunction.createCall(sqlOperands.get(0), sqlOperands.subList(1, sqlOperands.size()), quantifier);
   }
 

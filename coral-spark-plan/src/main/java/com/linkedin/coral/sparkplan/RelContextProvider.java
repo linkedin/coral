@@ -80,7 +80,7 @@ class RelContextProvider {
         .defaultSchema(schemaPlus)
         .typeSystem(new HiveTypeSystem())
         .traitDefs((List<RelTraitDef>) null)
-        .operatorTable(ChainedSqlOperatorTable.of(SqlStdOperatorTable.instance(), new DaliOperatorTable(schema, this.registry)))
+        .operatorTable(ChainedSqlOperatorTable.of(SqlStdOperatorTable.instance(), new DaliOperatorTable(schema, this.registry, null)))
         .programs(Programs.ofRules(Programs.RULE_SET))
         .build();
   }

@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -23,11 +24,14 @@ import org.apache.calcite.sql.SqlPrefixOperator;
 import org.apache.calcite.sql.SqlSpecialOperator;
 import org.apache.calcite.sql.SqlUnresolvedFunction;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
+import org.apache.calcite.sql.type.SqlOperandTypeChecker;
+import org.apache.calcite.sql.type.SqlTypeFamily;
 import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
 import org.apache.hadoop.hive.metastore.api.Table;
 
 import static com.google.common.base.Preconditions.*;
 import static org.apache.calcite.sql.parser.SqlParserPos.*;
+import static org.apache.calcite.sql.type.OperandTypes.*;
 
 
 /**
@@ -36,10 +40,12 @@ import static org.apache.calcite.sql.parser.SqlParserPos.*;
 public class HiveFunctionResolver {
 
   public final HiveFunctionRegistry registry;
+  private final ConcurrentHashMap<String, HiveFunction> dynamicFunctionRegistry;
   private final List<SqlOperator> operators;
 
-  public HiveFunctionResolver(HiveFunctionRegistry registry) {
+  public HiveFunctionResolver(HiveFunctionRegistry registry, ConcurrentHashMap<String, HiveFunction> dynamicRegistry) {
     this.registry = registry;
+    this.dynamicFunctionRegistry = dynamicRegistry;
     this.operators = new ArrayList<>(SqlStdOperatorTable.instance().getOperatorList());
     operators.add(HiveRLikeOperator.REGEXP);
     operators.add(HiveRLikeOperator.RLIKE);
@@ -75,7 +81,7 @@ public class HiveFunctionResolver {
             && (o instanceof SqlBinaryOperator || o instanceof SqlSpecialOperator))
         .collect(Collectors.toList());
     if (matches.size() == 0) {
-      HiveFunction f = tryResolve(lowerCaseOperator, false, null);
+      HiveFunction f = tryResolve(lowerCaseOperator, false, null, 2);
       if (f != null) {
         matches.add(f.getSqlOperator());
       }
@@ -106,14 +112,19 @@ public class HiveFunctionResolver {
    * @param isCaseSensitive is function name case-sensitive
    * @param hiveTable handle to Hive table representing metastore information. This is used for resolving
    *                  Dali function names, which are resolved using table parameters
+   * @param numOfOperands number of operands this function takes. This is needed to
+   *                  create SqlOperandTypeChecker to resolve Dali function dynamically
    * @return resolved hive functions
    * @throws UnknownSqlFunctionException if the function name can not be resolved.
    */
-  public HiveFunction tryResolve(@Nonnull String functionName, boolean isCaseSensitive, @Nullable Table hiveTable) {
+  public HiveFunction tryResolve(@Nonnull String functionName,
+      boolean isCaseSensitive,
+      @Nullable Table hiveTable,
+      int numOfOperands) {
     checkNotNull(functionName);
     Collection<HiveFunction> functions = registry.lookup(functionName, isCaseSensitive);
     if (functions.isEmpty() && hiveTable != null) {
-      functions = tryResolveAsDaliFunction(functionName, hiveTable);
+      functions = tryResolveAsDaliFunction(functionName, hiveTable, numOfOperands);
     }
     if (functions.isEmpty()) {
       throw new UnknownSqlFunctionException(functionName);
@@ -134,7 +145,18 @@ public class HiveFunctionResolver {
    * @return list of matching HiveFunctions or empty list if there is no match
    */
   public Collection<HiveFunction> resolve(String functionName, boolean isCaseSensitive) {
-    return registry.lookup(functionName, isCaseSensitive);
+    Collection<HiveFunction> staticLookup = registry.lookup(functionName, isCaseSensitive);
+    if (!staticLookup.isEmpty()) {
+      return staticLookup;
+    } else {
+      Collection<HiveFunction> dynamicLookup = ImmutableList.of();
+      HiveFunction hiveFunction = dynamicFunctionRegistry.get(functionName);
+      if (hiveFunction != null) {
+        dynamicLookup = ImmutableList.of(hiveFunction);
+      }
+
+      return dynamicLookup;
+    }
   }
 
   /**
@@ -142,11 +164,15 @@ public class HiveFunctionResolver {
    * This uses table parameters 'function' property to resolve the function name to the implementing class.
    * @param functionName function name to resolve
    * @param table Hive metastore table handle
+   * @param numOfOperands number of operands this function takes. This is needed to
+   *                      create SqlOperandTypeChecker to resolve Dali function dynamically
    * @return list of matching HiveFunctions or empty list if the function name is not in the
    *   dali function name format of db_tableName_functionName
    * @throws UnknownSqlFunctionException if the function name is in Dali function name format but there is no mapping
    */
-  public Collection<HiveFunction> tryResolveAsDaliFunction(String functionName, @Nonnull Table table) {
+  public Collection<HiveFunction> tryResolveAsDaliFunction(String functionName,
+      @Nonnull Table table,
+      int numOfOperands) {
     Preconditions.checkNotNull(table);
     String functionPrefix = String.format("%s_%s_", table.getDbName(), table.getTableName());
     if (!functionName.toLowerCase().startsWith(functionPrefix.toLowerCase())) {
@@ -163,9 +189,18 @@ public class HiveFunctionResolver {
     }
     final Collection<HiveFunction> hiveFunctions = registry.lookup(funcClassName, true);
     if (hiveFunctions.size() == 0) {
-      // we want to see class name in the exception message for coverage testing
-      // so throw exception here
-      throw new UnknownSqlFunctionException(funcClassName);
+      Collection<HiveFunction> dynamicResolvedHiveFunctions = resolveDaliFunctionDynamically(functionName,
+          funcClassName,
+          hiveTable,
+          numOfOperands);
+
+      if (dynamicResolvedHiveFunctions.size() == 0) {
+        // we want to see class name in the exception message for coverage testing
+        // so throw exception here
+        throw new UnknownSqlFunctionException(funcClassName);
+      }
+
+      return dynamicResolvedHiveFunctions;
     }
 
     return hiveFunctions.stream().map(f -> new HiveFunction(
@@ -176,6 +211,29 @@ public class HiveFunctionResolver {
             functionName
         )
     )).collect(Collectors.toList());
+  }
+
+  private @Nonnull Collection<HiveFunction> resolveDaliFunctionDynamically(String functionName,
+      String funcClassName,
+      HiveTable hiveTable,
+      int numOfOperands) {
+    HiveFunction hiveFunction = new HiveFunction(
+        funcClassName,
+        new VersionedSqlUserDefinedFunction(
+            new SqlUserDefinedFunction(
+                new SqlIdentifier(funcClassName, ZERO),
+                new HiveGenericUDFReturnTypeInference(funcClassName, hiveTable.getDaliUdfDependencies()),
+                null,
+                createSqlOperandTypeChecker(numOfOperands),
+                null,
+                null
+            ),
+            hiveTable.getDaliUdfDependencies(),
+            functionName
+        )
+    );
+    dynamicFunctionRegistry.put(funcClassName, hiveFunction);
+    return ImmutableList.of(hiveFunction);
   }
 
   private @Nonnull HiveFunction unresolvedFunction(String functionName, Table table) {
@@ -191,5 +249,15 @@ public class HiveFunctionResolver {
     } else {
       return new SqlFunctionIdentifier(functionName, ImmutableList.of(table.getDbName(), table.getTableName()));
     }
+  }
+
+  private @Nonnull SqlOperandTypeChecker createSqlOperandTypeChecker(int numOfOperands) {
+    List<SqlTypeFamily> families = new ArrayList<>();
+    for (int i = 0; i < numOfOperands; i++) {
+      families.add(SqlTypeFamily.ANY);
+    }
+    SqlOperandTypeChecker sqlOperandTypeChecker = family(families);
+
+    return sqlOperandTypeChecker;
   }
 }

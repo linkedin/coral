@@ -86,7 +86,7 @@ public class VersionedSqlUserDefinedFunction extends SqlUserDefinedFunction {
   }
 
   // This method is called during SQL validation. The super-class implementation resets the call's sqlOperator to one
-  // that is looked up from the StaticHiveFunctionRegistry. Since UDFs in the StaticHiveFunctionRegistry are not
+  // that is looked up from the StaticHiveFunctionRegistry or inferred dynamically if it's a Dali UDF. Since UDFs in the StaticHiveFunctionRegistry are not
   // versioned, this method overrides the super-class implementation to properly restore the call's operator as
   // a VersionedSqlUserDefinedFunction based on the already existing call's sqlOperator obtained from the
   // StaticHiveFunctionRegistry, and hence preserve ivyDependencies and viewDependentFunctionName.

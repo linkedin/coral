@@ -7,11 +7,13 @@ package com.linkedin.coral.hive.hive2rel;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.linkedin.coral.hive.hive2rel.functions.HiveFunction;
 import com.linkedin.coral.hive.hive2rel.functions.HiveFunctionRegistry;
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 import com.linkedin.coral.hive.hive2rel.parsetree.ParseTreeBuilder;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nonnull;
 import org.apache.calcite.adapter.java.JavaTypeFactory;
 import org.apache.calcite.config.CalciteConnectionConfig;
@@ -56,6 +58,7 @@ class RelContextProvider {
   // maintain a mutable copy of Hive function registry in order to save some UDF information
   // resolved at run time.  For example, dependencies information.
   private HiveFunctionRegistry registry;
+  private ConcurrentHashMap<String, HiveFunction> dynamicRegistry;
 
   /**
    * Instantiates a new Rel context provider.
@@ -68,6 +71,7 @@ class RelContextProvider {
     SchemaPlus schemaPlus = Frameworks.createRootSchema(false);
     schemaPlus.add(HiveSchema.ROOT_SCHEMA, schema);
     this.registry = new StaticHiveFunctionRegistry();
+    this.dynamicRegistry = new ConcurrentHashMap<>();
     // this is to ensure that jdbc:calcite driver is correctly registered
     // before initializing framework (which needs it)
     // We don't want each engine to register the driver. It may not also load correctly
@@ -78,7 +82,8 @@ class RelContextProvider {
         .defaultSchema(schemaPlus)
         .typeSystem(new HiveTypeSystem())
         .traitDefs((List<RelTraitDef>) null)
-        .operatorTable(ChainedSqlOperatorTable.of(SqlStdOperatorTable.instance(), new DaliOperatorTable(schema, this.registry)))
+        .operatorTable(ChainedSqlOperatorTable.of(SqlStdOperatorTable.instance(),
+                                                  new DaliOperatorTable(schema, this.registry, this.dynamicRegistry)))
         .programs(Programs.ofRules(Programs.RULE_SET))
         .build();
   }
@@ -90,6 +95,10 @@ class RelContextProvider {
    */
   public HiveFunctionRegistry getHiveFunctionRegistry() {
     return this.registry;
+  }
+
+  public ConcurrentHashMap<String, HiveFunction> getDynamicHiveFunctionRegistry() {
+    return this.dynamicRegistry;
   }
 
   /**

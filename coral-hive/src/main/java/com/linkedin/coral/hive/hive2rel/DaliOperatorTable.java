@@ -11,6 +11,7 @@ import com.linkedin.coral.hive.hive2rel.functions.HiveFunction;
 import com.linkedin.coral.hive.hive2rel.functions.HiveFunctionResolver;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import org.apache.calcite.sql.SqlFunctionCategory;
 import org.apache.calcite.sql.SqlIdentifier;
@@ -31,14 +32,16 @@ public class DaliOperatorTable implements SqlOperatorTable {
   // For now, we create another instance since the function registry is simple.
   private HiveFunctionResolver funcResolver;
 
-  public DaliOperatorTable(HiveSchema schema, HiveFunctionRegistry registry) {
+  public DaliOperatorTable(HiveSchema schema,
+      HiveFunctionRegistry registry,
+      ConcurrentHashMap<String, HiveFunction> dynamicRegistry) {
     this.schema = schema;
-    this.funcResolver =  new HiveFunctionResolver(registry);
+    this.funcResolver =  new HiveFunctionResolver(registry, dynamicRegistry);
   }
 
   /**
    * Resolves functions names to corresponding Calcite UDF. HiveFunctionResolver ensures that
-   * {@code sqlIdentifier} has function name or corresponding class name for Dali functions.. All function registry
+   * {@code sqlIdentifier} has function name or corresponding class name for Dali functions. All function registry
    * lookups performed by this class are case-sensitive.
    *
    * Calcite invokes this function multiple times during analysis phase to validate SqlCall operators. This is
@@ -53,7 +56,6 @@ public class DaliOperatorTable implements SqlOperatorTable {
         .map(HiveFunction::getSqlOperator)
         .collect(Collectors.toCollection(() -> list));
   }
-
 
   @Override
   public List<SqlOperator> getOperatorList() {
