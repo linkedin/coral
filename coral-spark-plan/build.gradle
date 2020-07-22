@@ -1,0 +1,34 @@
+apply plugin:'java'
+apply plugin: 'maven-publish'
+
+dependencies {
+  compile deps.'gson'
+  compile deps.'slf4j-api'
+  compile deps.'slf4j-log4j12'
+  compile project(':coral-hive')
+
+  testCompile(deps.'hive'.'hive-exec-core') {
+    exclude group: 'org.apache.avro', module: 'avro-tools'
+    // These exclusions are required to prevent duplicate classes since we include
+    // shaded jar above
+    exclude group: 'org.apache.calcite', module: 'calcite-core'
+    exclude group: 'org.apache.calcite', module: 'calcite-avatica'
+  }
+
+  testCompile deps.'hadoop'.'hadoop-mapreduce-client-core'
+  testCompile deps.'kryo'
+}
+
+task sourcesJar(type: Jar) {
+  from sourceSets.main.allSource
+  archiveClassifier = 'sources'
+}
+
+task javadocJar(type: Jar) {
+  from javadoc
+  archiveClassifier = 'javadoc'
+}
+
+artifacts {
+  archives jar, javadocJar, sourcesJar
+}
