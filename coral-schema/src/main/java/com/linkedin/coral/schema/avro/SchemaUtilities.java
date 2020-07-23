@@ -15,6 +15,9 @@ import javax.annotation.Nonnull;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
 import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rex.RexCall;
+import org.apache.calcite.rex.RexInputRef;
+import org.apache.calcite.rex.RexNode;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.hadoop.hive.serde2.avro.AvroSerdeUtils;
@@ -87,20 +90,48 @@ class SchemaUtilities {
    */
   static void appendField(@Nonnull String fieldName,
       @Nonnull RelDataType fieldRelDataType,
-      @Nonnull SchemaBuilder.FieldAssembler<Schema> fieldAssembler) {
+      @Nonnull SchemaBuilder.FieldAssembler<Schema> fieldAssembler,
+      @Nonnull boolean isNullable) {
     Preconditions.checkNotNull(fieldName);
     Preconditions.checkNotNull(fieldRelDataType);
     Preconditions.checkNotNull(fieldAssembler);
 
     Schema fieldSchema = RelDataTypeToAvroType.relDataTypeToAvroType(fieldRelDataType);
 
-    // TODO: currently mark everything field transformed by Rel operators and udfs as nullable for now
-    // Should handle nullability properly later
     // TODO: handle default value properly
-    Schema fieldSchemaNullable = Schema.createUnion(Arrays.asList(fieldSchema, Schema.create(Schema.Type.NULL)));
-    fieldAssembler.name(fieldName).type(fieldSchemaNullable).noDefault();
+    if (isNullable) {
+      Schema fieldSchemaNullable = Schema.createUnion(Arrays.asList(fieldSchema, Schema.create(Schema.Type.NULL)));
+      fieldAssembler.name(fieldName).type(fieldSchemaNullable).noDefault();
+    } else {
+      fieldAssembler.name(fieldName).type(fieldSchema).noDefault();
+    }
   }
 
+  static boolean isFieldNullable(@Nonnull RexCall rexCall, @Nonnull Schema inputSchema) {
+    Preconditions.checkNotNull(rexCall);
+    Preconditions.checkNotNull(inputSchema);
+
+    // the field is non-nullable only if all operands are RexInputRef
+    // and corresponding field schema type of RexInputRef index is not UNION
+    List<RexNode> operands = rexCall.getOperands();
+    for (RexNode operand : operands) {
+      if (operand instanceof RexInputRef) {
+        Schema.Field field = inputSchema.getFields().get(((RexInputRef) operand).getIndex());
+        if (Schema.Type.UNION.equals(field.schema().getType())) {
+          return true;
+        }
+      } else if (operand instanceof RexCall) {
+        boolean isNullable = isFieldNullable((RexCall) operand, inputSchema);
+        if (isNullable) {
+          return true;
+        }
+      } else {
+        return true;
+      }
+    }
+
+    return false;
+  }
 
   static void appendField(@Nonnull String fieldName,
       @Nonnull Schema.Field field,

@@ -67,17 +67,20 @@ public class TestUtils {
     String baseComplexSchema = loadSchema("base-complex.avsc");
     String baseEnumSchema = loadSchema("base-enum.avsc");
     String baseLateralViewSchema = loadSchema("base-lateralview.avsc");
+    String baseNullabilitySchema = loadSchema("base-nullability.avsc");
 
     executeCreateTableQuery("default", "basecomplex", baseComplexSchema);
     executeCreateTableQuery("default", "baseenum", baseEnumSchema);
     executeCreateTableQuery("default", "baselateralview", baseLateralViewSchema);
+    executeCreateTableQuery("default", "basenullability", baseNullabilitySchema);
   }
 
   private static void initializeUdfs() {
     List<String> viewsToCreateLessThanHundred = Arrays.asList(
         "foo_dali_udf",
         "foo_dali_multiple_udfs",
-        "foo_dali_udf_with_operator");
+        "foo_dali_udf_with_operator",
+        "foo_dali_udf_nullability");
     executeCreateFunctionQuery("default",
         viewsToCreateLessThanHundred,
         "LessThanHundred",
@@ -86,7 +89,8 @@ public class TestUtils {
     List<String> viewsToCreateGreaterThanHundred = Arrays.asList(
         "foo_dali_udf2",
         "foo_dali_multiple_udfs",
-        "foo_dali_udf_with_operator");
+        "foo_dali_udf_with_operator",
+        "foo_dali_udf_nullability");
     executeCreateFunctionQuery("default",
         viewsToCreateGreaterThanHundred,
         "GreaterThanHundred",
@@ -95,7 +99,8 @@ public class TestUtils {
     List<String> viewsToCreateFuncSquare = Arrays.asList(
         "foo_dali_udf3",
         "foo_dali_multiple_udfs",
-        "foo_dali_udf_with_operator");
+        "foo_dali_udf_with_operator",
+        "foo_dali_udf_nullability");
     executeCreateFunctionQuery("default",
         viewsToCreateFuncSquare,
         "FuncSquare",

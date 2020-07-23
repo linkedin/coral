@@ -1,0 +1,85 @@
+{
+  "type" : "record",
+  "name" : "basenullability",
+  "namespace" : "coral.schema.avro.base.nullability",
+  "fields" : [ {
+    "name" : "Id",
+    "type" : "int"
+  }, {
+    "name" : "Array_Col",
+    "type" : [ "null", {
+      "type" : "array",
+      "items" : [ "null", "string" ]
+    } ],
+    "default" : null
+  }, {
+    "name" : "Map_Col",
+    "type" : [ "null", {
+      "type" : "map",
+      "values" : [ "null", "string" ]
+    } ],
+    "default" : null
+  }, {
+    "name" : "Int_Field_1",
+    "type" : [ "null", "int" ],
+    "default" : null
+  }, {
+    "name" : "Int_Field_2",
+    "type" : "int"
+  }, {
+    "name" : "Double_Field_1",
+    "type" : [ "null", "double" ],
+    "default" : null
+  }, {
+    "name" : "Double_Field_2",
+    "type" : "double"
+  }, {
+    "name" : "Bool_Field_1",
+    "type" : [ "null", "boolean" ],
+    "default" : null
+  }, {
+    "name" : "Bool_Field_2",
+    "type" : "boolean"
+  }, {
+    "name" : "String_Field_1",
+    "type" : [ "null", "string" ],
+    "default" : null
+  }, {
+    "name" : "String_Field_2",
+    "type" : "string"
+  }, {
+    "name" : "Struct_Col",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "Struct_col",
+      "namespace" : "coral.schema.avro.base.nullability.basenullability",
+      "fields" : [ {
+        "name" : "Bool_Field",
+        "type" : "boolean"
+      }, {
+        "name" : "Int_Field",
+        "type" : [ "null", "int" ],
+        "default" : null
+      }, {
+        "name" : "Bigint_Field",
+        "type" : "long"
+      }, {
+        "name" : "Float_Field",
+        "type" : [ "null", "float" ],
+        "default" : null
+      }, {
+        "name" : "Double_Field",
+        "type" : "double"
+      }, {
+        "name" : "Date_String_Field",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "String_Field",
+        "type" : [ "null", "string" ],
+        "default" : null
+      } ]
+    } ],
+    "default" : null
+  } ]
+}

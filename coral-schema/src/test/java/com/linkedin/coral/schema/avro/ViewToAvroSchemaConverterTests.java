@@ -171,7 +171,7 @@ public class ViewToAvroSchemaConverterTests {
         + "tblproperties('functions' = 'LessThanHundred:com.linkedin.coral.hive.hive2rel.CoralTestUDF1', "
         + "              'dependencies' = 'ivy://com.linkedin:udf:1.0') "
         + "AS "
-        + "SELECT Id AS Id_Viewc_Col, default_foo_dali_udf_LessThanHundred(Id) AS Id_View_LessThanHundred_Col "
+        + "SELECT Id AS Id_View_Col, default_foo_dali_udf_LessThanHundred(Id) AS Id_View_LessThanHundred_Col "
         + "FROM basecomplex";
 
     TestUtils.executeCreateViewQuery("default", "foo_dali_udf", viewSql);
@@ -451,6 +451,92 @@ public class ViewToAvroSchemaConverterTests {
 
     ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
     viewToAvroSchemaConverter.toAvroSchema("default", "v");
+  }
+
+  @Test
+  public void testNullabilityBasic() {
+    String viewSql = "CREATE VIEW v AS "
+        + "SELECT bn.Id, "
+        + "bn.Array_Col, "
+        + "bn.Map_Col, "
+        + "bn.Int_Field_1, "
+        + "bn.Int_Field_2, "
+        + "bn.Double_Field_1, "
+        + "bn.Double_Field_2, "
+        + "bn.Bool_Field_1, "
+        + "bn.Bool_Field_2, "
+        + "bn.String_Field_1, "
+        + "bn.String_Field_2, "
+        + "bn.Struct_Col "
+        + "FROM basenullability bn";
+
+    TestUtils.executeCreateViewQuery("default", "v", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v");
+
+    Assert.assertEquals(actualSchema.toString(true),
+        TestUtils.loadSchema("testNullabilityBasic-expected.avsc"));
+  }
+
+  @Test
+  public void testNullabilitySqlOperator() {
+    String viewSql = "CREATE VIEW v AS "
+        + "SELECT bn.Id + bn.Int_Field_1, "
+        + "bn.Id + bn.Int_Field_2, "
+        + "bn.Int_Field_1 + bn.Int_Field_1, "
+        + "bn.Int_Field_1 + 1, "
+        + "bn.Int_Field_2 + 1, "
+        + "bn.Double_Field_1 + bn.Double_Field_1, "
+        + "bn.Double_Field_2 + bn.Double_Field_2, "
+        + "bn.Double_Field_1 + bn.Double_Field_2, "
+        + "NOT bn.Bool_Field_1, "
+        + "NOT bn.Bool_Field_2 "
+        + "FROM basenullability bn";
+
+    TestUtils.executeCreateViewQuery("default", "v", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v");
+
+    Assert.assertEquals(actualSchema.toString(true),
+        TestUtils.loadSchema("testNullabilitySqlOperator-expected.avsc"));
+  }
+
+  @Test
+  public void testNullabilityUdf() {
+    String viewSql = "CREATE VIEW foo_dali_udf_nullability "
+        + "tblproperties('functions' = 'LessThanHundred:com.linkedin.coral.hive.hive2rel.CoralTestUDF1 GreaterThanHundred:com.linkedin.coral.hive.hive2rel.CoralTestUDF2 FuncSquare:com.linkedin.coral.hive.hive2rel.CoralTestUDF3', "
+        + "              'dependencies' = 'ivy://com.linkedin:udf:1.0 ivy://com.linkedin:udf:1.0 ivy://com.linkedin:udf:1.0') "
+        + "AS "
+        + "SELECT default_foo_dali_udf_nullability_LessThanHundred(Int_Field_1), "
+        + "default_foo_dali_udf_nullability_LessThanHundred(Int_Field_2), "
+        + "default_foo_dali_udf_nullability_GreaterThanHundred(Int_Field_1), "
+        + "default_foo_dali_udf_nullability_GreaterThanHundred(Int_Field_2), "
+        + "default_foo_dali_udf_nullability_FuncSquare(Int_Field_1), "
+        + "default_foo_dali_udf_nullability_FuncSquare(Int_Field_2), "
+        + "default_foo_dali_udf_nullability_LessThanHundred(Int_Field_1) AND default_foo_dali_udf_nullability_LessThanHundred(Int_Field_2), "
+        + "default_foo_dali_udf_nullability_GreaterThanHundred(Int_Field_1) OR default_foo_dali_udf_nullability_GreaterThanHundred(Int_Field_2), "
+        + "default_foo_dali_udf_nullability_FuncSquare(Int_Field_1) + Id, "
+        + "default_foo_dali_udf_nullability_FuncSquare(Int_Field_2) + Id, "
+        + "CONCAT(String_Field_1,String_Field_1), "
+        + "CONCAT(String_Field_2,String_Field_2), "
+        + "CONCAT(String_Field_1,String_Field_2), "
+        + "default_foo_dali_udf_nullability_FuncSquare(Int_Field_1) + 1, "
+        + "default_foo_dali_udf_nullability_FuncSquare(Int_Field_2 + 1) + 1, "
+        + "default_foo_dali_udf_nullability_FuncSquare(default_foo_dali_udf_nullability_FuncSquare(default_foo_dali_udf_nullability_FuncSquare(Int_Field_2))) + bn.Id, "
+        + "default_foo_dali_udf_nullability_FuncSquare(default_foo_dali_udf_nullability_FuncSquare(default_foo_dali_udf_nullability_FuncSquare(Int_Field_2)) + 1) + bn.Id, "
+        + "default_foo_dali_udf_nullability_FuncSquare(Int_Field_2 + Id) + Id, "
+        + "Id + default_foo_dali_udf_nullability_FuncSquare(Id) "
+        + "FROM basenullability bn";
+
+    TestUtils.executeCreateViewQuery("default", "foo_dali_udf_nullability", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "foo_dali_udf_nullability");
+
+    Assert.assertEquals(actualSchema.toString(true),
+        TestUtils.loadSchema("testNullabilityUdf-expected.avsc"));
   }
 
   @Test

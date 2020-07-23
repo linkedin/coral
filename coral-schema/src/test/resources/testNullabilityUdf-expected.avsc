@@ -1,0 +1,63 @@
+{
+  "type" : "record",
+  "name" : "foo_dali_udf_nullability",
+  "namespace" : "default.foo_dali_udf_nullability",
+  "fields" : [ {
+    "name" : "EXPR_0",
+    "type" : [ "null", "boolean" ]
+  }, {
+    "name" : "EXPR_1",
+    "type" : "boolean"
+  }, {
+    "name" : "EXPR_2",
+    "type" : [ "null", "boolean" ]
+  }, {
+    "name" : "EXPR_3",
+    "type" : "boolean"
+  }, {
+    "name" : "EXPR_4",
+    "type" : [ "null", "int" ]
+  }, {
+    "name" : "EXPR_5",
+    "type" : "int"
+  }, {
+    "name" : "EXPR_6",
+    "type" : [ "null", "boolean" ]
+  }, {
+    "name" : "EXPR_7",
+    "type" : [ "null", "boolean" ]
+  }, {
+    "name" : "EXPR_8",
+    "type" : [ "null", "int" ]
+  }, {
+    "name" : "EXPR_9",
+    "type" : "int"
+  }, {
+    "name" : "EXPR_10",
+    "type" : [ "null", "string" ]
+  }, {
+    "name" : "EXPR_11",
+    "type" : "string"
+  }, {
+    "name" : "EXPR_12",
+    "type" : [ "null", "string" ]
+  }, {
+    "name" : "EXPR_13",
+    "type" : [ "null", "int" ]
+  }, {
+    "name" : "EXPR_14",
+    "type" : [ "null", "int" ]
+  }, {
+    "name" : "EXPR_15",
+    "type" : "int"
+  }, {
+    "name" : "EXPR_16",
+    "type" : [ "null", "int" ]
+  }, {
+    "name" : "EXPR_17",
+    "type" : "int"
+  }, {
+    "name" : "EXPR_18",
+    "type" : "int"
+  } ]
+}

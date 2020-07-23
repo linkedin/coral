@@ -7,6 +7,6 @@
     "type" : "int"
   }, {
     "name" : "Id_View_FuncSquare_Col",
-    "type" : [ "null", "int" ]
+    "type" : "int"
   } ]
 }

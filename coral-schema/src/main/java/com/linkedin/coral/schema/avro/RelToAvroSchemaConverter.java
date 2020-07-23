@@ -67,15 +67,10 @@ import org.apache.hadoop.hive.metastore.api.Table;
  * the user-specified new name is used instead
  *
  * Nullability:
- * Currently, nullability is addressed in a similar way as case sensitivity. However, this approach can
- * cause information loss.
- * TODO: implement the following rules for nullability
  * 1. If a column is unmodified by Rel operator, it retains nullability property
- * 2. If the column is an input to UDF, always expect a nullable return value from UDF. Since nullability property
- *    for parameters is not correctly encoded for UDFs so calcite will not provide this information directly.
- * 3. For projecting an expression consider various types of expressions like arithmetic, logical and unary expressions.
+ * 2. For UDF and SQL operators like arithmetic, logical and unary expressions,
  *    Operator semantics will determine nullable type. By and large, for all operators,
- *    1) if one of the inputs is null then the return value will also be null.
+ *    1) If one of the inputs is null then the return value will also be null.
  *    2) If all inputs are non-null, operator will return non null
  *
  * Enum:
@@ -297,7 +292,7 @@ public class RelToAvroSchemaConverter {
       for (AggregateCall aggCall : logicalAggregate.getAggCallList()) {
         String fieldName = "aggregate";
         RelDataType fieldType = aggCall.getType();
-        SchemaUtilities.appendField(fieldName, fieldType, logicalAggregateFieldAssembler);
+        SchemaUtilities.appendField(fieldName, fieldType, logicalAggregateFieldAssembler, true);
       }
 
       schemaMap.put(logicalAggregate, logicalAggregateFieldAssembler.endRecord());
@@ -332,7 +327,7 @@ public class RelToAvroSchemaConverter {
             .fields();
 
         for (RelDataTypeField field : relNode.getRowType().getFieldList()) {
-          SchemaUtilities.appendField(field.getName(), field.getType(), hiveUncollectFieldAssembler);
+          SchemaUtilities.appendField(field.getName(), field.getType(), hiveUncollectFieldAssembler, true);
         }
 
         schemaMap.put(relNode, hiveUncollectFieldAssembler.endRecord());
@@ -409,7 +404,7 @@ public class RelToAvroSchemaConverter {
     public RexNode visitLiteral(RexLiteral rexLiteral) {
       RexNode rexNode = super.visitLiteral(rexLiteral);
       RelDataType fieldType = rexLiteral.getType();
-      appendField(fieldType);
+      appendField(fieldType, true);
 
       return rexNode;
     }
@@ -423,7 +418,9 @@ public class RelToAvroSchemaConverter {
          * and only return type of udf or sql operator is relevant
          */
         RelDataType fieldType = rexCall.getType();
-        appendField(fieldType);
+        boolean isNullable = SchemaUtilities.isFieldNullable(rexCall, inputSchema);
+
+        appendField(fieldType, isNullable);
 
         return rexCall;
       } else {
@@ -479,9 +476,9 @@ public class RelToAvroSchemaConverter {
       return super.visitPatternFieldRef(rexPatternFieldRef);
     }
 
-    private void appendField(RelDataType fieldType) {
+    private void appendField(RelDataType fieldType, boolean isNullable) {
       String fieldName = SchemaUtilities.getFieldName("", suggestedFieldNames.poll());
-      SchemaUtilities.appendField(fieldName, fieldType, fieldAssembler);
+      SchemaUtilities.appendField(fieldName, fieldType, fieldAssembler, isNullable);
     }
   }
 }

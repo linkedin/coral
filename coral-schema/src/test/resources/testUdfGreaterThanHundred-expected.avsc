@@ -7,6 +7,6 @@
     "type" : "int"
   }, {
     "name" : "Id_View_GreaterThanHundred_Col",
-    "type" : [ "null", "boolean" ]
+    "type" : "boolean"
   } ]
 }

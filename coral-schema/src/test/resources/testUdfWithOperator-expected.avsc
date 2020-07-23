@@ -7,13 +7,13 @@
     "type" : "int"
   }, {
     "name" : "EXPR_1",
-    "type" : [ "null", "boolean" ]
+    "type" : "boolean"
   }, {
     "name" : "EXPR_2",
-    "type" : [ "null", "boolean" ]
+    "type" : "boolean"
   }, {
     "name" : "EXPR_3",
-    "type" : [ "null", "int" ]
+    "type" : "int"
   }, {
     "name" : "EXPR_4",
     "type" : [ "null", "int" ]
@@ -28,6 +28,6 @@
     "type" : [ "null", "int" ]
   }, {
     "name" : "EXPR_8",
-    "type" : [ "null", "int" ]
+    "type" : "int"
   } ]
 }

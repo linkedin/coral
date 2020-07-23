@@ -1,0 +1,36 @@
+{
+  "type" : "record",
+  "name" : "v",
+  "namespace" : "default.v",
+  "fields" : [ {
+    "name" : "EXPR_0",
+    "type" : [ "null", "int" ]
+  }, {
+    "name" : "EXPR_1",
+    "type" : "int"
+  }, {
+    "name" : "EXPR_2",
+    "type" : [ "null", "int" ]
+  }, {
+    "name" : "EXPR_3",
+    "type" : [ "null", "int" ]
+  }, {
+    "name" : "EXPR_4",
+    "type" : [ "null", "int" ]
+  }, {
+    "name" : "EXPR_5",
+    "type" : [ "null", "double" ]
+  }, {
+    "name" : "EXPR_6",
+    "type" : "double"
+  }, {
+    "name" : "EXPR_7",
+    "type" : [ "null", "double" ]
+  }, {
+    "name" : "EXPR_8",
+    "type" : [ "null", "boolean" ]
+  }, {
+    "name" : "EXPR_9",
+    "type" : "boolean"
+  } ]
+}
