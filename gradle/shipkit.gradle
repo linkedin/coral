@@ -23,7 +23,7 @@ allprojects {
 
            pkg {
                repo = 'maven'
-               user = 'linkedin-apa-dali'
+               user = 'lnkd-apa'
                userOrg = 'linkedin'
                name = 'coral'
                licenses = ['BSD 2-Clause']
