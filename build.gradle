@@ -20,6 +20,7 @@ configurations {
 }
 
 allprojects {
+  group = "com.linkedin.coral"
   repositories {
     mavenCentral()
     maven {
