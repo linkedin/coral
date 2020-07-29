@@ -8,27 +8,30 @@ shipkit {
   gitHub.writeAuthToken = System.getenv("GH_WRITE_TOKEN")
 
   git.releasableBranchRegex = "master|release/.+"
+
+  team.developers = ['wmoustafa:Walaa Eldin Moustafa', 'khaitranq:Khai Tranh', 'funcheetah:Wenye Zhang', 'shardulm94:Shardul Mahadik', 'shardulm94:Shardul Mahadik', 'hotsushi:Sushant Raikar']
 }
 
 allprojects {
-   plugins.withId("org.shipkit.bintray") {
+  plugins.withId("org.shipkit.bintray") {
 
-       //Bintray configuration is handled by JFrog Bintray Gradle Plugin
-       //For reference see the official documentation: https://github.com/bintray/gradle-bintray-plugin
-       bintray {
-
-           // The Bintray API token is required to publish artifacts to Bintray
-           // Ensure that the release machine or Travis CI has this env variable exported
-           key = System.getenv("BINTRAY_API_KEY")
-
-           pkg {
-               repo = 'maven'
-               user = 'lnkd-apa'
-               userOrg = 'linkedin'
-               name = 'coral'
-               licenses = ['BSD 2-Clause']
-               labels = ['coral', 'sql', 'presto', 'spark', 'hive', 'views']
-           }
-       }
-   }
+    //Bintray configuration is handled by JFrog Bintray Gradle Plugin
+    //For reference see the official documentation: https://github.com/bintray/gradle-bintray-plugin
+    bintray {
+      // The Bintray API token is required to publish artifacts to Bintray
+      // Ensure that the release machine or Travis CI has this env variable exported
+      key = System.getenv("BINTRAY_API_KEY")
+      pkg {
+        repo = 'maven'
+        user = 'lnkd-apa'
+        userOrg = 'linkedin'
+        name = 'coral'
+        licenses = ['BSD 2-Clause']
+        labels = ['coral', 'sql', 'presto', 'spark', 'hive', 'views']
+        vcsUrl = "https://github.com/linkedin/coral.git"
+        description = "A library for analyzing, processing, and rewriting views defined in the Hive Metastore, and sharing them across multiple execution engines"
+      }
+      publish = true
+    }
+  }
 }
