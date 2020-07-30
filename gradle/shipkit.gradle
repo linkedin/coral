@@ -9,7 +9,7 @@ shipkit {
 
   git.releasableBranchRegex = "master|release/.+"
 
-  team.developers = ['wmoustafa:Walaa Eldin Moustafa', 'khaitranq:Khai Tranh', 'funcheetah:Wenye Zhang', 'shardulm94:Shardul Mahadik', 'shardulm94:Shardul Mahadik', 'hotsushi:Sushant Raikar']
+  team.developers = ['wmoustafa:Walaa Eldin Moustafa', 'khaitranq:Khai Tranh', 'funcheetah:Wenye Zhang', 'shardulm94:Shardul Mahadik', 'hotsushi:Sushant Raikar']
 }
 
 allprojects {
