@@ -19,9 +19,6 @@ dependencies {
   testCompile deps.'kryo'
 }
 
-def pomPath = "$buildDir/${name}.pom"
-
 artifacts {
-  archives file: file(pomPath), name: "$name", type: "pom"
   archives jar, javadocJar, sourcesJar
 }
