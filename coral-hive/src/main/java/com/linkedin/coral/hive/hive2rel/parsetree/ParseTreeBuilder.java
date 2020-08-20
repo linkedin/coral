@@ -83,7 +83,7 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
       Config config,
       HiveFunctionRegistry registry,
       ConcurrentHashMap<String, HiveFunction> dynamicRegistry) {
-    this.msc = Optional.of(msc);
+    this.msc = msc == null ? Optional.empty() : Optional.of(msc);
     checkNotNull(config);
     checkState(config.catalogName.isEmpty() || !config.defaultDBName.isEmpty(),
         "Default DB is required if catalog name is not empty");
@@ -98,7 +98,7 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
    * @param config parse configuration to use
    */
   public ParseTreeBuilder(@Nullable HiveMetastoreClient msc, Config config) {
-    this.msc = Optional.of(msc);
+    this.msc = msc == null ? Optional.empty() : Optional.of(msc);
     checkNotNull(config);
     checkState(config.catalogName.isEmpty() || !config.defaultDBName.isEmpty(),
         "Default DB is required if catalog name is not empty");

@@ -43,10 +43,11 @@ import org.apache.calcite.tools.RelBuilder;
  * are created only once and shared across each call to corresponding getter.
  */
 // TODO: Replace this with Google injection framework
-class RelContextProvider {
+public class RelContextProvider {
 
-  private final FrameworkConfig config;
-  private final HiveSchema schema;
+  private FrameworkConfig config;
+  private HiveSchema schema;
+  private LocalMetastoreHiveSchema localMetastoreHiveSchema;
   private RelBuilder relBuilder;
   private CalciteCatalogReader catalogReader;
   private HiveSqlValidator sqlValidator;
@@ -65,27 +66,22 @@ class RelContextProvider {
    *
    * @param schema {@link HiveSchema} to use for conversion to relational algebra
    */
-  RelContextProvider(@Nonnull HiveSchema schema) {
+  public RelContextProvider(@Nonnull HiveSchema schema) {
     Preconditions.checkNotNull(schema);
     this.schema = schema;
-    SchemaPlus schemaPlus = Frameworks.createRootSchema(false);
-    schemaPlus.add(HiveSchema.ROOT_SCHEMA, schema);
-    this.registry = new StaticHiveFunctionRegistry();
-    this.dynamicRegistry = new ConcurrentHashMap<>();
-    // this is to ensure that jdbc:calcite driver is correctly registered
-    // before initializing framework (which needs it)
-    // We don't want each engine to register the driver. It may not also load correctly
-    // if the service uses its own service loader (see Presto)
-    driver = new Driver();
-    config = Frameworks.newConfigBuilder()
-        .convertletTable(convertletTable)
-        .defaultSchema(schemaPlus)
-        .typeSystem(new HiveTypeSystem())
-        .traitDefs((List<RelTraitDef>) null)
-        .operatorTable(ChainedSqlOperatorTable.of(SqlStdOperatorTable.instance(),
-                                                  new DaliOperatorTable(schema, this.registry, this.dynamicRegistry)))
-        .programs(Programs.ofRules(Programs.RULE_SET))
-        .build();
+    initializeForSchema(schema, null);
+  }
+
+  /**
+   * Instantiates a new Rel context provider with localMetastoreHiveSchema.
+   * This initializer is to work with localMetastore in coral-spark-plan module
+   *
+   * @param localMetastoreHiveSchema {@link LocalMetastoreHiveSchema} to use for conversion to relational algebra
+   */
+  public RelContextProvider(@Nonnull LocalMetastoreHiveSchema localMetastoreHiveSchema) {
+    Preconditions.checkNotNull(localMetastoreHiveSchema);
+    this.localMetastoreHiveSchema = localMetastoreHiveSchema;
+    initializeForSchema(null, localMetastoreHiveSchema);
   }
 
   /**
@@ -107,14 +103,12 @@ class RelContextProvider {
    *
    * @return FrameworkConfig object
    */
-  FrameworkConfig getConfig() {
+  public FrameworkConfig getConfig() {
     return config;
   }
 
   ParseTreeBuilder.Config getParseTreeBuilderConfig() {
-    return new ParseTreeBuilder.Config()
-        .setCatalogName(HiveSchema.ROOT_SCHEMA)
-        .setDefaultDB(HiveDbSchema.DEFAULT_DB);
+    return new ParseTreeBuilder.Config().setCatalogName(HiveSchema.ROOT_SCHEMA).setDefaultDB(HiveDbSchema.DEFAULT_DB);
   }
 
   HiveSchema getHiveSchema() {
@@ -126,7 +120,7 @@ class RelContextProvider {
    *
    * @return the rel builder
    */
-  RelBuilder getRelBuilder() {
+  public RelBuilder getRelBuilder() {
     if (relBuilder == null) {
       // Turn off Rel simplification. Rel simplification can statically interpret boolean conditions in
       // OR, AND, CASE clauses and simplify those. This has two problems:
@@ -136,6 +130,27 @@ class RelContextProvider {
       relBuilder = RelBuilder.create(config);
     }
     return relBuilder;
+  }
+
+  private void initializeForSchema(HiveSchema schema, LocalMetastoreHiveSchema localMetastoreHiveSchema) {
+    SchemaPlus schemaPlus = Frameworks.createRootSchema(false);
+    schemaPlus.add(HiveSchema.ROOT_SCHEMA, localMetastoreHiveSchema == null ? schema : localMetastoreHiveSchema);
+    this.registry = new StaticHiveFunctionRegistry();
+    this.dynamicRegistry = new ConcurrentHashMap<>();
+    // this is to ensure that jdbc:calcite driver is correctly registered
+    // before initializing framework (which needs it)
+    // We don't want each engine to register the driver. It may not also load correctly
+    // if the service uses its own service loader (see Presto)
+    driver = new Driver();
+    config = Frameworks.newConfigBuilder()
+        .convertletTable(convertletTable)
+        .defaultSchema(schemaPlus)
+        .typeSystem(new HiveTypeSystem())
+        .traitDefs((List<RelTraitDef>) null)
+        .operatorTable(ChainedSqlOperatorTable.of(SqlStdOperatorTable.instance(),
+            new DaliOperatorTable(schema, this.registry, this.dynamicRegistry)))
+        .programs(Programs.ofRules(Programs.RULE_SET))
+        .build();
   }
 
   /**
@@ -149,16 +164,13 @@ class RelContextProvider {
       connectionConfig = config.getContext().unwrap(CalciteConnectionConfig.class);
     } else {
       Properties properties = new Properties();
-      properties.setProperty(CalciteConnectionProperty.CASE_SENSITIVE.camelName(),
-          String.valueOf(false));
+      properties.setProperty(CalciteConnectionProperty.CASE_SENSITIVE.camelName(), String.valueOf(false));
       connectionConfig = new CalciteConnectionConfigImpl(properties);
     }
     if (catalogReader == null) {
-      catalogReader =
-          new CalciteCatalogReader(config.getDefaultSchema().unwrap(CalciteSchema.class),
-              ImmutableList.of(HiveSchema.ROOT_SCHEMA, HiveSchema.DEFAULT_DB),
-              getRelBuilder().getTypeFactory(),
-              connectionConfig);
+      catalogReader = new CalciteCatalogReader(config.getDefaultSchema().unwrap(CalciteSchema.class),
+          ImmutableList.of(HiveSchema.ROOT_SCHEMA, HiveSchema.DEFAULT_DB), getRelBuilder().getTypeFactory(),
+          connectionConfig);
     }
     return catalogReader;
   }
@@ -170,10 +182,8 @@ class RelContextProvider {
    */
   HiveSqlValidator getHiveSqlValidator() {
     if (sqlValidator == null) {
-      sqlValidator = new HiveSqlValidator(config.getOperatorTable(),
-          getCalciteCatalogReader(),
-          ((JavaTypeFactory) relBuilder.getTypeFactory()),
-          SqlConformanceEnum.PRAGMATIC_2003);
+      sqlValidator = new HiveSqlValidator(config.getOperatorTable(), getCalciteCatalogReader(),
+          ((JavaTypeFactory) relBuilder.getTypeFactory()), SqlConformanceEnum.PRAGMATIC_2003);
     }
     return sqlValidator;
   }
@@ -202,12 +212,8 @@ class RelContextProvider {
    */
   SqlToRelConverter getSqlToRelConverter() {
     if (relConverter == null) {
-      relConverter = new HiveSqlToRelConverter(getViewExpander(),
-          getHiveSqlValidator(),
-          getCalciteCatalogReader(),
-          getRelOptCluster(),
-          convertletTable,
-          SqlToRelConverter.configBuilder().build());
+      relConverter = new HiveSqlToRelConverter(getViewExpander(), getHiveSqlValidator(), getCalciteCatalogReader(),
+          getRelOptCluster(), convertletTable, SqlToRelConverter.configBuilder().build());
     }
     return relConverter;
   }

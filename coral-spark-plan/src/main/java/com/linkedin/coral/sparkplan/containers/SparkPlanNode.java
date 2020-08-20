@@ -20,7 +20,7 @@ public class SparkPlanNode {
   // need to distinguish different plan types because we use different mechanisms
   // to parse different plan types.
   public enum PLANTYPE {
-    SCAN, PROJECT, FILTER, JOIN, AGGREGATE, UNDEFINED
+    HIVE_SCAN, FILE_SCAN, PROJECT, FILTER, JOIN, AGGREGATE, UNDEFINED
   }
 
   private final int position;

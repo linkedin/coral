@@ -7,6 +7,8 @@ package com.linkedin.coral.hive.hive2rel;
 
 import com.linkedin.coral.com.google.common.annotations.VisibleForTesting;
 import com.linkedin.coral.hive.hive2rel.parsetree.ParseTreeBuilder;
+import java.util.List;
+import java.util.Map;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelRoot;
 import org.apache.calcite.sql.SqlNode;
@@ -39,6 +41,19 @@ public class HiveToRelConverter {
   public static HiveToRelConverter create(HiveMetastoreClient mscClient) {
     checkNotNull(mscClient);
     HiveSchema schema = new HiveSchema(mscClient);
+    RelContextProvider relContextProvider = new RelContextProvider(schema);
+    return new HiveToRelConverter(relContextProvider);
+  }
+
+  /**
+   * Initializes converter with local metastore instead of retrieving metadata using HiveMetastoreClient,
+   * this initializer is for SparkPlanToIRRelConverter in coral-spark-plan module
+   * @param localMetaStore Map containing the required metadata (database name, table name, column name & type)
+   *                       needed by SparkPlanToIRRelConverter in coral-spark-plan module
+   */
+  public static HiveToRelConverter create(Map<String, Map<String, List<String>>> localMetaStore) {
+    checkNotNull(localMetaStore);
+    LocalMetastoreHiveSchema schema = new LocalMetastoreHiveSchema(localMetaStore);
     RelContextProvider relContextProvider = new RelContextProvider(schema);
     return new HiveToRelConverter(relContextProvider);
   }
@@ -96,6 +111,11 @@ public class HiveToRelConverter {
 
   @VisibleForTesting
   ParseTreeBuilder getTreeBuilder() {
+    if (relContextProvider.getHiveSchema() == null) {
+      return new ParseTreeBuilder(null, relContextProvider.getParseTreeBuilderConfig(),
+          relContextProvider.getHiveFunctionRegistry(),
+          relContextProvider.getDynamicHiveFunctionRegistry());
+    }
     return new ParseTreeBuilder(relContextProvider.getHiveSchema().getHiveMetastoreClient(),
         relContextProvider.getParseTreeBuilderConfig(),
         relContextProvider.getHiveFunctionRegistry(),
