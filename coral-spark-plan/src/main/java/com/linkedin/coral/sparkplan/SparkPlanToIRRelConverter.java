@@ -165,6 +165,9 @@ public class SparkPlanToIRRelConverter {
    * @return true if the node contains only simple predicates, false otherwise
    */
   private boolean containsOnlySimplePredicates(RexNode condition) {
+    if (condition == null) {
+      return true;
+    }
     Queue<RexNode> queue = new LinkedList<>();
     queue.add(condition);
     while (!queue.isEmpty()) { // breadth first search
@@ -358,6 +361,7 @@ public class SparkPlanToIRRelConverter {
       String tableName = nameMatcher.group(2);
       String databaseTableName = databaseName + "." + tableName;
       predicateInfoMap.putIfAbsent(databaseTableName, new LinkedList<>());
+      String exceptionPredicate = null;
       try {
         RelBuilder relBuilder = relContextProvider.getRelBuilder();
         RelNode scanRelNode = relBuilder.scan(ImmutableList.of("hive", databaseName, tableName)).build();
@@ -378,6 +382,7 @@ public class SparkPlanToIRRelConverter {
         }
         if (potentialComplexPredicates.size() == 1) {
           String filterCondition = potentialComplexPredicates.get(0).trim();
+          exceptionPredicate = filterCondition;
           String modifiedFilterCondition = modifyFilterConditionString(filterCondition);
           RexNode rexNode = getRexNode(databaseName, tableName, modifiedFilterCondition);
           if (!containsOnlySimplePredicates(rexNode)) {
@@ -391,13 +396,18 @@ public class SparkPlanToIRRelConverter {
         }
       } catch (RuntimeException e) {
         e.printStackTrace();
-        predicateInfoMap.get(databaseTableName).add("Exception: " + e.getMessage());
+        predicateInfoMap.get(databaseTableName)
+            .add("Exception: " + e.getMessage() + (exceptionPredicate == null ? ""
+                : "\n" + "Predicate: [" + exceptionPredicate + "]"));
       }
     }
   }
 
   private RexNode getRexNode(String databaseName, String tableName, String modifiedFilterCondition) {
-    String sql = "SELECT * FROM " + databaseName + "." + tableName + " WHERE " + modifiedFilterCondition;
+    if ("".equals(modifiedFilterCondition.trim())) {
+      return null;
+    }
+    String sql = "SELECT * FROM " + databaseName + "." + tableName + " WHERE " + modifiedFilterCondition;;
     RelNode convertedNode = hiveToRelConverter.convertSql(sql);
     return convertedNode.getInput(0).getChildExps().get(0);
   }
@@ -495,12 +505,14 @@ public class SparkPlanToIRRelConverter {
       } else if (c == ',') {
         if (parenthesis == 0) {
           sb.deleteCharAt(sb.length() - 1);
-          conditions.add(sb.toString());
+          if (!"null".equals(sb.toString().trim().toLowerCase())) {
+            conditions.add(sb.toString());
+          }
           sb = new StringBuilder();
         }
       }
     }
-    if (!"".equals(sb.toString())) {
+    if (!"".equals(sb.toString()) && !"null".equals(sb.toString().trim().toLowerCase())) {
       conditions.add(sb.toString());
     }
     return String.join(" AND ", conditions);
