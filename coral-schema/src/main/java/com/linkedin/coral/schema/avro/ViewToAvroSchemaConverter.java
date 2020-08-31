@@ -84,11 +84,6 @@ public class ViewToAvroSchemaConverter {
           tableOrViewName,
           dbName + "." + tableOrViewName);
 
-      // add partition columns to schema if table or view is partitioned
-      if (SchemaUtilities.isPartitioned(tableOrView)) {
-        avroSchema = SchemaUtilities.addPartitionColsToSchema(avroSchema, tableOrView);
-      }
-
       return avroSchema;
     }
   }

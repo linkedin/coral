@@ -355,7 +355,7 @@ public class RelToAvroSchemaConverter {
         throw new RuntimeException("Cannot find table " + dbName + "." + tableName + " in Hive metastore");
       }
 
-      Schema tableSchema = SchemaUtilities.getCasePreservedSchemaFromTblProperties(baseTable);
+      Schema tableSchema = SchemaUtilities.getCasePreservedSchemaForTable(baseTable);
       if (tableSchema == null) {
         throw new SchemaNotFoundException("Cannot determine avro schema for table " + dbName + "." + tableName);
       }

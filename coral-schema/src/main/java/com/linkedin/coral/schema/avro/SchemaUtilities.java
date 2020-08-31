@@ -37,6 +37,25 @@ class SchemaUtilities {
   }
 
   /**
+   * This method return case preserved avro schema including partition columns for table
+   *
+   * @param table
+   * @return case preserved avro schema for table including partition columns
+   */
+  static Schema getCasePreservedSchemaForTable(@Nonnull final Table table) {
+    Preconditions.checkNotNull(table);
+    Schema schemaWithoutPartitionColumns = getCasePreservedSchemaFromTblProperties(table);
+
+    // add partition columns to schema if table is partitioned
+    if (isPartitioned(table)) {
+      Schema schemaWithPartitionColumns = addPartitionColsToSchema(schemaWithoutPartitionColumns, table);
+      return schemaWithPartitionColumns;
+    } else {
+      return schemaWithoutPartitionColumns;
+    }
+  }
+
+  /**
    * Returns case sensitive schema from table properties or null if not present
    *
    * Note: This method is modified based on SchemaUtilities in Dali codebase

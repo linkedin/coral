@@ -539,6 +539,64 @@ public class ViewToAvroSchemaConverterTests {
         TestUtils.loadSchema("testNullabilityUdf-expected.avsc"));
   }
 
+  @Test(enabled = false)
+  public void testRenameToLowercase() {
+    String viewSql = "CREATE VIEW v AS "
+        + "SELECT bc.Id AS id, bc.Array_Col AS array_col "
+        + "FROM basecomplex bc "
+        + "WHERE bc.Id > 0 AND bc.Struct_Col IS NOT NULL";
+
+    TestUtils.executeCreateViewQuery("default", "v", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v");
+
+    Assert.assertEquals(actualSchema.toString(true),
+        TestUtils.loadSchema("testRenameToLowercase-expected.avsc"));
+  }
+
+  @Test
+  public void testSelectStarWithPartition() {
+    String viewSql = "CREATE VIEW v AS SELECT * FROM basecasepreservation";
+
+    TestUtils.executeCreateViewQuery("default", "v", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v");
+
+    Assert.assertEquals(actualSchema.toString(true),
+        TestUtils.loadSchema("testSelectStarWithPartition.avsc"));
+  }
+
+  @Test
+  public void testSelectPartitionColumn() {
+    String viewSql = "CREATE VIEW v AS SELECT KEY, VALUE, datepartition FROM basecasepreservation";
+
+    TestUtils.executeCreateViewQuery("default", "v", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v");
+
+    Assert.assertEquals(actualSchema.toString(true),
+        TestUtils.loadSchema("testSelectStarWithPartition.avsc"));
+  }
+
+  @Test
+  public void testUnionSelectStarFromPartitionTable() {
+    String viewSql = "CREATE VIEW v AS "
+        + "SELECT * FROM basecasepreservation "
+        + "UNION ALL "
+        + "SELECT * FROM basecasepreservation";
+
+    TestUtils.executeCreateViewQuery("default", "v", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v");
+
+    Assert.assertEquals(actualSchema.toString(true),
+        TestUtils.loadSchema("testSelectStarWithPartition.avsc"));
+  }
+
   @Test
   public void testSubQueryWhere() {
     // TODO: implement this test

@@ -1,0 +1,16 @@
+{
+  "type" : "record",
+  "name" : "v",
+  "namespace" : "default.v",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "int"
+  }, {
+    "name" : "array_col",
+    "type" : [ "null", {
+      "type" : "array",
+      "items" : [ "null", "string" ]
+    } ],
+    "default" : null
+  } ]
+}
