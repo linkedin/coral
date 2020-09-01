@@ -34,8 +34,9 @@ public class HiveViewTable extends HiveTable implements TranslatableTable {
 
   /**
    * Constructor to create bridge from hive table to calcite table
-
+   *
    * @param hiveTable Hive table
+   * @param schemaPath Calcite schema path
    */
   public HiveViewTable(Table hiveTable, List<String> schemaPath) {
     super(hiveTable);

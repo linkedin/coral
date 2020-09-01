@@ -192,7 +192,10 @@ public class UDFTransformer {
    *                             quotation marks INCLUDED.
    *                             As seen in the example above, the single quotation marks are also present in the
    *                             regex matcher.
+   *
+   * @return {@link UDFTransformer} object
    */
+
   public static UDFTransformer of(@Nonnull String calciteOperatorName, @Nonnull SqlOperator targetOperator,
       @Nullable String operandTransformers, @Nullable String resultTransformer,
       @Nullable String operatorTransformers) {

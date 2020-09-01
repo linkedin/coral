@@ -213,5 +213,4 @@ public class PigUDF extends Function {
 
     return String.format(CONSTANT_PARAMETER_TEMPLATE, String.join(", ", parameters));
   }
-
 }

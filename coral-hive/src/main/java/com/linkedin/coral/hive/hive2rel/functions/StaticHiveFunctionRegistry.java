@@ -418,7 +418,7 @@
    }
 
    /**
-    * Returns immutable copy of internal function registry
+    * @return immutable copy of internal function registry
     */
    public ImmutableMultimap<String, HiveFunction> getRegistry() {
      return ImmutableMultimap.copyOf(FUNCTION_MAP);

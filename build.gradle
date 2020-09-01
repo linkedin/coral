@@ -1,7 +1,3 @@
-configurations {
-  provided
-}
-
 buildscript {
   repositories {
     jcenter()
@@ -15,11 +11,20 @@ buildscript {
   }
 }
 
+plugins {
+  id "org.shipkit.java" version "2.3.0"
+}
+
+configurations {
+  provided
+}
+
 allprojects {
+  group = "com.linkedin.coral"
   repositories {
     mavenCentral()
     maven {
-      url 'http://dl.bintray.com/funcheetah8/maven/'
+      url 'https://linkedin.bintray.com/maven/'
     }
   }
 }

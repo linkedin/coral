@@ -111,6 +111,10 @@ public class UDFMapUtils {
 
   /**
    * Creates Presto UDF for a given Presto UDF name and return type inference.
+   *
+   * @param udfName udf name
+   * @param typeInference {@link SqlReturnTypeInference} of return type
+   * @return SQL operator
    */
   public static SqlOperator createUDF(String udfName, SqlReturnTypeInference typeInference) {
     return new SqlUserDefinedFunction(new SqlIdentifier(ImmutableList.of(udfName), SqlParserPos.ZERO),

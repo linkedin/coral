@@ -15,4 +15,5 @@ target/
 derby.log
 ligradle
 .DS_Store
-.ideaDataSources
+*.patch
+

@@ -83,7 +83,7 @@ public class HiveDbSchema implements Schema {
 
   /**
    * A Hive DB does not have subschema
-   * @param name
+   * @param name Subschema name
    * @return Calcite schema
    */
   @Override
