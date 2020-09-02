@@ -49,8 +49,9 @@ public class HiveToRelConverter {
   /**
    * Initializes converter with local metastore instead of retrieving metadata using HiveMetastoreClient,
    * this initializer is for SparkPlanToIRRelConverter in coral-spark-plan module
-   * @param localMetaStore Map containing the required metadata (database name, table name, column name & type)
+   * @param localMetaStore Map containing the required metadata (database name, table name, column name and type)
    *                       needed by SparkPlanToIRRelConverter in coral-spark-plan module
+   * @return {@link HiveToRelConverter}
    */
   public static HiveToRelConverter create(Map<String, Map<String, List<String>>> localMetaStore) {
     checkNotNull(localMetaStore);

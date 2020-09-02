@@ -106,7 +106,7 @@ public class LocalMetastoreHiveSchema implements Schema {
   }
 
   /**
-   * Returns Hive metastore client, because we don't have MSC in this class, return null for now
+   * @return Hive metastore client, because we don't have MSC in this class, return null for now
    */
   public HiveMetastoreClient getHiveMetastoreClient() {
     return null;

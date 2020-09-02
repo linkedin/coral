@@ -1,7 +1,7 @@
 apply plugin: 'java'
 
 dependencies {
-  compile('com.linkedin.calcite:calcite-core:1.21.0.138') {
+  compile('com.linkedin.calcite:calcite-core:1.21.0.140') {
     artifact {
       name = 'calcite-core'
       extension = 'jar'

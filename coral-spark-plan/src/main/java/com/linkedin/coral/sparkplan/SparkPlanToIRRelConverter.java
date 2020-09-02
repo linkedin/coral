@@ -58,6 +58,7 @@ public class SparkPlanToIRRelConverter {
    *
    * @param mscClient HiveMetaStoreClient. Hive metastore client provides small subset
    *                  of methods provided by Hive's metastore client interface.
+   * @return {@link SparkPlanToIRRelConverter}
    */
   public static SparkPlanToIRRelConverter create(HiveMetastoreClient mscClient) {
     checkNotNull(mscClient);
@@ -70,7 +71,8 @@ public class SparkPlanToIRRelConverter {
   /**
    * Initializes converter and provider with localMetastore, which is a map
    *
-   * @param localMetastore map containing all the the required metadata (database name, table name, column name & type)
+   * @param localMetastore map containing all the the required metadata (database name, table name, column name and type)
+   * @return {@link SparkPlanToIRRelConverter}
    */
   public static SparkPlanToIRRelConverter create(Map<String, Map<String, List<String>>> localMetastore) {
     checkNotNull(localMetastore);
@@ -81,7 +83,9 @@ public class SparkPlanToIRRelConverter {
   /**
    * Initializes converter and provider with localMetastorePath, which points to a json file
    * @param localMetastorePath path of local metastore json file, containing all the required
-   *                           metadata (database name, table name, column name & type)
+   *                           metadata (database name, table name, column name and type)
+   * @return {@link SparkPlanToIRRelConverter}
+   * @throws IOException when creating a buffer {@link Reader}
    */
   public static SparkPlanToIRRelConverter create(String localMetastorePath) throws IOException {
     checkNotNull(localMetastorePath);

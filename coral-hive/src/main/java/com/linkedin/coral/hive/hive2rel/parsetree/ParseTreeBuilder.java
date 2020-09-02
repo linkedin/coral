@@ -79,6 +79,7 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
    * @param msc optional HiveMetastore client. This is required to decode view definitions
    * @param config parse configuration to use
    * @param registry {@link HiveFunctionRegistry} object, which represents the Hive function registry
+   * @param dynamicRegistry Map of {@link HiveFunction}
    */
   public ParseTreeBuilder(@Nullable HiveMetastoreClient msc,
       Config config,
