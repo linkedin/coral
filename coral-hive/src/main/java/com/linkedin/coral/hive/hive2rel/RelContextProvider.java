@@ -12,6 +12,7 @@ import com.linkedin.coral.hive.hive2rel.functions.HiveFunctionRegistry;
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 import com.linkedin.coral.hive.hive2rel.parsetree.ParseTreeBuilder;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nonnull;
@@ -45,9 +46,8 @@ import org.apache.calcite.tools.RelBuilder;
 // TODO: Replace this with Google injection framework
 public class RelContextProvider {
 
-  private FrameworkConfig config;
-  private HiveSchema schema;
-  private LocalMetastoreHiveSchema localMetastoreHiveSchema;
+  private final FrameworkConfig config;
+  private final HiveMetastoreClient hiveMetastoreClient;
   private RelBuilder relBuilder;
   private CalciteCatalogReader catalogReader;
   private HiveSqlValidator sqlValidator;
@@ -64,24 +64,58 @@ public class RelContextProvider {
   /**
    * Instantiates a new Rel context provider.
    *
-   * @param schema {@link HiveSchema} to use for conversion to relational algebra
+   * @param hiveMetastoreClient Hive metastore client to construct Calcite schema
    */
-  public RelContextProvider(@Nonnull HiveSchema schema) {
-    Preconditions.checkNotNull(schema);
-    this.schema = schema;
-    initializeForSchema(schema, null);
+  public RelContextProvider(@Nonnull HiveMetastoreClient hiveMetastoreClient) {
+    Preconditions.checkNotNull(hiveMetastoreClient);
+    this.hiveMetastoreClient = hiveMetastoreClient;
+    HiveSchema schema = new HiveSchema(hiveMetastoreClient);
+    SchemaPlus schemaPlus = Frameworks.createRootSchema(false);
+    schemaPlus.add(HiveSchema.ROOT_SCHEMA, schema);
+    this.registry = new StaticHiveFunctionRegistry();
+    this.dynamicRegistry = new ConcurrentHashMap<>();
+    // this is to ensure that jdbc:calcite driver is correctly registered
+    // before initializing framework (which needs it)
+    // We don't want each engine to register the driver. It may not also load correctly
+    // if the service uses its own service loader (see Presto)
+    driver = new Driver();
+    config = Frameworks.newConfigBuilder()
+        .convertletTable(convertletTable)
+        .defaultSchema(schemaPlus)
+        .typeSystem(new HiveTypeSystem())
+        .traitDefs((List<RelTraitDef>) null)
+        .operatorTable(ChainedSqlOperatorTable.of(SqlStdOperatorTable.instance(),
+                                                  new DaliOperatorTable(this.registry, this.dynamicRegistry)))
+        .programs(Programs.ofRules(Programs.RULE_SET))
+        .build();
   }
 
   /**
-   * Instantiates a new Rel context provider with localMetastoreHiveSchema.
-   * This initializer is to work with localMetastore in coral-spark-plan module
+   * Instantiates a new Rel context provider.
    *
-   * @param localMetastoreHiveSchema {@link LocalMetastoreHiveSchema} to use for conversion to relational algebra
+   * @param localMetaStore in-memory version of Hive metastore client used to  construct Calcite schema
    */
-  public RelContextProvider(@Nonnull LocalMetastoreHiveSchema localMetastoreHiveSchema) {
-    Preconditions.checkNotNull(localMetastoreHiveSchema);
-    this.localMetastoreHiveSchema = localMetastoreHiveSchema;
-    initializeForSchema(null, localMetastoreHiveSchema);
+  public RelContextProvider(Map<String, Map<String, List<String>>> localMetaStore) {
+    this.hiveMetastoreClient = null;
+    LocalMetastoreHiveSchema schema = new LocalMetastoreHiveSchema(localMetaStore);
+    SchemaPlus schemaPlus = Frameworks.createRootSchema(false);
+    schemaPlus.add(HiveSchema.ROOT_SCHEMA, schema);
+    this.registry = new StaticHiveFunctionRegistry();
+    this.dynamicRegistry = new ConcurrentHashMap<>();
+    // this is to ensure that jdbc:calcite driver is correctly registered
+    // before initializing framework (which needs it)
+    // We don't want each engine to register the driver. It may not also load correctly
+    // if the service uses its own service loader (see Presto)
+    driver = new Driver();
+    config = Frameworks.newConfigBuilder()
+        .convertletTable(convertletTable)
+        .defaultSchema(schemaPlus)
+        .typeSystem(new HiveTypeSystem())
+        .traitDefs((List<RelTraitDef>) null)
+        .operatorTable(ChainedSqlOperatorTable.of(SqlStdOperatorTable.instance(),
+            new DaliOperatorTable(this.registry, this.dynamicRegistry)))
+        .programs(Programs.ofRules(Programs.RULE_SET))
+        .build();
   }
 
   /**
@@ -108,11 +142,17 @@ public class RelContextProvider {
   }
 
   ParseTreeBuilder.Config getParseTreeBuilderConfig() {
-    return new ParseTreeBuilder.Config().setCatalogName(HiveSchema.ROOT_SCHEMA).setDefaultDB(HiveDbSchema.DEFAULT_DB);
+    return new ParseTreeBuilder.Config()
+        .setCatalogName(HiveSchema.ROOT_SCHEMA)
+        .setDefaultDB(HiveDbSchema.DEFAULT_DB);
+  }
+
+  HiveMetastoreClient getHiveMetastoreClient() {
+    return hiveMetastoreClient;
   }
 
   HiveSchema getHiveSchema() {
-    return schema;
+    return config.getDefaultSchema().getSubSchema(HiveSchema.ROOT_SCHEMA).unwrap(HiveSchema.class);
   }
 
   /**
@@ -130,27 +170,6 @@ public class RelContextProvider {
       relBuilder = RelBuilder.create(config);
     }
     return relBuilder;
-  }
-
-  private void initializeForSchema(HiveSchema schema, LocalMetastoreHiveSchema localMetastoreHiveSchema) {
-    SchemaPlus schemaPlus = Frameworks.createRootSchema(false);
-    schemaPlus.add(HiveSchema.ROOT_SCHEMA, localMetastoreHiveSchema == null ? schema : localMetastoreHiveSchema);
-    this.registry = new StaticHiveFunctionRegistry();
-    this.dynamicRegistry = new ConcurrentHashMap<>();
-    // this is to ensure that jdbc:calcite driver is correctly registered
-    // before initializing framework (which needs it)
-    // We don't want each engine to register the driver. It may not also load correctly
-    // if the service uses its own service loader (see Presto)
-    driver = new Driver();
-    config = Frameworks.newConfigBuilder()
-        .convertletTable(convertletTable)
-        .defaultSchema(schemaPlus)
-        .typeSystem(new HiveTypeSystem())
-        .traitDefs((List<RelTraitDef>) null)
-        .operatorTable(ChainedSqlOperatorTable.of(SqlStdOperatorTable.instance(),
-            new DaliOperatorTable(schema, this.registry, this.dynamicRegistry)))
-        .programs(Programs.ofRules(Programs.RULE_SET))
-        .build();
   }
 
   /**

@@ -105,11 +105,4 @@ public class HiveSchema implements Schema {
   public Schema snapshot(SchemaVersion schemaVersion) {
     return this;
   }
-
-  /**
-   * @return {@link HiveMetastoreClient} object
-   */
-  public @Nonnull
-  HiveMetastoreClient getHiveMetastoreClient() {
-    return msc; }
 }

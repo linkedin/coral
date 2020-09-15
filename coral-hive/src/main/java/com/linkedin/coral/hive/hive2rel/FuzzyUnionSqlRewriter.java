@@ -6,7 +6,6 @@
 package com.linkedin.coral.hive.hive2rel;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.linkedin.coral.hive.hive2rel.functions.GenericProjectFunction;
 import java.util.List;
 import java.util.Set;
@@ -14,6 +13,7 @@ import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
+import org.apache.calcite.schema.Table;
 import org.apache.calcite.sql.SqlAsOperator;
 import org.apache.calcite.sql.SqlBasicCall;
 import org.apache.calcite.sql.SqlCall;
@@ -25,8 +25,6 @@ import org.apache.calcite.sql.SqlNodeList;
 import org.apache.calcite.sql.SqlSelect;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.util.SqlShuttle;
-import org.apache.hadoop.hive.metastore.api.FieldSchema;
-import org.apache.hadoop.hive.metastore.api.Table;
 
 /**
  * Fuzzy union occur when there is a mismatch in the schemas of the branches of a union. This can occur in a Dali view
@@ -81,17 +79,17 @@ import org.apache.hadoop.hive.metastore.api.Table;
  */
 class FuzzyUnionSqlRewriter extends SqlShuttle {
 
-  private final Table table;
+  private final String tableName;
   private final RelDataType tableDataType;
   private final RelContextProvider relContextProvider;
   private final List<String> columnNames;
 
-  public FuzzyUnionSqlRewriter(@Nonnull Table table, @Nonnull RelContextProvider relContextProvider) {
-    this.table = table;
+  public FuzzyUnionSqlRewriter(@Nonnull Table table, @Nonnull String tableName,
+      @Nonnull RelContextProvider relContextProvider) {
     this.relContextProvider = relContextProvider;
-    HiveTable hiveTable = new HiveTable(table);
-    this.tableDataType = hiveTable.getRowType(relContextProvider.getHiveSqlValidator().getTypeFactory());
-    this.columnNames = Lists.transform(table.getSd().getCols(), field -> field.getName());
+    this.tableName = tableName;
+    this.tableDataType = table.getRowType(relContextProvider.getHiveSqlValidator().getTypeFactory());
+    this.columnNames = tableDataType.getFieldNames();
   }
 
   @Override
@@ -111,7 +109,7 @@ class FuzzyUnionSqlRewriter extends SqlShuttle {
   private SqlNode createGenericProject(String columnName) {
     SqlNode[] genericProjectOperands = new SqlNode[2];
     genericProjectOperands[0] =
-        new SqlIdentifier(ImmutableList.of(table.getTableName(), columnName), SqlParserPos.ZERO);
+        new SqlIdentifier(ImmutableList.of(tableName, columnName), SqlParserPos.ZERO);
     genericProjectOperands[1] = SqlLiteral.createCharString(columnName, SqlParserPos.ZERO);
     RelDataTypeField columnField = tableDataType.getField(columnName, false, true);
     SqlBasicCall genericProjectCall = new SqlBasicCall(new GenericProjectFunction(columnField.getType()),
@@ -137,16 +135,16 @@ class FuzzyUnionSqlRewriter extends SqlShuttle {
    */
   private SqlNodeList createProjectedFieldsNodeList(RelDataType fromNodeDataType) {
     SqlNodeList projectedFields = new SqlNodeList(SqlParserPos.ZERO);
-    for (FieldSchema field : table.getSd().getCols()) {
+    for (RelDataTypeField field : tableDataType.getFieldList()) {
       SqlNode projectedField;
       RelDataTypeField schemaDataTypeField = tableDataType.getField(field.getName(), false, false);
       RelDataTypeField inputDataTypeField = fromNodeDataType.getField(field.getName(), false, false);
-      if (field.getType().contains("struct")
+      if (field.getType().getFullTypeString().contains("RecordType")
           && !schemaDataTypeField.equals(inputDataTypeField)) {
         projectedField = createGenericProject(field.getName());
       } else {
         projectedField = new SqlIdentifier(ImmutableList.of(
-            table.getTableName(), field.getName()), SqlParserPos.ZERO);
+            tableName, field.getName()), SqlParserPos.ZERO);
       }
       projectedFields.add(projectedField);
     }
@@ -191,7 +189,7 @@ class FuzzyUnionSqlRewriter extends SqlShuttle {
     // Create a SqlNode that has a string equivalent to the following query:
     // SELECT table_name.col1, generic_project(table_name.col2), ... FROM (unionBranch) as table_name
     SqlNodeList projectedFields = createProjectedFieldsNodeList(fromNodeDataType);
-    SqlNode[] castTableOperands = {unionBranch, new SqlIdentifier(table.getTableName(), SqlParserPos.ZERO)};
+    SqlNode[] castTableOperands = {unionBranch, new SqlIdentifier(tableName, SqlParserPos.ZERO)};
     SqlBasicCall castTableCall = new SqlBasicCall(new SqlAsOperator(), castTableOperands, SqlParserPos.ZERO);
     SqlSelect selectOperator = new SqlSelect(SqlParserPos.ZERO, new SqlNodeList(SqlParserPos.ZERO),
         projectedFields, castTableCall, null, null, null, null, null, null, null);

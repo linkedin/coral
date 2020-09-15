@@ -6,7 +6,6 @@
 package com.linkedin.coral.sparkplan;
 
 import com.linkedin.coral.hive.hive2rel.HiveMscAdapter;
-import com.linkedin.coral.hive.hive2rel.HiveSchema;
 import com.linkedin.coral.hive.hive2rel.RelContextProvider;
 import java.io.IOException;
 import org.apache.hadoop.hive.metastore.IMetaStoreClient;
@@ -29,8 +28,7 @@ public class SparkPlanToIRRelConverterTest {
     final IMetaStoreClient msc = testHive.getMetastoreClient();
     HiveMscAdapter hiveMscAdapter = new HiveMscAdapter(msc);
     converter = SparkPlanToIRRelConverter.create(hiveMscAdapter);
-    HiveSchema schema = new HiveSchema(hiveMscAdapter);
-    relContextProvider = new RelContextProvider(schema);
+    relContextProvider = new RelContextProvider(hiveMscAdapter);
   }
 
 

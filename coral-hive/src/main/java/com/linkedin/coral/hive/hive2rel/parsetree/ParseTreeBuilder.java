@@ -53,42 +53,43 @@ import static org.apache.calcite.sql.parser.SqlParserPos.*;
  * Class to convert Hive Abstract Syntax Tree(AST) represented by {@link ASTNode} to
  * Calcite based AST represented using {@link SqlNode}.
  *
- * Hive AST nodes are poorly structured and do not support polymorphic behavior for processing
- * AST using, for example, visitors. ASTNode carries all the information as type and text fields
- * and children nodes are of base class Node. This requires constant casting of nodes and string
- * processing to get the type and value out of a node. This complicates analysis of the tree.
+ * Hive AST nodes do not support polymorphic behavior for processing AST using, for example, visitors
+ * ASTNode carries all the information as type and text fields and children nodes are of base class Node.
+ * This requires constant casting of nodes and string processing to get the type and value out of a node.
+ * This complicates analysis of the tree.
  *
  * This class converts the AST to Calcite based AST using {@link SqlNode}.This is more structured
  * allowing for simpler analysis code.
  *
  * NOTE:
- * There are, certain difficulties in correct translation.
+ * There are certain difficulties in correct translation.
  * For example, for identifier named {@code s.field1} it's hard to ascertain if {@code s} is a
  * table name or column name of type struct. This is typically resolved by validators using scope but
  * we haven't specialized that part yet.
  */
 public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuilder.ParseContext> {
   @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-  private final Optional<HiveMetastoreClient> msc;
+  private final HiveMetastoreClient hiveMetastoreClient;
   private final Config config;
   private final HiveFunctionResolver functionResolver;
   private HiveFunctionRegistry registry;
 
   /**
-   * Constructs a parse tree builder to use hive metatstore and user provided configuration
-   * @param msc optional HiveMetastore client. This is required to decode view definitions
+   * Constructs a parse tree builder
+   * @param hiveMetastoreClient optional HiveMetastore client. This is required to decode view definitions
    * @param config parse configuration to use
-   * @param registry {@link HiveFunctionRegistry} object, which represents the Hive function registry
-   * @param dynamicRegistry Map of {@link HiveFunction}
+   * @param registry Static Hive function registry
+   * @param dynamicRegistry Dynamic Hive function registry (inferred at runtime)
    */
-  public ParseTreeBuilder(@Nullable HiveMetastoreClient msc,
+  public ParseTreeBuilder(
+      HiveMetastoreClient hiveMetastoreClient,
       Config config,
       HiveFunctionRegistry registry,
       ConcurrentHashMap<String, HiveFunction> dynamicRegistry) {
-    this.msc = msc == null ? Optional.empty() : Optional.of(msc);
     checkNotNull(config);
     checkState(config.catalogName.isEmpty() || !config.defaultDBName.isEmpty(),
         "Default DB is required if catalog name is not empty");
+    this.hiveMetastoreClient = hiveMetastoreClient;
     this.config = config;
     this.functionResolver = new HiveFunctionResolver(registry, dynamicRegistry);
   }
@@ -96,18 +97,17 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
   /**
    * This constructor is used for unit testing purpose
    * Constructs a parse tree builder to use hive metatstore and user provided configuration
-   * @param msc optional HiveMetastore client. This is required to decode view definitions
+   * @param hiveMetastoreClient optional HiveMetastore client. This is required to decode view definitions
    * @param config parse configuration to use
    */
-  public ParseTreeBuilder(@Nullable HiveMetastoreClient msc, Config config) {
-    this.msc = msc == null ? Optional.empty() : Optional.of(msc);
+  public ParseTreeBuilder(@Nullable HiveMetastoreClient hiveMetastoreClient, Config config) {
+    this.hiveMetastoreClient = hiveMetastoreClient;
     checkNotNull(config);
     checkState(config.catalogName.isEmpty() || !config.defaultDBName.isEmpty(),
         "Default DB is required if catalog name is not empty");
     this.config = config;
     this.functionResolver = new HiveFunctionResolver(new StaticHiveFunctionRegistry(), new ConcurrentHashMap<>());
   }
-
   /**
    * Creates a parse tree for a hive view using the expanded view text from hive metastore.
    * This table name is required for handling dali function name resolution.
@@ -713,7 +713,11 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
   }
 
   private HiveMetastoreClient getMscOrThrow() {
-    return msc.orElseThrow(() -> new RuntimeException("Hive metastore client is required to access table"));
+    if (hiveMetastoreClient == null) {
+      throw new RuntimeException("Hive metastore client is required to access table");
+    } else {
+      return hiveMetastoreClient;
+    }
   }
 
   public static class Config {

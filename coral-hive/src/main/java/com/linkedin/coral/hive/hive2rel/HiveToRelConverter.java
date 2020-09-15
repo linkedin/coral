@@ -11,8 +11,8 @@ import java.util.List;
 import java.util.Map;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelRoot;
+import org.apache.calcite.schema.Table;
 import org.apache.calcite.sql.SqlNode;
-import org.apache.hadoop.hive.metastore.api.Table;
 
 import static com.google.common.base.Preconditions.*;
 
@@ -41,8 +41,7 @@ public class HiveToRelConverter {
    */
   public static HiveToRelConverter create(HiveMetastoreClient mscClient) {
     checkNotNull(mscClient);
-    HiveSchema schema = new HiveSchema(mscClient);
-    RelContextProvider relContextProvider = new RelContextProvider(schema);
+    RelContextProvider relContextProvider = new RelContextProvider(mscClient);
     return new HiveToRelConverter(relContextProvider);
   }
 
@@ -55,8 +54,7 @@ public class HiveToRelConverter {
    */
   public static HiveToRelConverter create(Map<String, Map<String, List<String>>> localMetaStore) {
     checkNotNull(localMetaStore);
-    LocalMetastoreHiveSchema schema = new LocalMetastoreHiveSchema(localMetaStore);
-    RelContextProvider relContextProvider = new RelContextProvider(schema);
+    RelContextProvider relContextProvider = new RelContextProvider(localMetaStore);
     return new HiveToRelConverter(relContextProvider);
   }
 
@@ -103,10 +101,9 @@ public class HiveToRelConverter {
    */
   public RelNode convertView(String hiveDbName, String hiveViewName) {
     SqlNode sqlNode = getTreeBuilder().processView(hiveDbName, hiveViewName);
-    HiveMetastoreClient msc = relContextProvider.getHiveSchema().getHiveMetastoreClient();
-    Table table = msc.getTable(hiveDbName, hiveViewName);
-    if (table != null) {
-      sqlNode.accept(new FuzzyUnionSqlRewriter(table, relContextProvider));
+    Table view = relContextProvider.getHiveSchema().getSubSchema(hiveDbName).getTable(hiveViewName);
+    if (view != null) {
+      sqlNode.accept(new FuzzyUnionSqlRewriter(view, hiveViewName, relContextProvider));
     }
     return toRel(sqlNode);
   }
@@ -118,7 +115,7 @@ public class HiveToRelConverter {
           relContextProvider.getHiveFunctionRegistry(),
           relContextProvider.getDynamicHiveFunctionRegistry());
     }
-    return new ParseTreeBuilder(relContextProvider.getHiveSchema().getHiveMetastoreClient(),
+    return new ParseTreeBuilder(relContextProvider.getHiveMetastoreClient(),
         relContextProvider.getParseTreeBuilderConfig(),
         relContextProvider.getHiveFunctionRegistry(),
         relContextProvider.getDynamicHiveFunctionRegistry());

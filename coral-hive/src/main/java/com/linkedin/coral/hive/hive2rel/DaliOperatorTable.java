@@ -27,15 +27,12 @@ import org.apache.calcite.util.Util;
  * the mapping stored in table parameters in the metastore.
  */
 public class DaliOperatorTable implements SqlOperatorTable {
-  private final HiveSchema schema;
   // TODO: support injection framework to inject same function resolver here and ParseTreeBuilder.
   // For now, we create another instance since the function registry is simple.
   private HiveFunctionResolver funcResolver;
 
-  public DaliOperatorTable(HiveSchema schema,
-      HiveFunctionRegistry registry,
+  public DaliOperatorTable(HiveFunctionRegistry registry,
       ConcurrentHashMap<String, HiveFunction> dynamicRegistry) {
-    this.schema = schema;
     this.funcResolver =  new HiveFunctionResolver(registry, dynamicRegistry);
   }
 

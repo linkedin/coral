@@ -31,9 +31,7 @@ class ToRelConverter {
     msc = hive.getMetastoreClient();
     HiveMscAdapter mscAdapter = new HiveMscAdapter(msc);
     converter = HiveToRelConverter.create(mscAdapter);
-    // for validation
-    HiveSchema schema = new HiveSchema(mscAdapter);
-    relContextProvider = new RelContextProvider(schema);
+    relContextProvider = new RelContextProvider(mscAdapter);
   }
 
   public static IMetaStoreClient getMsc() {
@@ -61,11 +59,6 @@ class ToRelConverter {
   static String nodeToStr(SqlNode sqlNode) {
     RelNode relNode = converter.toRel(sqlNode);
     return relToSql(relNode);
-  }
-
-  static String viewToRelStr(String database, String table) {
-    RelNode rel = converter.convertView(database, table);
-    return relToStr(rel);
   }
 
   static RelBuilder createRelBuilder() {

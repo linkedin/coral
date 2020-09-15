@@ -40,7 +40,7 @@ public class HiveViewExpander implements RelOptTable.ViewExpander {
     Preconditions.checkNotNull(viewPath);
     Preconditions.checkState(!viewPath.isEmpty());
 
-    HiveMetastoreClient msc = relContextProvider.getHiveSchema().getHiveMetastoreClient();
+    HiveMetastoreClient msc = relContextProvider.getHiveMetastoreClient();
     String dbName = Util.last(schemaPath);
     String tableName = viewPath.get(0);
     Table table = msc.getTable(dbName, tableName);

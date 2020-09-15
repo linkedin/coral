@@ -8,8 +8,6 @@ package com.linkedin.coral.sparkplan;
 import com.google.common.collect.ImmutableList;
 import com.google.gson.Gson;
 import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
-import com.linkedin.coral.hive.hive2rel.HiveSchema;
-import com.linkedin.coral.hive.hive2rel.LocalMetastoreHiveSchema;
 import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
 import com.linkedin.coral.hive.hive2rel.RelContextProvider;
 import com.linkedin.coral.sparkplan.containers.SparkPlanNode;
@@ -62,8 +60,7 @@ public class SparkPlanToIRRelConverter {
    */
   public static SparkPlanToIRRelConverter create(HiveMetastoreClient mscClient) {
     checkNotNull(mscClient);
-    HiveSchema schema = new HiveSchema(mscClient);
-    RelContextProvider relContextProvider = new RelContextProvider(schema);
+    RelContextProvider relContextProvider = new RelContextProvider(mscClient);
     SparkPlanToIRRelConverter.hiveToRelConverter = HiveToRelConverter.create(mscClient);
     return new SparkPlanToIRRelConverter(relContextProvider);
   }
@@ -98,8 +95,7 @@ public class SparkPlanToIRRelConverter {
   }
 
   private static void initializeForLocalMetastore(Map<String, Map<String, List<String>>> localMetastore) {
-    LocalMetastoreHiveSchema schema = new LocalMetastoreHiveSchema(localMetastore);
-    relContextProvider = new RelContextProvider(schema);
+    relContextProvider = new RelContextProvider(localMetastore);
     SparkPlanToIRRelConverter.hiveToRelConverter = HiveToRelConverter.create(localMetastore);
   }
 
