@@ -51,11 +51,44 @@ public class ViewToAvroSchemaConverter {
   /**
    * This is the main API to generate the avro schema for a given Dali view
    *
+   * @param dbName
+   * @param tableOrViewName
+   * @param preserveNamespace indicates whether original namespace in base tables will be preserved
+   *                          If it is true, projected field will have the same namespace
+   *                          with the corresponding field in base table
+   *                          If it is false, a new set of namespace will be generated for the resulting schema
+   *                          The rule is as follows:
+   *                            1. Top level namespace is dbName.tableOrViewName
+   *                            2. Nested namespace is parentNamespace.parentFieldName
+   *
+   * @return avro schema for a given Dali view [dbName, viewName]
+   */
+  public Schema toAvroSchema(String dbName, String tableOrViewName, boolean preserveNamespace) {
+    Preconditions.checkNotNull(dbName);
+    Preconditions.checkNotNull(tableOrViewName);
+
+    Schema avroSchema = inferAvroSchema(dbName, tableOrViewName, preserveNamespace);
+
+    return avroSchema;
+  }
+
+  /**
+   * This is the main API to generate the avro schema for a given Dali view
+   *
    * @param dbName database name used to generate Avro schema
    * @param tableOrViewName table or view to generate Avro schema
    * @return avro schema for a given Dali view [dbName, viewName]
    */
   public Schema toAvroSchema(String dbName, String tableOrViewName) {
+    Preconditions.checkNotNull(dbName);
+    Preconditions.checkNotNull(tableOrViewName);
+
+    Schema avroSchema = inferAvroSchema(dbName, tableOrViewName, false);
+
+    return avroSchema;
+  }
+
+  private Schema inferAvroSchema(String dbName, String tableOrViewName, boolean preserveNamespace) {
     Preconditions.checkNotNull(dbName);
     Preconditions.checkNotNull(tableOrViewName);
 
@@ -77,12 +110,15 @@ public class ViewToAvroSchemaConverter {
       RelToAvroSchemaConverter relToAvroSchemaConverter = new RelToAvroSchemaConverter(hiveMetastoreClient);
 
       Schema schema = relToAvroSchemaConverter.convert(relNode);
+      Schema avroSchema = schema;
 
       // handle schema name and namespace
-      Schema avroSchema = SchemaUtilities.setupNameAndNamespace(
-          schema,
-          tableOrViewName,
-          dbName + "." + tableOrViewName);
+      if (!preserveNamespace) {
+        avroSchema = SchemaUtilities.setupNameAndNamespace(
+            schema,
+            tableOrViewName,
+            dbName + "." + tableOrViewName);
+      }
 
       return avroSchema;
     }

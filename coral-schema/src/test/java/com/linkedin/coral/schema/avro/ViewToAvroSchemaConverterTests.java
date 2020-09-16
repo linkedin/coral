@@ -598,6 +598,38 @@ public class ViewToAvroSchemaConverterTests {
   }
 
   @Test
+  public void testUnionPreserveNamespace() {
+    String viewSql = "CREATE VIEW v AS "
+        + "SELECT * FROM basecasepreservation "
+        + "UNION ALL "
+        + "SELECT * FROM basecasepreservation";
+
+    TestUtils.executeCreateViewQuery("default", "v", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v", true);
+
+    Assert.assertEquals(actualSchema.toString(true),
+        TestUtils.loadSchema("testUnionPreserveNamespace.avsc"));
+  }
+
+  @Test
+  public void testUnionNotPreserveNamespace() {
+    String viewSql = "CREATE VIEW v AS "
+        + "SELECT * FROM basecasepreservation "
+        + "UNION ALL "
+        + "SELECT * FROM basecasepreservation";
+
+    TestUtils.executeCreateViewQuery("default", "v", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v", false);
+
+    Assert.assertEquals(actualSchema.toString(true),
+        TestUtils.loadSchema("testSelectStarWithPartition.avsc"));
+  }
+
+  @Test
   public void testSubQueryWhere() {
     // TODO: implement this test
   }
