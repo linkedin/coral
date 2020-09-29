@@ -9,6 +9,9 @@
     "name" : "EXPR_1",
     "type" : [ "null", "long" ]
   }, {
+    "name" : "EXPR_2",
+    "type" : [ "null", "int" ]
+  }, {
     "name" : "Additional_Int",
     "type" : [ "null", "int" ]
   }, {

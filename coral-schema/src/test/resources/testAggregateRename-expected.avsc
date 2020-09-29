@@ -1,0 +1,12 @@
+{
+  "type" : "record",
+  "name" : "v",
+  "namespace" : "default.v",
+  "fields" : [ {
+    "name" : "Id_View_Col",
+    "type" : "int"
+  }, {
+    "name" : "Count_Col",
+    "type" : [ "null", "long" ]
+  } ]
+}

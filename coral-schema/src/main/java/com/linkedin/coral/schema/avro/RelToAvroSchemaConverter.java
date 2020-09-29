@@ -290,7 +290,7 @@ public class RelToAvroSchemaConverter {
 
       // Handle aggCalls
       for (AggregateCall aggCall : logicalAggregate.getAggCallList()) {
-        String fieldName = "aggregate";
+        String fieldName = SchemaUtilities.toAvroQualifiedName(aggCall.getName());
         RelDataType fieldType = aggCall.getType();
         SchemaUtilities.appendField(fieldName, fieldType, logicalAggregateFieldAssembler, true);
       }

@@ -96,7 +96,7 @@ public class ViewToAvroSchemaConverterTests {
   @Test
   public void testAggregate() {
     String viewSql = "CREATE VIEW v AS "
-        + "SELECT bc.Id AS Id_View_Col, COUNT(bc.Map_Col), 100 AS Additional_Int, bc.Struct_Col AS Struct_View_Col "
+        + "SELECT bc.Id AS Id_View_Col, COUNT(bc.Map_Col), 1 + 1, 100 AS Additional_Int, bc.Struct_Col AS Struct_View_Col "
         + "FROM basecomplex bc "
         + "WHERE bc.Id > 0 AND bc.Map_Col IS NOT NULL AND bc.Struct_Col IS NOT NULL "
         + "GROUP BY bc.Id, bc.Struct_Col";
@@ -106,10 +106,27 @@ public class ViewToAvroSchemaConverterTests {
     ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
     Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v");
 
-    // TODO: need to improve default name for aggregation later
     Assert.assertEquals(actualSchema.toString(true),
         TestUtils.loadSchema("testAggregate-expected.avsc"));
   }
+
+  @Test
+  public void testAggregateRename() {
+    String viewSql = "CREATE VIEW v AS "
+        + "SELECT bc.Id AS Id_View_Col, COUNT(*) AS Count_Col "
+        + "FROM basecomplex bc "
+        + "WHERE bc.Id > 0 "
+        + "GROUP BY bc.Id";
+
+    TestUtils.executeCreateViewQuery("default", "v", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v");
+
+    Assert.assertEquals(actualSchema.toString(true),
+        TestUtils.loadSchema("testAggregateRename-expected.avsc"));
+  }
+
 
   @Test
   public void testSubQueryFrom() {
