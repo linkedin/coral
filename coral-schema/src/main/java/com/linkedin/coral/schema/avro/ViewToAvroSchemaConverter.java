@@ -11,6 +11,8 @@ import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
 import org.apache.avro.Schema;
 import org.apache.calcite.rel.RelNode;
 import org.apache.hadoop.hive.metastore.api.Table;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -27,6 +29,7 @@ import org.apache.hadoop.hive.metastore.api.Table;
 public class ViewToAvroSchemaConverter {
   private final HiveToRelConverter hiveToRelConverter;
   private final HiveMetastoreClient hiveMetastoreClient;
+  private static final Logger LOG = LoggerFactory.getLogger(ViewToAvroSchemaConverter.class);
 
   /**
    * Constructor to create an instance of ViewToAvroSchemaConverter
@@ -99,10 +102,7 @@ public class ViewToAvroSchemaConverter {
 
     if (!tableOrView.getTableType().equals("VIRTUAL_VIEW")) {
       // It's base table, just retrieve the avro schema from Hive metastore
-      Schema tableSchema = SchemaUtilities.getCasePreservedSchemaFromTblProperties(tableOrView);
-      if (tableSchema == null) {
-        throw new RuntimeException("Cannot determine avro schema for table " + dbName + "." + tableOrViewName);
-      }
+      Schema tableSchema = SchemaUtilities.getAvroSchemaForTable(tableOrView);
 
       return tableSchema;
     } else {

@@ -1,0 +1,4 @@
+id  int,
+array_col array<string>,
+map_col map<string,string>,
+struct_col struct<bool_field:boolean,int_field:int,bigint_field:bigint,float_field:float,double_field:double,date_string_field:string,string_field:string>

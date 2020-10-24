@@ -69,12 +69,14 @@ public class TestUtils {
     String baseLateralViewSchema = loadSchema("base-lateralview.avsc");
     String baseNullabilitySchema = loadSchema("base-nullability.avsc");
     String baseCasePreservation = loadSchema("base-casepreservation.avsc");
+    String baseComplexFieldSchema = loadSchema("base-complex-fieldschema");
 
     executeCreateTableQuery("default", "basecomplex", baseComplexSchema);
     executeCreateTableQuery("default", "baseenum", baseEnumSchema);
     executeCreateTableQuery("default", "baselateralview", baseLateralViewSchema);
     executeCreateTableQuery("default", "basenullability", baseNullabilitySchema);
     executeCreateTableWithPartitionQuery("default", "basecasepreservation", baseCasePreservation);
+    executeCreateTableWithPartitionFieldSchemaQuery("default", "basecomplexfieldschema", baseComplexFieldSchema);
   }
 
   private static void initializeUdfs() {
@@ -128,6 +130,18 @@ public class TestUtils {
         + "INPUTFORMAT 'org.apache.hadoop.hive.ql.io.avro.AvroContainerInputFormat' "
         + "OUTPUTFORMAT 'org.apache.hadoop.hive.ql.io.avro.AvroContainerOutputFormat' "
         + "TBLPROPERTIES ('" + AVRO_SCHEMA_LITERAL + "'='" + schema + "')");
+  }
+
+  private static void executeCreateTableWithPartitionFieldSchemaQuery(String dbName,
+      String tableName,
+      String fieldSchema) {
+    executeQuery("DROP TABLE IF EXISTS " + dbName + "." + tableName);
+    executeQuery("CREATE EXTERNAL TABLE " + tableName + " (" + fieldSchema + ") "
+        + "PARTITIONED BY (datepartition string) "
+        + "ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.avro.AvroSerDe' "
+        + "STORED AS "
+        + "INPUTFORMAT 'org.apache.hadoop.hive.ql.io.avro.AvroContainerInputFormat' "
+        + "OUTPUTFORMAT 'org.apache.hadoop.hive.ql.io.avro.AvroContainerOutputFormat'");
   }
 
   private static void executeCreateFunctionQuery(String dbName, List<String> viewNames, String functionName, String functionClass) {

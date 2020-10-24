@@ -8,7 +8,6 @@ package com.linkedin.coral.schema.avro;
 import com.linkedin.coral.com.google.common.base.Preconditions;
 import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
 import com.linkedin.coral.hive.hive2rel.rel.HiveUncollect;
-import com.linkedin.coral.schema.avro.exceptions.SchemaNotFoundException;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -53,6 +52,9 @@ import org.apache.calcite.rex.RexTableInputRef;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
 import org.apache.hadoop.hive.metastore.api.Table;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 
 /**
@@ -98,6 +100,7 @@ import org.apache.hadoop.hive.metastore.api.Table;
  */
 public class RelToAvroSchemaConverter {
   private final HiveMetastoreClient hiveMetastoreClient;
+  private static final Logger LOG = LoggerFactory.getLogger(RelToAvroSchemaConverter.class);
 
   public RelToAvroSchemaConverter(HiveMetastoreClient hiveMetastoreClient) {
     this.hiveMetastoreClient = hiveMetastoreClient;
@@ -342,7 +345,7 @@ public class RelToAvroSchemaConverter {
      * This method retrieves avro schema for tableScan
      *
      * @param tableScan
-     * @return avro schema for tableScan
+     * @return avro schema for tableScan. The schema includes partition columns if table is partitioned
      * @throws RuntimeException if cannot find table in Hive metastore
      * @throws RuntimeException if cannot determine avro schema for tableScan
      */
@@ -355,10 +358,7 @@ public class RelToAvroSchemaConverter {
         throw new RuntimeException("Cannot find table " + dbName + "." + tableName + " in Hive metastore");
       }
 
-      Schema tableSchema = SchemaUtilities.getCasePreservedSchemaForTable(baseTable);
-      if (tableSchema == null) {
-        throw new SchemaNotFoundException("Cannot determine avro schema for table " + dbName + "." + tableName);
-      }
+      Schema tableSchema = SchemaUtilities.getAvroSchemaForTable(baseTable);
 
       return tableSchema;
     }

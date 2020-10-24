@@ -646,6 +646,38 @@ public class ViewToAvroSchemaConverterTests {
         TestUtils.loadSchema("testSelectStarWithPartition.avsc"));
   }
 
+
+  @Test
+  public void testBaseTableWithFieldSchema() {
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "basecomplexfieldschema");
+
+    Assert.assertEquals(actualSchema.toString(true),
+        TestUtils.loadSchema("testBaseTableWithFieldSchema-expected.avsc"));
+  }
+
+  @Test
+  public void testSelectStarFromTableWithFieldSchema() {
+    String viewSql = "CREATE VIEW v AS SELECT * FROM basecomplexfieldschema";
+
+    TestUtils.executeCreateViewQuery("default", "v", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v");
+
+    Assert.assertEquals(actualSchema.toString(true),
+        TestUtils.loadSchema("testSelectStarFromTableWithFieldSchema-expected.avsc"));
+  }
+
+  @Test
+  public void testBaseTableWithPartiton() {
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "basecasepreservation");
+
+    Assert.assertEquals(actualSchema.toString(true),
+        TestUtils.loadSchema("testBaseTableWithPartiton-expected.avsc"));
+  }
+
   @Test
   public void testSubQueryWhere() {
     // TODO: implement this test

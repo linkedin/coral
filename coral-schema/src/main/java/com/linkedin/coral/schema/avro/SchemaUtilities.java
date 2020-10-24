@@ -44,15 +44,59 @@ class SchemaUtilities {
    */
   static Schema getCasePreservedSchemaForTable(@Nonnull final Table table) {
     Preconditions.checkNotNull(table);
-    Schema schemaWithoutPartitionColumns = getCasePreservedSchemaFromTblProperties(table);
+    Schema avroSchema = getCasePreservedSchemaFromTblProperties(table);
+
+    if (avroSchema == null) {
+      return null;
+    }
 
     // add partition columns to schema if table is partitioned
-    if (isPartitioned(table)) {
-      Schema schemaWithPartitionColumns = addPartitionColsToSchema(schemaWithoutPartitionColumns, table);
-      return schemaWithPartitionColumns;
-    } else {
-      return schemaWithoutPartitionColumns;
+    Schema tableSchema = addPartitionColsToSchema(avroSchema, table);
+
+    return tableSchema;
+  }
+
+  /**
+   * This method return avro schema including partition columns for table
+   *
+   * If avro schema exists in table properties, retrieve it from table properties
+   * Otherwise, avro schema is converted from hive schema
+   *
+   * @param table
+   * @return Avro schema for table including partition columns
+   */
+  static Schema getAvroSchemaForTable(@Nonnull final Table table) {
+    Preconditions.checkNotNull(table);
+    Schema tableSchema = SchemaUtilities.getCasePreservedSchemaForTable(table);
+    if (tableSchema == null) {
+      LOG.warn("Cannot determine Avro schema for table " + table.getDbName() + "." + table.getTableName() + ". "
+          + "Deriving Avro schema from Hive schema for that table. "
+          + "Please note every field will have lower-cased name and be nullable");
+
+      tableSchema = SchemaUtilities.convertHiveSchemaToAvro(table);
     }
+
+    return tableSchema;
+  }
+
+  static Schema convertHiveSchemaToAvro(@Nonnull final Table table) {
+    Preconditions.checkNotNull(table);
+
+    String recordName = table.getTableName();
+    String recordNamespace = table.getDbName() + "." + recordName;
+
+    final List<FieldSchema> cols = new ArrayList<>();
+
+    cols.addAll(table.getSd().getCols());
+    if (isPartitioned(table)) {
+      cols.addAll(getPartitionCols(table));
+    }
+
+    return convertFieldSchemaToAvroSchema(
+        recordName,
+        recordNamespace,
+        true,
+        cols);
   }
 
   /**
@@ -84,6 +128,8 @@ class SchemaUtilities {
       return null;
     }
   }
+
+
 
   static void appendField(@Nonnull Schema.Field field,
       @Nonnull SchemaBuilder.FieldAssembler<Schema> fieldAssembler) {
@@ -205,6 +251,10 @@ class SchemaUtilities {
   static Schema addPartitionColsToSchema(@Nonnull Schema schema, @Nonnull Table tableOrView) {
     Preconditions.checkNotNull(schema);
     Preconditions.checkNotNull(tableOrView);
+
+    if (!isPartitioned(tableOrView)) {
+      return schema;
+    }
 
     Schema partitionColumnsSchema = convertFieldSchemaToAvroSchema("partitionCols",
                                                                "partitionCols",
