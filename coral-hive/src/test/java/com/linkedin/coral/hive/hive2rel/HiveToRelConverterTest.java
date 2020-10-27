@@ -6,9 +6,12 @@
 package com.linkedin.coral.hive.hive2rel;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 import com.linkedin.coral.hive.hive2rel.functions.UnknownSqlFunctionException;
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.runtime.CalciteContextException;
@@ -296,6 +299,18 @@ public class HiveToRelConverterTest {
     RelNode rel = toRel(sql);
     final String expectedSql = "SELECT *\n"
         + "FROM hive.default.schema_evolve";
+    assertEquals(relToHql(rel), expectedSql);
+  }
+
+  @Test
+  public void testConversionWithLocalMetastore() {
+    Map<String, Map<String, List<String>>> localMetaStore = ImmutableMap.of("default",
+        ImmutableMap.of("table_localstore", ImmutableList.of("name|string", "company|string", "group_name|string")));
+    HiveToRelConverter hiveToRelConverter = HiveToRelConverter.create(localMetaStore);
+    RelNode rel = hiveToRelConverter.convertSql("SELECT * FROM default.table_localstore");
+
+    final String expectedSql = "SELECT *\n"
+        + "FROM hive.default.table_localstore";
     assertEquals(relToHql(rel), expectedSql);
   }
 
