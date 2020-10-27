@@ -25,7 +25,6 @@ import org.apache.calcite.sql.type.SqlTypeFamily;
 import org.apache.calcite.sql.type.SqlTypeName;
 
 
-
 /**
  * PrestoElementAtFunction represents a SQL operator that maps to the subscript [] operator in SQL standard. In the
  * case of arrays it access the nth element of an array, and in case of maps it looks up the value corresponding to the

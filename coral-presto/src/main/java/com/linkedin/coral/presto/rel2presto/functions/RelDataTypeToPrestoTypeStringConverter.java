@@ -13,6 +13,8 @@ import org.apache.calcite.rel.type.RelRecordType;
 import org.apache.calcite.sql.type.ArraySqlType;
 import org.apache.calcite.sql.type.MapSqlType;
 
+import static com.linkedin.coral.presto.rel2presto.functions.PrestoKeywordsConverter.quoteReservedKeyword;
+
 
 /**
  * Transforms a RelDataType to a Presto type string such that it is parseable and semantically correct.
@@ -132,8 +134,12 @@ class RelDataTypeToPrestoTypeStringConverter {
   private static String buildStructDataTypeString(RelRecordType relRecordType) {
     List<String> structFieldStrings = new ArrayList<>();
     for (RelDataTypeField relDataTypeField : relRecordType.getFieldList()) {
-      structFieldStrings.add(String.format("%s %s", relDataTypeField.getName(),
-          buildPrestoTypeString(relDataTypeField.getType())));
+      structFieldStrings.add(
+          String.format("%s %s",
+              quoteReservedKeyword(relDataTypeField.getName()),
+              buildPrestoTypeString(relDataTypeField.getType())
+          )
+      );
     }
     String subFieldsString = String.join(", ", structFieldStrings);
     return String.format("row(%s)", subFieldsString);
