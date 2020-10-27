@@ -679,6 +679,22 @@ public class ViewToAvroSchemaConverterTests {
   }
 
   @Test
+  public void testCompatibleUnion() {
+    String viewSql = "CREATE VIEW v AS "
+        + "SELECT * FROM basecomplex "
+        + "UNION ALL "
+        + "SELECT * FROM basecomplexunioncompatible";
+
+    TestUtils.executeCreateViewQuery("default", "v", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v", true);
+
+    Assert.assertEquals(actualSchema.toString(true),
+        TestUtils.loadSchema("base-complex.avsc"));
+  }
+
+  @Test
   public void testSubQueryWhere() {
     // TODO: implement this test
   }

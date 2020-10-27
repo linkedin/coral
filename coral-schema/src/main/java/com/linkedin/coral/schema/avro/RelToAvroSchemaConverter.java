@@ -251,11 +251,12 @@ public class RelToAvroSchemaConverter {
       Schema inputSchema1 = schemaMap.get(logicalUnion.getInput(0));
       Schema inputSchema2 = schemaMap.get(logicalUnion.getInput(1));
 
-      // TODO: instead of throwing exception when schemas do not match, handle this case using fuzzy union semantics
       if (!inputSchema1.toString(true).equals(inputSchema2.toString(true))) {
-        throw new RuntimeException("Input schemas of LogicalUnion operator do not match. "
-            + "inputSchema1 is: " + inputSchema1.toString(true) + ", "
-            + "inputSchema2 is: " + inputSchema2.toString(true));
+        if (!SchemaUtilities.isUnionRecordSchemaCompatible(inputSchema1, inputSchema2)) {
+          throw new RuntimeException("Input schemas of LogicalUnion operator are not compatible. "
+              + "inputSchema1 is: " + inputSchema1.toString(true) + ", "
+              + "inputSchema2 is: " + inputSchema2.toString(true));
+        }
       }
 
       schemaMap.put(logicalUnion, inputSchema1);

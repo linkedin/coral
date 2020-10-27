@@ -65,6 +65,7 @@ public class TestUtils {
 
   private static void initializeTables() {
     String baseComplexSchema = loadSchema("base-complex.avsc");
+    String baseComplexUnionCompatible = loadSchema("base-complex-union-compatible.avsc");
     String baseEnumSchema = loadSchema("base-enum.avsc");
     String baseLateralViewSchema = loadSchema("base-lateralview.avsc");
     String baseNullabilitySchema = loadSchema("base-nullability.avsc");
@@ -72,6 +73,7 @@ public class TestUtils {
     String baseComplexFieldSchema = loadSchema("base-complex-fieldschema");
 
     executeCreateTableQuery("default", "basecomplex", baseComplexSchema);
+    executeCreateTableQuery("default", "basecomplexunioncompatible", baseComplexUnionCompatible);
     executeCreateTableQuery("default", "baseenum", baseEnumSchema);
     executeCreateTableQuery("default", "baselateralview", baseLateralViewSchema);
     executeCreateTableQuery("default", "basenullability", baseNullabilitySchema);

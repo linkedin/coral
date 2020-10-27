@@ -11,6 +11,9 @@ import org.apache.commons.lang3.StringUtils;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
@@ -334,6 +337,107 @@ class SchemaUtilities {
     combinedSchema.setFields(combinedSchemaFields);
 
     return combinedSchema;
+  }
+
+  /**
+   * This method decides if two input schemas of LogicalUnion operator are compatible.
+   *
+   * Two schemas are compatible if they have same field names and types.
+   * namespace and doc etc are ignored.
+   *
+   * @param leftSchema
+   * @param rightSchema
+   * @return return true if two schemas are union compatible; false otherwise.
+   */
+  static boolean isUnionRecordSchemaCompatible(@Nonnull Schema leftSchema, @Nonnull Schema rightSchema) {
+    Preconditions.checkNotNull(leftSchema);
+    Preconditions.checkNotNull(rightSchema);
+
+    List<Schema.Field> leftSchemaFields = leftSchema.getFields();
+    List<Schema.Field> rightSchemaFields = rightSchema.getFields();
+
+    Map<String, Schema.Field> leftSchemaFieldsMap =
+        leftSchemaFields.stream().collect(Collectors.toMap(Schema.Field::name,
+                                                           Function.identity()));
+    Map<String, Schema.Field> rightSchemaFieldsMap =
+        rightSchemaFields.stream().collect(Collectors.toMap(Schema.Field::name,
+                                                            Function.identity()));
+
+    for (Schema.Field field : leftSchemaFields) {
+      if (!rightSchemaFieldsMap.containsKey(field.name())) {
+        // field in leftSchema is missing in rightSchema
+        LOG.error(field.name() + " is in schema " + leftSchema.getName() + ": " + leftSchema.toString(true)
+            + ", but not in schema " + rightSchema.getName() + ": " + rightSchema.toString(true));
+        return false;
+      }
+    }
+
+    for (Schema.Field field : rightSchemaFields) {
+      if (!leftSchemaFieldsMap.containsKey(field.name())) {
+        // field in rightSchema is missing in leftSchema
+        LOG.error(field.name() + " is in schema " + rightSchema.getName() + ": " + rightSchema.toString(true)
+            + ", but not in schema " + leftSchema.getName() + ": " + leftSchema.toString(true));
+        return false;
+      }
+    }
+
+    for (Schema.Field leftField : leftSchemaFields) {
+      Schema.Field rightField = rightSchemaFieldsMap.get(leftField.name());
+      boolean isUnionSchemaCompatible = isUnionSchemaCompatible(leftField.schema(), rightField.schema());
+
+      if (!isUnionSchemaCompatible) {
+        LOG.error(leftField.name() + " is not compatible with " + rightField.name() + " for LogicalUnion operator.");
+
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  private static boolean isUnionSchemaCompatible(@Nonnull Schema leftSchema, @Nonnull Schema rightSchema) {
+    Preconditions.checkNotNull(leftSchema);
+    Preconditions.checkNotNull(rightSchema);
+
+    switch (leftSchema.getType()) {
+      case BOOLEAN:
+      case BYTES:
+      case DOUBLE:
+      case ENUM:
+      case FIXED:
+      case FLOAT:
+      case INT:
+      case LONG:
+      case STRING:
+        return leftSchema.getType() == rightSchema.getType();
+
+      case RECORD:
+        return leftSchema.getType() == rightSchema.getType()
+            && isUnionRecordSchemaCompatible(leftSchema, rightSchema);
+
+      case MAP:
+        return leftSchema.getType() == rightSchema.getType()
+            && isUnionSchemaCompatible(leftSchema.getValueType(), rightSchema.getValueType());
+
+      case ARRAY:
+        return leftSchema.getType() == rightSchema.getType()
+            && isUnionSchemaCompatible(leftSchema.getElementType(), rightSchema.getElementType());
+
+      case UNION:
+        boolean isSameType = (leftSchema.getType() == rightSchema.getType());
+        boolean isBothNullableType = AvroSerdeUtils.isNullableType(leftSchema)
+                                  && AvroSerdeUtils.isNullableType(rightSchema);
+
+        Schema leftOtherType = AvroSerdeUtils.getOtherTypeFromNullableType(leftSchema);
+        Schema rightOtherType = AvroSerdeUtils.getOtherTypeFromNullableType(rightSchema);
+        boolean isOtherTypeUnionCompatible = isUnionSchemaCompatible(leftOtherType, rightOtherType);
+
+        return isSameType && isBothNullableType && isOtherTypeUnionCompatible;
+
+      default:
+        throw new IllegalArgumentException("Unsupported Avro type " + leftSchema.getType()
+            + " in schema: " + leftSchema.toString(true));
+    }
   }
 
   private static void appendFieldWithNewNamespace(@Nonnull Schema.Field field,
