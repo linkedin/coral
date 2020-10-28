@@ -54,8 +54,8 @@ public class ViewToAvroSchemaConverter {
   /**
    * This is the main API to generate the avro schema for a given Dali view
    *
-   * @param dbName
-   * @param tableOrViewName
+   * @param dbName database name
+   * @param tableOrViewName table or view name
    * @param preserveNamespace indicates whether original namespace in base tables will be preserved
    *                          If it is true, projected field will have the same namespace
    *                          with the corresponding field in base table
