@@ -42,5 +42,4 @@ public class PrestoTryCastFunction extends SqlFunction {
     call.operand(1).unparse(writer, 0, 0);
     writer.endFunCall(frame);
   }
-
 }

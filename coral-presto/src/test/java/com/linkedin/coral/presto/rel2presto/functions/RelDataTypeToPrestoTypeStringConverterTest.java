@@ -105,10 +105,10 @@ public class RelDataTypeToPrestoTypeStringConverterTest {
 
   @Test
   public void testNestedStructRelDataType() {
-    String expectedPrestoTypeCastString = "row(str varchar, struct row(str varchar, int integer))";
+    String expectedPrestoTypeCastString = "row(str varchar, struct row(\"values\" varchar, int integer))";
 
     List<RelDataTypeField> nestedFields = new ArrayList();
-    nestedFields.add(new RelDataTypeFieldImpl("str", 0,
+    nestedFields.add(new RelDataTypeFieldImpl("values", 0,
         new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.VARCHAR)));
     nestedFields.add(new RelDataTypeFieldImpl("int", 0,
         new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.INTEGER)));
@@ -128,10 +128,10 @@ public class RelDataTypeToPrestoTypeStringConverterTest {
 
   @Test
   public void testMapWithStructValueRelDataType() {
-    String expectedPrestoTypeCastString = "map(integer, row(str varchar, int integer))";
+    String expectedPrestoTypeCastString = "map(integer, row(\"values\" varchar, int integer))";
 
     List<RelDataTypeField> fields = new ArrayList();
-    fields.add(new RelDataTypeFieldImpl("str", 0,
+    fields.add(new RelDataTypeFieldImpl("values", 0,
         new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.VARCHAR)));
     fields.add(new RelDataTypeFieldImpl("int", 0,
         new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.INTEGER)));
@@ -147,10 +147,10 @@ public class RelDataTypeToPrestoTypeStringConverterTest {
 
   @Test
   public void testArrayWithStructEleRelDataType() {
-    String expectedPrestoTypeCastString = "array(row(str varchar, int integer))";
+    String expectedPrestoTypeCastString = "array(row(\"values\" varchar, int integer))";
 
     List<RelDataTypeField> fields = new ArrayList();
-    fields.add(new RelDataTypeFieldImpl("str", 0,
+    fields.add(new RelDataTypeFieldImpl("values", 0,
         new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.VARCHAR)));
     fields.add(new RelDataTypeFieldImpl("int", 0,
         new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.INTEGER)));
@@ -165,10 +165,10 @@ public class RelDataTypeToPrestoTypeStringConverterTest {
 
   @Test
   public void testComplexRelDataType() {
-    String expectedPrestoTypeCastString = "map(integer, array(row(str varchar, struct row(str varchar, int integer))))";
+    String expectedPrestoTypeCastString = "map(integer, array(row(str varchar, struct row(\"values\" varchar, int integer))))";
 
     List<RelDataTypeField> nestedFields = new ArrayList();
-    nestedFields.add(new RelDataTypeFieldImpl("str", 0,
+    nestedFields.add(new RelDataTypeFieldImpl("values", 0,
         new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.VARCHAR)));
     nestedFields.add(new RelDataTypeFieldImpl("int", 0,
         new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.INTEGER)));

@@ -354,6 +354,4 @@ public class GenericProjectToPrestoConverter {
     String subFieldsString = String.join(", ", structSelectedFieldStrings);
     return String.format("row(%s)", subFieldsString);
   }
-
-
 }
