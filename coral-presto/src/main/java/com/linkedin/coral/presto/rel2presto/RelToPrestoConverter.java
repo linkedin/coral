@@ -14,6 +14,7 @@ import java.util.Map;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Correlate;
 import org.apache.calcite.rel.core.Project;
+import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rel.core.Uncollect;
 import org.apache.calcite.rel.core.Values;
 import org.apache.calcite.rel.core.Window;
@@ -33,6 +34,7 @@ import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlNodeList;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
+import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.validate.SqlValidatorUtil;
 import org.apache.calcite.util.Util;
 
@@ -166,6 +168,29 @@ public class RelToPrestoConverter extends RelToSqlConverter {
     final SqlNode asNode = SqlStdOperatorTable.AS.createCall(POS, asOperands);
 
     return result(asNode, ImmutableList.of(Clause.FROM), e, null);
+  }
+
+  /**
+   * This overridden function makes sure that the basetable names in the output SQL
+   * will be in the form of "dbname.tablename" instead of "catalogname.dbname.tablename"
+   *
+   * Presto can have configurable catalog names. In that case the HiveToRelConverter's default "hive" catalog will
+   * cause failures:  https://github.com/prestosql/presto/issues/5785. If catalogname is not prepended, presto uses
+   * the catalog name of the view being translated. If for example a view "hive2.db.view" whose coral-presto
+   * translation returns "SELECT * FROM db.table" will be evaluated as "SELECT * FROM hive2.db.table" in presto.
+   *
+   * Example:
+   *  hive.default.foo_bar -&gt; default.foo_bar
+   */
+  @Override
+  public Result visit(TableScan e) {
+    List<String> qualifiedName = e.getTable().getQualifiedName();
+    if (qualifiedName.size() > 2) {
+      qualifiedName = qualifiedName.subList(qualifiedName.size() - 2, qualifiedName.size()); // take last two entries
+    }
+    final SqlIdentifier identifier =
+        new SqlIdentifier(qualifiedName, SqlParserPos.ZERO);
+    return result(identifier, ImmutableList.of(Clause.FROM), e, null);
   }
 
   /**

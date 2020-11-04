@@ -33,10 +33,10 @@ public class FuzzyUnionViewTest {
     String expectedSql = ""
         + "SELECT \"a\", \"b\"\n"
         + "FROM (SELECT \"a\", \"b\"\n"
-        + "FROM \"hive\".\"fuzzy_union\".\"tablea\"\n"
+        + "FROM \"fuzzy_union\".\"tablea\"\n"
         + "UNION ALL\n"
         + "SELECT \"a\", \"b\"\n"
-        + "FROM \"hive\".\"fuzzy_union\".\"tablea\")";
+        + "FROM \"fuzzy_union\".\"tablea\")";
 
     assertTrue(expandedSql.contains(expectedSql));
   }
@@ -52,13 +52,13 @@ public class FuzzyUnionViewTest {
         + "SELECT \"a\", \"b\"\n"
         + "FROM (SELECT *\n"
         + "FROM (SELECT \"a\", \"b\"\n"
-        + "FROM \"hive\".\"fuzzy_union\".\"tablea\"\n"
+        + "FROM \"fuzzy_union\".\"tablea\"\n"
         + "UNION ALL\n"
         + "SELECT \"a\", \"b\"\n"
-        + "FROM \"hive\".\"fuzzy_union\".\"tablea\")\n"
+        + "FROM \"fuzzy_union\".\"tablea\")\n"
         + "UNION ALL\n"
         + "SELECT \"a\", \"b\"\n"
-        + "FROM \"hive\".\"fuzzy_union\".\"tablea\")";
+        + "FROM \"fuzzy_union\".\"tablea\")";
 
     assertTrue(expandedSql.contains(expectedSql));
   }
@@ -73,10 +73,10 @@ public class FuzzyUnionViewTest {
     String expectedSql = ""
         + "SELECT \"a\", \"b\"\n"
         + "FROM (SELECT \"a\", \"b\"\n"
-        + "FROM \"hive\".\"fuzzy_union\".\"tablea\"\n"
+        + "FROM \"fuzzy_union\".\"tablea\"\n"
         + "UNION ALL\n"
         + "SELECT \"a\", \"b\"\n"
-        + "FROM \"hive\".\"fuzzy_union\".\"tablea\")";
+        + "FROM \"fuzzy_union\".\"tablea\")";
 
     assertTrue(expandedSql.contains(expectedSql));
   }
@@ -91,10 +91,10 @@ public class FuzzyUnionViewTest {
     String expectedSql = ""
         + "SELECT \"a\", \"b\"\n"
         + "FROM (SELECT \"a\", \"b\"\n"
-        + "FROM \"hive\".\"fuzzy_union\".\"tableb\"\n"
+        + "FROM \"fuzzy_union\".\"tableb\"\n"
         + "UNION ALL\n"
         + "SELECT \"a\", CAST(row(b.b1) as row(b1 varchar)) AS \"b\"\n"
-        + "FROM \"hive\".\"fuzzy_union\".\"tablec\")";
+        + "FROM \"fuzzy_union\".\"tablec\")";
 
     assertTrue(expandedSql.contains(expectedSql));
   }
@@ -109,10 +109,10 @@ public class FuzzyUnionViewTest {
     String expectedSql = ""
         + "SELECT \"a\", \"b\"\n"
         + "FROM (SELECT \"a\", CAST(row(b.b1) as row(b1 varchar)) AS \"b\"\n"
-        + "FROM \"hive\".\"fuzzy_union\".\"tabled\"\n"
+        + "FROM \"fuzzy_union\".\"tabled\"\n"
         + "UNION ALL\n"
         + "SELECT \"a\", CAST(row(b.b1) as row(b1 varchar)) AS \"b\"\n"
-        + "FROM \"hive\".\"fuzzy_union\".\"tablee\")";
+        + "FROM \"fuzzy_union\".\"tablee\")";
 
     assertTrue(expandedSql.contains(expectedSql));
   }
@@ -127,10 +127,10 @@ public class FuzzyUnionViewTest {
     String expectedSql = ""
         + "SELECT \"a\", \"b\"\n"
         + "FROM (SELECT \"a\", CAST(row(b.b1) as row(b1 varchar)) AS \"b\"\n"
-        + "FROM \"hive\".\"fuzzy_union\".\"tablef\"\n"
+        + "FROM \"fuzzy_union\".\"tablef\"\n"
         + "UNION ALL\n"
         + "SELECT \"a\", CAST(row(b.b1) as row(b1 varchar)) AS \"b\"\n"
-        + "FROM \"hive\".\"fuzzy_union\".\"tableg\")";
+        + "FROM \"fuzzy_union\".\"tableg\")";
 
     assertTrue(expandedSql.contains(expectedSql));
   }
@@ -146,13 +146,13 @@ public class FuzzyUnionViewTest {
         + "SELECT \"a\", \"b\"\n"
         + "FROM (SELECT *\n"
         + "FROM (SELECT \"a\", CAST(row(b.b1) as row(b1 varchar)) AS \"b\"\n"
-        + "FROM \"hive\".\"fuzzy_union\".\"tablef\"\n"
+        + "FROM \"fuzzy_union\".\"tablef\"\n"
         + "UNION ALL\n"
         + "SELECT \"a\", CAST(row(b.b1) as row(b1 varchar)) AS \"b\"\n"
-        + "FROM \"hive\".\"fuzzy_union\".\"tableg\")\n"
+        + "FROM \"fuzzy_union\".\"tableg\")\n"
         + "UNION ALL\n"
         + "SELECT \"a\", CAST(row(b.b1) as row(b1 varchar)) AS \"b\"\n"
-        + "FROM \"hive\".\"fuzzy_union\".\"tablef\")";
+        + "FROM \"fuzzy_union\".\"tablef\")";
 
     assertTrue(expandedSql.contains(expectedSql));
   }
@@ -167,10 +167,10 @@ public class FuzzyUnionViewTest {
     String expectedSql = ""
         + "SELECT \"a\", \"b\"\n"
         + "FROM (SELECT \"a\", TRANSFORM_VALUES(b, (k, v) -> cast(row(v.b1) as row(b1 varchar))) AS \"b\"\n"
-        + "FROM \"hive\".\"fuzzy_union\".\"tableh\"\n"
+        + "FROM \"fuzzy_union\".\"tableh\"\n"
         + "UNION ALL\n"
         + "SELECT \"a\", \"b\"\n"
-        + "FROM \"hive\".\"fuzzy_union\".\"tablei\")";
+        + "FROM \"fuzzy_union\".\"tablei\")";
 
     assertTrue(expandedSql.contains(expectedSql));
   }
@@ -185,10 +185,10 @@ public class FuzzyUnionViewTest {
     String expectedSql = ""
         + "SELECT \"a\", \"b\"\n"
         + "FROM (SELECT \"a\", TRANSFORM(b, x -> cast(row(x.b1) as row(b1 varchar))) AS \"b\"\n"
-        + "FROM \"hive\".\"fuzzy_union\".\"tablej\"\n"
+        + "FROM \"fuzzy_union\".\"tablej\"\n"
         + "UNION ALL\n"
         + "SELECT \"a\", \"b\"\n"
-        + "FROM \"hive\".\"fuzzy_union\".\"tablek\")";
+        + "FROM \"fuzzy_union\".\"tablek\")";
 
     assertTrue(expandedSql.contains(expectedSql));
   }
@@ -203,10 +203,10 @@ public class FuzzyUnionViewTest {
     String expectedSql = ""
         + "SELECT \"a\", \"b\"\n"
         + "FROM (SELECT \"a\", CAST(row(b.b1, cast(row(b.b2.b3, cast(row(b.b2.b4.b5) as row(b5 varchar))) as row(b3 varchar, b4 row(b5 varchar)))) as row(b1 varchar, b2 row(b3 varchar, b4 row(b5 varchar)))) AS \"b\"\n"
-        + "FROM \"hive\".\"fuzzy_union\".\"tablel\"\n"
+        + "FROM \"fuzzy_union\".\"tablel\"\n"
         + "UNION ALL\n"
         + "SELECT \"a\", \"b\"\n"
-        + "FROM \"hive\".\"fuzzy_union\".\"tablem\")";
+        + "FROM \"fuzzy_union\".\"tablem\")";
 
     assertTrue(expandedSql.contains(expectedSql));
   }
@@ -221,10 +221,10 @@ public class FuzzyUnionViewTest {
     String expectedSql = ""
         + "SELECT \"a\", \"b\"\n"
         + "FROM (SELECT \"a\", CAST(row(b.b1, transform_values(b.m1, (k, v) -> cast(row(v.b1, transform(v.a1, x -> cast(row(x.b1) as row(b1 varchar)))) as row(b1 varchar, a1 array(row(b1 varchar)))))) as row(b1 varchar, m1 map(varchar, row(b1 varchar, a1 array(row(b1 varchar)))))) AS \"b\"\n"
-        + "FROM \"hive\".\"fuzzy_union\".\"tablen\"\n"
+        + "FROM \"fuzzy_union\".\"tablen\"\n"
         + "UNION ALL\n"
         + "SELECT \"a\", \"b\"\n"
-        + "FROM \"hive\".\"fuzzy_union\".\"tableo\")";
+        + "FROM \"fuzzy_union\".\"tableo\")";
 
     assertTrue(expandedSql.contains(expectedSql));
   }
