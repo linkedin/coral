@@ -26,6 +26,10 @@ allprojects {
     maven {
       url 'https://linkedin.bintray.com/maven/'
     }
+    maven {
+      url "https://packages.confluent.io/maven/"
+      content { includeGroup "io.confluent" }
+    }
   }
 }
 
