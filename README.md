@@ -25,7 +25,7 @@ and implementing query rewrite algorithms for data governance and query optimiza
 - Coral-Schema: Derives Avro schema of view using view logical plan and input Avro schemas of base tables.
 - Coral-Spark-Plan: Converts Spark plan strings to equivalent logical plan (in progress).
 - Coral-Beam: Convert view logical plan to Beam Java API streaming code
-- Coral-Beam-runtime: runtime module to support Coral-Beam
+- Coral-Beam-Runtime: runtime module to support Coral-Beam
 
 ## How to Build
 Clone the repository:
@@ -43,3 +43,4 @@ Please see the [Contribution Agreement](CONTRIBUTING.md).
 
 ## Resources
 - [Coral & Transport UDFs: Building Blocks of a Postmodern Data Warehouse](https://www.slideshare.net/walaa_eldin_moustafa/coral-transport-udfs-building-blocks-of-a-postmodern-data-warehouse-229545076), Tech-talk, Facebook HQ, 2/28/2020.
+- [Bridging Offline and Nearline Computations with Apache Calcite](https://engineering.linkedin.com/blog/2019/01/bridging-offline-and-nearline-computations-with-apache-calcite), LinkedIn Engineering Blogs 01/29/2019.
