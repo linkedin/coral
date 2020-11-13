@@ -171,7 +171,14 @@ class FuzzyUnionSqlRewriter extends SqlShuttle {
       relContextProvider.getHiveSqlValidator().validate(unionBranch);
       fromNodeDataType = relContextProvider.getHiveSqlValidator().getValidatedNodeType(unionBranch);
     }
-    if (tableDataType.equals(fromNodeDataType)
+    // tableDataType is always a view RelDataType. View RelDataTypes are inferred from Hive's storage
+    // descriptor. Unlike view RelDataTypes, base table RelDataTypes are inferred from Hive SerDe
+    // library corresponding to the table. See {@link com.linkedin.coral.hive.hive2rel.HiveTable.getRowType}
+    // for more details. This results in the view schema (tableDataType) being always lower-cased, and the
+    // (potentially) base table schema (fromNodeDataType) being properly cased. Case difference
+    // between view schema and underlying union branch schema should not warrant a fuzzy union,
+    // and hence we ignore cases when comparing fromNodeDataType and tableDataType.
+    if (tableDataType.getFullTypeString().equalsIgnoreCase(fromNodeDataType.getFullTypeString())
         || !fromNodeDataType.isStruct()
         || fromNodeDataType.getFieldCount() < tableDataType.getFieldCount()) {
       return unionBranch;
