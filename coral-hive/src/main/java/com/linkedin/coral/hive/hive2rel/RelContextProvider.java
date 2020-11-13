@@ -36,6 +36,8 @@ import org.apache.calcite.tools.FrameworkConfig;
 import org.apache.calcite.tools.Frameworks;
 import org.apache.calcite.tools.Programs;
 import org.apache.calcite.tools.RelBuilder;
+
+
 /**
  * Calcite needs different objects that are not trivial to create. This class
  * simplifies creation of objects, required by Calcite, easy. These objects
@@ -58,6 +60,7 @@ public class RelContextProvider {
   private ConcurrentHashMap<String, HiveFunction> dynamicRegistry;
   private HiveSchema schema;
   private LocalMetastoreHiveSchema localMetastoreSchema;
+
   /**
    * Instantiates a new Rel context provider.
    *
@@ -86,6 +89,7 @@ public class RelContextProvider {
         .programs(Programs.ofRules(Programs.RULE_SET))
         .build();
   }
+
   /**
    * Instantiates a new Rel context provider.
    *
@@ -113,6 +117,7 @@ public class RelContextProvider {
         .programs(Programs.ofRules(Programs.RULE_SET))
         .build();
   }
+
   /**
    * Gets the local copy of HiveFunctionRegistry for current query.
    *
@@ -141,6 +146,7 @@ public class RelContextProvider {
   HiveMetastoreClient getHiveMetastoreClient() {
     return hiveMetastoreClient;
   }
+
   Schema getHiveSchema() {
     return (schema != null) ? this.schema : this.localMetastoreSchema;
   }
@@ -193,6 +199,7 @@ public class RelContextProvider {
     }
     return sqlValidator;
   }
+
   /**
    * Gets rel opt cluster.
    *
@@ -204,10 +211,12 @@ public class RelContextProvider {
     }
     return cluster;
   }
+
   HiveViewExpander getViewExpander() {
     // we don't need to cache this...Okay to re-create each time
     return new HiveViewExpander(this);
   }
+
   /**
    * Gets sql to rel converter.
    *

@@ -5,7 +5,6 @@
  */
 package com.linkedin.coral.sparkplan;
 
-import com.google.common.collect.ImmutableList;
 import com.google.gson.Gson;
 import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
 import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
@@ -33,7 +32,7 @@ import java.util.stream.Collectors;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexNode;
-import org.apache.calcite.tools.RelBuilder;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import static com.google.common.base.Preconditions.*;
 import static com.linkedin.coral.sparkplan.containers.SparkPlanNode.PLANTYPE.*;
@@ -363,9 +362,6 @@ public class SparkPlanToIRRelConverter {
       predicateInfoMap.putIfAbsent(databaseTableName, new LinkedList<>());
       String exceptionPredicate = null;
       try {
-        RelBuilder relBuilder = relContextProvider.getRelBuilder();
-        RelNode scanRelNode = relBuilder.scan(ImmutableList.of("hive", databaseName, tableName)).build();
-        relBuilder.clear();
         Pattern innerInfoPattern = null;
         if (scanType == HIVE_SCAN) {
           innerInfoPattern = Pattern.compile("\\[(.*?)]");
@@ -390,14 +386,13 @@ public class SparkPlanToIRRelConverter {
           } else {
             predicateInfoMap.get(databaseTableName).add("Simple Predicate: [" + filterCondition + "]");
           }
-          relBuilder.clear();
         } else {
           predicateInfoMap.get(databaseTableName).add("No Predicate");
         }
       } catch (RuntimeException e) {
         e.printStackTrace();
         predicateInfoMap.get(databaseTableName)
-            .add("Exception: " + e.getMessage() + (exceptionPredicate == null ? ""
+            .add("Exception: " + e.getMessage() + "\n" + ExceptionUtils.getStackTrace(e) + (exceptionPredicate == null ? ""
                 : "\n" + "Predicate: [" + exceptionPredicate + "]"));
       }
     }
