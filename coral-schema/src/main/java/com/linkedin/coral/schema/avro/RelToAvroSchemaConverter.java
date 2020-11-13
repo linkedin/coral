@@ -51,6 +51,7 @@ import org.apache.calcite.rex.RexSubQuery;
 import org.apache.calcite.rex.RexTableInputRef;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
+import org.apache.calcite.util.Pair;
 import org.apache.hadoop.hive.metastore.api.Table;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -293,9 +294,9 @@ public class RelToAvroSchemaConverter {
       }
 
       // Handle aggCalls
-      for (AggregateCall aggCall : logicalAggregate.getAggCallList()) {
-        String fieldName = SchemaUtilities.toAvroQualifiedName(aggCall.getName());
-        RelDataType fieldType = aggCall.getType();
+      for (Pair<AggregateCall, String> aggCall : logicalAggregate.getNamedAggCalls()) {
+        String fieldName = SchemaUtilities.toAvroQualifiedName(aggCall.right);
+        RelDataType fieldType = aggCall.left.getType();
         SchemaUtilities.appendField(fieldName, fieldType, logicalAggregateFieldAssembler, true);
       }
 

@@ -1,0 +1,21 @@
+{
+  "type" : "record",
+  "name" : "v",
+  "namespace" : "default.v",
+  "fields" : [ {
+    "name" : "Id",
+    "type" : "int"
+  }, {
+    "name" : "Array_Count",
+    "type" : [ "null", "int" ]
+  }, {
+    "name" : "Map_Count",
+    "type" : [ "null", "int" ]
+  }, {
+    "name" : "EXPR_3",
+    "type" : [ "null", "long" ]
+  }, {
+    "name" : "EXPR_4",
+    "type" : [ "null", "long" ]
+  } ]
+}

@@ -127,6 +127,37 @@ public class ViewToAvroSchemaConverterTests {
         TestUtils.loadSchema("testAggregateRename-expected.avsc"));
   }
 
+  @Test
+  public void testRexCallAggregate() {
+    String viewSql = "CREATE VIEW v AS "
+        + "SELECT 22*COUNT(bc.Id) AS Temp "
+        + "FROM basecomplex bc";
+
+    TestUtils.executeCreateViewQuery("default", "v", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v");
+
+    Assert.assertEquals(actualSchema.toString(true),
+        TestUtils.loadSchema("testRexCallAggregate-expected.avsc"));
+  }
+
+  @Test
+  public void testRexCallAggregateMultiple() {
+    String viewSql = "CREATE VIEW v AS "
+        + "SELECT bc.Id, 22*COUNT(bc.Array_Col) AS Array_Count, 33*COUNT(bc.Map_Col) AS Map_Count, COUNT(bc.Array_Col), COUNT(bc.Map_Col) "
+        + "FROM basecomplex bc "
+        + "WHERE bc.Id > 0 "
+        + "GROUP BY bc.Id";
+
+    TestUtils.executeCreateViewQuery("default", "v", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v");
+
+    Assert.assertEquals(actualSchema.toString(true),
+        TestUtils.loadSchema("testRexCallAggregateMultiple-expected.avsc"));
+  }
 
   @Test
   public void testSubQueryFrom() {
