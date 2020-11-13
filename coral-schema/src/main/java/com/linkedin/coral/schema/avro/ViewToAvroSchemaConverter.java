@@ -56,21 +56,23 @@ public class ViewToAvroSchemaConverter {
    *
    * @param dbName database name
    * @param tableOrViewName table or view name
-   * @param preserveNamespace indicates whether original namespace in base tables will be preserved
-   *                          If it is true, projected field will have the same namespace
-   *                          with the corresponding field in base table
-   *                          If it is false, a new set of namespace will be generated for the resulting schema
-   *                          The rule is as follows:
-   *                            1. Top level namespace is dbName.tableOrViewName
-   *                            2. Nested namespace is parentNamespace.parentFieldName
+   * @param strictMode if strictMode is set to True, we will not fall back to Hive schema if avro.schema.literal
+   *                        is missing in table properties. In addition, original namespace in base tables will be preserved.
+   *                   if strictMode is set to False, we will fall back to Hive schema if avro.schema.literal
+   *                        is missing in table properties. A new set of namespace will be generated for
+   *                        the resulting schema. The rule is as follows:
+   *                                1. Top level namespace is dbName.tableOrViewName
+   *                                2. Nested namespace is parentNamespace.parentFieldName
    *
    * @return avro schema for a given Dali view [dbName, viewName]
    */
-  public Schema toAvroSchema(String dbName, String tableOrViewName, boolean preserveNamespace) {
+public Schema toAvroSchema(String dbName,
+    String tableOrViewName,
+    boolean strictMode) {
     Preconditions.checkNotNull(dbName);
     Preconditions.checkNotNull(tableOrViewName);
 
-    Schema avroSchema = inferAvroSchema(dbName, tableOrViewName, preserveNamespace);
+    Schema avroSchema = inferAvroSchema(dbName, tableOrViewName, strictMode);
 
     return avroSchema;
   }
@@ -91,7 +93,9 @@ public class ViewToAvroSchemaConverter {
     return avroSchema;
   }
 
-  private Schema inferAvroSchema(String dbName, String tableOrViewName, boolean preserveNamespace) {
+  private Schema inferAvroSchema(String dbName,
+      String tableOrViewName,
+      boolean strictMode) {
     Preconditions.checkNotNull(dbName);
     Preconditions.checkNotNull(tableOrViewName);
 
@@ -102,18 +106,18 @@ public class ViewToAvroSchemaConverter {
 
     if (!tableOrView.getTableType().equals("VIRTUAL_VIEW")) {
       // It's base table, just retrieve the avro schema from Hive metastore
-      Schema tableSchema = SchemaUtilities.getAvroSchemaForTable(tableOrView);
+      Schema tableSchema = SchemaUtilities.getAvroSchemaForTable(tableOrView, strictMode);
 
       return tableSchema;
     } else {
       RelNode relNode = hiveToRelConverter.convertView(dbName, tableOrViewName);
       RelToAvroSchemaConverter relToAvroSchemaConverter = new RelToAvroSchemaConverter(hiveMetastoreClient);
 
-      Schema schema = relToAvroSchemaConverter.convert(relNode);
+      Schema schema = relToAvroSchemaConverter.convert(relNode, strictMode);
       Schema avroSchema = schema;
 
-      // handle schema name and namespace
-      if (!preserveNamespace) {
+      // In flex mode, we assign a new set of namespace
+      if (!strictMode) {
         avroSchema = SchemaUtilities.setupNameAndNamespace(
             schema,
             tableOrViewName,

@@ -719,10 +719,10 @@ public class ViewToAvroSchemaConverterTests {
     TestUtils.executeCreateViewQuery("default", "v", viewSql);
 
     ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
-    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v", true);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v", false);
 
     Assert.assertEquals(actualSchema.toString(true),
-        TestUtils.loadSchema("base-complex.avsc"));
+        TestUtils.loadSchema("testCompatibleUnion-expected.avsc"));
   }
 
   @Test

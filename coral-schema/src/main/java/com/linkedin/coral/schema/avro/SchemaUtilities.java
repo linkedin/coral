@@ -8,10 +8,12 @@ package com.linkedin.coral.schema.avro;
 import com.linkedin.coral.com.google.common.base.Preconditions;
 import com.linkedin.coral.com.google.common.base.Strings;
 import org.apache.commons.lang3.StringUtils;
+import com.linkedin.coral.schema.avro.exceptions.SchemaNotFoundException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
@@ -66,17 +68,23 @@ class SchemaUtilities {
    * Otherwise, avro schema is converted from hive schema
    *
    * @param table
+   * @param strictMode if set to true, we do not fall back to Hive schema
    * @return Avro schema for table including partition columns
    */
-  static Schema getAvroSchemaForTable(@Nonnull final Table table) {
+  static Schema getAvroSchemaForTable(@Nonnull final Table table, boolean strictMode) {
     Preconditions.checkNotNull(table);
     Schema tableSchema = SchemaUtilities.getCasePreservedSchemaForTable(table);
     if (tableSchema == null) {
-      LOG.warn("Cannot determine Avro schema for table " + table.getDbName() + "." + table.getTableName() + ". "
-          + "Deriving Avro schema from Hive schema for that table. "
-          + "Please note every field will have lower-cased name and be nullable");
+      if (!strictMode) {
+        LOG.warn("Cannot determine Avro schema for table " + table.getDbName() + "." + table.getTableName() + ". "
+            + "Deriving Avro schema from Hive schema for that table. "
+            + "Please note every field will have lower-cased name and be nullable");
 
-      tableSchema = SchemaUtilities.convertHiveSchemaToAvro(table);
+        tableSchema = SchemaUtilities.convertHiveSchemaToAvro(table);
+      } else {
+        throw new SchemaNotFoundException("strictMode is set to True and fallback to Hive schema is disabled. "
+            + "Cannot determine Avro schema for table " + table.getDbName() + "." + table.getTableName() + ".");
+      }
     }
 
     return tableSchema;
@@ -339,6 +347,23 @@ class SchemaUtilities {
     return combinedSchema;
   }
 
+  static Schema mergeUnionSchema(@Nonnull Schema leftSchema,
+      @Nonnull Schema rightSchema,
+      boolean strictMode) {
+    Preconditions.checkNotNull(leftSchema);
+    Preconditions.checkNotNull(rightSchema);
+
+    if (!leftSchema.toString(true).equals(rightSchema.toString(true))) {
+      if (!SchemaUtilities.isUnionRecordSchemaCompatible(leftSchema, rightSchema, strictMode)) {
+        throw new RuntimeException("Input schemas of LogicalUnion operator are not compatible. "
+            + "inputSchema1 is: " + leftSchema.toString(true) + ", "
+            + "inputSchema2 is: " + rightSchema.toString(true));
+      }
+    }
+
+    return leftSchema;
+  }
+
   /**
    * This method decides if two input schemas of LogicalUnion operator are compatible.
    *
@@ -349,9 +374,22 @@ class SchemaUtilities {
    * @param rightSchema
    * @return return true if two schemas are union compatible; false otherwise.
    */
-  static boolean isUnionRecordSchemaCompatible(@Nonnull Schema leftSchema, @Nonnull Schema rightSchema) {
+  static boolean isUnionRecordSchemaCompatible(@Nonnull Schema leftSchema,
+      @Nonnull Schema rightSchema,
+      boolean strictMode) {
     Preconditions.checkNotNull(leftSchema);
     Preconditions.checkNotNull(rightSchema);
+
+    if (strictMode) {
+      // we requires namespace matches in strictMode
+      if (!Objects.equals(leftSchema.getNamespace(), rightSchema.getNamespace())) {
+        LOG.error("Found namespace mismatch while configured with strict mode. "
+            + "Namespace for " + leftSchema.getName() + " is: " + leftSchema.getNamespace() + ". "
+            + "Namespace for " + rightSchema.getName() + " is: " + rightSchema.getNamespace());
+
+        return false;
+      }
+    }
 
     List<Schema.Field> leftSchemaFields = leftSchema.getFields();
     List<Schema.Field> rightSchemaFields = rightSchema.getFields();
@@ -383,7 +421,7 @@ class SchemaUtilities {
 
     for (Schema.Field leftField : leftSchemaFields) {
       Schema.Field rightField = rightSchemaFieldsMap.get(leftField.name());
-      boolean isUnionSchemaCompatible = isUnionSchemaCompatible(leftField.schema(), rightField.schema());
+      boolean isUnionSchemaCompatible = isUnionSchemaCompatible(leftField.schema(), rightField.schema(), strictMode);
 
       if (!isUnionSchemaCompatible) {
         LOG.error(leftField.name() + " is not compatible with " + rightField.name() + " for LogicalUnion operator.");
@@ -395,7 +433,9 @@ class SchemaUtilities {
     return true;
   }
 
-  private static boolean isUnionSchemaCompatible(@Nonnull Schema leftSchema, @Nonnull Schema rightSchema) {
+  private static boolean isUnionSchemaCompatible(@Nonnull Schema leftSchema,
+      @Nonnull Schema rightSchema,
+      boolean strictMode) {
     Preconditions.checkNotNull(leftSchema);
     Preconditions.checkNotNull(rightSchema);
 
@@ -403,36 +443,44 @@ class SchemaUtilities {
       case BOOLEAN:
       case BYTES:
       case DOUBLE:
-      case ENUM:
-      case FIXED:
       case FLOAT:
       case INT:
       case LONG:
       case STRING:
         return leftSchema.getType() == rightSchema.getType();
+      case FIXED:
+        boolean isSameType = leftSchema.getType() == rightSchema.getType();
+        boolean isSameNamespace = Objects.equals(leftSchema.getNamespace(), rightSchema.getNamespace());
 
+        return isSameType && (!strictMode || isSameNamespace);
+      case ENUM:
+        boolean isSameEnumType = (leftSchema.getType() == rightSchema.getType());
+        boolean isSameSymbolSize = (leftSchema.getEnumSymbols().size() == rightSchema.getEnumSymbols().size());
+        boolean isSameEnumNamespace = Objects.equals(leftSchema.getNamespace(), rightSchema.getNamespace());
+
+        return isSameEnumType && isSameSymbolSize && (!strictMode || isSameEnumNamespace);
       case RECORD:
         return leftSchema.getType() == rightSchema.getType()
-            && isUnionRecordSchemaCompatible(leftSchema, rightSchema);
+            && isUnionRecordSchemaCompatible(leftSchema, rightSchema, strictMode);
 
       case MAP:
         return leftSchema.getType() == rightSchema.getType()
-            && isUnionSchemaCompatible(leftSchema.getValueType(), rightSchema.getValueType());
+            && isUnionSchemaCompatible(leftSchema.getValueType(), rightSchema.getValueType(), strictMode);
 
       case ARRAY:
         return leftSchema.getType() == rightSchema.getType()
-            && isUnionSchemaCompatible(leftSchema.getElementType(), rightSchema.getElementType());
+            && isUnionSchemaCompatible(leftSchema.getElementType(), rightSchema.getElementType(), strictMode);
 
       case UNION:
-        boolean isSameType = (leftSchema.getType() == rightSchema.getType());
+        boolean isSameUnionType = (leftSchema.getType() == rightSchema.getType());
         boolean isBothNullableType = AvroSerdeUtils.isNullableType(leftSchema)
                                   && AvroSerdeUtils.isNullableType(rightSchema);
 
         Schema leftOtherType = AvroSerdeUtils.getOtherTypeFromNullableType(leftSchema);
         Schema rightOtherType = AvroSerdeUtils.getOtherTypeFromNullableType(rightSchema);
-        boolean isOtherTypeUnionCompatible = isUnionSchemaCompatible(leftOtherType, rightOtherType);
+        boolean isOtherTypeUnionCompatible = isUnionSchemaCompatible(leftOtherType, rightOtherType, strictMode);
 
-        return isSameType && isBothNullableType && isOtherTypeUnionCompatible;
+        return isSameUnionType && isBothNullableType && isOtherTypeUnionCompatible;
 
       default:
         throw new IllegalArgumentException("Unsupported Avro type " + leftSchema.getType()

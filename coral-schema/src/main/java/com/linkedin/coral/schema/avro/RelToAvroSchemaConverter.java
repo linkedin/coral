@@ -111,15 +111,16 @@ public class RelToAvroSchemaConverter {
    * This method generates a corresponding avro schema for calcite IR RelNode
    *
    * @param relNode {@link RelNode} object
+   * @param strictMode configure whether to use strict mode
    * @return avro schema for calcite IR RelNode
    * @throws RuntimeException if cannot find table in Hive metastore
    * @throws RuntimeException if cannot determine avro schema for tableScan
    */
-  public Schema convert(@Nonnull RelNode relNode) {
+  public Schema convert(@Nonnull RelNode relNode, boolean strictMode) {
     Preconditions.checkNotNull(relNode, "RelNode to convert cannot be null");
 
     Map<RelNode, Schema> schemaMap = new HashMap<>();
-    relNode.accept(new SchemaRelShuttle(hiveMetastoreClient, schemaMap));
+    relNode.accept(new SchemaRelShuttle(hiveMetastoreClient, schemaMap, strictMode));
     Schema viewSchema = schemaMap.get(relNode);
 
     return viewSchema;
@@ -149,13 +150,16 @@ public class RelToAvroSchemaConverter {
    */
   private class SchemaRelShuttle extends RelShuttleImpl {
     private Map<RelNode, Schema> schemaMap;
+    private boolean strictMode;
 
     private final HiveMetastoreClient hiveMetastoreClient;
 
     public SchemaRelShuttle(HiveMetastoreClient hiveMetastoreClient,
-                            Map<RelNode, Schema> schemaMap) {
+                            Map<RelNode, Schema> schemaMap,
+                            boolean strictMode) {
       this.hiveMetastoreClient = hiveMetastoreClient;
       this.schemaMap = schemaMap;
+      this.strictMode = strictMode;
     }
 
     @Override
@@ -252,15 +256,9 @@ public class RelToAvroSchemaConverter {
       Schema inputSchema1 = schemaMap.get(logicalUnion.getInput(0));
       Schema inputSchema2 = schemaMap.get(logicalUnion.getInput(1));
 
-      if (!inputSchema1.toString(true).equals(inputSchema2.toString(true))) {
-        if (!SchemaUtilities.isUnionRecordSchemaCompatible(inputSchema1, inputSchema2)) {
-          throw new RuntimeException("Input schemas of LogicalUnion operator are not compatible. "
-              + "inputSchema1 is: " + inputSchema1.toString(true) + ", "
-              + "inputSchema2 is: " + inputSchema2.toString(true));
-        }
-      }
+      Schema mergedSchema = SchemaUtilities.mergeUnionSchema(inputSchema1, inputSchema2, strictMode);
 
-      schemaMap.put(logicalUnion, inputSchema1);
+      schemaMap.put(logicalUnion, mergedSchema);
 
       return relNode;
     }
@@ -360,7 +358,7 @@ public class RelToAvroSchemaConverter {
         throw new RuntimeException("Cannot find table " + dbName + "." + tableName + " in Hive metastore");
       }
 
-      Schema tableSchema = SchemaUtilities.getAvroSchemaForTable(baseTable);
+      Schema tableSchema = SchemaUtilities.getAvroSchemaForTable(baseTable, strictMode);
 
       return tableSchema;
     }
