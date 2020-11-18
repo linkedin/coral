@@ -151,6 +151,8 @@ public class HiveToTrinoConverterTest {
             + "CAST(\"at_timezone\"(\"from_unixtime\"(CAST(\"a_decimal_zero\" AS DOUBLE)), \"$canonicalize_hive_timezone_id\"('America/Los_Angeles')) AS TIMESTAMP(3)), "
             + "CAST(\"at_timezone\"(\"from_unixtime\"(\"to_unixtime\"(\"with_timezone\"(\"a_timestamp\", 'UTC'))), \"$canonicalize_hive_timezone_id\"('America/Los_Angeles')) AS TIMESTAMP(3)), "
             + "CAST(\"at_timezone\"(\"from_unixtime\"(\"to_unixtime\"(\"with_timezone\"(\"a_date\", 'UTC'))), \"$canonicalize_hive_timezone_id\"('America/Los_Angeles')) AS TIMESTAMP(3))\n"
-            + "FROM \"test\".\"table_from_utc_timestamp\"" }, };
+            + "FROM \"test\".\"table_from_utc_timestamp\"" },
+
+        { "test", "translate_view", "SELECT TRANSLATE(\"b\".\"b1\", 'a', 'b')\nFROM \"test\".\"tablea\"" }, };
   }
 }

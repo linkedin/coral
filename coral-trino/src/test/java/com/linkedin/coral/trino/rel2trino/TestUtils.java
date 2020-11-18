@@ -304,6 +304,7 @@ public class TestUtils {
             + "from_utc_timestamp(a_decimal_zero, 'America/Los_Angeles'), "
             + "from_utc_timestamp(a_timestamp, 'America/Los_Angeles'), "
             + "from_utc_timestamp(a_date, 'America/Los_Angeles')" + "FROM test.table_from_utc_timestamp");
+    run(driver, "CREATE VIEW IF NOT EXISTS test.translate_view AS SELECT translate(b.b1, 'a', 'b') FROM test.tableA");
   }
 
   public static RelNode convertView(String db, String view) {
