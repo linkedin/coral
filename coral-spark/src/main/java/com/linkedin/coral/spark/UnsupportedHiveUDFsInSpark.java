@@ -24,7 +24,7 @@ class UnsupportedHiveUDFsInSpark {
    * Add hive UDFs that do not work with Spark.
    */
   static {
-    // Removing this blacklist in the long term can be tracked here: CORAL-78
+    // Removing this blocklist in the long term can be tracked here: CORAL-78
     add("com.linkedin.dali.udf.userinterfacelookup.hive.UserInterfaceLookup");
     add("com.linkedin.dali.udf.portallookup.hive.PortalLookup");
   }
@@ -37,10 +37,10 @@ class UnsupportedHiveUDFsInSpark {
   }
 
   /**
-   * This API is used for checking if a UDF is blacklisted
+   * This API is used for checking if a UDF is on the blocklist
    *
    * @param udfName Name of the udf, for example com.linkedin.coral.hive.hive2rel.CoralTestUnsupportedUDF
-   * @return Boolean returns true if a UDF is blacklisted
+   * @return Boolean returns true if a UDF is on the blocklist
    */
   static Boolean contains(String udfName) {
     return unsupportedUDFSet.contains(udfName);
