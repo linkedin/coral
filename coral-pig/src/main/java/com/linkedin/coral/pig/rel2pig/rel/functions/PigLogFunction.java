@@ -6,14 +6,16 @@
 package com.linkedin.coral.pig.rel2pig.rel.functions;
 
 import com.linkedin.coral.pig.rel2pig.rel.PigRexUtils;
+
 import java.util.List;
+
 import org.apache.calcite.rex.RexCall;
 
 
 /**
  * PigLogFunction represents the translation from Calcite LOG UDF to builtin Pig functions.
  * The output of the PigLogFunction has the following form:
- *     LOG(value)/LOG(base)
+ * LOG(value)/LOG(base)
  */
 public class PigLogFunction extends PigBuiltinFunction {
 

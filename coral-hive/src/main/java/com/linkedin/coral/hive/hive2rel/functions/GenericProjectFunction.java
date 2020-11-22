@@ -25,16 +25,16 @@ import org.apache.calcite.util.Static;
 
 /**
  * GenericProjectFunction is a place holder function that takes two parameters
- *   - a reference to a column
- *   - a literal representing the name of the column passed as the first parameter
- *
+ * - a reference to a column
+ * - a literal representing the name of the column passed as the first parameter
+ * <p>
  * The first parameter is necessary to pass type information regarding the columns to the proceeding rewriters.
  * The second parameter is necessary to pass the name of the column to rewriters that need to know the column name
  * in the RexCall/RexNode (Relational Algebra) phase.
- *
+ * <p>
  * Currently, this GenericProject UDF is used internally to indicate that coral-spark/coral-presto need to perform
  * rewrites to further update the query because there is an inconsistent branch in a union function.
- *
+ * <p>
  * The GenericProject function should be limited to be used by internal APIs and not in external Dali Views.
  * This is because it is difficult to derive the return type of an external GenericProject call in a Dali View.
  */

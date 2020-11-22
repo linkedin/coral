@@ -6,6 +6,7 @@
 package com.linkedin.coral.hive.hive2rel.functions;
 
 import java.util.List;
+
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.parser.SqlParserPos;
 

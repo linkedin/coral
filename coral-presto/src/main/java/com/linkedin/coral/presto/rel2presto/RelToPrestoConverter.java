@@ -6,11 +6,13 @@
 package com.linkedin.coral.presto.rel2presto;
 
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
+
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Correlate;
 import org.apache.calcite.rel.core.Project;
@@ -52,6 +54,7 @@ public class RelToPrestoConverter extends RelToSqlConverter {
 
   /**
    * Convert relational algebra to Presto SQL
+   *
    * @param relNode calcite relational algebra representation of SQL
    * @return SQL string
    */
@@ -62,6 +65,7 @@ public class RelToPrestoConverter extends RelToSqlConverter {
 
   /**
    * Convert input relational algebra to calcite SqlNode
+   *
    * @param relNode relation algebra
    * @return calcite SqlNode representation for input
    */
@@ -70,9 +74,9 @@ public class RelToPrestoConverter extends RelToSqlConverter {
   }
 
   /**
-   * @see #dispatch(RelNode)
    * @param window Relnode representing window clause
    * @return result of translation to sql
+   * @see #dispatch(RelNode)
    */
   public Result visit(Window window) {
     return null;
@@ -139,7 +143,7 @@ public class RelToPrestoConverter extends RelToSqlConverter {
 
     for (int i = 0; i < projExps.size(); i++) {
       if (!(projExps.get(i) instanceof RexInputRef)
-        || ((RexInputRef) projExps.get(i)).getIndex() != i) {
+          || ((RexInputRef) projExps.get(i)).getIndex() != i) {
         return false;
       }
     }
@@ -173,14 +177,14 @@ public class RelToPrestoConverter extends RelToSqlConverter {
   /**
    * This overridden function makes sure that the basetable names in the output SQL
    * will be in the form of "dbname.tablename" instead of "catalogname.dbname.tablename"
-   *
+   * <p>
    * Presto can have configurable catalog names. In that case the HiveToRelConverter's default "hive" catalog will
    * cause failures:  https://github.com/prestosql/presto/issues/5785. If catalogname is not prepended, presto uses
    * the catalog name of the view being translated. If for example a view "hive2.db.view" whose coral-presto
    * translation returns "SELECT * FROM db.table" will be evaluated as "SELECT * FROM hive2.db.table" in presto.
-   *
+   * <p>
    * Example:
-   *  hive.default.foo_bar -&gt; default.foo_bar
+   * hive.default.foo_bar -&gt; default.foo_bar
    */
   @Override
   public Result visit(TableScan e) {
@@ -195,12 +199,12 @@ public class RelToPrestoConverter extends RelToSqlConverter {
 
   /**
    * Checks whether we do unnest in Presto. In this case the plan should have this structure:
-   *    Uncollect
-   *      LogicalProject(<List of projections>)
-   *        LogicalValues(tuples=[[{ 0 }]])
+   * Uncollect
+   * LogicalProject(<List of projections>)
+   * LogicalValues(tuples=[[{ 0 }]])
    * Then when producing presto SQL, we just generate UNNEST(<List of projections>). For other cases
    * Presto does not support UNNEST a query: UNNEST(SELECT ..).
-   *  TODO: verify for HIVE parser if we get a Calcite plan for lateral view explode() in this same structure
+   * TODO: verify for HIVE parser if we get a Calcite plan for lateral view explode() in this same structure
    */
   private boolean isPrestoSupportedUnnest(Uncollect uncollect) {
     if (!(uncollect.getInput() instanceof Project)

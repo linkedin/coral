@@ -8,9 +8,11 @@ package com.linkedin.coral.hive.hive2rel.parsetree;
 import com.google.common.collect.ImmutableList;
 import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
 import com.linkedin.coral.hive.hive2rel.HiveMscAdapter;
+
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
+
 import org.apache.calcite.avatica.util.Casing;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.parser.SqlParseException;
@@ -41,7 +43,7 @@ public class ParseTreeBuilderTest {
   }
 
   @DataProvider(name = "convertSQL")
-  public Iterator<Object[]> getConvertSql(){
+  public Iterator<Object[]> getConvertSql() {
     List<String> convertSql = ImmutableList.of(
         "SELECT a, -c, a+c, (c>10), (c > 10 AND a < 25) from test.tableOne where c > 10 AND a < 15 OR b = 'abc'",
         "SELECT a, (32 * 18 / 15) from foo",
@@ -121,12 +123,12 @@ public class ParseTreeBuilderTest {
         // "SELECT a, rank() over (partition by b order by c asc) from foo group by a",
     );
     // We wrap the SQL to be tested here rather than wrap each SQL statement in the its own array in the constant
-    return convertSql.stream().map(x -> new Object[]{x}).iterator();
+    return convertSql.stream().map(x -> new Object[] {x}).iterator();
   }
 
   @DataProvider(name = "validateSql")
-  public Object[][] getValidateSql(){
-    return new Object[][]{
+  public Object[][] getValidateSql() {
+    return new Object[][] {
         // hive doesn't support casting as varbinary
         {"SELECT cast(a as binary) from foo", "SELECT cast(`a` as binary) from `foo`"},
         {"SELECT cast(a as string) from foo", "SELECT cast(`a` as varchar) from `foo`"},

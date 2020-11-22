@@ -10,6 +10,7 @@ import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
 import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
 import com.linkedin.coral.hive.hive2rel.RelContextProvider;
 import com.linkedin.coral.sparkplan.containers.SparkPlanNode;
+
 import java.io.IOException;
 import java.io.Reader;
 import java.nio.file.Files;
@@ -29,6 +30,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexNode;
@@ -78,6 +80,7 @@ public class SparkPlanToIRRelConverter {
 
   /**
    * Initializes converter and provider with localMetastorePath, which points to a json file
+   *
    * @param localMetastorePath path of local metastore json file, containing all the required
    *                           metadata (database name, table name, column name and type)
    * @return {@link SparkPlanToIRRelConverter}
@@ -121,6 +124,7 @@ public class SparkPlanToIRRelConverter {
 
   /**
    * This API is used to judge if there is complicated predicate which is pushed down to scan node in given plan
+   *
    * @param plan well-formed Spark logical or physical plan string
    * @return "Yes" if there is complicated predicate pushed down to scan node in given plan; "No" if there is a
    * non-complicated predicate pushed down to scan node in given plan; "Fail to judge" if all the scan nodes in this plan can't be handled
@@ -187,8 +191,8 @@ public class SparkPlanToIRRelConverter {
    * For example,
    * using this plan:
    * +- Project [area_code#64, code#65]
-   *    +- Filter (isnotnull(country#63) && (country#63 = US))
-   *        +- HiveTableRelation `default`.`airports`, org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe, [name#62, country#63, area_code#64, code#65]
+   * +- Filter (isnotnull(country#63) && (country#63 = US))
+   * +- HiveTableRelation `default`.`airports`, org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe, [name#62, country#63, area_code#64, code#65]
    * we can construct the Map {2:1, 1:0} where we use position (0, 1, 2) to represent each plan node
    *
    * @param plan Spark optimized logical plan or physical plan
@@ -233,8 +237,8 @@ public class SparkPlanToIRRelConverter {
    * For example,
    * using this plan:
    * +- Project [area_code#64, code#65]
-   *    +- Filter (isnotnull(country#63) && (country#63 = US))
-   *        +- HiveTableRelation `default`.`airports`, org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe, [name#62, country#63, area_code#64, code#65]
+   * +- Filter (isnotnull(country#63) && (country#63 = US))
+   * +- HiveTableRelation `default`.`airports`, org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe, [name#62, country#63, area_code#64, code#65]
    * after constructing the Map dag {2:1, 1:0} where we use position (0, 1, 2) to represent each plan node,
    * we need to visit nodes in 2->1->0 sequence
    *
@@ -283,7 +287,7 @@ public class SparkPlanToIRRelConverter {
   /**
    * This API is used to visit scan SparkPlanNode, and parse the description and update predicateInfoMap
    *
-   * @param nodeToVisit current node needs to be visited
+   * @param nodeToVisit      current node needs to be visited
    * @param predicateInfoMap a map whose key is table name and value is a list of predicate information of that table
    */
   private void visitScanNode(SparkPlanNode nodeToVisit, Map<String, List<String>> predicateInfoMap) {
@@ -305,6 +309,7 @@ public class SparkPlanToIRRelConverter {
 
   /**
    * This API is used to get the first word from a string
+   *
    * @param s string from which we want to get the first word
    */
   private String getFirstWord(String s) {
@@ -337,12 +342,12 @@ public class SparkPlanToIRRelConverter {
    * we need to add 'Complicated Predicate: [(datediff(18429, cast(substring(datepartition#66, 0, 10) as date)) <= 365)]'
    * to the value list of 'test.airport' in [[predicateInfoMap]] because it is a complicated predicate
    *
-   * @param nodeToVisit Spark scan node we need to parse
+   * @param nodeToVisit      Spark scan node we need to parse
    * @param predicateInfoMap a map whose key is table name and value is a list of predicate information of that table
-   * @param scanType type of the scan
+   * @param scanType         type of the scan
    */
   private void visitScanNode(SparkPlanNode nodeToVisit, Map<String, List<String>> predicateInfoMap,
-      SparkPlanNode.PLANTYPE scanType) {
+                             SparkPlanNode.PLANTYPE scanType) {
     nodeToVisit.setPlanType(scanType);
     String description = nodeToVisit.getDescription();
     Pattern namePattern = null;
@@ -402,7 +407,8 @@ public class SparkPlanToIRRelConverter {
     if ("".equals(modifiedFilterCondition.trim())) {
       return null;
     }
-    String sql = "SELECT * FROM " + databaseName + "." + tableName + " WHERE " + modifiedFilterCondition;;
+    String sql = "SELECT * FROM " + databaseName + "." + tableName + " WHERE " + modifiedFilterCondition;
+    ;
     RelNode convertedNode = hiveToRelConverter.convertSql(sql);
     return convertedNode.getInput(0).getChildExps().get(0);
   }
@@ -410,6 +416,7 @@ public class SparkPlanToIRRelConverter {
   /**
    * This API is used to judge if the string [[info]] only contains field names of the table, if so, it is not a
    * complex predicate
+   *
    * @param info string we need to judge
    * @return true if it only contains field names like 'datepartition#20, engagement_p1#12, engagement_p2_detailed#15, id#17L'
    * otherwise, return false if it contains other things like '(datediff(18429, cast(substring(datepartition#20, 0, 10) as date)) <= 365)'
@@ -435,6 +442,7 @@ public class SparkPlanToIRRelConverter {
    * GreaterThan(field, value) -> field > value
    * LessThan(field, value) -> field < value
    * Besides, we need to replace the delimiter of different conditions from ',' to 'AND'
+   *
    * @param filterCondition condition string we need to modify
    * @return modified string which can be converted by Coral-hive
    */

@@ -28,12 +28,11 @@ import org.apache.calcite.sql.validate.SqlValidatorScope;
  * Operator to reference fields of structs returned by SQL functions.
  * This supports following SQL:
  * {@code
- *   SELECT f(col_1, col_2).field_a FROM myTable
+ * SELECT f(col_1, col_2).field_a FROM myTable
  * }
  * where {@code f} is a function that returns a ROW type containing {@code field_a}.
- *
+ * <p>
  * TODO: Fix calcite and fold this into Calcite DOT operator
- *
  */
 public class FunctionFieldReferenceOperator extends SqlBinaryOperator {
   public static final FunctionFieldReferenceOperator
@@ -68,7 +67,7 @@ public class FunctionFieldReferenceOperator extends SqlBinaryOperator {
     call.operand(0).unparse(writer, getLeftPrec(), getRightPrec());
     writer.literal(".");
     writer.setNeedWhitespace(false);
-      // strip quotes from fieldName
+    // strip quotes from fieldName
     String fieldName = fieldNameStripQuotes(call.operand(1));
     writer.identifier(fieldName, true);
   }
@@ -87,7 +86,7 @@ public class FunctionFieldReferenceOperator extends SqlBinaryOperator {
 
   @Override
   public void validateCall(SqlCall call, SqlValidator validator, SqlValidatorScope scope,
-      SqlValidatorScope operandScope) {
+                           SqlValidatorScope operandScope) {
     call.operand(0).validateExpr(validator, operandScope);
   }
 

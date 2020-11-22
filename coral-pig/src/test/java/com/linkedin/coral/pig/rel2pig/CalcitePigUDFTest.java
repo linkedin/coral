@@ -6,6 +6,7 @@
 package com.linkedin.coral.pig.rel2pig;
 
 import java.io.IOException;
+
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.pig.pigunit.PigTest;
@@ -18,6 +19,9 @@ import org.testng.annotations.Test;
 public class CalcitePigUDFTest {
 
   static final String OUTPUT_RELATION = "view";
+
+  private CalcitePigUDFTest() {
+  }
 
   @BeforeTest
   public static void beforeTest() throws HiveException, MetaException {
@@ -32,9 +36,9 @@ public class CalcitePigUDFTest {
   public static void testNestedUDF() throws IOException, ParseException {
     final String sql = "SELECT cos(sin(i1)) FROM functions.tablefields AS t";
     final String[] expectedPigLatin = {
-        "view = LOAD 'src/test/resources/data/functions/tablefields.json' USING JsonLoader('" +
-            "i_1:int, i0:int, i1:int, i2:int, i3:int, fl1:double, fl2:double, fl3:double, " +
-            "str:chararray, substr:chararray, exstr:chararray, bootrue:boolean, boofalse:boolean, bin:bytearray');",
+        "view = LOAD 'src/test/resources/data/functions/tablefields.json' USING JsonLoader('"
+            + "i_1:int, i0:int, i1:int, i2:int, i3:int, fl1:double, fl2:double, fl3:double, "
+            + "str:chararray, substr:chararray, exstr:chararray, bootrue:boolean, boofalse:boolean, bin:bytearray');",
         "view = FOREACH view GENERATE COS(SIN(i1)) AS EXPRx0;"
     };
     final String[] expectedOutput = {
@@ -56,9 +60,9 @@ public class CalcitePigUDFTest {
   public static void testPigIfUDF() throws IOException, ParseException {
     final String sql = "SELECT if(i1 > 0, 'greater', 'lesser') FROM functions.tablefields AS t";
     final String[] expectedPigLatin = {
-        "view = LOAD 'src/test/resources/data/functions/tablefields.json' USING JsonLoader('" +
-            "i_1:int, i0:int, i1:int, i2:int, i3:int, fl1:double, fl2:double, fl3:double, " +
-            "str:chararray, substr:chararray, exstr:chararray, bootrue:boolean, boofalse:boolean, bin:bytearray');",
+        "view = LOAD 'src/test/resources/data/functions/tablefields.json' USING JsonLoader('"
+            + "i_1:int, i0:int, i1:int, i2:int, i3:int, fl1:double, fl2:double, fl3:double, "
+            + "str:chararray, substr:chararray, exstr:chararray, bootrue:boolean, boofalse:boolean, bin:bytearray');",
         "view = FOREACH view GENERATE (CASE WHEN (i1 > 0) THEN 'greater' ELSE 'lesser' END) AS EXPRx0;"
     };
     final String[] expectedOutput = {
@@ -81,9 +85,9 @@ public class CalcitePigUDFTest {
   public static void testPigLog2UDF() throws IOException, ParseException {
     final String sql = "SELECT log2(i3) FROM functions.tablefields AS t";
     final String[] expectedPigLatin = {
-        "view = LOAD 'src/test/resources/data/functions/tablefields.json' USING JsonLoader('" +
-            "i_1:int, i0:int, i1:int, i2:int, i3:int, fl1:double, fl2:double, fl3:double, " +
-            "str:chararray, substr:chararray, exstr:chararray, bootrue:boolean, boofalse:boolean, bin:bytearray');",
+        "view = LOAD 'src/test/resources/data/functions/tablefields.json' USING JsonLoader('"
+            + "i_1:int, i0:int, i1:int, i2:int, i3:int, fl1:double, fl2:double, fl3:double, "
+            + "str:chararray, substr:chararray, exstr:chararray, bootrue:boolean, boofalse:boolean, bin:bytearray');",
         "view = FOREACH view GENERATE LOG(i3)/LOG(2) AS EXPRx0;"
     };
     final String[] expectedOutput = {
@@ -106,9 +110,9 @@ public class CalcitePigUDFTest {
   public static void testPigLogUDF() throws IOException, ParseException {
     final String sql = "SELECT log(i2, i3) FROM functions.tablefields AS t";
     final String[] expectedPigLatin = {
-        "view = LOAD 'src/test/resources/data/functions/tablefields.json' USING JsonLoader('" +
-            "i_1:int, i0:int, i1:int, i2:int, i3:int, fl1:double, fl2:double, fl3:double, " +
-            "str:chararray, substr:chararray, exstr:chararray, bootrue:boolean, boofalse:boolean, bin:bytearray');",
+        "view = LOAD 'src/test/resources/data/functions/tablefields.json' USING JsonLoader('"
+            + "i_1:int, i0:int, i1:int, i2:int, i3:int, fl1:double, fl2:double, fl3:double, "
+            + "str:chararray, substr:chararray, exstr:chararray, bootrue:boolean, boofalse:boolean, bin:bytearray');",
         "view = FOREACH view GENERATE LOG(i3)/LOG(i2) AS EXPRx0;"
     };
     final String[] expectedOutput = {
@@ -131,9 +135,9 @@ public class CalcitePigUDFTest {
   public static void testPigSubstringUDF() throws IOException, ParseException {
     final String sqlTemplate = "SELECT %s FROM functions.tablefields AS t";
     final String expectedPigLatinTemplate = String.join("\n",
-        "view = LOAD 'src/test/resources/data/functions/tablefields.json' USING JsonLoader('" +
-            "i_1:int, i0:int, i1:int, i2:int, i3:int, fl1:double, fl2:double, fl3:double, " +
-            "str:chararray, substr:chararray, exstr:chararray, bootrue:boolean, boofalse:boolean, bin:bytearray');",
+        "view = LOAD 'src/test/resources/data/functions/tablefields.json' USING JsonLoader('"
+            + "i_1:int, i0:int, i1:int, i2:int, i3:int, fl1:double, fl2:double, fl3:double, "
+            + "str:chararray, substr:chararray, exstr:chararray, bootrue:boolean, boofalse:boolean, bin:bytearray');",
         "view = FOREACH view GENERATE %s AS EXPRx0;"
     );
 
@@ -179,9 +183,9 @@ public class CalcitePigUDFTest {
   public static void testPigRoundUDF() throws IOException, ParseException {
     final String sqlTemplate = "SELECT %s FROM functions.tablefields AS t";
     final String expectedPigLatinTemplate = String.join("\n",
-        "view = LOAD 'src/test/resources/data/functions/tablefields.json' USING JsonLoader('" +
-            "i_1:int, i0:int, i1:int, i2:int, i3:int, fl1:double, fl2:double, fl3:double, " +
-            "str:chararray, substr:chararray, exstr:chararray, bootrue:boolean, boofalse:boolean, bin:bytearray');",
+        "view = LOAD 'src/test/resources/data/functions/tablefields.json' USING JsonLoader('"
+            + "i_1:int, i0:int, i1:int, i2:int, i3:int, fl1:double, fl2:double, fl3:double, "
+            + "str:chararray, substr:chararray, exstr:chararray, bootrue:boolean, boofalse:boolean, bin:bytearray');",
         "view = FOREACH view GENERATE %s AS EXPRx0;"
     );
 
@@ -233,9 +237,9 @@ public class CalcitePigUDFTest {
   public static void testAllPigBuiltinFunctions() throws IOException, ParseException {
     final String sqlTemplate = "SELECT %s(%s) FROM functions.tablefields";
     final String expectedPigLatinTemplate = String.join("\n",
-        "view = LOAD 'src/test/resources/data/functions/tablefields.json' USING JsonLoader('" +
-            "i_1:int, i0:int, i1:int, i2:int, i3:int, fl1:double, fl2:double, fl3:double, " +
-            "str:chararray, substr:chararray, exstr:chararray, bootrue:boolean, boofalse:boolean, bin:bytearray');",
+        "view = LOAD 'src/test/resources/data/functions/tablefields.json' USING JsonLoader('"
+            + "i_1:int, i0:int, i1:int, i2:int, i3:int, fl1:double, fl2:double, fl3:double, "
+            + "str:chararray, substr:chararray, exstr:chararray, bootrue:boolean, boofalse:boolean, bin:bytearray');",
         "view = FOREACH view GENERATE %1$s(%2$s) AS EXPRx0;"
     );
 
@@ -260,8 +264,8 @@ public class CalcitePigUDFTest {
         PigFunctionTest.create("log10", "LOG10", "fl3", "(0.24303804868629444)"),
         PigFunctionTest.create("lower", "LOWER", "str", "(abcd)"),
         PigFunctionTest.create("ln", "LOG", "fl3", "(0.5596157879354227)"),
-        PigFunctionTest.create("regexp_extract","REGEX_EXTRACT", "str, '.*(B)(.*D)', 1", "(B)"),
-        PigFunctionTest.create("regexp_extract","REGEX_EXTRACT", "str, '.*(B)(.*D)', 2", "(cD)"),
+        PigFunctionTest.create("regexp_extract", "REGEX_EXTRACT", "str, '.*(B)(.*D)', 1", "(B)"),
+        PigFunctionTest.create("regexp_extract", "REGEX_EXTRACT", "str, '.*(B)(.*D)', 2", "(cD)"),
         PigFunctionTest.create("sin", "SIN", "i1", "(0.8414709848078965)"),
         PigFunctionTest.create("tan", "TAN", "i1", "(1.5574077246549023)"),
         PigFunctionTest.create("trim", "TRIM", "exstr", "(eFg)"),
@@ -279,9 +283,9 @@ public class CalcitePigUDFTest {
     final String sqlTemplate = "SELECT %s(%s) FROM functions.tablefields";
     final String expectedPigLatinTemplate = String.join("\n",
         "DEFINE PIG_UDF_%1$s dali.data.pig.udf.HiveUDF('%1$s');",
-        "view = LOAD 'src/test/resources/data/functions/tablefields.json' USING JsonLoader('" +
-            "i_1:int, i0:int, i1:int, i2:int, i3:int, fl1:double, fl2:double, fl3:double, " +
-            "str:chararray, substr:chararray, exstr:chararray, bootrue:boolean, boofalse:boolean, bin:bytearray');",
+        "view = LOAD 'src/test/resources/data/functions/tablefields.json' USING JsonLoader('"
+            + "i_1:int, i0:int, i1:int, i2:int, i3:int, fl1:double, fl2:double, fl3:double, "
+            + "str:chararray, substr:chararray, exstr:chararray, bootrue:boolean, boofalse:boolean, bin:bytearray');",
         "view = FOREACH view GENERATE PIG_UDF_%1$s(%2$s) AS EXPRx0;"
     );
 
@@ -320,7 +324,7 @@ public class CalcitePigUDFTest {
    * Runs the set of tests provided in the testSuite
    */
   private static void runTestSuite(String sqlTemplate, String expectedPigLatinTemplate,
-      PigFunctionTest[] testSuite) throws IOException, ParseException {
+                                   PigFunctionTest[] testSuite) throws IOException, ParseException {
 
     for (int i = 0; i < testSuite.length; ++i) {
       final PigFunctionTest pigFunctionTest = testSuite[i];

@@ -9,6 +9,7 @@ import com.linkedin.coral.com.google.common.base.Preconditions;
 import com.linkedin.coral.com.google.common.base.Strings;
 import org.apache.commons.lang3.StringUtils;
 import com.linkedin.coral.schema.avro.exceptions.SchemaNotFoundException;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -17,6 +18,7 @@ import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
+
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
 import org.apache.calcite.rel.type.RelDataType;
@@ -63,7 +65,7 @@ class SchemaUtilities {
 
   /**
    * This method return avro schema including partition columns for table
-   *
+   * <p>
    * If avro schema exists in table properties, retrieve it from table properties
    * Otherwise, avro schema is converted from hive schema
    *
@@ -112,7 +114,7 @@ class SchemaUtilities {
 
   /**
    * Returns case sensitive schema from table properties or null if not present
-   *
+   * <p>
    * Note: This method is modified based on SchemaUtilities in Dali codebase
    *
    * @param table
@@ -141,9 +143,8 @@ class SchemaUtilities {
   }
 
 
-
   static void appendField(@Nonnull Schema.Field field,
-      @Nonnull SchemaBuilder.FieldAssembler<Schema> fieldAssembler) {
+                          @Nonnull SchemaBuilder.FieldAssembler<Schema> fieldAssembler) {
     Preconditions.checkNotNull(field);
     Preconditions.checkNotNull(fieldAssembler);
 
@@ -165,9 +166,9 @@ class SchemaUtilities {
    * @param fieldAssembler
    */
   static void appendField(@Nonnull String fieldName,
-      @Nonnull RelDataType fieldRelDataType,
-      @Nonnull SchemaBuilder.FieldAssembler<Schema> fieldAssembler,
-      @Nonnull boolean isNullable) {
+                          @Nonnull RelDataType fieldRelDataType,
+                          @Nonnull SchemaBuilder.FieldAssembler<Schema> fieldAssembler,
+                          @Nonnull boolean isNullable) {
     Preconditions.checkNotNull(fieldName);
     Preconditions.checkNotNull(fieldRelDataType);
     Preconditions.checkNotNull(fieldAssembler);
@@ -210,8 +211,8 @@ class SchemaUtilities {
   }
 
   static void appendField(@Nonnull String fieldName,
-      @Nonnull Schema.Field field,
-      @Nonnull SchemaBuilder.FieldAssembler<Schema> fieldAssembler) {
+                          @Nonnull Schema.Field field,
+                          @Nonnull SchemaBuilder.FieldAssembler<Schema> fieldAssembler) {
     Preconditions.checkNotNull(fieldName);
     Preconditions.checkNotNull(field);
     Preconditions.checkNotNull(fieldAssembler);
@@ -268,41 +269,41 @@ class SchemaUtilities {
     }
 
     Schema partitionColumnsSchema = convertFieldSchemaToAvroSchema("partitionCols",
-                                                               "partitionCols",
-                                                                false,
-                                                                              tableOrView.getPartitionKeys());
+        "partitionCols",
+        false,
+        tableOrView.getPartitionKeys());
 
     List<Schema.Field> fieldsWithPartitionColumns = new ArrayList<>();
 
     for (Schema.Field field : schema.getFields()) {
       fieldsWithPartitionColumns.add(new Schema.Field(field.name(),
-                                                      field.schema(),
-                                                      field.doc(),
-                                                      field.defaultValue(),
-                                                      field.order()));
+          field.schema(),
+          field.doc(),
+          field.defaultValue(),
+          field.order()));
     }
 
     for (Schema.Field field : partitionColumnsSchema.getFields()) {
       fieldsWithPartitionColumns.add(new Schema.Field(field.name(),
           field.schema(),
           "This is the partition column. "
-          + "Partition columns, if present in the schema, should also be projected in the data.",
+              + "Partition columns, if present in the schema, should also be projected in the data.",
           field.defaultValue(),
           field.order()));
     }
 
     Schema schemaWithPartitionColumns = Schema.createRecord(schema.getName(),
-                                                            schema.getDoc(),
-                                                            schema.getNamespace(),
-                                                            schema.isError());
+        schema.getDoc(),
+        schema.getNamespace(),
+        schema.isError());
     schemaWithPartitionColumns.setFields(fieldsWithPartitionColumns);
 
     return schemaWithPartitionColumns;
   }
 
   static Schema setupNameAndNamespace(@Nonnull Schema schema,
-      @Nonnull String schemaName,
-      @Nonnull String schemaNamespace) {
+                                      @Nonnull String schemaName,
+                                      @Nonnull String schemaNamespace) {
     Preconditions.checkNotNull(schema);
     Preconditions.checkNotNull(schemaName);
     Preconditions.checkNotNull(schemaNamespace);
@@ -348,8 +349,8 @@ class SchemaUtilities {
   }
 
   static Schema mergeUnionSchema(@Nonnull Schema leftSchema,
-      @Nonnull Schema rightSchema,
-      boolean strictMode) {
+                                 @Nonnull Schema rightSchema,
+                                 boolean strictMode) {
     Preconditions.checkNotNull(leftSchema);
     Preconditions.checkNotNull(rightSchema);
 
@@ -366,7 +367,7 @@ class SchemaUtilities {
 
   /**
    * This method decides if two input schemas of LogicalUnion operator are compatible.
-   *
+   * <p>
    * Two schemas are compatible if they have same field names and types.
    * namespace and doc etc are ignored.
    *
@@ -375,8 +376,8 @@ class SchemaUtilities {
    * @return return true if two schemas are union compatible; false otherwise.
    */
   static boolean isUnionRecordSchemaCompatible(@Nonnull Schema leftSchema,
-      @Nonnull Schema rightSchema,
-      boolean strictMode) {
+                                               @Nonnull Schema rightSchema,
+                                               boolean strictMode) {
     Preconditions.checkNotNull(leftSchema);
     Preconditions.checkNotNull(rightSchema);
 
@@ -396,10 +397,10 @@ class SchemaUtilities {
 
     Map<String, Schema.Field> leftSchemaFieldsMap =
         leftSchemaFields.stream().collect(Collectors.toMap(Schema.Field::name,
-                                                           Function.identity()));
+            Function.identity()));
     Map<String, Schema.Field> rightSchemaFieldsMap =
         rightSchemaFields.stream().collect(Collectors.toMap(Schema.Field::name,
-                                                            Function.identity()));
+            Function.identity()));
 
     for (Schema.Field field : leftSchemaFields) {
       if (!rightSchemaFieldsMap.containsKey(field.name())) {
@@ -434,8 +435,8 @@ class SchemaUtilities {
   }
 
   private static boolean isUnionSchemaCompatible(@Nonnull Schema leftSchema,
-      @Nonnull Schema rightSchema,
-      boolean strictMode) {
+                                                 @Nonnull Schema rightSchema,
+                                                 boolean strictMode) {
     Preconditions.checkNotNull(leftSchema);
     Preconditions.checkNotNull(rightSchema);
 
@@ -474,7 +475,7 @@ class SchemaUtilities {
       case UNION:
         boolean isSameUnionType = (leftSchema.getType() == rightSchema.getType());
         boolean isBothNullableType = AvroSerdeUtils.isNullableType(leftSchema)
-                                  && AvroSerdeUtils.isNullableType(rightSchema);
+            && AvroSerdeUtils.isNullableType(rightSchema);
 
         Schema leftOtherType = AvroSerdeUtils.getOtherTypeFromNullableType(leftSchema);
         Schema rightOtherType = AvroSerdeUtils.getOtherTypeFromNullableType(rightSchema);
@@ -489,8 +490,8 @@ class SchemaUtilities {
   }
 
   private static void appendFieldWithNewNamespace(@Nonnull Schema.Field field,
-      @Nonnull String namespace,
-      @Nonnull SchemaBuilder.FieldAssembler<Schema> fieldAssembler) {
+                                                  @Nonnull String namespace,
+                                                  @Nonnull SchemaBuilder.FieldAssembler<Schema> fieldAssembler) {
     Preconditions.checkNotNull(field);
     Preconditions.checkNotNull(namespace);
     Preconditions.checkNotNull(fieldAssembler);
@@ -499,9 +500,9 @@ class SchemaUtilities {
     switch (field.schema().getType()) {
       case ENUM:
         fieldSchema = Schema.createEnum(fieldSchema.getName(),
-                                        fieldSchema.getDoc(),
-                                        namespace,
-                                        fieldSchema.getEnumSymbols());
+            fieldSchema.getDoc(),
+            namespace,
+            fieldSchema.getEnumSymbols());
         break;
       default:
         break;
@@ -667,9 +668,9 @@ class SchemaUtilities {
   }
 
   private static Schema convertFieldSchemaToAvroSchema(@Nonnull final String recordName,
-      @Nonnull final String recordNamespace,
-      @Nonnull final boolean mkFieldsOptional,
-      @Nonnull final List<FieldSchema> columns) {
+                                                       @Nonnull final String recordNamespace,
+                                                       @Nonnull final boolean mkFieldsOptional,
+                                                       @Nonnull final List<FieldSchema> columns) {
     Preconditions.checkNotNull(recordName);
     Preconditions.checkNotNull(recordNamespace);
     Preconditions.checkNotNull(mkFieldsOptional);
@@ -714,9 +715,9 @@ class SchemaUtilities {
     String schemaStr = table.getParameters().get(AvroSerdeUtils.AvroTableProperties.SCHEMA_LITERAL.getPropName());
     if (Strings.isNullOrEmpty(schemaStr)) {
       schemaStr = table.getSd()
-                      .getSerdeInfo()
-                      .getParameters()
-                      .get(AvroSerdeUtils.AvroTableProperties.SCHEMA_LITERAL.getPropName());
+          .getSerdeInfo()
+          .getParameters()
+          .get(AvroSerdeUtils.AvroTableProperties.SCHEMA_LITERAL.getPropName());
     }
 
     if (Strings.isNullOrEmpty(schemaStr)) {

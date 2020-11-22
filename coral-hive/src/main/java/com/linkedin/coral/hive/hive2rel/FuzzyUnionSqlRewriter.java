@@ -7,10 +7,12 @@ package com.linkedin.coral.hive.hive2rel;
 
 import com.google.common.collect.ImmutableList;
 import com.linkedin.coral.hive.hive2rel.functions.GenericProjectFunction;
+
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
+
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.schema.Table;
@@ -31,50 +33,50 @@ import org.apache.calcite.sql.util.SqlShuttle;
  * that is composed of the union of two tables. When a view is initially deployed, the schemas must be exactly the
  * same. However, one of the tables could evolve to introduce a new field in a struct, which leads to a mismatch in the
  * schemas when taking the union of the tables in the view.
- *
+ * <p>
  * This shuttle rewrites a SqlNode AST so that every branch of a union operator project exactly a given table schema.
  * The schema of a struct is fixed using the GenericProject UDF.
  * The introduction of the GenericProject only occurs when the branch of the union contains a superset of the table
  * schema fields and is not strictly equivalent.
- *
+ * <p>
  * If the SqlNode AST does not have union operators, the initial SqlNode AST will be returned.
  * If the SqlNode AST has a union operator, and there exists a semantically incorrect branch, an error will be thrown.
- *
+ * <p>
  * For example:
- *
+ * <p>
  * Given schemas:
  * a - (f:int, f1:struct(f2:int))
  * b - (f:int, f1:struct(f2:int))
  * Given view as query:
- *   SELECT *
- *   FROM a
- *   UNION ALL
- *   SELECT *
- *   FROM b
- *
+ * SELECT *
+ * FROM a
+ * UNION ALL
+ * SELECT *
+ * FROM b
+ * <p>
  * This view will be initially deployed successfully because both branches of the union are the same.
  * Let's name the view, 'view_c', and assume it was deployed in a database, 'database_d'.
- *
+ * <p>
  * Suppose the schema of b is changed such that it is now:
  * b - (f:int, f1:struct(f2:int, f3:int))
  * There is now a mismatch in the schemas between the two branches of the view leading to a fuzzy union.
  * A query for database_d.view_c will fail.
- *
+ * <p>
  * To resolve the mismatch in schemas, we use the GenericProject UDF to project view_c's original schema
  * of b.f1 given by (f:int, f1:struct(f2:int)) over the column.
  * The rewritten query will look something like:
- *   SELECT *
- *   FROM a
- *   UNION ALL
- *   SELECT view_c.f, generic_project(view_c.f1, 'view_c.f1') as f1
- *   FROM (
- *     SELECT * from b
- *   ) as view_c
- *
+ * SELECT *
+ * FROM a
+ * UNION ALL
+ * SELECT view_c.f, generic_project(view_c.f1, 'view_c.f1') as f1
+ * FROM (
+ * SELECT * from b
+ * ) as view_c
+ * <p>
  * The expected schema will be inserted as the return type of the generic_project SQL function.
  * The first parameter will be a reference to the column to be fixed.
  * The second parameter will be a string literal containing the name of the column.
- *
+ * <p>
  * It is up to the coral modules for a specific engine (spark/presto) to resolve the schema of b.f1.
  */
 class FuzzyUnionSqlRewriter extends SqlShuttle {
@@ -85,7 +87,7 @@ class FuzzyUnionSqlRewriter extends SqlShuttle {
   private final List<String> columnNames;
 
   public FuzzyUnionSqlRewriter(@Nonnull Table table, @Nonnull String tableName,
-      @Nonnull RelContextProvider relContextProvider) {
+                               @Nonnull RelContextProvider relContextProvider) {
     this.relContextProvider = relContextProvider;
     this.tableName = tableName;
     this.tableDataType = table.getRowType(relContextProvider.getHiveSqlValidator().getTypeFactory());
@@ -104,6 +106,7 @@ class FuzzyUnionSqlRewriter extends SqlShuttle {
 
   /**
    * Create a SqlNode that calls GenericProject for the given column
+   *
    * @param columnName The name of the column that is to be fixed
    */
   private SqlNode createGenericProject(String columnName) {
@@ -123,15 +126,16 @@ class FuzzyUnionSqlRewriter extends SqlShuttle {
 
   /**
    * Create the SqlNodeList for the operands for a GenericProject.
+   *
    * @param fromNodeDataType RelDataType that contains a superset of the fields in tableDataType and is not strictly
    *                         equal to tableDataType.
    * @return a SqlNodeList that contains all the fields in tableDataType where:
-   *         - fields that do not involve structs are identity fields
-   *         - fields that involve structs:
-   *           - if fromNodeDataType.structField = tableDataType.structField
-   *             - identity projection
-   *           - else
-   *             - use a generic projection over the struct column fixing the schema to be tableDataType.structField
+   * - fields that do not involve structs are identity fields
+   * - fields that involve structs:
+   * - if fromNodeDataType.structField = tableDataType.structField
+   * - identity projection
+   * - else
+   * - use a generic projection over the struct column fixing the schema to be tableDataType.structField
    */
   private SqlNodeList createProjectedFieldsNodeList(RelDataType fromNodeDataType) {
     SqlNodeList projectedFields = new SqlNodeList(SqlParserPos.ZERO);
@@ -156,6 +160,7 @@ class FuzzyUnionSqlRewriter extends SqlShuttle {
    * Create a SqlNode that has that has a schema fixed to the provided table if and only if the SqlNode has
    * a RelDataType that is a superset of the fields that exist in the tableDataType and is not strictly the equivalent
    * to tableDataType.
+   *
    * @param unionBranch SqlNode node that is a branch in a union
    * @return SqlNode that has its schema fixed to the schema of the table
    */
@@ -207,6 +212,7 @@ class FuzzyUnionSqlRewriter extends SqlShuttle {
   /**
    * Looks at the union operator in the call and adds a fuzzy union projection over branches that have mismatched
    * schemas.
+   *
    * @param unionCall Union operator SqlCall
    * @return a Union operator SqlCall with fuzzy union semantics
    */
@@ -232,6 +238,7 @@ class FuzzyUnionSqlRewriter extends SqlShuttle {
 
   /**
    * Determines if the SqlNode is a UNION call
+   *
    * @param node a given SqlNode to evaluate
    * @return true if the SqlNode is a UNION call; false otherwise
    */

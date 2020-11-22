@@ -13,8 +13,10 @@ import com.linkedin.coral.pig.rel2pig.rel.PigLogicalProject;
 import com.linkedin.coral.pig.rel2pig.rel.PigLogicalUnion;
 import com.linkedin.coral.pig.rel2pig.rel.PigRelUtils;
 import com.linkedin.coral.pig.rel2pig.rel.PigTableScan;
+
 import java.util.List;
 import java.util.stream.Collectors;
+
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.TableFunctionScan;
 import org.apache.calcite.rel.core.TableScan;
@@ -35,36 +37,36 @@ import org.apache.calcite.rel.logical.LogicalValues;
 /**
  * RelToPigLatinConverter translates a SQL query expressed in Calcite Relational Algebra
  * into equivalent Pig Latin statement(s).
- *
+ * <p>
  * The interface to use RelToPigLatinConverter looks something like the following:
- *   String outputRelation = "OUTPUT_RELATION";
- *   PigLoadFunction loadFunc = (String db, String table) -&gt; "LOAD_FUNCTION()";
- *   TableToPigPathFunction pathFunc = (String db, String table) -&gt; "PATH_THAT_LOAD_FUNCTION_CAN_READ";
- *   RelToPigLatinConverter converter = new RelToPigLatinConverter(loadFunc, pathFunc);
- *   String pigLatin = converter.convert(relNode, outputRelation);
- *
+ * String outputRelation = "OUTPUT_RELATION";
+ * PigLoadFunction loadFunc = (String db, String table) -&gt; "LOAD_FUNCTION()";
+ * TableToPigPathFunction pathFunc = (String db, String table) -&gt; "PATH_THAT_LOAD_FUNCTION_CAN_READ";
+ * RelToPigLatinConverter converter = new RelToPigLatinConverter(loadFunc, pathFunc);
+ * String pigLatin = converter.convert(relNode, outputRelation);
+ * <p>
  * The returned "pigLatin" can be passed as a Pig Script to the Pig engine.
- *
+ * <p>
  * For example, if we use the following parameters:
- *   outputRelation         : "view"
- *   pigLoadFunction        : PigLoadFunction loadFunc =
- *                              (String db, String table) -&gt; "dali.data.pig.DaliStorage()";
- *   tableToPigPathFunction : TableToPigPathFunction pathFunc =
- *                              (String db, String table) -&gt; String.format("dalids:///%s.%s", db, table);
- *
+ * outputRelation         : "view"
+ * pigLoadFunction        : PigLoadFunction loadFunc =
+ * (String db, String table) -&gt; "dali.data.pig.DaliStorage()";
+ * tableToPigPathFunction : TableToPigPathFunction pathFunc =
+ * (String db, String table) -&gt; String.format("dalids:///%s.%s", db, table);
+ * <p>
  * Assuming these SQL queries are correctly parsed as Calcite Relational Algebra,
  * some example translations of are the following:
- *
+ * <p>
  * Suppose we had a table defined as:
- *   CREATE TABLE IF NOT EXISTS pig.tableA(a int, b int, c int)
- *
+ * CREATE TABLE IF NOT EXISTS pig.tableA(a int, b int, c int)
+ * <p>
  * Example 1:
- *   SQL:
- *     SELECT tableA.b FROM pig.tableA AS tableA
- *   Pig Latin:
- *     view = LOAD 'dalids:///pig.tableA' USING dali.data.pig.DaliStorage() ;
- *     view = FOREACH view GENERATE b ;
- *
+ * SQL:
+ * SELECT tableA.b FROM pig.tableA AS tableA
+ * Pig Latin:
+ * view = LOAD 'dalids:///pig.tableA' USING dali.data.pig.DaliStorage() ;
+ * view = FOREACH view GENERATE b ;
+ * <p>
  * TODO(ralam): Update with more examples as functionality is incrementally built.
  */
 public class RelToPigLatinConverter {
@@ -81,7 +83,7 @@ public class RelToPigLatinConverter {
    * Converts a SQL query represented in Calcite Relational Algebra, root, to Pig Latin
    * where the final output of the table is stored in the alias, outputRelation.
    *
-   * @param root Root node of the SQL query
+   * @param root           Root node of the SQL query
    * @param outputRelation The alias of the variable that the SQL query is to be dumped
    * @return Pig Latin equivalent of the SQL query
    */
@@ -95,7 +97,7 @@ public class RelToPigLatinConverter {
   /**
    * Delegates RelNodes to its specific RelNode type handler
    *
-   * @param relNode input RelNode
+   * @param relNode        input RelNode
    * @param outputRelation variable where RelNode operation output will be stored
    * @return Pig Latin script for all operations in the DAG of RelNodes with root relNode
    */
@@ -120,8 +122,8 @@ public class RelToPigLatinConverter {
   /**
    * Generates Pig Latin to perform a TableScan.
    *
-   * @param state Intermediate state of the query translation
-   * @param tableScan TableScan node
+   * @param state          Intermediate state of the query translation
+   * @param tableScan      TableScan node
    * @param outputRelation name of the variable to be outputted
    */
   private void visit(RelToPigBuilder state, TableScan tableScan, String outputRelation) {
@@ -139,8 +141,8 @@ public class RelToPigLatinConverter {
   /**
    * Generates Pig Latin to perform a TableScan.
    *
-   * @param state Intermediate state of the query translation
-   * @param logicalFilter LogicalFilter node
+   * @param state          Intermediate state of the query translation
+   * @param logicalFilter  LogicalFilter node
    * @param outputRelation name of the variable to be outputted
    */
   private void visit(RelToPigBuilder state, LogicalFilter logicalFilter, String outputRelation) {
@@ -151,7 +153,7 @@ public class RelToPigLatinConverter {
   /**
    * Generates Pig Latin to perform a LogicalProject.
    *
-   * @param state Intermediate state of the query translation
+   * @param state          Intermediate state of the query translation
    * @param logicalProject LogicalProject node
    * @param outputRelation name of the variable to be outputted
    */
@@ -163,8 +165,8 @@ public class RelToPigLatinConverter {
   /**
    * Generates Pig Latin to perform a LogicalJoin.
    *
-   * @param state Intermediate state of the query translation
-   * @param logicalJoin LogicalJoin node
+   * @param state          Intermediate state of the query translation
+   * @param logicalJoin    LogicalJoin node
    * @param outputRelation name of the variable to be outputted
    */
   private void visit(RelToPigBuilder state, LogicalJoin logicalJoin, String outputRelation) {
@@ -184,8 +186,8 @@ public class RelToPigLatinConverter {
   /**
    * Generates Pig Latin to perform a LogicalUnion.
    *
-   * @param state Intermediate state of the query translation
-   * @param logicalUnion LogicalUnion node
+   * @param state          Intermediate state of the query translation
+   * @param logicalUnion   LogicalUnion node
    * @param outputRelation name of the variable to be outputted
    */
   private void visit(RelToPigBuilder state, LogicalUnion logicalUnion, String outputRelation) {
@@ -209,9 +211,9 @@ public class RelToPigLatinConverter {
   /**
    * Generates Pig Latin to perform a LogicalAggregate.
    *
-   * @param state Intermediary state of the query translation
+   * @param state            Intermediary state of the query translation
    * @param logicalAggregate LogicalAggregate node
-   * @param outputRelation name of the variable to be outputted
+   * @param outputRelation   name of the variable to be outputted
    */
   private void visit(RelToPigBuilder state, LogicalAggregate logicalAggregate, String outputRelation) {
     visit(state, logicalAggregate.getInput(), outputRelation);

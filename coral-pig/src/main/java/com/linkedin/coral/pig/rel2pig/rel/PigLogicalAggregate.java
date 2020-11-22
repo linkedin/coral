@@ -6,9 +6,11 @@
 package com.linkedin.coral.pig.rel2pig.rel;
 
 import com.linkedin.coral.pig.rel2pig.exceptions.UnsupportedRexCallException;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+
 import org.apache.calcite.rel.core.AggregateCall;
 import org.apache.calcite.rel.logical.LogicalAggregate;
 
@@ -32,11 +34,11 @@ public class PigLogicalAggregate {
    * Translates a Calcite LogicalAggregate into Pig Latin
    *
    * @param logicalAggregate The Calcite LogicalAggregate to be translated
-   * @param outputRelation The variable that stores the aggregate output
-   * @param inputRelation The variable that has stored the Pig relation to be aggregated
+   * @param outputRelation   The variable that stores the aggregate output
+   * @param inputRelation    The variable that has stored the Pig relation to be aggregated
    * @return The Pig Latin for the logicalAggregate in the form of:
-   *             [outputRelation] = GROUP [inputRelation] BY [groupingSet];
-   *             [outputRelation] = FILTER [inputRelation] BY [logicalFilter.expressions]
+   * [outputRelation] = GROUP [inputRelation] BY [groupingSet];
+   * [outputRelation] = FILTER [inputRelation] BY [logicalFilter.expressions]
    */
   public static String getScript(LogicalAggregate logicalAggregate, String outputRelation, String inputRelation) {
 
@@ -56,19 +58,19 @@ public class PigLogicalAggregate {
    * Translates SQL GROUP BY sets in LogicalAggregates into Pig Latin
    *
    * @param logicalAggregate The Calcite LogicalAggregate to be translated
-   * @param outputRelation The variable that stores the aggregate output
-   * @param inputRelation The variable that has stored the Pig relation to be aggregated
+   * @param outputRelation   The variable that stores the aggregate output
+   * @param inputRelation    The variable that has stored the Pig relation to be aggregated
    * @return The Pig Latin for a SQL GROUP BY operator in the form of:
-   *             [outputRelation] = GROUP [inputRelation] BY [groupingSet];
-   *                 OR
-   *             [outputRelation] = GROUP [inputRelation] ALL;
-   *
-   *         For example, if 'input' is grouped by fields (a,b) and dumped to 'output',
-   *         the GROUP BY call will look like:
-   *             "output = GROUP input BY (a,b);"
+   * [outputRelation] = GROUP [inputRelation] BY [groupingSet];
+   * OR
+   * [outputRelation] = GROUP [inputRelation] ALL;
+   * <p>
+   * For example, if 'input' is grouped by fields (a,b) and dumped to 'output',
+   * the GROUP BY call will look like:
+   * "output = GROUP input BY (a,b);"
    */
   private static String getGroupByStatement(LogicalAggregate logicalAggregate, String outputRelation,
-      String inputRelation) {
+                                            String inputRelation) {
 
     final List<Integer> groupSet = logicalAggregate.getGroupSet().toList();
 
@@ -89,18 +91,18 @@ public class PigLogicalAggregate {
    * Translates aggregate function calls in LogicalAggregates into Pig Latin
    *
    * @param logicalAggregate The Calcite LogicalAggregate to be translated
-   * @param outputRelation The variable that stores the aggregate output
-   * @param inputRelation The variable that has stored the Pig relation to be aggregated
-   * @param bagIdentifier The identifier for the bag that is formed by the Pig group used for the aggregate.
+   * @param outputRelation   The variable that stores the aggregate output
+   * @param inputRelation    The variable that has stored the Pig relation to be aggregated
+   * @param bagIdentifier    The identifier for the bag that is formed by the Pig group used for the aggregate.
    * @return The Pig Latin for a SQL Aggregate operator in the form of:
-   *             [outputRelation] = FOREACH [inputRelation] GENERATE [groupingSets] , [aggregateFunctionCalls] ;
-   *
-   *         For example, if the AVG function is called on field 'b' for an 'input' that is grouped by fields (a,b)
-   *         and dumped to 'output', the AGGREGATE call will look like:
-   *             "output = FOREACH input GENERATE group.a, group.b, AVG(b);"
+   * [outputRelation] = FOREACH [inputRelation] GENERATE [groupingSets] , [aggregateFunctionCalls] ;
+   * <p>
+   * For example, if the AVG function is called on field 'b' for an 'input' that is grouped by fields (a,b)
+   * and dumped to 'output', the AGGREGATE call will look like:
+   * "output = FOREACH input GENERATE group.a, group.b, AVG(b);"
    */
   private static String getForEachStatement(LogicalAggregate logicalAggregate, String outputRelation,
-      String inputRelation, String bagIdentifier) {
+                                            String inputRelation, String bagIdentifier) {
 
     final List<String> outputFieldNames = PigRelUtils.getOutputFieldNames(logicalAggregate);
     final List<String> inputFieldNames = PigRelUtils.getOutputFieldNames(logicalAggregate.getInput());
@@ -120,22 +122,22 @@ public class PigLogicalAggregate {
   /**
    * Translates a GROUP BY set into a projection list in Pig Latin
    *
-   * @param groupSet List of column index references
+   * @param groupSet         List of column index references
    * @param outputFieldNames List-index based mapping from Calcite index reference to field name of
    *                         the output.
-   * @param inputFieldNames List-index based mapping from Calcite index reference to field name of
-   *                        the input.
+   * @param inputFieldNames  List-index based mapping from Calcite index reference to field name of
+   *                         the input.
    * @return The Pig Latin for the projection list of grouped columns in the form of:
-   *             ([groupedColumnN] AS [columnAliasN] (,)* )+
-   *
-   *         For example, if an Aggregate function is grouped by fields (a,b), its group set fields would look like:
-   *             "group.a AS a, group.b AS b"
-   *
-   *         If there is only one field (a), its group set fields would look like:
-   *             "group AS a"
+   * ([groupedColumnN] AS [columnAliasN] (,)* )+
+   * <p>
+   * For example, if an Aggregate function is grouped by fields (a,b), its group set fields would look like:
+   * "group.a AS a, group.b AS b"
+   * <p>
+   * If there is only one field (a), its group set fields would look like:
+   * "group AS a"
    */
   private static String getGroupSetFields(List<Integer> groupSet, List<String> outputFieldNames,
-      List<String> inputFieldNames) {
+                                          List<String> inputFieldNames) {
 
     if (groupSet.size() == 1) {
       return String.format(FIELD_TEMPLATE, "group", outputFieldNames.get(groupSet.get(0)));
@@ -155,18 +157,18 @@ public class PigLogicalAggregate {
    * @param logicalAggregate The Calcite LogicalAggregate to be translated
    * @param outputFieldNames List-index based mapping from Calcite index reference to field accessors of
    *                         the output.
-   * @param inputFieldNames List-index based mapping from Calcite index reference to field accessors of
-   *                        the input.
-   * @param bagIdentifier The identifier of the bag produced by the aggregate.
+   * @param inputFieldNames  List-index based mapping from Calcite index reference to field accessors of
+   *                         the input.
+   * @param bagIdentifier    The identifier of the bag produced by the aggregate.
    * @return The Pig Latin for the projection list of aggregate functions in the form of:
-   *             ([AggregateFunction] ( [arguments] ) AS [aggregateFunctionAlias] (,)* )+
-   *
-   *         For example, a relation with a bagIdentifier 'id' grouped by fields ('a', 'b') with function calls to
-   *         AVG(a) as 'average' and SUM(b) as 'total' in Pig Latin would look like:
-   *             "AVG(id.a) AS average , SUM(id.b) AS total"
+   * ([AggregateFunction] ( [arguments] ) AS [aggregateFunctionAlias] (,)* )+
+   * <p>
+   * For example, a relation with a bagIdentifier 'id' grouped by fields ('a', 'b') with function calls to
+   * AVG(a) as 'average' and SUM(b) as 'total' in Pig Latin would look like:
+   * "AVG(id.a) AS average , SUM(id.b) AS total"
    */
   private static String getAggregateFunctionCalls(LogicalAggregate logicalAggregate, List<String> outputFieldNames,
-      List<String> inputFieldNames, String bagIdentifier) {
+                                                  List<String> inputFieldNames, String bagIdentifier) {
 
     final int groupBySetOffset = logicalAggregate.getGroupSet().toList().size();
     final List<String> aggregateStatements = new ArrayList<>();

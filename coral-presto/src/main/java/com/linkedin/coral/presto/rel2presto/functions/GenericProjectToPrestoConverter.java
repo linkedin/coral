@@ -7,6 +7,7 @@ package com.linkedin.coral.presto.rel2presto.functions;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rel.type.RelRecordType;
@@ -22,75 +23,74 @@ import org.apache.calcite.sql.type.MapSqlType;
 /**
  * GenericProjectToPrestoConverter takes a GenericProject RexCall call and rewrites its function call to be suitable
  * to Presto.
- *
+ * <p>
  * Presto does not support the GenericProject UDF which can be done in Hive and Spark because the return type of
  * GenericProject can only be determined at runtime based on the schema. Presto has compile-time validations that will
  * fail because the return type of GenericProject cannot be validated.
- *
+ * <p>
  * At the language-level, we can apply a set of transformations over each data type to perform similar functionalities
  * to GenericProject by calling Presto built-in UDFs in conjunction:
- *   - struct/row
- *     - CAST(ROW([selected_row_field_references]) as ROW([selected_row_field_types]))
- *   - array
- *     - TRANSFORM([selected_array_field_reference], x -&gt; [transform x as necessary])
- *   - map
- *     - TRANSFORM_VALUES([selected_map_field_reference], (k, v) -&gt; [transform v as necessary])
- *   - primitives/other
- *     - [selected_field_reference]
- *
+ * - struct/row
+ * - CAST(ROW([selected_row_field_references]) as ROW([selected_row_field_types]))
+ * - array
+ * - TRANSFORM([selected_array_field_reference], x -&gt; [transform x as necessary])
+ * - map
+ * - TRANSFORM_VALUES([selected_map_field_reference], (k, v) -&gt; [transform v as necessary])
+ * - primitives/other
+ * - [selected_field_reference]
+ * <p>
  * Some example of transformation strings are as follows:
  * NOTE: Assume the following format for a GenericProject call:
- *   - generic_project([actual_schema], [desired_schema]) from a column (col)
- *
- *   Example 1:
- *     - GenericProject call
- *       - generic_project(
- *           struct(a:int, b:int),
- *           struct(a:int)
- *         )
- *     - Presto rewrite
- *       - cast(row(col.a) as row(a int))
- *
- *   Example 2:
- *     - GenericProject call
- *       - generic_project(
- *           array(struct(a:int, b:int)),
- *           array(struct(a:int))
- *         )
- *     - Presto rewrite
- *       - transform(col, x -&gt; cast(row(x.a) as row(a int)))
- *
- *   Example 3:
- *     - GenericProject call
- *       - generic_project(
- *           map(string, struct(a:int, b:int)),
- *           map(string, struct(a:int))
- *         )
- *     - Presto rewrite
- *       - transform_values(col, (k, v) -&gt; cast(row(v.a) as row(a int)))
- *
- *   Example 4:
- *     - GenericProject call
- *       - generic_project(
- *           struct(a:int, s:struct(b:int, c:int)),
- *           struct(a:int, s:struct(b:int))
- *         )
- *     - Presto rewrite
- *       - cast(row(col.a, cast(row(col.s.b) as row(b int))) as row(a int, s row(b int)))
- *
- *   Example 5:
- *     - GenericProject call
- *       - generic_project(
- *           map(string, array(struct(a:int, s:struct(b:int, c:int)))),
- *           map(string, array(struct(a:int, s:struct(b:int))))
- *         )
- *     - Presto rewrite
- *       - transform_values(col, (k, v) -&gt;
- *           transform(v, x -&gt;
- *             cast(row(x.a, cast(row(x.s.b) as row(b int))) as row(a int, s row(b int)))
- *           )
- *         )
- *
+ * - generic_project([actual_schema], [desired_schema]) from a column (col)
+ * <p>
+ * Example 1:
+ * - GenericProject call
+ * - generic_project(
+ * struct(a:int, b:int),
+ * struct(a:int)
+ * )
+ * - Presto rewrite
+ * - cast(row(col.a) as row(a int))
+ * <p>
+ * Example 2:
+ * - GenericProject call
+ * - generic_project(
+ * array(struct(a:int, b:int)),
+ * array(struct(a:int))
+ * )
+ * - Presto rewrite
+ * - transform(col, x -&gt; cast(row(x.a) as row(a int)))
+ * <p>
+ * Example 3:
+ * - GenericProject call
+ * - generic_project(
+ * map(string, struct(a:int, b:int)),
+ * map(string, struct(a:int))
+ * )
+ * - Presto rewrite
+ * - transform_values(col, (k, v) -&gt; cast(row(v.a) as row(a int)))
+ * <p>
+ * Example 4:
+ * - GenericProject call
+ * - generic_project(
+ * struct(a:int, s:struct(b:int, c:int)),
+ * struct(a:int, s:struct(b:int))
+ * )
+ * - Presto rewrite
+ * - cast(row(col.a, cast(row(col.s.b) as row(b int))) as row(a int, s row(b int)))
+ * <p>
+ * Example 5:
+ * - GenericProject call
+ * - generic_project(
+ * map(string, array(struct(a:int, s:struct(b:int, c:int)))),
+ * map(string, array(struct(a:int, s:struct(b:int))))
+ * )
+ * - Presto rewrite
+ * - transform_values(col, (k, v) -&gt;
+ * transform(v, x -&gt;
+ * cast(row(x.a, cast(row(x.s.b) as row(b int))) as row(a int, s row(b int)))
+ * )
+ * )
  */
 public class GenericProjectToPrestoConverter {
   private GenericProjectToPrestoConverter() {
@@ -99,16 +99,17 @@ public class GenericProjectToPrestoConverter {
   /**
    * Create a RexCall that performs GenericProject-like operations for Presto depending on the given return type.
    * The Presto UDF for each data type is as follows:
-   *   - struct/row
-   *     - CAST
-   *   - array
-   *     - TRANSFORM
-   *   - map
-   *     - TRANSFORM_VALUES
-   *   - other/primitives
-   *     - N/A
+   * - struct/row
+   * - CAST
+   * - array
+   * - TRANSFORM
+   * - map
+   * - TRANSFORM_VALUES
+   * - other/primitives
+   * - N/A
+   *
    * @param builder RexBuilder for the call
-   * @param call a GenericProject call
+   * @param call    a GenericProject call
    * @return a Presto UDF call equivalent for the given GenericProject call
    */
   public static RexCall convertGenericProject(RexBuilder builder, RexCall call) {
@@ -211,9 +212,10 @@ public class GenericProjectToPrestoConverter {
   /**
    * Create the transformation string for a map RelDataType to convert fromDataType to toDataType.
    * The transformation string follows the following format:
-   *   TRANSFORM_VALUES([selected_map_field_reference], (k, v) -> [transform v as necessary])
-   * @param fromDataType given map RelDataType
-   * @param toDataType desired map RelDataType
+   * TRANSFORM_VALUES([selected_map_field_reference], (k, v) -> [transform v as necessary])
+   *
+   * @param fromDataType       given map RelDataType
+   * @param toDataType         desired map RelDataType
    * @param fieldNameReference name of the field that references the map input
    * @return string denoting the UDF call applied to the map
    */
@@ -225,14 +227,15 @@ public class GenericProjectToPrestoConverter {
   /**
    * Create the argument string to a TRANSFORM_VALUES() Presto UDF call to convert fromDataType to toDataType.
    * The argument string follows the following format:
-   *   [selected_map_field_reference], (k, v) -> [transform v as necessary]
-   * @param fromDataType given map RelDataType
-   * @param toDataType desired map RelDataType
+   * [selected_map_field_reference], (k, v) -> [transform v as necessary]
+   *
+   * @param fromDataType       given map RelDataType
+   * @param toDataType         desired map RelDataType
    * @param fieldNameReference name of the field that references the map input
    * @return string denoting the argument to a TRANSFORM_VALUES UDF call
    */
   private static String mapDataTypeArgumentString(MapSqlType fromDataType, MapSqlType toDataType,
-      String fieldNameReference) {
+                                                  String fieldNameReference) {
     String mapKeyFieldReference = "k";
     String mapValueFieldReference = "v";
     String valueTransformedFieldString = relDataTypeFieldAccessString(fromDataType.getValueType(),
@@ -244,14 +247,15 @@ public class GenericProjectToPrestoConverter {
   /**
    * Create the transformation string for an array RelDataType to convert fromDataType to toDataType.
    * The transformation string follows the following format:
-   *   TRANSFORM([selected_array_field_reference], x -> [transform x as necessary])
-   * @param fromDataType given array RelDataType
-   * @param toDataType desired array RelDataType
+   * TRANSFORM([selected_array_field_reference], x -> [transform x as necessary])
+   *
+   * @param fromDataType       given array RelDataType
+   * @param toDataType         desired array RelDataType
    * @param fieldNameReference name of the field that references the array input
    * @return string denoting the UDF call applied to the array
    */
   private static String arrayDataTypeString(ArraySqlType fromDataType, ArraySqlType toDataType,
-      String fieldNameReference) {
+                                            String fieldNameReference) {
     String arrayDataTypeArgumentString = arrayDataTypeArgumentString(fromDataType, toDataType, fieldNameReference);
     return String.format("transform(%s)", arrayDataTypeArgumentString);
   }
@@ -259,14 +263,15 @@ public class GenericProjectToPrestoConverter {
   /**
    * Create the argument string to a TRANSFORM() Presto UDF call to convert fromDataType to toDataType.
    * The argument string follows the following format:
-   *   [selected_array_field_reference], x -> [transform x as necessary]
-   * @param fromDataType given array RelDataType
-   * @param toDataType desired array RelDataType
+   * [selected_array_field_reference], x -> [transform x as necessary]
+   *
+   * @param fromDataType       given array RelDataType
+   * @param toDataType         desired array RelDataType
    * @param fieldNameReference name of the field that references the array input
    * @return string denoting the argument to a TRANSFORM UDF call
    */
   private static String arrayDataTypeArgumentString(ArraySqlType fromDataType, ArraySqlType toDataType,
-      String fieldNameReference) {
+                                                    String fieldNameReference) {
     String elementFieldReference = "x";
     String elementTransformedFieldString = relDataTypeFieldAccessString(fromDataType.getComponentType(),
         toDataType.getComponentType(), elementFieldReference);
@@ -276,14 +281,15 @@ public class GenericProjectToPrestoConverter {
   /**
    * Create the transformation string for a struct RelDataType to convert fromDataType to toDataType.
    * The transformation string follows the following format:
-   *   CAST(ROW([selected_row_field_references]) AS ROW([selected_row_field_types]))
-   * @param fromDataType given struct RelDataType
-   * @param toDataType desired struct RelDataType
+   * CAST(ROW([selected_row_field_references]) AS ROW([selected_row_field_types]))
+   *
+   * @param fromDataType       given struct RelDataType
+   * @param toDataType         desired struct RelDataType
    * @param fieldNameReference name of the field that references the struct input
    * @return string denoting the UDF call applied to the struct
    */
   private static String structDataTypeString(RelRecordType fromDataType, RelRecordType toDataType,
-      String fieldNameReference) {
+                                             String fieldNameReference) {
     String structDataTypeArgumentString = structDataTypeArgumentString(fromDataType, toDataType, fieldNameReference);
     return (String.format("cast(%s)", structDataTypeArgumentString));
   }
@@ -291,14 +297,15 @@ public class GenericProjectToPrestoConverter {
   /**
    * Create the argument string to a CAST() Presto UDF call to convert fromDataType to toDataType.
    * The argument string follows the following format:
-   *   ROW([selected_row_field_references]) AS ROW([selected_row_field_types])
-   * @param fromDataType given array RelDataType
-   * @param toDataType desired array RelDataType
+   * ROW([selected_row_field_references]) AS ROW([selected_row_field_types])
+   *
+   * @param fromDataType       given array RelDataType
+   * @param toDataType         desired array RelDataType
    * @param fieldNameReference name of the field that references the struct input
    * @return string denoting the argument to a CAST UDF call
    */
   private static String structDataTypeArgumentString(RelRecordType fromDataType, RelRecordType toDataType,
-      String fieldNameReference) {
+                                                     String fieldNameReference) {
     String structFieldsAccessString = buildStructRelDataTypeFieldAccessString(fromDataType, toDataType, fieldNameReference);
     String castToRowTypeString = RelDataTypeToPrestoTypeStringConverter.buildPrestoTypeString(toDataType);
     return String.format("%s as %s", structFieldsAccessString, castToRowTypeString);
@@ -306,13 +313,14 @@ public class GenericProjectToPrestoConverter {
 
   /**
    * Delegates a string builder to transform fromDataType to toDataType.
-   * @param fromDataType given RelDataType
-   * @param toDataType desired RelDataType
+   *
+   * @param fromDataType       given RelDataType
+   * @param toDataType         desired RelDataType
    * @param fieldNameReference name of the field reference
    * @return string denoting the argument to a CAST UDF call
    */
   private static String relDataTypeFieldAccessString(RelDataType fromDataType, RelDataType toDataType,
-      String fieldNameReference) {
+                                                     String fieldNameReference) {
     if (fromDataType.equals(toDataType)) {
       return fieldNameReference;
     }
@@ -331,14 +339,15 @@ public class GenericProjectToPrestoConverter {
 
   /**
    * Create a struct field access string in the form of:
-   *   ROW([selected_col_field_1], [selected_col_field_2], etc.)
-   * @param fromDataType given struct RelDataType
-   * @param toDataType desired struct RelDataType
+   * ROW([selected_col_field_1], [selected_col_field_2], etc.)
+   *
+   * @param fromDataType       given struct RelDataType
+   * @param toDataType         desired struct RelDataType
    * @param fieldNameReference name of the struct field reference
    * @return string denoting a row with all desired field accesses in toDataType derived from fromDataType
    */
   private static String buildStructRelDataTypeFieldAccessString(RelRecordType fromDataType, RelRecordType toDataType,
-      String fieldNameReference) {
+                                                                String fieldNameReference) {
     List<String> structSelectedFieldStrings = new ArrayList<>();
     for (RelDataTypeField toDataTypeField : toDataType.getFieldList()) {
       RelDataTypeField fromDataTypeField = fromDataType.getField(toDataTypeField.getName(), false, false);

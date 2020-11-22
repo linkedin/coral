@@ -7,9 +7,11 @@ package com.linkedin.coral.schema.avro;
 
 import com.linkedin.coral.com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
 import org.apache.avro.Schema;
 import org.apache.hadoop.hive.serde2.avro.AvroSerDe;
 import org.apache.hadoop.hive.serde2.avro.AvroSerdeUtils;
@@ -28,7 +30,7 @@ import org.codehaus.jackson.node.NullNode;
 
 /**
  * This class converts Hive TypeInfo schema to avro schema
- *
+ * <p>
  * The main API is convertFieldsTypeInfoToAvroSchema
  */
 public class TypeInfoToAvroSchemaConverter {

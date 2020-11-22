@@ -14,6 +14,7 @@ import com.google.common.collect.Sets;
 import com.google.common.io.Resources;
 import groovy.grape.Grape;
 import groovy.lang.GroovyClassLoader;
+
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -25,6 +26,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,7 +47,7 @@ public class ArtifactsResolver {
    * dependencies and returns those as a set of local
    * uris
    *
-   * @param artifactUri  Artifact string artifactUri
+   * @param artifactUri Artifact string artifactUri
    * @return List of resolved dependencies
    * @throws IllegalArgumentException If the artifact is not a valid URI
    */
@@ -72,13 +74,10 @@ public class ArtifactsResolver {
   }
 
   /**
-   * @param queryString
-   * e.g 'ext=jar&exclude=org.mortbay.jetty:jetty&transitive=true'
-   *
+   * @param queryString e.g 'ext=jar&exclude=org.mortbay.jetty:jetty&transitive=true'
    * @return queryMap
    * e.g {ext: jar, exclude: {group:org.mortbay.jetty, module:jetty}, transitive: true}
-   *
-   * @throws IllegalArgumentException  If the queryString is not well formed
+   * @throws IllegalArgumentException If the queryString is not well formed
    */
   private static Map<String, Object> parseQueryString(String queryString) {
     if (Strings.isNullOrEmpty(queryString)) {

@@ -10,8 +10,10 @@ import com.linkedin.coral.com.google.common.collect.ImmutableMultimap;
 import com.linkedin.coral.pig.rel2pig.exceptions.IllegalPigCastException;
 import com.linkedin.coral.pig.rel2pig.exceptions.UnsupportedPigTypeException;
 import com.linkedin.coral.pig.rel2pig.rel.PigRexUtils;
+
 import java.util.List;
 import java.util.Map;
+
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.type.SqlTypeName;

@@ -9,6 +9,7 @@ import com.google.common.base.Preconditions;
 import com.linkedin.coral.hive.hive2rel.parsetree.parser.ASTNode;
 import com.linkedin.coral.hive.hive2rel.parsetree.parser.HiveParser;
 import com.linkedin.coral.hive.hive2rel.parsetree.parser.Node;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -17,7 +18,7 @@ import java.util.stream.Collectors;
  * Abstract visitor (actually, a walker) to hive AST.
  * This class implements a walker that calls specific named methods
  * passing corresponding {@link ASTNode}.
- *
+ * <p>
  * By default, this visits all children of the node
  *
  * @param <C> Visitor context that is passed to all the visitor methods
@@ -27,12 +28,12 @@ public abstract class AbstractASTVisitor<R, C> {
   /**
    * Provides a AST visitor functionality by calling
    * appropriately named visitor method based on node type.
-   *
+   * <p>
    * We need to provide this because Hive AST object model
    * does not provide properly typed nodes accepting visitors.
    *
    * @param node hive parse tree node to visit
-   * @param ctx abstract context passed to visitor methods
+   * @param ctx  abstract context passed to visitor methods
    * @return return the value from visitor node
    */
   protected R visit(ASTNode node, C ctx) {
@@ -232,7 +233,7 @@ public abstract class AbstractASTVisitor<R, C> {
       case HiveParser.TOK_TIMESTAMP:
         return visitTimestamp(node, ctx);
 
-        // joins
+      // joins
       case HiveParser.TOK_JOIN:
         return visitJoin(node, ctx);
 
@@ -506,7 +507,7 @@ public abstract class AbstractASTVisitor<R, C> {
   }
 
   protected R visitDateLiteral(ASTNode node, C ctx) {
-      return visitChildren(node, ctx).get(0);
+    return visitChildren(node, ctx).get(0);
   }
 
   protected R visitTimestamp(ASTNode node, C ctx) {

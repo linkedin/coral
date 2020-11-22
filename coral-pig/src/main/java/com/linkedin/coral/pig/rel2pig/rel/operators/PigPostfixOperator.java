@@ -7,15 +7,17 @@ package com.linkedin.coral.pig.rel2pig.rel.operators;
 
 import com.linkedin.coral.pig.rel2pig.exceptions.UnsupportedRexCallException;
 import com.linkedin.coral.pig.rel2pig.rel.PigRexUtils;
+
 import java.util.List;
+
 import org.apache.calcite.rex.RexCall;
 
 
 /**
  * PigPostfixOperator translates SqlPostfixOperators to Pig Latin.
  * Currently, we only support the following SqlPostFixOperators:
- *   - IS_NULL
- *   - IS_NOT_NULL
+ * - IS_NULL
+ * - IS_NOT_NULL
  */
 public class PigPostfixOperator extends PigOperator {
 

@@ -270,7 +270,8 @@ public class ViewToAvroSchemaConverterTests {
   @Test
   public void testMultipleUdfs() {
     String viewSql = "CREATE VIEW foo_dali_multiple_udfs "
-        + "tblproperties('functions' = 'LessThanHundred:com.linkedin.coral.hive.hive2rel.CoralTestUDF1 GreaterThanHundred:com.linkedin.coral.hive.hive2rel.CoralTestUDF2 FuncSquare:com.linkedin.coral.hive.hive2rel.CoralTestUDF3', "
+        + "tblproperties('functions' = 'LessThanHundred:com.linkedin.coral.hive.hive2rel.CoralTestUDF1 GreaterThanHundred:com.linkedin.coral.hive.hive2rel"
+        + ".CoralTestUDF2 FuncSquare:com.linkedin.coral.hive.hive2rel.CoralTestUDF3', "
         + "              'dependencies' = 'ivy://com.linkedin:udf:1.0 ivy://com.linkedin:udf:1.0 ivy://com.linkedin:udf:1.0') "
         + "AS "
         + "SELECT Id AS Id_Viewc_Col, "
@@ -291,7 +292,9 @@ public class ViewToAvroSchemaConverterTests {
   @Test
   public void testUdfWithOperator() {
     String viewSql = "CREATE VIEW foo_dali_udf_with_operator "
-        + "tblproperties('functions' = 'LessThanHundred:com.linkedin.coral.hive.hive2rel.CoralTestUDF1 GreaterThanHundred:com.linkedin.coral.hive.hive2rel.CoralTestUDF2 FuncSquare:com.linkedin.coral.hive.hive2rel.CoralTestUDF3', "
+        +
+        "tblproperties('functions' = 'LessThanHundred:com.linkedin.coral.hive.hive2rel.CoralTestUDF1 GreaterThanHundred:com.linkedin.coral.hive.hive2rel"
+        + ".CoralTestUDF2 FuncSquare:com.linkedin.coral.hive.hive2rel.CoralTestUDF3', "
         + "              'dependencies' = 'ivy://com.linkedin:udf:1.0 ivy://com.linkedin:udf:1.0 ivy://com.linkedin:udf:1.0') "
         + "AS "
         + "SELECT Id AS Id_Viewc_Col, "
@@ -554,7 +557,9 @@ public class ViewToAvroSchemaConverterTests {
   @Test
   public void testNullabilityUdf() {
     String viewSql = "CREATE VIEW foo_dali_udf_nullability "
-        + "tblproperties('functions' = 'LessThanHundred:com.linkedin.coral.hive.hive2rel.CoralTestUDF1 GreaterThanHundred:com.linkedin.coral.hive.hive2rel.CoralTestUDF2 FuncSquare:com.linkedin.coral.hive.hive2rel.CoralTestUDF3', "
+        +
+        "tblproperties('functions' = 'LessThanHundred:com.linkedin.coral.hive.hive2rel.CoralTestUDF1 GreaterThanHundred:com.linkedin.coral.hive.hive2rel"
+        + ".CoralTestUDF2 FuncSquare:com.linkedin.coral.hive.hive2rel.CoralTestUDF3', "
         + "              'dependencies' = 'ivy://com.linkedin:udf:1.0 ivy://com.linkedin:udf:1.0 ivy://com.linkedin:udf:1.0') "
         + "AS "
         + "SELECT default_foo_dali_udf_nullability_LessThanHundred(Int_Field_1), "
@@ -572,8 +577,12 @@ public class ViewToAvroSchemaConverterTests {
         + "CONCAT(String_Field_1,String_Field_2), "
         + "default_foo_dali_udf_nullability_FuncSquare(Int_Field_1) + 1, "
         + "default_foo_dali_udf_nullability_FuncSquare(Int_Field_2 + 1) + 1, "
-        + "default_foo_dali_udf_nullability_FuncSquare(default_foo_dali_udf_nullability_FuncSquare(default_foo_dali_udf_nullability_FuncSquare(Int_Field_2))) + bn.Id, "
-        + "default_foo_dali_udf_nullability_FuncSquare(default_foo_dali_udf_nullability_FuncSquare(default_foo_dali_udf_nullability_FuncSquare(Int_Field_2)) + 1) + bn.Id, "
+        +
+        "default_foo_dali_udf_nullability_FuncSquare(default_foo_dali_udf_nullability_FuncSquare(default_foo_dali_udf_nullability_FuncSquare(Int_Field_2))) +"
+        + " bn.Id, "
+        +
+        "default_foo_dali_udf_nullability_FuncSquare(default_foo_dali_udf_nullability_FuncSquare(default_foo_dali_udf_nullability_FuncSquare(Int_Field_2)) + "
+        + "1) + bn.Id, "
         + "default_foo_dali_udf_nullability_FuncSquare(Int_Field_2 + Id) + Id, "
         + "Id + default_foo_dali_udf_nullability_FuncSquare(Id) "
         + "FROM basenullability bn";

@@ -9,9 +9,11 @@ import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 import com.linkedin.coral.hive.hive2rel.parsetree.UnhandledASTTokenException;
 import com.linkedin.coral.spark.containers.SparkUDFInfo;
 import com.linkedin.coral.spark.exceptions.UnsupportedUDFException;
+
 import java.net.URI;
 import java.util.LinkedList;
 import java.util.List;
+
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.sql.type.ReturnTypes;
@@ -47,58 +49,58 @@ public class CoralSparkTest {
         "coralTestUDF",
         "com.linkedin.coral.spark.CoralTestUDF",
         "ivy://com.linkedin.coral.spark.CoralTestUDF"
-        );
+    );
   }
 
   @Test
-  public void testGetBaseTablesFromView(){
-    RelNode relNode = TestUtils.toRelNode("default","foo_bar_view");
+  public void testGetBaseTablesFromView() {
+    RelNode relNode = TestUtils.toRelNode("default", "foo_bar_view");
     CoralSpark coralSpark = CoralSpark.create(relNode);
-    List<String> base_tables = coralSpark.getBaseTables();
-    assertTrue(base_tables.contains("default.foo"));
-    assertTrue(base_tables.contains("default.bar"));
+    List<String> baseTables = coralSpark.getBaseTables();
+    assertTrue(baseTables.contains("default.foo"));
+    assertTrue(baseTables.contains("default.bar"));
   }
 
   @Test
-  public void testLiteralColumnsFromView(){
+  public void testLiteralColumnsFromView() {
     // [LIHADOOP-47172] use date literal in view definition
     String targetSql = String.join("\n",
         "SELECT '2013-01-01', '2017-08-22 01:02:03', 123, 123",
         "FROM default.foo",
         "LIMIT 1");
-    RelNode relNode = TestUtils.toRelNode("default","foo_v1");
+    RelNode relNode = TestUtils.toRelNode("default", "foo_v1");
     CoralSpark coralSpark = CoralSpark.create(relNode);
     String expandedSql = coralSpark.getSparkSql();
     assertEquals(expandedSql, targetSql);
   }
 
   @Test
-  public void testGetSQLFromView(){
+  public void testGetSQLFromView() {
     String targetSql = String.join("\n",
         "SELECT t0.bcol, bar.x",
         "FROM (SELECT b bcol, SUM(c) sum_c",
         "FROM default.foo",
         "GROUP BY b) t0",
         "INNER JOIN default.bar ON t0.sum_c = bar.y");
-    RelNode relNode = TestUtils.toRelNode("default","foo_bar_view");
+    RelNode relNode = TestUtils.toRelNode("default", "foo_bar_view");
     CoralSpark coralSpark = CoralSpark.create(relNode);
     String expandedSql = coralSpark.getSparkSql();
     assertEquals(expandedSql, targetSql);
   }
 
   @Test
-  public void testAllowBaseTableInView(){
-    RelNode relNode = TestUtils.toRelNode("default","foo");
+  public void testAllowBaseTableInView() {
+    RelNode relNode = TestUtils.toRelNode("default", "foo");
     CoralSpark coralSpark = CoralSpark.create(relNode);
-    List<String> base_tables = coralSpark.getBaseTables();
-    assertTrue(base_tables.contains("default.foo"));
+    List<String> baseTables = coralSpark.getBaseTables();
+    assertTrue(baseTables.contains("default.foo"));
   }
 
   @Test
   public void testDaliUdf() {
     // Dali view foo_dali_udf contains a UDF defined in TransportableUDFMap.
     // The actual values are determined by the parameter values of TransportableUDFMap.add() call.
-    RelNode relNode = TestUtils.toRelNode("default","foo_dali_udf");
+    RelNode relNode = TestUtils.toRelNode("default", "foo_dali_udf");
     CoralSpark coralSpark = CoralSpark.create(relNode);
     List<SparkUDFInfo> udfJars = coralSpark.getSparkUDFInfoList();
     assertEquals(1, udfJars.size());
@@ -127,7 +129,7 @@ public class CoralSparkTest {
     // Dali view foo_dali_udf2 contains a UDF not defined in BuiltinUDFMap and TransportableUDFMap.
     // We need to fall back to the udf initially defined in HiveFunctionRegistry.
     // Then the function Name comes from Hive metastore in the format dbName_viewName_funcBaseName.
-    RelNode relNode = TestUtils.toRelNode("default","foo_dali_udf2");
+    RelNode relNode = TestUtils.toRelNode("default", "foo_dali_udf2");
     CoralSpark coralSpark = CoralSpark.create(relNode);
     List<SparkUDFInfo> udfJars = coralSpark.getSparkUDFInfoList();
 
@@ -152,7 +154,7 @@ public class CoralSparkTest {
 
   @Test(expectedExceptions = UnsupportedUDFException.class)
   public void testUnsupportedUdf() {
-    RelNode relNode = TestUtils.toRelNode("default","foo_dali_udf5");
+    RelNode relNode = TestUtils.toRelNode("default", "foo_dali_udf5");
     // this step should proactively fail because UDF is not supported.
     CoralSpark.create(relNode);
   }
@@ -161,7 +163,7 @@ public class CoralSparkTest {
   public void testTwoFunctionsWithDependencies() {
     // Dali view foo_dali_udf3 contains 2 UDFs.  One UDF is defined in TransportableUDFMap.  The other one is not.
     // We need to fall back the second one to the udf initially defined in HiveFunctionRegistry.
-    RelNode relNode = TestUtils.toRelNode("default","foo_dali_udf3");
+    RelNode relNode = TestUtils.toRelNode("default", "foo_dali_udf3");
     CoralSpark coralSpark = CoralSpark.create(relNode);
     List<SparkUDFInfo> udfJars = coralSpark.getSparkUDFInfoList();
     assertEquals(2, udfJars.size());
@@ -174,7 +176,7 @@ public class CoralSparkTest {
   public void testExtraSpaceInDependencyParam() {
     // Dali view foo_dali_udf4 is same as foo_dali_udf2, except it contains extra space in dependencies parameter
     // inside TBLPROPERTIES clause.
-    RelNode relNode = TestUtils.toRelNode("default","foo_dali_udf4");
+    RelNode relNode = TestUtils.toRelNode("default", "foo_dali_udf4");
     CoralSpark coralSpark = CoralSpark.create(relNode);
     List<SparkUDFInfo> udfJars = coralSpark.getSparkUDFInfoList();
     assertEquals(1, udfJars.size());
@@ -185,7 +187,7 @@ public class CoralSparkTest {
 
   @Test
   public void testNoUdf() {
-    RelNode relNode = TestUtils.toRelNode("default","foo_bar_view");
+    RelNode relNode = TestUtils.toRelNode("default", "foo_bar_view");
     CoralSpark coralSpark = CoralSpark.create(relNode);
     List<SparkUDFInfo> udfJars = coralSpark.getSparkUDFInfoList();
     assertTrue(udfJars.isEmpty());
@@ -218,11 +220,11 @@ public class CoralSparkTest {
 
     String targetSql = String.join("\n",
         "SELECT complex.a, t1.ccol",
-        "FROM default.complex "+
-        "LATERAL VIEW OUTER "+
-        "EXPLODE("+
-            "if(complex.c IS NOT NULL AND size(complex.c) > 0, complex.c, ARRAY (NULL))"+
-        ") t1 AS ccol"
+        "FROM default.complex "
+            + "LATERAL VIEW OUTER "
+            + "EXPLODE("
+            + "if(complex.c IS NOT NULL AND size(complex.c) > 0, complex.c, ARRAY (NULL))"
+            + ") t1 AS ccol"
     );
     assertEquals(convertToSparkSql, targetSql);
   }
@@ -237,15 +239,15 @@ public class CoralSparkTest {
     ));
     String targetSql = String.join("\n",
         "SELECT complex.a, t1.ccol, t4.ccol2",
-        "FROM default.complex " +
-        "LATERAL VIEW EXPLODE(complex.c) t1 AS ccol "+
-        "LATERAL VIEW EXPLODE(complex.c) t4 AS ccol2");
+        "FROM default.complex "
+            + "LATERAL VIEW EXPLODE(complex.c) t1 AS ccol "
+            + "LATERAL VIEW EXPLODE(complex.c) t4 AS ccol2");
     assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
   }
 
   @Test
   public void testDataTypeArrayMap() {
-    RelNode relNode = TestUtils.toRelNode(String.join("\n","",
+    RelNode relNode = TestUtils.toRelNode(String.join("\n", "",
         "SELECT array(map('abc', 123, 'def', 567), map('pqr', 65, 'xyz', 89))[0]['abc']",
         "FROM bar"
     ));
@@ -259,7 +261,7 @@ public class CoralSparkTest {
 
   @Test
   public void testDataTypeNamedStruct() {
-    RelNode relNode = TestUtils.toRelNode(String.join("\n","",
+    RelNode relNode = TestUtils.toRelNode(String.join("\n", "",
         "SELECT named_struct('abc', 123, 'def', 'xyz').def",
         "FROM bar"
     ));
@@ -272,7 +274,7 @@ public class CoralSparkTest {
 
   @Test
   public void testDataTypeString() {
-    RelNode relNode = TestUtils.toRelNode(String.join("\n","",
+    RelNode relNode = TestUtils.toRelNode(String.join("\n", "",
         "SELECT CAST(1 AS STRING)",
         "FROM bar"
     ));
@@ -285,7 +287,7 @@ public class CoralSparkTest {
 
   @Test
   public void testNamedStructViewWithSelectSupported() {
-    RelNode relNode = TestUtils.toRelNode(String.join("\n","",
+    RelNode relNode = TestUtils.toRelNode(String.join("\n", "",
         "SELECT named_struct_view.named_struc",
         "FROM named_struct_view"
     ));
@@ -309,7 +311,7 @@ public class CoralSparkTest {
 
   @Test(expectedExceptions = IllegalStateException.class)
   public void testLateralViewStarNotSupported() {
-    RelNode relNode = TestUtils.toRelNode(String.join("\n","",
+    RelNode relNode = TestUtils.toRelNode(String.join("\n", "",
         "SELECT a, t.*",
         "FROM complex",
         "LATERAL VIEW explode(complex.c) t"
@@ -319,7 +321,7 @@ public class CoralSparkTest {
 
   @Test(expectedExceptions = UnhandledASTTokenException.class)
   public void testLateralViewMapNotSupported() {
-    RelNode relNode = TestUtils.toRelNode(String.join("\n","",
+    RelNode relNode = TestUtils.toRelNode(String.join("\n", "",
         "SELECT a, t.ccol1, t.ccol2",
         "FROM complex",
         "LATERAL VIEW explode(complex.m) t as ccol1, ccol2"

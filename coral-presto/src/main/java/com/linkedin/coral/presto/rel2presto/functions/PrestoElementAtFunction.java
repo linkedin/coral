@@ -6,6 +6,7 @@
 package com.linkedin.coral.presto.rel2presto.functions;
 
 import java.util.Arrays;
+
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.sql.SqlCall;
@@ -45,8 +46,9 @@ public class PrestoElementAtFunction extends SqlSpecialOperator {
     super("element_at", SqlKind.OTHER_FUNCTION, 100, true, null, null, null);
   }
 
-  @Override public ReduceResult reduceExpr(int ordinal,
-      TokenSequence list) {
+  @Override
+  public ReduceResult reduceExpr(int ordinal,
+                                 TokenSequence list) {
     SqlNode left = list.node(ordinal - 1);
     SqlNode right = list.node(ordinal + 1);
     return new ReduceResult(ordinal - 1,
@@ -60,16 +62,19 @@ public class PrestoElementAtFunction extends SqlSpecialOperator {
             right));
   }
 
-  @Override public void unparse(
+  @Override
+  public void unparse(
       SqlWriter writer, SqlCall call, int leftPrec, int rightPrec) {
     SqlUtil.unparseFunctionSyntax(this, writer, call);
   }
 
-  @Override public SqlOperandCountRange getOperandCountRange() {
+  @Override
+  public SqlOperandCountRange getOperandCountRange() {
     return SqlOperandCountRanges.of(2);
   }
 
-  @Override public boolean checkOperandTypes(
+  @Override
+  public boolean checkOperandTypes(
       SqlCallBinding callBinding,
       boolean throwOnFailure) {
     final SqlNode left = callBinding.operand(0);
@@ -101,12 +106,14 @@ public class PrestoElementAtFunction extends SqlSpecialOperator {
     }
   }
 
-  @Override public String getAllowedSignatures(String name) {
+  @Override
+  public String getAllowedSignatures(String name) {
     return "<ARRAY>[<INTEGER>]\n"
         + "<MAP>[<VALUE>]";
   }
 
-  @Override public RelDataType inferReturnType(SqlOperatorBinding opBinding) {
+  @Override
+  public RelDataType inferReturnType(SqlOperatorBinding opBinding) {
     final RelDataTypeFactory typeFactory = opBinding.getTypeFactory();
     final RelDataType operandType = opBinding.getOperandType(0);
     switch (operandType.getSqlTypeName()) {

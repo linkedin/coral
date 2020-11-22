@@ -7,8 +7,10 @@ package com.linkedin.coral.hive.hive2rel;
 
 import com.linkedin.coral.com.google.common.annotations.VisibleForTesting;
 import com.linkedin.coral.hive.hive2rel.parsetree.ParseTreeBuilder;
+
 import java.util.List;
 import java.util.Map;
+
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelRoot;
 import org.apache.calcite.schema.Table;
@@ -35,6 +37,7 @@ public class HiveToRelConverter {
 
   /**
    * Initializes converter with hive configuration at provided path
+   *
    * @param mscClient HiveMetaStoreClient. Hive metastore client provides small subset
    *                  of methods provided by Hive's metastore client interface.
    * @return {@link HiveToRelConverter} object
@@ -48,6 +51,7 @@ public class HiveToRelConverter {
   /**
    * Initializes converter with local metastore instead of retrieving metadata using HiveMetastoreClient,
    * this initializer is for SparkPlanToIRRelConverter in coral-spark-plan module
+   *
    * @param localMetaStore Map containing the required metadata (database name, table name, column name and type)
    *                       needed by SparkPlanToIRRelConverter in coral-spark-plan module
    * @return {@link HiveToRelConverter}
@@ -65,7 +69,7 @@ public class HiveToRelConverter {
 
   /**
    * Converts input Hive SQL query to Calcite {@link RelNode}.
-   *
+   * <p>
    * This method resolves all the database, table and field names using the catalog
    * information provided by hive configuration during initialization. The input
    * sql parameter should not refer to dali functions since those can not be resolved.
@@ -84,6 +88,7 @@ public class HiveToRelConverter {
    * standardized intermediate representation. What is "standard"
    * is vague right now but we try to be closer to ANSI standard.
    * TODO: define standard intermediate representation
+   *
    * @param relNode calcite relnode representing hive query
    * @return standard representation of input query as relnode
    */
@@ -95,7 +100,8 @@ public class HiveToRelConverter {
    * Similar to {@link #convertSql(String)} but converts hive view definition stored
    * in the hive metastore to corresponding {@link RelNode} implementation.
    * This sets up the initial context for resolving Dali function names using table parameters.
-   * @param hiveDbName hive database name
+   *
+   * @param hiveDbName   hive database name
    * @param hiveViewName hive view name whose definition to convert.  Table name is allowed.
    * @return Calcite {@link RelNode} representation of hive view definition
    */

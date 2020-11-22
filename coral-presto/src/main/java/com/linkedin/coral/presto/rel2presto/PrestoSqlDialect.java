@@ -33,7 +33,7 @@ public class PrestoSqlDialect extends SqlDialect {
   }
 
   public void unparseOffsetFetch(SqlWriter writer, SqlNode offset,
-      SqlNode fetch) {
+                                 SqlNode fetch) {
     unparseFetchUsingLimit(writer, offset, fetch);
   }
 

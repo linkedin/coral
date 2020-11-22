@@ -17,14 +17,14 @@ import org.slf4j.LoggerFactory;
 
 /**
  * This is the main class to generate the avro schema for a given Dali view
- *
+ * <p>
  * The avro schema generation process is done in two steps:
- *  1) Use HiveToRelConverter to convert a Dali view to Calcite IR RelNode
- *  2) Use RelToAvroSchemaConverter to generate avro schema for Calcite IR RelNode
- *
+ * 1) Use HiveToRelConverter to convert a Dali view to Calcite IR RelNode
+ * 2) Use RelToAvroSchemaConverter to generate avro schema for Calcite IR RelNode
+ * <p>
  * Usage:
- *     ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
- *     Schema avroSchema = viewToAvroSchemaConverter.toAvroSchema("dbName", "viewOrTableName");
+ * ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+ * Schema avroSchema = viewToAvroSchemaConverter.toAvroSchema("dbName", "viewOrTableName");
  */
 public class ViewToAvroSchemaConverter {
   private final HiveToRelConverter hiveToRelConverter;
@@ -54,21 +54,20 @@ public class ViewToAvroSchemaConverter {
   /**
    * This is the main API to generate the avro schema for a given Dali view
    *
-   * @param dbName database name
+   * @param dbName          database name
    * @param tableOrViewName table or view name
-   * @param strictMode if strictMode is set to True, we will not fall back to Hive schema if avro.schema.literal
+   * @param strictMode      if strictMode is set to True, we will not fall back to Hive schema if avro.schema.literal
    *                        is missing in table properties. In addition, original namespace in base tables will be preserved.
-   *                   if strictMode is set to False, we will fall back to Hive schema if avro.schema.literal
+   *                        if strictMode is set to False, we will fall back to Hive schema if avro.schema.literal
    *                        is missing in table properties. A new set of namespace will be generated for
    *                        the resulting schema. The rule is as follows:
-   *                                1. Top level namespace is dbName.tableOrViewName
-   *                                2. Nested namespace is parentNamespace.parentFieldName
-   *
+   *                        1. Top level namespace is dbName.tableOrViewName
+   *                        2. Nested namespace is parentNamespace.parentFieldName
    * @return avro schema for a given Dali view [dbName, viewName]
    */
-public Schema toAvroSchema(String dbName,
-    String tableOrViewName,
-    boolean strictMode) {
+  public Schema toAvroSchema(String dbName,
+                             String tableOrViewName,
+                             boolean strictMode) {
     Preconditions.checkNotNull(dbName);
     Preconditions.checkNotNull(tableOrViewName);
 
@@ -80,7 +79,7 @@ public Schema toAvroSchema(String dbName,
   /**
    * This is the main API to generate the avro schema for a given Dali view
    *
-   * @param dbName database name used to generate Avro schema
+   * @param dbName          database name used to generate Avro schema
    * @param tableOrViewName table or view to generate Avro schema
    * @return avro schema for a given Dali view [dbName, viewName]
    */
@@ -94,8 +93,8 @@ public Schema toAvroSchema(String dbName,
   }
 
   private Schema inferAvroSchema(String dbName,
-      String tableOrViewName,
-      boolean strictMode) {
+                                 String tableOrViewName,
+                                 boolean strictMode) {
     Preconditions.checkNotNull(dbName);
     Preconditions.checkNotNull(tableOrViewName);
 

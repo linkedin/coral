@@ -6,7 +6,9 @@
 package com.linkedin.coral.hive.hive2rel.functions;
 
 import com.google.common.collect.ImmutableList;
+
 import java.util.List;
+
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.schema.Function;
 import org.apache.calcite.sql.SqlBasicCall;
@@ -36,13 +38,13 @@ public class VersionedSqlUserDefinedFunction extends SqlUserDefinedFunction {
   private String viewDependentFunctionName;
 
   private VersionedSqlUserDefinedFunction(SqlIdentifier opName,
-      SqlReturnTypeInference returnTypeInference,
-      SqlOperandTypeInference operandTypeInference,
-      SqlOperandTypeChecker operandTypeChecker,
-      List<RelDataType> paramTypes,
-      Function function,
-      List<String> ivyDependencies,
-      String viewDependentFunctionName) {
+                                          SqlReturnTypeInference returnTypeInference,
+                                          SqlOperandTypeInference operandTypeInference,
+                                          SqlOperandTypeChecker operandTypeChecker,
+                                          List<RelDataType> paramTypes,
+                                          Function function,
+                                          List<String> ivyDependencies,
+                                          String viewDependentFunctionName) {
     super(opName, returnTypeInference, operandTypeInference, operandTypeChecker, paramTypes,
         function,
         SqlFunctionCategory.USER_DEFINED_FUNCTION);
@@ -51,12 +53,12 @@ public class VersionedSqlUserDefinedFunction extends SqlUserDefinedFunction {
   }
 
   public VersionedSqlUserDefinedFunction(String name,
-      SqlReturnTypeInference returnTypeInference,
-      SqlOperandTypeChecker operandTypeChecker,
-      List<RelDataType> paramTypes,
-      Function function,
-      List<String> ivyDependencies,
-      String viewDependentFunctionName) {
+                                         SqlReturnTypeInference returnTypeInference,
+                                         SqlOperandTypeChecker operandTypeChecker,
+                                         List<RelDataType> paramTypes,
+                                         Function function,
+                                         List<String> ivyDependencies,
+                                         String viewDependentFunctionName) {
     this(new SqlIdentifier(ImmutableList.of(name), SqlParserPos.ZERO),
         returnTypeInference,
         null,
@@ -100,6 +102,6 @@ public class VersionedSqlUserDefinedFunction extends SqlUserDefinedFunction {
             viewDependentFunctionName
         )
     );
-    return  relDataType;
+    return relDataType;
   }
 }

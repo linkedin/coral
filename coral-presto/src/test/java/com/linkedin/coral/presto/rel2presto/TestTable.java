@@ -7,8 +7,10 @@ package com.linkedin.coral.presto.rel2presto;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+
 import java.util.List;
 import java.util.stream.Collectors;
+
 import org.apache.calcite.config.CalciteConnectionConfig;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
@@ -117,7 +119,7 @@ public class TestTable implements Table {
 
   @Override
   public boolean rolledUpColumnValidInsideAgg(String s, SqlCall sqlCall, SqlNode sqlNode,
-      CalciteConnectionConfig calciteConnectionConfig) {
+                                              CalciteConnectionConfig calciteConnectionConfig) {
     return true;
   }
 

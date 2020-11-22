@@ -14,6 +14,7 @@ public class UnknownSqlFunctionException extends RuntimeException {
 
   /**
    * Constructs an exception indicating unknown function name
+   *
    * @param functionName function name that could not be resolved
    */
   public UnknownSqlFunctionException(String functionName) {

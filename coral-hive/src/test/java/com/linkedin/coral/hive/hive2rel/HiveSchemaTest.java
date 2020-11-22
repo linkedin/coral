@@ -8,7 +8,9 @@ package com.linkedin.coral.hive.hive2rel;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.linkedin.coral.hive.hive2rel.TestUtils.TestHive;
+
 import java.io.IOException;
+
 import org.apache.calcite.schema.Schema;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.testng.annotations.BeforeClass;

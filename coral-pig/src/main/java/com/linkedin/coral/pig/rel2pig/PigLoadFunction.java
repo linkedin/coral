@@ -8,12 +8,12 @@ package com.linkedin.coral.pig.rel2pig;
 /**
  * PigLoadFunction is a functional interface that defines a mapping from a table to its
  * the LoadFunc to be used in Pig.
- *
+ * <p>
  * For example, DaliViews generally use the dali.data.pig.DaliStorage().
- *
+ * <p>
  * We could define the PigLoadFunction as the following:
- *   PigLoadFunction func =
- *     (String db, String table) -&gt; "dali.data.pig.DaliStorage()";
+ * PigLoadFunction func =
+ * (String db, String table) -&gt; "dali.data.pig.DaliStorage()";
  */
 @FunctionalInterface
 public interface PigLoadFunction {

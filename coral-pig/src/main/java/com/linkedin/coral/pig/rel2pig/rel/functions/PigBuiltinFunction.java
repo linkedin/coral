@@ -6,19 +6,21 @@
 package com.linkedin.coral.pig.rel2pig.rel.functions;
 
 import com.linkedin.coral.pig.rel2pig.rel.PigRexUtils;
+
 import java.util.List;
 import java.util.stream.Collectors;
+
 import org.apache.calcite.rex.RexCall;
 
 
 /**
  * PigBuiltinFunction represents a builtin function in Pig.
- *
+ * <p>
  * Examples of Pig builtin functions include and is not limited to:
- *   - REGEX_EXTRACT
- *   - SIN
- *   - COS
- *   - LOWER
+ * - REGEX_EXTRACT
+ * - SIN
+ * - COS
+ * - LOWER
  */
 public class PigBuiltinFunction extends Function {
 
@@ -51,7 +53,7 @@ public class PigBuiltinFunction extends Function {
   /**
    * Generates Pig Latin for an identity projection of operands.
    *
-   * @param rexCall RexCall to be transformed
+   * @param rexCall         RexCall to be transformed
    * @param inputFieldNames List-index based mapping from Calcite index reference to field names of
    *                        the input of the given RexCall.
    * @return Pig Latin to do an identity projection of operands.
@@ -63,7 +65,7 @@ public class PigBuiltinFunction extends Function {
   /**
    * Generates Pig Latin for the function name of the given rexCall
    *
-   * @param rexCall RexCall to be transformed
+   * @param rexCall         RexCall to be transformed
    * @param inputFieldNames List-index based mapping from Calcite index reference to field names of
    *                        the input of the given RexCall.
    * @return Pig Latin for the function name of the given rexCall

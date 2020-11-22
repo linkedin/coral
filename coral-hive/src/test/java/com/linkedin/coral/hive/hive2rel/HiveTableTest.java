@@ -7,8 +7,10 @@ package com.linkedin.coral.hive.hive2rel;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+
 import java.io.IOException;
 import java.util.Map;
+
 import org.apache.calcite.jdbc.JavaTypeFactoryImpl;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
@@ -106,9 +108,11 @@ public class HiveTableTest {
     assertTrue(t instanceof HiveTable);
     return ((HiveTable) t);
   }
+
   /**
    * Provide instance of Table given db and table name. This expects that db exists
-   * @param db database name
+   *
+   * @param db    database name
    * @param table table name
    * @return Instance of schema Table if it exists; null otherwise
    * @throws NullPointerException if db does not exist

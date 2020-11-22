@@ -6,8 +6,10 @@
 package com.linkedin.coral.hive.hive2rel;
 
 import com.linkedin.coral.hive.hive2rel.rel.HiveUncollect;
+
 import java.util.ArrayList;
 import java.util.List;
+
 import org.apache.calcite.linq4j.Ord;
 import org.apache.calcite.plan.Convention;
 import org.apache.calcite.plan.RelOptCluster;
@@ -41,8 +43,8 @@ import org.apache.calcite.sql2rel.SqlToRelConverter;
 class HiveSqlToRelConverter extends SqlToRelConverter {
 
   HiveSqlToRelConverter(RelOptTable.ViewExpander viewExpander, SqlValidator validator,
-      Prepare.CatalogReader catalogReader, RelOptCluster cluster, SqlRexConvertletTable convertletTable,
-      Config config) {
+                        Prepare.CatalogReader catalogReader, RelOptCluster cluster, SqlRexConvertletTable convertletTable,
+                        Config config) {
     super(viewExpander, validator, catalogReader, cluster, convertletTable, config);
   }
 

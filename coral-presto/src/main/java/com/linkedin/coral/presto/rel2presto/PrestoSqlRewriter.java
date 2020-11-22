@@ -7,6 +7,7 @@ package com.linkedin.coral.presto.rel2presto;
 
 import java.util.TimeZone;
 import java.util.stream.Collectors;
+
 import org.apache.calcite.sql.SqlArrayTypeSpec;
 import org.apache.calcite.sql.SqlBasicTypeNameSpec;
 import org.apache.calcite.sql.SqlDataTypeSpec;

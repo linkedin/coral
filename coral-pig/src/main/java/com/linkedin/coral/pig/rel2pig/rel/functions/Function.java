@@ -6,6 +6,7 @@
 package com.linkedin.coral.pig.rel2pig.rel.functions;
 
 import java.util.List;
+
 import org.apache.calcite.rex.RexCall;
 
 
@@ -18,7 +19,7 @@ public abstract class Function {
   /**
    * Generates the Pig Latin for the operator used in the given rexCall and inputFieldNames.
    *
-   * @param rexCall RexCall for the given operator.
+   * @param rexCall         RexCall for the given operator.
    * @param inputFieldNames List-index based mapping from Calcite index reference to field name of the input.
    * @return Pig Latin expression for the rexCall
    */

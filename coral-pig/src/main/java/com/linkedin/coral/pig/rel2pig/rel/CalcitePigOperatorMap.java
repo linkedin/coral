@@ -17,6 +17,7 @@ import com.linkedin.coral.pig.rel2pig.rel.functions.PigSubstringFunction;
 import com.linkedin.coral.pig.rel2pig.rel.functions.PigUDF;
 import com.linkedin.coral.pig.rel2pig.rel.functions.PigIfFunction;
 import com.linkedin.coral.pig.rel2pig.rel.functions.PigBuiltinFunction;
+
 import java.util.Map;
 
 
@@ -107,7 +108,7 @@ public class CalcitePigOperatorMap {
    * If caseSensitive is set to false, the functionName is set to lower case.
    * If a UDF is not found for the given functionName, null is returned.
    *
-   * @param functionName Name of a function
+   * @param functionName  Name of a function
    * @param caseSensitive Set as true if a case-sensitive lookup to be performed. Else, set to false for lowercase.
    * @return UDF for the function
    */

@@ -6,8 +6,10 @@
 package com.linkedin.coral.hive.hive2rel.functions;
 
 import com.google.common.collect.ImmutableList;
+
 import java.util.ArrayList;
 import java.util.List;
+
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeField;
@@ -40,11 +42,11 @@ import static org.apache.calcite.util.Static.*;
  * This is currently only tested for IN (&lt;values&gt;) but can be
  * extended to support subqueries as well.
  * We reimplement this separate from SqlStdOperator.IN operator because:
- *  1. For IN operators, calcite SqlToRel converter turn IN clause into OR predicates.
- *     We want to preserve IN clause because destination engine may handle IN clauses
- *     different from set of OR predicates
- *  2. In some cases, calcite turns IN clause to INNER JOIN query on a set of values. We
- *     again want to prevent this conversion.
+ * 1. For IN operators, calcite SqlToRel converter turn IN clause into OR predicates.
+ * We want to preserve IN clause because destination engine may handle IN clauses
+ * different from set of OR predicates
+ * 2. In some cases, calcite turns IN clause to INNER JOIN query on a set of values. We
+ * again want to prevent this conversion.
  */
 public class HiveInOperator extends SqlSpecialOperator {
 
@@ -161,7 +163,8 @@ public class HiveInOperator extends SqlSpecialOperator {
         anyNullable(leftRowType.getFieldList())
             || anyNullable(rightRowType.getFieldList()));
   }
-    private static boolean anyNullable(List<RelDataTypeField> fieldList) {
+
+  private static boolean anyNullable(List<RelDataTypeField> fieldList) {
     for (RelDataTypeField field : fieldList) {
       if (field.getType().isNullable()) {
         return true;

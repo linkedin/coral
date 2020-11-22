@@ -10,8 +10,10 @@ import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import com.linkedin.coral.hive.hive2rel.functions.FunctionFieldReferenceOperator;
 import com.linkedin.coral.hive.hive2rel.functions.HiveInOperator;
 import com.linkedin.coral.hive.hive2rel.functions.HiveNamedStructFunction;
+
 import java.util.ArrayList;
 import java.util.List;
+
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.SqlCall;
@@ -26,8 +28,10 @@ import org.apache.calcite.sql2rel.ReflectiveConvertletTable;
 import org.apache.calcite.sql2rel.SqlRexContext;
 import org.apache.calcite.sql2rel.SqlRexConvertlet;
 import org.apache.calcite.sql2rel.StandardConvertletTable;
+
 /**
  * ConvertletTable for Hive Operators
+ *
  * @see ReflectiveConvertletTable documentation for method naming and visibility rules
  */
 public class HiveConvertletTable extends ReflectiveConvertletTable {
@@ -60,7 +64,7 @@ public class HiveConvertletTable extends ReflectiveConvertletTable {
 
   @SuppressWarnings("unused")
   public RexNode convertFunctionFieldReferenceOperator(SqlRexContext cx, FunctionFieldReferenceOperator op,
-      SqlCall call) {
+                                                       SqlCall call) {
     RexNode funcExpr = cx.convertExpression(call.operand(0));
     String fieldName = FunctionFieldReferenceOperator.fieldNameStripQuotes(call.operand(1));
     return cx.getRexBuilder().makeFieldAccess(funcExpr, fieldName, false);

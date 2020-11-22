@@ -6,8 +6,10 @@
 package com.linkedin.coral.pig.rel2pig.rel.operators;
 
 import com.linkedin.coral.pig.rel2pig.rel.PigRexUtils;
+
 import java.util.ArrayList;
 import java.util.List;
+
 import org.apache.calcite.rex.RexCall;
 
 /**

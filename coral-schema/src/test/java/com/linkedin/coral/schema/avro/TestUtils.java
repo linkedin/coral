@@ -8,12 +8,14 @@ package com.linkedin.coral.schema.avro;
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
 import com.linkedin.coral.hive.hive2rel.HiveMscAdapter;
+
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+
 import org.apache.calcite.sql.type.ReturnTypes;
 import org.apache.calcite.sql.type.SqlTypeFamily;
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -30,6 +32,8 @@ import static org.apache.calcite.sql.type.OperandTypes.*;
 public class TestUtils {
   private static Driver driver;
   private static final String AVRO_SCHEMA_LITERAL = "avro.schema.literal";
+
+  private TestUtils() { }
 
   public static HiveMetastoreClient setup() throws HiveException, MetaException {
     HiveConf conf = getHiveConf();
@@ -135,8 +139,8 @@ public class TestUtils {
   }
 
   private static void executeCreateTableWithPartitionFieldSchemaQuery(String dbName,
-      String tableName,
-      String fieldSchema) {
+                                                                      String tableName,
+                                                                      String fieldSchema) {
     executeQuery("DROP TABLE IF EXISTS " + dbName + "." + tableName);
     executeQuery("CREATE EXTERNAL TABLE " + tableName + " (" + fieldSchema + ") "
         + "PARTITIONED BY (datepartition string) "
@@ -155,7 +159,7 @@ public class TestUtils {
   }
 
   private static void executeQuery(String sql) {
-    while(true){
+    while (true) {
       try {
         driver.run(sql);
       } catch (CommandNeedRetryException e) {

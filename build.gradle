@@ -12,6 +12,7 @@ buildscript {
 }
 
 plugins {
+  id 'checkstyle'
   id "org.shipkit.java" version "2.3.4"
 }
 
@@ -41,6 +42,12 @@ subprojects {
 
     exclude '**/*.avsc'
     exclude '**/*.json'
+  }
+
+  apply plugin: 'checkstyle'
+  checkstyle {
+    configFile = file("${rootDir}/gradle/checkstyle/checkstyle.xml")
+    toolVersion = '8.11'
   }
 
   plugins.withType(JavaPlugin) {

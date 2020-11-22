@@ -6,8 +6,10 @@
 package com.linkedin.coral.hive.hive2rel.functions;
 
 import com.google.common.collect.ImmutableList;
+
 import java.util.ArrayList;
 import java.util.List;
+
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlNode;
@@ -28,9 +30,8 @@ import static org.apache.calcite.sql.parser.SqlParserPos.*;
  * not provide function definition to actually evaluate the function. Right now,
  * this also does not provide implementation to dynamically figure out return type
  * based on input parameters.
- *
+ * <p>
  * NOTE: HiveFunction is designed to be "re-usable" class.
- *
  */
 public class HiveFunction {
 

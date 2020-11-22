@@ -7,8 +7,10 @@ package com.linkedin.coral.hive.hive2rel;
 
 import com.google.common.base.Preconditions;
 import com.linkedin.coral.hive.hive2rel.parsetree.ParseTreeBuilder;
+
 import java.util.List;
 import javax.annotation.Nonnull;
+
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.rel.RelRoot;
 import org.apache.calcite.rel.type.RelDataType;

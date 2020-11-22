@@ -7,6 +7,7 @@ package com.linkedin.coral.hive.hive2rel;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import org.apache.calcite.DataContext;
 import org.apache.calcite.config.CalciteConnectionConfig;
 import org.apache.calcite.linq4j.Enumerable;
@@ -24,10 +25,10 @@ import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
 
 /**
  * This class is a replacement for {@link HiveTable} to work with localMetastore in coral-spark-plan module
- *
+ * <p>
  * Adaptor class from Hive {@link org.apache.hadoop.hive.metastore.api.Table} representation to
  * Calcite {@link ScannableTable}
- *
+ * <p>
  * Implementing this as a ScannableTable, instead of Table, is hacky approach to make calcite
  * correctly generate relational algebra. This will have to go away gradually.
  */
@@ -38,7 +39,8 @@ public class LocalMetastoreHiveTable implements ScannableTable {
 
   /**
    * Overwritten constructor which can help to use local metastore
-   * @param tableName name of the table
+   *
+   * @param tableName  name of the table
    * @param columnInfo list of column information of table, contains name and type of the column, like "name:string"
    */
   public LocalMetastoreHiveTable(String tableName, List<String> columnInfo) {
@@ -85,7 +87,7 @@ public class LocalMetastoreHiveTable implements ScannableTable {
 
   @Override
   public boolean rolledUpColumnValidInsideAgg(String s, SqlCall sqlCall, SqlNode sqlNode,
-      CalciteConnectionConfig calciteConnectionConfig) {
+                                              CalciteConnectionConfig calciteConnectionConfig) {
     return true;
   }
 

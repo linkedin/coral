@@ -4,17 +4,20 @@
  * See LICENSE in the project root for license information.
  */
 package com.linkedin.coral.hive.hive2rel;
+
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.linkedin.coral.hive.hive2rel.functions.HiveFunction;
 import com.linkedin.coral.hive.hive2rel.functions.HiveFunctionRegistry;
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 import com.linkedin.coral.hive.hive2rel.parsetree.ParseTreeBuilder;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nonnull;
+
 import org.apache.calcite.adapter.java.JavaTypeFactory;
 import org.apache.calcite.config.CalciteConnectionConfig;
 import org.apache.calcite.config.CalciteConnectionConfigImpl;
@@ -126,9 +129,11 @@ public class RelContextProvider {
   public HiveFunctionRegistry getHiveFunctionRegistry() {
     return this.registry;
   }
+
   public ConcurrentHashMap<String, HiveFunction> getDynamicHiveFunctionRegistry() {
     return this.dynamicRegistry;
   }
+
   /**
    * Gets {@link FrameworkConfig} for creation of various objects
    * from Calcite object model
@@ -138,11 +143,13 @@ public class RelContextProvider {
   public FrameworkConfig getConfig() {
     return config;
   }
+
   ParseTreeBuilder.Config getParseTreeBuilderConfig() {
     return new ParseTreeBuilder.Config()
         .setCatalogName(HiveSchema.ROOT_SCHEMA)
         .setDefaultDB(HiveDbSchema.DEFAULT_DB);
   }
+
   HiveMetastoreClient getHiveMetastoreClient() {
     return hiveMetastoreClient;
   }
@@ -150,6 +157,7 @@ public class RelContextProvider {
   Schema getHiveSchema() {
     return (schema != null) ? this.schema : this.localMetastoreSchema;
   }
+
   /**
    * Gets {@link RelBuilder} object for generating relational algebra.
    *
@@ -166,6 +174,7 @@ public class RelContextProvider {
     }
     return relBuilder;
   }
+
   /**
    * Gets calcite catalog reader.
    *
@@ -187,6 +196,7 @@ public class RelContextProvider {
     }
     return catalogReader;
   }
+
   /**
    * Gets hive sql validator.
    *

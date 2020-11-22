@@ -6,14 +6,16 @@
 package com.linkedin.coral.pig.rel2pig.rel.functions;
 
 import com.linkedin.coral.pig.rel2pig.rel.operators.PigCaseOperator;
+
 import java.util.List;
+
 import org.apache.calcite.rex.RexCall;
 
 
 /**
  * PigIfFunction represents the translation from Calcite IF UDF to builtin Pig functions.
  * The output of the PigIfFunction has the following form:
- *     CASE WHEN condition THEN value ELSE default
+ * CASE WHEN condition THEN value ELSE default
  */
 public class PigIfFunction extends PigBuiltinFunction {
 

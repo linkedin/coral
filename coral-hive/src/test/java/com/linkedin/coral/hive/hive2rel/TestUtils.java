@@ -6,12 +6,14 @@
 package com.linkedin.coral.hive.hive2rel;
 
 import com.google.common.collect.ImmutableList;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.IMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.MetaException;
@@ -26,6 +28,8 @@ import org.apache.hadoop.hive.ql.session.SessionState;
 public class TestUtils {
 
   static TestHive hive;
+
+  private TestUtils() { }
 
   public static class TestHive {
     private final HiveConf conf;
@@ -44,6 +48,7 @@ public class TestUtils {
         this.name = name;
         this.tables = ImmutableList.copyOf(tables);
       }
+
       String name;
       List<String> tables;
     }
@@ -85,47 +90,66 @@ public class TestUtils {
 
       driver.run("CREATE TABLE IF NOT EXISTS fuzzy_union.tableA(a int, b struct<b1:string>)");
       driver.run("CREATE VIEW IF NOT EXISTS fuzzy_union.union_view AS SELECT * from fuzzy_union.tableA union all SELECT * from fuzzy_union.tableA");
-      driver.run("CREATE VIEW IF NOT EXISTS fuzzy_union.union_view_with_more_than_two_tables AS SELECT * from fuzzy_union.tableA union all SELECT * from fuzzy_union.tableA union all SELECT * from fuzzy_union.tableA");
-      driver.run("CREATE VIEW IF NOT EXISTS fuzzy_union.union_view_with_alias AS SELECT * FROM (SELECT * from fuzzy_union.tableA) as viewFirst union all SELECT * FROM (SELECT * from fuzzy_union.tableA) as viewSecond");
+      driver.run(
+          "CREATE VIEW IF NOT EXISTS fuzzy_union.union_view_with_more_than_two_tables AS SELECT * from fuzzy_union.tableA union all SELECT * from fuzzy_union"
+              + ".tableA union all SELECT * from fuzzy_union.tableA");
+      driver.run(
+          "CREATE VIEW IF NOT EXISTS fuzzy_union.union_view_with_alias AS SELECT * FROM (SELECT * from fuzzy_union.tableA) as viewFirst union all SELECT * "
+              + "FROM (SELECT * from fuzzy_union.tableA) as viewSecond");
 
       driver.run("CREATE TABLE IF NOT EXISTS fuzzy_union.tableB(a int, b struct<b1:string>)");
       driver.run("CREATE TABLE IF NOT EXISTS fuzzy_union.tableC(a int, b struct<b1:string>)");
-      driver.run("CREATE VIEW IF NOT EXISTS fuzzy_union.union_view_single_branch_evolved AS SELECT * from fuzzy_union.tableB union all SELECT * from fuzzy_union.tableC");
+      driver.run(
+          "CREATE VIEW IF NOT EXISTS fuzzy_union.union_view_single_branch_evolved AS SELECT * from fuzzy_union.tableB union all SELECT * from fuzzy_union"
+              + ".tableC");
       driver.run("ALTER TABLE fuzzy_union.tableC CHANGE COLUMN b b struct<b1:string, b2:int>");
 
       driver.run("CREATE TABLE IF NOT EXISTS fuzzy_union.tableD(a int, b struct<b1:string>)");
       driver.run("CREATE TABLE IF NOT EXISTS fuzzy_union.tableE(a int, b struct<b1:string>)");
-      driver.run("CREATE VIEW IF NOT EXISTS fuzzy_union.union_view_double_branch_evolved_same AS SELECT * from fuzzy_union.tableD union all SELECT * from fuzzy_union.tableE");
+      driver.run(
+          "CREATE VIEW IF NOT EXISTS fuzzy_union.union_view_double_branch_evolved_same AS SELECT * from fuzzy_union.tableD union all SELECT * from "
+              + "fuzzy_union.tableE");
       driver.run("ALTER TABLE fuzzy_union.tableD CHANGE COLUMN b b struct<b1:string, b2:int>");
       driver.run("ALTER TABLE fuzzy_union.tableE CHANGE COLUMN b b struct<b1:string, b2:int>");
 
       driver.run("CREATE TABLE IF NOT EXISTS fuzzy_union.tableF(a int, b struct<b1:string>)");
       driver.run("CREATE TABLE IF NOT EXISTS fuzzy_union.tableG(a int, b struct<b1:string>)");
-      driver.run("CREATE VIEW IF NOT EXISTS fuzzy_union.union_view_double_branch_evolved_different AS SELECT * from fuzzy_union.tableF union all SELECT * from fuzzy_union.tableG");
-      driver.run("CREATE VIEW IF NOT EXISTS fuzzy_union.union_view_more_than_two_branches_evolved AS SELECT * from fuzzy_union.tableF union all SELECT * from fuzzy_union.tableG union all SELECT * from fuzzy_union.tableF");
+      driver.run(
+          "CREATE VIEW IF NOT EXISTS fuzzy_union.union_view_double_branch_evolved_different AS SELECT * from fuzzy_union.tableF union all SELECT * from "
+              + "fuzzy_union.tableG");
+      driver.run(
+          "CREATE VIEW IF NOT EXISTS fuzzy_union.union_view_more_than_two_branches_evolved AS SELECT * from fuzzy_union.tableF union all SELECT * from "
+              + "fuzzy_union.tableG union all SELECT * from fuzzy_union.tableF");
       driver.run("ALTER TABLE fuzzy_union.tableF CHANGE COLUMN b b struct<b1:string, b3:string>");
       driver.run("ALTER TABLE fuzzy_union.tableG CHANGE COLUMN b b struct<b1:string, b2:int>");
 
       driver.run("CREATE TABLE IF NOT EXISTS fuzzy_union.tableH(a int, b map<string, struct<b1:string>>)");
       driver.run("CREATE TABLE IF NOT EXISTS fuzzy_union.tableI(a int, b map<string, struct<b1:string>>)");
-      driver.run("CREATE VIEW IF NOT EXISTS fuzzy_union.union_view_map_with_struct_value_evolved AS SELECT * from fuzzy_union.tableH union all SELECT * from fuzzy_union.tableI");
+      driver.run(
+          "CREATE VIEW IF NOT EXISTS fuzzy_union.union_view_map_with_struct_value_evolved AS SELECT * from fuzzy_union.tableH union all SELECT * from "
+              + "fuzzy_union.tableI");
       driver.run("ALTER TABLE fuzzy_union.tableH CHANGE COLUMN b b map<string, struct<b1:string, b2:int>>");
 
       driver.run("CREATE TABLE IF NOT EXISTS fuzzy_union.tableJ(a int, b array<struct<b1:string>>)");
       driver.run("CREATE TABLE IF NOT EXISTS fuzzy_union.tableK(a int, b array<struct<b1:string>>)");
-      driver.run("CREATE VIEW IF NOT EXISTS fuzzy_union.union_view_array_with_struct_value_evolved AS SELECT * from fuzzy_union.tableJ union all SELECT * from fuzzy_union.tableK");
+      driver.run(
+          "CREATE VIEW IF NOT EXISTS fuzzy_union.union_view_array_with_struct_value_evolved AS SELECT * from fuzzy_union.tableJ union all SELECT * from "
+              + "fuzzy_union.tableK");
       driver.run("ALTER TABLE fuzzy_union.tableJ CHANGE COLUMN b b array<struct<b1:string, b2:int>>");
 
       driver.run("CREATE TABLE IF NOT EXISTS fuzzy_union.tableL(a int, b struct<b1:string, b2:struct<b3:string, b4:struct<b5:string>>>)");
       driver.run("CREATE TABLE IF NOT EXISTS fuzzy_union.tableM(a int, b struct<b1:string, b2:struct<b3:string, b4:struct<b5:string>>>)");
-      driver.run("CREATE VIEW IF NOT EXISTS fuzzy_union.union_view_deeply_nested_struct_evolved AS SELECT * from fuzzy_union.tableL union all SELECT * from fuzzy_union.tableM");
+      driver.run(
+          "CREATE VIEW IF NOT EXISTS fuzzy_union.union_view_deeply_nested_struct_evolved AS SELECT * from fuzzy_union.tableL union all SELECT * from "
+              + "fuzzy_union.tableM");
       driver.run("ALTER TABLE fuzzy_union.tableL CHANGE COLUMN b b struct<b1:string, b2:struct<b3:string, b4:struct<b5:string, b6:string>>>");
 
       driver.run("CREATE TABLE IF NOT EXISTS foo(a int, b varchar(30), c double)");
       driver.run("CREATE TABLE IF NOT EXISTS bar(x int, y double)");
       driver.run("CREATE VIEW IF NOT EXISTS foo_view AS SELECT b as bcol, sum(c) as sum_c from foo group by b");
       driver.run(
-          "CREATE TABLE IF NOT EXISTS complex(a int, b string, c array<double>, s struct<name:string, age:int>, m map<string, string>, sarr array<struct<name:string, age:int>>)");
+          "CREATE TABLE IF NOT EXISTS complex(a int, b string, c array<double>, s struct<name:string, age:int>, m map<string, string>, sarr "
+              + "array<struct<name:string, age:int>>)");
 
       driver.run("CREATE VIEW IF NOT EXISTS null_check_view AS SELECT a, ISNULL(b) as b_isnull FROM foo");
       driver.run("CREATE VIEW IF NOT EXISTS null_check_wrapper AS SELECT * FROM null_check_view");
@@ -168,6 +192,7 @@ public class TestUtils {
   }
 
   // package private
+
   /**
    * Caller must explicitly make changes persistent by calling alter_table method on
    * metastore client to make changes persistent.
@@ -179,7 +204,7 @@ public class TestUtils {
         .split(" |:");
     Map<String, String> functionMap = new HashMap<>();
     for (int i = 0; i < split.length - 1; i += 2) {
-      functionMap.put(split[i], split[i+1]);
+      functionMap.put(split[i], split[i + 1]);
     }
     functionMap.put(functionName, functionClass);
     String serializedFunctions = functionMap.entrySet().stream()

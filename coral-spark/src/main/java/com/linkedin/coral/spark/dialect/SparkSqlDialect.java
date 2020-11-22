@@ -17,12 +17,12 @@ import org.apache.calcite.sql.fun.SqlSubstringFunction;
 
 /**
  * This class represents the Spark SQL Dialect.
- *
+ * <p>
  * It overrides Hive Dialect with following behavior
- *    - Disables character set names
- *    - converts ARRAY[] to ARRAY() or MAP[] to MAP()
- *    - converts UNNEST to EXPLODE
- *
+ * - Disables character set names
+ * - converts ARRAY[] to ARRAY() or MAP[] to MAP()
+ * - converts UNNEST to EXPLODE
+ * <p>
  * This is the Final Step in translation pipeline.
  * There should not be any AST manipulation logic here, just Spark translation logic.
  */
@@ -39,12 +39,12 @@ public class SparkSqlDialect extends SqlDialect {
 
   /**
    * Overrides unparse call:
-   *      All SqlCall translations will go through here.
-   *
+   * All SqlCall translations will go through here.
+   * <p>
    * We specifically target two
-   *    - UNNEST
-   *    - MAP or ARRAY
-   * */
+   * - UNNEST
+   * - MAP or ARRAY
+   */
   @Override
   public void unparseCall(SqlWriter writer, SqlCall call, int leftPrec, int rightPrec) {
     if (call.getOperator() instanceof SqlMultisetValueConstructor) {
@@ -59,14 +59,13 @@ public class SparkSqlDialect extends SqlDialect {
   }
 
   /**
-   *  Default SQL operator for SUBSTRING(a, 1, 5)
-   *    unparses to "SUBSTRING(a FROM 1 FOR 5)"
-   *
-   *  SparkSQL doesn't support this translation
-   *  so the behaviour is overridden here with
-   *    "SUBSTRING(a, 1, 5)"
-   *
-   * */
+   * Default SQL operator for SUBSTRING(a, 1, 5)
+   * unparses to "SUBSTRING(a FROM 1 FOR 5)"
+   * <p>
+   * SparkSQL doesn't support this translation
+   * so the behaviour is overridden here with
+   * "SUBSTRING(a, 1, 5)"
+   */
   private void unparseSubstring(SqlWriter writer, SqlCall call) {
     writer.keyword("SUBSTRING");
     final SqlWriter.Frame frame =
@@ -79,10 +78,10 @@ public class SparkSqlDialect extends SqlDialect {
   }
 
   /**
-   *  Converts UNNEST(...) to EXPLODE(...)
-   *
-   *  Code referred from SqlFunctionalOperator.java
-   * */
+   * Converts UNNEST(...) to EXPLODE(...)
+   * <p>
+   * Code referred from SqlFunctionalOperator.java
+   */
   private void unparseUnnest(SqlWriter writer, SqlCall call) {
     writer.keyword("EXPLODE");
     final SqlWriter.Frame frame =
@@ -95,9 +94,9 @@ public class SparkSqlDialect extends SqlDialect {
   }
 
   /**
-   *  Converts ARRAY[] to ARRAY()
-   *  Converts MAP[] to MAP()
-   * */
+   * Converts ARRAY[] to ARRAY()
+   * Converts MAP[] to MAP()
+   */
   private void unparseMapOrArray(
       SqlWriter writer,
       SqlCall call) {
@@ -116,21 +115,20 @@ public class SparkSqlDialect extends SqlDialect {
   }
 
   /**
-   *  Disables character set.
-   *
-   *  Otherwise data types are accompanied with character sets
-   *
-   *  For ex:
-   *  VARCHAR(30) CHARACTER SET `ISO-8859-1`
-   *
-   * */
+   * Disables character set.
+   * <p>
+   * Otherwise data types are accompanied with character sets
+   * <p>
+   * For ex:
+   * VARCHAR(30) CHARACTER SET `ISO-8859-1`
+   */
   @Override
   public boolean supportsCharSet() {
     return false;
   }
 
   public void unparseOffsetFetch(SqlWriter writer, SqlNode offset,
-      SqlNode fetch) {
+                                 SqlNode fetch) {
     unparseFetchUsingLimit(writer, offset, fetch);
   }
 

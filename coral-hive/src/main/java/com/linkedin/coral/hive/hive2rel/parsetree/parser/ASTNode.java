@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,6 +20,7 @@ package com.linkedin.coral.hive.hive2rel.parsetree.parser;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+
 import org.antlr.runtime.Token;
 import org.antlr.runtime.tree.CommonTree;
 import org.antlr.runtime.tree.Tree;
@@ -37,8 +38,7 @@ public class ASTNode extends CommonTree implements Node, Serializable {
   /**
    * Constructor.
    *
-   * @param t
-   *          Token for the CommonTree Node
+   * @param t Token for the CommonTree Node
    */
   public ASTNode(Token t) {
     super(t);
@@ -65,12 +65,12 @@ public class ASTNode extends CommonTree implements Node, Serializable {
       return null;
     }
 
-    ArrayList<Node> ret_vec = new ArrayList<Node>();
+    ArrayList<Node> retVec = new ArrayList<Node>();
     for (int i = 0; i < super.getChildCount(); ++i) {
-      ret_vec.add((Node) super.getChild(i));
+      retVec.add((Node) super.getChild(i));
     }
 
-    return ret_vec;
+    return retVec;
   }
 
   /*
@@ -84,7 +84,7 @@ public class ASTNode extends CommonTree implements Node, Serializable {
 
   /**
    * @return information about the object from which this ASTNode originated, or
-   *         null if this ASTNode was not expanded from an object reference
+   * null if this ASTNode was not expanded from an object reference
    */
   public ASTNodeOrigin getOrigin() {
     return origin;

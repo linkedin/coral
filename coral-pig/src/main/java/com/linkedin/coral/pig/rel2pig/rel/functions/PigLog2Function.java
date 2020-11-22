@@ -6,14 +6,16 @@
 package com.linkedin.coral.pig.rel2pig.rel.functions;
 
 import com.linkedin.coral.pig.rel2pig.rel.PigRexUtils;
+
 import java.util.List;
+
 import org.apache.calcite.rex.RexCall;
 
 
 /**
  * PigLog2Function represents the translation from Calcite LOG2 UDF to builtin Pig functions.
  * The output of the PigLogFunction has the following form:
- *     LOG(value)/LOG(2)
+ * LOG(value)/LOG(2)
  */
 public class PigLog2Function extends PigBuiltinFunction {
   private static final String LOG2_FUNCTION_NAME = "LOG2";

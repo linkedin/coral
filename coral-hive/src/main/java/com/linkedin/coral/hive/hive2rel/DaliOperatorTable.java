@@ -9,10 +9,12 @@ import com.google.common.collect.ImmutableList;
 import com.linkedin.coral.hive.hive2rel.functions.HiveFunctionRegistry;
 import com.linkedin.coral.hive.hive2rel.functions.HiveFunction;
 import com.linkedin.coral.hive.hive2rel.functions.HiveFunctionResolver;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+
 import org.apache.calcite.sql.SqlFunctionCategory;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlOperator;
@@ -32,21 +34,21 @@ public class DaliOperatorTable implements SqlOperatorTable {
   private HiveFunctionResolver funcResolver;
 
   public DaliOperatorTable(HiveFunctionRegistry registry,
-      ConcurrentHashMap<String, HiveFunction> dynamicRegistry) {
-    this.funcResolver =  new HiveFunctionResolver(registry, dynamicRegistry);
+                           ConcurrentHashMap<String, HiveFunction> dynamicRegistry) {
+    this.funcResolver = new HiveFunctionResolver(registry, dynamicRegistry);
   }
 
   /**
    * Resolves functions names to corresponding Calcite UDF. HiveFunctionResolver ensures that
    * {@code sqlIdentifier} has function name or corresponding class name for Dali functions. All function registry
    * lookups performed by this class are case-sensitive.
-   *
+   * <p>
    * Calcite invokes this function multiple times during analysis phase to validate SqlCall operators. This is
    * also used to resolve overloaded function names by using number and type of function parameters.
    */
   @Override
   public void lookupOperatorOverloads(SqlIdentifier sqlIdentifier, SqlFunctionCategory sqlFunctionCategory,
-      SqlSyntax sqlSyntax, List<SqlOperator> list, SqlNameMatcher sqlNameMatcher) {
+                                      SqlSyntax sqlSyntax, List<SqlOperator> list, SqlNameMatcher sqlNameMatcher) {
     String functionName = Util.last(sqlIdentifier.names);
     Collection<HiveFunction> functions = funcResolver.resolve(functionName, true);
     functions.stream()

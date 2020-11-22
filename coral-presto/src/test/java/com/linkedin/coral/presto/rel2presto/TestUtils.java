@@ -7,15 +7,16 @@ package com.linkedin.coral.presto.rel2presto;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-import com.linkedin.coral.com.google.common.base.Function;
 import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
 import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
 import com.linkedin.coral.hive.hive2rel.HiveMscAdapter;
+
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import org.apache.calcite.plan.RelTraitDef;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelRoot;
@@ -82,6 +83,7 @@ public class TestUtils {
    * to type all formatting each time.
    * WARNING: This is not generic method but utility method for common cases
    * for testing. There are bugs. Use at your own risk or, better yet, fix it
+   *
    * @param sql
    */
   public static String formatSql(String sql) {
@@ -93,6 +95,7 @@ public class TestUtils {
 
   private static final ImmutableList<String> SQL_KEYWORDS;
   private static final Pattern KW_PATTERN;
+
   static {
     String kw = "SELECT FROM WHERE AS IN GROUP BY HAVING ORDER ASC DSC JOIN"
         + " INNER OUTER CROSS UNNEST LEFT RIGHT SUM COUNT MAX MIN AVG CAST IN EXCEPT IS NULL NOT OVER AND OR ON";
@@ -150,12 +153,12 @@ public class TestUtils {
     while (m.find()) {
       String replacement = null;
       String alias = m.group(1);
-      if (alias.equalsIgnoreCase("integer") ||
-          alias.equalsIgnoreCase("double") ||
-          alias.equalsIgnoreCase("boolean") ||
-          alias.equalsIgnoreCase("varchar") ||
-          alias.equalsIgnoreCase("real") ||
-          alias.equalsIgnoreCase("varbinary")) {
+      if (alias.equalsIgnoreCase("integer")
+          || alias.equalsIgnoreCase("double")
+          || alias.equalsIgnoreCase("boolean")
+          || alias.equalsIgnoreCase("varchar")
+          || alias.equalsIgnoreCase("real")
+          || alias.equalsIgnoreCase("varbinary")) {
         replacement = "AS " + alias.toUpperCase();
       } else {
         replacement = "AS \"" + m.group(1).toUpperCase() + "\"";
@@ -176,8 +179,8 @@ public class TestUtils {
     return sb.toString();
   }
 
-  static void run(Driver driver, String sql){
-    while(true){
+  static void run(Driver driver, String sql) {
+    while (true) {
       try {
         driver.run(sql);
       } catch (CommandNeedRetryException e) {

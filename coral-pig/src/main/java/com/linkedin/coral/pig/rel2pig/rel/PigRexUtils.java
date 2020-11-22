@@ -14,7 +14,9 @@ import com.linkedin.coral.pig.rel2pig.rel.operators.PigPostfixOperator;
 import com.linkedin.coral.pig.rel2pig.rel.operators.PigPrefixOperator;
 import com.linkedin.coral.pig.rel2pig.rel.operators.PigSpecialOperator;
 import com.linkedin.coral.pig.rel2pig.rel.operators.PigFunction;
+
 import java.util.List;
+
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexFieldAccess;
 import org.apache.calcite.rex.RexInputRef;
@@ -42,7 +44,7 @@ public class PigRexUtils {
   /**
    * Transforms a SQL expression represented as a RexNode to equivalent Pig Latin
    *
-   * @param rexNode RexNode SQL expression to be transformed
+   * @param rexNode         RexNode SQL expression to be transformed
    * @param inputFieldNames Column name accessors for input references
    * @return Pig Latin equivalent of given rexNode
    */
@@ -63,7 +65,7 @@ public class PigRexUtils {
   /**
    * Resolves the Pig Latin accessor name of an input reference given by a RexInputRef
    *
-   * @param rexInputRef Input reference to be resolved
+   * @param rexInputRef     Input reference to be resolved
    * @param inputFieldNames Mapping from list index to accessor name
    * @return Pig Latin accessor name of the given rexInputRef
    */
@@ -99,7 +101,7 @@ public class PigRexUtils {
   /**
    * Resolves the Pig Latin expression for a struct field access given by a RexCall.
    *
-   * @param rexFieldAccess RexFieldAccess to be resolved
+   * @param rexFieldAccess  RexFieldAccess to be resolved
    * @param inputFieldNames Mapping from list index to accessor name
    * @return Pig Latin expression of the given rexCall
    */
@@ -112,7 +114,7 @@ public class PigRexUtils {
   /**
    * Resolves the Pig Latin expression for a SQL expression given by a RexCall.
    *
-   * @param rexCall RexCall to be resolved
+   * @param rexCall         RexCall to be resolved
    * @param inputFieldNames Mapping from list index to accessor name
    * @return Pig Latin expression of the given rexCall
    */

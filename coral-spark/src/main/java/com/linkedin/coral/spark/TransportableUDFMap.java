@@ -6,6 +6,7 @@
 package com.linkedin.coral.spark;
 
 import com.linkedin.coral.spark.containers.SparkUDFInfo;
+
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
@@ -18,7 +19,7 @@ import java.util.Optional;
  * This class contains static mapping from legacy Dali Hive UDFs to an equivalent Transportable UDF.
  * This class also contains those UDFs that are already defined using Transport UDF.
  * sparkClassName points to a Spark native class in the corresponding spark jar file.
- *
+ * <p>
  * Add new mappings here
  */
 class TransportableUDFMap {

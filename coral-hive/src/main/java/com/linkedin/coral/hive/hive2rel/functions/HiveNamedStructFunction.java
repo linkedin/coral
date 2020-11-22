@@ -8,6 +8,7 @@ package com.linkedin.coral.hive.hive2rel.functions;
 import java.util.AbstractList;
 import java.util.List;
 import java.util.Map;
+
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlCallBinding;

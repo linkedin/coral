@@ -11,6 +11,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
 import com.linkedin.coral.hive.hive2rel.functions.HiveReturnTypes;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -19,6 +20,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.SqlIdentifier;
@@ -31,83 +33,82 @@ import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
 
 /**
  * Object for transforming UDF from one SQL language to another SQL language.
- *
+ * <p>
  * Suppose f1(a1, a2, ..., an) in the first language can be computed by
  * f2(b1, b2, ..., bm) in the second language as follows:
- *    (b1, b2, ..., bm) = g(a1, a2, ..., an)
- *    f1(a1, a2, ..., an) = h(f2(g(a1, a2, ..., an)))
- *
+ * (b1, b2, ..., bm) = g(a1, a2, ..., an)
+ * f1(a1, a2, ..., an) = h(f2(g(a1, a2, ..., an)))
+ * <p>
  * We need to define two transformation functions:
  * - A vector function g for transforming all operands
  * - A function h for transforming the result.
- *
+ * <p>
  * This class will represent g and h as expressions in JSON format as follows:
  * - Operators: +, -, *, /, and ^
  * - Operands: source operands and literal values
- *
+ * <p>
  * There may also be situations where a function in one language can map to more than one functions in the other
  * language depending on the set of input parameters.
  * We define a set of matching functions to determine what function name is used.
  * Currently, there is no use-case more complicated than matching a parameter string to a static regex.
- *
+ * <p>
  * Example 1:
  * In Calcite SQL, TRUNCATE(aDouble, numDigitAfterDot) truncates aDouble by removing
  * any digit from the position numDigitAfterDot after the dot, like truncate(11.45, 0) = 11,
  * truncate(11.45, 1) = 11.4
- *
+ * <p>
  * In PrestoSQL, TRUNCATE(aDouble) only takes one argument and removes all digits after the dot,
  * like truncate(11.45) = 11.
- *
+ * <p>
  * The transformation from Calcite TRUNCATE to PrestoSQL TRUNCATE is represented as follows:
  * 1. PrestoSQL name: TRUNCATE
- *
+ * <p>
  * 2. Operand transformers:
  * g(b1) = a1 * 10 ^ a2, with JSON format:
  * [
- *  { "op":"*",
- *    "operands":[
- *      {"input":1}, // input 0 is reserved for result transformer. source inputs start from 1
- *      { "op":"^",
- *        "operands":[
- *          {"value":10},
- *          {"input":2}]}]}]
- *
+ * { "op":"*",
+ * "operands":[
+ * {"input":1}, // input 0 is reserved for result transformer. source inputs start from 1
+ * { "op":"^",
+ * "operands":[
+ * {"value":10},
+ * {"input":2}]}]}]
+ * <p>
  * 3. Result transformer:
  * h(result) = result / 10 ^ a2
  * { "op":"/",
- *    "operands":[
- *      {"input":0}, // input 0 is for result transformer
- *      { "op":"^",
- *        "operands":[
- *          {"value":10},
- *          {"input":2}]}]}]
- *
- *
+ * "operands":[
+ * {"input":0}, // input 0 is for result transformer
+ * { "op":"^",
+ * "operands":[
+ * {"value":10},
+ * {"input":2}]}]}]
+ * <p>
  * 4. Operator transformers:
  * none
- *
+ * <p>
  * Example 2:
  * In Calcite, there exists a hive-derived function to decode binary data given a format, DECODE(binary, scheme).
  * In Presto, there is no generic decoding function that takes a decoding-scheme.
  * Instead, there exist specific decoding functions that are first-class functions like FROM_UTF8(binary).
  * Consequently, we would need to know the operands in the function in order to determine the corresponding call.
- *
+ * <p>
  * The transformation from Calcite DECODE to a PRESTO equivalent is represented as follows:
  * 1. PrestoSQL name: There is no function name determined at compile time.
  * null
- *
+ * <p>
  * 2. Operand transformers: We want to retain column 1 and drop column 2:
  * [{"input":1}]
- *
+ * <p>
  * 3. Result transformer: No transformation is performed on output.
  * null
- *
+ * <p>
  * 4. Operator transformers: Check the second parameter (scheme) matches 'utf-8' with any casing using Java Regex.
  * [ {
- *    "regex" : "^.*(?i)(utf-8).*$",
- *    "input" : 2,
- *    "name" : "from_utf8"
- *   }
+ * "regex" : "^.*(?i)(utf-8).*$",
+ * "input" : 2,
+ * "name" : "from_utf8"
+ * }
  * ]
  */
 public class UDFTransformer {
@@ -148,7 +149,7 @@ public class UDFTransformer {
   public final List<JsonObject> operatorTransformers;
 
   private UDFTransformer(String calciteOperatorName, SqlOperator targetOperator, List<JsonObject> operandTransformers,
-      JsonObject resultTransformer, List<JsonObject> operatorTransformers) {
+                         JsonObject resultTransformer, List<JsonObject> operatorTransformers) {
     this.calciteOperatorName = calciteOperatorName;
     this.targetOperator = targetOperator;
     this.operandTransformers = operandTransformers;
@@ -159,12 +160,12 @@ public class UDFTransformer {
   /**
    * Creates a new transformer.
    *
-   * @param calciteOperatorName Name of the Calcite function associated with this UDF
-   * @param targetOperator Target operator (a UDF in the target language)
-   * @param operandTransformers JSON string representing the operand transformations,
-   *                            null for identity transformations
-   * @param resultTransformer JSON string representing the result transformation,
-   *                          null for identity transformation
+   * @param calciteOperatorName  Name of the Calcite function associated with this UDF
+   * @param targetOperator       Target operator (a UDF in the target language)
+   * @param operandTransformers  JSON string representing the operand transformations,
+   *                             null for identity transformations
+   * @param resultTransformer    JSON string representing the result transformation,
+   *                             null for identity transformation
    * @param operatorTransformers JSON string representing an array of transformers that can vary the name of the target
    *                             operator based on runtime parameter values.
    *                             In the order of the JSON Array, the first transformer that matches the JSON string will
@@ -172,33 +173,32 @@ public class UDFTransformer {
    *                             Operands are indexed beginning at index 1.
    *                             An operatorTransformer has the following serialized JSON string format:
    *                             "[
-   *                               {
-   *                                  \"name\" : \"{Name of function if this matches}\",
-   *                                  \"input\" : {Index of the parameter starting at index 1 that is evaluated },
-   *                                  \"regex\" : \"{Java Regex string matching the parameter at given input}\"
-   *                               },
-   *                               ...
+   *                             {
+   *                             \"name\" : \"{Name of function if this matches}\",
+   *                             \"input\" : {Index of the parameter starting at index 1 that is evaluated },
+   *                             \"regex\" : \"{Java Regex string matching the parameter at given input}\"
+   *                             },
+   *                             ...
    *                             ]"
    *                             For example, a transformer for a operator named "foo" when parameter 2 matches exactly
    *                             "bar" is specified as:
    *                             "[
-   *                               {
-   *                                  \"name\" : \"foo\",
-   *                                  \"input\" : 2,
-   *                                  \"regex\" : \"'bar'\"
-   *                               }
+   *                             {
+   *                             \"name\" : \"foo\",
+   *                             \"input\" : 2,
+   *                             \"regex\" : \"'bar'\"
+   *                             }
    *                             ]"
    *                             NOTE: A string literal is represented exactly as ['STRING_LITERAL'] with the single
    *                             quotation marks INCLUDED.
    *                             As seen in the example above, the single quotation marks are also present in the
    *                             regex matcher.
-   *
    * @return {@link UDFTransformer} object
    */
 
   public static UDFTransformer of(@Nonnull String calciteOperatorName, @Nonnull SqlOperator targetOperator,
-      @Nullable String operandTransformers, @Nullable String resultTransformer,
-      @Nullable String operatorTransformers) {
+                                  @Nullable String operandTransformers, @Nullable String resultTransformer,
+                                  @Nullable String operatorTransformers) {
     List<JsonObject> operands = null;
     JsonObject result = null;
     List<JsonObject> operators = null;
@@ -217,7 +217,7 @@ public class UDFTransformer {
   /**
    * Transforms a call to the source operator.
    *
-   * @param rexBuilder Rex Builder
+   * @param rexBuilder     Rex Builder
    * @param sourceOperands Source operands
    * @return An expression calling the target operator that is equivalent to the source operator call
    */
@@ -268,7 +268,7 @@ public class UDFTransformer {
   private RexNode transformExpression(RexBuilder rexBuilder, JsonObject transformer, List<RexNode> sourceOperands) {
     if (transformer.get(OPERATOR) != null) {
       final List<RexNode> inputOperands = new ArrayList<>();
-      for (JsonElement inputOperand: transformer.getAsJsonArray(OPERANDS)) {
+      for (JsonElement inputOperand : transformer.getAsJsonArray(OPERANDS)) {
         if (inputOperand.isJsonObject()) {
           inputOperands.add(transformExpression(rexBuilder, inputOperand.getAsJsonObject(), sourceOperands));
         }

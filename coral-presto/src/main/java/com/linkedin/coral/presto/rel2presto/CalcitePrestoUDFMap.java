@@ -12,9 +12,11 @@ import com.linkedin.coral.presto.rel2presto.functions.PrestoElementAtFunction;
 import com.linkedin.coral.hive.hive2rel.functions.HiveFunction;
 import com.linkedin.coral.hive.hive2rel.functions.HiveRLikeOperator;
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
+
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 
@@ -27,6 +29,7 @@ public class CalcitePrestoUDFMap {
 
   private static final Map<String, UDFTransformer> UDF_MAP = new HashMap();
   private static final StaticHiveFunctionRegistry HIVE_REGISTRY = new StaticHiveFunctionRegistry();
+
   static {
     // conditional functions
     createUDFMapEntry(UDF_MAP, hiveToCalciteOp("nvl"), 2, "coalesce");
@@ -55,7 +58,7 @@ public class CalcitePrestoUDFMap {
     createUDFMapEntry(UDF_MAP, hiveToCalciteOp("unhex"), 1, "from_hex");
     createUDFMapEntry(UDF_MAP, hiveToCalciteOp("array_contains"), 2, "contains");
     createUDFMapEntry(UDF_MAP, hiveToCalciteOp("regexp_extract"), 3, "regexp_extract",
-       "[{\"input\": 1}, {\"op\": \"hive_pattern_to_presto\", \"operands\":[{\"input\": 2}]}, {\"input\": 3}]",
+        "[{\"input\": 1}, {\"op\": \"hive_pattern_to_presto\", \"operands\":[{\"input\": 2}]}, {\"input\": 3}]",
         null);
     createUDFMapEntry(UDF_MAP, hiveToCalciteOp("instr"), 2, "strpos");
     createRuntimeUDFMapEntry(UDF_MAP, hiveToCalciteOp("decode"), 2,
@@ -109,7 +112,7 @@ public class CalcitePrestoUDFMap {
    * Gets UDFTransformer for a given Calcite SQL Operator.
    *
    * @param calciteOpName Name of Calcite SQL operator
-   * @param numOperands Number of operands
+   * @param numOperands   Number of operands
    * @return {@link UDFTransformer} object
    */
   public static UDFTransformer getUDFTransformer(String calciteOpName, int numOperands) {

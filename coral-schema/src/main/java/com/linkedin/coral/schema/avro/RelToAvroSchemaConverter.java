@@ -8,12 +8,14 @@ package com.linkedin.coral.schema.avro;
 import com.linkedin.coral.com.google.common.base.Preconditions;
 import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
 import com.linkedin.coral.hive.hive2rel.rel.HiveUncollect;
+
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import javax.annotation.Nonnull;
+
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
 import org.apache.calcite.rel.RelNode;
@@ -57,47 +59,45 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-
 /**
  * This class generates an avro schema for calcite IR RelNode
- *
+ * <p>
  * It utilizes RelShuttle to traverse the calcite IR RelNode in a bottom-up manner
  * and generate the avro schema layer by layer based on base table avro schema
- *
+ * <p>
  * Case Sensitivity:
  * Case Sensitivity is addressed by extracting field name directly from base table avro schema based on index mapping
  * and pass it through AST tree in a bottom-up manner if there is no renaming. If there is renaming, then
  * the user-specified new name is used instead
- *
+ * <p>
  * Nullability:
  * 1. If a column is unmodified by Rel operator, it retains nullability property
  * 2. For UDF and SQL operators like arithmetic, logical and unary expressions,
- *    Operator semantics will determine nullable type. By and large, for all operators,
- *    1) If one of the inputs is null then the return value will also be null.
- *    2) If all inputs are non-null, operator will return non null
- *
+ * Operator semantics will determine nullable type. By and large, for all operators,
+ * 1) If one of the inputs is null then the return value will also be null.
+ * 2) If all inputs are non-null, operator will return non null
+ * <p>
  * Enum:
  * Enum is handled in a similar way as case sensitivity. Since sql does not have an enum type, enum type can only be
  * preserved through a pass-through logical operator (e.g. LogicalFilter). If any transformation (e.g. UDF) applies
  * to enum field, we use the output type of the transformation to replace enum type.
- *
+ * <p>
  * For example
  * LogicalProject(Id_View_Col=[$0], Map_View_Col=[$1], Struct_Count=[$2], EXPR$3=[100])
- *   LogicalAggregate(group=[{0, 1}], Struct_Count=[COUNT()])
- *     LogicalProject(Id_View_Col=[$0], Map_View_Col=[$2], struct_col=[$3])
- *       LogicalFilter(condition=[AND(&gt;($0, 0), IS NOT NULL($2), IS NOT NULL($3))])
- *         LogicalTableScan(table=[[hive, default, basecomplex]])
- *
- *  1) LogicalTableScan reads base table schema from metastore
- *  2) LogicalFilter passes through the output schema from LogicalTableScan
- *  3) LogicalProject(Id_View_Col=[$0], Map_View_Col=[$2], struct_col=[$3]) keeps
- *    [Id_View_Col, Map_View_Col, struct_col] fields from the output schema of LogicalFilter
- *  4) LogicalAggregate keeps [Id_View_Col, Map_View_Col] field and append a new field [Struct_Count]
- *    with type inferred from COUNT() operation
- *  5) LogicalProject(Id_View_Col=[$0], Map_View_Col=[$1], Struct_Count=[$2], EXPR$3=[100]) keeps field
- *     [Id_View_Col, Map_View_Col, Struct_Count] and append a new field EXPR$3 into the avro schema. The output schema
- *     of top level LogicalProject is the Dali view avro schema
- *
+ * LogicalAggregate(group=[{0, 1}], Struct_Count=[COUNT()])
+ * LogicalProject(Id_View_Col=[$0], Map_View_Col=[$2], struct_col=[$3])
+ * LogicalFilter(condition=[AND(&gt;($0, 0), IS NOT NULL($2), IS NOT NULL($3))])
+ * LogicalTableScan(table=[[hive, default, basecomplex]])
+ * <p>
+ * 1) LogicalTableScan reads base table schema from metastore
+ * 2) LogicalFilter passes through the output schema from LogicalTableScan
+ * 3) LogicalProject(Id_View_Col=[$0], Map_View_Col=[$2], struct_col=[$3]) keeps
+ * [Id_View_Col, Map_View_Col, struct_col] fields from the output schema of LogicalFilter
+ * 4) LogicalAggregate keeps [Id_View_Col, Map_View_Col] field and append a new field [Struct_Count]
+ * with type inferred from COUNT() operation
+ * 5) LogicalProject(Id_View_Col=[$0], Map_View_Col=[$1], Struct_Count=[$2], EXPR$3=[100]) keeps field
+ * [Id_View_Col, Map_View_Col, Struct_Count] and append a new field EXPR$3 into the avro schema. The output schema
+ * of top level LogicalProject is the Dali view avro schema
  */
 public class RelToAvroSchemaConverter {
   private final HiveMetastoreClient hiveMetastoreClient;
@@ -110,7 +110,7 @@ public class RelToAvroSchemaConverter {
   /**
    * This method generates a corresponding avro schema for calcite IR RelNode
    *
-   * @param relNode {@link RelNode} object
+   * @param relNode    {@link RelNode} object
    * @param strictMode configure whether to use strict mode
    * @return avro schema for calcite IR RelNode
    * @throws RuntimeException if cannot find table in Hive metastore
@@ -129,24 +129,22 @@ public class RelToAvroSchemaConverter {
   /**
    * This class extends RelShuttleImp. It's used to generate avro schema while traversing
    * the calcite IR RelNode in a bottom-up manner
-   *
+   * <p>
    * RelShuttle is used to traverse the IR RelNode without modifying it.
    * For each logical operator type, it's implemented in the following manner:
    *
-   *     @Override
-   *     public RelNode visit(LogicalOperator logicalOperator) {
-   *       RelNode relNode = super.visit(logicalOperator);
-   *
-   *       // begin of building avro schema
-   *       code to build avro schema in this level
-   *       // end of building avro schema
-   *
-   *       return relNode;
-   *     }
-   *
+   * @Override public RelNode visit(LogicalOperator logicalOperator) {
+   * RelNode relNode = super.visit(logicalOperator);
+   * <p>
+   * // begin of building avro schema
+   * code to build avro schema in this level
+   * // end of building avro schema
+   * <p>
+   * return relNode;
+   * }
+   * <p>
    * relNode returned is the same instance of input logicalOperator. The reason of being implemented in
    * this way is that we want to build avro schema in a bottom-up manner
-   *
    */
   private class SchemaRelShuttle extends RelShuttleImpl {
     private Map<RelNode, Schema> schemaMap;
@@ -203,8 +201,8 @@ public class RelToAvroSchemaConverter {
       }
 
       SchemaBuilder.FieldAssembler<Schema> logicalProjectFieldAssembler = SchemaBuilder.record(inputSchema.getName())
-                                                                         .namespace(inputSchema.getNamespace())
-                                                                         .fields();
+          .namespace(inputSchema.getNamespace())
+          .fields();
       logicalProject.accept(new SchemaRexShuttle(inputSchema, suggestedFieldNames, logicalProjectFieldAssembler));
 
       schemaMap.put(logicalProject, logicalProjectFieldAssembler.endRecord());
@@ -227,7 +225,7 @@ public class RelToAvroSchemaConverter {
           .fields();
 
       for (int i = 0; i < leftInputSchemaFields.size(); i++) {
-          SchemaUtilities.appendField(leftInputSchemaFields.get(i), logicalJoinFieldAssembler);
+        SchemaUtilities.appendField(leftInputSchemaFields.get(i), logicalJoinFieldAssembler);
       }
       for (int i = 0; i < rightInputSchemaFields.size(); i++) {
         SchemaUtilities.appendField(rightInputSchemaFields.get(i), logicalJoinFieldAssembler);
@@ -373,8 +371,8 @@ public class RelToAvroSchemaConverter {
     private SchemaBuilder.FieldAssembler<Schema> fieldAssembler;
 
     public SchemaRexShuttle(Schema inputSchema,
-        Queue<String> suggestedFieldNames,
-        SchemaBuilder.FieldAssembler<Schema> fieldAssembler) {
+                            Queue<String> suggestedFieldNames,
+                            SchemaBuilder.FieldAssembler<Schema> fieldAssembler) {
       this.inputSchema = inputSchema;
       this.suggestedFieldNames = suggestedFieldNames;
       this.fieldAssembler = fieldAssembler;
@@ -412,7 +410,7 @@ public class RelToAvroSchemaConverter {
     @Override
     public RexNode visitCall(RexCall rexCall) {
       if (rexCall.getOperator() instanceof SqlUserDefinedFunction
-      || rexCall.getOperator() instanceof SqlOperator) {
+          || rexCall.getOperator() instanceof SqlOperator) {
         /**
          * For SqlUserDefinedFunction and SqlOperator RexCall, no need to handle it recursively
          * and only return type of udf or sql operator is relevant

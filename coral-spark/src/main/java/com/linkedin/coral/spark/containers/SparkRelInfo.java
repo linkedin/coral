@@ -6,11 +6,12 @@
 package com.linkedin.coral.spark.containers;
 
 import java.util.List;
+
 import org.apache.calcite.rel.RelNode;
 
 /**
  * This class is a container for following information
- *
+ * <p>
  * 1) sparkRelNode : RelNode which is transformed by [[IRRelToSparkRelTransformer]] and contains
  * Spark UDF names.
  * 2) sparkUDFInfoList : Spark UDF information such as ivy link that is required to be registered, before the UDFs are used.

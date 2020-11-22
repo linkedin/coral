@@ -6,6 +6,7 @@
 package com.linkedin.coral.hive.hive2rel;
 
 import java.io.IOException;
+
 import org.apache.calcite.schema.Table;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.hadoop.hive.metastore.api.MetaException;

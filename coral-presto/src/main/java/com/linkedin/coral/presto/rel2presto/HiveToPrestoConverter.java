@@ -25,7 +25,7 @@ public class HiveToPrestoConverter {
   }
 
   private HiveToPrestoConverter(HiveToRelConverter hiveToRelConverter,
-      RelToPrestoConverter relToPrestoConverter) {
+                                RelToPrestoConverter relToPrestoConverter) {
     this.hiveToRelConverter = hiveToRelConverter;
     this.relToPrestoConverter = relToPrestoConverter;
   }
@@ -43,7 +43,8 @@ public class HiveToPrestoConverter {
 
   /**
    * Converts input view definition to Presto SQL
-   * @param dbName hive DB name
+   *
+   * @param dbName   hive DB name
    * @param viewName hive view base name
    * @return Presto SQL matching input view definition
    */

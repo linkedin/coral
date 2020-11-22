@@ -28,7 +28,8 @@ public class HiveRLikeOperator extends SqlSpecialOperator {
 
   /**
    * Creates an operator to represent Hive's RLIKE operator as calcite operator
-   *  @param name   Operator name
+   *
+   * @param name    Operator name
    * @param negated Whether this is 'NOT LIKE'
    */
   public HiveRLikeOperator(String name, boolean negated) {

@@ -13,12 +13,14 @@ import com.linkedin.coral.spark.containers.SparkRelInfo;
 import com.linkedin.coral.spark.containers.SparkUDFInfo;
 import com.linkedin.coral.spark.exceptions.UnsupportedUDFException;
 import com.linkedin.coral.spark.utils.RelDataTypeToSparkDataTypeStringConverter;
+
 import java.math.BigDecimal;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelShuttle;
 import org.apache.calcite.rel.RelShuttleImpl;
@@ -58,13 +60,13 @@ import org.slf4j.LoggerFactory;
 
 /**
  * This class applies series of transformations to make a IR RelNode compatible with Spark.
- *
+ * <p>
  * It uses Calcite's RelShuttle and RexShuttle to traverse the RelNode Plan.
  * During traversal it identifies and transforms UDFs.
- *      1) Identify UDF if it is defined in [[TransportableUDFMap]] and adds it to a List<SparkUDFInfo>
- *      2) Rewrites UDF name in the RelNode plan
- *        for example: com.linkedin.dali.udf.date.hive.EpochToEpochMilliseconds -> epochToEpochMilliseconds
- *
+ * 1) Identify UDF if it is defined in [[TransportableUDFMap]] and adds it to a List<SparkUDFInfo>
+ * 2) Rewrites UDF name in the RelNode plan
+ * for example: com.linkedin.dali.udf.date.hive.EpochToEpochMilliseconds -> epochToEpochMilliseconds
+ * <p>
  * Use `transform` to get an instance of [[SparkRelInfo]] which contains the Spark RelNode and SparkUDFInfoList.
  */
 class IRRelToSparkRelTransformer {
@@ -76,7 +78,6 @@ class IRRelToSparkRelTransformer {
    * This API is used to transforms IR RelNode to make it compatible with spark.
    *
    * @return [[SparkRelInfo]] containing the Spark RelNode and list of standard UDFs.
-   *
    */
   static SparkRelInfo transform(RelNode calciteNode) {
     List<SparkUDFInfo> sparkUDFInfos = new ArrayList<>();
@@ -166,9 +167,9 @@ class IRRelToSparkRelTransformer {
 
   /**
    * For replacing a UDF SQL operator with a new SQL operator with different name.
-   *
+   * <p>
    * Consults [[TransportableUDFMap]] to get the new name.
-   *
+   * <p>
    * for example: com.linkedin.dali.udf.date.hive.EpochToEpochMilliseconds -> epochToEpochMilliseconds
    */
   private static class SparkRexConverter extends RexShuttle {
@@ -185,7 +186,7 @@ class IRRelToSparkRelTransformer {
      * This method traverses the list of RexCall nodes.  During traversal, this method performs the necessary
      * conversion from Calcite terms to Spark terms.  For example, Calcite has a built-in function "CARDINALITY",
      * which corresponds to "SIZE" in Spark.
-     *
+     * <p>
      * In order to convert to Spark terms correctly, we need to traverse RexCall expression in post-order.
      * This is because a built-in function name may appear as parameter of a user function.
      * For example, user_function1( CARDINALITY(fieldName) )
@@ -200,11 +201,11 @@ class IRRelToSparkRelTransformer {
 
       RexNode convertToNewNode = convertToZeroBasedArrayIndex(updatedCall)
           .orElseGet(() -> convertToNamedStruct(updatedCall)
-          .orElseGet(() -> convertFuzzyUnionGenericProject(updatedCall)
-          .orElseGet(() -> convertDaliUDF(updatedCall)
-          .orElseGet(() -> convertBuiltInUDF(updatedCall)
-          .orElseGet(() -> fallbackToHiveUdf(updatedCall)
-          .orElse(updatedCall))))));
+              .orElseGet(() -> convertFuzzyUnionGenericProject(updatedCall)
+                  .orElseGet(() -> convertDaliUDF(updatedCall)
+                      .orElseGet(() -> convertBuiltInUDF(updatedCall)
+                          .orElseGet(() -> fallbackToHiveUdf(updatedCall)
+                              .orElse(updatedCall))))));
 
       return convertToNewNode;
     }
@@ -266,7 +267,7 @@ class IRRelToSparkRelTransformer {
               rexBuilder.makeCall(
                   createUDF(sparkUDFInfo1.getFunctionName(), call.getOperator().getReturnTypeInference()),
                   call.getOperands())
-           );
+          );
     }
 
     // Coral RelNode Stores array indexes as +1, this fixes the behavior on spark side
@@ -306,6 +307,7 @@ class IRRelToSparkRelTransformer {
 
     /**
      * Add the schema to GenericProject in Fuzzy Union
+     *
      * @param call a given RexCall
      * @return RexCall that resolves FuzzyUnion if its operator is GenericProject; otherwise, return empty
      */

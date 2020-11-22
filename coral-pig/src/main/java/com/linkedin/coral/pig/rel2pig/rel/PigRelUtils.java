@@ -7,12 +7,14 @@ package com.linkedin.coral.pig.rel2pig.rel;
 
 import com.linkedin.coral.pig.rel2pig.rel.functions.Function;
 import com.linkedin.coral.pig.rel2pig.rel.functions.PigUDF;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.logical.LogicalFilter;
 import org.apache.calcite.rel.logical.LogicalJoin;
@@ -33,19 +35,19 @@ public class PigRelUtils {
   /**
    * Returns a list-index-based map from Calcite indexed references to fully qualified field names for the given
    * RelDataType.
-   *
+   * <p>
    * For example, if we had a RelNode with RelDataType as follows:
-   *   relRecordType = RelRecordType(a int, b int, c int)
-   *
+   * relRecordType = RelRecordType(a int, b int, c int)
+   * <p>
    * Calling getOutputFieldNames for relRecordType would return:
-   *   getOutputFieldNames(relRecordType) -&gt; {"a", "b", "c"}
-   *
+   * getOutputFieldNames(relRecordType) -&gt; {"a", "b", "c"}
+   * <p>
    * Complex Types:
-   *   For complex types (nested structs, maps, arrays), input references are not flattened.
-   *   For example, suppose we had a data type as follows:
-   *     RelRecordType(a int, b RelRecordType(b1 int), c int)
-   *   Its output field-name map will be as follows:
-   *     {"a", "b", "c"}
+   * For complex types (nested structs, maps, arrays), input references are not flattened.
+   * For example, suppose we had a data type as follows:
+   * RelRecordType(a int, b RelRecordType(b1 int), c int)
+   * Its output field-name map will be as follows:
+   * {"a", "b", "c"}
    *
    * @param relNode RelNode whose Pig fields are to be derived
    * @return Mapping from list-index field reference to its associated Pig alias.
@@ -58,9 +60,9 @@ public class PigRelUtils {
 
   /**
    * Returns a set of all function definitions necessary for the relNode and its children.
-   *
+   * <p>
    * A function definition is in the form of:
-   *     "DEFINE [pigFunctionName] HiveUDF([hiveFunctionName])"
+   * "DEFINE [pigFunctionName] HiveUDF([hiveFunctionName])"
    *
    * @param relNode RelNode whose dependencies are to be derived
    * @return Set of all function definitions necessary for the relNode and its children.
@@ -87,9 +89,9 @@ public class PigRelUtils {
 
   /**
    * Returns a set of all function definitions necessary for the rexNode and its children.
-   *
+   * <p>
    * A function definition is in the form of:
-   *     "DEFINE [pigFunctionName] HiveUDF([hiveFunctionName])"
+   * "DEFINE [pigFunctionName] HiveUDF([hiveFunctionName])"
    *
    * @param rexNode RexNode whose dependencies are to be derived
    * @return Set of all function definitions necessary for the rexNode and its children.

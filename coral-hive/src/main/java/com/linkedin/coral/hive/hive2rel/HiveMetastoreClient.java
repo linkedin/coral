@@ -6,6 +6,7 @@
 package com.linkedin.coral.hive.hive2rel;
 
 import java.util.List;
+
 import org.apache.hadoop.hive.metastore.api.Database;
 import org.apache.hadoop.hive.metastore.api.Table;
 

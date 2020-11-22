@@ -8,27 +8,29 @@ package com.linkedin.coral.pig.rel2pig.rel.functions;
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import com.linkedin.coral.hive.hive2rel.functions.VersionedSqlUserDefinedFunction;
 import com.linkedin.coral.pig.rel2pig.rel.PigRexUtils;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexNode;
 
 
 /**
  * PigUDF represents a that can be defined by the user (UDF).
- *
+ * <p>
  * For example:
- *   Pig UDFs can be explicitly declared with the following pig statement:
- *       DEFINE [pigFunctionName] [UDF CLASS]('hiveFunctionName')
- *
- *   If we want to access the Hive explode UDF, it can be declared as follows:
- *       DEFINE pigExplode HiveUDF('explode');
- *
- *   It can subsequently be accessed in a script as follows:
- *       [output] = FOREACH [input] GENERATE pigExplode(arrayField);
+ * Pig UDFs can be explicitly declared with the following pig statement:
+ * DEFINE [pigFunctionName] [UDF CLASS]('hiveFunctionName')
+ * <p>
+ * If we want to access the Hive explode UDF, it can be declared as follows:
+ * DEFINE pigExplode HiveUDF('explode');
+ * <p>
+ * It can subsequently be accessed in a script as follows:
+ * [output] = FOREACH [input] GENERATE pigExplode(arrayField);
  */
 public class PigUDF extends Function {
 
@@ -38,7 +40,7 @@ public class PigUDF extends Function {
   private static final String FUNCTION_CALL_TEMPLATE = "%s(%s)";
   private static final String DEFINE_PIG_BUILTIN_UDF_TEMPLATE = "DEFINE %s dali.data.pig.udf.HiveUDF('%s'%s);";
   private static final String CONSTANT_PARAMETER_TEMPLATE = ", \\'(%s)\\'";
-  private static final String NOT_ALPHA_NUMERIC_UNDERSCORE_REGEX  = "[^a-zA-Z0-9_]";
+  private static final String NOT_ALPHA_NUMERIC_UNDERSCORE_REGEX = "[^a-zA-Z0-9_]";
 
   // Name of function in Hive
   private final String hiveFunctionName;
@@ -65,7 +67,7 @@ public class PigUDF extends Function {
    * Creates a PigUDF with a given functionName and constant parameters.
    * Constant parameters are passed as 0-based indices.
    *
-   * @param functionName Name of the function
+   * @param functionName       Name of the function
    * @param constantParameters Set of indices that contain constant parameters.
    * @return PigUDF for the given functionName
    */
@@ -75,18 +77,18 @@ public class PigUDF extends Function {
 
   /**
    * Transforms a UDF call represented as a RexCall to a target language.
-   *
+   * <p>
    * The expression of the RexCall will be produced by a pipelined sequence as follows:
-   *     translateOperands -&gt; Returns a comma separated list of operands (OPERANDS_STR)
-   *     translateFunctionName -&gt; Returns the Pig Latin name for the operator in the RexCall (FUNCTION_STR)
-   *     translateFunctionCallOutput -&gt; Returns the Pig Latin on operations after the function call with the
-   *                                    function call string passed as an input
+   * translateOperands -&gt; Returns a comma separated list of operands (OPERANDS_STR)
+   * translateFunctionName -&gt; Returns the Pig Latin name for the operator in the RexCall (FUNCTION_STR)
+   * translateFunctionCallOutput -&gt; Returns the Pig Latin on operations after the function call with the
+   * function call string passed as an input
    *
-   * @param rexCall RexCall to be transformed
+   * @param rexCall         RexCall to be transformed
    * @param inputFieldNames List-index based mapping from Calcite index reference to field names of
    *                        the input of the given RexCall.
    * @return PigExpression of the RexCall consisting of the following:
-   *           - Pig Latin expression for the UDF called in the RexCall
+   * - Pig Latin expression for the UDF called in the RexCall
    */
   @Override
   public final String unparse(RexCall rexCall, List<String> inputFieldNames) {
@@ -103,14 +105,14 @@ public class PigUDF extends Function {
   /**
    * Generates the Pig Latin to define the functions needed for the given rexCall.
    *
-   * @param rexCall RexCall representing the function
+   * @param rexCall         RexCall representing the function
    * @param inputFieldNames List-index based mapping from Calcite index reference to field names of
    *                        the input of the given RexCall.
    * @return List of Pig DEFINE statements needed for the Function.
-   *         For example, to use the 'explode' function in Hive, it would need to be defined in Pig as follows:
-   *             {
-   *                 "DEFINE explode HiveUDF('explode');"
-   *             }
+   * For example, to use the 'explode' function in Hive, it would need to be defined in Pig as follows:
+   * {
+   * "DEFINE explode HiveUDF('explode');"
+   * }
    */
   public List<String> getFunctionDefinitions(RexCall rexCall, List<String> inputFieldNames) {
     final String constantParameterStatement = getConstantParameterStatement(rexCall, inputFieldNames);
@@ -122,7 +124,7 @@ public class PigUDF extends Function {
   /**
    * Generates Pig Latin for the function name of the given rexCall
    *
-   * @param rexCall RexCall to be transformed
+   * @param rexCall         RexCall to be transformed
    * @param inputFieldNames List-index based mapping from Calcite index reference to field names of
    *                        the input of the given RexCall.
    * @return Pig Latin for the function name of the given rexCall
@@ -149,15 +151,15 @@ public class PigUDF extends Function {
 
   /**
    * Generates the versioned function name for the given rexCall.
-   *
+   * <p>
    * If there is no version associated with the functionName, the function is unversioned and is named as follows:
-   *     'PIG_UDF_[calciteName]
-   *
+   * 'PIG_UDF_[calciteName]
+   * <p>
    * A versioned function is associated with a versioned table.
    * There may exist multiple implementations of the same UserDefinedFunctions in the same view, in which case
    * different versions of a UDF require different aliases.
    * The versioned function name is named as follows:
-   *     'PIG_UDF_[db]_[table]_[tableVersion]_[calciteName]
+   * 'PIG_UDF_[db]_[table]_[tableVersion]_[calciteName]
    *
    * @param rexCall RexCall to be transformed
    * @return Versioned functionName using viewDependentFunctionName as a component of the alias.
@@ -176,18 +178,18 @@ public class PigUDF extends Function {
 
   /**
    * Generates the Constant Parameter Statement.
-   *
+   * <p>
    * Constant Parameters are parameters in a function that are literals.
-   *
+   * <p>
    * For example:
-   *      infile(field_str, 'file:///user/home/dir/of/file')
-   *   In this example, 'file:///user/home/dir/of/file' is a constant parameter.
-   *   The Pig Engine cannot distinguish constant parameters, so they must be declared explicitly.
+   * infile(field_str, 'file:///user/home/dir/of/file')
+   * In this example, 'file:///user/home/dir/of/file' is a constant parameter.
+   * The Pig Engine cannot distinguish constant parameters, so they must be declared explicitly.
+   * <p>
+   * The constant parameter statement for this call would be:
+   * ', (null, \"file:///user/home/dir/of/file\")'
    *
-   *   The constant parameter statement for this call would be:
-   *       ', (null, \"file:///user/home/dir/of/file\")'
-   *
-   * @param rexCall RexCall to be transformed
+   * @param rexCall         RexCall to be transformed
    * @param inputFieldNames List-index based mapping from Calcite index reference to field names of
    *                        the input of the given RexCall.
    * @return Creates a string list of

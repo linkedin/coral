@@ -21,6 +21,7 @@ public class FuzzyUnionViewTest {
   public void beforeClass() throws HiveException, MetaException {
     TestUtils.initializeViews();
   }
+
   @Test
   public void testNoSchemaEvolution() throws TException {
     String database = "fuzzy_union";
@@ -172,7 +173,8 @@ public class FuzzyUnionViewTest {
     String expandedSql = coralSpark.getSparkSql();
 
     String expectedSql = ""
-        + "SELECT a, generic_project(b, '{\"type\":\"map\",\"valueContainsNull\":true,\"keyType\":\"string\",\"valueType\":{\"type\":\"struct\",\"fields\":[{\"type\":\"string\",\"name\":\"b1\",\"nullable\":true,\"metadata\":{}}]}}') b\n"
+        + "SELECT a, generic_project(b, '{\"type\":\"map\",\"valueContainsNull\":true,\"keyType\":\"string\",\"valueType\":{\"type\":\"struct\","
+        + "\"fields\":[{\"type\":\"string\",\"name\":\"b1\",\"nullable\":true,\"metadata\":{}}]}}') b\n"
         + "FROM fuzzy_union.tableh\n"
         + "UNION ALL\n"
         + "SELECT *\n"
@@ -190,7 +192,8 @@ public class FuzzyUnionViewTest {
     String expandedSql = coralSpark.getSparkSql();
 
     String expectedSql = ""
-        + "SELECT a, generic_project(b, '{\"type\":\"array\",\"containsNull\":true,\"elementType\":{\"type\":\"struct\",\"fields\":[{\"type\":\"string\",\"name\":\"b1\",\"nullable\":true,\"metadata\":{}}]}}') b\n"
+        + "SELECT a, generic_project(b, '{\"type\":\"array\",\"containsNull\":true,\"elementType\":{\"type\":\"struct\",\"fields\":[{\"type\":\"string\","
+        + "\"name\":\"b1\",\"nullable\":true,\"metadata\":{}}]}}') b\n"
         + "FROM fuzzy_union.tablej\n"
         + "UNION ALL\n"
         + "SELECT *\n"
@@ -208,7 +211,11 @@ public class FuzzyUnionViewTest {
     String expandedSql = coralSpark.getSparkSql();
 
     String expectedSql = ""
-        + "SELECT a, generic_project(b, '{\"type\":\"struct\",\"fields\":[{\"type\":\"string\",\"name\":\"b1\",\"nullable\":true,\"metadata\":{}},{\"type\":{\"type\":\"struct\",\"fields\":[{\"type\":\"string\",\"name\":\"b3\",\"nullable\":true,\"metadata\":{}},{\"type\":{\"type\":\"struct\",\"fields\":[{\"type\":\"string\",\"name\":\"b5\",\"nullable\":true,\"metadata\":{}}]},\"name\":\"b4\",\"nullable\":true,\"metadata\":{}}]},\"name\":\"b2\",\"nullable\":true,\"metadata\":{}}]}') b\n"
+        +
+        "SELECT a, generic_project(b, '{\"type\":\"struct\",\"fields\":[{\"type\":\"string\",\"name\":\"b1\",\"nullable\":true,\"metadata\":{}},"
+        + "{\"type\":{\"type\":\"struct\",\"fields\":[{\"type\":\"string\",\"name\":\"b3\",\"nullable\":true,\"metadata\":{}},{\"type\":{\"type\":\"struct\","
+        + "\"fields\":[{\"type\":\"string\",\"name\":\"b5\",\"nullable\":true,\"metadata\":{}}]},\"name\":\"b4\",\"nullable\":true,\"metadata\":{}}]},"
+        + "\"name\":\"b2\",\"nullable\":true,\"metadata\":{}}]}') b\n"
         + "FROM fuzzy_union.tablel\n"
         + "UNION ALL\n"
         + "SELECT *\n"

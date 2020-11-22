@@ -7,10 +7,12 @@ package com.linkedin.coral.hive.hive2rel;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 import org.apache.calcite.linq4j.tree.Expression;
 import org.apache.calcite.rel.type.RelProtoDataType;
 import org.apache.calcite.schema.Function;
@@ -24,7 +26,7 @@ import static com.google.common.base.Preconditions.*;
 
 /**
  * This class is a replacement for {@link HiveDbSchema} to work with localMetastore in coral-spark-plan module
- *
+ * <p>
  * Adaptor from Hive catalog providing database and table names
  * to Calcite {@link Schema}
  */
@@ -76,6 +78,7 @@ public class LocalMetastoreHiveDbSchema implements Schema {
 
   /**
    * A Hive DB does not have subschema
+   *
    * @param name name of the schema
    * @return Calcite schema
    */

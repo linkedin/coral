@@ -6,16 +6,17 @@
 package com.linkedin.coral.pig.rel2pig.rel.functions;
 
 import java.util.List;
+
 import org.apache.calcite.rex.RexCall;
 
 
 /**
  * PigRoundFunction represents the translation from Calcite/Hive ROUND to builtin Pig functions.
  * The output of PigRoundFunction has the following form:
- *     - No precision:
- *          ROUND(value)
- *     - With precision:
- *          ROUND_TO(value, precision)
+ * - No precision:
+ * ROUND(value)
+ * - With precision:
+ * ROUND_TO(value, precision)
  */
 public class PigRoundFunction extends PigBuiltinFunction {
 

@@ -10,8 +10,10 @@ import com.linkedin.coral.hive.hive2rel.functions.HiveExplodeOperator;
 import com.linkedin.coral.spark.dialect.SparkSqlDialect;
 import com.linkedin.coral.spark.functions.SqlLateralJoin;
 import com.linkedin.coral.spark.functions.SqlLateralViewAsOperator;
+
 import java.util.ArrayList;
 import java.util.List;
+
 import org.apache.calcite.rel.core.Correlate;
 import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rel.core.TableScan;
@@ -30,23 +32,21 @@ import org.apache.calcite.sql.parser.SqlParserPos;
 /**
  * This class converts Spark RelNode to Spark SQL
  * and is used by CoralSpark's constructSparkSQL() method.
- *
+ * <p>
  * This class handles
- *  - Converting Correlate to Lateral Views
- *  - Converting base tables names to catalogname.dbname.tablename
- *  - Converting Unnest to Explode
- *
+ * - Converting Correlate to Lateral Views
+ * - Converting base tables names to catalogname.dbname.tablename
+ * - Converting Unnest to Explode
  */
 public class SparkRelToSparkSqlConverter extends RelToSqlConverter {
   /**
    * Creates a SparkRelToSparkSqlConverter.
-   *
+   * <p>
    * This class converts a Spark RelNode to Spark understandable Hive SQL
    * and is used by CoralSpark's constructSparkSQL() method.
-   *
+   * <p>
    * One functionality that is overridden is while reading table and
    * changing basetable names from "catalogname.dbname.tablename" to "dbname.tablename".
-   *
    */
   SparkRelToSparkSqlConverter() {
     super(SparkSqlDialect.INSTANCE);
@@ -56,13 +56,13 @@ public class SparkRelToSparkSqlConverter extends RelToSqlConverter {
   /**
    * This overridden function makes sure that the basetable names in the output SQL
    * will be in the form of "dbname.tablename" instead of "catalogname.dbname.tablename"
-   *
+   * <p>
    * This is necessary to handle SparkSession.sql() inability to handle table names in
    * the form of 'catalogname.dbname.tablename'. This is because Spark SQL parser doesn't support it and throws
    * "org.apache.spark.sql.catalyst.parser.ParseException: mismatched input '.' expecting &lt;EOF&gt;" Error.
-   *
+   * <p>
    * For Example:
-   *  hive.default.foo_bar -&gt; default.foo_bar
+   * hive.default.foo_bar -&gt; default.foo_bar
    */
   @Override
   public Result visit(TableScan e) {
@@ -76,14 +76,14 @@ public class SparkRelToSparkSqlConverter extends RelToSqlConverter {
   /**
    * Correlate is Lateral View in Calcite's RelNode world.
    * Correlate is basically a join where right node is re-executed for every left node.
-   *
+   * <p>
    * This function overrides the default behavior of Calcite's SqlConverter
    * Example:
-   *  SELECT $cor0.a, $cor0.ccol
-   *       FROM default.complex $cor0, LATERAL(EXPLODE($cor0.c)) t1
-   *                  To
-   *  SELECT complex.a, t1.ccol
-   *        FROM default.complex LATERAL VIEW EXPLODE(complex.c) t1 AS ccol
+   * SELECT $cor0.a, $cor0.ccol
+   * FROM default.complex $cor0, LATERAL(EXPLODE($cor0.c)) t1
+   * To
+   * SELECT complex.a, t1.ccol
+   * FROM default.complex LATERAL VIEW EXPLODE(complex.c) t1 AS ccol
    */
   @Override
   public Result visit(Correlate e) {
@@ -112,15 +112,15 @@ public class SparkRelToSparkSqlConverter extends RelToSqlConverter {
   /**
    * CORAL represents explode function as an Uncollect RelNode,
    * which takes Project RelNode as input which is in the form of
-   *        SELECT `complex`.`c` as`ccol` FROM (VALUES  (0))
-   *
+   * SELECT `complex`.`c` as`ccol` FROM (VALUES  (0))
+   * <p>
    * In this function we override default SQL conversion for uncollect and
    * handle correctly converting it to an explode function
-   *
+   * <p>
    * For Example:
-   *  SELECT `complex`.`c` as`ccol` FROM (VALUES  (0))
-   *            is converted to
-   *  EXPLODE(`complex`.`c`)
+   * SELECT `complex`.`c` as`ccol` FROM (VALUES  (0))
+   * is converted to
+   * EXPLODE(`complex`.`c`)
    */
   @Override
   public Result visit(Uncollect e) {
@@ -145,18 +145,18 @@ public class SparkRelToSparkSqlConverter extends RelToSqlConverter {
   /**
    * Calcite's RelNode doesn't support 'OUTER' lateral views, Source: https://calcite.apache.org/docs/reference.html
    * The way Coral deals with this is by creating an IF function which will simulate an outer lateral view.
-   *
+   * <p>
    * For Example:
-   *  LATERAL VIEW OUTER explode(complex.c)
-   *          will be translated to
-   *  LATERAL VIEW explode(if(complex.c IS NOT NULL AND size(complex.c) > 0, complex.c, ARRAY (NULL)))
-   *
+   * LATERAL VIEW OUTER explode(complex.c)
+   * will be translated to
+   * LATERAL VIEW explode(if(complex.c IS NOT NULL AND size(complex.c) > 0, complex.c, ARRAY (NULL)))
+   * <p>
    * Spark needs an explicit 'OUTER' keyword for it to consider empty arrays,
    * therefore this function helps in finding out whether OUTER keyword is needed.
-   *
+   * <p>
    * This functions checks if a SqlNode
-   *    - has 'if' child
-   *    - has ARRAY(NULL) as the else result
+   * - has 'if' child
+   * - has ARRAY(NULL) as the else result
    */
   private boolean isCorrelateRightChildOuter(SqlNode rightChild) {
     if (rightChild instanceof SqlBasicCall) {

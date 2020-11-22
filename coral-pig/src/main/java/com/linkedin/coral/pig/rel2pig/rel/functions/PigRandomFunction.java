@@ -7,13 +7,14 @@ package com.linkedin.coral.pig.rel2pig.rel.functions;
 
 import java.util.Collections;
 import java.util.List;
+
 import org.apache.calcite.rex.RexCall;
 
 
 /**
  * PigRandomFunction represents the translation from Calcite RAND UDF to builtin Pig functions.
  * The output of PigRandomFunction has the following form:
- *     RANDOM()
+ * RANDOM()
  */
 public class PigRandomFunction extends PigBuiltinFunction {
 

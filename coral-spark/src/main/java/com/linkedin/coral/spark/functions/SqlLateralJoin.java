@@ -29,7 +29,7 @@ public class SqlLateralJoin extends SqlJoin {
   boolean isOuter;
 
   public SqlLateralJoin(SqlParserPos pos, SqlNode left, SqlLiteral natural, SqlLiteral joinType, SqlNode right,
-      SqlLiteral conditionType, SqlNode condition, boolean isOuter) {
+                        SqlLiteral conditionType, SqlNode condition, boolean isOuter) {
     super(pos, left, natural, joinType, right, conditionType, condition);
     this.left = left;
     this.right = right;

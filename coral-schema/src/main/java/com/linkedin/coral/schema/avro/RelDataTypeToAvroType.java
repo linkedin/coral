@@ -6,7 +6,9 @@
 package com.linkedin.coral.schema.avro;
 
 import com.linkedin.coral.com.google.common.base.Preconditions;
+
 import javax.annotation.Nonnull;
+
 import org.apache.avro.Schema;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.sql.type.ArraySqlType;
@@ -15,7 +17,7 @@ import org.apache.calcite.sql.type.BasicSqlType;
 
 /**
  * This class provides RelDataType to avro data type mapping
- *
+ * <p>
  * relDataTypeToAvroType is the main API
  */
 class RelDataTypeToAvroType {

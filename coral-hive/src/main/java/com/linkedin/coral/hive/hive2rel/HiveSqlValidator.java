@@ -23,8 +23,8 @@ import org.apache.calcite.sql.validate.SqlValidatorScope;
 class HiveSqlValidator extends SqlValidatorImpl {
 
   public HiveSqlValidator(SqlOperatorTable opTab,
-      CalciteCatalogReader catalogReader, JavaTypeFactory typeFactory,
-      SqlConformance conformance) {
+                          CalciteCatalogReader catalogReader, JavaTypeFactory typeFactory,
+                          SqlConformance conformance) {
     super(opTab, catalogReader, typeFactory, conformance);
   }
 
@@ -42,7 +42,7 @@ class HiveSqlValidator extends SqlValidatorImpl {
 
   @Override
   protected void inferUnknownTypes(RelDataType inferredType,
-      SqlValidatorScope scope, SqlNode node) {
+                                   SqlValidatorScope scope, SqlNode node) {
     if (SqlUtil.isNullLiteral(node, false)) {
       setValidatedNodeType(node, typeFactory.createSqlType(SqlTypeName.NULL));
       return;

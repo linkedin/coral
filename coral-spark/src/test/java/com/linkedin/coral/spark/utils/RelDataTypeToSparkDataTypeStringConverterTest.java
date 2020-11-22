@@ -7,9 +7,11 @@ package com.linkedin.coral.spark.utils;
 
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rel.type.RelDataTypeFieldImpl;
@@ -20,6 +22,7 @@ import org.apache.calcite.sql.type.BasicSqlType;
 import org.apache.calcite.sql.type.MapSqlType;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.testng.annotations.Test;
+
 import static org.testng.Assert.*;
 
 
@@ -47,7 +50,7 @@ public class RelDataTypeToSparkDataTypeStringConverterTest {
       RelDataType relDataType = new BasicSqlType(RelDataTypeSystem.DEFAULT, sqlTypeName);
       String sparkDataTypeSchemaString =
           RelDataTypeToSparkDataTypeStringConverter.convertRelDataType(relDataType);
-      assertEquals(sparkDataTypeSchemaString,expectedSparkDataTypeSchemaString);
+      assertEquals(sparkDataTypeSchemaString, expectedSparkDataTypeSchemaString);
     }
   }
 
@@ -91,7 +94,7 @@ public class RelDataTypeToSparkDataTypeStringConverterTest {
         "{\"type\":\"map\",\"valueContainsNull\":true,\"keyType\":\"integer\",\"valueType\":\"integer\"}";
 
     MapSqlType mapSqlType = new MapSqlType(new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.INTEGER),
-        new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.INTEGER),true);
+        new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.INTEGER), true);
 
     String sparkDataTypeSchemaString = RelDataTypeToSparkDataTypeStringConverter.convertRelDataType(mapSqlType);
 

@@ -6,15 +6,17 @@
 package com.linkedin.coral.pig.rel2pig.rel.functions;
 
 import com.linkedin.coral.pig.rel2pig.rel.PigRexUtils;
+
 import java.util.Arrays;
 import java.util.List;
+
 import org.apache.calcite.rex.RexCall;
 
 
 /**
  * PigSubstringFunction represents the translation from Calcite Substring UDF to builtin Pig functions.
  * The output of the PigSubstring has the following form:
- *     SUBSTRING(string, startIndex, endIndex)
+ * SUBSTRING(string, startIndex, endIndex)
  */
 public class PigSubstringFunction extends PigBuiltinFunction {
   private static final String SUBSTRING_FUNCTION_NAME = "SUBSTRING";
@@ -55,7 +57,7 @@ public class PigSubstringFunction extends PigBuiltinFunction {
     //     endIndex = SIZE(string)
     final String endIndex = rexCall.getOperands().size() >= 3
         ? String.format(ADDITION_TEMPLATE, startIndex, PigRexUtils.convertRexNodeToPigExpression(
-            rexCall.getOperands().get(2), inputFieldNames))
+        rexCall.getOperands().get(2), inputFieldNames))
         : String.format(SIZE_FUNCTION_TEMPLATE, value);
     return Arrays.asList(value, startIndex, endIndex);
   }

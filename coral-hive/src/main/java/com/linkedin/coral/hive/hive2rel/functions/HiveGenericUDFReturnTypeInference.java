@@ -6,6 +6,7 @@
 package com.linkedin.coral.hive.hive2rel.functions;
 
 import com.linkedin.coral.hive.hive2rel.TypeConverter;
+
 import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -13,6 +14,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.List;
+
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.sql.SqlOperatorBinding;
@@ -82,7 +84,7 @@ public class HiveGenericUDFReturnTypeInference implements SqlReturnTypeInference
    * This method converts ObjectInspector to RelDataType
    *
    * @param hiveObjectInspector ObjectInspector to convert to RelDataType
-   * @param relDataTypeFactory RelDataTypeFactory used during the conversion
+   * @param relDataTypeFactory  RelDataTypeFactory used during the conversion
    * @return converted RelDataType based on input ObjectInspector
    */
   private RelDataType getCalciteRelDataType(ObjectInspector hiveObjectInspector, RelDataTypeFactory relDataTypeFactory) {

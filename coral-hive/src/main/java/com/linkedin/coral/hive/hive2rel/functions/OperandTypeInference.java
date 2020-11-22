@@ -6,7 +6,9 @@
 package com.linkedin.coral.hive.hive2rel.functions;
 
 import com.google.common.base.Preconditions;
+
 import java.util.List;
+
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.sql.SqlCallBinding;
@@ -27,7 +29,7 @@ public class OperandTypeInference {
       new SqlOperandTypeInference() {
         @Override
         public void inferOperandTypes(SqlCallBinding callBinding, RelDataType returnType,
-            RelDataType[] relDataTypes) {
+                                      RelDataType[] relDataTypes) {
           final RelDataType unknownType = callBinding.getValidator().getUnknownType();
           List<SqlNode> operands = callBinding.operands();
           Preconditions.checkState(operands.size() == 3 && relDataTypes.length == 3);

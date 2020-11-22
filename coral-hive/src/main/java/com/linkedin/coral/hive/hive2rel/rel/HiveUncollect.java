@@ -6,6 +6,7 @@
 package com.linkedin.coral.hive.hive2rel.rel;
 
 import java.util.List;
+
 import org.apache.calcite.plan.Convention;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelTraitSet;
@@ -47,7 +48,7 @@ public class HiveUncollect extends Uncollect {
 
   @Override
   protected RelDataType deriveRowType() {
-   RelDataType inputType = input.getRowType();
+    RelDataType inputType = input.getRowType();
     assert inputType.isStruct() : inputType + " is not a struct";
     final List<RelDataTypeField> fields = inputType.getFieldList();
     final RelDataTypeFactory.Builder builder =

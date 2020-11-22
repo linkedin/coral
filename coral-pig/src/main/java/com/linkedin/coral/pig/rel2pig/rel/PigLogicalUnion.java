@@ -6,6 +6,7 @@
 package com.linkedin.coral.pig.rel2pig.rel;
 
 import java.util.List;
+
 import org.apache.calcite.rel.logical.LogicalUnion;
 
 
@@ -23,11 +24,11 @@ public class PigLogicalUnion {
   /**
    * Translates a Calcite LogicalUnion into Pig Latin
    *
-   * @param logicalUnion The Calcite LogicalUnion to be translated
+   * @param logicalUnion   The Calcite LogicalUnion to be translated
    * @param outputRelation The variable that stores the union output
    * @param inputRelations The list of relations that are part of the union
    * @return The PigLatin for the logicalUnion over 'n' tables/relations in the form of:
-   *           [outputRelation] = UNION [inputRelations].get(0), ... [inputRelations].get(n-1);
+   * [outputRelation] = UNION [inputRelations].get(0), ... [inputRelations].get(n-1);
    */
   public static String getScript(LogicalUnion logicalUnion, String outputRelation, List<String> inputRelations) {
     if (inputRelations.size() < 2) {

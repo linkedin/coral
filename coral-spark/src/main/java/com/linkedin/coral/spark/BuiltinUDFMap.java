@@ -8,12 +8,13 @@ package com.linkedin.coral.spark;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 
 /**
  * This is Mapping class for built in functions from Calcite IR to Spark
- *
+ * <p>
  * The mapping is created statically and queried in CoralSpark's SparkRelToSparkSqlConverter
  * with the lookup API.
  */
@@ -34,7 +35,7 @@ class BuiltinUDFMap {
    * This API is used for querying Spark-specific built in function for a coral IR function
    *
    * @return Optional<String>
-   *   String will be null if mapping is not found, and can be confirmed with Optional.isPresent()
+   * String will be null if mapping is not found, and can be confirmed with Optional.isPresent()
    */
   static Optional<String> lookup(String calciteOpName) {
     return Optional.ofNullable(UDF_MAP.get(calciteOpName));

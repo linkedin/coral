@@ -8,8 +8,10 @@ package com.linkedin.coral.spark;
 import com.linkedin.coral.spark.containers.SparkRelInfo;
 import com.linkedin.coral.spark.containers.SparkUDFInfo;
 import com.linkedin.coral.spark.dialect.SparkSqlDialect;
+
 import java.util.List;
 import java.util.stream.Collectors;
+
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
@@ -17,16 +19,15 @@ import org.apache.calcite.rel.RelNode;
 
 /**
  * This is the main API class for Coral-Spark.
- *
+ * <p>
  * Use `process` to get an instance of  CoralSparkInfo, which contains
- *  1) Spark SQL
- *  2) Base tables
- *  3) Spark UDF information objects, ie. List of {@link SparkUDFInfo}
- *
+ * 1) Spark SQL
+ * 2) Base tables
+ * 3) Spark UDF information objects, ie. List of {@link SparkUDFInfo}
+ * <p>
  * This class converts a IR RelNode to a Spark SQL by
- *  1) Transforming it to a Spark RelNode with Spark details [[IRRelToSparkRelTransformer]]
- *  2) Constructing a Spark SQL AST by using [[SparkRelToSparkSqlConverter]]
- *
+ * 1) Transforming it to a Spark RelNode with Spark details [[IRRelToSparkRelTransformer]]
+ * 2) Constructing a Spark SQL AST by using [[SparkRelToSparkSqlConverter]]
  */
 public class CoralSpark {
 
@@ -36,7 +37,7 @@ public class CoralSpark {
   private String sparkSql;
 
   private CoralSpark(RelNode sparkRelNode, List<String> baseTables, List<SparkUDFInfo> sparkUDFInfoList,
-      String sparkSql) {
+                     String sparkSql) {
     this.sparkRelNode = sparkRelNode;
     this.baseTables = baseTables;
     this.sparkUDFInfoList = sparkUDFInfoList;
@@ -45,16 +46,15 @@ public class CoralSpark {
 
   /**
    * Users use this function as the main API for getting CoralSpark instance.
-   *
+   * <p>
    * Internally IR RelNode is converted to Spark RelNode, and Spark RelNode to Spark SQL.
-   *
+   * <p>
    * It returns an instance of CoralSpark which contains
-   *  1) Spark SQL
-   *  2) Base tables
-   *  3) Spark UDF information objects, ie. List of {@link SparkUDFInfo}
+   * 1) Spark SQL
+   * 2) Base tables
+   * 3) Spark UDF information objects, ie. List of {@link SparkUDFInfo}
    *
    * @param irRelNode A IR RelNode for which CoralSpark will be constructed.
-   *
    * @return [[CoralSparkInfo]]
    */
   public static CoralSpark create(RelNode irRelNode) {
@@ -68,16 +68,15 @@ public class CoralSpark {
 
   /**
    * This function returns a completely expanded SQL statement in HiveQL Dialect.
-   *
+   * <p>
    * A SQL statement is 'completely expanded' if it doesn't depend
    * on (or selects from) Hive views, but instead, just on base tables.
    * This function internally calls [[SparkRelToSparkSqlConverter]] module to
    * convert CoralSpark to SparkSQL.
-   *
+   * <p>
    * Converts Spark RelNode to Spark SQL
    *
    * @param sparkRelNode A Spark compatible RelNode
-   *
    * @return SQL String in HiveQL dialect which is 'completely expanded'
    */
   private static String constructSparkSQL(RelNode sparkRelNode) {
@@ -91,7 +90,7 @@ public class CoralSpark {
   /**
    * This function returns the list of base table names, in the format
    * "database_name.table_name".
-   *
+   * <p>
    * A 'base table' of a view, is the Hive table on which view is dependent on.
    *
    * @param relNode A RelNode (may or may not be Spark compatible)
@@ -129,7 +128,7 @@ public class CoralSpark {
 
   /**
    * Getter for Spark SQL which is 'completely expanded'
-   *
+   * <p>
    * A SQL statement is 'completely expanded' if it doesn't depend
    * on (or selects from) Hive views, but instead, just on base tables.
    *

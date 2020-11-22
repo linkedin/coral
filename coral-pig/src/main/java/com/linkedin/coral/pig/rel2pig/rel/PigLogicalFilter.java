@@ -6,6 +6,7 @@
 package com.linkedin.coral.pig.rel2pig.rel;
 
 import java.util.List;
+
 import org.apache.calcite.rel.logical.LogicalFilter;
 
 
@@ -22,11 +23,12 @@ public class PigLogicalFilter {
 
   /**
    * Translates a Calcite LogicalFilter into Pig Latin
-   * @param logicalFilter The Calcite LogicalFilter to be translated
+   *
+   * @param logicalFilter  The Calcite LogicalFilter to be translated
    * @param outputRelation The variable that stores the filtered output
-   * @param inputRelation The variable that has stored the Pig relation to be filtered
+   * @param inputRelation  The variable that has stored the Pig relation to be filtered
    * @return The Pig Latin for the logicalFilter in the form of:
-   *           [outputRelation] = FILTER [inputRelation] BY [logicalFilter.expressions]
+   * [outputRelation] = FILTER [inputRelation] BY [logicalFilter.expressions]
    */
   public static String getScript(LogicalFilter logicalFilter, String outputRelation, String inputRelation) {
     List<String> inputFieldNames = PigRelUtils.getOutputFieldNames(logicalFilter.getInput());

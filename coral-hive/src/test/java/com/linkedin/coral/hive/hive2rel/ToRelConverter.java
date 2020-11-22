@@ -6,6 +6,7 @@
 package com.linkedin.coral.hive.hive2rel;
 
 import java.io.IOException;
+
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.rel2sql.RelToSqlConverter;
@@ -20,11 +21,12 @@ import static org.testng.Assert.*;
 
 
 class ToRelConverter {
-
   private static TestUtils.TestHive hive;
   private static IMetaStoreClient msc;
   static HiveToRelConverter converter;
   static RelContextProvider relContextProvider;
+
+  private ToRelConverter() { }
 
   static void setup() throws IOException, HiveException, MetaException {
     hive = TestUtils.setupDefaultHive();
@@ -38,7 +40,9 @@ class ToRelConverter {
     return msc;
   }
 
-  public static RelContextProvider getRelContextProvider() { return relContextProvider; }
+  public static RelContextProvider getRelContextProvider() {
+    return relContextProvider;
+  }
 
   static RelNode toRel(String sql) {
     return converter.convertSql(sql);

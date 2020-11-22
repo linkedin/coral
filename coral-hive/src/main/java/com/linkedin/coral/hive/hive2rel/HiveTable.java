@@ -10,12 +10,14 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.linkedin.coral.com.google.common.base.Throwables;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
 import org.apache.calcite.DataContext;
 import org.apache.calcite.config.CalciteConnectionConfig;
 import org.apache.calcite.linq4j.Enumerable;
@@ -41,7 +43,7 @@ import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
 /**
  * Adaptor class from Hive {@link org.apache.hadoop.hive.metastore.api.Table} representation to
  * Calcite {@link ScannableTable}
- *
+ * <p>
  * Implementing this as a ScannableTable, instead of Table, is hacky approach to make calcite
  * correctly generate relational algebra. This will have to go away gradually.
  */
@@ -54,7 +56,7 @@ public class HiveTable implements ScannableTable {
    * Any functions the user registers during view creation should also be
    * specified in the table properties of the created view under the key
    * {@value #TBLPROPERTIES_FUNCTIONS_KEY}
-   *
+   * <p>
    * e.g 'functions' = 'f:c1 g:c2'
    */
   static final String TBLPROPERTIES_FUNCTIONS_KEY = "functions";
@@ -65,7 +67,7 @@ public class HiveTable implements ScannableTable {
    * {@value #TBLPROPERTIES_DEPENDENCIES_KEY} or under
    * [fn].{@value #TBLPROPERTIES_DEPENDENCIES_KEY} for function specific
    * dependencies
-   *
+   * <p>
    * e.g 'dependencies' = 'o1:m1:v1 o2:m2:v2?transitive=false'
    */
   static final String TBLPROPERTIES_DEPENDENCIES_KEY = "dependencies";
@@ -80,6 +82,7 @@ public class HiveTable implements ScannableTable {
 
   /**
    * Constructor to create bridge from hive table to calcite table
+   *
    * @param hiveTable Hive table
    */
   public HiveTable(org.apache.hadoop.hive.metastore.api.Table hiveTable) {
@@ -92,6 +95,7 @@ public class HiveTable implements ScannableTable {
    * The 'functions' parameter in TBLPROPERTIES clause is a whitespace-separated list of function base name
    * used in the view, followed by colon(:), followed by the corresponding full class names.  Example:
    * 'functions' = 'func_1:com.linkedin.Func1 func_2:com.linkedin.Func2'
+   *
    * @return returns a mapping of function name to class name as stored in the
    * {@code functions} parameter key of table parameters
    */
@@ -110,6 +114,7 @@ public class HiveTable implements ScannableTable {
    * The 'dependencies' parameter in TBLPROPERTIES clause is a whitespace-separated list of the ivy coordinates
    * of the artifacts a UDF requires.  Example:
    * 'dependencies' = 'ivy://com.linkedin.foo:foo1:0.0.1 ivy://com.linkedin.foo:foo2:0.0.1'
+   *
    * @return returns a string list of the ivy coordinates as stored in the
    * {@code dependencies} table property.  The return value is null if
    * {@code dependencies} is not set.
@@ -131,7 +136,7 @@ public class HiveTable implements ScannableTable {
 
   private void checkDaliTable() {
     // FIXME: this fails unit test right now
-   // Preconditions.checkState(isDaliTable());
+    // Preconditions.checkState(isDaliTable());
   }
 
   @Override
@@ -203,8 +208,8 @@ public class HiveTable implements ScannableTable {
         return Schema.TableType.TABLE;
       case INDEX_TABLE:
         return Schema.TableType.INDEX;
-        default:
-          throw new RuntimeException("Unknown table type: " + hiveTable.getTableType());
+      default:
+        throw new RuntimeException("Unknown table type: " + hiveTable.getTableType());
     }
   }
 
@@ -215,7 +220,7 @@ public class HiveTable implements ScannableTable {
 
   @Override
   public boolean rolledUpColumnValidInsideAgg(String s, SqlCall sqlCall, SqlNode sqlNode,
-      CalciteConnectionConfig calciteConnectionConfig) {
+                                              CalciteConnectionConfig calciteConnectionConfig) {
     return true;
   }
 

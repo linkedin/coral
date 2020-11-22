@@ -7,8 +7,10 @@ package com.linkedin.coral.hive.hive2rel.functions;
 
 import com.google.common.base.Preconditions;
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
+
 import java.util.List;
 import java.util.stream.Collectors;
+
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.sql.SqlOperatorBinding;
@@ -87,17 +89,17 @@ public class HiveReturnTypes {
 
   /**
    * Creates a row type given the field names and {@link SqlReturnTypeInference} of the fields.
-   *
+   * <p>
    * This method is useful to create row types whose fields are complex types and hence cannot be represented through
    * {@link SqlTypeName}s to be used in {@link #rowOf(ImmutableList, ImmutableList)}
    *
    * @param fieldNames List of field names
-   * @param types List of {@link SqlReturnTypeInference} corresponding to field names
+   * @param types      List of {@link SqlReturnTypeInference} corresponding to field names
    * @return {@link SqlReturnTypeInference} object inferring struct type of field names and filed types baed on
    * input {@link SqlReturnTypeInference} objects.
    */
   public static SqlReturnTypeInference rowOfInference(ImmutableList<String> fieldNames,
-      ImmutableList<SqlReturnTypeInference> types) {
+                                                      ImmutableList<SqlReturnTypeInference> types) {
     return new SqlReturnTypeInference() {
       @Override
       public RelDataType inferReturnType(SqlOperatorBinding opBinding) {

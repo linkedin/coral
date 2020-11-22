@@ -8,7 +8,9 @@ package com.linkedin.coral.pig.rel2pig;
 import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
 import com.linkedin.coral.hive.hive2rel.HiveMscAdapter;
 import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
+
 import java.io.InputStream;
+
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.runtime.Hook;
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -33,6 +35,7 @@ public class TestUtils {
 
   /**
    * Initializes the tables used in Coral-Pig unit tests
+   *
    * @throws HiveException
    * @throws MetaException
    */
@@ -75,7 +78,8 @@ public class TestUtils {
         "CREATE TABLE IF NOT EXISTS pig.tablenull(nullablefield string, field string)"));
 
     run(driver, String.join("\n", "",
-        "CREATE TABLE IF NOT EXISTS functions.tablefields(i_1 int, i0 int, i1 int, i2 int, i3 int, fl1 double, fl2 double, fl3 double, str string, substr string, exstr string, bootrue boolean, boofalse boolean, bin binary)"));
+        "CREATE TABLE IF NOT EXISTS functions.tablefields(i_1 int, i0 int, i1 int, i2 int, i3 int, fl1 double, fl2 double, "
+        + "fl3 double, str string, substr string, exstr string, bootrue boolean, boofalse boolean, bin binary)"));
   }
 
   /**
@@ -91,10 +95,11 @@ public class TestUtils {
 
   /**
    * Translates the view definition of a SQL query to Pig Latin
-   * @param sql A SQL query.
+   *
+   * @param sql            A SQL query.
    * @param outputRelation The variable that the output of the table will be stored in
    * @return Ordered list of Pig Latin statements to read the records produced by the view definition of the
-   *         given database.table stored in outputRelation
+   * given database.table stored in outputRelation
    */
   public static String[] sqlToPigLatin(String sql, String outputRelation) {
     RelNode relNode = hiveToRelConverter.convertSql(sql);
@@ -134,7 +139,8 @@ public class TestUtils {
       }
 
       if (db.equalsIgnoreCase("functions") && t.equalsIgnoreCase("tablefields")) {
-        return "JsonLoader('i_1:int, i0:int, i1:int, i2:int, i3:int, fl1:double, fl2:double, fl3:double, str:chararray, substr:chararray, exstr:chararray, bootrue:boolean, boofalse:boolean, bin:bytearray')";
+        return "JsonLoader('i_1:int, i0:int, i1:int, i2:int, i3:int, fl1:double, fl2:double, fl3:double, str:chararray, "
+        + "substr:chararray, exstr:chararray, bootrue:boolean, boofalse:boolean, bin:bytearray')";
       }
 
       return "JsonLoader()";

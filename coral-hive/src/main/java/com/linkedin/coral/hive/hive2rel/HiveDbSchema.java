@@ -7,9 +7,11 @@ package com.linkedin.coral.hive.hive2rel;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+
 import java.util.Collection;
 import java.util.Set;
 import javax.annotation.Nonnull;
+
 import org.apache.calcite.linq4j.tree.Expression;
 import org.apache.calcite.rel.type.RelProtoDataType;
 import org.apache.calcite.schema.Function;
@@ -83,6 +85,7 @@ public class HiveDbSchema implements Schema {
 
   /**
    * A Hive DB does not have subschema
+   *
    * @param name Subschema name
    * @return Calcite schema
    */

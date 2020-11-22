@@ -6,6 +6,7 @@
 package com.linkedin.coral.hive.hive2rel;
 
 import java.io.IOException;
+
 import org.apache.calcite.rel.RelNode;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
@@ -56,9 +57,9 @@ public class HiveOperatorsTest {
   public void testInValues() {
     final String sql = "SELECT a, c FROM foo WHERE b IN ('abc', 'pqr', 'mno')";
     RelNode rel = toRel(sql);
-    final String expected = "LogicalProject(a=[$0], c=[$2])\n" +
-        "  LogicalFilter(condition=[IN($1, 'abc', 'pqr', 'mno')])\n" +
-        "    LogicalTableScan(table=[[hive, default, foo]])\n";
+    final String expected = "LogicalProject(a=[$0], c=[$2])\n"
+        + "  LogicalFilter(condition=[IN($1, 'abc', 'pqr', 'mno')])\n"
+        + "    LogicalTableScan(table=[[hive, default, foo]])\n";
     assertEquals(relToStr(rel), expected);
     final String expectedSql = "SELECT \"a\", \"c\"\nFROM \"hive\".\"default\".\"foo\"\n"
         + "WHERE \"b\" IN ('abc', 'pqr', 'mno')";
@@ -69,12 +70,12 @@ public class HiveOperatorsTest {
   public void testNotInValues() {
     final String sql = "SELECT a, b FROM foo WHERE b NOT IN ('abc', 'xyz')";
     RelNode rel = toRel(sql);
-    final String expected = "LogicalProject(a=[$0], b=[$1])\n" +
-        "  LogicalFilter(condition=[NOT(IN($1, 'abc', 'xyz'))])\n" +
-        "    LogicalTableScan(table=[[hive, default, foo]])\n";
+    final String expected = "LogicalProject(a=[$0], b=[$1])\n"
+        + "  LogicalFilter(condition=[NOT(IN($1, 'abc', 'xyz'))])\n"
+        + "    LogicalTableScan(table=[[hive, default, foo]])\n";
     assertEquals(relToStr(rel), expected);
-    final String expectedSql = "SELECT \"a\", \"b\"\nFROM \"hive\".\"default\".\"foo\"\n" +
-        "WHERE NOT \"b\" IN ('abc', 'xyz')";
+    final String expectedSql = "SELECT \"a\", \"b\"\nFROM \"hive\".\"default\".\"foo\"\n"
+        + "WHERE NOT \"b\" IN ('abc', 'xyz')";
     assertEquals(relToSql(rel), expectedSql);
   }
 
@@ -99,24 +100,24 @@ public class HiveOperatorsTest {
     {
       final String sql = "SELECT a, CAST(NULL as int) FROM foo";
       RelNode rel = toRel(sql);
-      final String expectedSql = "SELECT \"a\", CAST(NULL AS INTEGER)\n" +
-          "FROM \"hive\".\"default\".\"foo\"";
+      final String expectedSql = "SELECT \"a\", CAST(NULL AS INTEGER)\n"
+          + "FROM \"hive\".\"default\".\"foo\"";
       assertEquals(relToSql(rel), expectedSql);
     }
     {
       final String sql = "SELECT cast(a as double) FROM foo";
       RelNode rel = toRel(sql);
-      final String expectedSql = "SELECT CAST(\"a\" AS DOUBLE PRECISION)\n" +
-          "FROM \"hive\".\"default\".\"foo\"";
+      final String expectedSql = "SELECT CAST(\"a\" AS DOUBLE PRECISION)\n"
+          + "FROM \"hive\".\"default\".\"foo\"";
       assertEquals(relToSql(rel), expectedSql);
     }
   }
 
   private void testLikeFamilyOperators(String operator) {
     final String sql = "SELECT a, b FROM foo WHERE b " + operator + " 'abc%'";
-    String expectedRel = "LogicalProject(a=[$0], b=[$1])\n" +
-        "  LogicalFilter(condition=[" + operator.toUpperCase()  +"($1, 'abc%')])\n" +
-        "    LogicalTableScan(table=[[hive, default, foo]])\n";
+    String expectedRel = "LogicalProject(a=[$0], b=[$1])\n"
+        + "  LogicalFilter(condition=[" + operator.toUpperCase() + "($1, 'abc%')])\n"
+        + "    LogicalTableScan(table=[[hive, default, foo]])\n";
     RelNode rel = toRel(sql);
     assertEquals(relToStr(rel), expectedRel);
     String expectedSql = "SELECT \"a\", \"b\"\nFROM \"hive\".\"default\".\"foo\"\n"

@@ -6,26 +6,26 @@
 package com.linkedin.coral.sparkplan;
 
 import com.google.common.collect.ImmutableList;
+
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
+
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.IMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.MetaException;
-import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.hadoop.hive.ql.Driver;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
-import org.apache.hadoop.hive.ql.processors.CommandProcessorResponse;
 import org.apache.hadoop.hive.ql.session.SessionState;
 
 
 public class TestUtils {
 
   static TestHive hive;
+
+  private TestUtils() { }
 
   public static class TestHive {
     private final HiveConf conf;
@@ -44,6 +44,7 @@ public class TestUtils {
         this.name = name;
         this.tables = ImmutableList.copyOf(tables);
       }
+
       String name;
       List<String> tables;
     }

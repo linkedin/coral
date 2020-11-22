@@ -8,8 +8,10 @@ package com.linkedin.coral.pig.rel2pig.rel.operators;
 import com.linkedin.coral.hive.hive2rel.functions.UnknownSqlFunctionException;
 import com.linkedin.coral.pig.rel2pig.exceptions.UnsupportedRexCallException;
 import com.linkedin.coral.pig.rel2pig.rel.PigRexUtils;
+
 import java.util.List;
 import java.util.stream.Collectors;
+
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.type.MapSqlType;
@@ -62,7 +64,7 @@ public class PigSpecialOperator extends PigOperator {
    * Translates ITEM operator calls to Pig Latin.
    *
    * @return Pig Latin of an ITEM operator call, which is implemented by:
-   *           - a map access for some given key
+   * - a map access for some given key
    */
   private String convertItemOperatorCall() {
     final RexNode columnReference = rexCall.getOperands().get(0);

@@ -24,12 +24,12 @@ import org.apache.calcite.sql.validate.SqlValidatorScope;
  * This template is used by UDFs in Presto that have dynamic return types and a lambda function parameter.
  * The lambda function parameter will be represented as a string literal input.
  * Since these lambda functions are internally used APIs, we do not set strict validations.
- *
+ * <p>
  * The unparsed output of a GenericTemplateFunction would be as follows:
- *   " ... [FUNCTION_NAME]([STRING_PARAMETER]) ... "
+ * " ... [FUNCTION_NAME]([STRING_PARAMETER]) ... "
  * NOTE: Since the input parameter is a lambda function, we do not want to capture it as a string when being parsed
  * by Presto, so there will be no quotations around the [STRING_PARAMETER]
- *
+ * <p>
  * Since the return type is dynamic, derived classes can set an appropriate return type using the genericDataType
  * constructor parameter.
  */

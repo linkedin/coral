@@ -7,9 +7,11 @@ package com.linkedin.coral.presto.rel2presto.functions;
 
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rel.type.RelDataTypeFieldImpl;
@@ -97,7 +99,7 @@ public class RelDataTypeToPrestoTypeStringConverterTest {
     String expectedPrestoTypeCastString = "map(integer, integer)";
 
     MapSqlType mapSqlType = new MapSqlType(new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.INTEGER),
-      new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.INTEGER),true);
+        new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.INTEGER), true);
     String prestoTypeCastString = RelDataTypeToPrestoTypeStringConverter.buildPrestoTypeString(mapSqlType);
 
     assertEquals(prestoTypeCastString, expectedPrestoTypeCastString);

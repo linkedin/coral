@@ -18,6 +18,7 @@ import com.linkedin.coral.hive.hive2rel.parsetree.parser.ASTNode;
 import com.linkedin.coral.hive.hive2rel.parsetree.parser.Node;
 import com.linkedin.coral.hive.hive2rel.parsetree.parser.ParseDriver;
 import com.linkedin.coral.hive.hive2rel.parsetree.parser.ParseException;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -25,6 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+
 import org.apache.calcite.sql.JoinConditionType;
 import org.apache.calcite.sql.JoinType;
 import org.apache.calcite.sql.SqlAsOperator;
@@ -52,15 +54,15 @@ import static org.apache.calcite.sql.parser.SqlParserPos.*;
 /**
  * Class to convert Hive Abstract Syntax Tree(AST) represented by {@link ASTNode} to
  * Calcite based AST represented using {@link SqlNode}.
- *
+ * <p>
  * Hive AST nodes do not support polymorphic behavior for processing AST using, for example, visitors
  * ASTNode carries all the information as type and text fields and children nodes are of base class Node.
  * This requires constant casting of nodes and string processing to get the type and value out of a node.
  * This complicates analysis of the tree.
- *
+ * <p>
  * This class converts the AST to Calcite based AST using {@link SqlNode}.This is more structured
  * allowing for simpler analysis code.
- *
+ * <p>
  * NOTE:
  * There are certain difficulties in correct translation.
  * For example, for identifier named {@code s.field1} it's hard to ascertain if {@code s} is a
@@ -76,10 +78,11 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
 
   /**
    * Constructs a parse tree builder
+   *
    * @param hiveMetastoreClient optional HiveMetastore client. This is required to decode view definitions
-   * @param config parse configuration to use
-   * @param registry Static Hive function registry
-   * @param dynamicRegistry Dynamic Hive function registry (inferred at runtime)
+   * @param config              parse configuration to use
+   * @param registry            Static Hive function registry
+   * @param dynamicRegistry     Dynamic Hive function registry (inferred at runtime)
    */
   public ParseTreeBuilder(
       HiveMetastoreClient hiveMetastoreClient,
@@ -97,8 +100,9 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
   /**
    * This constructor is used for unit testing purpose
    * Constructs a parse tree builder to use hive metatstore and user provided configuration
+   *
    * @param hiveMetastoreClient optional HiveMetastore client. This is required to decode view definitions
-   * @param config parse configuration to use
+   * @param config              parse configuration to use
    */
   public ParseTreeBuilder(@Nullable HiveMetastoreClient hiveMetastoreClient, Config config) {
     this.hiveMetastoreClient = hiveMetastoreClient;
@@ -108,9 +112,11 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     this.config = config;
     this.functionResolver = new HiveFunctionResolver(new StaticHiveFunctionRegistry(), new ConcurrentHashMap<>());
   }
+
   /**
    * Creates a parse tree for a hive view using the expanded view text from hive metastore.
    * This table name is required for handling dali function name resolution.
+   *
    * @param hiveView hive table handle to read expanded text from.  Table name is also allowed.
    * @return Calcite SqlNode representing parse tree that calcite framework can understand
    */
@@ -130,7 +136,7 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
   /**
    * Gets the hive table handle for db and table and calls {@link #processViewOrTable(Table)}
    *
-   * @param dbName database name
+   * @param dbName    database name
    * @param tableName table name
    * @return {@link SqlNode} object
    */
@@ -145,6 +151,7 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
   /**
    * Creates a parse tree for input sql. The input SQL must NOT contain any Dali function names.
    * It is okay for the sql to refer to dali views that use dali functions.
+   *
    * @param sql sql statement to convert to parse tree
    * @return Calcite SqlNode representing parse tree that calcite framework can understand
    */
@@ -356,7 +363,7 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     if (!descending) {
       return children.get(0);
     }
-    return new SqlBasicCall(SqlStdOperatorTable.DESC, new SqlNode[]{children.get(0)}, ZERO);
+    return new SqlBasicCall(SqlStdOperatorTable.DESC, new SqlNode[] {children.get(0)}, ZERO);
   }
 
   @Override
@@ -429,7 +436,7 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
         .filter(f -> functionNode.getText().equalsIgnoreCase(f.getName()))
         .collect(Collectors.toList());
     checkState(functions.size() == 1);
-    return new SqlBasicCall(functions.get(0), new SqlNode[]{new SqlIdentifier("", ZERO)}, ZERO);
+    return new SqlBasicCall(functions.get(0), new SqlNode[] {new SqlIdentifier("", ZERO)}, ZERO);
   }
 
   @Override
@@ -465,7 +472,7 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
       return new SqlBasicCall(SqlStdOperatorTable.AS, sqlNodes.toArray(new SqlNode[0]), ZERO);
     } else if (sqlNodes.size() == 3) {
       // lateral view alias have 3 args
-      SqlNode[] nodes = new SqlNode[]{sqlNodes.get(0), sqlNodes.get(2), sqlNodes.get(1)};
+      SqlNode[] nodes = new SqlNode[] {sqlNodes.get(0), sqlNodes.get(2), sqlNodes.get(1)};
       return new SqlBasicCall(SqlStdOperatorTable.AS, nodes, ZERO);
     } else {
       throw new UnhandledASTTokenException(node);

@@ -6,8 +6,10 @@
 package com.linkedin.coral.hive.hive2rel;
 
 import com.google.common.collect.ImmutableList;
+
 import java.util.List;
 import javax.annotation.Nonnull;
+
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.IMetaStoreClient;

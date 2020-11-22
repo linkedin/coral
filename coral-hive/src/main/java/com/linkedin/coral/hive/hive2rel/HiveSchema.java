@@ -7,10 +7,12 @@ package com.linkedin.coral.hive.hive2rel;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import javax.annotation.Nonnull;
+
 import org.apache.calcite.linq4j.tree.Expression;
 import org.apache.calcite.rel.type.RelProtoDataType;
 import org.apache.calcite.schema.Function;
@@ -37,6 +39,7 @@ public class HiveSchema implements Schema {
 
   /**
    * Create HiveSchema using input metastore client to read hive catalog
+   *
    * @param msc Hive metastore client
    */
   public HiveSchema(@Nonnull HiveMetastoreClient msc) {
@@ -45,6 +48,7 @@ public class HiveSchema implements Schema {
 
   /**
    * This always returns null as root hive schema does not have tables.
+   *
    * @param name Table name
    * @return get calcite table representation
    */

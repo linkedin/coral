@@ -7,6 +7,7 @@ package com.linkedin.coral.pig.rel2pig.rel;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import org.apache.calcite.rel.logical.LogicalProject;
 import org.apache.calcite.rex.RexNode;
 
@@ -24,11 +25,12 @@ public class PigLogicalProject {
 
   /**
    * Translates a Calcite LogicalProject into Pig Latin
+   *
    * @param logicalProject The Calcite LogicalProject to be translated
    * @param outputRelation The variable that stores the projection output
-   * @param inputRelation The variable that has stored the Pig relation to perform a projection over
+   * @param inputRelation  The variable that has stored the Pig relation to perform a projection over
    * @return The Pig Latin for the logicalProject in the form of:
-   *           [outputRelation] = FOREACH [inputRelation] GENERATE [logicalProject.fields]
+   * [outputRelation] = FOREACH [inputRelation] GENERATE [logicalProject.fields]
    */
   public static String getScript(LogicalProject logicalProject, String outputRelation, String inputRelation) {
 

@@ -8,7 +8,9 @@ package com.linkedin.coral.hive.hive2rel;
 import com.linkedin.coral.com.google.common.base.Preconditions;
 import com.linkedin.coral.com.google.common.base.Throwables;
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
+
 import java.util.List;
+
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelRoot;
@@ -35,7 +37,7 @@ public class HiveViewTable extends HiveTable implements TranslatableTable {
   /**
    * Constructor to create bridge from hive table to calcite table
    *
-   * @param hiveTable Hive table
+   * @param hiveTable  Hive table
    * @param schemaPath Calcite schema path
    */
   public HiveViewTable(Table hiveTable, List<String> schemaPath) {
@@ -95,7 +97,7 @@ public class HiveViewTable extends HiveTable implements TranslatableTable {
   // Returns true if an explicit cast is required from inputType to castToType, false otherwise
   // From what we noticed, cast will be required when there's schema promotion
   private static boolean isTypeCastRequired(RelDataType inputType, RelDataType castToType,
-      RelDataTypeFactory typeFactory) {
+                                            RelDataTypeFactory typeFactory) {
     if (inputType == castToType) {
       return false;
     }
@@ -137,19 +139,18 @@ public class HiveViewTable extends HiveTable implements TranslatableTable {
 
   /**
    * The method will check if the inputFields has to be casted to castToFields.
-   *
+   * <p>
    * e.g.
    * (1) if castToFields = List(f1, f3), inputFields = List(f1, f2, f3), then return false.
    * (2) if castToFields = List(f1, f3), inputFields = List(f1, f3, f4), then return false.
    * (3) if castToFields = List(f1, f3), inputFields = List(f1, f4), then return true.
    *
-   * @param inputFields a list of RelDataTypeField to cast from if required.
+   * @param inputFields  a list of RelDataTypeField to cast from if required.
    * @param castToFields a list of RelDataTypeField to cast to if required.
-   *
    * @return if a CAST operator will be generated from inputFields to castToFields
    */
   private static boolean isFieldListCastRequired(List<RelDataTypeField> inputFields, List<RelDataTypeField> castToFields,
-      RelDataTypeFactory typeFactory) {
+                                                 RelDataTypeFactory typeFactory) {
     if (inputFields.size() < castToFields.size()) {
       return true;
     }

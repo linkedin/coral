@@ -8,6 +8,7 @@ package com.linkedin.coral.hive.hive2rel.functions;
 import com.linkedin.coral.com.google.common.base.Preconditions;
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import com.linkedin.coral.hive.hive2rel.HiveTable;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -16,6 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+
 import org.apache.calcite.sql.SqlBinaryOperator;
 import org.apache.calcite.sql.SqlFunctionCategory;
 import org.apache.calcite.sql.SqlIdentifier;
@@ -53,6 +55,7 @@ public class HiveFunctionResolver {
 
   /**
    * Resolves {@code name} to calcite unary operator.
+   *
    * @param name operator text (Ex: '-')
    * @return SqlOperator matching input name
    * @throws IllegalStateException if there is zero or more than one matching operator
@@ -70,6 +73,7 @@ public class HiveFunctionResolver {
 
   /**
    * Resolves {@code name} to calcite binary operator
+   *
    * @param name operator text (Ex: '+' or 'LIKE')
    * @return SqlOperator matching input name
    * @throws IllegalStateException if there are zero or more than one matching operator
@@ -108,19 +112,20 @@ public class HiveFunctionResolver {
    * this attempts to match dali-style function names (DB_TABLE_VERSION_FUNCTION).
    * Right now, this method does not validate parameters leaving it to
    * the subsequent validator and analyzer phases to validate parameter types.
-   * @param functionName hive function name
+   *
+   * @param functionName    hive function name
    * @param isCaseSensitive is function name case-sensitive
-   * @param hiveTable handle to Hive table representing metastore information. This is used for resolving
-   *                  Dali function names, which are resolved using table parameters
-   * @param numOfOperands number of operands this function takes. This is needed to
-   *                  create SqlOperandTypeChecker to resolve Dali function dynamically
+   * @param hiveTable       handle to Hive table representing metastore information. This is used for resolving
+   *                        Dali function names, which are resolved using table parameters
+   * @param numOfOperands   number of operands this function takes. This is needed to
+   *                        create SqlOperandTypeChecker to resolve Dali function dynamically
    * @return resolved hive functions
    * @throws UnknownSqlFunctionException if the function name can not be resolved.
    */
   public HiveFunction tryResolve(@Nonnull String functionName,
-      boolean isCaseSensitive,
-      @Nullable Table hiveTable,
-      int numOfOperands) {
+                                 boolean isCaseSensitive,
+                                 @Nullable Table hiveTable,
+                                 int numOfOperands) {
     checkNotNull(functionName);
     Collection<HiveFunction> functions = registry.lookup(functionName, isCaseSensitive);
     if (functions.isEmpty() && hiveTable != null) {
@@ -140,7 +145,8 @@ public class HiveFunctionResolver {
 
   /**
    * Resolves function to concrete operator.
-   * @param functionName function name to resolve
+   *
+   * @param functionName    function name to resolve
    * @param isCaseSensitive is the function name case-sensitive
    * @return list of matching HiveFunctions or empty list if there is no match
    */
@@ -162,17 +168,18 @@ public class HiveFunctionResolver {
   /**
    * Tries to resolve function name as Dali function name using the provided Hive table catalog information.
    * This uses table parameters 'function' property to resolve the function name to the implementing class.
-   * @param functionName function name to resolve
-   * @param table Hive metastore table handle
+   *
+   * @param functionName  function name to resolve
+   * @param table         Hive metastore table handle
    * @param numOfOperands number of operands this function takes. This is needed to
    *                      create SqlOperandTypeChecker to resolve Dali function dynamically
    * @return list of matching HiveFunctions or empty list if the function name is not in the
-   *   dali function name format of db_tableName_functionName
+   * dali function name format of db_tableName_functionName
    * @throws UnknownSqlFunctionException if the function name is in Dali function name format but there is no mapping
    */
   public Collection<HiveFunction> tryResolveAsDaliFunction(String functionName,
-      @Nonnull Table table,
-      int numOfOperands) {
+                                                           @Nonnull Table table,
+                                                           int numOfOperands) {
     Preconditions.checkNotNull(table);
     String functionPrefix = String.format("%s_%s_", table.getDbName(), table.getTableName());
     if (!functionName.toLowerCase().startsWith(functionPrefix.toLowerCase())) {
@@ -213,10 +220,11 @@ public class HiveFunctionResolver {
     )).collect(Collectors.toList());
   }
 
-  private @Nonnull Collection<HiveFunction> resolveDaliFunctionDynamically(String functionName,
-      String funcClassName,
-      HiveTable hiveTable,
-      int numOfOperands) {
+  private @Nonnull
+  Collection<HiveFunction> resolveDaliFunctionDynamically(String functionName,
+                                                          String funcClassName,
+                                                          HiveTable hiveTable,
+                                                          int numOfOperands) {
     HiveFunction hiveFunction = new HiveFunction(
         funcClassName,
         new VersionedSqlUserDefinedFunction(
@@ -236,14 +244,16 @@ public class HiveFunctionResolver {
     return ImmutableList.of(hiveFunction);
   }
 
-  private @Nonnull HiveFunction unresolvedFunction(String functionName, Table table) {
+  private @Nonnull
+  HiveFunction unresolvedFunction(String functionName, Table table) {
     SqlIdentifier funcIdentifier = createFunctionIdentifier(functionName, table);
     return new HiveFunction(functionName,
         new SqlUnresolvedFunction(funcIdentifier, null, null,
             null, null, SqlFunctionCategory.USER_DEFINED_FUNCTION));
   }
 
-  private @Nonnull SqlIdentifier createFunctionIdentifier(String functionName, @Nullable Table table) {
+  private @Nonnull
+  SqlIdentifier createFunctionIdentifier(String functionName, @Nullable Table table) {
     if (table == null) {
       return new SqlIdentifier(ImmutableList.of(functionName), ZERO);
     } else {
@@ -251,7 +261,8 @@ public class HiveFunctionResolver {
     }
   }
 
-  private @Nonnull SqlOperandTypeChecker createSqlOperandTypeChecker(int numOfOperands) {
+  private @Nonnull
+  SqlOperandTypeChecker createSqlOperandTypeChecker(int numOfOperands) {
     List<SqlTypeFamily> families = new ArrayList<>();
     for (int i = 0; i < numOfOperands; i++) {
       families.add(SqlTypeFamily.ANY);

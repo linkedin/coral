@@ -6,6 +6,7 @@
 package com.linkedin.coral.pig.rel2pig;
 
 import java.io.IOException;
+
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.pig.pigunit.PigTest;
@@ -19,6 +20,9 @@ public class RelToPigLatinConverterTest {
 
   static final String OUTPUT_RELATION = "view";
 
+  private RelToPigLatinConverterTest() {
+  }
+
   @BeforeTest
   public static void beforeTest() throws HiveException, MetaException {
     TestUtils.turnOffRelSimplification();
@@ -27,6 +31,7 @@ public class RelToPigLatinConverterTest {
 
   /**
    * Tests a projection of a single column
+   *
    * @throws IOException
    * @throws ParseException
    */
@@ -55,6 +60,7 @@ public class RelToPigLatinConverterTest {
 
   /**
    * Tests a projection over all columns
+   *
    * @throws IOException
    * @throws ParseException
    */
@@ -83,6 +89,7 @@ public class RelToPigLatinConverterTest {
 
   /**
    * Tests a projection of multiple columns with aliases that differ from its base table
+   *
    * @throws IOException
    * @throws ParseException
    */
@@ -231,6 +238,7 @@ public class RelToPigLatinConverterTest {
 
   /**
    * Tests the Hive IN operator
+   *
    * @throws IOException
    * @throws ParseException
    */
@@ -258,10 +266,10 @@ public class RelToPigLatinConverterTest {
 
   /**
    * Tests CASE statements with:
-   *   - different comparison operators
-   *   - AND and OR predicates in a single condition
-   *   - CASE with and without an ELSE(default) clause
-   *   - overlapping conditions
+   * - different comparison operators
+   * - AND and OR predicates in a single condition
+   * - CASE with and without an ELSE(default) clause
+   * - overlapping conditions
    */
   @Test
   public static void testCaseOperator() throws IOException, ParseException {
@@ -317,6 +325,7 @@ public class RelToPigLatinConverterTest {
 
   /**
    * Tests the NOT Hive IN operator
+   *
    * @throws IOException
    * @throws ParseException
    */
@@ -395,6 +404,7 @@ public class RelToPigLatinConverterTest {
 
   /**
    * Tests a filter with multiple conditions
+   *
    * @throws IOException
    * @throws ParseException
    */
@@ -421,7 +431,7 @@ public class RelToPigLatinConverterTest {
 
   /**
    * Tests the following aggregate functions with a single grouping:
-   *   COUNT, AVG, SUM, MAX, MIN
+   * COUNT, AVG, SUM, MAX, MIN
    */
   @Test
   public static void testAggregateFunctions() throws IOException, ParseException {
@@ -519,7 +529,8 @@ public class RelToPigLatinConverterTest {
         "CORAL_PIG_ALIAS_1 = LOAD 'src/test/resources/data/pig/tableleft.json' USING JsonLoader('a:int, b:int, c:int');",
         "CORAL_PIG_ALIAS_2 = LOAD 'src/test/resources/data/pig/tableleft.json' USING JsonLoader('a:int, b:int, c:int');",
         "view = JOIN CORAL_PIG_ALIAS_1 BY (a), CORAL_PIG_ALIAS_2 BY (a);",
-        "view = FOREACH view GENERATE CORAL_PIG_ALIAS_1::a AS a, CORAL_PIG_ALIAS_1::b AS b, CORAL_PIG_ALIAS_1::c AS c, CORAL_PIG_ALIAS_2::a AS a0, CORAL_PIG_ALIAS_2::b AS b0, CORAL_PIG_ALIAS_2::c AS c0;",
+        "view = FOREACH view GENERATE CORAL_PIG_ALIAS_1::a AS a, CORAL_PIG_ALIAS_1::b AS b, CORAL_PIG_ALIAS_1::c AS c, CORAL_PIG_ALIAS_2::a AS a0, "
+            + "CORAL_PIG_ALIAS_2::b AS b0, CORAL_PIG_ALIAS_2::c AS c0;",
         "view = FOREACH view GENERATE a AS a, b AS bl, b0 AS br;",
     };
     final String[] expectedOutput = {
@@ -551,7 +562,8 @@ public class RelToPigLatinConverterTest {
         "CORAL_PIG_ALIAS_1 = LOAD 'src/test/resources/data/pig/tableleft.json' USING JsonLoader('a:int, b:int, c:int');",
         "CORAL_PIG_ALIAS_2 = LOAD 'src/test/resources/data/pig/tableleft.json' USING JsonLoader('a:int, b:int, c:int');",
         "view = JOIN CORAL_PIG_ALIAS_1 BY (a, b, c), CORAL_PIG_ALIAS_2 BY (a, b, c);",
-        "view = FOREACH view GENERATE CORAL_PIG_ALIAS_1::a AS a, CORAL_PIG_ALIAS_1::b AS b, CORAL_PIG_ALIAS_1::c AS c, CORAL_PIG_ALIAS_2::a AS a0, CORAL_PIG_ALIAS_2::b AS b0, CORAL_PIG_ALIAS_2::c AS c0;",
+        "view = FOREACH view GENERATE CORAL_PIG_ALIAS_1::a AS a, CORAL_PIG_ALIAS_1::b AS b, CORAL_PIG_ALIAS_1::c AS c, CORAL_PIG_ALIAS_2::a AS a0, "
+            + "CORAL_PIG_ALIAS_2::b AS b0, CORAL_PIG_ALIAS_2::c AS c0;",
         "view = FOREACH view GENERATE a AS a, b AS b, c AS c, a0 AS a0, b0 AS b0, c0 AS c0;"
     };
     final String[] expectedOutput = {
@@ -571,7 +583,7 @@ public class RelToPigLatinConverterTest {
 
   /**
    * Tests the following join types over two different tables:
-   *   INNER, FULL OUTER, LEFT OUTER, RIGHT OUTER
+   * INNER, FULL OUTER, LEFT OUTER, RIGHT OUTER
    */
   @Test
   public static void testJoinTypes() throws IOException, ParseException {
@@ -580,7 +592,8 @@ public class RelToPigLatinConverterTest {
         "CORAL_PIG_ALIAS_1 = LOAD 'src/test/resources/data/pig/tableleft.json' USING JsonLoader('a:int, b:int, c:int');",
         "CORAL_PIG_ALIAS_2 = LOAD 'src/test/resources/data/pig/tableright.json' USING JsonLoader('d:int, e:int');",
         "view = JOIN CORAL_PIG_ALIAS_1 BY (a)%s, CORAL_PIG_ALIAS_2 BY (d);",
-        "view = FOREACH view GENERATE CORAL_PIG_ALIAS_1::a AS a, CORAL_PIG_ALIAS_1::b AS b, CORAL_PIG_ALIAS_1::c AS c, CORAL_PIG_ALIAS_2::d AS d, CORAL_PIG_ALIAS_2::e AS e;",
+        "view = FOREACH view GENERATE CORAL_PIG_ALIAS_1::a AS a, CORAL_PIG_ALIAS_1::b AS b, CORAL_PIG_ALIAS_1::c AS c, CORAL_PIG_ALIAS_2::d AS d, "
+            + "CORAL_PIG_ALIAS_2::e AS e;",
         "view = FOREACH view GENERATE a AS a, b AS b, c AS c, d AS d, e AS e;"
     );
 

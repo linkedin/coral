@@ -18,84 +18,83 @@ import org.apache.calcite.sql.type.MapSqlType;
 /**
  * RelDataTypeToSparkDataTypeStringConverter converts a RelDataType to a Spark DataType JSON schema string.
  * The schema JSON string is parseable by Spark.DataType and is fully-qualified.
- *
+ * <p>
  * Some example Spark.DataType schema JSON strings for a RelDataType are as follows:
- *
+ * <p>
  * Example 1:
  * RelDataType:
- *   struct(s1: integer, s2: varchar)
+ * struct(s1: integer, s2: varchar)
  * Spark.DataType String:
- *   {
- *     'type': 'struct',
- *     'fields': [
- *       {
- *         'name': 's1',
- *         'type': 'int',
- *         'nullable': true,
- *         'metadata': {}
- *       },
- *       {
- *         'name': 's1',
- *         'type': 'int',
- *         'nullable': true,
- *         'metadata': {}
- *       }
- *     ]
- *   }
- *
+ * {
+ * 'type': 'struct',
+ * 'fields': [
+ * {
+ * 'name': 's1',
+ * 'type': 'int',
+ * 'nullable': true,
+ * 'metadata': {}
+ * },
+ * {
+ * 'name': 's1',
+ * 'type': 'int',
+ * 'nullable': true,
+ * 'metadata': {}
+ * }
+ * ]
+ * }
+ * <p>
  * Example 2:
  * RelDataType:
- *   map(varchar, struct(s1: integer, s2: varchar))
+ * map(varchar, struct(s1: integer, s2: varchar))
  * Spark.DataType String:
- *   {
- *     'type': 'map',
- *     'keyType': 'string',
- *     'valueType': {
- *       'type': 'struct',
- *       'fields': [
- *          {
- *           'name': 's1',
- *           'type': 'int',
- *           'nullable': true,
- *           'metadata': {}
- *         },
- *         {
- *           'name': 's1',
- *           'type': 'int',
- *           'nullable': true,
- *           'metadata': {}
- *         }
- *       ]
- *     },
- *     'valueContainsNull': true
- *   }
- *
+ * {
+ * 'type': 'map',
+ * 'keyType': 'string',
+ * 'valueType': {
+ * 'type': 'struct',
+ * 'fields': [
+ * {
+ * 'name': 's1',
+ * 'type': 'int',
+ * 'nullable': true,
+ * 'metadata': {}
+ * },
+ * {
+ * 'name': 's1',
+ * 'type': 'int',
+ * 'nullable': true,
+ * 'metadata': {}
+ * }
+ * ]
+ * },
+ * 'valueContainsNull': true
+ * }
+ * <p>
  * Example 3:
  * RelDataType:
- *   array(struct(s1: integer, s2: varchar))
+ * array(struct(s1: integer, s2: varchar))
  * Spark.DataType String:
- *   {
- *     'type': 'array',
- *     'elementType': {
- *       'type': 'struct',
- *       'fields': [
- *          {
- *           'name': 's1',
- *           'type': 'int',
- *           'nullable': true,
- *           'metadata': {}
- *         },
- *         {
- *           'name': 's1',
- *           'type': 'int',
- *           'nullable': true,
- *           'metadata': {}
- *         }
- *       ]
- *     },
- *     'containsNull': true
- *   }
- *
+ * {
+ * 'type': 'array',
+ * 'elementType': {
+ * 'type': 'struct',
+ * 'fields': [
+ * {
+ * 'name': 's1',
+ * 'type': 'int',
+ * 'nullable': true,
+ * 'metadata': {}
+ * },
+ * {
+ * 'name': 's1',
+ * 'type': 'int',
+ * 'nullable': true,
+ * 'metadata': {}
+ * }
+ * ]
+ * },
+ * 'containsNull': true
+ * }
  */
 public class RelDataTypeToSparkDataTypeStringConverter {
 
@@ -115,6 +114,7 @@ public class RelDataTypeToSparkDataTypeStringConverter {
 
   /**
    * Converts a RelDataType to a Spark.DataType schema JSON string
+   *
    * @param relDataType a given RelDataType object
    * @return a Spark.DataType schema JSON string
    */
@@ -126,6 +126,7 @@ public class RelDataTypeToSparkDataTypeStringConverter {
 
   /**
    * Converts a RelDataType to a JSON object representing its schema in Spark.DataType
+   *
    * @param relDataType a given RelDataType object
    * @return a Spark.DataType schema JSON string
    */
@@ -186,6 +187,7 @@ public class RelDataTypeToSparkDataTypeStringConverter {
 
   /**
    * Converts a RelRecordType(struct) to a Spark.DataType struct schema
+   *
    * @param relRecordType a given struct RelRecordType object
    * @return a Spark.DataType schema JSON string
    */
@@ -207,6 +209,7 @@ public class RelDataTypeToSparkDataTypeStringConverter {
 
   /**
    * Converts a ArraySqlType(array) to a Spark.DataType struct schema
+   *
    * @param arraySqlType a given struct ArraySqlType object
    * @return a Spark.DataType schema JSON string
    */
@@ -220,6 +223,7 @@ public class RelDataTypeToSparkDataTypeStringConverter {
 
   /**
    * Converts a MapSqlType(map) to a Spark.DataType struct schema
+   *
    * @param mapSqlType a given struct MapSqlType object
    * @return a Spark.DataType schema JSON string
    */
