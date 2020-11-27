@@ -71,9 +71,19 @@ public class HiveToRelConverterTest {
   }
 
   @Test
-  public void testCast() {
+  public void testWhen() {
     final String sql = "SELECT CASE WHEN '1.5' = 1 THEN 'abc' ELSE 'def' END";
-    System.out.println(relToString(sql));
+    final String expected = "LogicalProject(EXPR$0=[CASE(=(CAST('1.5'):INTEGER NOT NULL, 1), 'abc', 'def')])\n"
+        + "  LogicalValues(tuples=[[{ 0 }]])\n";
+    assertEquals(relToString(sql), expected);
+  }
+
+  @Test
+  public void testCase() {
+    final String sql = "SELECT CASE '1.5' WHEN '1.5' THEN 'abc' ELSE 'def' END";
+    final String expected = "LogicalProject(EXPR$0=[CASE(=('1.5', '1.5'), 'abc', 'def')])\n"
+        + "  LogicalValues(tuples=[[{ 0 }]])\n";
+    assertEquals(relToString(sql), expected);
   }
 
   @Test
