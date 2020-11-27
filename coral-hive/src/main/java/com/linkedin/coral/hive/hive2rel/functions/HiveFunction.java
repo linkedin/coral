@@ -14,6 +14,7 @@ import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlNodeList;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.SqlSelect;
+import org.apache.calcite.sql.fun.SqlCase;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.util.Util;
 
@@ -84,7 +85,7 @@ public class HiveFunction {
       }
       // 1 node for case, 2n for when/then nodes, and optionally 1 else node
       SqlNode elseNode = operands.size() % 2 == 1 ? SqlLiteral.createNull(ZERO) : Util.last(operands);
-      return getSqlOperator().createCall(ZERO, operands.get(0), new SqlNodeList(whenNodes, ZERO),
+      return SqlCase.createSwitched(ZERO, operands.get(0), new SqlNodeList(whenNodes, ZERO),
           new SqlNodeList(thenNodes, ZERO), elseNode);
     }
   };
@@ -101,7 +102,7 @@ public class HiveFunction {
       }
       // 2n for when/then nodes, and optionally 1 else node
       SqlNode elseNode = operands.size() % 2 == 0 ? SqlLiteral.createNull(ZERO) : Util.last(operands);
-      return getSqlOperator().createCall(ZERO, null, new SqlNodeList(whenNodes, ZERO), new SqlNodeList(thenNodes, ZERO),
+      return new SqlCase(ZERO, null, new SqlNodeList(whenNodes, ZERO), new SqlNodeList(thenNodes, ZERO),
           elseNode);
     }
   };

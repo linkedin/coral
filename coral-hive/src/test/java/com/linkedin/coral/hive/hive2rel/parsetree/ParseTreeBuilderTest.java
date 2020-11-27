@@ -133,7 +133,7 @@ public class ParseTreeBuilderTest {
         {"SELECT a, c from foo union all select x, y from bar",
             "SELECT * FROM (SELECT `a`, `c` from `foo` union all SELECT `x`, `y` from `bar`) as `_u1`"},
         {"SELECT case (a + 10) when 20 then 5 when 30 then 10 else 1 END from foo",
-            "SELECT CASE `a` + 10 when 20 then 5 when 30 then 10 else 1 END from `foo`"},
+            "SELECT CASE WHEN `a` + 10 = 20 THEN 5 WHEN `a` + 10 = 30 THEN 10 ELSE 1 END from `foo`"},
         {"SELECT CASE WHEN a THEN 10 WHEN b THEN 20 ELSE 30 END from foo",
             "SELECT CASE WHEN `a` THEN 10 WHEN `b` THEN 20 ELSE 30 END from `foo`"},
         {"SELECT named_struct('abc', 123, 'def', 234.23) FROM foo",
