@@ -11,7 +11,8 @@ def versions = [
     'coral-calcite': '0.0.3',
     'hive': '1.2.2',
     'hadoop': '2.7.0',
-    'pig': '0.15.0'
+    'pig': '0.15.0',
+    'beam': '2.25.0'
 ]
 
 ext.deps = [
@@ -39,5 +40,9 @@ ext.deps = [
     'pig': [
         'pig': "org.apache.pig:pig:${versions['pig']}:h2",
         'pigunit': "org.apache.pig:pigunit:${versions['pig']}"
+    ],
+    'beam': [
+        'java-core': "org.apache.beam:beam-runners-core-java:${versions['beam']}",
+        'java-io-kafka': "org.apache.beam:beam-sdks-java-io-kafka:${versions['beam']}"
     ]
 ]

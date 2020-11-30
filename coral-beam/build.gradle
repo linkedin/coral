@@ -1,0 +1,12 @@
+apply plugin: 'java'
+
+dependencies {
+  compile project(path: ':coral-beam-runtime')
+  compile('com.linkedin.calcite:calcite-piglet:1.21.0.140')
+  compile('com.google.googlejavaformat:google-java-format:1.4')
+  testCompile deps.'hadoop'.'hadoop-mapreduce-client-core'
+}
+
+artifacts {
+  archives jar, javadocJar, sourcesJar
+}
