@@ -38,6 +38,9 @@ Build:
 The project is under active development and we welcome contributions of different forms.
 Please see the [Contribution Agreement](CONTRIBUTING.md).
 
+## Community
+- Join the chat on [Slack](https://join.slack.com/t/coral-sql/shared_invite/zt-j9jw5idg-mkt3fjA~wgoUEMXXZqMr6g)!
+
 ## Resources
 - [Coral: A SQL translation, analysis, and rewrite engine for modern data lakehouses](https://engineering.linkedin.com/blog/2020/coral), LinkedIn Engineering Blog, 12/10/2020.
 - [Coral & Transport UDFs: Building Blocks of a Postmodern Data Warehouse](https://www.slideshare.net/walaa_eldin_moustafa/coral-transport-udfs-building-blocks-of-a-postmodern-data-warehouse-229545076), Tech-talk, Facebook HQ, 2/28/2020.
