@@ -726,6 +726,19 @@ public class ViewToAvroSchemaConverterTests {
   }
 
   @Test
+  public void testSelectStarFromNestComplex() {
+    String viewSql = "CREATE VIEW v AS SELECT * FROM basenestedcomplex";
+
+    TestUtils.executeCreateViewQuery("default", "v", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v");
+
+    Assert.assertEquals(actualSchema.toString(true),
+        TestUtils.loadSchema("testSelectStarFromNestComplex-expected.avsc"));
+  }
+
+  @Test
   public void testSubQueryWhere() {
     // TODO: implement this test
   }
