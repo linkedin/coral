@@ -172,7 +172,7 @@ class SchemaUtilities {
     Preconditions.checkNotNull(fieldRelDataType);
     Preconditions.checkNotNull(fieldAssembler);
 
-    Schema fieldSchema = RelDataTypeToAvroType.relDataTypeToAvroType(fieldRelDataType);
+    Schema fieldSchema = RelDataTypeToAvroType.relDataTypeToAvroTypeNonNullable(fieldRelDataType, fieldName);
 
     // TODO: handle default value properly
     if (isNullable) {

@@ -5,6 +5,7 @@
  */
 package com.linkedin.coral.schema.avro;
 
+import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
 import com.linkedin.coral.hive.hive2rel.HiveMscAdapter;
@@ -14,6 +15,7 @@ import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.sql.type.ReturnTypes;
 import org.apache.calcite.sql.type.SqlTypeFamily;
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -41,6 +43,13 @@ public class TestUtils {
     initializeUdfs();
 
     return metastoreClient;
+  }
+
+  public static HiveToRelConverter setupRelDataTypeToAvroTypeTests() throws HiveException, MetaException {
+    HiveMetastoreClient metastoreClient = setup();
+    HiveToRelConverter hiveToRelConverter = HiveToRelConverter.create(metastoreClient);
+
+    return hiveToRelConverter;
   }
 
   public static void executeCreateViewQuery(String dbName, String viewName, String sql) {
@@ -71,6 +80,7 @@ public class TestUtils {
     String baseNullabilitySchema = loadSchema("base-nullability.avsc");
     String baseCasePreservation = loadSchema("base-casepreservation.avsc");
     String baseComplexFieldSchema = loadSchema("base-complex-fieldschema");
+    String baseNestedComplexSchema = loadSchema("base-nested-complex.avsc");
 
     executeCreateTableQuery("default", "basecomplex", baseComplexSchema);
     executeCreateTableQuery("default", "basecomplexunioncompatible", baseComplexUnionCompatible);
@@ -79,6 +89,7 @@ public class TestUtils {
     executeCreateTableQuery("default", "basenullability", baseNullabilitySchema);
     executeCreateTableWithPartitionQuery("default", "basecasepreservation", baseCasePreservation);
     executeCreateTableWithPartitionFieldSchemaQuery("default", "basecomplexfieldschema", baseComplexFieldSchema);
+    executeCreateTableWithPartitionQuery("default", "basenestedcomplex", baseNestedComplexSchema);
   }
 
   private static void initializeUdfs() {
