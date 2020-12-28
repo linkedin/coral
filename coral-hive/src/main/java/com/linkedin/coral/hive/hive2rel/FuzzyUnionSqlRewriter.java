@@ -1,16 +1,18 @@
 /**
- * Copyright 2019 LinkedIn Corporation. All rights reserved.
+ * Copyright 2019-2021 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
 package com.linkedin.coral.hive.hive2rel;
 
-import com.google.common.collect.ImmutableList;
-import com.linkedin.coral.hive.hive2rel.functions.GenericProjectFunction;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+
 import javax.annotation.Nonnull;
+
+import com.google.common.collect.ImmutableList;
+
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.schema.Table;
@@ -25,6 +27,9 @@ import org.apache.calcite.sql.SqlNodeList;
 import org.apache.calcite.sql.SqlSelect;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.util.SqlShuttle;
+
+import com.linkedin.coral.hive.hive2rel.functions.GenericProjectFunction;
+
 
 /**
  * Fuzzy union occur when there is a mismatch in the schemas of the branches of a union. This can occur in a Dali view
@@ -108,12 +113,11 @@ class FuzzyUnionSqlRewriter extends SqlShuttle {
    */
   private SqlNode createGenericProject(String columnName) {
     SqlNode[] genericProjectOperands = new SqlNode[2];
-    genericProjectOperands[0] =
-        new SqlIdentifier(ImmutableList.of(tableName, columnName), SqlParserPos.ZERO);
+    genericProjectOperands[0] = new SqlIdentifier(ImmutableList.of(tableName, columnName), SqlParserPos.ZERO);
     genericProjectOperands[1] = SqlLiteral.createCharString(columnName, SqlParserPos.ZERO);
     RelDataTypeField columnField = tableDataType.getField(columnName, false, true);
-    SqlBasicCall genericProjectCall = new SqlBasicCall(new GenericProjectFunction(columnField.getType()),
-        genericProjectOperands, SqlParserPos.ZERO);
+    SqlBasicCall genericProjectCall =
+        new SqlBasicCall(new GenericProjectFunction(columnField.getType()), genericProjectOperands, SqlParserPos.ZERO);
     SqlNode[] castAsColumnOperands = new SqlNode[2];
     castAsColumnOperands[0] = genericProjectCall;
     castAsColumnOperands[1] = new SqlIdentifier(columnName, SqlParserPos.ZERO);
@@ -143,8 +147,7 @@ class FuzzyUnionSqlRewriter extends SqlShuttle {
           && !schemaDataTypeField.equals(inputDataTypeField)) {
         projectedField = createGenericProject(field.getName());
       } else {
-        projectedField = new SqlIdentifier(ImmutableList.of(
-            tableName, field.getName()), SqlParserPos.ZERO);
+        projectedField = new SqlIdentifier(ImmutableList.of(tableName, field.getName()), SqlParserPos.ZERO);
       }
       projectedFields.add(projectedField);
     }
@@ -179,15 +182,14 @@ class FuzzyUnionSqlRewriter extends SqlShuttle {
     // between view schema and underlying union branch schema should not warrant a fuzzy union,
     // and hence we ignore cases when comparing fromNodeDataType and tableDataType.
     if (tableDataType.getFullTypeString().equalsIgnoreCase(fromNodeDataType.getFullTypeString())
-        || !fromNodeDataType.isStruct()
-        || fromNodeDataType.getFieldCount() < tableDataType.getFieldCount()) {
+        || !fromNodeDataType.isStruct() || fromNodeDataType.getFieldCount() < tableDataType.getFieldCount()) {
       return unionBranch;
     }
 
     // The table schema will be projected over a branch if and only if the branch contains a superset of the
     // fields in the provided table schema and does not have the same schema as the table schema.
-    Set<String> fromNodeFieldNames = fromNodeDataType.getFieldList().stream().map(
-        f -> f.getName()).collect(Collectors.toSet());
+    Set<String> fromNodeFieldNames =
+        fromNodeDataType.getFieldList().stream().map(f -> f.getName()).collect(Collectors.toSet());
 
     if (!fromNodeFieldNames.containsAll(columnNames)) {
       return unionBranch;
@@ -196,10 +198,10 @@ class FuzzyUnionSqlRewriter extends SqlShuttle {
     // Create a SqlNode that has a string equivalent to the following query:
     // SELECT table_name.col1, generic_project(table_name.col2), ... FROM (unionBranch) as table_name
     SqlNodeList projectedFields = createProjectedFieldsNodeList(fromNodeDataType);
-    SqlNode[] castTableOperands = {unionBranch, new SqlIdentifier(tableName, SqlParserPos.ZERO)};
+    SqlNode[] castTableOperands = { unionBranch, new SqlIdentifier(tableName, SqlParserPos.ZERO) };
     SqlBasicCall castTableCall = new SqlBasicCall(new SqlAsOperator(), castTableOperands, SqlParserPos.ZERO);
-    SqlSelect selectOperator = new SqlSelect(SqlParserPos.ZERO, new SqlNodeList(SqlParserPos.ZERO),
-        projectedFields, castTableCall, null, null, null, null, null, null, null);
+    SqlSelect selectOperator = new SqlSelect(SqlParserPos.ZERO, new SqlNodeList(SqlParserPos.ZERO), projectedFields,
+        castTableCall, null, null, null, null, null, null, null);
 
     return selectOperator;
   }
@@ -236,7 +238,6 @@ class FuzzyUnionSqlRewriter extends SqlShuttle {
    * @return true if the SqlNode is a UNION call; false otherwise
    */
   private boolean isUnionOperator(SqlNode node) {
-    return (node instanceof SqlCall)
-        && ((SqlCall) node).getOperator().getKind() == SqlKind.UNION;
+    return (node instanceof SqlCall) && ((SqlCall) node).getOperator().getKind() == SqlKind.UNION;
   }
 }

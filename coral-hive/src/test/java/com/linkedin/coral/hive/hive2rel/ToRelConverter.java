@@ -1,11 +1,12 @@
 /**
- * Copyright 2019 LinkedIn Corporation. All rights reserved.
+ * Copyright 2018-2020 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
 package com.linkedin.coral.hive.hive2rel;
 
 import java.io.IOException;
+
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.rel2sql.RelToSqlConverter;
@@ -38,7 +39,9 @@ class ToRelConverter {
     return msc;
   }
 
-  public static RelContextProvider getRelContextProvider() { return relContextProvider; }
+  public static RelContextProvider getRelContextProvider() {
+    return relContextProvider;
+  }
 
   static RelNode toRel(String sql) {
     return converter.convertSql(sql);
@@ -75,15 +78,12 @@ class ToRelConverter {
 
   static String relToSql(RelNode rel) {
     RelToSqlConverter rel2sql = new RelToSqlConverter(SqlDialect.DatabaseProduct.POSTGRESQL.getDialect());
-    return rel2sql.visitChild(0, rel)
-        .asStatement()
-        .toSqlString(SqlDialect.DatabaseProduct.POSTGRESQL.getDialect()).getSql();
+    return rel2sql.visitChild(0, rel).asStatement().toSqlString(SqlDialect.DatabaseProduct.POSTGRESQL.getDialect())
+        .getSql();
   }
 
   static String relToHql(RelNode rel) {
     RelToSqlConverter rel2sql = new RelToSqlConverter(SqlDialect.DatabaseProduct.HIVE.getDialect());
-    return rel2sql.visitChild(0, rel)
-        .asStatement()
-        .toSqlString(SqlDialect.DatabaseProduct.HIVE.getDialect()).getSql();
+    return rel2sql.visitChild(0, rel).asStatement().toSqlString(SqlDialect.DatabaseProduct.HIVE.getDialect()).getSql();
   }
 }

@@ -1,13 +1,14 @@
 /**
- * Copyright 2019 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2021 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
 package com.linkedin.coral.presto.rel2presto;
 
+import org.apache.calcite.rel.RelNode;
+
 import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
 import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
-import org.apache.calcite.rel.RelNode;
 
 import static com.google.common.base.Preconditions.*;
 
@@ -24,8 +25,7 @@ public class HiveToPrestoConverter {
     return new HiveToPrestoConverter(hiveToRelConverter, relToPrestoConverter);
   }
 
-  private HiveToPrestoConverter(HiveToRelConverter hiveToRelConverter,
-      RelToPrestoConverter relToPrestoConverter) {
+  private HiveToPrestoConverter(HiveToRelConverter hiveToRelConverter, RelToPrestoConverter relToPrestoConverter) {
     this.hiveToRelConverter = hiveToRelConverter;
     this.relToPrestoConverter = relToPrestoConverter;
   }

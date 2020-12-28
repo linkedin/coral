@@ -1,14 +1,17 @@
 /**
- * Copyright 2019 LinkedIn Corporation. All rights reserved.
+ * Copyright 2019-2021 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
 package com.linkedin.coral.pig.rel2pig.rel.operators;
 
-import com.linkedin.coral.pig.rel2pig.rel.PigRexUtils;
 import java.util.ArrayList;
 import java.util.List;
+
 import org.apache.calcite.rex.RexCall;
+
+import com.linkedin.coral.pig.rel2pig.rel.PigRexUtils;
+
 
 /**
  * PigCaseOperator translates SqlCaseOperator to Pig Latin.
@@ -35,17 +38,17 @@ public class PigCaseOperator extends PigOperator {
     // ]
     final List<String> cases = new ArrayList<>();
     for (int i = 1; i < rexCall.getOperands().size(); i += 2) {
-      final String casePredicate = PigRexUtils.convertRexNodeToPigExpression(
-          rexCall.getOperands().get(i - 1), inputFieldNames);
-      final String caseOutput = PigRexUtils.convertRexNodeToPigExpression(
-          rexCall.getOperands().get(i), inputFieldNames);
+      final String casePredicate =
+          PigRexUtils.convertRexNodeToPigExpression(rexCall.getOperands().get(i - 1), inputFieldNames);
+      final String caseOutput =
+          PigRexUtils.convertRexNodeToPigExpression(rexCall.getOperands().get(i), inputFieldNames);
       cases.add(String.format(CONDITION_TEMPLATE, casePredicate, caseOutput));
     }
 
     // If there exists an ELSE condition, add it to the list of cases.
     if (rexCall.getOperands().size() % 2 == 1) {
-      final String defaultOutput = PigRexUtils.convertRexNodeToPigExpression(
-          rexCall.getOperands().get(rexCall.getOperands().size() - 1), inputFieldNames);
+      final String defaultOutput = PigRexUtils
+          .convertRexNodeToPigExpression(rexCall.getOperands().get(rexCall.getOperands().size() - 1), inputFieldNames);
       cases.add(String.format(ELSE_TEMPLATE, defaultOutput));
     }
 

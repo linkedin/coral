@@ -1,15 +1,10 @@
 /**
- * Copyright 2020 LinkedIn Corporation. All rights reserved.
+ * Copyright 2020-2021 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
 package com.linkedin.coral.sparkplan;
 
-import com.google.gson.Gson;
-import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
-import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
-import com.linkedin.coral.hive.hive2rel.RelContextProvider;
-import com.linkedin.coral.sparkplan.containers.SparkPlanNode;
 import java.io.IOException;
 import java.io.Reader;
 import java.nio.file.Files;
@@ -19,7 +14,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -29,10 +23,18 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import com.google.gson.Gson;
+
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexNode;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+
+import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
+import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
+import com.linkedin.coral.hive.hive2rel.RelContextProvider;
+import com.linkedin.coral.sparkplan.containers.SparkPlanNode;
 
 import static com.google.common.base.Preconditions.*;
 import static com.linkedin.coral.sparkplan.containers.SparkPlanNode.PLANTYPE.*;
@@ -256,8 +258,8 @@ public class SparkPlanToIRRelConverter {
     while (!nodesToVisit.isEmpty()) {
       SparkPlanNode nodeToVisit = null;
       for (SparkPlanNode node : nodesToVisit) {
-        if (childrenOfNode.getOrDefault(node, new HashSet<>()).isEmpty() && (nodeToVisit == null
-            || nodeToVisit.getPosition() < node.getPosition())) {
+        if (childrenOfNode.getOrDefault(node, new HashSet<>()).isEmpty()
+            && (nodeToVisit == null || nodeToVisit.getPosition() < node.getPosition())) {
           nodeToVisit = node;
         }
       }
@@ -392,8 +394,8 @@ public class SparkPlanToIRRelConverter {
       } catch (RuntimeException e) {
         e.printStackTrace();
         predicateInfoMap.get(databaseTableName)
-            .add("Exception: " + e.getMessage() + "\n" + ExceptionUtils.getStackTrace(e) + (exceptionPredicate == null ? ""
-                : "\n" + "Predicate: [" + exceptionPredicate + "]"));
+            .add("Exception: " + e.getMessage() + "\n" + ExceptionUtils.getStackTrace(e)
+                + (exceptionPredicate == null ? "" : "\n" + "Predicate: [" + exceptionPredicate + "]"));
       }
     }
   }
@@ -402,7 +404,8 @@ public class SparkPlanToIRRelConverter {
     if ("".equals(modifiedFilterCondition.trim())) {
       return null;
     }
-    String sql = "SELECT * FROM " + databaseName + "." + tableName + " WHERE " + modifiedFilterCondition;;
+    String sql = "SELECT * FROM " + databaseName + "." + tableName + " WHERE " + modifiedFilterCondition;
+    ;
     RelNode convertedNode = hiveToRelConverter.convertSql(sql);
     return convertedNode.getInput(0).getChildExps().get(0);
   }

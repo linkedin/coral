@@ -1,16 +1,18 @@
 /**
- * Copyright 2019 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2021 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
 package com.linkedin.coral.hive.hive2rel.parsetree;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import com.google.common.base.Preconditions;
+
 import com.linkedin.coral.hive.hive2rel.parsetree.parser.ASTNode;
 import com.linkedin.coral.hive.hive2rel.parsetree.parser.HiveParser;
 import com.linkedin.coral.hive.hive2rel.parsetree.parser.Node;
-import java.util.List;
-import java.util.stream.Collectors;
 
 
 /**
@@ -232,7 +234,7 @@ public abstract class AbstractASTVisitor<R, C> {
       case HiveParser.TOK_TIMESTAMP:
         return visitTimestamp(node, ctx);
 
-        // joins
+      // joins
       case HiveParser.TOK_JOIN:
         return visitJoin(node, ctx);
 
@@ -280,9 +282,7 @@ public abstract class AbstractASTVisitor<R, C> {
   }
 
   protected List<R> visitChildren(List<Node> nodes, C ctx) {
-    return nodes.stream()
-        .map(n -> visit((ASTNode) n, ctx))
-        .collect(Collectors.toList());
+    return nodes.stream().map(n -> visit((ASTNode) n, ctx)).collect(Collectors.toList());
   }
 
   protected R visitTabAlias(ASTNode node, C ctx) {
@@ -506,7 +506,7 @@ public abstract class AbstractASTVisitor<R, C> {
   }
 
   protected R visitDateLiteral(ASTNode node, C ctx) {
-      return visitChildren(node, ctx).get(0);
+    return visitChildren(node, ctx).get(0);
   }
 
   protected R visitTimestamp(ASTNode node, C ctx) {

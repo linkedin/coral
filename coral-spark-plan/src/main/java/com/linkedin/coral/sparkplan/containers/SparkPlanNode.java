@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 LinkedIn Corporation. All rights reserved.
+ * Copyright 2020-2021 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -20,7 +20,13 @@ public class SparkPlanNode {
   // need to distinguish different plan types because we use different mechanisms
   // to parse different plan types.
   public enum PLANTYPE {
-    HIVE_SCAN, FILE_SCAN, PROJECT, FILTER, JOIN, AGGREGATE, UNDEFINED
+    HIVE_SCAN,
+    FILE_SCAN,
+    PROJECT,
+    FILTER,
+    JOIN,
+    AGGREGATE,
+    UNDEFINED
   }
 
   private final int position;

@@ -1,43 +1,43 @@
 def versions = [
-    'antlr-runtime': '3.4',
-    'jsr305': '3.0.2',
-    'jline': '0.9.94',
-    'gson': '2.8.1',
-    'presto-parser': '0.185',
-    'slf4j': '1.7.25',
-    'kryo': '2.22',
-    'testing': '6.4',
+  'antlr-runtime': '3.4',
+  'jsr305': '3.0.2',
+  'jline': '0.9.94',
+  'gson': '2.8.1',
+  'presto-parser': '0.185',
+  'slf4j': '1.7.25',
+  'kryo': '2.22',
+  'testing': '6.4',
 
-    'coral-calcite': '0.0.3',
-    'hive': '1.2.2',
-    'hadoop': '2.7.0',
-    'pig': '0.15.0'
+  'coral-calcite': '0.0.3',
+  'hive': '1.2.2',
+  'hadoop': '2.7.0',
+  'pig': '0.15.0'
 ]
 
 ext.deps = [
-    'antlr-runtime': "org.antlr:antlr-runtime:${versions['antlr-runtime']}",
-    'javax-annotation': "com.google.code.findbugs:jsr305:${versions['jsr305']}",
-    'jline': "jline:jline:${versions['jline']}",
-    'gson': "com.google.code.gson:gson:${versions['gson']}",
-    'presto-parser': "com.facebook.presto:presto-parser:${versions['presto-parser']}",
-    'slf4j-api': "org.slf4j:slf4j-api:${versions['slf4j']}",
-    'slf4j-log4j12': "org.slf4j:slf4j-log4j12:${versions['slf4j']}",
-    'kryo': "com.esotericsoftware.kryo:kryo:${versions['kryo']}",
-    'testing': "org.testng:testng:${versions['testing']}",
+  'antlr-runtime': "org.antlr:antlr-runtime:${versions['antlr-runtime']}",
+  'javax-annotation': "com.google.code.findbugs:jsr305:${versions['jsr305']}",
+  'jline': "jline:jline:${versions['jline']}",
+  'gson': "com.google.code.gson:gson:${versions['gson']}",
+  'presto-parser': "com.facebook.presto:presto-parser:${versions['presto-parser']}",
+  'slf4j-api': "org.slf4j:slf4j-api:${versions['slf4j']}",
+  'slf4j-log4j12': "org.slf4j:slf4j-log4j12:${versions['slf4j']}",
+  'kryo': "com.esotericsoftware.kryo:kryo:${versions['kryo']}",
+  'testing': "org.testng:testng:${versions['testing']}",
 
-    'hive':[
-        'hive-metastore': "org.apache.hive:hive-metastore:${versions['hive']}",
-        'hive-exec-core': "org.apache.hive:hive-exec:${versions['hive']}:core",
-        'hive-common': "org.apache.hive:hive-common:${versions['hive']}"
+  'hive':[
+    'hive-metastore': "org.apache.hive:hive-metastore:${versions['hive']}",
+    'hive-exec-core': "org.apache.hive:hive-exec:${versions['hive']}:core",
+    'hive-common': "org.apache.hive:hive-common:${versions['hive']}"
 
-    ],
-    'hadoop': [
-        'hadoop-common': "org.apache.hadoop:hadoop-common:${versions['hadoop']}",
-        'hadoop-mapreduce-client-common': "org.apache.hadoop:hadoop-mapreduce-client-common:${versions['hadoop']}",
-        'hadoop-mapreduce-client-core': "org.apache.hadoop:hadoop-mapreduce-client-core:${versions['hadoop']}"
-    ],
-    'pig': [
-        'pig': "org.apache.pig:pig:${versions['pig']}:h2",
-        'pigunit': "org.apache.pig:pigunit:${versions['pig']}"
-    ]
+  ],
+  'hadoop': [
+    'hadoop-common': "org.apache.hadoop:hadoop-common:${versions['hadoop']}",
+    'hadoop-mapreduce-client-common': "org.apache.hadoop:hadoop-mapreduce-client-common:${versions['hadoop']}",
+    'hadoop-mapreduce-client-core': "org.apache.hadoop:hadoop-mapreduce-client-core:${versions['hadoop']}"
+  ],
+  'pig': [
+    'pig': "org.apache.pig:pig:${versions['pig']}:h2",
+    'pigunit': "org.apache.pig:pigunit:${versions['pig']}"
+  ]
 ]

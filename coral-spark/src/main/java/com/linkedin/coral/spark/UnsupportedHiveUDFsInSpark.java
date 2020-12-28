@@ -1,11 +1,12 @@
 /**
- * Copyright 2019 LinkedIn Corporation. All rights reserved.
+ * Copyright 2019-2021 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
 package com.linkedin.coral.spark;
 
 import java.util.HashSet;
+
 
 /**
  * [CORAL-75] Some dali UDFs get registered correctly in a SparkSession, and hence a DataFrame is successfully

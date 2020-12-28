@@ -1,21 +1,19 @@
 /**
- * Copyright 2019 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2020 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
 package com.linkedin.coral.presto.rel2presto;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
-import com.linkedin.coral.com.google.common.base.Function;
-import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
-import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
-import com.linkedin.coral.hive.hive2rel.HiveMscAdapter;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
+
 import org.apache.calcite.plan.RelTraitDef;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelRoot;
@@ -36,6 +34,10 @@ import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.session.SessionState;
 
+import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
+import com.linkedin.coral.hive.hive2rel.HiveMscAdapter;
+import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
+
 import static com.linkedin.coral.presto.rel2presto.TestTable.*;
 
 
@@ -45,21 +47,13 @@ public class TestUtils {
 
   public static FrameworkConfig createFrameworkConfig(TestTable... tables) {
     SchemaPlus rootSchema = Frameworks.createRootSchema(true);
-    Arrays.asList(tables)
-        .forEach(t -> rootSchema.add(t.getTableName(), t));
+    Arrays.asList(tables).forEach(t -> rootSchema.add(t.getTableName(), t));
 
     SqlParser.Config parserConfig =
-        SqlParser.configBuilder()
-            .setCaseSensitive(false)
-            .setConformance(SqlConformanceEnum.DEFAULT)
-            .build();
+        SqlParser.configBuilder().setCaseSensitive(false).setConformance(SqlConformanceEnum.DEFAULT).build();
 
-    return Frameworks.newConfigBuilder()
-        .parserConfig(parserConfig)
-        .defaultSchema(rootSchema)
-        .traitDefs((List<RelTraitDef>) null)
-        .programs(Programs.ofRules(Programs.RULE_SET))
-        .build();
+    return Frameworks.newConfigBuilder().parserConfig(parserConfig).defaultSchema(rootSchema)
+        .traitDefs((List<RelTraitDef>) null).programs(Programs.ofRules(Programs.RULE_SET)).build();
   }
 
   static RelNode toRel(String sql, FrameworkConfig config) {
@@ -101,8 +95,8 @@ public class TestUtils {
   }
 
   private static String addLineBreaks(String s) {
-    ImmutableList<String> lineBreakKeywords = ImmutableList.copyOf(
-        "SELECT FROM WHERE GROUP HAVING ORDER OVER IN EXCEPT UNION INTERSECT".split("\\s+"));
+    ImmutableList<String> lineBreakKeywords =
+        ImmutableList.copyOf("SELECT FROM WHERE GROUP HAVING ORDER OVER IN EXCEPT UNION INTERSECT".split("\\s+"));
     Pattern pattern = Pattern.compile("\\s" + String.join("\\b|\\s", lineBreakKeywords) + "\\b");
     Matcher m = pattern.matcher(s);
     StringBuffer sb = new StringBuffer();
@@ -114,16 +108,9 @@ public class TestUtils {
   }
 
   public static String quoteColumns(String sql) {
-    Iterable<String> concat = Iterables.concat(
-        TABLE_ONE.getColumnNames(),
-        TABLE_TWO.getColumnNames(),
-        TABLE_THREE.getColumnNames(),
-        TABLE_FOUR.getColumnNames(),
-        ImmutableList.of(
-            TABLE_ONE.getTableName(),
-            TABLE_TWO.getTableName(),
-            TABLE_THREE.getTableName(),
-            TABLE_FOUR.getTableName()));
+    Iterable<String> concat = Iterables.concat(TABLE_ONE.getColumnNames(), TABLE_TWO.getColumnNames(),
+        TABLE_THREE.getColumnNames(), TABLE_FOUR.getColumnNames(), ImmutableList.of(TABLE_ONE.getTableName(),
+            TABLE_TWO.getTableName(), TABLE_THREE.getTableName(), TABLE_FOUR.getTableName()));
     Pattern colPattern = Pattern.compile(String.join("|", concat));
     return quoteColumns(sql, colPattern);
   }
@@ -150,12 +137,9 @@ public class TestUtils {
     while (m.find()) {
       String replacement = null;
       String alias = m.group(1);
-      if (alias.equalsIgnoreCase("integer") ||
-          alias.equalsIgnoreCase("double") ||
-          alias.equalsIgnoreCase("boolean") ||
-          alias.equalsIgnoreCase("varchar") ||
-          alias.equalsIgnoreCase("real") ||
-          alias.equalsIgnoreCase("varbinary")) {
+      if (alias.equalsIgnoreCase("integer") || alias.equalsIgnoreCase("double") || alias.equalsIgnoreCase("boolean")
+          || alias.equalsIgnoreCase("varchar") || alias.equalsIgnoreCase("real")
+          || alias.equalsIgnoreCase("varbinary")) {
         replacement = "AS " + alias.toUpperCase();
       } else {
         replacement = "AS \"" + m.group(1).toUpperCase() + "\"";
@@ -176,8 +160,8 @@ public class TestUtils {
     return sb.toString();
   }
 
-  static void run(Driver driver, String sql){
-    while(true){
+  static void run(Driver driver, String sql) {
+    while (true) {
       try {
         driver.run(sql);
       } catch (CommandNeedRetryException e) {
@@ -203,196 +187,82 @@ public class TestUtils {
     hiveToRelConverter = HiveToRelConverter.create(hiveMetastoreClient);
 
     // Views and tables used in FuzzyUnionViewTest
-    run(driver, String.join("\n", "",
-        "CREATE DATABASE IF NOT EXISTS fuzzy_union"
-    ));
+    run(driver, String.join("\n", "", "CREATE DATABASE IF NOT EXISTS fuzzy_union"));
+
+    run(driver, String.join("\n", "", "CREATE TABLE IF NOT EXISTS fuzzy_union.tableA(a int, b struct<b1:string>)"));
+    run(driver, String.join("\n", "", "CREATE VIEW IF NOT EXISTS fuzzy_union.union_view", "AS",
+        "SELECT * from fuzzy_union.tableA", "union all", "SELECT *", "from fuzzy_union.tableA"));
+    run(driver,
+        String.join("\n", "", "CREATE VIEW IF NOT EXISTS fuzzy_union.union_view_with_more_than_two_tables", "AS",
+            "SELECT *", "from fuzzy_union.tableA", "union all", "SELECT *", "from fuzzy_union.tableA", "union all",
+            "SELECT *", "from fuzzy_union.tableA"));
+    run(driver,
+        String.join("\n", "", "CREATE VIEW IF NOT EXISTS fuzzy_union.union_view_with_alias", "AS", "SELECT *", "FROM",
+            "(SELECT * from fuzzy_union.tableA)", "as viewFirst", "union all", "SELECT *",
+            "FROM (SELECT * from fuzzy_union.tableA)", "as viewSecond"));
+
+    run(driver, String.join("\n", "", "CREATE TABLE IF NOT EXISTS fuzzy_union.tableB(a int, b struct<b1:string>)"));
+    run(driver, String.join("\n", "", "CREATE TABLE IF NOT EXISTS fuzzy_union.tableC(a int, b struct<b1:string>)"));
+    run(driver, String.join("\n", "", "CREATE VIEW IF NOT EXISTS fuzzy_union.union_view_single_branch_evolved", "AS",
+        "SELECT *", "from fuzzy_union.tableB", "union all", "SELECT *", "from fuzzy_union.tableC"));
+    run(driver, String.join("\n", "", "ALTER TABLE fuzzy_union.tableC CHANGE COLUMN b b struct<b1:string, b2:int>"));
+
+    run(driver, String.join("\n", "", "CREATE TABLE IF NOT EXISTS fuzzy_union.tableD(a int, b struct<b1:string>)"));
+    run(driver, String.join("\n", "", "CREATE TABLE IF NOT EXISTS fuzzy_union.tableE(a int, b struct<b1:string>)"));
+    run(driver, String.join("\n", "", "CREATE VIEW IF NOT EXISTS fuzzy_union.union_view_double_branch_evolved_same",
+        "AS", "SELECT *", "from fuzzy_union.tableD", "union all", "SELECT *", "from fuzzy_union.tableE"));
+    run(driver, String.join("\n", "", "ALTER TABLE fuzzy_union.tableD CHANGE COLUMN b b struct<b1:string, b2:int>"));
+    run(driver, String.join("\n", "", "ALTER TABLE fuzzy_union.tableE CHANGE COLUMN b b struct<b1:string, b2:int>"));
+
+    run(driver, String.join("\n", "", "CREATE TABLE IF NOT EXISTS fuzzy_union.tableF(a int, b struct<b1:string>)"));
+    run(driver, String.join("\n", "", "CREATE TABLE IF NOT EXISTS fuzzy_union.tableG(a int, b struct<b1:string>)"));
+    run(driver,
+        String.join("\n", "", "CREATE VIEW IF NOT EXISTS fuzzy_union.union_view_double_branch_evolved_different", "AS",
+            "SELECT *", "from fuzzy_union.tableF", "union all", "SELECT *", "from fuzzy_union.tableG"));
+    run(driver,
+        String.join("\n", "", "CREATE VIEW IF NOT EXISTS fuzzy_union.union_view_more_than_two_branches_evolved", "AS",
+            "SELECT *", "from fuzzy_union.tableF", "union all", "SELECT *", "from fuzzy_union.tableG", "union all",
+            "SELECT *", "from fuzzy_union.tableF"));
+    run(driver, String.join("\n", "", "ALTER TABLE fuzzy_union.tableF CHANGE COLUMN b b struct<b1:string, b3:string>"));
+    run(driver, String.join("\n", "", "ALTER TABLE fuzzy_union.tableG CHANGE COLUMN b b struct<b1:string, b2:int>"));
 
     run(driver, String.join("\n", "",
-        "CREATE TABLE IF NOT EXISTS fuzzy_union.tableA(a int, b struct<b1:string>)"
-    ));
+        "CREATE TABLE IF NOT EXISTS fuzzy_union.tableH(a int, b map<string, struct<b1:string>>)"));
     run(driver, String.join("\n", "",
-        "CREATE VIEW IF NOT EXISTS fuzzy_union.union_view",
-        "AS",
-        "SELECT * from fuzzy_union.tableA",
-        "union all",
-        "SELECT *",
-        "from fuzzy_union.tableA"
-    ));
+        "CREATE TABLE IF NOT EXISTS fuzzy_union.tableI(a int, b map<string, struct<b1:string>>)"));
+    run(driver, String.join("\n", "", "CREATE VIEW IF NOT EXISTS fuzzy_union.union_view_map_with_struct_value_evolved",
+        "AS", "SELECT *", "from fuzzy_union.tableH", "union all", "SELECT *", "from fuzzy_union.tableI"));
     run(driver, String.join("\n", "",
-        "CREATE VIEW IF NOT EXISTS fuzzy_union.union_view_with_more_than_two_tables",
-        "AS",
-        "SELECT *",
-        "from fuzzy_union.tableA",
-        "union all",
-        "SELECT *",
-        "from fuzzy_union.tableA",
-        "union all",
-        "SELECT *",
-        "from fuzzy_union.tableA"
-    ));
-    run(driver, String.join("\n", "",
-        "CREATE VIEW IF NOT EXISTS fuzzy_union.union_view_with_alias",
-        "AS",
-        "SELECT *",
-        "FROM",
-        "(SELECT * from fuzzy_union.tableA)",
-        "as viewFirst",
-        "union all",
-        "SELECT *",
-        "FROM (SELECT * from fuzzy_union.tableA)",
-        "as viewSecond"
-    ));
+        "ALTER TABLE fuzzy_union.tableH CHANGE COLUMN b b map<string, struct<b1:string, b2:int>>"));
+
+    run(driver,
+        String.join("\n", "", "CREATE TABLE IF NOT EXISTS fuzzy_union.tableJ(a int, b array<struct<b1:string>>)"));
+    run(driver,
+        String.join("\n", "", "CREATE TABLE IF NOT EXISTS fuzzy_union.tableK(a int, b array<struct<b1:string>>)"));
+    run(driver,
+        String.join("\n", "", "CREATE VIEW IF NOT EXISTS fuzzy_union.union_view_array_with_struct_value_evolved", "AS",
+            "SELECT *", "from fuzzy_union.tableJ", "union all", "SELECT *", "from fuzzy_union.tableK"));
+    run(driver,
+        String.join("\n", "", "ALTER TABLE fuzzy_union.tableJ CHANGE COLUMN b b array<struct<b1:string, b2:int>>"));
 
     run(driver, String.join("\n", "",
-        "CREATE TABLE IF NOT EXISTS fuzzy_union.tableB(a int, b struct<b1:string>)"
-    ));
+        "CREATE TABLE IF NOT EXISTS fuzzy_union.tableL(a int, b struct<b1:string, b2:struct<b3:string, b4:struct<b5:string>>>)"));
     run(driver, String.join("\n", "",
-        "CREATE TABLE IF NOT EXISTS fuzzy_union.tableC(a int, b struct<b1:string>)"
-    ));
+        "CREATE TABLE IF NOT EXISTS fuzzy_union.tableM(a int, b struct<b1:string, b2:struct<b3:string, b4:struct<b5:string>>>)"));
+    run(driver, String.join("\n", "", "CREATE VIEW IF NOT EXISTS fuzzy_union.union_view_deeply_nested_struct_evolved",
+        "AS", "SELECT *", "from fuzzy_union.tableL", "union all", "SELECT *", "from fuzzy_union.tableM"));
     run(driver, String.join("\n", "",
-        "CREATE VIEW IF NOT EXISTS fuzzy_union.union_view_single_branch_evolved",
-        "AS",
-        "SELECT *",
-        "from fuzzy_union.tableB",
-        "union all",
-        "SELECT *",
-        "from fuzzy_union.tableC"
-    ));
-    run(driver, String.join("\n", "",
-        "ALTER TABLE fuzzy_union.tableC CHANGE COLUMN b b struct<b1:string, b2:int>"
-    ));
+        "ALTER TABLE fuzzy_union.tableL CHANGE COLUMN b b struct<b1:string, b2:struct<b3:string, b4:struct<b5:string, b6:string>>>"));
 
     run(driver, String.join("\n", "",
-        "CREATE TABLE IF NOT EXISTS fuzzy_union.tableD(a int, b struct<b1:string>)"
-    ));
+        "CREATE TABLE IF NOT EXISTS fuzzy_union.tableN(a int, b struct<b1:string, m1:map<string, struct<b1:string, a1:array<struct<b1:string>>>>>)"));
     run(driver, String.join("\n", "",
-        "CREATE TABLE IF NOT EXISTS fuzzy_union.tableE(a int, b struct<b1:string>)"
-    ));
+        "CREATE TABLE IF NOT EXISTS fuzzy_union.tableO(a int, b struct<b1:string, m1:map<string, struct<b1:string, a1:array<struct<b1:string>>>>>)"));
+    run(driver,
+        String.join("\n", "", "CREATE VIEW IF NOT EXISTS fuzzy_union.union_view_deeply_nested_complex_struct_evolved",
+            "AS", "SELECT *", "from fuzzy_union.tableN", "union all", "SELECT *", "from fuzzy_union.tableO"));
     run(driver, String.join("\n", "",
-        "CREATE VIEW IF NOT EXISTS fuzzy_union.union_view_double_branch_evolved_same",
-        "AS",
-        "SELECT *",
-        "from fuzzy_union.tableD",
-        "union all",
-        "SELECT *",
-        "from fuzzy_union.tableE"
-    ));
-    run(driver, String.join("\n", "",
-        "ALTER TABLE fuzzy_union.tableD CHANGE COLUMN b b struct<b1:string, b2:int>"
-    ));
-    run(driver, String.join("\n", "",
-        "ALTER TABLE fuzzy_union.tableE CHANGE COLUMN b b struct<b1:string, b2:int>"
-    ));
-
-    run(driver, String.join("\n", "",
-        "CREATE TABLE IF NOT EXISTS fuzzy_union.tableF(a int, b struct<b1:string>)"
-    ));
-    run(driver, String.join("\n", "",
-        "CREATE TABLE IF NOT EXISTS fuzzy_union.tableG(a int, b struct<b1:string>)"
-    ));
-    run(driver, String.join("\n", "",
-        "CREATE VIEW IF NOT EXISTS fuzzy_union.union_view_double_branch_evolved_different",
-        "AS",
-        "SELECT *",
-        "from fuzzy_union.tableF",
-        "union all",
-        "SELECT *",
-        "from fuzzy_union.tableG"
-    ));
-    run(driver, String.join("\n", "",
-        "CREATE VIEW IF NOT EXISTS fuzzy_union.union_view_more_than_two_branches_evolved",
-        "AS",
-        "SELECT *",
-        "from fuzzy_union.tableF",
-        "union all",
-        "SELECT *",
-        "from fuzzy_union.tableG",
-        "union all",
-        "SELECT *",
-        "from fuzzy_union.tableF"
-    ));
-    run(driver, String.join("\n", "",
-        "ALTER TABLE fuzzy_union.tableF CHANGE COLUMN b b struct<b1:string, b3:string>"
-    ));
-    run(driver, String.join("\n", "",
-        "ALTER TABLE fuzzy_union.tableG CHANGE COLUMN b b struct<b1:string, b2:int>"
-    ));
-
-    run(driver, String.join("\n", "",
-        "CREATE TABLE IF NOT EXISTS fuzzy_union.tableH(a int, b map<string, struct<b1:string>>)"
-    ));
-    run(driver, String.join("\n", "",
-        "CREATE TABLE IF NOT EXISTS fuzzy_union.tableI(a int, b map<string, struct<b1:string>>)"
-    ));
-    run(driver, String.join("\n", "",
-        "CREATE VIEW IF NOT EXISTS fuzzy_union.union_view_map_with_struct_value_evolved",
-        "AS",
-        "SELECT *",
-        "from fuzzy_union.tableH",
-        "union all",
-        "SELECT *",
-        "from fuzzy_union.tableI"
-    ));
-    run(driver, String.join("\n", "",
-        "ALTER TABLE fuzzy_union.tableH CHANGE COLUMN b b map<string, struct<b1:string, b2:int>>"
-    ));
-
-    run(driver, String.join("\n", "",
-        "CREATE TABLE IF NOT EXISTS fuzzy_union.tableJ(a int, b array<struct<b1:string>>)"
-    ));
-    run(driver, String.join("\n", "",
-        "CREATE TABLE IF NOT EXISTS fuzzy_union.tableK(a int, b array<struct<b1:string>>)"
-    ));
-    run(driver, String.join("\n", "",
-        "CREATE VIEW IF NOT EXISTS fuzzy_union.union_view_array_with_struct_value_evolved",
-        "AS",
-        "SELECT *",
-        "from fuzzy_union.tableJ",
-        "union all",
-        "SELECT *",
-        "from fuzzy_union.tableK"
-    ));
-    run(driver, String.join("\n", "",
-        "ALTER TABLE fuzzy_union.tableJ CHANGE COLUMN b b array<struct<b1:string, b2:int>>"
-    ));
-
-    run(driver, String.join("\n", "",
-        "CREATE TABLE IF NOT EXISTS fuzzy_union.tableL(a int, b struct<b1:string, b2:struct<b3:string, b4:struct<b5:string>>>)"
-    ));
-    run(driver, String.join("\n", "",
-        "CREATE TABLE IF NOT EXISTS fuzzy_union.tableM(a int, b struct<b1:string, b2:struct<b3:string, b4:struct<b5:string>>>)"
-    ));
-    run(driver, String.join("\n", "",
-        "CREATE VIEW IF NOT EXISTS fuzzy_union.union_view_deeply_nested_struct_evolved",
-        "AS",
-        "SELECT *",
-        "from fuzzy_union.tableL",
-        "union all",
-        "SELECT *",
-        "from fuzzy_union.tableM"
-    ));
-    run(driver, String.join("\n", "",
-        "ALTER TABLE fuzzy_union.tableL CHANGE COLUMN b b struct<b1:string, b2:struct<b3:string, b4:struct<b5:string, b6:string>>>"
-    ));
-
-    run(driver, String.join("\n", "",
-        "CREATE TABLE IF NOT EXISTS fuzzy_union.tableN(a int, b struct<b1:string, m1:map<string, struct<b1:string, a1:array<struct<b1:string>>>>>)"
-    ));
-    run(driver, String.join("\n", "",
-        "CREATE TABLE IF NOT EXISTS fuzzy_union.tableO(a int, b struct<b1:string, m1:map<string, struct<b1:string, a1:array<struct<b1:string>>>>>)"
-    ));
-    run(driver, String.join("\n", "",
-        "CREATE VIEW IF NOT EXISTS fuzzy_union.union_view_deeply_nested_complex_struct_evolved",
-        "AS",
-        "SELECT *",
-        "from fuzzy_union.tableN",
-        "union all",
-        "SELECT *",
-        "from fuzzy_union.tableO"
-    ));
-    run(driver, String.join("\n", "",
-        "ALTER TABLE fuzzy_union.tableN CHANGE COLUMN b b struct<b1:string, m1:map<string, struct<b1:string, a1:array<struct<b0:string, b1:string>>>>>"
-    ));
+        "ALTER TABLE fuzzy_union.tableN CHANGE COLUMN b b struct<b1:string, m1:map<string, struct<b1:string, a1:array<struct<b0:string, b1:string>>>>>"));
 
   }
 

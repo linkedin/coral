@@ -1,5 +1,5 @@
 /**
- * Copyright 2019 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2021 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -16,12 +16,9 @@ import org.apache.calcite.sql.parser.SqlParserPos;
 public class PrestoSqlDialect extends SqlDialect {
   private static final String IDENTIFIER_QUOTE_STRING = "\"";
 
-  public static final PrestoSqlDialect INSTANCE = new PrestoSqlDialect(
-      emptyContext()
-          .withDatabaseProduct(DatabaseProduct.UNKNOWN)
-          .withDatabaseProductName("Presto")
-          .withIdentifierQuoteString(IDENTIFIER_QUOTE_STRING)
-          .withNullCollation(NullCollation.LAST));
+  public static final PrestoSqlDialect INSTANCE =
+      new PrestoSqlDialect(emptyContext().withDatabaseProduct(DatabaseProduct.UNKNOWN).withDatabaseProductName("Presto")
+          .withIdentifierQuoteString(IDENTIFIER_QUOTE_STRING).withNullCollation(NullCollation.LAST));
 
   private PrestoSqlDialect(Context context) {
     super(context);
@@ -32,8 +29,7 @@ public class PrestoSqlDialect extends SqlDialect {
     return false;
   }
 
-  public void unparseOffsetFetch(SqlWriter writer, SqlNode offset,
-      SqlNode fetch) {
+  public void unparseOffsetFetch(SqlWriter writer, SqlNode offset, SqlNode fetch) {
     unparseFetchUsingLimit(writer, offset, fetch);
   }
 
@@ -49,8 +45,7 @@ public class PrestoSqlDialect extends SqlDialect {
 
   @Override
   public void unparseIdentifier(SqlWriter writer, SqlIdentifier identifier) {
-    final SqlWriter.Frame frame =
-        writer.startList(SqlWriter.FrameTypeEnum.IDENTIFIER);
+    final SqlWriter.Frame frame = writer.startList(SqlWriter.FrameTypeEnum.IDENTIFIER);
     for (int i = 0; i < identifier.names.size(); i++) {
       writer.sep(".");
       final String name = identifier.names.get(i);

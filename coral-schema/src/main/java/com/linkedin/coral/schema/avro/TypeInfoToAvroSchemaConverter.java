@@ -1,16 +1,16 @@
 /**
- * Copyright 2019 LinkedIn Corporation. All rights reserved.
+ * Copyright 2019-2021 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
 package com.linkedin.coral.schema.avro;
 
-import com.linkedin.coral.com.google.common.collect.Lists;
-import org.apache.commons.lang3.StringUtils;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
 import org.apache.avro.Schema;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.hive.serde2.avro.AvroSerDe;
 import org.apache.hadoop.hive.serde2.avro.AvroSerdeUtils;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
@@ -24,6 +24,8 @@ import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.UnionTypeInfo;
 import org.codehaus.jackson.node.JsonNodeFactory;
 import org.codehaus.jackson.node.NullNode;
+
+import com.linkedin.coral.com.google.common.collect.Lists;
 
 
 /**
@@ -41,16 +43,15 @@ public class TypeInfoToAvroSchemaConverter {
   private static final String SHORT_TYPE_NAME = "short";
   private static final String BYTE_TYPE_NAME = "byte";
 
-  public TypeInfoToAvroSchemaConverter(
-      String namespace, boolean mkFieldsOptional) {
+  public TypeInfoToAvroSchemaConverter(String namespace, boolean mkFieldsOptional) {
     this.recordCounter = 0;
     this.namespace = namespace;
 
     this.mkFieldsOptional = mkFieldsOptional;
   }
 
-  Schema convertFieldsTypeInfoToAvroSchema(
-      String recordNamespace, String recordName, List<String> fieldNames, List<TypeInfo> fieldTypeInfos) {
+  Schema convertFieldsTypeInfoToAvroSchema(String recordNamespace, String recordName, List<String> fieldNames,
+      List<TypeInfo> fieldTypeInfos) {
     final List<Schema.Field> fields = new ArrayList<>();
     for (int i = 0; i < fieldNames.size(); ++i) {
       final TypeInfo fieldTypeInfo = fieldTypeInfos.get(i);
@@ -125,13 +126,12 @@ public class TypeInfoToAvroSchemaConverter {
         recordCounter += 1;
 
         candidate = parseSchemaFromStruct(sti, recordNamespace, newRecordName);
-      } else {  // not a struct type
+      } else { // not a struct type
         candidate = convertTypeInfoToAvroSchema(ti, recordNamespace, recordName);
       }
 
       // Remove nullable wrapping from nested schemas before adding
-      schemas.add(AvroSerdeUtils.isNullableType(candidate)
-          ? AvroSerdeUtils.getOtherTypeFromNullableType(candidate)
+      schemas.add(AvroSerdeUtils.isNullableType(candidate) ? AvroSerdeUtils.getOtherTypeFromNullableType(candidate)
           : candidate);
     }
 
@@ -140,14 +140,16 @@ public class TypeInfoToAvroSchemaConverter {
 
   // Previously, Hive use recordType[N] as the recordName for each structType, with the change we made in LIHADOOP-36761,
   // the new record name will be in the form of "structNamespace.structName"
-  private Schema parseSchemaFromStruct(final StructTypeInfo typeInfo, final String recordNamespace, final String recordName) {
-    final Schema recordSchema = convertFieldsTypeInfoToAvroSchema(
-        recordNamespace, recordName, typeInfo.getAllStructFieldNames(), typeInfo.getAllStructFieldTypeInfos());
+  private Schema parseSchemaFromStruct(final StructTypeInfo typeInfo, final String recordNamespace,
+      final String recordName) {
+    final Schema recordSchema = convertFieldsTypeInfoToAvroSchema(recordNamespace, recordName,
+        typeInfo.getAllStructFieldNames(), typeInfo.getAllStructFieldTypeInfos());
 
     return recordSchema;
   }
 
-  private Schema parseSchemaFromList(final ListTypeInfo typeInfo, final String recordNamespace, final String recordName) {
+  private Schema parseSchemaFromList(final ListTypeInfo typeInfo, final String recordNamespace,
+      final String recordName) {
     Schema listSchema = convertTypeInfoToAvroSchema(typeInfo.getListElementTypeInfo(), recordNamespace, recordName);
     return Schema.createArray(listSchema);
   }

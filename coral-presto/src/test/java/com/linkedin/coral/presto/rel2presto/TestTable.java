@@ -1,14 +1,16 @@
 /**
- * Copyright 2019 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2020 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
 package com.linkedin.coral.presto.rel2presto;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+
 import org.apache.calcite.config.CalciteConnectionConfig;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
@@ -26,35 +28,19 @@ import org.apache.calcite.sql.type.SqlTypeName;
  */
 public class TestTable implements Table {
 
-  public static final TestTable TABLE_ONE = new TestTable("tableOne", ImmutableMap.of(
-      "icol", SqlTypeName.INTEGER,
-      "dcol", SqlTypeName.DOUBLE,
-      "scol", SqlTypeName.VARCHAR,
-      "tcol", SqlTypeName.TIMESTAMP,
-      "acol", SqlTypeName.ARRAY
-  ));
+  public static final TestTable TABLE_ONE =
+      new TestTable("tableOne", ImmutableMap.of("icol", SqlTypeName.INTEGER, "dcol", SqlTypeName.DOUBLE, "scol",
+          SqlTypeName.VARCHAR, "tcol", SqlTypeName.TIMESTAMP, "acol", SqlTypeName.ARRAY));
 
-  public static final TestTable TABLE_TWO = new TestTable("tableTwo",
-      ImmutableMap.of(
-          "ifield", SqlTypeName.INTEGER,
-          "dfield", SqlTypeName.DOUBLE,
-          "sfield", SqlTypeName.VARCHAR,
-          "tfield", SqlTypeName.TIMESTAMP,
-          "decfield", SqlTypeName.DECIMAL
-      ));
+  public static final TestTable TABLE_TWO =
+      new TestTable("tableTwo", ImmutableMap.of("ifield", SqlTypeName.INTEGER, "dfield", SqlTypeName.DOUBLE, "sfield",
+          SqlTypeName.VARCHAR, "tfield", SqlTypeName.TIMESTAMP, "decfield", SqlTypeName.DECIMAL));
 
   public static final TestTable TABLE_THREE = new TestTable("tableThree",
-      ImmutableMap.of(
-          "binaryfield", SqlTypeName.BINARY,
-          "varbinaryfield", SqlTypeName.VARBINARY
-      ));
+      ImmutableMap.of("binaryfield", SqlTypeName.BINARY, "varbinaryfield", SqlTypeName.VARBINARY));
 
-  public static final TestTable TABLE_FOUR = new TestTable("tableFour", ImmutableMap.of(
-      "icol", SqlTypeName.INTEGER,
-      "scol", SqlTypeName.VARCHAR,
-      "acol", SqlTypeName.ARRAY,
-      "mcol", SqlTypeName.MAP
-  ));
+  public static final TestTable TABLE_FOUR = new TestTable("tableFour", ImmutableMap.of("icol", SqlTypeName.INTEGER,
+      "scol", SqlTypeName.VARCHAR, "acol", SqlTypeName.ARRAY, "mcol", SqlTypeName.MAP));
 
   private final ImmutableMap<String, SqlTypeName> columns;
   private final String tableName;
@@ -71,14 +57,11 @@ public class TestTable implements Table {
   public RelDataType getRowType(RelDataTypeFactory typeFactory) {
     ImmutableList<String> fields = columns.keySet().asList();
 
-    List<RelDataType> fieldTypes = columns.values()
-        .stream()
-        .map(s -> getRelType(typeFactory, s))
-        .collect(Collectors.toList());
+    List<RelDataType> fieldTypes =
+        columns.values().stream().map(s -> getRelType(typeFactory, s)).collect(Collectors.toList());
     RelDataType rowType = typeFactory.createStructType(fieldTypes, fields);
     return rowType;
   }
-
 
   public static RelDataType getRelType(RelDataTypeFactory typeFactory, SqlTypeName type) {
     if (type.equals(SqlTypeName.ARRAY)) {
@@ -94,10 +77,8 @@ public class TestTable implements Table {
   }
 
   private static RelDataType createStructType(RelDataTypeFactory typeFactory) {
-    List<RelDataType> fieldTypes = ImmutableList.of(
-        typeFactory.createSqlType(SqlTypeName.INTEGER),
-        typeFactory.createSqlType(SqlTypeName.VARCHAR)
-    );
+    List<RelDataType> fieldTypes = ImmutableList.of(typeFactory.createSqlType(SqlTypeName.INTEGER),
+        typeFactory.createSqlType(SqlTypeName.VARCHAR));
     List<String> fieldNames = ImmutableList.of("IFIELD", "SFIELD");
     return typeFactory.createStructType(fieldTypes, fieldNames);
   }

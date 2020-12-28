@@ -1,5 +1,5 @@
 /**
- * Copyright 2019 LinkedIn Corporation. All rights reserved.
+ * Copyright 2018-2021 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -26,8 +26,7 @@ import org.apache.calcite.sql.type.SqlOperandCountRanges;
  */
 public class HiveExplodeOperator extends SqlUnnestOperator {
 
-  public static final HiveExplodeOperator
-      EXPLODE = new HiveExplodeOperator();
+  public static final HiveExplodeOperator EXPLODE = new HiveExplodeOperator();
 
   public HiveExplodeOperator() {
     // keep same same as base class 'UNNEST' operator
@@ -45,7 +44,6 @@ public class HiveExplodeOperator extends SqlUnnestOperator {
   public SqlOperandCountRange getOperandCountRange() {
     return SqlOperandCountRanges.of(1);
   }
-
 
   @Override
   public RelDataType inferReturnType(SqlOperatorBinding opBinding) {

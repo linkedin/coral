@@ -1,18 +1,17 @@
 /**
- * Copyright 2019 LinkedIn Corporation. All rights reserved.
+ * Copyright 2018-2021 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
 package com.linkedin.coral.hive.hive2rel;
 
-import com.google.common.collect.ImmutableList;
-import com.linkedin.coral.hive.hive2rel.functions.HiveFunctionRegistry;
-import com.linkedin.coral.hive.hive2rel.functions.HiveFunction;
-import com.linkedin.coral.hive.hive2rel.functions.HiveFunctionResolver;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+
+import com.google.common.collect.ImmutableList;
+
 import org.apache.calcite.sql.SqlFunctionCategory;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlOperator;
@@ -20,6 +19,10 @@ import org.apache.calcite.sql.SqlOperatorTable;
 import org.apache.calcite.sql.SqlSyntax;
 import org.apache.calcite.sql.validate.SqlNameMatcher;
 import org.apache.calcite.util.Util;
+
+import com.linkedin.coral.hive.hive2rel.functions.HiveFunction;
+import com.linkedin.coral.hive.hive2rel.functions.HiveFunctionRegistry;
+import com.linkedin.coral.hive.hive2rel.functions.HiveFunctionResolver;
 
 
 /**
@@ -31,9 +34,8 @@ public class DaliOperatorTable implements SqlOperatorTable {
   // For now, we create another instance since the function registry is simple.
   private HiveFunctionResolver funcResolver;
 
-  public DaliOperatorTable(HiveFunctionRegistry registry,
-      ConcurrentHashMap<String, HiveFunction> dynamicRegistry) {
-    this.funcResolver =  new HiveFunctionResolver(registry, dynamicRegistry);
+  public DaliOperatorTable(HiveFunctionRegistry registry, ConcurrentHashMap<String, HiveFunction> dynamicRegistry) {
+    this.funcResolver = new HiveFunctionResolver(registry, dynamicRegistry);
   }
 
   /**
@@ -49,9 +51,7 @@ public class DaliOperatorTable implements SqlOperatorTable {
       SqlSyntax sqlSyntax, List<SqlOperator> list, SqlNameMatcher sqlNameMatcher) {
     String functionName = Util.last(sqlIdentifier.names);
     Collection<HiveFunction> functions = funcResolver.resolve(functionName, true);
-    functions.stream()
-        .map(HiveFunction::getSqlOperator)
-        .collect(Collectors.toCollection(() -> list));
+    functions.stream().map(HiveFunction::getSqlOperator).collect(Collectors.toCollection(() -> list));
   }
 
   @Override

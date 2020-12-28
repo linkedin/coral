@@ -1,11 +1,12 @@
 /**
- * Copyright 2019 LinkedIn Corporation. All rights reserved.
+ * Copyright 2018-2020 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
 package com.linkedin.coral.hive.hive2rel;
 
 import java.io.IOException;
+
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
 import org.apache.hadoop.hive.metastore.api.MetaException;
@@ -26,13 +27,11 @@ public class LateralViewTest {
   public void testLateralView() {
     final String sql = "SELECT a, ccol from complex lateral view explode(complex.c) t as ccol";
     RelNode relNode = toRel(sql);
-    String expected = "LogicalProject(a=[$0], ccol=[$6])\n" +
-        "  LogicalCorrelate(correlation=[$cor0], joinType=[inner], requiredColumns=[{2}])\n" +
-        "    LogicalTableScan(table=[[hive, default, complex]])\n" +
-        "    LogicalProject(ccol=[$0])\n" +
-        "      HiveUncollect\n" +
-        "        LogicalProject(ccol=[$cor0.c])\n" +
-        "          LogicalValues(tuples=[[{ 0 }]])\n";
+    String expected = "LogicalProject(a=[$0], ccol=[$6])\n"
+        + "  LogicalCorrelate(correlation=[$cor0], joinType=[inner], requiredColumns=[{2}])\n"
+        + "    LogicalTableScan(table=[[hive, default, complex]])\n" + "    LogicalProject(ccol=[$0])\n"
+        + "      HiveUncollect\n" + "        LogicalProject(ccol=[$cor0.c])\n"
+        + "          LogicalValues(tuples=[[{ 0 }]])\n";
     assertEquals(toRelStr(sql), expected);
   }
 
@@ -40,62 +39,54 @@ public class LateralViewTest {
   public void testLateralViewOuter() {
     final String sql = "SELECT a, t.ccol from complex lateral view outer explode(complex.c) t as ccol";
     RelNode relNode = toRel(sql);
-    String expected = "LogicalProject(a=[$0], ccol=[$6])\n" +
-        "  LogicalCorrelate(correlation=[$cor0], joinType=[inner], requiredColumns=[{2}])\n" +
-        "    LogicalTableScan(table=[[hive, default, complex]])\n" +
-        "    LogicalProject(ccol=[$0])\n" +
-        "      HiveUncollect\n" +
-        "        LogicalProject(ccol=[if(AND(IS NOT NULL($cor0.c), >(CARDINALITY($cor0.c), 0)), $cor0.c, ARRAY(null:NULL))])\n"+
-        "          LogicalValues(tuples=[[{ 0 }]])\n";
+    String expected = "LogicalProject(a=[$0], ccol=[$6])\n"
+        + "  LogicalCorrelate(correlation=[$cor0], joinType=[inner], requiredColumns=[{2}])\n"
+        + "    LogicalTableScan(table=[[hive, default, complex]])\n" + "    LogicalProject(ccol=[$0])\n"
+        + "      HiveUncollect\n"
+        + "        LogicalProject(ccol=[if(AND(IS NOT NULL($cor0.c), >(CARDINALITY($cor0.c), 0)), $cor0.c, ARRAY(null:NULL))])\n"
+        + "          LogicalValues(tuples=[[{ 0 }]])\n";
 
     assertEquals(toRelStr(sql), expected);
   }
 
   @Test
   public void testMultipleMixedLateralClauses() {
-    final String sql = "SELECT a, ccol, r.anotherCCol from complex " +
-        " lateral view outer explode(complex.c) t as ccol " +
-        " lateral view explode(complex.c) r as anotherCCol";
-    String expected = "LogicalProject(a=[$0], ccol=[$6], anotherCCol=[$7])\n" +
-        "  LogicalCorrelate(correlation=[$cor3], joinType=[inner], requiredColumns=[{2}])\n" +
-        "    LogicalCorrelate(correlation=[$cor0], joinType=[inner], requiredColumns=[{2}])\n" +
-        "      LogicalTableScan(table=[[hive, default, complex]])\n" +
-        "      LogicalProject(ccol=[$0])\n" +
-        "        HiveUncollect\n" +
-        "          LogicalProject(ccol=[if(AND(IS NOT NULL($cor0.c), >(CARDINALITY($cor0.c), 0)), $cor0.c, ARRAY(null:NULL))])\n" +
-        "            LogicalValues(tuples=[[{ 0 }]])\n" +
-        "    LogicalProject(anotherCCol=[$0])\n" +
-        "      HiveUncollect\n" +
-        "        LogicalProject(anotherCCol=[$cor3.c])\n" +
-        "          LogicalValues(tuples=[[{ 0 }]])\n";
+    final String sql = "SELECT a, ccol, r.anotherCCol from complex "
+        + " lateral view outer explode(complex.c) t as ccol " + " lateral view explode(complex.c) r as anotherCCol";
+    String expected = "LogicalProject(a=[$0], ccol=[$6], anotherCCol=[$7])\n"
+        + "  LogicalCorrelate(correlation=[$cor3], joinType=[inner], requiredColumns=[{2}])\n"
+        + "    LogicalCorrelate(correlation=[$cor0], joinType=[inner], requiredColumns=[{2}])\n"
+        + "      LogicalTableScan(table=[[hive, default, complex]])\n" + "      LogicalProject(ccol=[$0])\n"
+        + "        HiveUncollect\n"
+        + "          LogicalProject(ccol=[if(AND(IS NOT NULL($cor0.c), >(CARDINALITY($cor0.c), 0)), $cor0.c, ARRAY(null:NULL))])\n"
+        + "            LogicalValues(tuples=[[{ 0 }]])\n" + "    LogicalProject(anotherCCol=[$0])\n"
+        + "      HiveUncollect\n" + "        LogicalProject(anotherCCol=[$cor3.c])\n"
+        + "          LogicalValues(tuples=[[{ 0 }]])\n";
     assertEquals(toRelStr(sql), expected);
   }
 
   @Test
   public void testUnnestNestedTypes() {
-    final String sql = "SELECT a, sarr, flat_s FROM complex\n"
-        + "lateral view outer explode(complex.sarr) t as flat_s";
-    String expected = "LogicalProject(a=[$0], sarr=[$5], flat_s=[$6])\n" +
-        "  LogicalCorrelate(correlation=[$cor0], joinType=[inner], requiredColumns=[{5}])\n" +
-        "    LogicalTableScan(table=[[hive, default, complex]])\n" +
-        "    LogicalProject(flat_s=[$0])\n" +
-        "      HiveUncollect\n" +
-        "        LogicalProject(flat_s=[if(AND(IS NOT NULL($cor0.sarr), >(CARDINALITY($cor0.sarr), 0)), $cor0.sarr, ARRAY(null:NULL))])\n" +
-        "          LogicalValues(tuples=[[{ 0 }]])\n";
+    final String sql = "SELECT a, sarr, flat_s FROM complex\n" + "lateral view outer explode(complex.sarr) t as flat_s";
+    String expected = "LogicalProject(a=[$0], sarr=[$5], flat_s=[$6])\n"
+        + "  LogicalCorrelate(correlation=[$cor0], joinType=[inner], requiredColumns=[{5}])\n"
+        + "    LogicalTableScan(table=[[hive, default, complex]])\n" + "    LogicalProject(flat_s=[$0])\n"
+        + "      HiveUncollect\n"
+        + "        LogicalProject(flat_s=[if(AND(IS NOT NULL($cor0.sarr), >(CARDINALITY($cor0.sarr), 0)), $cor0.sarr, ARRAY(null:NULL))])\n"
+        + "          LogicalValues(tuples=[[{ 0 }]])\n";
     assertEquals(toRelStr(sql), expected);
   }
 
   @Test
   public void testComplexLateralExplodeOperand() {
-    final String sql = "SELECT a, ccol from complex lateral view " +
-        " explode(if(size(complex.c) > 5, array(10.5), complex.c)) t as ccol";
-    final String expected = "LogicalProject(a=[$0], ccol=[$6])\n" +
-        "  LogicalCorrelate(correlation=[$cor0], joinType=[inner], requiredColumns=[{2}])\n" +
-        "    LogicalTableScan(table=[[hive, default, complex]])\n" +
-        "    LogicalProject(ccol=[$0])\n" +
-        "      HiveUncollect\n" +
-        "        LogicalProject(ccol=[if(>(CARDINALITY($cor0.c), 5), ARRAY(10.5:DECIMAL(3, 1)), $cor0.c)])\n" +
-        "          LogicalValues(tuples=[[{ 0 }]])\n";
+    final String sql = "SELECT a, ccol from complex lateral view "
+        + " explode(if(size(complex.c) > 5, array(10.5), complex.c)) t as ccol";
+    final String expected = "LogicalProject(a=[$0], ccol=[$6])\n"
+        + "  LogicalCorrelate(correlation=[$cor0], joinType=[inner], requiredColumns=[{2}])\n"
+        + "    LogicalTableScan(table=[[hive, default, complex]])\n" + "    LogicalProject(ccol=[$0])\n"
+        + "      HiveUncollect\n"
+        + "        LogicalProject(ccol=[if(>(CARDINALITY($cor0.c), 5), ARRAY(10.5:DECIMAL(3, 1)), $cor0.c)])\n"
+        + "          LogicalValues(tuples=[[{ 0 }]])\n";
     assertEquals(toRelStr(sql), expected);
   }
 

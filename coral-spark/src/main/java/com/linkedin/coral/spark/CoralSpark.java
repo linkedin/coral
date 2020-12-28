@@ -1,18 +1,20 @@
 /**
- * Copyright 2019 LinkedIn Corporation. All rights reserved.
+ * Copyright 2018-2021 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
 package com.linkedin.coral.spark;
 
-import com.linkedin.coral.spark.containers.SparkRelInfo;
-import com.linkedin.coral.spark.containers.SparkUDFInfo;
-import com.linkedin.coral.spark.dialect.SparkSqlDialect;
 import java.util.List;
 import java.util.stream.Collectors;
+
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
+
+import com.linkedin.coral.spark.containers.SparkRelInfo;
+import com.linkedin.coral.spark.containers.SparkUDFInfo;
+import com.linkedin.coral.spark.dialect.SparkSqlDialect;
 
 
 /**
@@ -82,9 +84,7 @@ public class CoralSpark {
    */
   private static String constructSparkSQL(RelNode sparkRelNode) {
     SparkRelToSparkSqlConverter rel2sql = new SparkRelToSparkSqlConverter();
-    return rel2sql.visitChild(0, sparkRelNode)
-        .asStatement()
-        .accept(new SparkSqlRewriter())
+    return rel2sql.visitChild(0, sparkRelNode).asStatement().accept(new SparkSqlRewriter())
         .toSqlString(SparkSqlDialect.INSTANCE).getSql();
   }
 
@@ -99,12 +99,8 @@ public class CoralSpark {
    * depends on.
    */
   private static List<String> constructBaseTables(RelNode relNode) {
-    return RelOptUtil
-        .findAllTables(relNode)
-        .stream()
-        .map(RelOptTable::getQualifiedName)
-        .map(x -> String.join(".", x.get(1), x.get(2)))
-        .collect(Collectors.toList());
+    return RelOptUtil.findAllTables(relNode).stream().map(RelOptTable::getQualifiedName)
+        .map(x -> String.join(".", x.get(1), x.get(2))).collect(Collectors.toList());
 
   }
 

@@ -1,20 +1,13 @@
 /**
- * Copyright 2019 LinkedIn Corporation. All rights reserved.
+ * Copyright 2019-2021 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
 package com.linkedin.coral.pig.rel2pig;
 
-import com.linkedin.coral.pig.rel2pig.exceptions.UnsupportedRelNodeException;
-import com.linkedin.coral.pig.rel2pig.rel.PigLogicalAggregate;
-import com.linkedin.coral.pig.rel2pig.rel.PigLogicalFilter;
-import com.linkedin.coral.pig.rel2pig.rel.PigLogicalJoin;
-import com.linkedin.coral.pig.rel2pig.rel.PigLogicalProject;
-import com.linkedin.coral.pig.rel2pig.rel.PigLogicalUnion;
-import com.linkedin.coral.pig.rel2pig.rel.PigRelUtils;
-import com.linkedin.coral.pig.rel2pig.rel.PigTableScan;
 import java.util.List;
 import java.util.stream.Collectors;
+
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.TableFunctionScan;
 import org.apache.calcite.rel.core.TableScan;
@@ -30,6 +23,15 @@ import org.apache.calcite.rel.logical.LogicalProject;
 import org.apache.calcite.rel.logical.LogicalSort;
 import org.apache.calcite.rel.logical.LogicalUnion;
 import org.apache.calcite.rel.logical.LogicalValues;
+
+import com.linkedin.coral.pig.rel2pig.exceptions.UnsupportedRelNodeException;
+import com.linkedin.coral.pig.rel2pig.rel.PigLogicalAggregate;
+import com.linkedin.coral.pig.rel2pig.rel.PigLogicalFilter;
+import com.linkedin.coral.pig.rel2pig.rel.PigLogicalJoin;
+import com.linkedin.coral.pig.rel2pig.rel.PigLogicalProject;
+import com.linkedin.coral.pig.rel2pig.rel.PigLogicalUnion;
+import com.linkedin.coral.pig.rel2pig.rel.PigRelUtils;
+import com.linkedin.coral.pig.rel2pig.rel.PigTableScan;
 
 
 /**
@@ -189,12 +191,11 @@ public class RelToPigLatinConverter {
    * @param outputRelation name of the variable to be outputted
    */
   private void visit(RelToPigBuilder state, LogicalUnion logicalUnion, String outputRelation) {
-    List<String> inputRelations = logicalUnion.getInputs().stream()
-        .map(input -> {
-          String inputRelation = state.getUniqueAlias();
-          visit(state, input, inputRelation);
-          return inputRelation;
-        }).collect(Collectors.toList());
+    List<String> inputRelations = logicalUnion.getInputs().stream().map(input -> {
+      String inputRelation = state.getUniqueAlias();
+      visit(state, input, inputRelation);
+      return inputRelation;
+    }).collect(Collectors.toList());
     state.addStatement(PigLogicalUnion.getScript(logicalUnion, outputRelation, inputRelations));
   }
 

@@ -5,7 +5,6 @@
  */
 package com.linkedin.coral.schema.avro;
 
-import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
 import org.apache.avro.Schema;
 import org.apache.calcite.rel.RelNode;
 import org.apache.hadoop.hive.metastore.api.MetaException;
@@ -13,6 +12,8 @@ import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+
+import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
 
 
 public class RelDataTypeToAvroTypeTests {
@@ -29,11 +30,10 @@ public class RelDataTypeToAvroTypeTests {
 
     TestUtils.executeCreateViewQuery("default", "v", viewSql);
     RelNode relNode = hiveToRelConverter.convertView("default", "v");
-    Schema actualAvroType = RelDataTypeToAvroType.relDataTypeToAvroTypeNonNullable(relNode.getRowType(), "nestedRecord");
+    Schema actualAvroType =
+        RelDataTypeToAvroType.relDataTypeToAvroTypeNonNullable(relNode.getRowType(), "nestedRecord");
 
-    Assert.assertEquals(actualAvroType.toString(true),
-        TestUtils.loadSchema("rel2avro-testNestedRecord-expected.avsc"));
+    Assert.assertEquals(actualAvroType.toString(true), TestUtils.loadSchema("rel2avro-testNestedRecord-expected.avsc"));
   }
-
 
 }

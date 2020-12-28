@@ -1,23 +1,8 @@
 /**
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright 2017-2021 LinkedIn Corporation. All rights reserved.
+ * Licensed under the BSD-2 Clause license.
+ * See LICENSE in the project root for license information.
  */
-
-// $ANTLR 3.4 org/apache/hadoop/hive/ql/parse/HiveParser.g 2017-10-10 09:21:00
-
 package com.linkedin.coral.hive.hive2rel.parsetree.parser;
 
 import java.util.ArrayList;
@@ -25,6 +10,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Stack;
+
 import org.antlr.runtime.BaseRecognizer;
 import org.antlr.runtime.BitSet;
 import org.antlr.runtime.DFA;
@@ -49,11 +35,11 @@ import org.antlr.runtime.tree.RewriteRuleTokenStream;
 import org.antlr.runtime.tree.TreeAdaptor;
 
 
-//CHECKSTYLE:OFF
-@SuppressWarnings({"all", "warnings", "unchecked"})
+//spotless:off
+@SuppressWarnings({ "all", "warnings", "unchecked" })
 public class HiveParser extends Parser {
   public static final String[] tokenNames =
-      new String[]{"<invalid>", "<EOR>", "<DOWN>", "<UP>", "AMPERSAND", "BITWISEOR", "BITWISEXOR", "BigintLiteral", "ByteLengthLiteral", "COLON", "COMMA", "COMMENT", "CharSetLiteral", "CharSetName", "DIV", "DIVIDE", "DOLLAR", "DOT", "DecimalLiteral", "Digit", "EQUAL", "EQUAL_NS", "Exponent", "GREATERTHAN", "GREATERTHANOREQUALTO", "HexDigit", "Identifier", "KW_ADD", "KW_ADMIN", "KW_AFTER", "KW_ALL", "KW_ALTER", "KW_ANALYZE", "KW_AND", "KW_ARCHIVE", "KW_ARRAY", "KW_AS", "KW_ASC", "KW_AUTHORIZATION", "KW_BEFORE", "KW_BETWEEN", "KW_BIGINT", "KW_BINARY", "KW_BOOLEAN", "KW_BOTH", "KW_BUCKET", "KW_BUCKETS", "KW_BY", "KW_CASCADE", "KW_CASE", "KW_CAST", "KW_CHANGE", "KW_CHAR", "KW_CLUSTER", "KW_CLUSTERED", "KW_CLUSTERSTATUS", "KW_COLLECTION", "KW_COLUMN", "KW_COLUMNS", "KW_COMMENT", "KW_COMPACT", "KW_COMPACTIONS", "KW_COMPUTE", "KW_CONCATENATE", "KW_CONF", "KW_CONTINUE", "KW_CREATE", "KW_CROSS", "KW_CUBE", "KW_CURRENT", "KW_CURRENT_DATE", "KW_CURRENT_TIMESTAMP", "KW_CURSOR", "KW_DATA", "KW_DATABASE", "KW_DATABASES", "KW_DATE", "KW_DATETIME", "KW_DBPROPERTIES", "KW_DECIMAL", "KW_DEFAULT", "KW_DEFERRED", "KW_DEFINED", "KW_DELETE", "KW_DELIMITED", "KW_DEPENDENCY", "KW_DESC", "KW_DESCRIBE", "KW_DIRECTORIES", "KW_DIRECTORY", "KW_DISABLE", "KW_DISTINCT", "KW_DISTRIBUTE", "KW_DOUBLE", "KW_DROP", "KW_ELEM_TYPE", "KW_ELSE", "KW_ENABLE", "KW_END", "KW_ESCAPED", "KW_EXCHANGE", "KW_EXCLUSIVE", "KW_EXISTS", "KW_EXPLAIN", "KW_EXPORT", "KW_EXTENDED", "KW_EXTERNAL", "KW_FALSE", "KW_FETCH", "KW_FIELDS", "KW_FILE", "KW_FILEFORMAT", "KW_FIRST", "KW_FLOAT", "KW_FOLLOWING", "KW_FOR", "KW_FORMAT", "KW_FORMATTED", "KW_FROM", "KW_FULL", "KW_FUNCTION", "KW_FUNCTIONS", "KW_GRANT", "KW_GROUP", "KW_GROUPING", "KW_HAVING", "KW_HOLD_DDLTIME", "KW_IDXPROPERTIES", "KW_IF", "KW_IGNORE", "KW_IMPORT", "KW_IN", "KW_INDEX", "KW_INDEXES", "KW_INNER", "KW_INPATH", "KW_INPUTDRIVER", "KW_INPUTFORMAT", "KW_INSERT", "KW_INT", "KW_INTERSECT", "KW_INTO", "KW_IS", "KW_ITEMS", "KW_JAR", "KW_JOIN", "KW_KEYS", "KW_KEY_TYPE", "KW_LATERAL", "KW_LEFT", "KW_LESS", "KW_LIKE", "KW_LIMIT", "KW_LINES", "KW_LOAD", "KW_LOCAL", "KW_LOCATION", "KW_LOCK", "KW_LOCKS", "KW_LOGICAL", "KW_LONG", "KW_MACRO", "KW_MAP", "KW_MAPJOIN", "KW_MATERIALIZED", "KW_METADATA", "KW_MINUS", "KW_MORE", "KW_MSCK", "KW_NONE", "KW_NOSCAN", "KW_NOT", "KW_NO_DROP", "KW_NULL", "KW_OF", "KW_OFFLINE", "KW_ON", "KW_OPTION", "KW_OR", "KW_ORDER", "KW_OUT", "KW_OUTER", "KW_OUTPUTDRIVER", "KW_OUTPUTFORMAT", "KW_OVER", "KW_OVERWRITE", "KW_OWNER", "KW_PARTIALSCAN", "KW_PARTITION", "KW_PARTITIONED", "KW_PARTITIONS", "KW_PERCENT", "KW_PLUS", "KW_PRECEDING", "KW_PRESERVE", "KW_PRETTY", "KW_PRINCIPALS", "KW_PROCEDURE", "KW_PROTECTION", "KW_PURGE", "KW_RANGE", "KW_READ", "KW_READONLY", "KW_READS", "KW_REBUILD", "KW_RECORDREADER", "KW_RECORDWRITER", "KW_REDUCE", "KW_REGEXP", "KW_RELOAD", "KW_RENAME", "KW_REPAIR", "KW_REPLACE", "KW_REPLICATION", "KW_RESTRICT", "KW_REVOKE", "KW_REWRITE", "KW_RIGHT", "KW_RLIKE", "KW_ROLE", "KW_ROLES", "KW_ROLLUP", "KW_ROW", "KW_ROWS", "KW_SCHEMA", "KW_SCHEMAS", "KW_SELECT", "KW_SEMI", "KW_SERDE", "KW_SERDEPROPERTIES", "KW_SERVER", "KW_SET", "KW_SETS", "KW_SHARED", "KW_SHOW", "KW_SHOW_DATABASE", "KW_SKEWED", "KW_SMALLINT", "KW_SORT", "KW_SORTED", "KW_SSL", "KW_STATISTICS", "KW_STORED", "KW_STREAMTABLE", "KW_STRING", "KW_STRUCT", "KW_TABLE", "KW_TABLES", "KW_TABLESAMPLE", "KW_TBLPROPERTIES", "KW_TEMPORARY", "KW_TERMINATED", "KW_THEN", "KW_TIMESTAMP", "KW_TINYINT", "KW_TO", "KW_TOUCH", "KW_TRANSACTIONS", "KW_TRANSFORM", "KW_TRIGGER", "KW_TRUE", "KW_TRUNCATE", "KW_UNARCHIVE", "KW_UNBOUNDED", "KW_UNDO", "KW_UNION", "KW_UNIONTYPE", "KW_UNIQUEJOIN", "KW_UNLOCK", "KW_UNSET", "KW_UNSIGNED", "KW_UPDATE", "KW_URI", "KW_USE", "KW_USER", "KW_USING", "KW_UTC", "KW_UTCTIMESTAMP", "KW_VALUES", "KW_VALUE_TYPE", "KW_VARCHAR", "KW_VIEW", "KW_WHEN", "KW_WHERE", "KW_WHILE", "KW_WINDOW", "KW_WITH", "LCURLY", "LESSTHAN", "LESSTHANOREQUALTO", "LPAREN", "LSQUARE", "Letter", "MINUS", "MOD", "NOTEQUAL", "Number", "PLUS", "QUESTION", "QuotedIdentifier", "RCURLY", "RPAREN", "RSQUARE", "RegexComponent", "SEMICOLON", "STAR", "SmallintLiteral", "StringLiteral", "TILDE", "TinyintLiteral", "WS", "TOK_ADMIN_OPTION_FOR", "TOK_ALIASLIST", "TOK_ALLCOLREF", "TOK_ALTERDATABASE_OWNER", "TOK_ALTERDATABASE_PROPERTIES", "TOK_ALTERINDEX_PROPERTIES", "TOK_ALTERINDEX_REBUILD", "TOK_ALTERTABLE", "TOK_ALTERTABLE_ADDCOLS", "TOK_ALTERTABLE_ADDPARTS", "TOK_ALTERTABLE_ARCHIVE", "TOK_ALTERTABLE_BUCKETS", "TOK_ALTERTABLE_CHANGECOL_AFTER_POSITION", "TOK_ALTERTABLE_CLUSTER_SORT", "TOK_ALTERTABLE_COMPACT", "TOK_ALTERTABLE_DROPPARTS", "TOK_ALTERTABLE_DROPPROPERTIES", "TOK_ALTERTABLE_EXCHANGEPARTITION", "TOK_ALTERTABLE_FILEFORMAT", "TOK_ALTERTABLE_MERGEFILES", "TOK_ALTERTABLE_PARTCOLTYPE", "TOK_ALTERTABLE_PROPERTIES", "TOK_ALTERTABLE_PROTECTMODE", "TOK_ALTERTABLE_RENAME", "TOK_ALTERTABLE_RENAMECOL", "TOK_ALTERTABLE_RENAMEPART", "TOK_ALTERTABLE_REPLACECOLS", "TOK_ALTERTABLE_SERDEPROPERTIES", "TOK_ALTERTABLE_SERIALIZER", "TOK_ALTERTABLE_SKEWED", "TOK_ALTERTABLE_SKEWED_LOCATION", "TOK_ALTERTABLE_TOUCH", "TOK_ALTERTABLE_UNARCHIVE", "TOK_ALTERTABLE_UPDATECOLSTATS", "TOK_ALTERVIEW", "TOK_ALTERVIEW_ADDPARTS", "TOK_ALTERVIEW_DROPPARTS", "TOK_ALTERVIEW_DROPPROPERTIES", "TOK_ALTERVIEW_PROPERTIES", "TOK_ALTERVIEW_RENAME", "TOK_ANALYZE", "TOK_ANONYMOUS", "TOK_ARCHIVE", "TOK_BIGINT", "TOK_BINARY", "TOK_BOOLEAN", "TOK_CASCADE", "TOK_CHAR", "TOK_CHARSETLITERAL", "TOK_CLUSTERBY", "TOK_COLTYPELIST", "TOK_COL_NAME", "TOK_CREATEDATABASE", "TOK_CREATEFUNCTION", "TOK_CREATEINDEX", "TOK_CREATEINDEX_INDEXTBLNAME", "TOK_CREATEMACRO", "TOK_CREATEROLE", "TOK_CREATETABLE", "TOK_CREATEVIEW", "TOK_CROSSJOIN", "TOK_CTE", "TOK_CUBE_GROUPBY", "TOK_DATABASECOMMENT", "TOK_DATABASEPROPERTIES", "TOK_DATE", "TOK_DATELITERAL", "TOK_DATETIME", "TOK_DBPROPLIST", "TOK_DB_TYPE", "TOK_DECIMAL", "TOK_DEFERRED_REBUILDINDEX", "TOK_DELETE_FROM", "TOK_DESCDATABASE", "TOK_DESCFUNCTION", "TOK_DESCTABLE", "TOK_DESTINATION", "TOK_DIR", "TOK_DISABLE", "TOK_DISTRIBUTEBY", "TOK_DOUBLE", "TOK_DROPDATABASE", "TOK_DROPFUNCTION", "TOK_DROPINDEX", "TOK_DROPMACRO", "TOK_DROPROLE", "TOK_DROPTABLE", "TOK_DROPVIEW", "TOK_ENABLE", "TOK_EXPLAIN", "TOK_EXPLAIN_SQ_REWRITE", "TOK_EXPLIST", "TOK_EXPORT", "TOK_FALSE", "TOK_FILE", "TOK_FILEFORMAT_GENERIC", "TOK_FLOAT", "TOK_FROM", "TOK_FULLOUTERJOIN", "TOK_FUNCTION", "TOK_FUNCTIONDI", "TOK_FUNCTIONSTAR", "TOK_GRANT", "TOK_GRANT_OPTION_FOR", "TOK_GRANT_ROLE", "TOK_GRANT_WITH_ADMIN_OPTION", "TOK_GRANT_WITH_OPTION", "TOK_GROUP", "TOK_GROUPBY", "TOK_GROUPING_SETS", "TOK_GROUPING_SETS_EXPRESSION", "TOK_HAVING", "TOK_HINT", "TOK_HINTARGLIST", "TOK_HINTLIST", "TOK_HOLD_DDLTIME", "TOK_IFEXISTS", "TOK_IFNOTEXISTS", "TOK_IGNOREPROTECTION", "TOK_IMPORT", "TOK_INDEXCOMMENT", "TOK_INDEXPROPERTIES", "TOK_INDEXPROPLIST", "TOK_INSERT", "TOK_INSERT_INTO", "TOK_INT", "TOK_ISNOTNULL", "TOK_ISNULL", "TOK_JAR", "TOK_JOIN", "TOK_LATERAL_VIEW", "TOK_LATERAL_VIEW_OUTER", "TOK_LEFTOUTERJOIN", "TOK_LEFTSEMIJOIN", "TOK_LENGTH", "TOK_LIKETABLE", "TOK_LIMIT", "TOK_LIST", "TOK_LOAD", "TOK_LOCATION", "TOK_LOCKDB", "TOK_LOCKTABLE", "TOK_MAP", "TOK_MAPJOIN", "TOK_METADATA", "TOK_MSCK", "TOK_NOT_CLUSTERED", "TOK_NOT_SORTED", "TOK_NO_DROP", "TOK_NULL", "TOK_OFFLINE", "TOK_OP_ADD", "TOK_OP_AND", "TOK_OP_BITAND", "TOK_OP_BITNOT", "TOK_OP_BITOR", "TOK_OP_BITXOR", "TOK_OP_DIV", "TOK_OP_EQ", "TOK_OP_GE", "TOK_OP_GT", "TOK_OP_LE", "TOK_OP_LIKE", "TOK_OP_LT", "TOK_OP_MOD", "TOK_OP_MUL", "TOK_OP_NE", "TOK_OP_NOT", "TOK_OP_OR", "TOK_OP_SUB", "TOK_ORDERBY", "TOK_ORREPLACE", "TOK_PARTITIONFILEFORMAT", "TOK_PARTITIONINGSPEC", "TOK_PARTITIONSERDEPROPERTIES", "TOK_PARTSPEC", "TOK_PARTVAL", "TOK_PERCENT", "TOK_PRINCIPAL_NAME", "TOK_PRIVILEGE", "TOK_PRIVILEGE_LIST", "TOK_PRIV_ALL", "TOK_PRIV_ALTER_DATA", "TOK_PRIV_ALTER_METADATA", "TOK_PRIV_CREATE", "TOK_PRIV_DELETE", "TOK_PRIV_DROP", "TOK_PRIV_INDEX", "TOK_PRIV_INSERT", "TOK_PRIV_LOCK", "TOK_PRIV_OBJECT", "TOK_PRIV_OBJECT_COL", "TOK_PRIV_SELECT", "TOK_PRIV_SHOW_DATABASE", "TOK_PTBLFUNCTION", "TOK_QUERY", "TOK_READONLY", "TOK_RECORDREADER", "TOK_RECORDWRITER", "TOK_RELOADFUNCTION", "TOK_REPLICATION", "TOK_RESOURCE_ALL", "TOK_RESOURCE_LIST", "TOK_RESOURCE_URI", "TOK_RESTRICT", "TOK_REVOKE", "TOK_REVOKE_ROLE", "TOK_RIGHTOUTERJOIN", "TOK_ROLE", "TOK_ROLLUP_GROUPBY", "TOK_ROWCOUNT", "TOK_SELECT", "TOK_SELECTDI", "TOK_SELEXPR", "TOK_SERDE", "TOK_SERDENAME", "TOK_SERDEPROPS", "TOK_SERVER_TYPE", "TOK_SET_COLUMNS_CLAUSE", "TOK_SHOWCOLUMNS", "TOK_SHOWCONF", "TOK_SHOWDATABASES", "TOK_SHOWDBLOCKS", "TOK_SHOWFUNCTIONS", "TOK_SHOWINDEXES", "TOK_SHOWLOCKS", "TOK_SHOWPARTITIONS", "TOK_SHOWTABLES", "TOK_SHOW_COMPACTIONS", "TOK_SHOW_CREATETABLE", "TOK_SHOW_GRANT", "TOK_SHOW_ROLES", "TOK_SHOW_ROLE_GRANT", "TOK_SHOW_ROLE_PRINCIPALS", "TOK_SHOW_SET_ROLE", "TOK_SHOW_TABLESTATUS", "TOK_SHOW_TBLPROPERTIES", "TOK_SHOW_TRANSACTIONS", "TOK_SKEWED_LOCATIONS", "TOK_SKEWED_LOCATION_LIST", "TOK_SKEWED_LOCATION_MAP", "TOK_SMALLINT", "TOK_SORTBY", "TOK_STORAGEHANDLER", "TOK_STOREDASDIRS", "TOK_STREAMTABLE", "TOK_STRING", "TOK_STRINGLITERALSEQUENCE", "TOK_STRUCT", "TOK_SUBQUERY", "TOK_SUBQUERY_EXPR", "TOK_SUBQUERY_OP", "TOK_SUBQUERY_OP_NOTEXISTS", "TOK_SUBQUERY_OP_NOTIN", "TOK_SWITCHDATABASE", "TOK_TAB", "TOK_TABALIAS", "TOK_TABCOL", "TOK_TABCOLLIST", "TOK_TABCOLNAME", "TOK_TABCOLVALUE", "TOK_TABCOLVALUES", "TOK_TABCOLVALUE_PAIR", "TOK_TABLEBUCKETSAMPLE", "TOK_TABLECOMMENT", "TOK_TABLEFILEFORMAT", "TOK_TABLEPARTCOLS", "TOK_TABLEPROPERTIES", "TOK_TABLEPROPERTY", "TOK_TABLEPROPLIST", "TOK_TABLEROWFORMAT", "TOK_TABLEROWFORMATCOLLITEMS", "TOK_TABLEROWFORMATFIELD", "TOK_TABLEROWFORMATLINES", "TOK_TABLEROWFORMATMAPKEYS", "TOK_TABLEROWFORMATNULL", "TOK_TABLESERIALIZER", "TOK_TABLESKEWED", "TOK_TABLESPLITSAMPLE", "TOK_TABLE_OR_COL", "TOK_TABLE_PARTITION", "TOK_TABLE_TYPE", "TOK_TABNAME", "TOK_TABREF", "TOK_TABSORTCOLNAMEASC", "TOK_TABSORTCOLNAMEDESC", "TOK_TABSRC", "TOK_TABTYPE", "TOK_TEMPORARY", "TOK_TIMESTAMP", "TOK_TIMESTAMPLITERAL", "TOK_TINYINT", "TOK_TMP_FILE", "TOK_TRANSFORM", "TOK_TRUE", "TOK_TRUNCATETABLE", "TOK_UNION", "TOK_UNIONTYPE", "TOK_UNIQUEJOIN", "TOK_UNLOCKDB", "TOK_UNLOCKTABLE", "TOK_UPDATE_TABLE", "TOK_URI_TYPE", "TOK_USER", "TOK_USERSCRIPTCOLNAMES", "TOK_USERSCRIPTCOLSCHEMA", "TOK_VALUES_TABLE", "TOK_VALUE_ROW", "TOK_VARCHAR", "TOK_VIEWPARTCOLS", "TOK_VIRTUAL_TABLE", "TOK_VIRTUAL_TABREF", "TOK_WHERE", "TOK_WINDOWDEF", "TOK_WINDOWRANGE", "TOK_WINDOWSPEC", "TOK_WINDOWVALUES", "909"};
+      new String[] { "<invalid>", "<EOR>", "<DOWN>", "<UP>", "AMPERSAND", "BITWISEOR", "BITWISEXOR", "BigintLiteral", "ByteLengthLiteral", "COLON", "COMMA", "COMMENT", "CharSetLiteral", "CharSetName", "DIV", "DIVIDE", "DOLLAR", "DOT", "DecimalLiteral", "Digit", "EQUAL", "EQUAL_NS", "Exponent", "GREATERTHAN", "GREATERTHANOREQUALTO", "HexDigit", "Identifier", "KW_ADD", "KW_ADMIN", "KW_AFTER", "KW_ALL", "KW_ALTER", "KW_ANALYZE", "KW_AND", "KW_ARCHIVE", "KW_ARRAY", "KW_AS", "KW_ASC", "KW_AUTHORIZATION", "KW_BEFORE", "KW_BETWEEN", "KW_BIGINT", "KW_BINARY", "KW_BOOLEAN", "KW_BOTH", "KW_BUCKET", "KW_BUCKETS", "KW_BY", "KW_CASCADE", "KW_CASE", "KW_CAST", "KW_CHANGE", "KW_CHAR", "KW_CLUSTER", "KW_CLUSTERED", "KW_CLUSTERSTATUS", "KW_COLLECTION", "KW_COLUMN", "KW_COLUMNS", "KW_COMMENT", "KW_COMPACT", "KW_COMPACTIONS", "KW_COMPUTE", "KW_CONCATENATE", "KW_CONF", "KW_CONTINUE", "KW_CREATE", "KW_CROSS", "KW_CUBE", "KW_CURRENT", "KW_CURRENT_DATE", "KW_CURRENT_TIMESTAMP", "KW_CURSOR", "KW_DATA", "KW_DATABASE", "KW_DATABASES", "KW_DATE", "KW_DATETIME", "KW_DBPROPERTIES", "KW_DECIMAL", "KW_DEFAULT", "KW_DEFERRED", "KW_DEFINED", "KW_DELETE", "KW_DELIMITED", "KW_DEPENDENCY", "KW_DESC", "KW_DESCRIBE", "KW_DIRECTORIES", "KW_DIRECTORY", "KW_DISABLE", "KW_DISTINCT", "KW_DISTRIBUTE", "KW_DOUBLE", "KW_DROP", "KW_ELEM_TYPE", "KW_ELSE", "KW_ENABLE", "KW_END", "KW_ESCAPED", "KW_EXCHANGE", "KW_EXCLUSIVE", "KW_EXISTS", "KW_EXPLAIN", "KW_EXPORT", "KW_EXTENDED", "KW_EXTERNAL", "KW_FALSE", "KW_FETCH", "KW_FIELDS", "KW_FILE", "KW_FILEFORMAT", "KW_FIRST", "KW_FLOAT", "KW_FOLLOWING", "KW_FOR", "KW_FORMAT", "KW_FORMATTED", "KW_FROM", "KW_FULL", "KW_FUNCTION", "KW_FUNCTIONS", "KW_GRANT", "KW_GROUP", "KW_GROUPING", "KW_HAVING", "KW_HOLD_DDLTIME", "KW_IDXPROPERTIES", "KW_IF", "KW_IGNORE", "KW_IMPORT", "KW_IN", "KW_INDEX", "KW_INDEXES", "KW_INNER", "KW_INPATH", "KW_INPUTDRIVER", "KW_INPUTFORMAT", "KW_INSERT", "KW_INT", "KW_INTERSECT", "KW_INTO", "KW_IS", "KW_ITEMS", "KW_JAR", "KW_JOIN", "KW_KEYS", "KW_KEY_TYPE", "KW_LATERAL", "KW_LEFT", "KW_LESS", "KW_LIKE", "KW_LIMIT", "KW_LINES", "KW_LOAD", "KW_LOCAL", "KW_LOCATION", "KW_LOCK", "KW_LOCKS", "KW_LOGICAL", "KW_LONG", "KW_MACRO", "KW_MAP", "KW_MAPJOIN", "KW_MATERIALIZED", "KW_METADATA", "KW_MINUS", "KW_MORE", "KW_MSCK", "KW_NONE", "KW_NOSCAN", "KW_NOT", "KW_NO_DROP", "KW_NULL", "KW_OF", "KW_OFFLINE", "KW_ON", "KW_OPTION", "KW_OR", "KW_ORDER", "KW_OUT", "KW_OUTER", "KW_OUTPUTDRIVER", "KW_OUTPUTFORMAT", "KW_OVER", "KW_OVERWRITE", "KW_OWNER", "KW_PARTIALSCAN", "KW_PARTITION", "KW_PARTITIONED", "KW_PARTITIONS", "KW_PERCENT", "KW_PLUS", "KW_PRECEDING", "KW_PRESERVE", "KW_PRETTY", "KW_PRINCIPALS", "KW_PROCEDURE", "KW_PROTECTION", "KW_PURGE", "KW_RANGE", "KW_READ", "KW_READONLY", "KW_READS", "KW_REBUILD", "KW_RECORDREADER", "KW_RECORDWRITER", "KW_REDUCE", "KW_REGEXP", "KW_RELOAD", "KW_RENAME", "KW_REPAIR", "KW_REPLACE", "KW_REPLICATION", "KW_RESTRICT", "KW_REVOKE", "KW_REWRITE", "KW_RIGHT", "KW_RLIKE", "KW_ROLE", "KW_ROLES", "KW_ROLLUP", "KW_ROW", "KW_ROWS", "KW_SCHEMA", "KW_SCHEMAS", "KW_SELECT", "KW_SEMI", "KW_SERDE", "KW_SERDEPROPERTIES", "KW_SERVER", "KW_SET", "KW_SETS", "KW_SHARED", "KW_SHOW", "KW_SHOW_DATABASE", "KW_SKEWED", "KW_SMALLINT", "KW_SORT", "KW_SORTED", "KW_SSL", "KW_STATISTICS", "KW_STORED", "KW_STREAMTABLE", "KW_STRING", "KW_STRUCT", "KW_TABLE", "KW_TABLES", "KW_TABLESAMPLE", "KW_TBLPROPERTIES", "KW_TEMPORARY", "KW_TERMINATED", "KW_THEN", "KW_TIMESTAMP", "KW_TINYINT", "KW_TO", "KW_TOUCH", "KW_TRANSACTIONS", "KW_TRANSFORM", "KW_TRIGGER", "KW_TRUE", "KW_TRUNCATE", "KW_UNARCHIVE", "KW_UNBOUNDED", "KW_UNDO", "KW_UNION", "KW_UNIONTYPE", "KW_UNIQUEJOIN", "KW_UNLOCK", "KW_UNSET", "KW_UNSIGNED", "KW_UPDATE", "KW_URI", "KW_USE", "KW_USER", "KW_USING", "KW_UTC", "KW_UTCTIMESTAMP", "KW_VALUES", "KW_VALUE_TYPE", "KW_VARCHAR", "KW_VIEW", "KW_WHEN", "KW_WHERE", "KW_WHILE", "KW_WINDOW", "KW_WITH", "LCURLY", "LESSTHAN", "LESSTHANOREQUALTO", "LPAREN", "LSQUARE", "Letter", "MINUS", "MOD", "NOTEQUAL", "Number", "PLUS", "QUESTION", "QuotedIdentifier", "RCURLY", "RPAREN", "RSQUARE", "RegexComponent", "SEMICOLON", "STAR", "SmallintLiteral", "StringLiteral", "TILDE", "TinyintLiteral", "WS", "TOK_ADMIN_OPTION_FOR", "TOK_ALIASLIST", "TOK_ALLCOLREF", "TOK_ALTERDATABASE_OWNER", "TOK_ALTERDATABASE_PROPERTIES", "TOK_ALTERINDEX_PROPERTIES", "TOK_ALTERINDEX_REBUILD", "TOK_ALTERTABLE", "TOK_ALTERTABLE_ADDCOLS", "TOK_ALTERTABLE_ADDPARTS", "TOK_ALTERTABLE_ARCHIVE", "TOK_ALTERTABLE_BUCKETS", "TOK_ALTERTABLE_CHANGECOL_AFTER_POSITION", "TOK_ALTERTABLE_CLUSTER_SORT", "TOK_ALTERTABLE_COMPACT", "TOK_ALTERTABLE_DROPPARTS", "TOK_ALTERTABLE_DROPPROPERTIES", "TOK_ALTERTABLE_EXCHANGEPARTITION", "TOK_ALTERTABLE_FILEFORMAT", "TOK_ALTERTABLE_MERGEFILES", "TOK_ALTERTABLE_PARTCOLTYPE", "TOK_ALTERTABLE_PROPERTIES", "TOK_ALTERTABLE_PROTECTMODE", "TOK_ALTERTABLE_RENAME", "TOK_ALTERTABLE_RENAMECOL", "TOK_ALTERTABLE_RENAMEPART", "TOK_ALTERTABLE_REPLACECOLS", "TOK_ALTERTABLE_SERDEPROPERTIES", "TOK_ALTERTABLE_SERIALIZER", "TOK_ALTERTABLE_SKEWED", "TOK_ALTERTABLE_SKEWED_LOCATION", "TOK_ALTERTABLE_TOUCH", "TOK_ALTERTABLE_UNARCHIVE", "TOK_ALTERTABLE_UPDATECOLSTATS", "TOK_ALTERVIEW", "TOK_ALTERVIEW_ADDPARTS", "TOK_ALTERVIEW_DROPPARTS", "TOK_ALTERVIEW_DROPPROPERTIES", "TOK_ALTERVIEW_PROPERTIES", "TOK_ALTERVIEW_RENAME", "TOK_ANALYZE", "TOK_ANONYMOUS", "TOK_ARCHIVE", "TOK_BIGINT", "TOK_BINARY", "TOK_BOOLEAN", "TOK_CASCADE", "TOK_CHAR", "TOK_CHARSETLITERAL", "TOK_CLUSTERBY", "TOK_COLTYPELIST", "TOK_COL_NAME", "TOK_CREATEDATABASE", "TOK_CREATEFUNCTION", "TOK_CREATEINDEX", "TOK_CREATEINDEX_INDEXTBLNAME", "TOK_CREATEMACRO", "TOK_CREATEROLE", "TOK_CREATETABLE", "TOK_CREATEVIEW", "TOK_CROSSJOIN", "TOK_CTE", "TOK_CUBE_GROUPBY", "TOK_DATABASECOMMENT", "TOK_DATABASEPROPERTIES", "TOK_DATE", "TOK_DATELITERAL", "TOK_DATETIME", "TOK_DBPROPLIST", "TOK_DB_TYPE", "TOK_DECIMAL", "TOK_DEFERRED_REBUILDINDEX", "TOK_DELETE_FROM", "TOK_DESCDATABASE", "TOK_DESCFUNCTION", "TOK_DESCTABLE", "TOK_DESTINATION", "TOK_DIR", "TOK_DISABLE", "TOK_DISTRIBUTEBY", "TOK_DOUBLE", "TOK_DROPDATABASE", "TOK_DROPFUNCTION", "TOK_DROPINDEX", "TOK_DROPMACRO", "TOK_DROPROLE", "TOK_DROPTABLE", "TOK_DROPVIEW", "TOK_ENABLE", "TOK_EXPLAIN", "TOK_EXPLAIN_SQ_REWRITE", "TOK_EXPLIST", "TOK_EXPORT", "TOK_FALSE", "TOK_FILE", "TOK_FILEFORMAT_GENERIC", "TOK_FLOAT", "TOK_FROM", "TOK_FULLOUTERJOIN", "TOK_FUNCTION", "TOK_FUNCTIONDI", "TOK_FUNCTIONSTAR", "TOK_GRANT", "TOK_GRANT_OPTION_FOR", "TOK_GRANT_ROLE", "TOK_GRANT_WITH_ADMIN_OPTION", "TOK_GRANT_WITH_OPTION", "TOK_GROUP", "TOK_GROUPBY", "TOK_GROUPING_SETS", "TOK_GROUPING_SETS_EXPRESSION", "TOK_HAVING", "TOK_HINT", "TOK_HINTARGLIST", "TOK_HINTLIST", "TOK_HOLD_DDLTIME", "TOK_IFEXISTS", "TOK_IFNOTEXISTS", "TOK_IGNOREPROTECTION", "TOK_IMPORT", "TOK_INDEXCOMMENT", "TOK_INDEXPROPERTIES", "TOK_INDEXPROPLIST", "TOK_INSERT", "TOK_INSERT_INTO", "TOK_INT", "TOK_ISNOTNULL", "TOK_ISNULL", "TOK_JAR", "TOK_JOIN", "TOK_LATERAL_VIEW", "TOK_LATERAL_VIEW_OUTER", "TOK_LEFTOUTERJOIN", "TOK_LEFTSEMIJOIN", "TOK_LENGTH", "TOK_LIKETABLE", "TOK_LIMIT", "TOK_LIST", "TOK_LOAD", "TOK_LOCATION", "TOK_LOCKDB", "TOK_LOCKTABLE", "TOK_MAP", "TOK_MAPJOIN", "TOK_METADATA", "TOK_MSCK", "TOK_NOT_CLUSTERED", "TOK_NOT_SORTED", "TOK_NO_DROP", "TOK_NULL", "TOK_OFFLINE", "TOK_OP_ADD", "TOK_OP_AND", "TOK_OP_BITAND", "TOK_OP_BITNOT", "TOK_OP_BITOR", "TOK_OP_BITXOR", "TOK_OP_DIV", "TOK_OP_EQ", "TOK_OP_GE", "TOK_OP_GT", "TOK_OP_LE", "TOK_OP_LIKE", "TOK_OP_LT", "TOK_OP_MOD", "TOK_OP_MUL", "TOK_OP_NE", "TOK_OP_NOT", "TOK_OP_OR", "TOK_OP_SUB", "TOK_ORDERBY", "TOK_ORREPLACE", "TOK_PARTITIONFILEFORMAT", "TOK_PARTITIONINGSPEC", "TOK_PARTITIONSERDEPROPERTIES", "TOK_PARTSPEC", "TOK_PARTVAL", "TOK_PERCENT", "TOK_PRINCIPAL_NAME", "TOK_PRIVILEGE", "TOK_PRIVILEGE_LIST", "TOK_PRIV_ALL", "TOK_PRIV_ALTER_DATA", "TOK_PRIV_ALTER_METADATA", "TOK_PRIV_CREATE", "TOK_PRIV_DELETE", "TOK_PRIV_DROP", "TOK_PRIV_INDEX", "TOK_PRIV_INSERT", "TOK_PRIV_LOCK", "TOK_PRIV_OBJECT", "TOK_PRIV_OBJECT_COL", "TOK_PRIV_SELECT", "TOK_PRIV_SHOW_DATABASE", "TOK_PTBLFUNCTION", "TOK_QUERY", "TOK_READONLY", "TOK_RECORDREADER", "TOK_RECORDWRITER", "TOK_RELOADFUNCTION", "TOK_REPLICATION", "TOK_RESOURCE_ALL", "TOK_RESOURCE_LIST", "TOK_RESOURCE_URI", "TOK_RESTRICT", "TOK_REVOKE", "TOK_REVOKE_ROLE", "TOK_RIGHTOUTERJOIN", "TOK_ROLE", "TOK_ROLLUP_GROUPBY", "TOK_ROWCOUNT", "TOK_SELECT", "TOK_SELECTDI", "TOK_SELEXPR", "TOK_SERDE", "TOK_SERDENAME", "TOK_SERDEPROPS", "TOK_SERVER_TYPE", "TOK_SET_COLUMNS_CLAUSE", "TOK_SHOWCOLUMNS", "TOK_SHOWCONF", "TOK_SHOWDATABASES", "TOK_SHOWDBLOCKS", "TOK_SHOWFUNCTIONS", "TOK_SHOWINDEXES", "TOK_SHOWLOCKS", "TOK_SHOWPARTITIONS", "TOK_SHOWTABLES", "TOK_SHOW_COMPACTIONS", "TOK_SHOW_CREATETABLE", "TOK_SHOW_GRANT", "TOK_SHOW_ROLES", "TOK_SHOW_ROLE_GRANT", "TOK_SHOW_ROLE_PRINCIPALS", "TOK_SHOW_SET_ROLE", "TOK_SHOW_TABLESTATUS", "TOK_SHOW_TBLPROPERTIES", "TOK_SHOW_TRANSACTIONS", "TOK_SKEWED_LOCATIONS", "TOK_SKEWED_LOCATION_LIST", "TOK_SKEWED_LOCATION_MAP", "TOK_SMALLINT", "TOK_SORTBY", "TOK_STORAGEHANDLER", "TOK_STOREDASDIRS", "TOK_STREAMTABLE", "TOK_STRING", "TOK_STRINGLITERALSEQUENCE", "TOK_STRUCT", "TOK_SUBQUERY", "TOK_SUBQUERY_EXPR", "TOK_SUBQUERY_OP", "TOK_SUBQUERY_OP_NOTEXISTS", "TOK_SUBQUERY_OP_NOTIN", "TOK_SWITCHDATABASE", "TOK_TAB", "TOK_TABALIAS", "TOK_TABCOL", "TOK_TABCOLLIST", "TOK_TABCOLNAME", "TOK_TABCOLVALUE", "TOK_TABCOLVALUES", "TOK_TABCOLVALUE_PAIR", "TOK_TABLEBUCKETSAMPLE", "TOK_TABLECOMMENT", "TOK_TABLEFILEFORMAT", "TOK_TABLEPARTCOLS", "TOK_TABLEPROPERTIES", "TOK_TABLEPROPERTY", "TOK_TABLEPROPLIST", "TOK_TABLEROWFORMAT", "TOK_TABLEROWFORMATCOLLITEMS", "TOK_TABLEROWFORMATFIELD", "TOK_TABLEROWFORMATLINES", "TOK_TABLEROWFORMATMAPKEYS", "TOK_TABLEROWFORMATNULL", "TOK_TABLESERIALIZER", "TOK_TABLESKEWED", "TOK_TABLESPLITSAMPLE", "TOK_TABLE_OR_COL", "TOK_TABLE_PARTITION", "TOK_TABLE_TYPE", "TOK_TABNAME", "TOK_TABREF", "TOK_TABSORTCOLNAMEASC", "TOK_TABSORTCOLNAMEDESC", "TOK_TABSRC", "TOK_TABTYPE", "TOK_TEMPORARY", "TOK_TIMESTAMP", "TOK_TIMESTAMPLITERAL", "TOK_TINYINT", "TOK_TMP_FILE", "TOK_TRANSFORM", "TOK_TRUE", "TOK_TRUNCATETABLE", "TOK_UNION", "TOK_UNIONTYPE", "TOK_UNIQUEJOIN", "TOK_UNLOCKDB", "TOK_UNLOCKTABLE", "TOK_UPDATE_TABLE", "TOK_URI_TYPE", "TOK_USER", "TOK_USERSCRIPTCOLNAMES", "TOK_USERSCRIPTCOLSCHEMA", "TOK_VALUES_TABLE", "TOK_VALUE_ROW", "TOK_VARCHAR", "TOK_VIEWPARTCOLS", "TOK_VIRTUAL_TABLE", "TOK_VIRTUAL_TABREF", "TOK_WHERE", "TOK_WINDOWDEF", "TOK_WINDOWRANGE", "TOK_WINDOWSPEC", "TOK_WINDOWVALUES", "909" };
 
   public static final int EOF = -1;
   public static final int AMPERSAND = 4;
@@ -687,7 +673,7 @@ public class HiveParser extends Parser {
   public HiveParser_IdentifiersParser gIdentifiersParser;
 
   public Parser[] getDelegates() {
-    return new Parser[]{gSelectClauseParser, gFromClauseParser, gIdentifiersParser};
+    return new Parser[] { gSelectClauseParser, gFromClauseParser, gIdentifiersParser };
   }
 
   // delegators
@@ -941,9 +927,9 @@ public class HiveParser extends Parser {
       // "decision=<<"+nvae.grammarDecisionDescription+">>"
       // and "(decision="+nvae.decisionNumber+") and
       // "state "+nvae.stateNumber
-      msg = "cannot recognize input near" + (input.LT(1) != null ? " " + getTokenErrorDisplay(input.LT(1)) : "") + (
-          input.LT(2) != null ? " " + getTokenErrorDisplay(input.LT(2)) : "") + (input.LT(3) != null ? " "
-          + getTokenErrorDisplay(input.LT(3)) : "");
+      msg = "cannot recognize input near" + (input.LT(1) != null ? " " + getTokenErrorDisplay(input.LT(1)) : "")
+          + (input.LT(2) != null ? " " + getTokenErrorDisplay(input.LT(2)) : "")
+          + (input.LT(3) != null ? " " + getTokenErrorDisplay(input.LT(3)) : "");
     } else if (e instanceof MismatchedTokenException) {
       MismatchedTokenException mte = (MismatchedTokenException) e;
       msg =
@@ -1018,7 +1004,7 @@ public class HiveParser extends Parser {
         case KW_EXPLAIN: {
           alt1 = 1;
         }
-        break;
+          break;
         case KW_ALTER:
         case KW_ANALYZE:
         case KW_CREATE:
@@ -1048,7 +1034,7 @@ public class HiveParser extends Parser {
         case KW_WITH: {
           alt1 = 2;
         }
-        break;
+          break;
         default:
           NoViableAltException nvae = new NoViableAltException("", 1, 0, input);
 
@@ -1057,7 +1043,7 @@ public class HiveParser extends Parser {
 
       switch (alt1) {
         case 1:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:631:4: explainStatement EOF
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:631:4: explainStatement EOF
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -1072,9 +1058,9 @@ public class HiveParser extends Parser {
           EOF2_tree = (CommonTree) adaptor.create(EOF2);
           adaptor.addChild(root_0, EOF2_tree);
         }
-        break;
+          break;
         case 2:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:632:4: execStatement EOF
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:632:4: execStatement EOF
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -1089,7 +1075,7 @@ public class HiveParser extends Parser {
           EOF4_tree = (CommonTree) adaptor.create(EOF4);
           adaptor.addChild(root_0, EOF4_tree);
         }
-        break;
+          break;
       }
       retval.stop = input.LT(-1);
 
@@ -1184,11 +1170,11 @@ public class HiveParser extends Parser {
           case KW_WITH: {
             alt3 = 1;
           }
-          break;
+            break;
           case KW_REWRITE: {
             alt3 = 2;
           }
-          break;
+            break;
           default:
             NoViableAltException nvae = new NoViableAltException("", 3, 0, input);
 
@@ -1197,11 +1183,10 @@ public class HiveParser extends Parser {
 
         switch (alt3) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:639:6: ( explainOption )* execStatement
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:639:6: ( explainOption )* execStatement
           {
             // org/apache/hadoop/hive/ql/parse/HiveParser.g:639:6: ( explainOption )*
-            loop2:
-            do {
+            loop2: do {
               int alt2 = 2;
               switch (input.LA(1)) {
                 case KW_AUTHORIZATION:
@@ -1211,12 +1196,12 @@ public class HiveParser extends Parser {
                 case KW_LOGICAL: {
                   alt2 = 1;
                 }
-                break;
+                  break;
               }
 
               switch (alt2) {
                 case 1:
-                  // org/apache/hadoop/hive/ql/parse/HiveParser.g:639:6: explainOption
+                // org/apache/hadoop/hive/ql/parse/HiveParser.g:639:6: explainOption
                 {
                   pushFollow(FOLLOW_explainOption_in_explainStatement1073);
                   explainOption6 = explainOption();
@@ -1225,7 +1210,7 @@ public class HiveParser extends Parser {
 
                   stream_explainOption.add(explainOption6.getTree());
                 }
-                break;
+                  break;
 
                 default:
                   break loop2;
@@ -1273,9 +1258,9 @@ public class HiveParser extends Parser {
 
             retval.tree = root_0;
           }
-          break;
+            break;
           case 2:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:641:9: KW_REWRITE queryStatementExpression[true]
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:641:9: KW_REWRITE queryStatementExpression[true]
           {
             KW_REWRITE8 = (Token) match(input, KW_REWRITE, FOLLOW_KW_REWRITE_in_explainStatement1107);
             stream_KW_REWRITE.add(KW_REWRITE8);
@@ -1304,8 +1289,8 @@ public class HiveParser extends Parser {
               // org/apache/hadoop/hive/ql/parse/HiveParser.g:641:54: ^( TOK_EXPLAIN_SQ_REWRITE queryStatementExpression )
               {
                 CommonTree root_1 = (CommonTree) adaptor.nil();
-                root_1 = (CommonTree) adaptor.becomeRoot(
-                    (CommonTree) adaptor.create(TOK_EXPLAIN_SQ_REWRITE, "TOK_EXPLAIN_SQ_REWRITE"), root_1);
+                root_1 = (CommonTree) adaptor
+                    .becomeRoot((CommonTree) adaptor.create(TOK_EXPLAIN_SQ_REWRITE, "TOK_EXPLAIN_SQ_REWRITE"), root_1);
 
                 adaptor.addChild(root_1, stream_queryStatementExpression.nextTree());
 
@@ -1315,7 +1300,7 @@ public class HiveParser extends Parser {
 
             retval.tree = root_0;
           }
-          break;
+            break;
         }
       }
 
@@ -1438,19 +1423,19 @@ public class HiveParser extends Parser {
         case KW_WITH: {
           alt4 = 1;
         }
-        break;
+          break;
         case KW_LOAD: {
           alt4 = 2;
         }
-        break;
+          break;
         case KW_EXPORT: {
           alt4 = 3;
         }
-        break;
+          break;
         case KW_IMPORT: {
           alt4 = 4;
         }
-        break;
+          break;
         case KW_ALTER:
         case KW_ANALYZE:
         case KW_CREATE:
@@ -1469,15 +1454,15 @@ public class HiveParser extends Parser {
         case KW_USE: {
           alt4 = 5;
         }
-        break;
+          break;
         case KW_DELETE: {
           alt4 = 6;
         }
-        break;
+          break;
         case KW_UPDATE: {
           alt4 = 7;
         }
-        break;
+          break;
         default:
           NoViableAltException nvae = new NoViableAltException("", 4, 0, input);
 
@@ -1486,7 +1471,7 @@ public class HiveParser extends Parser {
 
       switch (alt4) {
         case 1:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:653:7: queryStatementExpression[true]
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:653:7: queryStatementExpression[true]
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -1497,9 +1482,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, queryStatementExpression11.getTree());
         }
-        break;
+          break;
         case 2:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:654:7: loadStatement
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:654:7: loadStatement
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -1510,9 +1495,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, loadStatement12.getTree());
         }
-        break;
+          break;
         case 3:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:655:7: exportStatement
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:655:7: exportStatement
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -1523,9 +1508,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, exportStatement13.getTree());
         }
-        break;
+          break;
         case 4:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:656:7: importStatement
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:656:7: importStatement
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -1536,9 +1521,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, importStatement14.getTree());
         }
-        break;
+          break;
         case 5:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:657:7: ddlStatement
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:657:7: ddlStatement
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -1549,9 +1534,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, ddlStatement15.getTree());
         }
-        break;
+          break;
         case 6:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:658:7: deleteStatement
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:658:7: deleteStatement
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -1562,9 +1547,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, deleteStatement16.getTree());
         }
-        break;
+          break;
         case 7:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:659:7: updateStatement
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:659:7: updateStatement
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -1575,7 +1560,7 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, updateStatement17.getTree());
         }
-        break;
+          break;
       }
       retval.stop = input.LT(-1);
 
@@ -1655,17 +1640,17 @@ public class HiveParser extends Parser {
           case KW_LOCAL: {
             alt5 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt5) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:665:24: islocal= KW_LOCAL
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:665:24: islocal= KW_LOCAL
           {
             islocal = (Token) match(input, KW_LOCAL, FOLLOW_KW_LOCAL_in_loadStatement1261);
             stream_KW_LOCAL.add(islocal);
           }
-          break;
+            break;
         }
 
         KW_INPATH20 = (Token) match(input, KW_INPATH, FOLLOW_KW_INPATH_in_loadStatement1265);
@@ -1684,17 +1669,17 @@ public class HiveParser extends Parser {
           case KW_OVERWRITE: {
             alt6 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt6) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:665:75: isoverwrite= KW_OVERWRITE
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:665:75: isoverwrite= KW_OVERWRITE
           {
             isoverwrite = (Token) match(input, KW_OVERWRITE, FOLLOW_KW_OVERWRITE_in_loadStatement1276);
             stream_KW_OVERWRITE.add(isoverwrite);
           }
-          break;
+            break;
         }
 
         KW_INTO21 = (Token) match(input, KW_INTO, FOLLOW_KW_INTO_in_loadStatement1280);
@@ -1830,17 +1815,17 @@ public class HiveParser extends Parser {
           case KW_METADATA: {
             alt7 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt7) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:672:15: isMetadataOnly= KW_METADATA
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:672:15: isMetadataOnly= KW_METADATA
           {
             isMetadataOnly = (Token) match(input, KW_METADATA, FOLLOW_KW_METADATA_in_replicationClause1344);
             stream_KW_METADATA.add(isMetadataOnly);
           }
-          break;
+            break;
         }
 
         KW_REPLICATION24 = (Token) match(input, KW_REPLICATION, FOLLOW_KW_REPLICATION_in_replicationClause1348);
@@ -1987,12 +1972,12 @@ public class HiveParser extends Parser {
           case KW_FOR: {
             alt8 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt8) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:682:7: replicationClause
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:682:7: replicationClause
           {
             pushFollow(FOLLOW_replicationClause_in_exportStatement1438);
             replicationClause30 = replicationClause();
@@ -2001,7 +1986,7 @@ public class HiveParser extends Parser {
 
             stream_replicationClause.add(replicationClause30.getTree());
           }
-          break;
+            break;
         }
 
         // AST REWRITE
@@ -2113,12 +2098,12 @@ public class HiveParser extends Parser {
           case KW_TABLE: {
             alt10 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt10) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:690:11: (ext= KW_EXTERNAL )? KW_TABLE (tab= tableOrPartition )
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:690:11: (ext= KW_EXTERNAL )? KW_TABLE (tab= tableOrPartition )
           {
             // org/apache/hadoop/hive/ql/parse/HiveParser.g:690:11: (ext= KW_EXTERNAL )?
             int alt9 = 2;
@@ -2126,17 +2111,17 @@ public class HiveParser extends Parser {
               case KW_EXTERNAL: {
                 alt9 = 1;
               }
-              break;
+                break;
             }
 
             switch (alt9) {
               case 1:
-                // org/apache/hadoop/hive/ql/parse/HiveParser.g:690:12: ext= KW_EXTERNAL
+              // org/apache/hadoop/hive/ql/parse/HiveParser.g:690:12: ext= KW_EXTERNAL
               {
                 ext = (Token) match(input, KW_EXTERNAL, FOLLOW_KW_EXTERNAL_in_importStatement1503);
                 stream_KW_EXTERNAL.add(ext);
               }
-              break;
+                break;
             }
 
             KW_TABLE32 = (Token) match(input, KW_TABLE, FOLLOW_KW_TABLE_in_importStatement1507);
@@ -2153,7 +2138,7 @@ public class HiveParser extends Parser {
               stream_tableOrPartition.add(tab.getTree());
             }
           }
-          break;
+            break;
         }
 
         KW_FROM33 = (Token) match(input, KW_FROM, FOLLOW_KW_FROM_in_importStatement1526);
@@ -2172,12 +2157,12 @@ public class HiveParser extends Parser {
           case KW_LOCATION: {
             alt11 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt11) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:692:10: location
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:692:10: location
           {
             pushFollow(FOLLOW_location_in_importStatement1543);
             location34 = location();
@@ -2186,7 +2171,7 @@ public class HiveParser extends Parser {
 
             stream_location.add(location34.getTree());
           }
-          break;
+            break;
         }
 
         // AST REWRITE
@@ -2352,7 +2337,7 @@ public class HiveParser extends Parser {
       alt12 = dfa12.predict(input);
       switch (alt12) {
         case 1:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:699:7: createDatabaseStatement
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:699:7: createDatabaseStatement
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -2363,9 +2348,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, createDatabaseStatement35.getTree());
         }
-        break;
+          break;
         case 2:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:700:7: switchDatabaseStatement
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:700:7: switchDatabaseStatement
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -2376,9 +2361,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, switchDatabaseStatement36.getTree());
         }
-        break;
+          break;
         case 3:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:701:7: dropDatabaseStatement
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:701:7: dropDatabaseStatement
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -2389,9 +2374,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, dropDatabaseStatement37.getTree());
         }
-        break;
+          break;
         case 4:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:702:7: createTableStatement
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:702:7: createTableStatement
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -2402,9 +2387,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, createTableStatement38.getTree());
         }
-        break;
+          break;
         case 5:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:703:7: dropTableStatement
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:703:7: dropTableStatement
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -2415,9 +2400,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, dropTableStatement39.getTree());
         }
-        break;
+          break;
         case 6:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:704:7: truncateTableStatement
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:704:7: truncateTableStatement
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -2428,9 +2413,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, truncateTableStatement40.getTree());
         }
-        break;
+          break;
         case 7:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:705:7: alterStatement
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:705:7: alterStatement
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -2441,9 +2426,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, alterStatement41.getTree());
         }
-        break;
+          break;
         case 8:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:706:7: descStatement
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:706:7: descStatement
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -2454,9 +2439,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, descStatement42.getTree());
         }
-        break;
+          break;
         case 9:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:707:7: showStatement
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:707:7: showStatement
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -2467,9 +2452,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, showStatement43.getTree());
         }
-        break;
+          break;
         case 10:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:708:7: metastoreCheck
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:708:7: metastoreCheck
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -2480,9 +2465,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, metastoreCheck44.getTree());
         }
-        break;
+          break;
         case 11:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:709:7: createViewStatement
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:709:7: createViewStatement
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -2493,9 +2478,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, createViewStatement45.getTree());
         }
-        break;
+          break;
         case 12:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:710:7: dropViewStatement
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:710:7: dropViewStatement
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -2506,9 +2491,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, dropViewStatement46.getTree());
         }
-        break;
+          break;
         case 13:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:711:7: createFunctionStatement
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:711:7: createFunctionStatement
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -2519,9 +2504,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, createFunctionStatement47.getTree());
         }
-        break;
+          break;
         case 14:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:712:7: createMacroStatement
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:712:7: createMacroStatement
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -2532,9 +2517,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, createMacroStatement48.getTree());
         }
-        break;
+          break;
         case 15:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:713:7: createIndexStatement
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:713:7: createIndexStatement
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -2545,9 +2530,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, createIndexStatement49.getTree());
         }
-        break;
+          break;
         case 16:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:714:7: dropIndexStatement
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:714:7: dropIndexStatement
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -2558,9 +2543,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, dropIndexStatement50.getTree());
         }
-        break;
+          break;
         case 17:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:715:7: dropFunctionStatement
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:715:7: dropFunctionStatement
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -2571,9 +2556,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, dropFunctionStatement51.getTree());
         }
-        break;
+          break;
         case 18:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:716:7: reloadFunctionStatement
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:716:7: reloadFunctionStatement
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -2584,9 +2569,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, reloadFunctionStatement52.getTree());
         }
-        break;
+          break;
         case 19:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:717:7: dropMacroStatement
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:717:7: dropMacroStatement
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -2597,9 +2582,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, dropMacroStatement53.getTree());
         }
-        break;
+          break;
         case 20:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:718:7: analyzeStatement
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:718:7: analyzeStatement
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -2610,9 +2595,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, analyzeStatement54.getTree());
         }
-        break;
+          break;
         case 21:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:719:7: lockStatement
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:719:7: lockStatement
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -2623,9 +2608,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, lockStatement55.getTree());
         }
-        break;
+          break;
         case 22:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:720:7: unlockStatement
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:720:7: unlockStatement
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -2636,9 +2621,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, unlockStatement56.getTree());
         }
-        break;
+          break;
         case 23:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:721:7: lockDatabase
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:721:7: lockDatabase
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -2649,9 +2634,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, lockDatabase57.getTree());
         }
-        break;
+          break;
         case 24:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:722:7: unlockDatabase
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:722:7: unlockDatabase
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -2662,9 +2647,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, unlockDatabase58.getTree());
         }
-        break;
+          break;
         case 25:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:723:7: createRoleStatement
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:723:7: createRoleStatement
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -2675,9 +2660,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, createRoleStatement59.getTree());
         }
-        break;
+          break;
         case 26:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:724:7: dropRoleStatement
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:724:7: dropRoleStatement
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -2688,9 +2673,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, dropRoleStatement60.getTree());
         }
-        break;
+          break;
         case 27:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:725:7: grantPrivileges
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:725:7: grantPrivileges
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -2701,9 +2686,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, grantPrivileges61.getTree());
         }
-        break;
+          break;
         case 28:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:726:7: revokePrivileges
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:726:7: revokePrivileges
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -2714,9 +2699,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, revokePrivileges62.getTree());
         }
-        break;
+          break;
         case 29:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:727:7: showGrants
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:727:7: showGrants
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -2727,9 +2712,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, showGrants63.getTree());
         }
-        break;
+          break;
         case 30:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:728:7: showRoleGrants
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:728:7: showRoleGrants
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -2740,9 +2725,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, showRoleGrants64.getTree());
         }
-        break;
+          break;
         case 31:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:729:7: showRolePrincipals
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:729:7: showRolePrincipals
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -2753,9 +2738,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, showRolePrincipals65.getTree());
         }
-        break;
+          break;
         case 32:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:730:7: showRoles
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:730:7: showRoles
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -2766,9 +2751,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, showRoles66.getTree());
         }
-        break;
+          break;
         case 33:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:731:7: grantRole
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:731:7: grantRole
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -2779,9 +2764,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, grantRole67.getTree());
         }
-        break;
+          break;
         case 34:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:732:7: revokeRole
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:732:7: revokeRole
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -2792,9 +2777,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, revokeRole68.getTree());
         }
-        break;
+          break;
         case 35:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:733:7: setRole
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:733:7: setRole
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -2805,9 +2790,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, setRole69.getTree());
         }
-        break;
+          break;
         case 36:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:734:7: showCurrentRole
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:734:7: showCurrentRole
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -2818,7 +2803,7 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, showCurrentRole70.getTree());
         }
-        break;
+          break;
       }
       retval.stop = input.LT(-1);
 
@@ -2949,11 +2934,11 @@ public class HiveParser extends Parser {
         case KW_RESTRICT: {
           alt13 = 1;
         }
-        break;
+          break;
         case KW_CASCADE: {
           alt13 = 2;
         }
-        break;
+          break;
         default:
           NoViableAltException nvae = new NoViableAltException("", 13, 0, input);
 
@@ -2962,7 +2947,7 @@ public class HiveParser extends Parser {
 
       switch (alt13) {
         case 1:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:747:7: KW_RESTRICT
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:747:7: KW_RESTRICT
         {
           KW_RESTRICT73 = (Token) match(input, KW_RESTRICT, FOLLOW_KW_RESTRICT_in_restrictOrCascade1941);
           stream_KW_RESTRICT.add(KW_RESTRICT73);
@@ -2993,9 +2978,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 2:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:749:7: KW_CASCADE
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:749:7: KW_CASCADE
         {
           KW_CASCADE74 = (Token) match(input, KW_CASCADE, FOLLOW_KW_CASCADE_in_restrictOrCascade1959);
           stream_KW_CASCADE.add(KW_CASCADE74);
@@ -3025,7 +3010,7 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
       }
       retval.stop = input.LT(-1);
 
@@ -3349,8 +3334,8 @@ public class HiveParser extends Parser {
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:778:12: ^( TOK_IGNOREPROTECTION )
           {
             CommonTree root_1 = (CommonTree) adaptor.nil();
-            root_1 = (CommonTree) adaptor.becomeRoot(
-                (CommonTree) adaptor.create(TOK_IGNOREPROTECTION, "TOK_IGNOREPROTECTION"), root_1);
+            root_1 = (CommonTree) adaptor
+                .becomeRoot((CommonTree) adaptor.create(TOK_IGNOREPROTECTION, "TOK_IGNOREPROTECTION"), root_1);
 
             adaptor.addChild(root_0, root_1);
           }
@@ -3437,11 +3422,11 @@ public class HiveParser extends Parser {
           case KW_DATABASE: {
             alt14 = 1;
           }
-          break;
+            break;
           case KW_SCHEMA: {
             alt14 = 2;
           }
-          break;
+            break;
           default:
             NoViableAltException nvae = new NoViableAltException("", 14, 0, input);
 
@@ -3450,19 +3435,19 @@ public class HiveParser extends Parser {
 
         switch (alt14) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:784:18: KW_DATABASE
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:784:18: KW_DATABASE
           {
             KW_DATABASE86 = (Token) match(input, KW_DATABASE, FOLLOW_KW_DATABASE_in_createDatabaseStatement2171);
             stream_KW_DATABASE.add(KW_DATABASE86);
           }
-          break;
+            break;
           case 2:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:784:30: KW_SCHEMA
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:784:30: KW_SCHEMA
           {
             KW_SCHEMA87 = (Token) match(input, KW_SCHEMA, FOLLOW_KW_SCHEMA_in_createDatabaseStatement2173);
             stream_KW_SCHEMA.add(KW_SCHEMA87);
           }
-          break;
+            break;
         }
 
         // org/apache/hadoop/hive/ql/parse/HiveParser.g:785:9: ( ifNotExists )?
@@ -3471,12 +3456,12 @@ public class HiveParser extends Parser {
           case KW_IF: {
             alt15 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt15) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:785:9: ifNotExists
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:785:9: ifNotExists
           {
             pushFollow(FOLLOW_ifNotExists_in_createDatabaseStatement2184);
             ifNotExists88 = ifNotExists();
@@ -3485,7 +3470,7 @@ public class HiveParser extends Parser {
 
             stream_ifNotExists.add(ifNotExists88.getTree());
           }
-          break;
+            break;
         }
 
         pushFollow(FOLLOW_identifier_in_createDatabaseStatement2197);
@@ -3501,12 +3486,12 @@ public class HiveParser extends Parser {
           case KW_COMMENT: {
             alt16 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt16) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:787:9: databaseComment
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:787:9: databaseComment
           {
             pushFollow(FOLLOW_databaseComment_in_createDatabaseStatement2207);
             databaseComment89 = databaseComment();
@@ -3515,7 +3500,7 @@ public class HiveParser extends Parser {
 
             stream_databaseComment.add(databaseComment89.getTree());
           }
-          break;
+            break;
         }
 
         // org/apache/hadoop/hive/ql/parse/HiveParser.g:788:9: ( location )?
@@ -3524,12 +3509,12 @@ public class HiveParser extends Parser {
           case KW_LOCATION: {
             alt17 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt17) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:788:9: location
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:788:9: location
           {
             pushFollow(FOLLOW_location_in_createDatabaseStatement2218);
             location90 = location();
@@ -3538,7 +3523,7 @@ public class HiveParser extends Parser {
 
             stream_location.add(location90.getTree());
           }
-          break;
+            break;
         }
 
         // org/apache/hadoop/hive/ql/parse/HiveParser.g:789:9: ( KW_WITH KW_DBPROPERTIES dbprops= dbProperties )?
@@ -3547,12 +3532,12 @@ public class HiveParser extends Parser {
           case KW_WITH: {
             alt18 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt18) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:789:10: KW_WITH KW_DBPROPERTIES dbprops= dbProperties
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:789:10: KW_WITH KW_DBPROPERTIES dbprops= dbProperties
           {
             KW_WITH91 = (Token) match(input, KW_WITH, FOLLOW_KW_WITH_in_createDatabaseStatement2230);
             stream_KW_WITH.add(KW_WITH91);
@@ -3568,7 +3553,7 @@ public class HiveParser extends Parser {
 
             stream_dbProperties.add(dbprops.getTree());
           }
-          break;
+            break;
         }
 
         // AST REWRITE
@@ -3592,9 +3577,8 @@ public class HiveParser extends Parser {
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:790:8: ^( TOK_CREATEDATABASE $name ( ifNotExists )? ( location )? ( databaseComment )? ( $dbprops)? )
           {
             CommonTree root_1 = (CommonTree) adaptor.nil();
-            root_1 =
-                (CommonTree) adaptor.becomeRoot((CommonTree) adaptor.create(TOK_CREATEDATABASE, "TOK_CREATEDATABASE"),
-                    root_1);
+            root_1 = (CommonTree) adaptor
+                .becomeRoot((CommonTree) adaptor.create(TOK_CREATEDATABASE, "TOK_CREATEDATABASE"), root_1);
 
             adaptor.addChild(root_1, stream_name.nextTree());
 
@@ -3789,8 +3773,8 @@ public class HiveParser extends Parser {
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:804:41: ^( TOK_DATABASEPROPERTIES dbPropertiesList )
           {
             CommonTree root_1 = (CommonTree) adaptor.nil();
-            root_1 = (CommonTree) adaptor.becomeRoot(
-                (CommonTree) adaptor.create(TOK_DATABASEPROPERTIES, "TOK_DATABASEPROPERTIES"), root_1);
+            root_1 = (CommonTree) adaptor
+                .becomeRoot((CommonTree) adaptor.create(TOK_DATABASEPROPERTIES, "TOK_DATABASEPROPERTIES"), root_1);
 
             adaptor.addChild(root_1, stream_dbPropertiesList.nextTree());
 
@@ -3856,19 +3840,18 @@ public class HiveParser extends Parser {
         stream_keyValueProperty.add(keyValueProperty97.getTree());
 
         // org/apache/hadoop/hive/ql/parse/HiveParser.g:811:24: ( COMMA keyValueProperty )*
-        loop19:
-        do {
+        loop19: do {
           int alt19 = 2;
           switch (input.LA(1)) {
             case COMMA: {
               alt19 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt19) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:811:25: COMMA keyValueProperty
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:811:25: COMMA keyValueProperty
             {
               COMMA98 = (Token) match(input, COMMA, FOLLOW_COMMA_in_dbPropertiesList2391);
               stream_COMMA.add(COMMA98);
@@ -3880,7 +3863,7 @@ public class HiveParser extends Parser {
 
               stream_keyValueProperty.add(keyValueProperty99.getTree());
             }
-            break;
+              break;
 
             default:
               break loop19;
@@ -3994,9 +3977,8 @@ public class HiveParser extends Parser {
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:819:8: ^( TOK_SWITCHDATABASE identifier )
           {
             CommonTree root_1 = (CommonTree) adaptor.nil();
-            root_1 =
-                (CommonTree) adaptor.becomeRoot((CommonTree) adaptor.create(TOK_SWITCHDATABASE, "TOK_SWITCHDATABASE"),
-                    root_1);
+            root_1 = (CommonTree) adaptor
+                .becomeRoot((CommonTree) adaptor.create(TOK_SWITCHDATABASE, "TOK_SWITCHDATABASE"), root_1);
 
             adaptor.addChild(root_1, stream_identifier.nextTree());
 
@@ -4073,11 +4055,11 @@ public class HiveParser extends Parser {
           case KW_DATABASE: {
             alt20 = 1;
           }
-          break;
+            break;
           case KW_SCHEMA: {
             alt20 = 2;
           }
-          break;
+            break;
           default:
             NoViableAltException nvae = new NoViableAltException("", 20, 0, input);
 
@@ -4086,19 +4068,19 @@ public class HiveParser extends Parser {
 
         switch (alt20) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:825:16: KW_DATABASE
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:825:16: KW_DATABASE
           {
             KW_DATABASE103 = (Token) match(input, KW_DATABASE, FOLLOW_KW_DATABASE_in_dropDatabaseStatement2476);
             stream_KW_DATABASE.add(KW_DATABASE103);
           }
-          break;
+            break;
           case 2:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:825:28: KW_SCHEMA
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:825:28: KW_SCHEMA
           {
             KW_SCHEMA104 = (Token) match(input, KW_SCHEMA, FOLLOW_KW_SCHEMA_in_dropDatabaseStatement2478);
             stream_KW_SCHEMA.add(KW_SCHEMA104);
           }
-          break;
+            break;
         }
 
         // org/apache/hadoop/hive/ql/parse/HiveParser.g:825:39: ( ifExists )?
@@ -4107,12 +4089,12 @@ public class HiveParser extends Parser {
           case KW_IF: {
             alt21 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt21) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:825:39: ifExists
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:825:39: ifExists
           {
             pushFollow(FOLLOW_ifExists_in_dropDatabaseStatement2481);
             ifExists105 = ifExists();
@@ -4121,7 +4103,7 @@ public class HiveParser extends Parser {
 
             stream_ifExists.add(ifExists105.getTree());
           }
-          break;
+            break;
         }
 
         pushFollow(FOLLOW_identifier_in_dropDatabaseStatement2484);
@@ -4138,12 +4120,12 @@ public class HiveParser extends Parser {
           case KW_RESTRICT: {
             alt22 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt22) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:825:60: restrictOrCascade
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:825:60: restrictOrCascade
           {
             pushFollow(FOLLOW_restrictOrCascade_in_dropDatabaseStatement2486);
             restrictOrCascade107 = restrictOrCascade();
@@ -4152,7 +4134,7 @@ public class HiveParser extends Parser {
 
             stream_restrictOrCascade.add(restrictOrCascade107.getTree());
           }
-          break;
+            break;
         }
 
         // AST REWRITE
@@ -4267,9 +4249,8 @@ public class HiveParser extends Parser {
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:833:8: ^( TOK_DATABASECOMMENT $comment)
           {
             CommonTree root_1 = (CommonTree) adaptor.nil();
-            root_1 =
-                (CommonTree) adaptor.becomeRoot((CommonTree) adaptor.create(TOK_DATABASECOMMENT, "TOK_DATABASECOMMENT"),
-                    root_1);
+            root_1 = (CommonTree) adaptor
+                .becomeRoot((CommonTree) adaptor.create(TOK_DATABASECOMMENT, "TOK_DATABASECOMMENT"), root_1);
 
             adaptor.addChild(root_1, stream_comment.nextNode());
 
@@ -4401,17 +4382,17 @@ public class HiveParser extends Parser {
           case KW_TEMPORARY: {
             alt23 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt23) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:839:18: temp= KW_TEMPORARY
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:839:18: temp= KW_TEMPORARY
           {
             temp = (Token) match(input, KW_TEMPORARY, FOLLOW_KW_TEMPORARY_in_createTableStatement2581);
             stream_KW_TEMPORARY.add(temp);
           }
-          break;
+            break;
         }
 
         // org/apache/hadoop/hive/ql/parse/HiveParser.g:839:38: (ext= KW_EXTERNAL )?
@@ -4420,17 +4401,17 @@ public class HiveParser extends Parser {
           case KW_EXTERNAL: {
             alt24 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt24) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:839:39: ext= KW_EXTERNAL
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:839:39: ext= KW_EXTERNAL
           {
             ext = (Token) match(input, KW_EXTERNAL, FOLLOW_KW_EXTERNAL_in_createTableStatement2588);
             stream_KW_EXTERNAL.add(ext);
           }
-          break;
+            break;
         }
 
         KW_TABLE110 = (Token) match(input, KW_TABLE, FOLLOW_KW_TABLE_in_createTableStatement2592);
@@ -4442,12 +4423,12 @@ public class HiveParser extends Parser {
           case KW_IF: {
             alt25 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt25) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:839:66: ifNotExists
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:839:66: ifNotExists
           {
             pushFollow(FOLLOW_ifNotExists_in_createTableStatement2594);
             ifNotExists111 = ifNotExists();
@@ -4456,7 +4437,7 @@ public class HiveParser extends Parser {
 
             stream_ifNotExists.add(ifNotExists111.getTree());
           }
-          break;
+            break;
         }
 
         pushFollow(FOLLOW_tableName_in_createTableStatement2599);
@@ -4472,7 +4453,7 @@ public class HiveParser extends Parser {
           case KW_LIKE: {
             alt40 = 1;
           }
-          break;
+            break;
           case EOF:
           case KW_AS:
           case KW_CLUSTERED:
@@ -4486,7 +4467,7 @@ public class HiveParser extends Parser {
           case LPAREN: {
             alt40 = 2;
           }
-          break;
+            break;
           default:
             NoViableAltException nvae = new NoViableAltException("", 40, 0, input);
 
@@ -4495,7 +4476,7 @@ public class HiveParser extends Parser {
 
         switch (alt40) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:840:10: like= KW_LIKE likeName= tableName ( tableRowFormat )? ( tableFileFormat )? ( location )? ( tablePropertiesPrefixed )?
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:840:10: like= KW_LIKE likeName= tableName ( tableRowFormat )? ( tableFileFormat )? ( location )? ( tablePropertiesPrefixed )?
           {
             like = (Token) match(input, KW_LIKE, FOLLOW_KW_LIKE_in_createTableStatement2612);
             stream_KW_LIKE.add(like);
@@ -4513,12 +4494,12 @@ public class HiveParser extends Parser {
               case KW_ROW: {
                 alt26 = 1;
               }
-              break;
+                break;
             }
 
             switch (alt26) {
               case 1:
-                // org/apache/hadoop/hive/ql/parse/HiveParser.g:841:10: tableRowFormat
+              // org/apache/hadoop/hive/ql/parse/HiveParser.g:841:10: tableRowFormat
               {
                 pushFollow(FOLLOW_tableRowFormat_in_createTableStatement2627);
                 tableRowFormat112 = tableRowFormat();
@@ -4527,7 +4508,7 @@ public class HiveParser extends Parser {
 
                 stream_tableRowFormat.add(tableRowFormat112.getTree());
               }
-              break;
+                break;
             }
 
             // org/apache/hadoop/hive/ql/parse/HiveParser.g:842:10: ( tableFileFormat )?
@@ -4536,12 +4517,12 @@ public class HiveParser extends Parser {
               case KW_STORED: {
                 alt27 = 1;
               }
-              break;
+                break;
             }
 
             switch (alt27) {
               case 1:
-                // org/apache/hadoop/hive/ql/parse/HiveParser.g:842:10: tableFileFormat
+              // org/apache/hadoop/hive/ql/parse/HiveParser.g:842:10: tableFileFormat
               {
                 pushFollow(FOLLOW_tableFileFormat_in_createTableStatement2639);
                 tableFileFormat113 = tableFileFormat();
@@ -4550,7 +4531,7 @@ public class HiveParser extends Parser {
 
                 stream_tableFileFormat.add(tableFileFormat113.getTree());
               }
-              break;
+                break;
             }
 
             // org/apache/hadoop/hive/ql/parse/HiveParser.g:843:10: ( location )?
@@ -4559,12 +4540,12 @@ public class HiveParser extends Parser {
               case KW_LOCATION: {
                 alt28 = 1;
               }
-              break;
+                break;
             }
 
             switch (alt28) {
               case 1:
-                // org/apache/hadoop/hive/ql/parse/HiveParser.g:843:10: location
+              // org/apache/hadoop/hive/ql/parse/HiveParser.g:843:10: location
               {
                 pushFollow(FOLLOW_location_in_createTableStatement2651);
                 location114 = location();
@@ -4573,7 +4554,7 @@ public class HiveParser extends Parser {
 
                 stream_location.add(location114.getTree());
               }
-              break;
+                break;
             }
 
             // org/apache/hadoop/hive/ql/parse/HiveParser.g:844:10: ( tablePropertiesPrefixed )?
@@ -4582,12 +4563,12 @@ public class HiveParser extends Parser {
               case KW_TBLPROPERTIES: {
                 alt29 = 1;
               }
-              break;
+                break;
             }
 
             switch (alt29) {
               case 1:
-                // org/apache/hadoop/hive/ql/parse/HiveParser.g:844:10: tablePropertiesPrefixed
+              // org/apache/hadoop/hive/ql/parse/HiveParser.g:844:10: tablePropertiesPrefixed
               {
                 pushFollow(FOLLOW_tablePropertiesPrefixed_in_createTableStatement2663);
                 tablePropertiesPrefixed115 = tablePropertiesPrefixed();
@@ -4596,12 +4577,12 @@ public class HiveParser extends Parser {
 
                 stream_tablePropertiesPrefixed.add(tablePropertiesPrefixed115.getTree());
               }
-              break;
+                break;
             }
           }
-          break;
+            break;
           case 2:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:845:10: ( LPAREN columnNameTypeList RPAREN )? ( tableComment )? ( tablePartition )? ( tableBuckets )? ( tableSkewed )? ( tableRowFormat )? ( tableFileFormat )? ( location )? ( tablePropertiesPrefixed )? ( KW_AS selectStatementWithCTE )?
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:845:10: ( LPAREN columnNameTypeList RPAREN )? ( tableComment )? ( tablePartition )? ( tableBuckets )? ( tableSkewed )? ( tableRowFormat )? ( tableFileFormat )? ( location )? ( tablePropertiesPrefixed )? ( KW_AS selectStatementWithCTE )?
           {
             // org/apache/hadoop/hive/ql/parse/HiveParser.g:845:10: ( LPAREN columnNameTypeList RPAREN )?
             int alt30 = 2;
@@ -4609,12 +4590,12 @@ public class HiveParser extends Parser {
               case LPAREN: {
                 alt30 = 1;
               }
-              break;
+                break;
             }
 
             switch (alt30) {
               case 1:
-                // org/apache/hadoop/hive/ql/parse/HiveParser.g:845:11: LPAREN columnNameTypeList RPAREN
+              // org/apache/hadoop/hive/ql/parse/HiveParser.g:845:11: LPAREN columnNameTypeList RPAREN
               {
                 LPAREN116 = (Token) match(input, LPAREN, FOLLOW_LPAREN_in_createTableStatement2676);
                 stream_LPAREN.add(LPAREN116);
@@ -4629,7 +4610,7 @@ public class HiveParser extends Parser {
                 RPAREN118 = (Token) match(input, RPAREN, FOLLOW_RPAREN_in_createTableStatement2680);
                 stream_RPAREN.add(RPAREN118);
               }
-              break;
+                break;
             }
 
             // org/apache/hadoop/hive/ql/parse/HiveParser.g:846:10: ( tableComment )?
@@ -4638,12 +4619,12 @@ public class HiveParser extends Parser {
               case KW_COMMENT: {
                 alt31 = 1;
               }
-              break;
+                break;
             }
 
             switch (alt31) {
               case 1:
-                // org/apache/hadoop/hive/ql/parse/HiveParser.g:846:10: tableComment
+              // org/apache/hadoop/hive/ql/parse/HiveParser.g:846:10: tableComment
               {
                 pushFollow(FOLLOW_tableComment_in_createTableStatement2693);
                 tableComment119 = tableComment();
@@ -4652,7 +4633,7 @@ public class HiveParser extends Parser {
 
                 stream_tableComment.add(tableComment119.getTree());
               }
-              break;
+                break;
             }
 
             // org/apache/hadoop/hive/ql/parse/HiveParser.g:847:10: ( tablePartition )?
@@ -4661,12 +4642,12 @@ public class HiveParser extends Parser {
               case KW_PARTITIONED: {
                 alt32 = 1;
               }
-              break;
+                break;
             }
 
             switch (alt32) {
               case 1:
-                // org/apache/hadoop/hive/ql/parse/HiveParser.g:847:10: tablePartition
+              // org/apache/hadoop/hive/ql/parse/HiveParser.g:847:10: tablePartition
               {
                 pushFollow(FOLLOW_tablePartition_in_createTableStatement2705);
                 tablePartition120 = tablePartition();
@@ -4675,7 +4656,7 @@ public class HiveParser extends Parser {
 
                 stream_tablePartition.add(tablePartition120.getTree());
               }
-              break;
+                break;
             }
 
             // org/apache/hadoop/hive/ql/parse/HiveParser.g:848:10: ( tableBuckets )?
@@ -4684,12 +4665,12 @@ public class HiveParser extends Parser {
               case KW_CLUSTERED: {
                 alt33 = 1;
               }
-              break;
+                break;
             }
 
             switch (alt33) {
               case 1:
-                // org/apache/hadoop/hive/ql/parse/HiveParser.g:848:10: tableBuckets
+              // org/apache/hadoop/hive/ql/parse/HiveParser.g:848:10: tableBuckets
               {
                 pushFollow(FOLLOW_tableBuckets_in_createTableStatement2717);
                 tableBuckets121 = tableBuckets();
@@ -4698,7 +4679,7 @@ public class HiveParser extends Parser {
 
                 stream_tableBuckets.add(tableBuckets121.getTree());
               }
-              break;
+                break;
             }
 
             // org/apache/hadoop/hive/ql/parse/HiveParser.g:849:10: ( tableSkewed )?
@@ -4707,12 +4688,12 @@ public class HiveParser extends Parser {
               case KW_SKEWED: {
                 alt34 = 1;
               }
-              break;
+                break;
             }
 
             switch (alt34) {
               case 1:
-                // org/apache/hadoop/hive/ql/parse/HiveParser.g:849:10: tableSkewed
+              // org/apache/hadoop/hive/ql/parse/HiveParser.g:849:10: tableSkewed
               {
                 pushFollow(FOLLOW_tableSkewed_in_createTableStatement2729);
                 tableSkewed122 = tableSkewed();
@@ -4721,7 +4702,7 @@ public class HiveParser extends Parser {
 
                 stream_tableSkewed.add(tableSkewed122.getTree());
               }
-              break;
+                break;
             }
 
             // org/apache/hadoop/hive/ql/parse/HiveParser.g:850:10: ( tableRowFormat )?
@@ -4730,12 +4711,12 @@ public class HiveParser extends Parser {
               case KW_ROW: {
                 alt35 = 1;
               }
-              break;
+                break;
             }
 
             switch (alt35) {
               case 1:
-                // org/apache/hadoop/hive/ql/parse/HiveParser.g:850:10: tableRowFormat
+              // org/apache/hadoop/hive/ql/parse/HiveParser.g:850:10: tableRowFormat
               {
                 pushFollow(FOLLOW_tableRowFormat_in_createTableStatement2741);
                 tableRowFormat123 = tableRowFormat();
@@ -4744,7 +4725,7 @@ public class HiveParser extends Parser {
 
                 stream_tableRowFormat.add(tableRowFormat123.getTree());
               }
-              break;
+                break;
             }
 
             // org/apache/hadoop/hive/ql/parse/HiveParser.g:851:10: ( tableFileFormat )?
@@ -4753,12 +4734,12 @@ public class HiveParser extends Parser {
               case KW_STORED: {
                 alt36 = 1;
               }
-              break;
+                break;
             }
 
             switch (alt36) {
               case 1:
-                // org/apache/hadoop/hive/ql/parse/HiveParser.g:851:10: tableFileFormat
+              // org/apache/hadoop/hive/ql/parse/HiveParser.g:851:10: tableFileFormat
               {
                 pushFollow(FOLLOW_tableFileFormat_in_createTableStatement2753);
                 tableFileFormat124 = tableFileFormat();
@@ -4767,7 +4748,7 @@ public class HiveParser extends Parser {
 
                 stream_tableFileFormat.add(tableFileFormat124.getTree());
               }
-              break;
+                break;
             }
 
             // org/apache/hadoop/hive/ql/parse/HiveParser.g:852:10: ( location )?
@@ -4776,12 +4757,12 @@ public class HiveParser extends Parser {
               case KW_LOCATION: {
                 alt37 = 1;
               }
-              break;
+                break;
             }
 
             switch (alt37) {
               case 1:
-                // org/apache/hadoop/hive/ql/parse/HiveParser.g:852:10: location
+              // org/apache/hadoop/hive/ql/parse/HiveParser.g:852:10: location
               {
                 pushFollow(FOLLOW_location_in_createTableStatement2765);
                 location125 = location();
@@ -4790,7 +4771,7 @@ public class HiveParser extends Parser {
 
                 stream_location.add(location125.getTree());
               }
-              break;
+                break;
             }
 
             // org/apache/hadoop/hive/ql/parse/HiveParser.g:853:10: ( tablePropertiesPrefixed )?
@@ -4799,12 +4780,12 @@ public class HiveParser extends Parser {
               case KW_TBLPROPERTIES: {
                 alt38 = 1;
               }
-              break;
+                break;
             }
 
             switch (alt38) {
               case 1:
-                // org/apache/hadoop/hive/ql/parse/HiveParser.g:853:10: tablePropertiesPrefixed
+              // org/apache/hadoop/hive/ql/parse/HiveParser.g:853:10: tablePropertiesPrefixed
               {
                 pushFollow(FOLLOW_tablePropertiesPrefixed_in_createTableStatement2777);
                 tablePropertiesPrefixed126 = tablePropertiesPrefixed();
@@ -4813,7 +4794,7 @@ public class HiveParser extends Parser {
 
                 stream_tablePropertiesPrefixed.add(tablePropertiesPrefixed126.getTree());
               }
-              break;
+                break;
             }
 
             // org/apache/hadoop/hive/ql/parse/HiveParser.g:854:10: ( KW_AS selectStatementWithCTE )?
@@ -4822,12 +4803,12 @@ public class HiveParser extends Parser {
               case KW_AS: {
                 alt39 = 1;
               }
-              break;
+                break;
             }
 
             switch (alt39) {
               case 1:
-                // org/apache/hadoop/hive/ql/parse/HiveParser.g:854:11: KW_AS selectStatementWithCTE
+              // org/apache/hadoop/hive/ql/parse/HiveParser.g:854:11: KW_AS selectStatementWithCTE
               {
                 KW_AS127 = (Token) match(input, KW_AS, FOLLOW_KW_AS_in_createTableStatement2790);
                 stream_KW_AS.add(KW_AS127);
@@ -4839,10 +4820,10 @@ public class HiveParser extends Parser {
 
                 stream_selectStatementWithCTE.add(selectStatementWithCTE128.getTree());
               }
-              break;
+                break;
             }
           }
-          break;
+            break;
         }
 
         // AST REWRITE
@@ -5053,12 +5034,12 @@ public class HiveParser extends Parser {
           case KW_COLUMNS: {
             alt41 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt41) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:874:50: KW_COLUMNS LPAREN columnNameList RPAREN
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:874:50: KW_COLUMNS LPAREN columnNameList RPAREN
           {
             KW_COLUMNS132 = (Token) match(input, KW_COLUMNS, FOLLOW_KW_COLUMNS_in_truncateTableStatement3006);
             stream_KW_COLUMNS.add(KW_COLUMNS132);
@@ -5076,7 +5057,7 @@ public class HiveParser extends Parser {
             RPAREN135 = (Token) match(input, RPAREN, FOLLOW_RPAREN_in_truncateTableStatement3012);
             stream_RPAREN.add(RPAREN135);
           }
-          break;
+            break;
         }
 
         // AST REWRITE
@@ -5096,9 +5077,8 @@ public class HiveParser extends Parser {
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:874:95: ^( TOK_TRUNCATETABLE tablePartitionPrefix ( columnNameList )? )
           {
             CommonTree root_1 = (CommonTree) adaptor.nil();
-            root_1 =
-                (CommonTree) adaptor.becomeRoot((CommonTree) adaptor.create(TOK_TRUNCATETABLE, "TOK_TRUNCATETABLE"),
-                    root_1);
+            root_1 = (CommonTree) adaptor
+                .becomeRoot((CommonTree) adaptor.create(TOK_TRUNCATETABLE, "TOK_TRUNCATETABLE"), root_1);
 
             adaptor.addChild(root_1, stream_tablePartitionPrefix.nextTree());
 
@@ -5264,12 +5244,12 @@ public class HiveParser extends Parser {
           case KW_WITH: {
             alt42 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt42) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:882:7: autoRebuild
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:882:7: autoRebuild
           {
             pushFollow(FOLLOW_autoRebuild_in_createIndexStatement3095);
             autoRebuild143 = autoRebuild();
@@ -5278,7 +5258,7 @@ public class HiveParser extends Parser {
 
             stream_autoRebuild.add(autoRebuild143.getTree());
           }
-          break;
+            break;
         }
 
         // org/apache/hadoop/hive/ql/parse/HiveParser.g:883:7: ( indexPropertiesPrefixed )?
@@ -5287,12 +5267,12 @@ public class HiveParser extends Parser {
           case KW_IDXPROPERTIES: {
             alt43 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt43) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:883:7: indexPropertiesPrefixed
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:883:7: indexPropertiesPrefixed
           {
             pushFollow(FOLLOW_indexPropertiesPrefixed_in_createIndexStatement3104);
             indexPropertiesPrefixed144 = indexPropertiesPrefixed();
@@ -5301,7 +5281,7 @@ public class HiveParser extends Parser {
 
             stream_indexPropertiesPrefixed.add(indexPropertiesPrefixed144.getTree());
           }
-          break;
+            break;
         }
 
         // org/apache/hadoop/hive/ql/parse/HiveParser.g:884:7: ( indexTblName )?
@@ -5310,12 +5290,12 @@ public class HiveParser extends Parser {
           case KW_IN: {
             alt44 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt44) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:884:7: indexTblName
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:884:7: indexTblName
           {
             pushFollow(FOLLOW_indexTblName_in_createIndexStatement3113);
             indexTblName145 = indexTblName();
@@ -5324,7 +5304,7 @@ public class HiveParser extends Parser {
 
             stream_indexTblName.add(indexTblName145.getTree());
           }
-          break;
+            break;
         }
 
         // org/apache/hadoop/hive/ql/parse/HiveParser.g:885:7: ( tableRowFormat )?
@@ -5333,12 +5313,12 @@ public class HiveParser extends Parser {
           case KW_ROW: {
             alt45 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt45) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:885:7: tableRowFormat
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:885:7: tableRowFormat
           {
             pushFollow(FOLLOW_tableRowFormat_in_createIndexStatement3122);
             tableRowFormat146 = tableRowFormat();
@@ -5347,7 +5327,7 @@ public class HiveParser extends Parser {
 
             stream_tableRowFormat.add(tableRowFormat146.getTree());
           }
-          break;
+            break;
         }
 
         // org/apache/hadoop/hive/ql/parse/HiveParser.g:886:7: ( tableFileFormat )?
@@ -5356,12 +5336,12 @@ public class HiveParser extends Parser {
           case KW_STORED: {
             alt46 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt46) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:886:7: tableFileFormat
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:886:7: tableFileFormat
           {
             pushFollow(FOLLOW_tableFileFormat_in_createIndexStatement3131);
             tableFileFormat147 = tableFileFormat();
@@ -5370,7 +5350,7 @@ public class HiveParser extends Parser {
 
             stream_tableFileFormat.add(tableFileFormat147.getTree());
           }
-          break;
+            break;
         }
 
         // org/apache/hadoop/hive/ql/parse/HiveParser.g:887:7: ( location )?
@@ -5379,12 +5359,12 @@ public class HiveParser extends Parser {
           case KW_LOCATION: {
             alt47 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt47) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:887:7: location
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:887:7: location
           {
             pushFollow(FOLLOW_location_in_createIndexStatement3140);
             location148 = location();
@@ -5393,7 +5373,7 @@ public class HiveParser extends Parser {
 
             stream_location.add(location148.getTree());
           }
-          break;
+            break;
         }
 
         // org/apache/hadoop/hive/ql/parse/HiveParser.g:888:7: ( tablePropertiesPrefixed )?
@@ -5402,12 +5382,12 @@ public class HiveParser extends Parser {
           case KW_TBLPROPERTIES: {
             alt48 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt48) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:888:7: tablePropertiesPrefixed
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:888:7: tablePropertiesPrefixed
           {
             pushFollow(FOLLOW_tablePropertiesPrefixed_in_createIndexStatement3149);
             tablePropertiesPrefixed149 = tablePropertiesPrefixed();
@@ -5416,7 +5396,7 @@ public class HiveParser extends Parser {
 
             stream_tablePropertiesPrefixed.add(tablePropertiesPrefixed149.getTree());
           }
-          break;
+            break;
         }
 
         // org/apache/hadoop/hive/ql/parse/HiveParser.g:889:7: ( indexComment )?
@@ -5425,12 +5405,12 @@ public class HiveParser extends Parser {
           case KW_COMMENT: {
             alt49 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt49) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:889:7: indexComment
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:889:7: indexComment
           {
             pushFollow(FOLLOW_indexComment_in_createIndexStatement3158);
             indexComment150 = indexComment();
@@ -5439,7 +5419,7 @@ public class HiveParser extends Parser {
 
             stream_indexComment.add(indexComment150.getTree());
           }
-          break;
+            break;
         }
 
         // AST REWRITE
@@ -5929,9 +5909,8 @@ public class HiveParser extends Parser {
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:933:44: ^( TOK_INDEXPROPERTIES indexPropertiesList )
           {
             CommonTree root_1 = (CommonTree) adaptor.nil();
-            root_1 =
-                (CommonTree) adaptor.becomeRoot((CommonTree) adaptor.create(TOK_INDEXPROPERTIES, "TOK_INDEXPROPERTIES"),
-                    root_1);
+            root_1 = (CommonTree) adaptor
+                .becomeRoot((CommonTree) adaptor.create(TOK_INDEXPROPERTIES, "TOK_INDEXPROPERTIES"), root_1);
 
             adaptor.addChild(root_1, stream_indexPropertiesList.nextTree());
 
@@ -5997,19 +5976,18 @@ public class HiveParser extends Parser {
         stream_keyValueProperty.add(keyValueProperty162.getTree());
 
         // org/apache/hadoop/hive/ql/parse/HiveParser.g:940:24: ( COMMA keyValueProperty )*
-        loop50:
-        do {
+        loop50: do {
           int alt50 = 2;
           switch (input.LA(1)) {
             case COMMA: {
               alt50 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt50) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:940:25: COMMA keyValueProperty
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:940:25: COMMA keyValueProperty
             {
               COMMA163 = (Token) match(input, COMMA, FOLLOW_COMMA_in_indexPropertiesList3537);
               stream_COMMA.add(COMMA163);
@@ -6021,7 +5999,7 @@ public class HiveParser extends Parser {
 
               stream_keyValueProperty.add(keyValueProperty164.getTree());
             }
-            break;
+              break;
 
             default:
               break loop50;
@@ -6045,9 +6023,8 @@ public class HiveParser extends Parser {
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:940:53: ^( TOK_INDEXPROPLIST ( keyValueProperty )+ )
           {
             CommonTree root_1 = (CommonTree) adaptor.nil();
-            root_1 =
-                (CommonTree) adaptor.becomeRoot((CommonTree) adaptor.create(TOK_INDEXPROPLIST, "TOK_INDEXPROPLIST"),
-                    root_1);
+            root_1 = (CommonTree) adaptor
+                .becomeRoot((CommonTree) adaptor.create(TOK_INDEXPROPLIST, "TOK_INDEXPROPLIST"), root_1);
 
             if (!(stream_keyValueProperty.hasNext())) {
               throw new RewriteEarlyExitException();
@@ -6133,12 +6110,12 @@ public class HiveParser extends Parser {
           case KW_IF: {
             alt51 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt51) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:946:24: ifExists
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:946:24: ifExists
           {
             pushFollow(FOLLOW_ifExists_in_dropIndexStatement3581);
             ifExists167 = ifExists();
@@ -6147,7 +6124,7 @@ public class HiveParser extends Parser {
 
             stream_ifExists.add(ifExists167.getTree());
           }
-          break;
+            break;
         }
 
         pushFollow(FOLLOW_identifier_in_dropIndexStatement3586);
@@ -6277,12 +6254,12 @@ public class HiveParser extends Parser {
           case KW_IF: {
             alt52 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt52) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:953:24: ifExists
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:953:24: ifExists
           {
             pushFollow(FOLLOW_ifExists_in_dropTableStatement3641);
             ifExists171 = ifExists();
@@ -6291,7 +6268,7 @@ public class HiveParser extends Parser {
 
             stream_ifExists.add(ifExists171.getTree());
           }
-          break;
+            break;
         }
 
         pushFollow(FOLLOW_tableName_in_dropTableStatement3644);
@@ -6307,17 +6284,17 @@ public class HiveParser extends Parser {
           case KW_PURGE: {
             alt53 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt53) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:953:44: KW_PURGE
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:953:44: KW_PURGE
           {
             KW_PURGE173 = (Token) match(input, KW_PURGE, FOLLOW_KW_PURGE_in_dropTableStatement3646);
             stream_KW_PURGE.add(KW_PURGE173);
           }
-          break;
+            break;
         }
 
         // org/apache/hadoop/hive/ql/parse/HiveParser.g:953:54: ( replicationClause )?
@@ -6326,12 +6303,12 @@ public class HiveParser extends Parser {
           case KW_FOR: {
             alt54 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt54) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:953:54: replicationClause
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:953:54: replicationClause
           {
             pushFollow(FOLLOW_replicationClause_in_dropTableStatement3649);
             replicationClause174 = replicationClause();
@@ -6340,7 +6317,7 @@ public class HiveParser extends Parser {
 
             stream_replicationClause.add(replicationClause174.getTree());
           }
-          break;
+            break;
         }
 
         // AST REWRITE
@@ -6482,27 +6459,27 @@ public class HiveParser extends Parser {
             case KW_TABLE: {
               alt57 = 1;
             }
-            break;
+              break;
             case KW_VIEW: {
               alt57 = 2;
             }
-            break;
+              break;
             case KW_INDEX: {
               alt57 = 3;
             }
-            break;
+              break;
             case KW_DATABASE:
             case KW_SCHEMA: {
               alt57 = 4;
             }
-            break;
+              break;
             default:
               NoViableAltException nvae = new NoViableAltException("", 57, 1, input);
 
               throw nvae;
           }
         }
-        break;
+          break;
         default:
           NoViableAltException nvae = new NoViableAltException("", 57, 0, input);
 
@@ -6511,7 +6488,7 @@ public class HiveParser extends Parser {
 
       switch (alt57) {
         case 1:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:960:7: KW_ALTER KW_TABLE tableName alterTableStatementSuffix
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:960:7: KW_ALTER KW_TABLE tableName alterTableStatementSuffix
         {
           KW_ALTER175 = (Token) match(input, KW_ALTER, FOLLOW_KW_ALTER_in_alterStatement3698);
           stream_KW_ALTER.add(KW_ALTER175);
@@ -6563,9 +6540,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 2:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:961:7: KW_ALTER KW_VIEW tableName ( KW_AS )? alterViewStatementSuffix
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:961:7: KW_ALTER KW_VIEW tableName ( KW_AS )? alterViewStatementSuffix
         {
           KW_ALTER179 = (Token) match(input, KW_ALTER, FOLLOW_KW_ALTER_in_alterStatement3722);
           stream_KW_ALTER.add(KW_ALTER179);
@@ -6586,17 +6563,17 @@ public class HiveParser extends Parser {
             case KW_AS: {
               alt55 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt55) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:961:34: KW_AS
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:961:34: KW_AS
             {
               KW_AS182 = (Token) match(input, KW_AS, FOLLOW_KW_AS_in_alterStatement3728);
               stream_KW_AS.add(KW_AS182);
             }
-            break;
+              break;
           }
 
           pushFollow(FOLLOW_alterViewStatementSuffix_in_alterStatement3731);
@@ -6636,9 +6613,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 3:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:962:7: KW_ALTER KW_INDEX alterIndexStatementSuffix
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:962:7: KW_ALTER KW_INDEX alterIndexStatementSuffix
         {
           KW_ALTER184 = (Token) match(input, KW_ALTER, FOLLOW_KW_ALTER_in_alterStatement3749);
           stream_KW_ALTER.add(KW_ALTER184);
@@ -6672,9 +6649,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 4:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:963:7: KW_ALTER ( KW_DATABASE | KW_SCHEMA ) alterDatabaseStatementSuffix
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:963:7: KW_ALTER ( KW_DATABASE | KW_SCHEMA ) alterDatabaseStatementSuffix
         {
           KW_ALTER187 = (Token) match(input, KW_ALTER, FOLLOW_KW_ALTER_in_alterStatement3765);
           stream_KW_ALTER.add(KW_ALTER187);
@@ -6685,11 +6662,11 @@ public class HiveParser extends Parser {
             case KW_DATABASE: {
               alt56 = 1;
             }
-            break;
+              break;
             case KW_SCHEMA: {
               alt56 = 2;
             }
-            break;
+              break;
             default:
               NoViableAltException nvae = new NoViableAltException("", 56, 0, input);
 
@@ -6698,19 +6675,19 @@ public class HiveParser extends Parser {
 
           switch (alt56) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:963:17: KW_DATABASE
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:963:17: KW_DATABASE
             {
               KW_DATABASE188 = (Token) match(input, KW_DATABASE, FOLLOW_KW_DATABASE_in_alterStatement3768);
               stream_KW_DATABASE.add(KW_DATABASE188);
             }
-            break;
+              break;
             case 2:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:963:29: KW_SCHEMA
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:963:29: KW_SCHEMA
             {
               KW_SCHEMA189 = (Token) match(input, KW_SCHEMA, FOLLOW_KW_SCHEMA_in_alterStatement3770);
               stream_KW_SCHEMA.add(KW_SCHEMA189);
             }
-            break;
+              break;
           }
 
           pushFollow(FOLLOW_alterDatabaseStatementSuffix_in_alterStatement3773);
@@ -6739,7 +6716,7 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
       }
       retval.stop = input.LT(-1);
 
@@ -7031,25 +7008,25 @@ public class HiveParser extends Parser {
                 case KW_WITH: {
                   alt59 = 1;
                 }
-                break;
+                  break;
                 case KW_PARTITION: {
                   alt59 = 1;
                 }
-                break;
+                  break;
                 default:
                   NoViableAltException nvae = new NoViableAltException("", 59, 22, input);
 
                   throw nvae;
               }
             }
-            break;
+              break;
             default:
               NoViableAltException nvae = new NoViableAltException("", 59, 1, input);
 
               throw nvae;
           }
         }
-        break;
+          break;
         case KW_UPDATE: {
           switch (input.LA(2)) {
             case KW_STATISTICS: {
@@ -7057,61 +7034,61 @@ public class HiveParser extends Parser {
                 case KW_FOR: {
                   alt59 = 2;
                 }
-                break;
+                  break;
                 default:
                   NoViableAltException nvae = new NoViableAltException("", 59, 23, input);
 
                   throw nvae;
               }
             }
-            break;
+              break;
             default:
               NoViableAltException nvae = new NoViableAltException("", 59, 2, input);
 
               throw nvae;
           }
         }
-        break;
+          break;
         case KW_DROP: {
           alt59 = 3;
         }
-        break;
+          break;
         case KW_ADD: {
           switch (input.LA(2)) {
             case KW_IF:
             case KW_PARTITION: {
               alt59 = 4;
             }
-            break;
+              break;
             case KW_COLUMNS: {
               alt59 = 12;
             }
-            break;
+              break;
             default:
               NoViableAltException nvae = new NoViableAltException("", 59, 4, input);
 
               throw nvae;
           }
         }
-        break;
+          break;
         case KW_TOUCH: {
           alt59 = 5;
         }
-        break;
+          break;
         case KW_ARCHIVE: {
           alt59 = 6;
         }
-        break;
+          break;
         case KW_UNARCHIVE: {
           alt59 = 7;
         }
-        break;
+          break;
         case KW_SET: {
           switch (input.LA(2)) {
             case KW_TBLPROPERTIES: {
               alt59 = 8;
             }
-            break;
+              break;
             case KW_FILEFORMAT:
             case KW_LOCATION:
             case KW_SERDE:
@@ -7119,62 +7096,62 @@ public class HiveParser extends Parser {
             case KW_SKEWED: {
               alt59 = 12;
             }
-            break;
+              break;
             default:
               NoViableAltException nvae = new NoViableAltException("", 59, 8, input);
 
               throw nvae;
           }
         }
-        break;
+          break;
         case KW_UNSET: {
           alt59 = 8;
         }
-        break;
+          break;
         case KW_SKEWED: {
           alt59 = 9;
         }
-        break;
+          break;
         case KW_NOT: {
           switch (input.LA(2)) {
             case KW_SKEWED:
             case KW_STORED: {
               alt59 = 9;
             }
-            break;
+              break;
             case KW_CLUSTERED:
             case KW_SORTED: {
               alt59 = 12;
             }
-            break;
+              break;
             default:
               NoViableAltException nvae = new NoViableAltException("", 59, 11, input);
 
               throw nvae;
           }
         }
-        break;
+          break;
         case KW_EXCHANGE: {
           alt59 = 10;
         }
-        break;
+          break;
         case KW_PARTITION: {
           switch (input.LA(2)) {
             case KW_COLUMN: {
               alt59 = 11;
             }
-            break;
+              break;
             case LPAREN: {
               alt59 = 12;
             }
-            break;
+              break;
             default:
               NoViableAltException nvae = new NoViableAltException("", 59, 13, input);
 
               throw nvae;
           }
         }
-        break;
+          break;
         case KW_CHANGE:
         case KW_CLUSTERED:
         case KW_COMPACT:
@@ -7185,7 +7162,7 @@ public class HiveParser extends Parser {
         case KW_REPLACE: {
           alt59 = 12;
         }
-        break;
+          break;
         default:
           NoViableAltException nvae = new NoViableAltException("", 59, 0, input);
 
@@ -7194,7 +7171,7 @@ public class HiveParser extends Parser {
 
       switch (alt59) {
         case 1:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:969:7: alterStatementSuffixRename[true]
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:969:7: alterStatementSuffixRename[true]
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -7205,9 +7182,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, alterStatementSuffixRename191.getTree());
         }
-        break;
+          break;
         case 2:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:970:7: alterStatementSuffixUpdateStatsCol
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:970:7: alterStatementSuffixUpdateStatsCol
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -7218,9 +7195,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, alterStatementSuffixUpdateStatsCol192.getTree());
         }
-        break;
+          break;
         case 3:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:971:7: alterStatementSuffixDropPartitions[true]
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:971:7: alterStatementSuffixDropPartitions[true]
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -7231,9 +7208,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, alterStatementSuffixDropPartitions193.getTree());
         }
-        break;
+          break;
         case 4:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:972:7: alterStatementSuffixAddPartitions[true]
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:972:7: alterStatementSuffixAddPartitions[true]
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -7244,9 +7221,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, alterStatementSuffixAddPartitions194.getTree());
         }
-        break;
+          break;
         case 5:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:973:7: alterStatementSuffixTouch
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:973:7: alterStatementSuffixTouch
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -7257,9 +7234,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, alterStatementSuffixTouch195.getTree());
         }
-        break;
+          break;
         case 6:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:974:7: alterStatementSuffixArchive
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:974:7: alterStatementSuffixArchive
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -7270,9 +7247,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, alterStatementSuffixArchive196.getTree());
         }
-        break;
+          break;
         case 7:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:975:7: alterStatementSuffixUnArchive
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:975:7: alterStatementSuffixUnArchive
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -7283,9 +7260,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, alterStatementSuffixUnArchive197.getTree());
         }
-        break;
+          break;
         case 8:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:976:7: alterStatementSuffixProperties
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:976:7: alterStatementSuffixProperties
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -7296,9 +7273,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, alterStatementSuffixProperties198.getTree());
         }
-        break;
+          break;
         case 9:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:977:7: alterStatementSuffixSkewedby
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:977:7: alterStatementSuffixSkewedby
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -7309,9 +7286,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, alterStatementSuffixSkewedby199.getTree());
         }
-        break;
+          break;
         case 10:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:978:7: alterStatementSuffixExchangePartition
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:978:7: alterStatementSuffixExchangePartition
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -7322,9 +7299,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, alterStatementSuffixExchangePartition200.getTree());
         }
-        break;
+          break;
         case 11:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:979:7: alterStatementPartitionKeyType
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:979:7: alterStatementPartitionKeyType
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -7335,9 +7312,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, alterStatementPartitionKeyType201.getTree());
         }
-        break;
+          break;
         case 12:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:980:7: ( partitionSpec )? alterTblPartitionStatementSuffix
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:980:7: ( partitionSpec )? alterTblPartitionStatementSuffix
         {
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:980:7: ( partitionSpec )?
           int alt58 = 2;
@@ -7345,12 +7322,12 @@ public class HiveParser extends Parser {
             case KW_PARTITION: {
               alt58 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt58) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:980:7: partitionSpec
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:980:7: partitionSpec
             {
               pushFollow(FOLLOW_partitionSpec_in_alterTableStatementSuffix3895);
               partitionSpec202 = partitionSpec();
@@ -7359,7 +7336,7 @@ public class HiveParser extends Parser {
 
               stream_partitionSpec.add(partitionSpec202.getTree());
             }
-            break;
+              break;
           }
 
           pushFollow(FOLLOW_alterTblPartitionStatementSuffix_in_alterTableStatementSuffix3898);
@@ -7394,7 +7371,7 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
       }
       retval.stop = input.LT(-1);
 
@@ -7469,66 +7446,66 @@ public class HiveParser extends Parser {
             case KW_FILEFORMAT: {
               alt60 = 1;
             }
-            break;
+              break;
             case KW_SERDE:
             case KW_SERDEPROPERTIES: {
               alt60 = 5;
             }
-            break;
+              break;
             case KW_SKEWED: {
               alt60 = 8;
             }
-            break;
+              break;
             case KW_LOCATION: {
               alt60 = 2;
             }
-            break;
+              break;
             default:
               NoViableAltException nvae = new NoViableAltException("", 60, 1, input);
 
               throw nvae;
           }
         }
-        break;
+          break;
         case KW_DISABLE:
         case KW_ENABLE: {
           alt60 = 3;
         }
-        break;
+          break;
         case KW_CONCATENATE: {
           alt60 = 4;
         }
-        break;
+          break;
         case KW_RENAME: {
           alt60 = 6;
         }
-        break;
+          break;
         case KW_INTO: {
           alt60 = 7;
         }
-        break;
+          break;
         case KW_CLUSTERED:
         case KW_NOT: {
           alt60 = 9;
         }
-        break;
+          break;
         case KW_COMPACT: {
           alt60 = 10;
         }
-        break;
+          break;
         case KW_UPDATE: {
           alt60 = 11;
         }
-        break;
+          break;
         case KW_CHANGE: {
           alt60 = 12;
         }
-        break;
+          break;
         case KW_ADD:
         case KW_REPLACE: {
           alt60 = 13;
         }
-        break;
+          break;
         default:
           NoViableAltException nvae = new NoViableAltException("", 60, 0, input);
 
@@ -7537,7 +7514,7 @@ public class HiveParser extends Parser {
 
       switch (alt60) {
         case 1:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:986:5: alterStatementSuffixFileFormat
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:986:5: alterStatementSuffixFileFormat
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -7548,9 +7525,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, alterStatementSuffixFileFormat204.getTree());
         }
-        break;
+          break;
         case 2:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:987:5: alterStatementSuffixLocation
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:987:5: alterStatementSuffixLocation
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -7561,9 +7538,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, alterStatementSuffixLocation205.getTree());
         }
-        break;
+          break;
         case 3:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:988:5: alterStatementSuffixProtectMode
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:988:5: alterStatementSuffixProtectMode
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -7574,9 +7551,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, alterStatementSuffixProtectMode206.getTree());
         }
-        break;
+          break;
         case 4:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:989:5: alterStatementSuffixMergeFiles
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:989:5: alterStatementSuffixMergeFiles
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -7587,9 +7564,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, alterStatementSuffixMergeFiles207.getTree());
         }
-        break;
+          break;
         case 5:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:990:5: alterStatementSuffixSerdeProperties
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:990:5: alterStatementSuffixSerdeProperties
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -7600,9 +7577,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, alterStatementSuffixSerdeProperties208.getTree());
         }
-        break;
+          break;
         case 6:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:991:5: alterStatementSuffixRenamePart
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:991:5: alterStatementSuffixRenamePart
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -7613,9 +7590,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, alterStatementSuffixRenamePart209.getTree());
         }
-        break;
+          break;
         case 7:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:992:5: alterStatementSuffixBucketNum
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:992:5: alterStatementSuffixBucketNum
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -7626,9 +7603,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, alterStatementSuffixBucketNum210.getTree());
         }
-        break;
+          break;
         case 8:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:993:5: alterTblPartitionStatementSuffixSkewedLocation
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:993:5: alterTblPartitionStatementSuffixSkewedLocation
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -7639,9 +7616,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, alterTblPartitionStatementSuffixSkewedLocation211.getTree());
         }
-        break;
+          break;
         case 9:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:994:5: alterStatementSuffixClusterbySortby
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:994:5: alterStatementSuffixClusterbySortby
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -7652,9 +7629,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, alterStatementSuffixClusterbySortby212.getTree());
         }
-        break;
+          break;
         case 10:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:995:5: alterStatementSuffixCompact
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:995:5: alterStatementSuffixCompact
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -7665,9 +7642,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, alterStatementSuffixCompact213.getTree());
         }
-        break;
+          break;
         case 11:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:996:5: alterStatementSuffixUpdateStatsCol
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:996:5: alterStatementSuffixUpdateStatsCol
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -7678,9 +7655,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, alterStatementSuffixUpdateStatsCol214.getTree());
         }
-        break;
+          break;
         case 12:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:997:5: alterStatementSuffixRenameCol
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:997:5: alterStatementSuffixRenameCol
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -7691,9 +7668,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, alterStatementSuffixRenameCol215.getTree());
         }
-        break;
+          break;
         case 13:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:998:5: alterStatementSuffixAddCol
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:998:5: alterStatementSuffixAddCol
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -7704,7 +7681,7 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, alterStatementSuffixAddCol216.getTree());
         }
-        break;
+          break;
       }
       retval.stop = input.LT(-1);
 
@@ -7862,26 +7839,26 @@ public class HiveParser extends Parser {
         case KW_UNSET: {
           alt61 = 1;
         }
-        break;
+          break;
         case KW_RENAME: {
           alt61 = 2;
         }
-        break;
+          break;
         case KW_ADD: {
           alt61 = 3;
         }
-        break;
+          break;
         case KW_DROP: {
           alt61 = 4;
         }
-        break;
+          break;
         case KW_MAP:
         case KW_REDUCE:
         case KW_SELECT:
         case KW_WITH: {
           alt61 = 5;
         }
-        break;
+          break;
         default:
           NoViableAltException nvae = new NoViableAltException("", 61, 0, input);
 
@@ -7890,7 +7867,7 @@ public class HiveParser extends Parser {
 
       switch (alt61) {
         case 1:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1011:7: alterViewSuffixProperties
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1011:7: alterViewSuffixProperties
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -7901,9 +7878,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, alterViewSuffixProperties222.getTree());
         }
-        break;
+          break;
         case 2:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1012:7: alterStatementSuffixRename[false]
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1012:7: alterStatementSuffixRename[false]
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -7914,9 +7891,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, alterStatementSuffixRename223.getTree());
         }
-        break;
+          break;
         case 3:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1013:7: alterStatementSuffixAddPartitions[false]
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1013:7: alterStatementSuffixAddPartitions[false]
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -7927,9 +7904,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, alterStatementSuffixAddPartitions224.getTree());
         }
-        break;
+          break;
         case 4:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1014:7: alterStatementSuffixDropPartitions[false]
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1014:7: alterStatementSuffixDropPartitions[false]
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -7940,9 +7917,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, alterStatementSuffixDropPartitions225.getTree());
         }
-        break;
+          break;
         case 5:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1015:7: selectStatementWithCTE
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1015:7: selectStatementWithCTE
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -7953,7 +7930,7 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, selectStatementWithCTE226.getTree());
         }
-        break;
+          break;
       }
       retval.stop = input.LT(-1);
 
@@ -8041,12 +8018,12 @@ public class HiveParser extends Parser {
           case KW_PARTITION: {
             alt62 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt62) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1021:44: partitionSpec
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1021:44: partitionSpec
           {
             pushFollow(FOLLOW_partitionSpec_in_alterIndexStatementSuffix4135);
             partitionSpec229 = partitionSpec();
@@ -8055,7 +8032,7 @@ public class HiveParser extends Parser {
 
             stream_partitionSpec.add(partitionSpec229.getTree());
           }
-          break;
+            break;
         }
 
         // org/apache/hadoop/hive/ql/parse/HiveParser.g:1022:5: ( KW_REBUILD -> ^( TOK_ALTERINDEX_REBUILD tableName $indexName ( partitionSpec )? ) | KW_SET KW_IDXPROPERTIES indexProperties -> ^( TOK_ALTERINDEX_PROPERTIES tableName $indexName indexProperties ) )
@@ -8064,11 +8041,11 @@ public class HiveParser extends Parser {
           case KW_REBUILD: {
             alt63 = 1;
           }
-          break;
+            break;
           case KW_SET: {
             alt63 = 2;
           }
-          break;
+            break;
           default:
             NoViableAltException nvae = new NoViableAltException("", 63, 0, input);
 
@@ -8077,7 +8054,7 @@ public class HiveParser extends Parser {
 
         switch (alt63) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1023:7: KW_REBUILD
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1023:7: KW_REBUILD
           {
             KW_REBUILD230 = (Token) match(input, KW_REBUILD, FOLLOW_KW_REBUILD_in_alterIndexStatementSuffix4150);
             stream_KW_REBUILD.add(KW_REBUILD230);
@@ -8101,8 +8078,8 @@ public class HiveParser extends Parser {
               // org/apache/hadoop/hive/ql/parse/HiveParser.g:1024:9: ^( TOK_ALTERINDEX_REBUILD tableName $indexName ( partitionSpec )? )
               {
                 CommonTree root_1 = (CommonTree) adaptor.nil();
-                root_1 = (CommonTree) adaptor.becomeRoot(
-                    (CommonTree) adaptor.create(TOK_ALTERINDEX_REBUILD, "TOK_ALTERINDEX_REBUILD"), root_1);
+                root_1 = (CommonTree) adaptor
+                    .becomeRoot((CommonTree) adaptor.create(TOK_ALTERINDEX_REBUILD, "TOK_ALTERINDEX_REBUILD"), root_1);
 
                 adaptor.addChild(root_1, stream_tableName.nextTree());
 
@@ -8120,9 +8097,9 @@ public class HiveParser extends Parser {
 
             retval.tree = root_0;
           }
-          break;
+            break;
           case 2:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1026:7: KW_SET KW_IDXPROPERTIES indexProperties
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1026:7: KW_SET KW_IDXPROPERTIES indexProperties
           {
             KW_SET231 = (Token) match(input, KW_SET, FOLLOW_KW_SET_in_alterIndexStatementSuffix4183);
             stream_KW_SET.add(KW_SET231);
@@ -8172,7 +8149,7 @@ public class HiveParser extends Parser {
 
             retval.tree = root_0;
           }
-          break;
+            break;
         }
       }
 
@@ -8227,25 +8204,25 @@ public class HiveParser extends Parser {
                 case KW_DBPROPERTIES: {
                   alt64 = 1;
                 }
-                break;
+                  break;
                 case KW_OWNER: {
                   alt64 = 2;
                 }
-                break;
+                  break;
                 default:
                   NoViableAltException nvae = new NoViableAltException("", 64, 3, input);
 
                   throw nvae;
               }
             }
-            break;
+              break;
             default:
               NoViableAltException nvae = new NoViableAltException("", 64, 1, input);
 
               throw nvae;
           }
         }
-        break;
+          break;
         case KW_ADD:
         case KW_ADMIN:
         case KW_AFTER:
@@ -8468,25 +8445,25 @@ public class HiveParser extends Parser {
                 case KW_DBPROPERTIES: {
                   alt64 = 1;
                 }
-                break;
+                  break;
                 case KW_OWNER: {
                   alt64 = 2;
                 }
-                break;
+                  break;
                 default:
                   NoViableAltException nvae = new NoViableAltException("", 64, 4, input);
 
                   throw nvae;
               }
             }
-            break;
+              break;
             default:
               NoViableAltException nvae = new NoViableAltException("", 64, 2, input);
 
               throw nvae;
           }
         }
-        break;
+          break;
         default:
           NoViableAltException nvae = new NoViableAltException("", 64, 0, input);
 
@@ -8495,7 +8472,7 @@ public class HiveParser extends Parser {
 
       switch (alt64) {
         case 1:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1035:7: alterDatabaseSuffixProperties
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1035:7: alterDatabaseSuffixProperties
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -8506,9 +8483,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, alterDatabaseSuffixProperties234.getTree());
         }
-        break;
+          break;
         case 2:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1036:7: alterDatabaseSuffixSetOwner
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1036:7: alterDatabaseSuffixSetOwner
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -8519,7 +8496,7 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, alterDatabaseSuffixSetOwner235.getTree());
         }
-        break;
+          break;
       }
       retval.stop = input.LT(-1);
 
@@ -8717,8 +8694,8 @@ public class HiveParser extends Parser {
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:1050:8: ^( TOK_ALTERDATABASE_OWNER $dbName principalName )
           {
             CommonTree root_1 = (CommonTree) adaptor.nil();
-            root_1 = (CommonTree) adaptor.becomeRoot(
-                (CommonTree) adaptor.create(TOK_ALTERDATABASE_OWNER, "TOK_ALTERDATABASE_OWNER"), root_1);
+            root_1 = (CommonTree) adaptor
+                .becomeRoot((CommonTree) adaptor.create(TOK_ALTERDATABASE_OWNER, "TOK_ALTERDATABASE_OWNER"), root_1);
 
             adaptor.addChild(root_1, stream_dbName.nextTree());
 
@@ -8810,8 +8787,8 @@ public class HiveParser extends Parser {
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:1057:19: ^( TOK_ALTERTABLE_RENAME tableName )
           {
             CommonTree root_1 = (CommonTree) adaptor.nil();
-            root_1 = (CommonTree) adaptor.becomeRoot(
-                (CommonTree) adaptor.create(TOK_ALTERTABLE_RENAME, "TOK_ALTERTABLE_RENAME"), root_1);
+            root_1 = (CommonTree) adaptor
+                .becomeRoot((CommonTree) adaptor.create(TOK_ALTERTABLE_RENAME, "TOK_ALTERTABLE_RENAME"), root_1);
 
             adaptor.addChild(root_1, stream_tableName.nextTree());
 
@@ -8822,8 +8799,8 @@ public class HiveParser extends Parser {
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:1058:19: ^( TOK_ALTERVIEW_RENAME tableName )
           {
             CommonTree root_1 = (CommonTree) adaptor.nil();
-            root_1 = (CommonTree) adaptor.becomeRoot(
-                (CommonTree) adaptor.create(TOK_ALTERVIEW_RENAME, "TOK_ALTERVIEW_RENAME"), root_1);
+            root_1 = (CommonTree) adaptor
+                .becomeRoot((CommonTree) adaptor.create(TOK_ALTERVIEW_RENAME, "TOK_ALTERVIEW_RENAME"), root_1);
 
             adaptor.addChild(root_1, stream_tableName.nextTree());
 
@@ -8901,11 +8878,11 @@ public class HiveParser extends Parser {
           case KW_ADD: {
             alt65 = 1;
           }
-          break;
+            break;
           case KW_REPLACE: {
             alt65 = 2;
           }
-          break;
+            break;
           default:
             NoViableAltException nvae = new NoViableAltException("", 65, 0, input);
 
@@ -8914,19 +8891,19 @@ public class HiveParser extends Parser {
 
         switch (alt65) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1064:8: add= KW_ADD
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1064:8: add= KW_ADD
           {
             add = (Token) match(input, KW_ADD, FOLLOW_KW_ADD_in_alterStatementSuffixAddCol4451);
             stream_KW_ADD.add(add);
           }
-          break;
+            break;
           case 2:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1064:21: replace= KW_REPLACE
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1064:21: replace= KW_REPLACE
           {
             replace = (Token) match(input, KW_REPLACE, FOLLOW_KW_REPLACE_in_alterStatementSuffixAddCol4457);
             stream_KW_REPLACE.add(replace);
           }
-          break;
+            break;
         }
 
         KW_COLUMNS245 = (Token) match(input, KW_COLUMNS, FOLLOW_KW_COLUMNS_in_alterStatementSuffixAddCol4460);
@@ -8952,12 +8929,12 @@ public class HiveParser extends Parser {
           case KW_RESTRICT: {
             alt66 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt66) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1064:85: restrictOrCascade
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1064:85: restrictOrCascade
           {
             pushFollow(FOLLOW_restrictOrCascade_in_alterStatementSuffixAddCol4468);
             restrictOrCascade249 = restrictOrCascade();
@@ -8966,7 +8943,7 @@ public class HiveParser extends Parser {
 
             stream_restrictOrCascade.add(restrictOrCascade249.getTree());
           }
-          break;
+            break;
         }
 
         // AST REWRITE
@@ -8986,8 +8963,8 @@ public class HiveParser extends Parser {
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:1065:24: ^( TOK_ALTERTABLE_ADDCOLS columnNameTypeList ( restrictOrCascade )? )
           {
             CommonTree root_1 = (CommonTree) adaptor.nil();
-            root_1 = (CommonTree) adaptor.becomeRoot(
-                (CommonTree) adaptor.create(TOK_ALTERTABLE_ADDCOLS, "TOK_ALTERTABLE_ADDCOLS"), root_1);
+            root_1 = (CommonTree) adaptor
+                .becomeRoot((CommonTree) adaptor.create(TOK_ALTERTABLE_ADDCOLS, "TOK_ALTERTABLE_ADDCOLS"), root_1);
 
             adaptor.addChild(root_1, stream_columnNameTypeList.nextTree());
 
@@ -9098,17 +9075,17 @@ public class HiveParser extends Parser {
           case KW_COLUMN: {
             alt67 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt67) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1072:17: KW_COLUMN
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1072:17: KW_COLUMN
           {
             KW_COLUMN251 = (Token) match(input, KW_COLUMN, FOLLOW_KW_COLUMN_in_alterStatementSuffixRenameCol4546);
             stream_KW_COLUMN.add(KW_COLUMN251);
           }
-          break;
+            break;
         }
 
         pushFollow(FOLLOW_identifier_in_alterStatementSuffixRenameCol4551);
@@ -9138,12 +9115,12 @@ public class HiveParser extends Parser {
           case KW_COMMENT: {
             alt68 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt68) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1072:75: KW_COMMENT comment= StringLiteral
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1072:75: KW_COMMENT comment= StringLiteral
           {
             KW_COMMENT253 = (Token) match(input, KW_COMMENT, FOLLOW_KW_COMMENT_in_alterStatementSuffixRenameCol4560);
             stream_KW_COMMENT.add(KW_COMMENT253);
@@ -9151,7 +9128,7 @@ public class HiveParser extends Parser {
             comment = (Token) match(input, StringLiteral, FOLLOW_StringLiteral_in_alterStatementSuffixRenameCol4564);
             stream_StringLiteral.add(comment);
           }
-          break;
+            break;
         }
 
         // org/apache/hadoop/hive/ql/parse/HiveParser.g:1072:110: ( alterStatementChangeColPosition )?
@@ -9161,12 +9138,12 @@ public class HiveParser extends Parser {
           case KW_FIRST: {
             alt69 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt69) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1072:110: alterStatementChangeColPosition
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1072:110: alterStatementChangeColPosition
           {
             pushFollow(FOLLOW_alterStatementChangeColPosition_in_alterStatementSuffixRenameCol4568);
             alterStatementChangeColPosition254 = alterStatementChangeColPosition();
@@ -9175,7 +9152,7 @@ public class HiveParser extends Parser {
 
             stream_alterStatementChangeColPosition.add(alterStatementChangeColPosition254.getTree());
           }
-          break;
+            break;
         }
 
         // org/apache/hadoop/hive/ql/parse/HiveParser.g:1072:143: ( restrictOrCascade )?
@@ -9185,12 +9162,12 @@ public class HiveParser extends Parser {
           case KW_RESTRICT: {
             alt70 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt70) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1072:143: restrictOrCascade
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1072:143: restrictOrCascade
           {
             pushFollow(FOLLOW_restrictOrCascade_in_alterStatementSuffixRenameCol4571);
             restrictOrCascade255 = restrictOrCascade();
@@ -9199,7 +9176,7 @@ public class HiveParser extends Parser {
 
             stream_restrictOrCascade.add(restrictOrCascade255.getTree());
           }
-          break;
+            break;
         }
 
         // AST REWRITE
@@ -9224,8 +9201,8 @@ public class HiveParser extends Parser {
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:1073:7: ^( TOK_ALTERTABLE_RENAMECOL $oldName $newName colType ( $comment)? ( alterStatementChangeColPosition )? ( restrictOrCascade )? )
           {
             CommonTree root_1 = (CommonTree) adaptor.nil();
-            root_1 = (CommonTree) adaptor.becomeRoot(
-                (CommonTree) adaptor.create(TOK_ALTERTABLE_RENAMECOL, "TOK_ALTERTABLE_RENAMECOL"), root_1);
+            root_1 = (CommonTree) adaptor
+                .becomeRoot((CommonTree) adaptor.create(TOK_ALTERTABLE_RENAMECOL, "TOK_ALTERTABLE_RENAMECOL"), root_1);
 
             adaptor.addChild(root_1, stream_oldName.nextTree());
 
@@ -9342,17 +9319,17 @@ public class HiveParser extends Parser {
           case KW_COLUMN: {
             alt71 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt71) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1079:38: KW_COLUMN
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1079:38: KW_COLUMN
           {
             KW_COLUMN259 = (Token) match(input, KW_COLUMN, FOLLOW_KW_COLUMN_in_alterStatementSuffixUpdateStatsCol4632);
             stream_KW_COLUMN.add(KW_COLUMN259);
           }
-          break;
+            break;
         }
 
         pushFollow(FOLLOW_identifier_in_alterStatementSuffixUpdateStatsCol4637);
@@ -9378,12 +9355,12 @@ public class HiveParser extends Parser {
           case KW_COMMENT: {
             alt72 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt72) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1079:92: KW_COMMENT comment= StringLiteral
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1079:92: KW_COMMENT comment= StringLiteral
           {
             KW_COMMENT262 =
                 (Token) match(input, KW_COMMENT, FOLLOW_KW_COMMENT_in_alterStatementSuffixUpdateStatsCol4644);
@@ -9393,7 +9370,7 @@ public class HiveParser extends Parser {
                 (Token) match(input, StringLiteral, FOLLOW_StringLiteral_in_alterStatementSuffixUpdateStatsCol4648);
             stream_StringLiteral.add(comment);
           }
-          break;
+            break;
         }
 
         // AST REWRITE
@@ -9486,11 +9463,11 @@ public class HiveParser extends Parser {
         case KW_FIRST: {
           alt73 = 1;
         }
-        break;
+          break;
         case KW_AFTER: {
           alt73 = 2;
         }
-        break;
+          break;
         default:
           NoViableAltException nvae = new NoViableAltException("", 73, 0, input);
 
@@ -9499,7 +9476,7 @@ public class HiveParser extends Parser {
 
       switch (alt73) {
         case 1:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1084:7: first= KW_FIRST
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1084:7: first= KW_FIRST
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -9507,9 +9484,9 @@ public class HiveParser extends Parser {
           first_tree = (CommonTree) adaptor.create(first);
           adaptor.addChild(root_0, first_tree);
         }
-        break;
+          break;
         case 2:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1084:22: KW_AFTER afterCol= identifier
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1084:22: KW_AFTER afterCol= identifier
         {
           KW_AFTER263 = (Token) match(input, KW_AFTER, FOLLOW_KW_AFTER_in_alterStatementChangeColPosition4689);
           stream_KW_AFTER.add(KW_AFTER263);
@@ -9540,9 +9517,8 @@ public class HiveParser extends Parser {
             // org/apache/hadoop/hive/ql/parse/HiveParser.g:1085:25: ^( TOK_ALTERTABLE_CHANGECOL_AFTER_POSITION )
             {
               CommonTree root_1 = (CommonTree) adaptor.nil();
-              root_1 = (CommonTree) adaptor.becomeRoot(
-                  (CommonTree) adaptor.create(TOK_ALTERTABLE_CHANGECOL_AFTER_POSITION,
-                      "TOK_ALTERTABLE_CHANGECOL_AFTER_POSITION"), root_1);
+              root_1 = (CommonTree) adaptor.becomeRoot((CommonTree) adaptor
+                  .create(TOK_ALTERTABLE_CHANGECOL_AFTER_POSITION, "TOK_ALTERTABLE_CHANGECOL_AFTER_POSITION"), root_1);
 
               adaptor.addChild(root_0, root_1);
             }
@@ -9551,9 +9527,8 @@ public class HiveParser extends Parser {
             // org/apache/hadoop/hive/ql/parse/HiveParser.g:1086:8: ^( TOK_ALTERTABLE_CHANGECOL_AFTER_POSITION $afterCol)
             {
               CommonTree root_1 = (CommonTree) adaptor.nil();
-              root_1 = (CommonTree) adaptor.becomeRoot(
-                  (CommonTree) adaptor.create(TOK_ALTERTABLE_CHANGECOL_AFTER_POSITION,
-                      "TOK_ALTERTABLE_CHANGECOL_AFTER_POSITION"), root_1);
+              root_1 = (CommonTree) adaptor.becomeRoot((CommonTree) adaptor
+                  .create(TOK_ALTERTABLE_CHANGECOL_AFTER_POSITION, "TOK_ALTERTABLE_CHANGECOL_AFTER_POSITION"), root_1);
 
               adaptor.addChild(root_1, stream_afterCol.nextTree());
 
@@ -9563,7 +9538,7 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
       }
       retval.stop = input.LT(-1);
 
@@ -9623,12 +9598,12 @@ public class HiveParser extends Parser {
           case KW_IF: {
             alt74 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt74) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1092:14: ifNotExists
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1092:14: ifNotExists
           {
             pushFollow(FOLLOW_ifNotExists_in_alterStatementSuffixAddPartitions4748);
             ifNotExists265 = ifNotExists();
@@ -9637,34 +9612,33 @@ public class HiveParser extends Parser {
 
             stream_ifNotExists.add(ifNotExists265.getTree());
           }
-          break;
+            break;
         }
 
         // org/apache/hadoop/hive/ql/parse/HiveParser.g:1092:27: ( alterStatementSuffixAddPartitionsElement )+
         int cnt75 = 0;
-        loop75:
-        do {
+        loop75: do {
           int alt75 = 2;
           switch (input.LA(1)) {
             case KW_PARTITION: {
               alt75 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt75) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1092:27: alterStatementSuffixAddPartitionsElement
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1092:27: alterStatementSuffixAddPartitionsElement
             {
               pushFollow(FOLLOW_alterStatementSuffixAddPartitionsElement_in_alterStatementSuffixAddPartitions4751);
               alterStatementSuffixAddPartitionsElement266 = alterStatementSuffixAddPartitionsElement();
 
               state._fsp--;
 
-              stream_alterStatementSuffixAddPartitionsElement.add(
-                  alterStatementSuffixAddPartitionsElement266.getTree());
+              stream_alterStatementSuffixAddPartitionsElement
+                  .add(alterStatementSuffixAddPartitionsElement266.getTree());
             }
-            break;
+              break;
 
             default:
               if (cnt75 >= 1) {
@@ -9693,8 +9667,8 @@ public class HiveParser extends Parser {
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:1093:19: ^( TOK_ALTERTABLE_ADDPARTS ( ifNotExists )? ( alterStatementSuffixAddPartitionsElement )+ )
           {
             CommonTree root_1 = (CommonTree) adaptor.nil();
-            root_1 = (CommonTree) adaptor.becomeRoot(
-                (CommonTree) adaptor.create(TOK_ALTERTABLE_ADDPARTS, "TOK_ALTERTABLE_ADDPARTS"), root_1);
+            root_1 = (CommonTree) adaptor
+                .becomeRoot((CommonTree) adaptor.create(TOK_ALTERTABLE_ADDPARTS, "TOK_ALTERTABLE_ADDPARTS"), root_1);
 
             // org/apache/hadoop/hive/ql/parse/HiveParser.g:1093:45: ( ifNotExists )?
             if (stream_ifNotExists.hasNext()) {
@@ -9717,8 +9691,8 @@ public class HiveParser extends Parser {
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:1094:19: ^( TOK_ALTERVIEW_ADDPARTS ( ifNotExists )? ( alterStatementSuffixAddPartitionsElement )+ )
           {
             CommonTree root_1 = (CommonTree) adaptor.nil();
-            root_1 = (CommonTree) adaptor.becomeRoot(
-                (CommonTree) adaptor.create(TOK_ALTERVIEW_ADDPARTS, "TOK_ALTERVIEW_ADDPARTS"), root_1);
+            root_1 = (CommonTree) adaptor
+                .becomeRoot((CommonTree) adaptor.create(TOK_ALTERVIEW_ADDPARTS, "TOK_ALTERVIEW_ADDPARTS"), root_1);
 
             // org/apache/hadoop/hive/ql/parse/HiveParser.g:1094:44: ( ifNotExists )?
             if (stream_ifNotExists.hasNext()) {
@@ -9804,12 +9778,12 @@ public class HiveParser extends Parser {
           case KW_FILEFORMAT: {
             alt76 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt76) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1098:21: partitionFileFormat
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1098:21: partitionFileFormat
           {
             pushFollow(FOLLOW_partitionFileFormat_in_alterStatementSuffixAddPartitionsElement4816);
             partitionFileFormat268 = partitionFileFormat();
@@ -9818,7 +9792,7 @@ public class HiveParser extends Parser {
 
             adaptor.addChild(root_0, partitionFileFormat268.getTree());
           }
-          break;
+            break;
         }
 
         // org/apache/hadoop/hive/ql/parse/HiveParser.g:1098:42: ( partitionSerdeProperties )?
@@ -9827,12 +9801,12 @@ public class HiveParser extends Parser {
           case KW_SERDEPROPERTIES: {
             alt77 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt77) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1098:42: partitionSerdeProperties
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1098:42: partitionSerdeProperties
           {
             pushFollow(FOLLOW_partitionSerdeProperties_in_alterStatementSuffixAddPartitionsElement4819);
             partitionSerdeProperties269 = partitionSerdeProperties();
@@ -9841,7 +9815,7 @@ public class HiveParser extends Parser {
 
             adaptor.addChild(root_0, partitionSerdeProperties269.getTree());
           }
-          break;
+            break;
         }
 
         // org/apache/hadoop/hive/ql/parse/HiveParser.g:1098:68: ( location )?
@@ -9850,12 +9824,12 @@ public class HiveParser extends Parser {
           case KW_LOCATION: {
             alt78 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt78) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1098:68: location
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1098:68: location
           {
             pushFollow(FOLLOW_location_in_alterStatementSuffixAddPartitionsElement4822);
             location270 = location();
@@ -9864,7 +9838,7 @@ public class HiveParser extends Parser {
 
             adaptor.addChild(root_0, location270.getTree());
           }
-          break;
+            break;
         }
       }
 
@@ -9915,19 +9889,18 @@ public class HiveParser extends Parser {
         stream_KW_TOUCH.add(KW_TOUCH271);
 
         // org/apache/hadoop/hive/ql/parse/HiveParser.g:1104:16: ( partitionSpec )*
-        loop79:
-        do {
+        loop79: do {
           int alt79 = 2;
           switch (input.LA(1)) {
             case KW_PARTITION: {
               alt79 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt79) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1104:17: partitionSpec
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1104:17: partitionSpec
             {
               pushFollow(FOLLOW_partitionSpec_in_alterStatementSuffixTouch4853);
               partitionSpec272 = partitionSpec();
@@ -9936,7 +9909,7 @@ public class HiveParser extends Parser {
 
               stream_partitionSpec.add(partitionSpec272.getTree());
             }
-            break;
+              break;
 
             default:
               break loop79;
@@ -9960,8 +9933,8 @@ public class HiveParser extends Parser {
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:1105:8: ^( TOK_ALTERTABLE_TOUCH ( partitionSpec )* )
           {
             CommonTree root_1 = (CommonTree) adaptor.nil();
-            root_1 = (CommonTree) adaptor.becomeRoot(
-                (CommonTree) adaptor.create(TOK_ALTERTABLE_TOUCH, "TOK_ALTERTABLE_TOUCH"), root_1);
+            root_1 = (CommonTree) adaptor
+                .becomeRoot((CommonTree) adaptor.create(TOK_ALTERTABLE_TOUCH, "TOK_ALTERTABLE_TOUCH"), root_1);
 
             // org/apache/hadoop/hive/ql/parse/HiveParser.g:1105:31: ( partitionSpec )*
             while (stream_partitionSpec.hasNext()) {
@@ -10025,19 +9998,18 @@ public class HiveParser extends Parser {
         stream_KW_ARCHIVE.add(KW_ARCHIVE273);
 
         // org/apache/hadoop/hive/ql/parse/HiveParser.g:1111:18: ( partitionSpec )*
-        loop80:
-        do {
+        loop80: do {
           int alt80 = 2;
           switch (input.LA(1)) {
             case KW_PARTITION: {
               alt80 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt80) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1111:19: partitionSpec
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1111:19: partitionSpec
             {
               pushFollow(FOLLOW_partitionSpec_in_alterStatementSuffixArchive4900);
               partitionSpec274 = partitionSpec();
@@ -10046,7 +10018,7 @@ public class HiveParser extends Parser {
 
               stream_partitionSpec.add(partitionSpec274.getTree());
             }
-            break;
+              break;
 
             default:
               break loop80;
@@ -10070,8 +10042,8 @@ public class HiveParser extends Parser {
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:1112:8: ^( TOK_ALTERTABLE_ARCHIVE ( partitionSpec )* )
           {
             CommonTree root_1 = (CommonTree) adaptor.nil();
-            root_1 = (CommonTree) adaptor.becomeRoot(
-                (CommonTree) adaptor.create(TOK_ALTERTABLE_ARCHIVE, "TOK_ALTERTABLE_ARCHIVE"), root_1);
+            root_1 = (CommonTree) adaptor
+                .becomeRoot((CommonTree) adaptor.create(TOK_ALTERTABLE_ARCHIVE, "TOK_ALTERTABLE_ARCHIVE"), root_1);
 
             // org/apache/hadoop/hive/ql/parse/HiveParser.g:1112:33: ( partitionSpec )*
             while (stream_partitionSpec.hasNext()) {
@@ -10136,19 +10108,18 @@ public class HiveParser extends Parser {
         stream_KW_UNARCHIVE.add(KW_UNARCHIVE275);
 
         // org/apache/hadoop/hive/ql/parse/HiveParser.g:1118:20: ( partitionSpec )*
-        loop81:
-        do {
+        loop81: do {
           int alt81 = 2;
           switch (input.LA(1)) {
             case KW_PARTITION: {
               alt81 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt81) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1118:21: partitionSpec
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1118:21: partitionSpec
             {
               pushFollow(FOLLOW_partitionSpec_in_alterStatementSuffixUnArchive4947);
               partitionSpec276 = partitionSpec();
@@ -10157,7 +10128,7 @@ public class HiveParser extends Parser {
 
               stream_partitionSpec.add(partitionSpec276.getTree());
             }
-            break;
+              break;
 
             default:
               break loop81;
@@ -10181,8 +10152,8 @@ public class HiveParser extends Parser {
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:1119:8: ^( TOK_ALTERTABLE_UNARCHIVE ( partitionSpec )* )
           {
             CommonTree root_1 = (CommonTree) adaptor.nil();
-            root_1 = (CommonTree) adaptor.becomeRoot(
-                (CommonTree) adaptor.create(TOK_ALTERTABLE_UNARCHIVE, "TOK_ALTERTABLE_UNARCHIVE"), root_1);
+            root_1 = (CommonTree) adaptor
+                .becomeRoot((CommonTree) adaptor.create(TOK_ALTERTABLE_UNARCHIVE, "TOK_ALTERTABLE_UNARCHIVE"), root_1);
 
             // org/apache/hadoop/hive/ql/parse/HiveParser.g:1119:35: ( partitionSpec )*
             while (stream_partitionSpec.hasNext()) {
@@ -10269,8 +10240,8 @@ public class HiveParser extends Parser {
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:1125:35: ^( TOK_PARTITIONFILEFORMAT fileFormat )
           {
             CommonTree root_1 = (CommonTree) adaptor.nil();
-            root_1 = (CommonTree) adaptor.becomeRoot(
-                (CommonTree) adaptor.create(TOK_PARTITIONFILEFORMAT, "TOK_PARTITIONFILEFORMAT"), root_1);
+            root_1 = (CommonTree) adaptor
+                .becomeRoot((CommonTree) adaptor.create(TOK_PARTITIONFILEFORMAT, "TOK_PARTITIONFILEFORMAT"), root_1);
 
             adaptor.addChild(root_1, stream_fileFormat.nextTree());
 
@@ -10439,12 +10410,12 @@ public class HiveParser extends Parser {
           case KW_IF: {
             alt82 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt82) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1137:15: ifExists
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1137:15: ifExists
           {
             pushFollow(FOLLOW_ifExists_in_alterStatementSuffixDropPartitions5068);
             ifExists282 = ifExists();
@@ -10453,7 +10424,7 @@ public class HiveParser extends Parser {
 
             stream_ifExists.add(ifExists282.getTree());
           }
-          break;
+            break;
         }
 
         pushFollow(FOLLOW_dropPartitionSpec_in_alterStatementSuffixDropPartitions5071);
@@ -10464,19 +10435,18 @@ public class HiveParser extends Parser {
         stream_dropPartitionSpec.add(dropPartitionSpec283.getTree());
 
         // org/apache/hadoop/hive/ql/parse/HiveParser.g:1137:43: ( COMMA dropPartitionSpec )*
-        loop83:
-        do {
+        loop83: do {
           int alt83 = 2;
           switch (input.LA(1)) {
             case COMMA: {
               alt83 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt83) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1137:44: COMMA dropPartitionSpec
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1137:44: COMMA dropPartitionSpec
             {
               COMMA284 = (Token) match(input, COMMA, FOLLOW_COMMA_in_alterStatementSuffixDropPartitions5074);
               stream_COMMA.add(COMMA284);
@@ -10488,7 +10458,7 @@ public class HiveParser extends Parser {
 
               stream_dropPartitionSpec.add(dropPartitionSpec285.getTree());
             }
-            break;
+              break;
 
             default:
               break loop83;
@@ -10501,12 +10471,12 @@ public class HiveParser extends Parser {
           case KW_IGNORE: {
             alt84 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt84) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1137:70: ignoreProtection
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1137:70: ignoreProtection
           {
             pushFollow(FOLLOW_ignoreProtection_in_alterStatementSuffixDropPartitions5080);
             ignoreProtection286 = ignoreProtection();
@@ -10515,7 +10485,7 @@ public class HiveParser extends Parser {
 
             stream_ignoreProtection.add(ignoreProtection286.getTree());
           }
-          break;
+            break;
         }
 
         // org/apache/hadoop/hive/ql/parse/HiveParser.g:1137:88: ( KW_PURGE )?
@@ -10524,17 +10494,17 @@ public class HiveParser extends Parser {
           case KW_PURGE: {
             alt85 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt85) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1137:88: KW_PURGE
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1137:88: KW_PURGE
           {
             KW_PURGE287 = (Token) match(input, KW_PURGE, FOLLOW_KW_PURGE_in_alterStatementSuffixDropPartitions5083);
             stream_KW_PURGE.add(KW_PURGE287);
           }
-          break;
+            break;
         }
 
         // org/apache/hadoop/hive/ql/parse/HiveParser.g:1137:98: ( replicationClause )?
@@ -10543,12 +10513,12 @@ public class HiveParser extends Parser {
           case KW_FOR: {
             alt86 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt86) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1137:98: replicationClause
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1137:98: replicationClause
           {
             pushFollow(FOLLOW_replicationClause_in_alterStatementSuffixDropPartitions5086);
             replicationClause288 = replicationClause();
@@ -10557,7 +10527,7 @@ public class HiveParser extends Parser {
 
             stream_replicationClause.add(replicationClause288.getTree());
           }
-          break;
+            break;
         }
 
         // AST REWRITE
@@ -10577,8 +10547,8 @@ public class HiveParser extends Parser {
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:1138:19: ^( TOK_ALTERTABLE_DROPPARTS ( dropPartitionSpec )+ ( ifExists )? ( ignoreProtection )? ( KW_PURGE )? ( replicationClause )? )
           {
             CommonTree root_1 = (CommonTree) adaptor.nil();
-            root_1 = (CommonTree) adaptor.becomeRoot(
-                (CommonTree) adaptor.create(TOK_ALTERTABLE_DROPPARTS, "TOK_ALTERTABLE_DROPPARTS"), root_1);
+            root_1 = (CommonTree) adaptor
+                .becomeRoot((CommonTree) adaptor.create(TOK_ALTERTABLE_DROPPARTS, "TOK_ALTERTABLE_DROPPARTS"), root_1);
 
             if (!(stream_dropPartitionSpec.hasNext())) {
               throw new RewriteEarlyExitException();
@@ -10619,8 +10589,8 @@ public class HiveParser extends Parser {
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:1139:19: ^( TOK_ALTERVIEW_DROPPARTS ( dropPartitionSpec )+ ( ifExists )? ( ignoreProtection )? ( replicationClause )? )
           {
             CommonTree root_1 = (CommonTree) adaptor.nil();
-            root_1 = (CommonTree) adaptor.becomeRoot(
-                (CommonTree) adaptor.create(TOK_ALTERVIEW_DROPPARTS, "TOK_ALTERVIEW_DROPPARTS"), root_1);
+            root_1 = (CommonTree) adaptor
+                .becomeRoot((CommonTree) adaptor.create(TOK_ALTERVIEW_DROPPARTS, "TOK_ALTERVIEW_DROPPARTS"), root_1);
 
             if (!(stream_dropPartitionSpec.hasNext())) {
               throw new RewriteEarlyExitException();
@@ -10717,11 +10687,11 @@ public class HiveParser extends Parser {
         case KW_SET: {
           alt88 = 1;
         }
-        break;
+          break;
         case KW_UNSET: {
           alt88 = 2;
         }
-        break;
+          break;
         default:
           NoViableAltException nvae = new NoViableAltException("", 88, 0, input);
 
@@ -10730,7 +10700,7 @@ public class HiveParser extends Parser {
 
       switch (alt88) {
         case 1:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1145:7: KW_SET KW_TBLPROPERTIES tableProperties
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1145:7: KW_SET KW_TBLPROPERTIES tableProperties
         {
           KW_SET289 = (Token) match(input, KW_SET, FOLLOW_KW_SET_in_alterStatementSuffixProperties5174);
           stream_KW_SET.add(KW_SET289);
@@ -10774,9 +10744,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 2:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1147:7: KW_UNSET KW_TBLPROPERTIES ( ifExists )? tableProperties
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1147:7: KW_UNSET KW_TBLPROPERTIES ( ifExists )? tableProperties
         {
           KW_UNSET292 = (Token) match(input, KW_UNSET, FOLLOW_KW_UNSET_in_alterStatementSuffixProperties5198);
           stream_KW_UNSET.add(KW_UNSET292);
@@ -10791,12 +10761,12 @@ public class HiveParser extends Parser {
             case KW_IF: {
               alt87 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt87) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1147:33: ifExists
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1147:33: ifExists
             {
               pushFollow(FOLLOW_ifExists_in_alterStatementSuffixProperties5202);
               ifExists294 = ifExists();
@@ -10805,7 +10775,7 @@ public class HiveParser extends Parser {
 
               stream_ifExists.add(ifExists294.getTree());
             }
-            break;
+              break;
           }
 
           pushFollow(FOLLOW_tableProperties_in_alterStatementSuffixProperties5205);
@@ -10849,7 +10819,7 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
       }
       retval.stop = input.LT(-1);
 
@@ -10912,11 +10882,11 @@ public class HiveParser extends Parser {
         case KW_SET: {
           alt90 = 1;
         }
-        break;
+          break;
         case KW_UNSET: {
           alt90 = 2;
         }
-        break;
+          break;
         default:
           NoViableAltException nvae = new NoViableAltException("", 90, 0, input);
 
@@ -10925,7 +10895,7 @@ public class HiveParser extends Parser {
 
       switch (alt90) {
         case 1:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1154:7: KW_SET KW_TBLPROPERTIES tableProperties
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1154:7: KW_SET KW_TBLPROPERTIES tableProperties
         {
           KW_SET296 = (Token) match(input, KW_SET, FOLLOW_KW_SET_in_alterViewSuffixProperties5247);
           stream_KW_SET.add(KW_SET296);
@@ -10969,9 +10939,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 2:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1156:7: KW_UNSET KW_TBLPROPERTIES ( ifExists )? tableProperties
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1156:7: KW_UNSET KW_TBLPROPERTIES ( ifExists )? tableProperties
         {
           KW_UNSET299 = (Token) match(input, KW_UNSET, FOLLOW_KW_UNSET_in_alterViewSuffixProperties5271);
           stream_KW_UNSET.add(KW_UNSET299);
@@ -10986,12 +10956,12 @@ public class HiveParser extends Parser {
             case KW_IF: {
               alt89 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt89) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1156:33: ifExists
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1156:33: ifExists
             {
               pushFollow(FOLLOW_ifExists_in_alterViewSuffixProperties5275);
               ifExists301 = ifExists();
@@ -11000,7 +10970,7 @@ public class HiveParser extends Parser {
 
               stream_ifExists.add(ifExists301.getTree());
             }
-            break;
+              break;
           }
 
           pushFollow(FOLLOW_tableProperties_in_alterViewSuffixProperties5278);
@@ -11044,7 +11014,7 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
       }
       retval.stop = input.LT(-1);
 
@@ -11116,18 +11086,18 @@ public class HiveParser extends Parser {
             case KW_SERDE: {
               alt92 = 1;
             }
-            break;
+              break;
             case KW_SERDEPROPERTIES: {
               alt92 = 2;
             }
-            break;
+              break;
             default:
               NoViableAltException nvae = new NoViableAltException("", 92, 1, input);
 
               throw nvae;
           }
         }
-        break;
+          break;
         default:
           NoViableAltException nvae = new NoViableAltException("", 92, 0, input);
 
@@ -11136,7 +11106,7 @@ public class HiveParser extends Parser {
 
       switch (alt92) {
         case 1:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1163:7: KW_SET KW_SERDE serdeName= StringLiteral ( KW_WITH KW_SERDEPROPERTIES tableProperties )?
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1163:7: KW_SET KW_SERDE serdeName= StringLiteral ( KW_WITH KW_SERDEPROPERTIES tableProperties )?
         {
           KW_SET303 = (Token) match(input, KW_SET, FOLLOW_KW_SET_in_alterStatementSuffixSerdeProperties5320);
           stream_KW_SET.add(KW_SET303);
@@ -11154,12 +11124,12 @@ public class HiveParser extends Parser {
             case KW_WITH: {
               alt91 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt91) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1163:48: KW_WITH KW_SERDEPROPERTIES tableProperties
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1163:48: KW_WITH KW_SERDEPROPERTIES tableProperties
             {
               KW_WITH305 = (Token) match(input, KW_WITH, FOLLOW_KW_WITH_in_alterStatementSuffixSerdeProperties5329);
               stream_KW_WITH.add(KW_WITH305);
@@ -11175,7 +11145,7 @@ public class HiveParser extends Parser {
 
               stream_tableProperties.add(tableProperties307.getTree());
             }
-            break;
+              break;
           }
 
           // AST REWRITE
@@ -11213,9 +11183,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 2:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1165:7: KW_SET KW_SERDEPROPERTIES tableProperties
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1165:7: KW_SET KW_SERDEPROPERTIES tableProperties
         {
           KW_SET308 = (Token) match(input, KW_SET, FOLLOW_KW_SET_in_alterStatementSuffixSerdeProperties5359);
           stream_KW_SET.add(KW_SET308);
@@ -11260,7 +11230,7 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
       }
       retval.stop = input.LT(-1);
 
@@ -11320,12 +11290,12 @@ public class HiveParser extends Parser {
           case KW_PARTITION: {
             alt93 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt93) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1172:15: partitionSpec
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1172:15: partitionSpec
           {
             pushFollow(FOLLOW_partitionSpec_in_tablePartitionPrefix5402);
             partitionSpec312 = partitionSpec();
@@ -11334,7 +11304,7 @@ public class HiveParser extends Parser {
 
             stream_partitionSpec.add(partitionSpec312.getTree());
           }
-          break;
+            break;
         }
 
         // AST REWRITE
@@ -11354,9 +11324,8 @@ public class HiveParser extends Parser {
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:1173:5: ^( TOK_TABLE_PARTITION tableName ( partitionSpec )? )
           {
             CommonTree root_1 = (CommonTree) adaptor.nil();
-            root_1 =
-                (CommonTree) adaptor.becomeRoot((CommonTree) adaptor.create(TOK_TABLE_PARTITION, "TOK_TABLE_PARTITION"),
-                    root_1);
+            root_1 = (CommonTree) adaptor
+                .becomeRoot((CommonTree) adaptor.create(TOK_TABLE_PARTITION, "TOK_TABLE_PARTITION"), root_1);
 
             adaptor.addChild(root_1, stream_tableName.nextTree());
 
@@ -11525,22 +11494,22 @@ public class HiveParser extends Parser {
             case KW_CLUSTERED: {
               alt94 = 1;
             }
-            break;
+              break;
             case KW_SORTED: {
               alt94 = 2;
             }
-            break;
+              break;
             default:
               NoViableAltException nvae = new NoViableAltException("", 94, 1, input);
 
               throw nvae;
           }
         }
-        break;
+          break;
         case KW_CLUSTERED: {
           alt94 = 3;
         }
-        break;
+          break;
         default:
           NoViableAltException nvae = new NoViableAltException("", 94, 0, input);
 
@@ -11549,7 +11518,7 @@ public class HiveParser extends Parser {
 
       switch (alt94) {
         case 1:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1186:5: KW_NOT KW_CLUSTERED
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1186:5: KW_NOT KW_CLUSTERED
         {
           KW_NOT316 = (Token) match(input, KW_NOT, FOLLOW_KW_NOT_in_alterStatementSuffixClusterbySortby5472);
           stream_KW_NOT.add(KW_NOT316);
@@ -11586,9 +11555,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 2:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1187:5: KW_NOT KW_SORTED
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1187:5: KW_NOT KW_SORTED
         {
           KW_NOT318 = (Token) match(input, KW_NOT, FOLLOW_KW_NOT_in_alterStatementSuffixClusterbySortby5488);
           stream_KW_NOT.add(KW_NOT318);
@@ -11624,9 +11593,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 3:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1188:5: tableBuckets
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1188:5: tableBuckets
         {
           pushFollow(FOLLOW_tableBuckets_in_alterStatementSuffixClusterbySortby5504);
           tableBuckets320 = tableBuckets();
@@ -11663,7 +11632,7 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
       }
       retval.stop = input.LT(-1);
 
@@ -11844,8 +11813,8 @@ public class HiveParser extends Parser {
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:1202:44: ^( TOK_SKEWED_LOCATIONS skewedLocationsList )
           {
             CommonTree root_1 = (CommonTree) adaptor.nil();
-            root_1 = (CommonTree) adaptor.becomeRoot(
-                (CommonTree) adaptor.create(TOK_SKEWED_LOCATIONS, "TOK_SKEWED_LOCATIONS"), root_1);
+            root_1 = (CommonTree) adaptor
+                .becomeRoot((CommonTree) adaptor.create(TOK_SKEWED_LOCATIONS, "TOK_SKEWED_LOCATIONS"), root_1);
 
             adaptor.addChild(root_1, stream_skewedLocationsList.nextTree());
 
@@ -11911,19 +11880,18 @@ public class HiveParser extends Parser {
         stream_skewedLocationMap.add(skewedLocationMap328.getTree());
 
         // org/apache/hadoop/hive/ql/parse/HiveParser.g:1209:25: ( COMMA skewedLocationMap )*
-        loop95:
-        do {
+        loop95: do {
           int alt95 = 2;
           switch (input.LA(1)) {
             case COMMA: {
               alt95 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt95) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1209:26: COMMA skewedLocationMap
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1209:26: COMMA skewedLocationMap
             {
               COMMA329 = (Token) match(input, COMMA, FOLLOW_COMMA_in_skewedLocationsList5632);
               stream_COMMA.add(COMMA329);
@@ -11935,7 +11903,7 @@ public class HiveParser extends Parser {
 
               stream_skewedLocationMap.add(skewedLocationMap330.getTree());
             }
-            break;
+              break;
 
             default:
               break loop95;
@@ -11959,8 +11927,8 @@ public class HiveParser extends Parser {
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:1209:55: ^( TOK_SKEWED_LOCATION_LIST ( skewedLocationMap )+ )
           {
             CommonTree root_1 = (CommonTree) adaptor.nil();
-            root_1 = (CommonTree) adaptor.becomeRoot(
-                (CommonTree) adaptor.create(TOK_SKEWED_LOCATION_LIST, "TOK_SKEWED_LOCATION_LIST"), root_1);
+            root_1 = (CommonTree) adaptor
+                .becomeRoot((CommonTree) adaptor.create(TOK_SKEWED_LOCATION_LIST, "TOK_SKEWED_LOCATION_LIST"), root_1);
 
             if (!(stream_skewedLocationMap.hasNext())) {
               throw new RewriteEarlyExitException();
@@ -12059,8 +12027,8 @@ public class HiveParser extends Parser {
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:1216:67: ^( TOK_SKEWED_LOCATION_MAP $key $value)
           {
             CommonTree root_1 = (CommonTree) adaptor.nil();
-            root_1 = (CommonTree) adaptor.becomeRoot(
-                (CommonTree) adaptor.create(TOK_SKEWED_LOCATION_MAP, "TOK_SKEWED_LOCATION_MAP"), root_1);
+            root_1 = (CommonTree) adaptor
+                .becomeRoot((CommonTree) adaptor.create(TOK_SKEWED_LOCATION_MAP, "TOK_SKEWED_LOCATION_MAP"), root_1);
 
             adaptor.addChild(root_1, stream_key.nextTree());
 
@@ -12206,24 +12174,24 @@ public class HiveParser extends Parser {
         case KW_SKEWED: {
           alt96 = 1;
         }
-        break;
+          break;
         case KW_NOT: {
           switch (input.LA(2)) {
             case KW_SKEWED: {
               alt96 = 2;
             }
-            break;
+              break;
             case KW_STORED: {
               alt96 = 3;
             }
-            break;
+              break;
             default:
               NoViableAltException nvae = new NoViableAltException("", 96, 2, input);
 
               throw nvae;
           }
         }
-        break;
+          break;
         default:
           NoViableAltException nvae = new NoViableAltException("", 96, 0, input);
 
@@ -12232,7 +12200,7 @@ public class HiveParser extends Parser {
 
       switch (alt96) {
         case 1:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1229:4: tableSkewed
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1229:4: tableSkewed
         {
           pushFollow(FOLLOW_tableSkewed_in_alterStatementSuffixSkewedby5752);
           tableSkewed334 = tableSkewed();
@@ -12258,8 +12226,8 @@ public class HiveParser extends Parser {
             // org/apache/hadoop/hive/ql/parse/HiveParser.g:1230:4: ^( TOK_ALTERTABLE_SKEWED tableSkewed )
             {
               CommonTree root_1 = (CommonTree) adaptor.nil();
-              root_1 = (CommonTree) adaptor.becomeRoot(
-                  (CommonTree) adaptor.create(TOK_ALTERTABLE_SKEWED, "TOK_ALTERTABLE_SKEWED"), root_1);
+              root_1 = (CommonTree) adaptor
+                  .becomeRoot((CommonTree) adaptor.create(TOK_ALTERTABLE_SKEWED, "TOK_ALTERTABLE_SKEWED"), root_1);
 
               adaptor.addChild(root_1, stream_tableSkewed.nextTree());
 
@@ -12269,9 +12237,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 2:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1232:3: KW_NOT KW_SKEWED
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1232:3: KW_NOT KW_SKEWED
         {
           KW_NOT335 = (Token) match(input, KW_NOT, FOLLOW_KW_NOT_in_alterStatementSuffixSkewedby5767);
           stream_KW_NOT.add(KW_NOT335);
@@ -12296,8 +12264,8 @@ public class HiveParser extends Parser {
             // org/apache/hadoop/hive/ql/parse/HiveParser.g:1233:4: ^( TOK_ALTERTABLE_SKEWED )
             {
               CommonTree root_1 = (CommonTree) adaptor.nil();
-              root_1 = (CommonTree) adaptor.becomeRoot(
-                  (CommonTree) adaptor.create(TOK_ALTERTABLE_SKEWED, "TOK_ALTERTABLE_SKEWED"), root_1);
+              root_1 = (CommonTree) adaptor
+                  .becomeRoot((CommonTree) adaptor.create(TOK_ALTERTABLE_SKEWED, "TOK_ALTERTABLE_SKEWED"), root_1);
 
               adaptor.addChild(root_0, root_1);
             }
@@ -12305,9 +12273,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 3:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1235:3: KW_NOT storedAsDirs
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1235:3: KW_NOT storedAsDirs
         {
           KW_NOT337 = (Token) match(input, KW_NOT, FOLLOW_KW_NOT_in_alterStatementSuffixSkewedby5782);
           stream_KW_NOT.add(KW_NOT337);
@@ -12336,8 +12304,8 @@ public class HiveParser extends Parser {
             // org/apache/hadoop/hive/ql/parse/HiveParser.g:1236:4: ^( TOK_ALTERTABLE_SKEWED storedAsDirs )
             {
               CommonTree root_1 = (CommonTree) adaptor.nil();
-              root_1 = (CommonTree) adaptor.becomeRoot(
-                  (CommonTree) adaptor.create(TOK_ALTERTABLE_SKEWED, "TOK_ALTERTABLE_SKEWED"), root_1);
+              root_1 = (CommonTree) adaptor
+                  .becomeRoot((CommonTree) adaptor.create(TOK_ALTERTABLE_SKEWED, "TOK_ALTERTABLE_SKEWED"), root_1);
 
               adaptor.addChild(root_1, stream_storedAsDirs.nextTree());
 
@@ -12347,7 +12315,7 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
       }
       retval.stop = input.LT(-1);
 
@@ -12716,17 +12684,17 @@ public class HiveParser extends Parser {
           case KW_COLUMN: {
             alt97 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt97) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1263:38: KW_COLUMN
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1263:38: KW_COLUMN
           {
             KW_COLUMN350 = (Token) match(input, KW_COLUMN, FOLLOW_KW_COLUMN_in_alterStatementSuffixStatsPart5954);
             stream_KW_COLUMN.add(KW_COLUMN350);
           }
-          break;
+            break;
         }
 
         pushFollow(FOLLOW_identifier_in_alterStatementSuffixStatsPart5959);
@@ -12752,12 +12720,12 @@ public class HiveParser extends Parser {
           case KW_COMMENT: {
             alt98 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt98) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1263:92: KW_COMMENT comment= StringLiteral
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1263:92: KW_COMMENT comment= StringLiteral
           {
             KW_COMMENT353 = (Token) match(input, KW_COMMENT, FOLLOW_KW_COMMENT_in_alterStatementSuffixStatsPart5966);
             stream_KW_COMMENT.add(KW_COMMENT353);
@@ -12765,7 +12733,7 @@ public class HiveParser extends Parser {
             comment = (Token) match(input, StringLiteral, FOLLOW_StringLiteral_in_alterStatementSuffixStatsPart5970);
             stream_StringLiteral.add(comment);
           }
-          break;
+            break;
         }
 
         // AST REWRITE
@@ -12938,11 +12906,11 @@ public class HiveParser extends Parser {
         case KW_ENABLE: {
           alt99 = 1;
         }
-        break;
+          break;
         case KW_DISABLE: {
           alt99 = 2;
         }
-        break;
+          break;
         default:
           NoViableAltException nvae = new NoViableAltException("", 99, 0, input);
 
@@ -12951,7 +12919,7 @@ public class HiveParser extends Parser {
 
       switch (alt99) {
         case 1:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1277:7: KW_ENABLE alterProtectModeMode
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1277:7: KW_ENABLE alterProtectModeMode
         {
           KW_ENABLE355 = (Token) match(input, KW_ENABLE, FOLLOW_KW_ENABLE_in_alterProtectMode6054);
           stream_KW_ENABLE.add(KW_ENABLE355);
@@ -12990,9 +12958,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 2:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1278:7: KW_DISABLE alterProtectModeMode
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1278:7: KW_DISABLE alterProtectModeMode
         {
           KW_DISABLE357 = (Token) match(input, KW_DISABLE, FOLLOW_KW_DISABLE_in_alterProtectMode6073);
           stream_KW_DISABLE.add(KW_DISABLE357);
@@ -13031,7 +12999,7 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
       }
       retval.stop = input.LT(-1);
 
@@ -13089,15 +13057,15 @@ public class HiveParser extends Parser {
         case KW_OFFLINE: {
           alt101 = 1;
         }
-        break;
+          break;
         case KW_NO_DROP: {
           alt101 = 2;
         }
-        break;
+          break;
         case KW_READONLY: {
           alt101 = 3;
         }
-        break;
+          break;
         default:
           NoViableAltException nvae = new NoViableAltException("", 101, 0, input);
 
@@ -13106,7 +13074,7 @@ public class HiveParser extends Parser {
 
       switch (alt101) {
         case 1:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1284:7: KW_OFFLINE
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1284:7: KW_OFFLINE
         {
           KW_OFFLINE359 = (Token) match(input, KW_OFFLINE, FOLLOW_KW_OFFLINE_in_alterProtectModeMode6111);
           stream_KW_OFFLINE.add(KW_OFFLINE359);
@@ -13136,9 +13104,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 2:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1285:7: KW_NO_DROP ( KW_CASCADE )?
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1285:7: KW_NO_DROP ( KW_CASCADE )?
         {
           KW_NO_DROP360 = (Token) match(input, KW_NO_DROP, FOLLOW_KW_NO_DROP_in_alterProtectModeMode6126);
           stream_KW_NO_DROP.add(KW_NO_DROP360);
@@ -13149,17 +13117,17 @@ public class HiveParser extends Parser {
             case KW_CASCADE: {
               alt100 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt100) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1285:18: KW_CASCADE
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1285:18: KW_CASCADE
             {
               KW_CASCADE361 = (Token) match(input, KW_CASCADE, FOLLOW_KW_CASCADE_in_alterProtectModeMode6128);
               stream_KW_CASCADE.add(KW_CASCADE361);
             }
-            break;
+              break;
           }
 
           // AST REWRITE
@@ -13193,9 +13161,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 3:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1286:7: KW_READONLY
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1286:7: KW_READONLY
         {
           KW_READONLY362 = (Token) match(input, KW_READONLY, FOLLOW_KW_READONLY_in_alterProtectModeMode6146);
           stream_KW_READONLY.add(KW_READONLY362);
@@ -13226,7 +13194,7 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
       }
       retval.stop = input.LT(-1);
 
@@ -13306,8 +13274,8 @@ public class HiveParser extends Parser {
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:1293:8: ^( TOK_ALTERTABLE_BUCKETS $num)
           {
             CommonTree root_1 = (CommonTree) adaptor.nil();
-            root_1 = (CommonTree) adaptor.becomeRoot(
-                (CommonTree) adaptor.create(TOK_ALTERTABLE_BUCKETS, "TOK_ALTERTABLE_BUCKETS"), root_1);
+            root_1 = (CommonTree) adaptor
+                .becomeRoot((CommonTree) adaptor.create(TOK_ALTERTABLE_BUCKETS, "TOK_ALTERTABLE_BUCKETS"), root_1);
 
             adaptor.addChild(root_1, stream_num.nextNode());
 
@@ -13390,8 +13358,8 @@ public class HiveParser extends Parser {
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:1300:8: ^( TOK_ALTERTABLE_COMPACT $compactType)
           {
             CommonTree root_1 = (CommonTree) adaptor.nil();
-            root_1 = (CommonTree) adaptor.becomeRoot(
-                (CommonTree) adaptor.create(TOK_ALTERTABLE_COMPACT, "TOK_ALTERTABLE_COMPACT"), root_1);
+            root_1 = (CommonTree) adaptor
+                .becomeRoot((CommonTree) adaptor.create(TOK_ALTERTABLE_COMPACT, "TOK_ALTERTABLE_COMPACT"), root_1);
 
             adaptor.addChild(root_1, stream_compactType.nextNode());
 
@@ -13475,21 +13443,21 @@ public class HiveParser extends Parser {
             case StringLiteral: {
               alt103 = 1;
             }
-            break;
+              break;
             case EOF:
             case KW_LOCATION:
             case KW_PARTITION:
             case KW_SERDEPROPERTIES: {
               alt103 = 2;
             }
-            break;
+              break;
             default:
               NoViableAltException nvae = new NoViableAltException("", 103, 1, input);
 
               throw nvae;
           }
         }
-        break;
+          break;
         case Identifier:
         case KW_ADD:
         case KW_ADMIN:
@@ -13708,7 +13676,7 @@ public class HiveParser extends Parser {
         case KW_WITH: {
           alt103 = 2;
         }
-        break;
+          break;
         default:
           NoViableAltException nvae = new NoViableAltException("", 103, 0, input);
 
@@ -13717,7 +13685,7 @@ public class HiveParser extends Parser {
 
       switch (alt103) {
         case 1:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1307:7: KW_INPUTFORMAT inFmt= StringLiteral KW_OUTPUTFORMAT outFmt= StringLiteral KW_SERDE serdeCls= StringLiteral ( KW_INPUTDRIVER inDriver= StringLiteral KW_OUTPUTDRIVER outDriver= StringLiteral )?
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1307:7: KW_INPUTFORMAT inFmt= StringLiteral KW_OUTPUTFORMAT outFmt= StringLiteral KW_SERDE serdeCls= StringLiteral ( KW_INPUTDRIVER inDriver= StringLiteral KW_OUTPUTDRIVER outDriver= StringLiteral )?
         {
           KW_INPUTFORMAT366 = (Token) match(input, KW_INPUTFORMAT, FOLLOW_KW_INPUTFORMAT_in_fileFormat6271);
           stream_KW_INPUTFORMAT.add(KW_INPUTFORMAT366);
@@ -13743,12 +13711,12 @@ public class HiveParser extends Parser {
             case KW_INPUTDRIVER: {
               alt102 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt102) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1307:112: KW_INPUTDRIVER inDriver= StringLiteral KW_OUTPUTDRIVER outDriver= StringLiteral
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1307:112: KW_INPUTDRIVER inDriver= StringLiteral KW_OUTPUTDRIVER outDriver= StringLiteral
             {
               KW_INPUTDRIVER369 = (Token) match(input, KW_INPUTDRIVER, FOLLOW_KW_INPUTDRIVER_in_fileFormat6290);
               stream_KW_INPUTDRIVER.add(KW_INPUTDRIVER369);
@@ -13762,7 +13730,7 @@ public class HiveParser extends Parser {
               outDriver = (Token) match(input, StringLiteral, FOLLOW_StringLiteral_in_fileFormat6300);
               stream_StringLiteral.add(outDriver);
             }
-            break;
+              break;
           }
 
           // AST REWRITE
@@ -13787,8 +13755,8 @@ public class HiveParser extends Parser {
             // org/apache/hadoop/hive/ql/parse/HiveParser.g:1308:10: ^( TOK_TABLEFILEFORMAT $inFmt $outFmt $serdeCls ( $inDriver)? ( $outDriver)? )
             {
               CommonTree root_1 = (CommonTree) adaptor.nil();
-              root_1 = (CommonTree) adaptor.becomeRoot(
-                  (CommonTree) adaptor.create(TOK_TABLEFILEFORMAT, "TOK_TABLEFILEFORMAT"), root_1);
+              root_1 = (CommonTree) adaptor
+                  .becomeRoot((CommonTree) adaptor.create(TOK_TABLEFILEFORMAT, "TOK_TABLEFILEFORMAT"), root_1);
 
               adaptor.addChild(root_1, stream_inFmt.nextNode());
 
@@ -13814,9 +13782,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 2:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1309:7: genericSpec= identifier
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1309:7: genericSpec= identifier
         {
           pushFollow(FOLLOW_identifier_in_fileFormat6341);
           genericSpec = identifier();
@@ -13844,8 +13812,8 @@ public class HiveParser extends Parser {
             // org/apache/hadoop/hive/ql/parse/HiveParser.g:1309:33: ^( TOK_FILEFORMAT_GENERIC $genericSpec)
             {
               CommonTree root_1 = (CommonTree) adaptor.nil();
-              root_1 = (CommonTree) adaptor.becomeRoot(
-                  (CommonTree) adaptor.create(TOK_FILEFORMAT_GENERIC, "TOK_FILEFORMAT_GENERIC"), root_1);
+              root_1 = (CommonTree) adaptor
+                  .becomeRoot((CommonTree) adaptor.create(TOK_FILEFORMAT_GENERIC, "TOK_FILEFORMAT_GENERIC"), root_1);
 
               adaptor.addChild(root_1, stream_genericSpec.nextTree());
 
@@ -13855,7 +13823,7 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
       }
       retval.stop = input.LT(-1);
 
@@ -13919,19 +13887,18 @@ public class HiveParser extends Parser {
         adaptor.addChild(root_0, identifier371.getTree());
 
         // org/apache/hadoop/hive/ql/parse/HiveParser.g:1316:17: ( DOT ^ ( KW_ELEM_TYPE | KW_KEY_TYPE | KW_VALUE_TYPE | identifier ) )*
-        loop105:
-        do {
+        loop105: do {
           int alt105 = 2;
           switch (input.LA(1)) {
             case DOT: {
               alt105 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt105) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1316:18: DOT ^ ( KW_ELEM_TYPE | KW_KEY_TYPE | KW_VALUE_TYPE | identifier )
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1316:18: DOT ^ ( KW_ELEM_TYPE | KW_KEY_TYPE | KW_VALUE_TYPE | identifier )
             {
               DOT372 = (Token) match(input, DOT, FOLLOW_DOT_in_tabTypeExpr6380);
               DOT372_tree = (CommonTree) adaptor.create(DOT372);
@@ -13943,15 +13910,15 @@ public class HiveParser extends Parser {
                 case KW_ELEM_TYPE: {
                   alt104 = 1;
                 }
-                break;
+                  break;
                 case KW_KEY_TYPE: {
                   alt104 = 2;
                 }
-                break;
+                  break;
                 case KW_VALUE_TYPE: {
                   alt104 = 3;
                 }
-                break;
+                  break;
                 case Identifier:
                 case KW_ADD:
                 case KW_ADMIN:
@@ -14168,7 +14135,7 @@ public class HiveParser extends Parser {
                 case KW_WITH: {
                   alt104 = 4;
                 }
-                break;
+                  break;
                 default:
                   NoViableAltException nvae = new NoViableAltException("", 104, 0, input);
 
@@ -14177,31 +14144,31 @@ public class HiveParser extends Parser {
 
               switch (alt104) {
                 case 1:
-                  // org/apache/hadoop/hive/ql/parse/HiveParser.g:1316:24: KW_ELEM_TYPE
+                // org/apache/hadoop/hive/ql/parse/HiveParser.g:1316:24: KW_ELEM_TYPE
                 {
                   KW_ELEM_TYPE373 = (Token) match(input, KW_ELEM_TYPE, FOLLOW_KW_ELEM_TYPE_in_tabTypeExpr6384);
                   KW_ELEM_TYPE373_tree = (CommonTree) adaptor.create(KW_ELEM_TYPE373);
                   adaptor.addChild(root_0, KW_ELEM_TYPE373_tree);
                 }
-                break;
+                  break;
                 case 2:
-                  // org/apache/hadoop/hive/ql/parse/HiveParser.g:1316:39: KW_KEY_TYPE
+                // org/apache/hadoop/hive/ql/parse/HiveParser.g:1316:39: KW_KEY_TYPE
                 {
                   KW_KEY_TYPE374 = (Token) match(input, KW_KEY_TYPE, FOLLOW_KW_KEY_TYPE_in_tabTypeExpr6388);
                   KW_KEY_TYPE374_tree = (CommonTree) adaptor.create(KW_KEY_TYPE374);
                   adaptor.addChild(root_0, KW_KEY_TYPE374_tree);
                 }
-                break;
+                  break;
                 case 3:
-                  // org/apache/hadoop/hive/ql/parse/HiveParser.g:1316:53: KW_VALUE_TYPE
+                // org/apache/hadoop/hive/ql/parse/HiveParser.g:1316:53: KW_VALUE_TYPE
                 {
                   KW_VALUE_TYPE375 = (Token) match(input, KW_VALUE_TYPE, FOLLOW_KW_VALUE_TYPE_in_tabTypeExpr6392);
                   KW_VALUE_TYPE375_tree = (CommonTree) adaptor.create(KW_VALUE_TYPE375);
                   adaptor.addChild(root_0, KW_VALUE_TYPE375_tree);
                 }
-                break;
+                  break;
                 case 4:
-                  // org/apache/hadoop/hive/ql/parse/HiveParser.g:1316:69: identifier
+                // org/apache/hadoop/hive/ql/parse/HiveParser.g:1316:69: identifier
                 {
                   pushFollow(FOLLOW_identifier_in_tabTypeExpr6396);
                   identifier376 = identifier();
@@ -14210,10 +14177,10 @@ public class HiveParser extends Parser {
 
                   adaptor.addChild(root_0, identifier376.getTree());
                 }
-                break;
+                  break;
               }
             }
-            break;
+              break;
 
             default:
               break loop105;
@@ -14285,19 +14252,18 @@ public class HiveParser extends Parser {
         adaptor.addChild(root_0, identifier377.getTree());
 
         // org/apache/hadoop/hive/ql/parse/HiveParser.g:1323:17: ( DOT ^ ( KW_ELEM_TYPE | KW_KEY_TYPE | KW_VALUE_TYPE | identifier ) )*
-        loop107:
-        do {
+        loop107: do {
           int alt107 = 2;
           switch (input.LA(1)) {
             case DOT: {
               alt107 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt107) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1323:18: DOT ^ ( KW_ELEM_TYPE | KW_KEY_TYPE | KW_VALUE_TYPE | identifier )
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1323:18: DOT ^ ( KW_ELEM_TYPE | KW_KEY_TYPE | KW_VALUE_TYPE | identifier )
             {
               DOT378 = (Token) match(input, DOT, FOLLOW_DOT_in_descTabTypeExpr6428);
               DOT378_tree = (CommonTree) adaptor.create(DOT378);
@@ -14309,15 +14275,15 @@ public class HiveParser extends Parser {
                 case KW_ELEM_TYPE: {
                   alt106 = 1;
                 }
-                break;
+                  break;
                 case KW_KEY_TYPE: {
                   alt106 = 2;
                 }
-                break;
+                  break;
                 case KW_VALUE_TYPE: {
                   alt106 = 3;
                 }
-                break;
+                  break;
                 case Identifier:
                 case KW_ADD:
                 case KW_ADMIN:
@@ -14534,7 +14500,7 @@ public class HiveParser extends Parser {
                 case KW_WITH: {
                   alt106 = 4;
                 }
-                break;
+                  break;
                 default:
                   NoViableAltException nvae = new NoViableAltException("", 106, 0, input);
 
@@ -14543,31 +14509,31 @@ public class HiveParser extends Parser {
 
               switch (alt106) {
                 case 1:
-                  // org/apache/hadoop/hive/ql/parse/HiveParser.g:1323:24: KW_ELEM_TYPE
+                // org/apache/hadoop/hive/ql/parse/HiveParser.g:1323:24: KW_ELEM_TYPE
                 {
                   KW_ELEM_TYPE379 = (Token) match(input, KW_ELEM_TYPE, FOLLOW_KW_ELEM_TYPE_in_descTabTypeExpr6432);
                   KW_ELEM_TYPE379_tree = (CommonTree) adaptor.create(KW_ELEM_TYPE379);
                   adaptor.addChild(root_0, KW_ELEM_TYPE379_tree);
                 }
-                break;
+                  break;
                 case 2:
-                  // org/apache/hadoop/hive/ql/parse/HiveParser.g:1323:39: KW_KEY_TYPE
+                // org/apache/hadoop/hive/ql/parse/HiveParser.g:1323:39: KW_KEY_TYPE
                 {
                   KW_KEY_TYPE380 = (Token) match(input, KW_KEY_TYPE, FOLLOW_KW_KEY_TYPE_in_descTabTypeExpr6436);
                   KW_KEY_TYPE380_tree = (CommonTree) adaptor.create(KW_KEY_TYPE380);
                   adaptor.addChild(root_0, KW_KEY_TYPE380_tree);
                 }
-                break;
+                  break;
                 case 3:
-                  // org/apache/hadoop/hive/ql/parse/HiveParser.g:1323:53: KW_VALUE_TYPE
+                // org/apache/hadoop/hive/ql/parse/HiveParser.g:1323:53: KW_VALUE_TYPE
                 {
                   KW_VALUE_TYPE381 = (Token) match(input, KW_VALUE_TYPE, FOLLOW_KW_VALUE_TYPE_in_descTabTypeExpr6440);
                   KW_VALUE_TYPE381_tree = (CommonTree) adaptor.create(KW_VALUE_TYPE381);
                   adaptor.addChild(root_0, KW_VALUE_TYPE381_tree);
                 }
-                break;
+                  break;
                 case 4:
-                  // org/apache/hadoop/hive/ql/parse/HiveParser.g:1323:69: identifier
+                // org/apache/hadoop/hive/ql/parse/HiveParser.g:1323:69: identifier
                 {
                   pushFollow(FOLLOW_identifier_in_descTabTypeExpr6444);
                   identifier382 = identifier();
@@ -14576,10 +14542,10 @@ public class HiveParser extends Parser {
 
                   adaptor.addChild(root_0, identifier382.getTree());
                 }
-                break;
+                  break;
               }
             }
-            break;
+              break;
 
             default:
               break loop107;
@@ -14807,22 +14773,22 @@ public class HiveParser extends Parser {
           case KW_WITH: {
             alt108 = 1;
           }
-          break;
+            break;
           case KW_PARTITION: {
             switch (input.LA(2)) {
               case EOF:
               case KW_PARTITION: {
                 alt108 = 1;
               }
-              break;
+                break;
             }
           }
-          break;
+            break;
         }
 
         switch (alt108) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1323:83: identifier
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1323:83: identifier
           {
             pushFollow(FOLLOW_identifier_in_descTabTypeExpr6449);
             identifier383 = identifier();
@@ -14831,7 +14797,7 @@ public class HiveParser extends Parser {
 
             adaptor.addChild(root_0, identifier383.getTree());
           }
-          break;
+            break;
         }
       }
 
@@ -14893,12 +14859,12 @@ public class HiveParser extends Parser {
           case KW_PARTITION: {
             alt109 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt109) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1329:20: partitionSpec
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1329:20: partitionSpec
           {
             pushFollow(FOLLOW_partitionSpec_in_partTypeExpr6479);
             partitionSpec385 = partitionSpec();
@@ -14907,7 +14873,7 @@ public class HiveParser extends Parser {
 
             stream_partitionSpec.add(partitionSpec385.getTree());
           }
-          break;
+            break;
         }
 
         // AST REWRITE
@@ -15002,12 +14968,12 @@ public class HiveParser extends Parser {
           case KW_PARTITION: {
             alt110 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt110) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1335:24: partitionSpec
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1335:24: partitionSpec
           {
             pushFollow(FOLLOW_partitionSpec_in_descPartTypeExpr6521);
             partitionSpec387 = partitionSpec();
@@ -15016,7 +14982,7 @@ public class HiveParser extends Parser {
 
             stream_partitionSpec.add(partitionSpec387.getTree());
           }
-          break;
+            break;
         }
 
         // AST REWRITE
@@ -15138,26 +15104,26 @@ public class HiveParser extends Parser {
             case KW_DATABASE: {
               alt118 = 1;
             }
-            break;
+              break;
             case KW_SCHEMA: {
               switch (input.LA(3)) {
                 case KW_EXTENDED: {
                   alt118 = 1;
                 }
-                break;
+                  break;
                 case Identifier: {
                   alt118 = 1;
                 }
-                break;
+                  break;
                 case KW_PARTITION: {
                   alt118 = 1;
                 }
-                break;
+                  break;
                 case EOF:
                 case DOT: {
                   alt118 = 2;
                 }
-                break;
+                  break;
                 case KW_ADD:
                 case KW_ADMIN:
                 case KW_AFTER:
@@ -15375,14 +15341,14 @@ public class HiveParser extends Parser {
                 case KW_WITH: {
                   alt118 = 1;
                 }
-                break;
+                  break;
                 default:
                   NoViableAltException nvae = new NoViableAltException("", 118, 4, input);
 
                   throw nvae;
               }
             }
-            break;
+              break;
             case Identifier:
             case KW_ADD:
             case KW_ADMIN:
@@ -15602,43 +15568,43 @@ public class HiveParser extends Parser {
             case KW_WITH: {
               alt118 = 2;
             }
-            break;
+              break;
             case KW_FUNCTION: {
               alt118 = 3;
             }
-            break;
+              break;
             default:
               NoViableAltException nvae = new NoViableAltException("", 118, 1, input);
 
               throw nvae;
           }
         }
-        break;
+          break;
         case KW_DESC: {
           switch (input.LA(2)) {
             case KW_DATABASE: {
               alt118 = 1;
             }
-            break;
+              break;
             case KW_SCHEMA: {
               switch (input.LA(3)) {
                 case KW_EXTENDED: {
                   alt118 = 1;
                 }
-                break;
+                  break;
                 case Identifier: {
                   alt118 = 1;
                 }
-                break;
+                  break;
                 case KW_PARTITION: {
                   alt118 = 1;
                 }
-                break;
+                  break;
                 case EOF:
                 case DOT: {
                   alt118 = 2;
                 }
-                break;
+                  break;
                 case KW_ADD:
                 case KW_ADMIN:
                 case KW_AFTER:
@@ -15856,14 +15822,14 @@ public class HiveParser extends Parser {
                 case KW_WITH: {
                   alt118 = 1;
                 }
-                break;
+                  break;
                 default:
                   NoViableAltException nvae = new NoViableAltException("", 118, 12, input);
 
                   throw nvae;
               }
             }
-            break;
+              break;
             case Identifier:
             case KW_ADD:
             case KW_ADMIN:
@@ -16083,18 +16049,18 @@ public class HiveParser extends Parser {
             case KW_WITH: {
               alt118 = 2;
             }
-            break;
+              break;
             case KW_FUNCTION: {
               alt118 = 3;
             }
-            break;
+              break;
             default:
               NoViableAltException nvae = new NoViableAltException("", 118, 2, input);
 
               throw nvae;
           }
         }
-        break;
+          break;
         default:
           NoViableAltException nvae = new NoViableAltException("", 118, 0, input);
 
@@ -16103,7 +16069,7 @@ public class HiveParser extends Parser {
 
       switch (alt118) {
         case 1:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1341:7: ( KW_DESCRIBE | KW_DESC ) ( KW_DATABASE | KW_SCHEMA ) ( KW_EXTENDED )? (dbName= identifier )
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1341:7: ( KW_DESCRIBE | KW_DESC ) ( KW_DATABASE | KW_SCHEMA ) ( KW_EXTENDED )? (dbName= identifier )
         {
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:1341:7: ( KW_DESCRIBE | KW_DESC )
           int alt111 = 2;
@@ -16111,11 +16077,11 @@ public class HiveParser extends Parser {
             case KW_DESCRIBE: {
               alt111 = 1;
             }
-            break;
+              break;
             case KW_DESC: {
               alt111 = 2;
             }
-            break;
+              break;
             default:
               NoViableAltException nvae = new NoViableAltException("", 111, 0, input);
 
@@ -16124,19 +16090,19 @@ public class HiveParser extends Parser {
 
           switch (alt111) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1341:8: KW_DESCRIBE
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1341:8: KW_DESCRIBE
             {
               KW_DESCRIBE388 = (Token) match(input, KW_DESCRIBE, FOLLOW_KW_DESCRIBE_in_descStatement6561);
               stream_KW_DESCRIBE.add(KW_DESCRIBE388);
             }
-            break;
+              break;
             case 2:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1341:20: KW_DESC
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1341:20: KW_DESC
             {
               KW_DESC389 = (Token) match(input, KW_DESC, FOLLOW_KW_DESC_in_descStatement6563);
               stream_KW_DESC.add(KW_DESC389);
             }
-            break;
+              break;
           }
 
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:1341:29: ( KW_DATABASE | KW_SCHEMA )
@@ -16145,11 +16111,11 @@ public class HiveParser extends Parser {
             case KW_DATABASE: {
               alt112 = 1;
             }
-            break;
+              break;
             case KW_SCHEMA: {
               alt112 = 2;
             }
-            break;
+              break;
             default:
               NoViableAltException nvae = new NoViableAltException("", 112, 0, input);
 
@@ -16158,19 +16124,19 @@ public class HiveParser extends Parser {
 
           switch (alt112) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1341:30: KW_DATABASE
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1341:30: KW_DATABASE
             {
               KW_DATABASE390 = (Token) match(input, KW_DATABASE, FOLLOW_KW_DATABASE_in_descStatement6567);
               stream_KW_DATABASE.add(KW_DATABASE390);
             }
-            break;
+              break;
             case 2:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1341:42: KW_SCHEMA
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1341:42: KW_SCHEMA
             {
               KW_SCHEMA391 = (Token) match(input, KW_SCHEMA, FOLLOW_KW_SCHEMA_in_descStatement6569);
               stream_KW_SCHEMA.add(KW_SCHEMA391);
             }
-            break;
+              break;
           }
 
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:1341:53: ( KW_EXTENDED )?
@@ -16179,17 +16145,17 @@ public class HiveParser extends Parser {
             case KW_EXTENDED: {
               alt113 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt113) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1341:53: KW_EXTENDED
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1341:53: KW_EXTENDED
             {
               KW_EXTENDED392 = (Token) match(input, KW_EXTENDED, FOLLOW_KW_EXTENDED_in_descStatement6572);
               stream_KW_EXTENDED.add(KW_EXTENDED392);
             }
-            break;
+              break;
           }
 
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:1341:66: (dbName= identifier )
@@ -16222,9 +16188,8 @@ public class HiveParser extends Parser {
             // org/apache/hadoop/hive/ql/parse/HiveParser.g:1341:89: ^( TOK_DESCDATABASE $dbName ( KW_EXTENDED )? )
             {
               CommonTree root_1 = (CommonTree) adaptor.nil();
-              root_1 =
-                  (CommonTree) adaptor.becomeRoot((CommonTree) adaptor.create(TOK_DESCDATABASE, "TOK_DESCDATABASE"),
-                      root_1);
+              root_1 = (CommonTree) adaptor
+                  .becomeRoot((CommonTree) adaptor.create(TOK_DESCDATABASE, "TOK_DESCDATABASE"), root_1);
 
               adaptor.addChild(root_1, stream_dbName.nextTree());
 
@@ -16240,9 +16205,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 2:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1342:7: ( KW_DESCRIBE | KW_DESC ) (descOptions= KW_FORMATTED |descOptions= KW_EXTENDED |descOptions= KW_PRETTY )? (parttype= descPartTypeExpr )
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1342:7: ( KW_DESCRIBE | KW_DESC ) (descOptions= KW_FORMATTED |descOptions= KW_EXTENDED |descOptions= KW_PRETTY )? (parttype= descPartTypeExpr )
         {
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:1342:7: ( KW_DESCRIBE | KW_DESC )
           int alt114 = 2;
@@ -16250,11 +16215,11 @@ public class HiveParser extends Parser {
             case KW_DESCRIBE: {
               alt114 = 1;
             }
-            break;
+              break;
             case KW_DESC: {
               alt114 = 2;
             }
-            break;
+              break;
             default:
               NoViableAltException nvae = new NoViableAltException("", 114, 0, input);
 
@@ -16263,19 +16228,19 @@ public class HiveParser extends Parser {
 
           switch (alt114) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1342:8: KW_DESCRIBE
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1342:8: KW_DESCRIBE
             {
               KW_DESCRIBE393 = (Token) match(input, KW_DESCRIBE, FOLLOW_KW_DESCRIBE_in_descStatement6600);
               stream_KW_DESCRIBE.add(KW_DESCRIBE393);
             }
-            break;
+              break;
             case 2:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1342:20: KW_DESC
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1342:20: KW_DESC
             {
               KW_DESC394 = (Token) match(input, KW_DESC, FOLLOW_KW_DESC_in_descStatement6602);
               stream_KW_DESC.add(KW_DESC394);
             }
-            break;
+              break;
           }
 
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:1342:29: (descOptions= KW_FORMATTED |descOptions= KW_EXTENDED |descOptions= KW_PRETTY )?
@@ -16286,11 +16251,11 @@ public class HiveParser extends Parser {
                 case Identifier: {
                   alt115 = 1;
                 }
-                break;
+                  break;
                 case KW_PARTITION: {
                   alt115 = 1;
                 }
-                break;
+                  break;
                 case KW_ADD:
                 case KW_ADMIN:
                 case KW_AFTER:
@@ -16508,24 +16473,24 @@ public class HiveParser extends Parser {
                 case KW_WITH: {
                   alt115 = 1;
                 }
-                break;
+                  break;
               }
             }
-            break;
+              break;
             case KW_EXTENDED: {
               alt115 = 2;
             }
-            break;
+              break;
             case KW_PRETTY: {
               switch (input.LA(2)) {
                 case Identifier: {
                   alt115 = 3;
                 }
-                break;
+                  break;
                 case KW_PARTITION: {
                   alt115 = 3;
                 }
-                break;
+                  break;
                 case KW_ADD:
                 case KW_ADMIN:
                 case KW_AFTER:
@@ -16743,34 +16708,34 @@ public class HiveParser extends Parser {
                 case KW_WITH: {
                   alt115 = 3;
                 }
-                break;
+                  break;
               }
             }
-            break;
+              break;
           }
 
           switch (alt115) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1342:30: descOptions= KW_FORMATTED
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1342:30: descOptions= KW_FORMATTED
             {
               descOptions = (Token) match(input, KW_FORMATTED, FOLLOW_KW_FORMATTED_in_descStatement6608);
               stream_KW_FORMATTED.add(descOptions);
             }
-            break;
+              break;
             case 2:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1342:55: descOptions= KW_EXTENDED
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1342:55: descOptions= KW_EXTENDED
             {
               descOptions = (Token) match(input, KW_EXTENDED, FOLLOW_KW_EXTENDED_in_descStatement6612);
               stream_KW_EXTENDED.add(descOptions);
             }
-            break;
+              break;
             case 3:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1342:79: descOptions= KW_PRETTY
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1342:79: descOptions= KW_PRETTY
             {
               descOptions = (Token) match(input, KW_PRETTY, FOLLOW_KW_PRETTY_in_descStatement6616);
               stream_KW_PRETTY.add(descOptions);
             }
-            break;
+              break;
           }
 
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:1342:103: (parttype= descPartTypeExpr )
@@ -16822,9 +16787,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 3:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1343:7: ( KW_DESCRIBE | KW_DESC ) KW_FUNCTION ( KW_EXTENDED )? (name= descFuncNames )
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1343:7: ( KW_DESCRIBE | KW_DESC ) KW_FUNCTION ( KW_EXTENDED )? (name= descFuncNames )
         {
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:1343:7: ( KW_DESCRIBE | KW_DESC )
           int alt116 = 2;
@@ -16832,11 +16797,11 @@ public class HiveParser extends Parser {
             case KW_DESCRIBE: {
               alt116 = 1;
             }
-            break;
+              break;
             case KW_DESC: {
               alt116 = 2;
             }
-            break;
+              break;
             default:
               NoViableAltException nvae = new NoViableAltException("", 116, 0, input);
 
@@ -16845,19 +16810,19 @@ public class HiveParser extends Parser {
 
           switch (alt116) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1343:8: KW_DESCRIBE
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1343:8: KW_DESCRIBE
             {
               KW_DESCRIBE395 = (Token) match(input, KW_DESCRIBE, FOLLOW_KW_DESCRIBE_in_descStatement6646);
               stream_KW_DESCRIBE.add(KW_DESCRIBE395);
             }
-            break;
+              break;
             case 2:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1343:20: KW_DESC
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1343:20: KW_DESC
             {
               KW_DESC396 = (Token) match(input, KW_DESC, FOLLOW_KW_DESC_in_descStatement6648);
               stream_KW_DESC.add(KW_DESC396);
             }
-            break;
+              break;
           }
 
           KW_FUNCTION397 = (Token) match(input, KW_FUNCTION, FOLLOW_KW_FUNCTION_in_descStatement6651);
@@ -16869,17 +16834,17 @@ public class HiveParser extends Parser {
             case KW_EXTENDED: {
               alt117 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt117) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1343:41: KW_EXTENDED
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1343:41: KW_EXTENDED
             {
               KW_EXTENDED398 = (Token) match(input, KW_EXTENDED, FOLLOW_KW_EXTENDED_in_descStatement6653);
               stream_KW_EXTENDED.add(KW_EXTENDED398);
             }
-            break;
+              break;
           }
 
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:1343:54: (name= descFuncNames )
@@ -16912,9 +16877,8 @@ public class HiveParser extends Parser {
             // org/apache/hadoop/hive/ql/parse/HiveParser.g:1343:78: ^( TOK_DESCFUNCTION $name ( KW_EXTENDED )? )
             {
               CommonTree root_1 = (CommonTree) adaptor.nil();
-              root_1 =
-                  (CommonTree) adaptor.becomeRoot((CommonTree) adaptor.create(TOK_DESCFUNCTION, "TOK_DESCFUNCTION"),
-                      root_1);
+              root_1 = (CommonTree) adaptor
+                  .becomeRoot((CommonTree) adaptor.create(TOK_DESCFUNCTION, "TOK_DESCFUNCTION"), root_1);
 
               adaptor.addChild(root_1, stream_name.nextTree());
 
@@ -16930,7 +16894,7 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
       }
       retval.stop = input.LT(-1);
 
@@ -17030,20 +16994,20 @@ public class HiveParser extends Parser {
           case KW_NOSCAN: {
             alt120 = 1;
           }
-          break;
+            break;
           case KW_PARTIALSCAN: {
             alt120 = 2;
           }
-          break;
+            break;
           case KW_FOR: {
             alt120 = 3;
           }
-          break;
+            break;
         }
 
         switch (alt120) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1350:81: (noscan= KW_NOSCAN )
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1350:81: (noscan= KW_NOSCAN )
           {
             // org/apache/hadoop/hive/ql/parse/HiveParser.g:1350:81: (noscan= KW_NOSCAN )
             // org/apache/hadoop/hive/ql/parse/HiveParser.g:1350:82: noscan= KW_NOSCAN
@@ -17052,9 +17016,9 @@ public class HiveParser extends Parser {
               stream_KW_NOSCAN.add(noscan);
             }
           }
-          break;
+            break;
           case 2:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1350:102: (partialscan= KW_PARTIALSCAN )
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1350:102: (partialscan= KW_PARTIALSCAN )
           {
             // org/apache/hadoop/hive/ql/parse/HiveParser.g:1350:102: (partialscan= KW_PARTIALSCAN )
             // org/apache/hadoop/hive/ql/parse/HiveParser.g:1350:103: partialscan= KW_PARTIALSCAN
@@ -17063,9 +17027,9 @@ public class HiveParser extends Parser {
               stream_KW_PARTIALSCAN.add(partialscan);
             }
           }
-          break;
+            break;
           case 3:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1351:57: ( KW_FOR KW_COLUMNS (statsColumnName= columnNameList )? )
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1351:57: ( KW_FOR KW_COLUMNS (statsColumnName= columnNameList )? )
           {
             // org/apache/hadoop/hive/ql/parse/HiveParser.g:1351:57: ( KW_FOR KW_COLUMNS (statsColumnName= columnNameList )? )
             // org/apache/hadoop/hive/ql/parse/HiveParser.g:1351:58: KW_FOR KW_COLUMNS (statsColumnName= columnNameList )?
@@ -17298,12 +17262,12 @@ public class HiveParser extends Parser {
                 case KW_WITH: {
                   alt119 = 1;
                 }
-                break;
+                  break;
               }
 
               switch (alt119) {
                 case 1:
-                  // org/apache/hadoop/hive/ql/parse/HiveParser.g:1351:77: statsColumnName= columnNameList
+                // org/apache/hadoop/hive/ql/parse/HiveParser.g:1351:77: statsColumnName= columnNameList
                 {
                   pushFollow(FOLLOW_columnNameList_in_analyzeStatement6794);
                   statsColumnName = columnNameList();
@@ -17312,11 +17276,11 @@ public class HiveParser extends Parser {
 
                   stream_columnNameList.add(statsColumnName.getTree());
                 }
-                break;
+                  break;
               }
             }
           }
-          break;
+            break;
         }
 
         // AST REWRITE
@@ -17598,31 +17562,31 @@ public class HiveParser extends Parser {
             case KW_TABLES: {
               alt143 = 2;
             }
-            break;
+              break;
             case KW_COLUMNS: {
               alt143 = 3;
             }
-            break;
+              break;
             case KW_FUNCTIONS: {
               alt143 = 4;
             }
-            break;
+              break;
             case KW_PARTITIONS: {
               alt143 = 5;
             }
-            break;
+              break;
             case KW_CREATE: {
               alt143 = 6;
             }
-            break;
+              break;
             case KW_TABLE: {
               alt143 = 7;
             }
-            break;
+              break;
             case KW_TBLPROPERTIES: {
               alt143 = 8;
             }
-            break;
+              break;
             case KW_LOCKS: {
               switch (input.LA(3)) {
                 case EOF:
@@ -17845,52 +17809,52 @@ public class HiveParser extends Parser {
                 case KW_WITH: {
                   alt143 = 9;
                 }
-                break;
+                  break;
                 case KW_SCHEMA: {
                   alt143 = 9;
                 }
-                break;
+                  break;
                 case KW_DATABASE: {
                   alt143 = 10;
                 }
-                break;
+                  break;
                 default:
                   NoViableAltException nvae = new NoViableAltException("", 143, 9, input);
 
                   throw nvae;
               }
             }
-            break;
+              break;
             case KW_COMPACTIONS: {
               alt143 = 12;
             }
-            break;
+              break;
             case KW_TRANSACTIONS: {
               alt143 = 13;
             }
-            break;
+              break;
             case KW_CONF: {
               alt143 = 14;
             }
-            break;
+              break;
             case KW_DATABASES:
             case KW_SCHEMAS: {
               alt143 = 1;
             }
-            break;
+              break;
             case KW_FORMATTED:
             case KW_INDEX:
             case KW_INDEXES: {
               alt143 = 11;
             }
-            break;
+              break;
             default:
               NoViableAltException nvae = new NoViableAltException("", 143, 1, input);
 
               throw nvae;
           }
         }
-        break;
+          break;
         default:
           NoViableAltException nvae = new NoViableAltException("", 143, 0, input);
 
@@ -17899,7 +17863,7 @@ public class HiveParser extends Parser {
 
       switch (alt143) {
         case 1:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1358:7: KW_SHOW ( KW_DATABASES | KW_SCHEMAS ) ( KW_LIKE showStmtIdentifier )?
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1358:7: KW_SHOW ( KW_DATABASES | KW_SCHEMAS ) ( KW_LIKE showStmtIdentifier )?
         {
           KW_SHOW405 = (Token) match(input, KW_SHOW, FOLLOW_KW_SHOW_in_showStatement6856);
           stream_KW_SHOW.add(KW_SHOW405);
@@ -17910,11 +17874,11 @@ public class HiveParser extends Parser {
             case KW_DATABASES: {
               alt121 = 1;
             }
-            break;
+              break;
             case KW_SCHEMAS: {
               alt121 = 2;
             }
-            break;
+              break;
             default:
               NoViableAltException nvae = new NoViableAltException("", 121, 0, input);
 
@@ -17923,19 +17887,19 @@ public class HiveParser extends Parser {
 
           switch (alt121) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1358:16: KW_DATABASES
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1358:16: KW_DATABASES
             {
               KW_DATABASES406 = (Token) match(input, KW_DATABASES, FOLLOW_KW_DATABASES_in_showStatement6859);
               stream_KW_DATABASES.add(KW_DATABASES406);
             }
-            break;
+              break;
             case 2:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1358:29: KW_SCHEMAS
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1358:29: KW_SCHEMAS
             {
               KW_SCHEMAS407 = (Token) match(input, KW_SCHEMAS, FOLLOW_KW_SCHEMAS_in_showStatement6861);
               stream_KW_SCHEMAS.add(KW_SCHEMAS407);
             }
-            break;
+              break;
           }
 
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:1358:41: ( KW_LIKE showStmtIdentifier )?
@@ -17944,12 +17908,12 @@ public class HiveParser extends Parser {
             case KW_LIKE: {
               alt122 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt122) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1358:42: KW_LIKE showStmtIdentifier
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1358:42: KW_LIKE showStmtIdentifier
             {
               KW_LIKE408 = (Token) match(input, KW_LIKE, FOLLOW_KW_LIKE_in_showStatement6865);
               stream_KW_LIKE.add(KW_LIKE408);
@@ -17961,7 +17925,7 @@ public class HiveParser extends Parser {
 
               stream_showStmtIdentifier.add(showStmtIdentifier409.getTree());
             }
-            break;
+              break;
           }
 
           // AST REWRITE
@@ -17981,9 +17945,8 @@ public class HiveParser extends Parser {
             // org/apache/hadoop/hive/ql/parse/HiveParser.g:1358:74: ^( TOK_SHOWDATABASES ( showStmtIdentifier )? )
             {
               CommonTree root_1 = (CommonTree) adaptor.nil();
-              root_1 =
-                  (CommonTree) adaptor.becomeRoot((CommonTree) adaptor.create(TOK_SHOWDATABASES, "TOK_SHOWDATABASES"),
-                      root_1);
+              root_1 = (CommonTree) adaptor
+                  .becomeRoot((CommonTree) adaptor.create(TOK_SHOWDATABASES, "TOK_SHOWDATABASES"), root_1);
 
               // org/apache/hadoop/hive/ql/parse/HiveParser.g:1358:94: ( showStmtIdentifier )?
               if (stream_showStmtIdentifier.hasNext()) {
@@ -17997,9 +17960,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 2:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1359:7: KW_SHOW KW_TABLES ( ( KW_FROM | KW_IN ) db_name= identifier )? ( KW_LIKE showStmtIdentifier | showStmtIdentifier )?
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1359:7: KW_SHOW KW_TABLES ( ( KW_FROM | KW_IN ) db_name= identifier )? ( KW_LIKE showStmtIdentifier | showStmtIdentifier )?
         {
           KW_SHOW410 = (Token) match(input, KW_SHOW, FOLLOW_KW_SHOW_in_showStatement6886);
           stream_KW_SHOW.add(KW_SHOW410);
@@ -18013,7 +17976,7 @@ public class HiveParser extends Parser {
             case KW_FROM: {
               alt124 = 1;
             }
-            break;
+              break;
             case KW_IN: {
               switch (input.LA(2)) {
                 case Identifier:
@@ -18235,15 +18198,15 @@ public class HiveParser extends Parser {
                 case KW_WITH: {
                   alt124 = 1;
                 }
-                break;
+                  break;
               }
             }
-            break;
+              break;
           }
 
           switch (alt124) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1359:26: ( KW_FROM | KW_IN ) db_name= identifier
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1359:26: ( KW_FROM | KW_IN ) db_name= identifier
             {
               // org/apache/hadoop/hive/ql/parse/HiveParser.g:1359:26: ( KW_FROM | KW_IN )
               int alt123 = 2;
@@ -18251,11 +18214,11 @@ public class HiveParser extends Parser {
                 case KW_FROM: {
                   alt123 = 1;
                 }
-                break;
+                  break;
                 case KW_IN: {
                   alt123 = 2;
                 }
-                break;
+                  break;
                 default:
                   NoViableAltException nvae = new NoViableAltException("", 123, 0, input);
 
@@ -18264,19 +18227,19 @@ public class HiveParser extends Parser {
 
               switch (alt123) {
                 case 1:
-                  // org/apache/hadoop/hive/ql/parse/HiveParser.g:1359:27: KW_FROM
+                // org/apache/hadoop/hive/ql/parse/HiveParser.g:1359:27: KW_FROM
                 {
                   KW_FROM412 = (Token) match(input, KW_FROM, FOLLOW_KW_FROM_in_showStatement6892);
                   stream_KW_FROM.add(KW_FROM412);
                 }
-                break;
+                  break;
                 case 2:
-                  // org/apache/hadoop/hive/ql/parse/HiveParser.g:1359:35: KW_IN
+                // org/apache/hadoop/hive/ql/parse/HiveParser.g:1359:35: KW_IN
                 {
                   KW_IN413 = (Token) match(input, KW_IN, FOLLOW_KW_IN_in_showStatement6894);
                   stream_KW_IN.add(KW_IN413);
                 }
-                break;
+                  break;
               }
 
               pushFollow(FOLLOW_identifier_in_showStatement6899);
@@ -18286,7 +18249,7 @@ public class HiveParser extends Parser {
 
               stream_identifier.add(db_name.getTree());
             }
-            break;
+              break;
           }
 
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:1359:63: ( KW_LIKE showStmtIdentifier | showStmtIdentifier )?
@@ -18514,14 +18477,14 @@ public class HiveParser extends Parser {
                 case StringLiteral: {
                   alt125 = 1;
                 }
-                break;
+                  break;
                 case EOF: {
                   alt125 = 2;
                 }
-                break;
+                  break;
               }
             }
-            break;
+              break;
             case Identifier:
             case KW_ADD:
             case KW_ADMIN:
@@ -18741,12 +18704,12 @@ public class HiveParser extends Parser {
             case StringLiteral: {
               alt125 = 2;
             }
-            break;
+              break;
           }
 
           switch (alt125) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1359:64: KW_LIKE showStmtIdentifier
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1359:64: KW_LIKE showStmtIdentifier
             {
               KW_LIKE414 = (Token) match(input, KW_LIKE, FOLLOW_KW_LIKE_in_showStatement6904);
               stream_KW_LIKE.add(KW_LIKE414);
@@ -18758,9 +18721,9 @@ public class HiveParser extends Parser {
 
               stream_showStmtIdentifier.add(showStmtIdentifier415.getTree());
             }
-            break;
+              break;
             case 2:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1359:91: showStmtIdentifier
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1359:91: showStmtIdentifier
             {
               pushFollow(FOLLOW_showStmtIdentifier_in_showStatement6908);
               showStmtIdentifier416 = showStmtIdentifier();
@@ -18769,7 +18732,7 @@ public class HiveParser extends Parser {
 
               stream_showStmtIdentifier.add(showStmtIdentifier416.getTree());
             }
-            break;
+              break;
           }
 
           // AST REWRITE
@@ -18814,9 +18777,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 3:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1360:7: KW_SHOW KW_COLUMNS ( KW_FROM | KW_IN ) tableName ( ( KW_FROM | KW_IN ) db_name= identifier )?
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1360:7: KW_SHOW KW_COLUMNS ( KW_FROM | KW_IN ) tableName ( ( KW_FROM | KW_IN ) db_name= identifier )?
         {
           KW_SHOW417 = (Token) match(input, KW_SHOW, FOLLOW_KW_SHOW_in_showStatement6936);
           stream_KW_SHOW.add(KW_SHOW417);
@@ -18830,11 +18793,11 @@ public class HiveParser extends Parser {
             case KW_FROM: {
               alt126 = 1;
             }
-            break;
+              break;
             case KW_IN: {
               alt126 = 2;
             }
-            break;
+              break;
             default:
               NoViableAltException nvae = new NoViableAltException("", 126, 0, input);
 
@@ -18843,19 +18806,19 @@ public class HiveParser extends Parser {
 
           switch (alt126) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1360:27: KW_FROM
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1360:27: KW_FROM
             {
               KW_FROM419 = (Token) match(input, KW_FROM, FOLLOW_KW_FROM_in_showStatement6941);
               stream_KW_FROM.add(KW_FROM419);
             }
-            break;
+              break;
             case 2:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1360:35: KW_IN
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1360:35: KW_IN
             {
               KW_IN420 = (Token) match(input, KW_IN, FOLLOW_KW_IN_in_showStatement6943);
               stream_KW_IN.add(KW_IN420);
             }
-            break;
+              break;
           }
 
           pushFollow(FOLLOW_tableName_in_showStatement6946);
@@ -18872,12 +18835,12 @@ public class HiveParser extends Parser {
             case KW_IN: {
               alt128 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt128) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1360:53: ( KW_FROM | KW_IN ) db_name= identifier
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1360:53: ( KW_FROM | KW_IN ) db_name= identifier
             {
               // org/apache/hadoop/hive/ql/parse/HiveParser.g:1360:53: ( KW_FROM | KW_IN )
               int alt127 = 2;
@@ -18885,11 +18848,11 @@ public class HiveParser extends Parser {
                 case KW_FROM: {
                   alt127 = 1;
                 }
-                break;
+                  break;
                 case KW_IN: {
                   alt127 = 2;
                 }
-                break;
+                  break;
                 default:
                   NoViableAltException nvae = new NoViableAltException("", 127, 0, input);
 
@@ -18898,19 +18861,19 @@ public class HiveParser extends Parser {
 
               switch (alt127) {
                 case 1:
-                  // org/apache/hadoop/hive/ql/parse/HiveParser.g:1360:54: KW_FROM
+                // org/apache/hadoop/hive/ql/parse/HiveParser.g:1360:54: KW_FROM
                 {
                   KW_FROM422 = (Token) match(input, KW_FROM, FOLLOW_KW_FROM_in_showStatement6950);
                   stream_KW_FROM.add(KW_FROM422);
                 }
-                break;
+                  break;
                 case 2:
-                  // org/apache/hadoop/hive/ql/parse/HiveParser.g:1360:62: KW_IN
+                // org/apache/hadoop/hive/ql/parse/HiveParser.g:1360:62: KW_IN
                 {
                   KW_IN423 = (Token) match(input, KW_IN, FOLLOW_KW_IN_in_showStatement6952);
                   stream_KW_IN.add(KW_IN423);
                 }
-                break;
+                  break;
               }
 
               pushFollow(FOLLOW_identifier_in_showStatement6957);
@@ -18920,7 +18883,7 @@ public class HiveParser extends Parser {
 
               stream_identifier.add(db_name.getTree());
             }
-            break;
+              break;
           }
 
           // AST REWRITE
@@ -18959,9 +18922,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 4:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1362:7: KW_SHOW KW_FUNCTIONS ( KW_LIKE showFunctionIdentifier | showFunctionIdentifier )?
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1362:7: KW_SHOW KW_FUNCTIONS ( KW_LIKE showFunctionIdentifier | showFunctionIdentifier )?
         {
           KW_SHOW424 = (Token) match(input, KW_SHOW, FOLLOW_KW_SHOW_in_showStatement6983);
           stream_KW_SHOW.add(KW_SHOW424);
@@ -19194,15 +19157,15 @@ public class HiveParser extends Parser {
                 case StringLiteral: {
                   alt129 = 1;
                 }
-                break;
+                  break;
                 case EOF:
                 case DOT: {
                   alt129 = 2;
                 }
-                break;
+                  break;
               }
             }
-            break;
+              break;
             case Identifier:
             case KW_ADD:
             case KW_ADMIN:
@@ -19422,12 +19385,12 @@ public class HiveParser extends Parser {
             case StringLiteral: {
               alt129 = 2;
             }
-            break;
+              break;
           }
 
           switch (alt129) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1362:29: KW_LIKE showFunctionIdentifier
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1362:29: KW_LIKE showFunctionIdentifier
             {
               KW_LIKE426 = (Token) match(input, KW_LIKE, FOLLOW_KW_LIKE_in_showStatement6988);
               stream_KW_LIKE.add(KW_LIKE426);
@@ -19439,9 +19402,9 @@ public class HiveParser extends Parser {
 
               stream_showFunctionIdentifier.add(showFunctionIdentifier427.getTree());
             }
-            break;
+              break;
             case 2:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1362:60: showFunctionIdentifier
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1362:60: showFunctionIdentifier
             {
               pushFollow(FOLLOW_showFunctionIdentifier_in_showStatement6992);
               showFunctionIdentifier428 = showFunctionIdentifier();
@@ -19450,7 +19413,7 @@ public class HiveParser extends Parser {
 
               stream_showFunctionIdentifier.add(showFunctionIdentifier428.getTree());
             }
-            break;
+              break;
           }
 
           // AST REWRITE
@@ -19470,9 +19433,8 @@ public class HiveParser extends Parser {
             // org/apache/hadoop/hive/ql/parse/HiveParser.g:1362:89: ^( TOK_SHOWFUNCTIONS ( KW_LIKE )? ( showFunctionIdentifier )? )
             {
               CommonTree root_1 = (CommonTree) adaptor.nil();
-              root_1 =
-                  (CommonTree) adaptor.becomeRoot((CommonTree) adaptor.create(TOK_SHOWFUNCTIONS, "TOK_SHOWFUNCTIONS"),
-                      root_1);
+              root_1 = (CommonTree) adaptor
+                  .becomeRoot((CommonTree) adaptor.create(TOK_SHOWFUNCTIONS, "TOK_SHOWFUNCTIONS"), root_1);
 
               // org/apache/hadoop/hive/ql/parse/HiveParser.g:1362:109: ( KW_LIKE )?
               if (stream_KW_LIKE.hasNext()) {
@@ -19492,9 +19454,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 5:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1363:7: KW_SHOW KW_PARTITIONS tabName= tableName ( partitionSpec )?
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1363:7: KW_SHOW KW_PARTITIONS tabName= tableName ( partitionSpec )?
         {
           KW_SHOW429 = (Token) match(input, KW_SHOW, FOLLOW_KW_SHOW_in_showStatement7015);
           stream_KW_SHOW.add(KW_SHOW429);
@@ -19515,12 +19477,12 @@ public class HiveParser extends Parser {
             case KW_PARTITION: {
               alt130 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt130) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1363:47: partitionSpec
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1363:47: partitionSpec
             {
               pushFollow(FOLLOW_partitionSpec_in_showStatement7023);
               partitionSpec431 = partitionSpec();
@@ -19529,7 +19491,7 @@ public class HiveParser extends Parser {
 
               stream_partitionSpec.add(partitionSpec431.getTree());
             }
-            break;
+              break;
           }
 
           // AST REWRITE
@@ -19551,9 +19513,8 @@ public class HiveParser extends Parser {
             // org/apache/hadoop/hive/ql/parse/HiveParser.g:1363:65: ^( TOK_SHOWPARTITIONS $tabName ( partitionSpec )? )
             {
               CommonTree root_1 = (CommonTree) adaptor.nil();
-              root_1 =
-                  (CommonTree) adaptor.becomeRoot((CommonTree) adaptor.create(TOK_SHOWPARTITIONS, "TOK_SHOWPARTITIONS"),
-                      root_1);
+              root_1 = (CommonTree) adaptor
+                  .becomeRoot((CommonTree) adaptor.create(TOK_SHOWPARTITIONS, "TOK_SHOWPARTITIONS"), root_1);
 
               adaptor.addChild(root_1, stream_tabName.nextTree());
 
@@ -19569,9 +19530,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 6:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1364:7: KW_SHOW KW_CREATE KW_TABLE tabName= tableName
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1364:7: KW_SHOW KW_CREATE KW_TABLE tabName= tableName
         {
           KW_SHOW432 = (Token) match(input, KW_SHOW, FOLLOW_KW_SHOW_in_showStatement7045);
           stream_KW_SHOW.add(KW_SHOW432);
@@ -19608,8 +19569,8 @@ public class HiveParser extends Parser {
             // org/apache/hadoop/hive/ql/parse/HiveParser.g:1364:55: ^( TOK_SHOW_CREATETABLE $tabName)
             {
               CommonTree root_1 = (CommonTree) adaptor.nil();
-              root_1 = (CommonTree) adaptor.becomeRoot(
-                  (CommonTree) adaptor.create(TOK_SHOW_CREATETABLE, "TOK_SHOW_CREATETABLE"), root_1);
+              root_1 = (CommonTree) adaptor
+                  .becomeRoot((CommonTree) adaptor.create(TOK_SHOW_CREATETABLE, "TOK_SHOW_CREATETABLE"), root_1);
 
               adaptor.addChild(root_1, stream_tabName.nextTree());
 
@@ -19619,9 +19580,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 7:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1365:7: KW_SHOW KW_TABLE KW_EXTENDED ( ( KW_FROM | KW_IN ) db_name= identifier )? KW_LIKE showStmtIdentifier ( partitionSpec )?
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1365:7: KW_SHOW KW_TABLE KW_EXTENDED ( ( KW_FROM | KW_IN ) db_name= identifier )? KW_LIKE showStmtIdentifier ( partitionSpec )?
         {
           KW_SHOW435 = (Token) match(input, KW_SHOW, FOLLOW_KW_SHOW_in_showStatement7070);
           stream_KW_SHOW.add(KW_SHOW435);
@@ -19639,12 +19600,12 @@ public class HiveParser extends Parser {
             case KW_IN: {
               alt132 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt132) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1365:37: ( KW_FROM | KW_IN ) db_name= identifier
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1365:37: ( KW_FROM | KW_IN ) db_name= identifier
             {
               // org/apache/hadoop/hive/ql/parse/HiveParser.g:1365:37: ( KW_FROM | KW_IN )
               int alt131 = 2;
@@ -19652,11 +19613,11 @@ public class HiveParser extends Parser {
                 case KW_FROM: {
                   alt131 = 1;
                 }
-                break;
+                  break;
                 case KW_IN: {
                   alt131 = 2;
                 }
-                break;
+                  break;
                 default:
                   NoViableAltException nvae = new NoViableAltException("", 131, 0, input);
 
@@ -19665,19 +19626,19 @@ public class HiveParser extends Parser {
 
               switch (alt131) {
                 case 1:
-                  // org/apache/hadoop/hive/ql/parse/HiveParser.g:1365:38: KW_FROM
+                // org/apache/hadoop/hive/ql/parse/HiveParser.g:1365:38: KW_FROM
                 {
                   KW_FROM438 = (Token) match(input, KW_FROM, FOLLOW_KW_FROM_in_showStatement7078);
                   stream_KW_FROM.add(KW_FROM438);
                 }
-                break;
+                  break;
                 case 2:
-                  // org/apache/hadoop/hive/ql/parse/HiveParser.g:1365:46: KW_IN
+                // org/apache/hadoop/hive/ql/parse/HiveParser.g:1365:46: KW_IN
                 {
                   KW_IN439 = (Token) match(input, KW_IN, FOLLOW_KW_IN_in_showStatement7080);
                   stream_KW_IN.add(KW_IN439);
                 }
-                break;
+                  break;
               }
 
               pushFollow(FOLLOW_identifier_in_showStatement7085);
@@ -19687,7 +19648,7 @@ public class HiveParser extends Parser {
 
               stream_identifier.add(db_name.getTree());
             }
-            break;
+              break;
           }
 
           KW_LIKE440 = (Token) match(input, KW_LIKE, FOLLOW_KW_LIKE_in_showStatement7089);
@@ -19706,12 +19667,12 @@ public class HiveParser extends Parser {
             case KW_PARTITION: {
               alt133 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt133) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1365:101: partitionSpec
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1365:101: partitionSpec
             {
               pushFollow(FOLLOW_partitionSpec_in_showStatement7093);
               partitionSpec442 = partitionSpec();
@@ -19720,7 +19681,7 @@ public class HiveParser extends Parser {
 
               stream_partitionSpec.add(partitionSpec442.getTree());
             }
-            break;
+              break;
           }
 
           // AST REWRITE
@@ -19742,8 +19703,8 @@ public class HiveParser extends Parser {
             // org/apache/hadoop/hive/ql/parse/HiveParser.g:1366:8: ^( TOK_SHOW_TABLESTATUS showStmtIdentifier ( $db_name)? ( partitionSpec )? )
             {
               CommonTree root_1 = (CommonTree) adaptor.nil();
-              root_1 = (CommonTree) adaptor.becomeRoot(
-                  (CommonTree) adaptor.create(TOK_SHOW_TABLESTATUS, "TOK_SHOW_TABLESTATUS"), root_1);
+              root_1 = (CommonTree) adaptor
+                  .becomeRoot((CommonTree) adaptor.create(TOK_SHOW_TABLESTATUS, "TOK_SHOW_TABLESTATUS"), root_1);
 
               adaptor.addChild(root_1, stream_showStmtIdentifier.nextTree());
 
@@ -19765,9 +19726,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 8:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1367:7: KW_SHOW KW_TBLPROPERTIES tableName ( LPAREN prptyName= StringLiteral RPAREN )?
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1367:7: KW_SHOW KW_TBLPROPERTIES tableName ( LPAREN prptyName= StringLiteral RPAREN )?
         {
           KW_SHOW443 = (Token) match(input, KW_SHOW, FOLLOW_KW_SHOW_in_showStatement7121);
           stream_KW_SHOW.add(KW_SHOW443);
@@ -19788,12 +19749,12 @@ public class HiveParser extends Parser {
             case LPAREN: {
               alt134 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt134) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1367:43: LPAREN prptyName= StringLiteral RPAREN
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1367:43: LPAREN prptyName= StringLiteral RPAREN
             {
               LPAREN446 = (Token) match(input, LPAREN, FOLLOW_LPAREN_in_showStatement7128);
               stream_LPAREN.add(LPAREN446);
@@ -19804,7 +19765,7 @@ public class HiveParser extends Parser {
               RPAREN447 = (Token) match(input, RPAREN, FOLLOW_RPAREN_in_showStatement7134);
               stream_RPAREN.add(RPAREN447);
             }
-            break;
+              break;
           }
 
           // AST REWRITE
@@ -19825,8 +19786,8 @@ public class HiveParser extends Parser {
             // org/apache/hadoop/hive/ql/parse/HiveParser.g:1367:86: ^( TOK_SHOW_TBLPROPERTIES tableName ( $prptyName)? )
             {
               CommonTree root_1 = (CommonTree) adaptor.nil();
-              root_1 = (CommonTree) adaptor.becomeRoot(
-                  (CommonTree) adaptor.create(TOK_SHOW_TBLPROPERTIES, "TOK_SHOW_TBLPROPERTIES"), root_1);
+              root_1 = (CommonTree) adaptor
+                  .becomeRoot((CommonTree) adaptor.create(TOK_SHOW_TBLPROPERTIES, "TOK_SHOW_TBLPROPERTIES"), root_1);
 
               adaptor.addChild(root_1, stream_tableName.nextTree());
 
@@ -19842,9 +19803,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 9:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1368:7: KW_SHOW KW_LOCKS (parttype= partTypeExpr )? (isExtended= KW_EXTENDED )?
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1368:7: KW_SHOW KW_LOCKS (parttype= partTypeExpr )? (isExtended= KW_EXTENDED )?
         {
           KW_SHOW448 = (Token) match(input, KW_SHOW, FOLLOW_KW_SHOW_in_showStatement7156);
           stream_KW_SHOW.add(KW_SHOW448);
@@ -20074,12 +20035,12 @@ public class HiveParser extends Parser {
             case KW_WITH: {
               alt135 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt135) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1368:25: parttype= partTypeExpr
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1368:25: parttype= partTypeExpr
             {
               pushFollow(FOLLOW_partTypeExpr_in_showStatement7163);
               parttype = partTypeExpr();
@@ -20088,7 +20049,7 @@ public class HiveParser extends Parser {
 
               stream_partTypeExpr.add(parttype.getTree());
             }
-            break;
+              break;
           }
 
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:1368:49: (isExtended= KW_EXTENDED )?
@@ -20097,17 +20058,17 @@ public class HiveParser extends Parser {
             case KW_EXTENDED: {
               alt136 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt136) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1368:50: isExtended= KW_EXTENDED
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1368:50: isExtended= KW_EXTENDED
             {
               isExtended = (Token) match(input, KW_EXTENDED, FOLLOW_KW_EXTENDED_in_showStatement7170);
               stream_KW_EXTENDED.add(isExtended);
             }
-            break;
+              break;
           }
 
           // AST REWRITE
@@ -20152,9 +20113,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 10:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1369:7: KW_SHOW KW_LOCKS ( KW_DATABASE | KW_SCHEMA ) (dbName= Identifier ) (isExtended= KW_EXTENDED )?
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1369:7: KW_SHOW KW_LOCKS ( KW_DATABASE | KW_SCHEMA ) (dbName= Identifier ) (isExtended= KW_EXTENDED )?
         {
           KW_SHOW450 = (Token) match(input, KW_SHOW, FOLLOW_KW_SHOW_in_showStatement7194);
           stream_KW_SHOW.add(KW_SHOW450);
@@ -20168,11 +20129,11 @@ public class HiveParser extends Parser {
             case KW_DATABASE: {
               alt137 = 1;
             }
-            break;
+              break;
             case KW_SCHEMA: {
               alt137 = 2;
             }
-            break;
+              break;
             default:
               NoViableAltException nvae = new NoViableAltException("", 137, 0, input);
 
@@ -20181,19 +20142,19 @@ public class HiveParser extends Parser {
 
           switch (alt137) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1369:25: KW_DATABASE
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1369:25: KW_DATABASE
             {
               KW_DATABASE452 = (Token) match(input, KW_DATABASE, FOLLOW_KW_DATABASE_in_showStatement7199);
               stream_KW_DATABASE.add(KW_DATABASE452);
             }
-            break;
+              break;
             case 2:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1369:37: KW_SCHEMA
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1369:37: KW_SCHEMA
             {
               KW_SCHEMA453 = (Token) match(input, KW_SCHEMA, FOLLOW_KW_SCHEMA_in_showStatement7201);
               stream_KW_SCHEMA.add(KW_SCHEMA453);
             }
-            break;
+              break;
           }
 
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:1369:48: (dbName= Identifier )
@@ -20209,17 +20170,17 @@ public class HiveParser extends Parser {
             case KW_EXTENDED: {
               alt138 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt138) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1369:69: isExtended= KW_EXTENDED
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1369:69: isExtended= KW_EXTENDED
             {
               isExtended = (Token) match(input, KW_EXTENDED, FOLLOW_KW_EXTENDED_in_showStatement7213);
               stream_KW_EXTENDED.add(isExtended);
             }
-            break;
+              break;
           }
 
           // AST REWRITE
@@ -20259,9 +20220,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 11:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1370:7: KW_SHOW (showOptions= KW_FORMATTED )? ( KW_INDEX | KW_INDEXES ) KW_ON showStmtIdentifier ( ( KW_FROM | KW_IN ) db_name= identifier )?
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1370:7: KW_SHOW (showOptions= KW_FORMATTED )? ( KW_INDEX | KW_INDEXES ) KW_ON showStmtIdentifier ( ( KW_FROM | KW_IN ) db_name= identifier )?
         {
           KW_SHOW454 = (Token) match(input, KW_SHOW, FOLLOW_KW_SHOW_in_showStatement7236);
           stream_KW_SHOW.add(KW_SHOW454);
@@ -20272,17 +20233,17 @@ public class HiveParser extends Parser {
             case KW_FORMATTED: {
               alt139 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt139) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1370:16: showOptions= KW_FORMATTED
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1370:16: showOptions= KW_FORMATTED
             {
               showOptions = (Token) match(input, KW_FORMATTED, FOLLOW_KW_FORMATTED_in_showStatement7241);
               stream_KW_FORMATTED.add(showOptions);
             }
-            break;
+              break;
           }
 
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:1370:43: ( KW_INDEX | KW_INDEXES )
@@ -20291,11 +20252,11 @@ public class HiveParser extends Parser {
             case KW_INDEX: {
               alt140 = 1;
             }
-            break;
+              break;
             case KW_INDEXES: {
               alt140 = 2;
             }
-            break;
+              break;
             default:
               NoViableAltException nvae = new NoViableAltException("", 140, 0, input);
 
@@ -20304,19 +20265,19 @@ public class HiveParser extends Parser {
 
           switch (alt140) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1370:44: KW_INDEX
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1370:44: KW_INDEX
             {
               KW_INDEX455 = (Token) match(input, KW_INDEX, FOLLOW_KW_INDEX_in_showStatement7246);
               stream_KW_INDEX.add(KW_INDEX455);
             }
-            break;
+              break;
             case 2:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1370:53: KW_INDEXES
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1370:53: KW_INDEXES
             {
               KW_INDEXES456 = (Token) match(input, KW_INDEXES, FOLLOW_KW_INDEXES_in_showStatement7248);
               stream_KW_INDEXES.add(KW_INDEXES456);
             }
-            break;
+              break;
           }
 
           KW_ON457 = (Token) match(input, KW_ON, FOLLOW_KW_ON_in_showStatement7251);
@@ -20336,12 +20297,12 @@ public class HiveParser extends Parser {
             case KW_IN: {
               alt142 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt142) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1370:91: ( KW_FROM | KW_IN ) db_name= identifier
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1370:91: ( KW_FROM | KW_IN ) db_name= identifier
             {
               // org/apache/hadoop/hive/ql/parse/HiveParser.g:1370:91: ( KW_FROM | KW_IN )
               int alt141 = 2;
@@ -20349,11 +20310,11 @@ public class HiveParser extends Parser {
                 case KW_FROM: {
                   alt141 = 1;
                 }
-                break;
+                  break;
                 case KW_IN: {
                   alt141 = 2;
                 }
-                break;
+                  break;
                 default:
                   NoViableAltException nvae = new NoViableAltException("", 141, 0, input);
 
@@ -20362,19 +20323,19 @@ public class HiveParser extends Parser {
 
               switch (alt141) {
                 case 1:
-                  // org/apache/hadoop/hive/ql/parse/HiveParser.g:1370:92: KW_FROM
+                // org/apache/hadoop/hive/ql/parse/HiveParser.g:1370:92: KW_FROM
                 {
                   KW_FROM459 = (Token) match(input, KW_FROM, FOLLOW_KW_FROM_in_showStatement7257);
                   stream_KW_FROM.add(KW_FROM459);
                 }
-                break;
+                  break;
                 case 2:
-                  // org/apache/hadoop/hive/ql/parse/HiveParser.g:1370:100: KW_IN
+                // org/apache/hadoop/hive/ql/parse/HiveParser.g:1370:100: KW_IN
                 {
                   KW_IN460 = (Token) match(input, KW_IN, FOLLOW_KW_IN_in_showStatement7259);
                   stream_KW_IN.add(KW_IN460);
                 }
-                break;
+                  break;
               }
 
               pushFollow(FOLLOW_identifier_in_showStatement7264);
@@ -20384,7 +20345,7 @@ public class HiveParser extends Parser {
 
               stream_identifier.add(db_name.getTree());
             }
-            break;
+              break;
           }
 
           // AST REWRITE
@@ -20431,9 +20392,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 12:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1372:7: KW_SHOW KW_COMPACTIONS
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1372:7: KW_SHOW KW_COMPACTIONS
         {
           KW_SHOW461 = (Token) match(input, KW_SHOW, FOLLOW_KW_SHOW_in_showStatement7294);
           stream_KW_SHOW.add(KW_SHOW461);
@@ -20458,8 +20419,8 @@ public class HiveParser extends Parser {
             // org/apache/hadoop/hive/ql/parse/HiveParser.g:1372:33: ^( TOK_SHOW_COMPACTIONS )
             {
               CommonTree root_1 = (CommonTree) adaptor.nil();
-              root_1 = (CommonTree) adaptor.becomeRoot(
-                  (CommonTree) adaptor.create(TOK_SHOW_COMPACTIONS, "TOK_SHOW_COMPACTIONS"), root_1);
+              root_1 = (CommonTree) adaptor
+                  .becomeRoot((CommonTree) adaptor.create(TOK_SHOW_COMPACTIONS, "TOK_SHOW_COMPACTIONS"), root_1);
 
               adaptor.addChild(root_0, root_1);
             }
@@ -20467,9 +20428,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 13:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1373:7: KW_SHOW KW_TRANSACTIONS
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1373:7: KW_SHOW KW_TRANSACTIONS
         {
           KW_SHOW463 = (Token) match(input, KW_SHOW, FOLLOW_KW_SHOW_in_showStatement7310);
           stream_KW_SHOW.add(KW_SHOW463);
@@ -20494,8 +20455,8 @@ public class HiveParser extends Parser {
             // org/apache/hadoop/hive/ql/parse/HiveParser.g:1373:34: ^( TOK_SHOW_TRANSACTIONS )
             {
               CommonTree root_1 = (CommonTree) adaptor.nil();
-              root_1 = (CommonTree) adaptor.becomeRoot(
-                  (CommonTree) adaptor.create(TOK_SHOW_TRANSACTIONS, "TOK_SHOW_TRANSACTIONS"), root_1);
+              root_1 = (CommonTree) adaptor
+                  .becomeRoot((CommonTree) adaptor.create(TOK_SHOW_TRANSACTIONS, "TOK_SHOW_TRANSACTIONS"), root_1);
 
               adaptor.addChild(root_0, root_1);
             }
@@ -20503,9 +20464,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 14:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1374:7: KW_SHOW KW_CONF StringLiteral
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1374:7: KW_SHOW KW_CONF StringLiteral
         {
           KW_SHOW465 = (Token) match(input, KW_SHOW, FOLLOW_KW_SHOW_in_showStatement7326);
           stream_KW_SHOW.add(KW_SHOW465);
@@ -20544,7 +20505,7 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
       }
       retval.stop = input.LT(-1);
 
@@ -20619,12 +20580,12 @@ public class HiveParser extends Parser {
           case KW_PARTITION: {
             alt144 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt144) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1380:34: partitionSpec
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1380:34: partitionSpec
           {
             pushFollow(FOLLOW_partitionSpec_in_lockStatement7371);
             partitionSpec471 = partitionSpec();
@@ -20633,7 +20594,7 @@ public class HiveParser extends Parser {
 
             stream_partitionSpec.add(partitionSpec471.getTree());
           }
-          break;
+            break;
         }
 
         pushFollow(FOLLOW_lockMode_in_lockStatement7374);
@@ -20743,11 +20704,11 @@ public class HiveParser extends Parser {
           case KW_DATABASE: {
             alt145 = 1;
           }
-          break;
+            break;
           case KW_SCHEMA: {
             alt145 = 2;
           }
-          break;
+            break;
           default:
             NoViableAltException nvae = new NoViableAltException("", 145, 0, input);
 
@@ -20756,19 +20717,19 @@ public class HiveParser extends Parser {
 
         switch (alt145) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1386:16: KW_DATABASE
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1386:16: KW_DATABASE
           {
             KW_DATABASE474 = (Token) match(input, KW_DATABASE, FOLLOW_KW_DATABASE_in_lockDatabase7417);
             stream_KW_DATABASE.add(KW_DATABASE474);
           }
-          break;
+            break;
           case 2:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1386:28: KW_SCHEMA
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1386:28: KW_SCHEMA
           {
             KW_SCHEMA475 = (Token) match(input, KW_SCHEMA, FOLLOW_KW_SCHEMA_in_lockDatabase7419);
             stream_KW_SCHEMA.add(KW_SCHEMA475);
           }
-          break;
+            break;
         }
 
         // org/apache/hadoop/hive/ql/parse/HiveParser.g:1386:39: (dbName= Identifier )
@@ -20943,12 +20904,12 @@ public class HiveParser extends Parser {
           case KW_PARTITION: {
             alt146 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt146) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1398:36: partitionSpec
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1398:36: partitionSpec
           {
             pushFollow(FOLLOW_partitionSpec_in_unlockStatement7503);
             partitionSpec481 = partitionSpec();
@@ -20957,7 +20918,7 @@ public class HiveParser extends Parser {
 
             stream_partitionSpec.add(partitionSpec481.getTree());
           }
-          break;
+            break;
         }
 
         // AST REWRITE
@@ -21057,11 +21018,11 @@ public class HiveParser extends Parser {
           case KW_DATABASE: {
             alt147 = 1;
           }
-          break;
+            break;
           case KW_SCHEMA: {
             alt147 = 2;
           }
-          break;
+            break;
           default:
             NoViableAltException nvae = new NoViableAltException("", 147, 0, input);
 
@@ -21070,19 +21031,19 @@ public class HiveParser extends Parser {
 
         switch (alt147) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1404:18: KW_DATABASE
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1404:18: KW_DATABASE
           {
             KW_DATABASE483 = (Token) match(input, KW_DATABASE, FOLLOW_KW_DATABASE_in_unlockDatabase7546);
             stream_KW_DATABASE.add(KW_DATABASE483);
           }
-          break;
+            break;
           case 2:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1404:30: KW_SCHEMA
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1404:30: KW_SCHEMA
           {
             KW_SCHEMA484 = (Token) match(input, KW_SCHEMA, FOLLOW_KW_SCHEMA_in_unlockDatabase7548);
             stream_KW_SCHEMA.add(KW_SCHEMA484);
           }
-          break;
+            break;
         }
 
         // org/apache/hadoop/hive/ql/parse/HiveParser.g:1404:41: (dbName= Identifier )
@@ -21378,12 +21339,12 @@ public class HiveParser extends Parser {
           case KW_ON: {
             alt148 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt148) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1425:7: privilegeObject
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1425:7: privilegeObject
           {
             pushFollow(FOLLOW_privilegeObject_in_grantPrivileges7695);
             privilegeObject490 = privilegeObject();
@@ -21392,7 +21353,7 @@ public class HiveParser extends Parser {
 
             stream_privilegeObject.add(privilegeObject490.getTree());
           }
-          break;
+            break;
         }
 
         KW_TO491 = (Token) match(input, KW_TO, FOLLOW_KW_TO_in_grantPrivileges7704);
@@ -21411,12 +21372,12 @@ public class HiveParser extends Parser {
           case KW_WITH: {
             alt149 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt149) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1427:7: withGrantOption
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1427:7: withGrantOption
           {
             pushFollow(FOLLOW_withGrantOption_in_grantPrivileges7714);
             withGrantOption493 = withGrantOption();
@@ -21425,7 +21386,7 @@ public class HiveParser extends Parser {
 
             stream_withGrantOption.add(withGrantOption493.getTree());
           }
-          break;
+            break;
         }
 
         // AST REWRITE
@@ -21539,12 +21500,12 @@ public class HiveParser extends Parser {
           case KW_GRANT: {
             alt150 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt150) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1434:17: grantOptionFor
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1434:17: grantOptionFor
           {
             pushFollow(FOLLOW_grantOptionFor_in_revokePrivileges7765);
             grantOptionFor495 = grantOptionFor();
@@ -21553,7 +21514,7 @@ public class HiveParser extends Parser {
 
             stream_grantOptionFor.add(grantOptionFor495.getTree());
           }
-          break;
+            break;
         }
 
         pushFollow(FOLLOW_privilegeList_in_revokePrivileges7768);
@@ -21569,12 +21530,12 @@ public class HiveParser extends Parser {
           case KW_ON: {
             alt151 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt151) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1434:47: privilegeObject
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1434:47: privilegeObject
           {
             pushFollow(FOLLOW_privilegeObject_in_revokePrivileges7770);
             privilegeObject497 = privilegeObject();
@@ -21583,7 +21544,7 @@ public class HiveParser extends Parser {
 
             stream_privilegeObject.add(privilegeObject497.getTree());
           }
-          break;
+            break;
         }
 
         KW_FROM498 = (Token) match(input, KW_FROM, FOLLOW_KW_FROM_in_revokePrivileges7773);
@@ -21925,30 +21886,30 @@ public class HiveParser extends Parser {
               case KW_WITH: {
                 alt152 = 1;
               }
-              break;
+                break;
               case KW_TO: {
                 switch (input.LA(3)) {
                   case COMMA:
                   case KW_TO: {
                     alt152 = 1;
                   }
-                  break;
+                    break;
                 }
               }
-              break;
+                break;
             }
           }
-          break;
+            break;
         }
 
         switch (alt152) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1441:16: KW_ROLE
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1441:16: KW_ROLE
           {
             KW_ROLE501 = (Token) match(input, KW_ROLE, FOLLOW_KW_ROLE_in_grantRole7824);
             stream_KW_ROLE.add(KW_ROLE501);
           }
-          break;
+            break;
         }
 
         pushFollow(FOLLOW_identifier_in_grantRole7827);
@@ -21959,19 +21920,18 @@ public class HiveParser extends Parser {
         stream_identifier.add(identifier502.getTree());
 
         // org/apache/hadoop/hive/ql/parse/HiveParser.g:1441:36: ( COMMA identifier )*
-        loop153:
-        do {
+        loop153: do {
           int alt153 = 2;
           switch (input.LA(1)) {
             case COMMA: {
               alt153 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt153) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1441:37: COMMA identifier
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1441:37: COMMA identifier
             {
               COMMA503 = (Token) match(input, COMMA, FOLLOW_COMMA_in_grantRole7830);
               stream_COMMA.add(COMMA503);
@@ -21983,7 +21943,7 @@ public class HiveParser extends Parser {
 
               stream_identifier.add(identifier504.getTree());
             }
-            break;
+              break;
 
             default:
               break loop153;
@@ -22006,12 +21966,12 @@ public class HiveParser extends Parser {
           case KW_WITH: {
             alt154 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt154) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1441:85: withAdminOption
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1441:85: withAdminOption
           {
             pushFollow(FOLLOW_withAdminOption_in_grantRole7840);
             withAdminOption507 = withAdminOption();
@@ -22020,7 +21980,7 @@ public class HiveParser extends Parser {
 
             stream_withAdminOption.add(withAdminOption507.getTree());
           }
-          break;
+            break;
         }
 
         // AST REWRITE
@@ -22140,15 +22100,15 @@ public class HiveParser extends Parser {
               case KW_OPTION: {
                 alt155 = 1;
               }
-              break;
+                break;
             }
           }
-          break;
+            break;
         }
 
         switch (alt155) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1448:17: adminOptionFor
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1448:17: adminOptionFor
           {
             pushFollow(FOLLOW_adminOptionFor_in_revokeRole7888);
             adminOptionFor509 = adminOptionFor();
@@ -22157,7 +22117,7 @@ public class HiveParser extends Parser {
 
             stream_adminOptionFor.add(adminOptionFor509.getTree());
           }
-          break;
+            break;
         }
 
         // org/apache/hadoop/hive/ql/parse/HiveParser.g:1448:33: ( KW_ROLE )?
@@ -22384,20 +22344,20 @@ public class HiveParser extends Parser {
               case KW_WITH: {
                 alt156 = 1;
               }
-              break;
+                break;
             }
           }
-          break;
+            break;
         }
 
         switch (alt156) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1448:33: KW_ROLE
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1448:33: KW_ROLE
           {
             KW_ROLE510 = (Token) match(input, KW_ROLE, FOLLOW_KW_ROLE_in_revokeRole7891);
             stream_KW_ROLE.add(KW_ROLE510);
           }
-          break;
+            break;
         }
 
         pushFollow(FOLLOW_identifier_in_revokeRole7894);
@@ -22408,19 +22368,18 @@ public class HiveParser extends Parser {
         stream_identifier.add(identifier511.getTree());
 
         // org/apache/hadoop/hive/ql/parse/HiveParser.g:1448:53: ( COMMA identifier )*
-        loop157:
-        do {
+        loop157: do {
           int alt157 = 2;
           switch (input.LA(1)) {
             case COMMA: {
               alt157 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt157) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1448:54: COMMA identifier
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1448:54: COMMA identifier
             {
               COMMA512 = (Token) match(input, COMMA, FOLLOW_COMMA_in_revokeRole7897);
               stream_COMMA.add(COMMA512);
@@ -22432,7 +22391,7 @@ public class HiveParser extends Parser {
 
               stream_identifier.add(identifier513.getTree());
             }
-            break;
+              break;
 
             default:
               break loop157;
@@ -22576,9 +22535,8 @@ public class HiveParser extends Parser {
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:1456:8: ^( TOK_SHOW_ROLE_GRANT principalName )
           {
             CommonTree root_1 = (CommonTree) adaptor.nil();
-            root_1 =
-                (CommonTree) adaptor.becomeRoot((CommonTree) adaptor.create(TOK_SHOW_ROLE_GRANT, "TOK_SHOW_ROLE_GRANT"),
-                    root_1);
+            root_1 = (CommonTree) adaptor
+                .becomeRoot((CommonTree) adaptor.create(TOK_SHOW_ROLE_GRANT, "TOK_SHOW_ROLE_GRANT"), root_1);
 
             adaptor.addChild(root_1, stream_principalName.nextTree());
 
@@ -22745,9 +22703,8 @@ public class HiveParser extends Parser {
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:1471:8: ^( TOK_SHOW_SET_ROLE )
           {
             CommonTree root_1 = (CommonTree) adaptor.nil();
-            root_1 =
-                (CommonTree) adaptor.becomeRoot((CommonTree) adaptor.create(TOK_SHOW_SET_ROLE, "TOK_SHOW_SET_ROLE"),
-                    root_1);
+            root_1 = (CommonTree) adaptor
+                .becomeRoot((CommonTree) adaptor.create(TOK_SHOW_SET_ROLE, "TOK_SHOW_SET_ROLE"), root_1);
 
             adaptor.addChild(root_0, root_1);
           }
@@ -22836,9 +22793,8 @@ public class HiveParser extends Parser {
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:1478:8: ^( TOK_SHOW_SET_ROLE $roleName)
           {
             CommonTree root_1 = (CommonTree) adaptor.nil();
-            root_1 =
-                (CommonTree) adaptor.becomeRoot((CommonTree) adaptor.create(TOK_SHOW_SET_ROLE, "TOK_SHOW_SET_ROLE"),
-                    root_1);
+            root_1 = (CommonTree) adaptor
+                .becomeRoot((CommonTree) adaptor.create(TOK_SHOW_SET_ROLE, "TOK_SHOW_SET_ROLE"), root_1);
 
             adaptor.addChild(root_1, stream_roleName.nextTree());
 
@@ -22918,12 +22874,12 @@ public class HiveParser extends Parser {
           case KW_USER: {
             alt158 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt158) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1484:24: principalName
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1484:24: principalName
           {
             pushFollow(FOLLOW_principalName_in_showGrants8126);
             principalName529 = principalName();
@@ -22932,7 +22888,7 @@ public class HiveParser extends Parser {
 
             stream_principalName.add(principalName529.getTree());
           }
-          break;
+            break;
         }
 
         // org/apache/hadoop/hive/ql/parse/HiveParser.g:1484:39: ( KW_ON privilegeIncludeColObject )?
@@ -22941,12 +22897,12 @@ public class HiveParser extends Parser {
           case KW_ON: {
             alt159 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt159) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1484:40: KW_ON privilegeIncludeColObject
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1484:40: KW_ON privilegeIncludeColObject
           {
             KW_ON530 = (Token) match(input, KW_ON, FOLLOW_KW_ON_in_showGrants8130);
             stream_KW_ON.add(KW_ON530);
@@ -22958,7 +22914,7 @@ public class HiveParser extends Parser {
 
             stream_privilegeIncludeColObject.add(privilegeIncludeColObject531.getTree());
           }
-          break;
+            break;
         }
 
         // AST REWRITE
@@ -23080,8 +23036,8 @@ public class HiveParser extends Parser {
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:1492:8: ^( TOK_SHOW_ROLE_PRINCIPALS $roleName)
           {
             CommonTree root_1 = (CommonTree) adaptor.nil();
-            root_1 = (CommonTree) adaptor.becomeRoot(
-                (CommonTree) adaptor.create(TOK_SHOW_ROLE_PRINCIPALS, "TOK_SHOW_ROLE_PRINCIPALS"), root_1);
+            root_1 = (CommonTree) adaptor
+                .becomeRoot((CommonTree) adaptor.create(TOK_SHOW_ROLE_PRINCIPALS, "TOK_SHOW_ROLE_PRINCIPALS"), root_1);
 
             adaptor.addChild(root_1, stream_roleName.nextTree());
 
@@ -23140,7 +23096,7 @@ public class HiveParser extends Parser {
         case KW_ALL: {
           alt160 = 1;
         }
-        break;
+          break;
         case Identifier:
         case KW_ADD:
         case KW_ADMIN:
@@ -23360,7 +23316,7 @@ public class HiveParser extends Parser {
         case KW_WITH: {
           alt160 = 2;
         }
-        break;
+          break;
         default:
           NoViableAltException nvae = new NoViableAltException("", 160, 0, input);
 
@@ -23369,7 +23325,7 @@ public class HiveParser extends Parser {
 
       switch (alt160) {
         case 1:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1499:7: KW_ALL
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1499:7: KW_ALL
         {
           KW_ALL534 = (Token) match(input, KW_ALL, FOLLOW_KW_ALL_in_privilegeIncludeColObject8224);
           stream_KW_ALL.add(KW_ALL534);
@@ -23391,9 +23347,8 @@ public class HiveParser extends Parser {
             // org/apache/hadoop/hive/ql/parse/HiveParser.g:1499:17: ^( TOK_RESOURCE_ALL )
             {
               CommonTree root_1 = (CommonTree) adaptor.nil();
-              root_1 =
-                  (CommonTree) adaptor.becomeRoot((CommonTree) adaptor.create(TOK_RESOURCE_ALL, "TOK_RESOURCE_ALL"),
-                      root_1);
+              root_1 = (CommonTree) adaptor
+                  .becomeRoot((CommonTree) adaptor.create(TOK_RESOURCE_ALL, "TOK_RESOURCE_ALL"), root_1);
 
               adaptor.addChild(root_0, root_1);
             }
@@ -23401,9 +23356,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 2:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1500:7: privObjectCols
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1500:7: privObjectCols
         {
           pushFollow(FOLLOW_privObjectCols_in_privilegeIncludeColObject8238);
           privObjectCols535 = privObjectCols();
@@ -23429,8 +23384,8 @@ public class HiveParser extends Parser {
             // org/apache/hadoop/hive/ql/parse/HiveParser.g:1500:25: ^( TOK_PRIV_OBJECT_COL privObjectCols )
             {
               CommonTree root_1 = (CommonTree) adaptor.nil();
-              root_1 = (CommonTree) adaptor.becomeRoot(
-                  (CommonTree) adaptor.create(TOK_PRIV_OBJECT_COL, "TOK_PRIV_OBJECT_COL"), root_1);
+              root_1 = (CommonTree) adaptor
+                  .becomeRoot((CommonTree) adaptor.create(TOK_PRIV_OBJECT_COL, "TOK_PRIV_OBJECT_COL"), root_1);
 
               adaptor.addChild(root_1, stream_privObjectCols.nextTree());
 
@@ -23440,7 +23395,7 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
       }
       retval.stop = input.LT(-1);
 
@@ -23596,7 +23551,7 @@ public class HiveParser extends Parser {
         case KW_DATABASE: {
           alt164 = 1;
         }
-        break;
+          break;
         case KW_SCHEMA: {
           switch (input.LA(2)) {
             case Identifier:
@@ -23816,57 +23771,57 @@ public class HiveParser extends Parser {
             case KW_WITH: {
               alt164 = 1;
             }
-            break;
+              break;
             case KW_PARTITION: {
               switch (input.LA(3)) {
                 case LPAREN: {
                   alt164 = 2;
                 }
-                break;
+                  break;
                 case KW_FROM:
                 case KW_TO: {
                   alt164 = 1;
                 }
-                break;
+                  break;
                 default:
                   NoViableAltException nvae = new NoViableAltException("", 164, 9, input);
 
                   throw nvae;
               }
             }
-            break;
+              break;
             case DOT:
             case KW_FROM: {
               alt164 = 2;
             }
-            break;
+              break;
             case KW_TO: {
               switch (input.LA(3)) {
                 case KW_FROM:
                 case KW_TO: {
                   alt164 = 1;
                 }
-                break;
+                  break;
                 case KW_GROUP:
                 case KW_ROLE:
                 case KW_USER: {
                   alt164 = 2;
                 }
-                break;
+                  break;
                 default:
                   NoViableAltException nvae = new NoViableAltException("", 164, 11, input);
 
                   throw nvae;
               }
             }
-            break;
+              break;
             default:
               NoViableAltException nvae = new NoViableAltException("", 164, 2, input);
 
               throw nvae;
           }
         }
-        break;
+          break;
         case Identifier:
         case KW_ADD:
         case KW_ADMIN:
@@ -24083,7 +24038,7 @@ public class HiveParser extends Parser {
         case KW_WITH: {
           alt164 = 2;
         }
-        break;
+          break;
         case KW_URI: {
           switch (input.LA(2)) {
             case DOT:
@@ -24092,43 +24047,43 @@ public class HiveParser extends Parser {
             case KW_TO: {
               alt164 = 2;
             }
-            break;
+              break;
             case StringLiteral: {
               alt164 = 3;
             }
-            break;
+              break;
             default:
               NoViableAltException nvae = new NoViableAltException("", 164, 5, input);
 
               throw nvae;
           }
         }
-        break;
+          break;
         case KW_SERVER: {
           switch (input.LA(2)) {
             case DOT:
             case KW_FROM: {
               alt164 = 2;
             }
-            break;
+              break;
             case KW_PARTITION: {
               switch (input.LA(3)) {
                 case LPAREN: {
                   alt164 = 2;
                 }
-                break;
+                  break;
                 case KW_FROM:
                 case KW_TO: {
                   alt164 = 4;
                 }
-                break;
+                  break;
                 default:
                   NoViableAltException nvae = new NoViableAltException("", 164, 20, input);
 
                   throw nvae;
               }
             }
-            break;
+              break;
             case KW_TO: {
               switch (input.LA(3)) {
                 case KW_GROUP:
@@ -24136,19 +24091,19 @@ public class HiveParser extends Parser {
                 case KW_USER: {
                   alt164 = 2;
                 }
-                break;
+                  break;
                 case KW_FROM:
                 case KW_TO: {
                   alt164 = 4;
                 }
-                break;
+                  break;
                 default:
                   NoViableAltException nvae = new NoViableAltException("", 164, 21, input);
 
                   throw nvae;
               }
             }
-            break;
+              break;
             case Identifier:
             case KW_ADD:
             case KW_ADMIN:
@@ -24366,14 +24321,14 @@ public class HiveParser extends Parser {
             case KW_WITH: {
               alt164 = 4;
             }
-            break;
+              break;
             default:
               NoViableAltException nvae = new NoViableAltException("", 164, 6, input);
 
               throw nvae;
           }
         }
-        break;
+          break;
         default:
           NoViableAltException nvae = new NoViableAltException("", 164, 0, input);
 
@@ -24382,7 +24337,7 @@ public class HiveParser extends Parser {
 
       switch (alt164) {
         case 1:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1511:7: ( KW_DATABASE | KW_SCHEMA ) identifier
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1511:7: ( KW_DATABASE | KW_SCHEMA ) identifier
         {
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:1511:7: ( KW_DATABASE | KW_SCHEMA )
           int alt161 = 2;
@@ -24390,11 +24345,11 @@ public class HiveParser extends Parser {
             case KW_DATABASE: {
               alt161 = 1;
             }
-            break;
+              break;
             case KW_SCHEMA: {
               alt161 = 2;
             }
-            break;
+              break;
             default:
               NoViableAltException nvae = new NoViableAltException("", 161, 0, input);
 
@@ -24403,19 +24358,19 @@ public class HiveParser extends Parser {
 
           switch (alt161) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1511:8: KW_DATABASE
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1511:8: KW_DATABASE
             {
               KW_DATABASE538 = (Token) match(input, KW_DATABASE, FOLLOW_KW_DATABASE_in_privObject8302);
               stream_KW_DATABASE.add(KW_DATABASE538);
             }
-            break;
+              break;
             case 2:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1511:20: KW_SCHEMA
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1511:20: KW_SCHEMA
             {
               KW_SCHEMA539 = (Token) match(input, KW_SCHEMA, FOLLOW_KW_SCHEMA_in_privObject8304);
               stream_KW_SCHEMA.add(KW_SCHEMA539);
             }
-            break;
+              break;
           }
 
           pushFollow(FOLLOW_identifier_in_privObject8307);
@@ -24452,9 +24407,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 2:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1512:7: ( KW_TABLE )? tableName ( partitionSpec )?
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1512:7: ( KW_TABLE )? tableName ( partitionSpec )?
         {
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:1512:7: ( KW_TABLE )?
           int alt162 = 2;
@@ -24678,7 +24633,7 @@ public class HiveParser extends Parser {
                 case KW_WITH: {
                   alt162 = 1;
                 }
-                break;
+                  break;
                 case KW_PARTITION: {
                   switch (input.LA(3)) {
                     case DOT:
@@ -24687,10 +24642,10 @@ public class HiveParser extends Parser {
                     case KW_TO: {
                       alt162 = 1;
                     }
-                    break;
+                      break;
                   }
                 }
-                break;
+                  break;
                 case KW_TO: {
                   switch (input.LA(3)) {
                     case DOT:
@@ -24699,23 +24654,23 @@ public class HiveParser extends Parser {
                     case KW_TO: {
                       alt162 = 1;
                     }
-                    break;
+                      break;
                   }
                 }
-                break;
+                  break;
               }
             }
-            break;
+              break;
           }
 
           switch (alt162) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1512:7: KW_TABLE
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1512:7: KW_TABLE
             {
               KW_TABLE541 = (Token) match(input, KW_TABLE, FOLLOW_KW_TABLE_in_privObject8323);
               stream_KW_TABLE.add(KW_TABLE541);
             }
-            break;
+              break;
           }
 
           pushFollow(FOLLOW_tableName_in_privObject8326);
@@ -24731,12 +24686,12 @@ public class HiveParser extends Parser {
             case KW_PARTITION: {
               alt163 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt163) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1512:27: partitionSpec
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1512:27: partitionSpec
             {
               pushFollow(FOLLOW_partitionSpec_in_privObject8328);
               partitionSpec543 = partitionSpec();
@@ -24745,7 +24700,7 @@ public class HiveParser extends Parser {
 
               stream_partitionSpec.add(partitionSpec543.getTree());
             }
-            break;
+              break;
           }
 
           // AST REWRITE
@@ -24782,9 +24737,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 3:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1513:7: KW_URI (path= StringLiteral )
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1513:7: KW_URI (path= StringLiteral )
         {
           KW_URI544 = (Token) match(input, KW_URI, FOLLOW_KW_URI_in_privObject8348);
           stream_KW_URI.add(KW_URI544);
@@ -24825,9 +24780,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 4:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1514:7: KW_SERVER identifier
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1514:7: KW_SERVER identifier
         {
           KW_SERVER545 = (Token) match(input, KW_SERVER, FOLLOW_KW_SERVER_in_privObject8372);
           stream_KW_SERVER.add(KW_SERVER545);
@@ -24867,7 +24822,7 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
       }
       retval.stop = input.LT(-1);
 
@@ -24946,7 +24901,7 @@ public class HiveParser extends Parser {
         case KW_DATABASE: {
           alt169 = 1;
         }
-        break;
+          break;
         case KW_SCHEMA: {
           switch (input.LA(2)) {
             case Identifier:
@@ -25167,37 +25122,37 @@ public class HiveParser extends Parser {
             case KW_WITH: {
               alt169 = 1;
             }
-            break;
+              break;
             case KW_PARTITION: {
               switch (input.LA(3)) {
                 case LPAREN: {
                   alt169 = 2;
                 }
-                break;
+                  break;
                 case EOF: {
                   alt169 = 1;
                 }
-                break;
+                  break;
                 default:
                   NoViableAltException nvae = new NoViableAltException("", 169, 9, input);
 
                   throw nvae;
               }
             }
-            break;
+              break;
             case EOF:
             case DOT:
             case LPAREN: {
               alt169 = 2;
             }
-            break;
+              break;
             default:
               NoViableAltException nvae = new NoViableAltException("", 169, 2, input);
 
               throw nvae;
           }
         }
-        break;
+          break;
         case Identifier:
         case KW_ADD:
         case KW_ADMIN:
@@ -25414,7 +25369,7 @@ public class HiveParser extends Parser {
         case KW_WITH: {
           alt169 = 2;
         }
-        break;
+          break;
         case KW_URI: {
           switch (input.LA(2)) {
             case EOF:
@@ -25423,18 +25378,18 @@ public class HiveParser extends Parser {
             case LPAREN: {
               alt169 = 2;
             }
-            break;
+              break;
             case StringLiteral: {
               alt169 = 3;
             }
-            break;
+              break;
             default:
               NoViableAltException nvae = new NoViableAltException("", 169, 5, input);
 
               throw nvae;
           }
         }
-        break;
+          break;
         case KW_SERVER: {
           switch (input.LA(2)) {
             case EOF:
@@ -25442,24 +25397,24 @@ public class HiveParser extends Parser {
             case LPAREN: {
               alt169 = 2;
             }
-            break;
+              break;
             case KW_PARTITION: {
               switch (input.LA(3)) {
                 case LPAREN: {
                   alt169 = 2;
                 }
-                break;
+                  break;
                 case EOF: {
                   alt169 = 4;
                 }
-                break;
+                  break;
                 default:
                   NoViableAltException nvae = new NoViableAltException("", 169, 21, input);
 
                   throw nvae;
               }
             }
-            break;
+              break;
             case Identifier:
             case KW_ADD:
             case KW_ADMIN:
@@ -25678,14 +25633,14 @@ public class HiveParser extends Parser {
             case KW_WITH: {
               alt169 = 4;
             }
-            break;
+              break;
             default:
               NoViableAltException nvae = new NoViableAltException("", 169, 6, input);
 
               throw nvae;
           }
         }
-        break;
+          break;
         default:
           NoViableAltException nvae = new NoViableAltException("", 169, 0, input);
 
@@ -25694,7 +25649,7 @@ public class HiveParser extends Parser {
 
       switch (alt169) {
         case 1:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1518:7: ( KW_DATABASE | KW_SCHEMA ) identifier
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1518:7: ( KW_DATABASE | KW_SCHEMA ) identifier
         {
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:1518:7: ( KW_DATABASE | KW_SCHEMA )
           int alt165 = 2;
@@ -25702,11 +25657,11 @@ public class HiveParser extends Parser {
             case KW_DATABASE: {
               alt165 = 1;
             }
-            break;
+              break;
             case KW_SCHEMA: {
               alt165 = 2;
             }
-            break;
+              break;
             default:
               NoViableAltException nvae = new NoViableAltException("", 165, 0, input);
 
@@ -25715,19 +25670,19 @@ public class HiveParser extends Parser {
 
           switch (alt165) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1518:8: KW_DATABASE
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1518:8: KW_DATABASE
             {
               KW_DATABASE547 = (Token) match(input, KW_DATABASE, FOLLOW_KW_DATABASE_in_privObjectCols8400);
               stream_KW_DATABASE.add(KW_DATABASE547);
             }
-            break;
+              break;
             case 2:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1518:20: KW_SCHEMA
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1518:20: KW_SCHEMA
             {
               KW_SCHEMA548 = (Token) match(input, KW_SCHEMA, FOLLOW_KW_SCHEMA_in_privObjectCols8402);
               stream_KW_SCHEMA.add(KW_SCHEMA548);
             }
-            break;
+              break;
           }
 
           pushFollow(FOLLOW_identifier_in_privObjectCols8405);
@@ -25764,9 +25719,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 2:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1519:7: ( KW_TABLE )? tableName ( LPAREN cols= columnNameList RPAREN )? ( partitionSpec )?
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1519:7: ( KW_TABLE )? tableName ( LPAREN cols= columnNameList RPAREN )? ( partitionSpec )?
         {
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:1519:7: ( KW_TABLE )?
           int alt166 = 2;
@@ -25991,35 +25946,35 @@ public class HiveParser extends Parser {
                 case KW_WITH: {
                   alt166 = 1;
                 }
-                break;
+                  break;
                 case KW_PARTITION: {
                   switch (input.LA(3)) {
                     case LPAREN: {
                       alt166 = 1;
                     }
-                    break;
+                      break;
                     case EOF:
                     case DOT:
                     case KW_PARTITION: {
                       alt166 = 1;
                     }
-                    break;
+                      break;
                   }
                 }
-                break;
+                  break;
               }
             }
-            break;
+              break;
           }
 
           switch (alt166) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1519:7: KW_TABLE
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1519:7: KW_TABLE
             {
               KW_TABLE550 = (Token) match(input, KW_TABLE, FOLLOW_KW_TABLE_in_privObjectCols8421);
               stream_KW_TABLE.add(KW_TABLE550);
             }
-            break;
+              break;
           }
 
           pushFollow(FOLLOW_tableName_in_privObjectCols8424);
@@ -26035,12 +25990,12 @@ public class HiveParser extends Parser {
             case LPAREN: {
               alt167 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt167) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1519:28: LPAREN cols= columnNameList RPAREN
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1519:28: LPAREN cols= columnNameList RPAREN
             {
               LPAREN552 = (Token) match(input, LPAREN, FOLLOW_LPAREN_in_privObjectCols8427);
               stream_LPAREN.add(LPAREN552);
@@ -26055,7 +26010,7 @@ public class HiveParser extends Parser {
               RPAREN553 = (Token) match(input, RPAREN, FOLLOW_RPAREN_in_privObjectCols8433);
               stream_RPAREN.add(RPAREN553);
             }
-            break;
+              break;
           }
 
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:1519:64: ( partitionSpec )?
@@ -26064,12 +26019,12 @@ public class HiveParser extends Parser {
             case KW_PARTITION: {
               alt168 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt168) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1519:64: partitionSpec
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1519:64: partitionSpec
             {
               pushFollow(FOLLOW_partitionSpec_in_privObjectCols8437);
               partitionSpec554 = partitionSpec();
@@ -26078,7 +26033,7 @@ public class HiveParser extends Parser {
 
               stream_partitionSpec.add(partitionSpec554.getTree());
             }
-            break;
+              break;
           }
 
           // AST REWRITE
@@ -26123,9 +26078,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 3:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1520:7: KW_URI (path= StringLiteral )
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1520:7: KW_URI (path= StringLiteral )
         {
           KW_URI555 = (Token) match(input, KW_URI, FOLLOW_KW_URI_in_privObjectCols8461);
           stream_KW_URI.add(KW_URI555);
@@ -26166,9 +26121,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 4:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1521:7: KW_SERVER identifier
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1521:7: KW_SERVER identifier
         {
           KW_SERVER556 = (Token) match(input, KW_SERVER, FOLLOW_KW_SERVER_in_privObjectCols8485);
           stream_KW_SERVER.add(KW_SERVER556);
@@ -26208,7 +26163,7 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
       }
       retval.stop = input.LT(-1);
 
@@ -26263,19 +26218,18 @@ public class HiveParser extends Parser {
         stream_privlegeDef.add(privlegeDef558.getTree());
 
         // org/apache/hadoop/hive/ql/parse/HiveParser.g:1527:19: ( COMMA privlegeDef )*
-        loop170:
-        do {
+        loop170: do {
           int alt170 = 2;
           switch (input.LA(1)) {
             case COMMA: {
               alt170 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt170) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1527:20: COMMA privlegeDef
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1527:20: COMMA privlegeDef
             {
               COMMA559 = (Token) match(input, COMMA, FOLLOW_COMMA_in_privilegeList8525);
               stream_COMMA.add(COMMA559);
@@ -26287,7 +26241,7 @@ public class HiveParser extends Parser {
 
               stream_privlegeDef.add(privlegeDef560.getTree());
             }
-            break;
+              break;
 
             default:
               break loop170;
@@ -26311,9 +26265,8 @@ public class HiveParser extends Parser {
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:1528:8: ^( TOK_PRIVILEGE_LIST ( privlegeDef )+ )
           {
             CommonTree root_1 = (CommonTree) adaptor.nil();
-            root_1 =
-                (CommonTree) adaptor.becomeRoot((CommonTree) adaptor.create(TOK_PRIVILEGE_LIST, "TOK_PRIVILEGE_LIST"),
-                    root_1);
+            root_1 = (CommonTree) adaptor
+                .becomeRoot((CommonTree) adaptor.create(TOK_PRIVILEGE_LIST, "TOK_PRIVILEGE_LIST"), root_1);
 
             if (!(stream_privlegeDef.hasNext())) {
               throw new RewriteEarlyExitException();
@@ -26394,12 +26347,12 @@ public class HiveParser extends Parser {
           case LPAREN: {
             alt171 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt171) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1534:22: LPAREN cols= columnNameList RPAREN
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1534:22: LPAREN cols= columnNameList RPAREN
           {
             LPAREN562 = (Token) match(input, LPAREN, FOLLOW_LPAREN_in_privlegeDef8572);
             stream_LPAREN.add(LPAREN562);
@@ -26414,7 +26367,7 @@ public class HiveParser extends Parser {
             RPAREN563 = (Token) match(input, RPAREN, FOLLOW_RPAREN_in_privlegeDef8578);
             stream_RPAREN.add(RPAREN563);
           }
-          break;
+            break;
         }
 
         // AST REWRITE
@@ -26531,47 +26484,47 @@ public class HiveParser extends Parser {
         case KW_ALL: {
           alt172 = 1;
         }
-        break;
+          break;
         case KW_ALTER: {
           alt172 = 2;
         }
-        break;
+          break;
         case KW_UPDATE: {
           alt172 = 3;
         }
-        break;
+          break;
         case KW_CREATE: {
           alt172 = 4;
         }
-        break;
+          break;
         case KW_DROP: {
           alt172 = 5;
         }
-        break;
+          break;
         case KW_INDEX: {
           alt172 = 6;
         }
-        break;
+          break;
         case KW_LOCK: {
           alt172 = 7;
         }
-        break;
+          break;
         case KW_SELECT: {
           alt172 = 8;
         }
-        break;
+          break;
         case KW_SHOW_DATABASE: {
           alt172 = 9;
         }
-        break;
+          break;
         case KW_INSERT: {
           alt172 = 10;
         }
-        break;
+          break;
         case KW_DELETE: {
           alt172 = 11;
         }
-        break;
+          break;
         default:
           NoViableAltException nvae = new NoViableAltException("", 172, 0, input);
 
@@ -26580,7 +26533,7 @@ public class HiveParser extends Parser {
 
       switch (alt172) {
         case 1:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1541:7: KW_ALL
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1541:7: KW_ALL
         {
           KW_ALL564 = (Token) match(input, KW_ALL, FOLLOW_KW_ALL_in_privilegeType8623);
           stream_KW_ALL.add(KW_ALL564);
@@ -26611,9 +26564,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 2:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1542:7: KW_ALTER
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1542:7: KW_ALTER
         {
           KW_ALTER565 = (Token) match(input, KW_ALTER, FOLLOW_KW_ALTER_in_privilegeType8637);
           stream_KW_ALTER.add(KW_ALTER565);
@@ -26635,8 +26588,8 @@ public class HiveParser extends Parser {
             // org/apache/hadoop/hive/ql/parse/HiveParser.g:1542:19: ^( TOK_PRIV_ALTER_METADATA )
             {
               CommonTree root_1 = (CommonTree) adaptor.nil();
-              root_1 = (CommonTree) adaptor.becomeRoot(
-                  (CommonTree) adaptor.create(TOK_PRIV_ALTER_METADATA, "TOK_PRIV_ALTER_METADATA"), root_1);
+              root_1 = (CommonTree) adaptor
+                  .becomeRoot((CommonTree) adaptor.create(TOK_PRIV_ALTER_METADATA, "TOK_PRIV_ALTER_METADATA"), root_1);
 
               adaptor.addChild(root_0, root_1);
             }
@@ -26644,9 +26597,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 3:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1543:7: KW_UPDATE
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1543:7: KW_UPDATE
         {
           KW_UPDATE566 = (Token) match(input, KW_UPDATE, FOLLOW_KW_UPDATE_in_privilegeType8651);
           stream_KW_UPDATE.add(KW_UPDATE566);
@@ -26668,8 +26621,8 @@ public class HiveParser extends Parser {
             // org/apache/hadoop/hive/ql/parse/HiveParser.g:1543:20: ^( TOK_PRIV_ALTER_DATA )
             {
               CommonTree root_1 = (CommonTree) adaptor.nil();
-              root_1 = (CommonTree) adaptor.becomeRoot(
-                  (CommonTree) adaptor.create(TOK_PRIV_ALTER_DATA, "TOK_PRIV_ALTER_DATA"), root_1);
+              root_1 = (CommonTree) adaptor
+                  .becomeRoot((CommonTree) adaptor.create(TOK_PRIV_ALTER_DATA, "TOK_PRIV_ALTER_DATA"), root_1);
 
               adaptor.addChild(root_0, root_1);
             }
@@ -26677,9 +26630,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 4:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1544:7: KW_CREATE
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1544:7: KW_CREATE
         {
           KW_CREATE567 = (Token) match(input, KW_CREATE, FOLLOW_KW_CREATE_in_privilegeType8665);
           stream_KW_CREATE.add(KW_CREATE567);
@@ -26710,9 +26663,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 5:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1545:7: KW_DROP
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1545:7: KW_DROP
         {
           KW_DROP568 = (Token) match(input, KW_DROP, FOLLOW_KW_DROP_in_privilegeType8679);
           stream_KW_DROP.add(KW_DROP568);
@@ -26743,9 +26696,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 6:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1546:7: KW_INDEX
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1546:7: KW_INDEX
         {
           KW_INDEX569 = (Token) match(input, KW_INDEX, FOLLOW_KW_INDEX_in_privilegeType8693);
           stream_KW_INDEX.add(KW_INDEX569);
@@ -26776,9 +26729,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 7:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1547:7: KW_LOCK
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1547:7: KW_LOCK
         {
           KW_LOCK570 = (Token) match(input, KW_LOCK, FOLLOW_KW_LOCK_in_privilegeType8707);
           stream_KW_LOCK.add(KW_LOCK570);
@@ -26809,9 +26762,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 8:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1548:7: KW_SELECT
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1548:7: KW_SELECT
         {
           KW_SELECT571 = (Token) match(input, KW_SELECT, FOLLOW_KW_SELECT_in_privilegeType8721);
           stream_KW_SELECT.add(KW_SELECT571);
@@ -26842,9 +26795,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 9:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1549:7: KW_SHOW_DATABASE
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1549:7: KW_SHOW_DATABASE
         {
           KW_SHOW_DATABASE572 = (Token) match(input, KW_SHOW_DATABASE, FOLLOW_KW_SHOW_DATABASE_in_privilegeType8735);
           stream_KW_SHOW_DATABASE.add(KW_SHOW_DATABASE572);
@@ -26866,8 +26819,8 @@ public class HiveParser extends Parser {
             // org/apache/hadoop/hive/ql/parse/HiveParser.g:1549:27: ^( TOK_PRIV_SHOW_DATABASE )
             {
               CommonTree root_1 = (CommonTree) adaptor.nil();
-              root_1 = (CommonTree) adaptor.becomeRoot(
-                  (CommonTree) adaptor.create(TOK_PRIV_SHOW_DATABASE, "TOK_PRIV_SHOW_DATABASE"), root_1);
+              root_1 = (CommonTree) adaptor
+                  .becomeRoot((CommonTree) adaptor.create(TOK_PRIV_SHOW_DATABASE, "TOK_PRIV_SHOW_DATABASE"), root_1);
 
               adaptor.addChild(root_0, root_1);
             }
@@ -26875,9 +26828,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 10:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1550:7: KW_INSERT
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1550:7: KW_INSERT
         {
           KW_INSERT573 = (Token) match(input, KW_INSERT, FOLLOW_KW_INSERT_in_privilegeType8749);
           stream_KW_INSERT.add(KW_INSERT573);
@@ -26908,9 +26861,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 11:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1551:7: KW_DELETE
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1551:7: KW_DELETE
         {
           KW_DELETE574 = (Token) match(input, KW_DELETE, FOLLOW_KW_DELETE_in_privilegeType8763);
           stream_KW_DELETE.add(KW_DELETE574);
@@ -26941,7 +26894,7 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
       }
       retval.stop = input.LT(-1);
 
@@ -26998,19 +26951,18 @@ public class HiveParser extends Parser {
         stream_principalName.add(principalName575.getTree());
 
         // org/apache/hadoop/hive/ql/parse/HiveParser.g:1557:21: ( COMMA principalName )*
-        loop173:
-        do {
+        loop173: do {
           int alt173 = 2;
           switch (input.LA(1)) {
             case COMMA: {
               alt173 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt173) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1557:22: COMMA principalName
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1557:22: COMMA principalName
             {
               COMMA576 = (Token) match(input, COMMA, FOLLOW_COMMA_in_principalSpecification8799);
               stream_COMMA.add(COMMA576);
@@ -27022,7 +26974,7 @@ public class HiveParser extends Parser {
 
               stream_principalName.add(principalName577.getTree());
             }
-            break;
+              break;
 
             default:
               break loop173;
@@ -27046,9 +26998,8 @@ public class HiveParser extends Parser {
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:1557:47: ^( TOK_PRINCIPAL_NAME ( principalName )+ )
           {
             CommonTree root_1 = (CommonTree) adaptor.nil();
-            root_1 =
-                (CommonTree) adaptor.becomeRoot((CommonTree) adaptor.create(TOK_PRINCIPAL_NAME, "TOK_PRINCIPAL_NAME"),
-                    root_1);
+            root_1 = (CommonTree) adaptor
+                .becomeRoot((CommonTree) adaptor.create(TOK_PRINCIPAL_NAME, "TOK_PRINCIPAL_NAME"), root_1);
 
             if (!(stream_principalName.hasNext())) {
               throw new RewriteEarlyExitException();
@@ -27125,15 +27076,15 @@ public class HiveParser extends Parser {
         case KW_USER: {
           alt174 = 1;
         }
-        break;
+          break;
         case KW_GROUP: {
           alt174 = 2;
         }
-        break;
+          break;
         case KW_ROLE: {
           alt174 = 3;
         }
-        break;
+          break;
         default:
           NoViableAltException nvae = new NoViableAltException("", 174, 0, input);
 
@@ -27142,7 +27093,7 @@ public class HiveParser extends Parser {
 
       switch (alt174) {
         case 1:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1563:7: KW_USER principalIdentifier
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1563:7: KW_USER principalIdentifier
         {
           KW_USER578 = (Token) match(input, KW_USER, FOLLOW_KW_USER_in_principalName8839);
           stream_KW_USER.add(KW_USER578);
@@ -27181,9 +27132,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 2:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1564:7: KW_GROUP principalIdentifier
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1564:7: KW_GROUP principalIdentifier
         {
           KW_GROUP580 = (Token) match(input, KW_GROUP, FOLLOW_KW_GROUP_in_principalName8857);
           stream_KW_GROUP.add(KW_GROUP580);
@@ -27222,9 +27173,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 3:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1565:7: KW_ROLE identifier
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1565:7: KW_ROLE identifier
         {
           KW_ROLE582 = (Token) match(input, KW_ROLE, FOLLOW_KW_ROLE_in_principalName8875);
           stream_KW_ROLE.add(KW_ROLE582);
@@ -27263,7 +27214,7 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
       }
       retval.stop = input.LT(-1);
 
@@ -27341,8 +27292,8 @@ public class HiveParser extends Parser {
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:1572:8: ^( TOK_GRANT_WITH_OPTION )
           {
             CommonTree root_1 = (CommonTree) adaptor.nil();
-            root_1 = (CommonTree) adaptor.becomeRoot(
-                (CommonTree) adaptor.create(TOK_GRANT_WITH_OPTION, "TOK_GRANT_WITH_OPTION"), root_1);
+            root_1 = (CommonTree) adaptor
+                .becomeRoot((CommonTree) adaptor.create(TOK_GRANT_WITH_OPTION, "TOK_GRANT_WITH_OPTION"), root_1);
 
             adaptor.addChild(root_0, root_1);
           }
@@ -27427,8 +27378,8 @@ public class HiveParser extends Parser {
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:1579:8: ^( TOK_GRANT_OPTION_FOR )
           {
             CommonTree root_1 = (CommonTree) adaptor.nil();
-            root_1 = (CommonTree) adaptor.becomeRoot(
-                (CommonTree) adaptor.create(TOK_GRANT_OPTION_FOR, "TOK_GRANT_OPTION_FOR"), root_1);
+            root_1 = (CommonTree) adaptor
+                .becomeRoot((CommonTree) adaptor.create(TOK_GRANT_OPTION_FOR, "TOK_GRANT_OPTION_FOR"), root_1);
 
             adaptor.addChild(root_0, root_1);
           }
@@ -27513,8 +27464,8 @@ public class HiveParser extends Parser {
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:1586:8: ^( TOK_ADMIN_OPTION_FOR )
           {
             CommonTree root_1 = (CommonTree) adaptor.nil();
-            root_1 = (CommonTree) adaptor.becomeRoot(
-                (CommonTree) adaptor.create(TOK_ADMIN_OPTION_FOR, "TOK_ADMIN_OPTION_FOR"), root_1);
+            root_1 = (CommonTree) adaptor
+                .becomeRoot((CommonTree) adaptor.create(TOK_ADMIN_OPTION_FOR, "TOK_ADMIN_OPTION_FOR"), root_1);
 
             adaptor.addChild(root_0, root_1);
           }
@@ -27677,17 +27628,17 @@ public class HiveParser extends Parser {
           case KW_REPAIR: {
             alt175 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt175) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1599:16: repair= KW_REPAIR
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1599:16: repair= KW_REPAIR
           {
             repair = (Token) match(input, KW_REPAIR, FOLLOW_KW_REPAIR_in_metastoreCheck9073);
             stream_KW_REPAIR.add(repair);
           }
-          break;
+            break;
         }
 
         // org/apache/hadoop/hive/ql/parse/HiveParser.g:1599:35: ( KW_TABLE tableName ( partitionSpec )? ( COMMA partitionSpec )* )?
@@ -27696,12 +27647,12 @@ public class HiveParser extends Parser {
           case KW_TABLE: {
             alt178 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt178) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1599:36: KW_TABLE tableName ( partitionSpec )? ( COMMA partitionSpec )*
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1599:36: KW_TABLE tableName ( partitionSpec )? ( COMMA partitionSpec )*
           {
             KW_TABLE597 = (Token) match(input, KW_TABLE, FOLLOW_KW_TABLE_in_metastoreCheck9078);
             stream_KW_TABLE.add(KW_TABLE597);
@@ -27719,12 +27670,12 @@ public class HiveParser extends Parser {
               case KW_PARTITION: {
                 alt176 = 1;
               }
-              break;
+                break;
             }
 
             switch (alt176) {
               case 1:
-                // org/apache/hadoop/hive/ql/parse/HiveParser.g:1599:55: partitionSpec
+              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1599:55: partitionSpec
               {
                 pushFollow(FOLLOW_partitionSpec_in_metastoreCheck9082);
                 partitionSpec599 = partitionSpec();
@@ -27733,23 +27684,22 @@ public class HiveParser extends Parser {
 
                 stream_partitionSpec.add(partitionSpec599.getTree());
               }
-              break;
+                break;
             }
 
             // org/apache/hadoop/hive/ql/parse/HiveParser.g:1599:70: ( COMMA partitionSpec )*
-            loop177:
-            do {
+            loop177: do {
               int alt177 = 2;
               switch (input.LA(1)) {
                 case COMMA: {
                   alt177 = 1;
                 }
-                break;
+                  break;
               }
 
               switch (alt177) {
                 case 1:
-                  // org/apache/hadoop/hive/ql/parse/HiveParser.g:1599:71: COMMA partitionSpec
+                // org/apache/hadoop/hive/ql/parse/HiveParser.g:1599:71: COMMA partitionSpec
                 {
                   COMMA600 = (Token) match(input, COMMA, FOLLOW_COMMA_in_metastoreCheck9086);
                   stream_COMMA.add(COMMA600);
@@ -27761,14 +27711,14 @@ public class HiveParser extends Parser {
 
                   stream_partitionSpec.add(partitionSpec601.getTree());
                 }
-                break;
+                  break;
 
                 default:
                   break loop177;
               }
             } while (true);
           }
-          break;
+            break;
         }
 
         // AST REWRITE
@@ -27872,19 +27822,18 @@ public class HiveParser extends Parser {
         stream_resource.add(resource602.getTree());
 
         // org/apache/hadoop/hive/ql/parse/HiveParser.g:1607:12: ( COMMA resource )*
-        loop179:
-        do {
+        loop179: do {
           int alt179 = 2;
           switch (input.LA(1)) {
             case COMMA: {
               alt179 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt179) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1607:13: COMMA resource
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1607:13: COMMA resource
             {
               COMMA603 = (Token) match(input, COMMA, FOLLOW_COMMA_in_resourceList9144);
               stream_COMMA.add(COMMA603);
@@ -27896,7 +27845,7 @@ public class HiveParser extends Parser {
 
               stream_resource.add(resource604.getTree());
             }
-            break;
+              break;
 
             default:
               break loop179;
@@ -27920,9 +27869,8 @@ public class HiveParser extends Parser {
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:1607:33: ^( TOK_RESOURCE_LIST ( resource )+ )
           {
             CommonTree root_1 = (CommonTree) adaptor.nil();
-            root_1 =
-                (CommonTree) adaptor.becomeRoot((CommonTree) adaptor.create(TOK_RESOURCE_LIST, "TOK_RESOURCE_LIST"),
-                    root_1);
+            root_1 = (CommonTree) adaptor
+                .becomeRoot((CommonTree) adaptor.create(TOK_RESOURCE_LIST, "TOK_RESOURCE_LIST"), root_1);
 
             if (!(stream_resource.hasNext())) {
               throw new RewriteEarlyExitException();
@@ -28081,15 +28029,15 @@ public class HiveParser extends Parser {
         case KW_JAR: {
           alt180 = 1;
         }
-        break;
+          break;
         case KW_FILE: {
           alt180 = 2;
         }
-        break;
+          break;
         case KW_ARCHIVE: {
           alt180 = 3;
         }
-        break;
+          break;
         default:
           NoViableAltException nvae = new NoViableAltException("", 180, 0, input);
 
@@ -28098,7 +28046,7 @@ public class HiveParser extends Parser {
 
       switch (alt180) {
         case 1:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1621:3: KW_JAR
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1621:3: KW_JAR
         {
           KW_JAR605 = (Token) match(input, KW_JAR, FOLLOW_KW_JAR_in_resourceType9225);
           stream_KW_JAR.add(KW_JAR605);
@@ -28128,9 +28076,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 2:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1623:3: KW_FILE
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1623:3: KW_FILE
         {
           KW_FILE606 = (Token) match(input, KW_FILE, FOLLOW_KW_FILE_in_resourceType9239);
           stream_KW_FILE.add(KW_FILE606);
@@ -28160,9 +28108,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 3:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1625:3: KW_ARCHIVE
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1625:3: KW_ARCHIVE
         {
           KW_ARCHIVE607 = (Token) match(input, KW_ARCHIVE, FOLLOW_KW_ARCHIVE_in_resourceType9253);
           stream_KW_ARCHIVE.add(KW_ARCHIVE607);
@@ -28192,7 +28140,7 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
       }
       retval.stop = input.LT(-1);
 
@@ -28267,17 +28215,17 @@ public class HiveParser extends Parser {
           case KW_TEMPORARY: {
             alt181 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt181) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1631:18: temp= KW_TEMPORARY
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1631:18: temp= KW_TEMPORARY
           {
             temp = (Token) match(input, KW_TEMPORARY, FOLLOW_KW_TEMPORARY_in_createFunctionStatement9289);
             stream_KW_TEMPORARY.add(temp);
           }
-          break;
+            break;
         }
 
         KW_FUNCTION609 = (Token) match(input, KW_FUNCTION, FOLLOW_KW_FUNCTION_in_createFunctionStatement9293);
@@ -28302,12 +28250,12 @@ public class HiveParser extends Parser {
           case KW_USING: {
             alt182 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt182) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1632:8: KW_USING rList= resourceList
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1632:8: KW_USING rList= resourceList
           {
             KW_USING613 = (Token) match(input, KW_USING, FOLLOW_KW_USING_in_createFunctionStatement9308);
             stream_KW_USING.add(KW_USING613);
@@ -28319,7 +28267,7 @@ public class HiveParser extends Parser {
 
             stream_resourceList.add(rList.getTree());
           }
-          break;
+            break;
         }
 
         // AST REWRITE
@@ -28341,9 +28289,8 @@ public class HiveParser extends Parser {
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:1633:25: ^( TOK_CREATEFUNCTION functionIdentifier StringLiteral ( $rList)? TOK_TEMPORARY )
           {
             CommonTree root_1 = (CommonTree) adaptor.nil();
-            root_1 =
-                (CommonTree) adaptor.becomeRoot((CommonTree) adaptor.create(TOK_CREATEFUNCTION, "TOK_CREATEFUNCTION"),
-                    root_1);
+            root_1 = (CommonTree) adaptor
+                .becomeRoot((CommonTree) adaptor.create(TOK_CREATEFUNCTION, "TOK_CREATEFUNCTION"), root_1);
 
             adaptor.addChild(root_1, stream_functionIdentifier.nextTree());
 
@@ -28364,9 +28311,8 @@ public class HiveParser extends Parser {
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:1634:25: ^( TOK_CREATEFUNCTION functionIdentifier StringLiteral ( $rList)? )
           {
             CommonTree root_1 = (CommonTree) adaptor.nil();
-            root_1 =
-                (CommonTree) adaptor.becomeRoot((CommonTree) adaptor.create(TOK_CREATEFUNCTION, "TOK_CREATEFUNCTION"),
-                    root_1);
+            root_1 = (CommonTree) adaptor
+                .becomeRoot((CommonTree) adaptor.create(TOK_CREATEFUNCTION, "TOK_CREATEFUNCTION"), root_1);
 
             adaptor.addChild(root_1, stream_functionIdentifier.nextTree());
 
@@ -28449,17 +28395,17 @@ public class HiveParser extends Parser {
           case KW_TEMPORARY: {
             alt183 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt183) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1640:16: temp= KW_TEMPORARY
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1640:16: temp= KW_TEMPORARY
           {
             temp = (Token) match(input, KW_TEMPORARY, FOLLOW_KW_TEMPORARY_in_dropFunctionStatement9403);
             stream_KW_TEMPORARY.add(temp);
           }
-          break;
+            break;
         }
 
         KW_FUNCTION615 = (Token) match(input, KW_FUNCTION, FOLLOW_KW_FUNCTION_in_dropFunctionStatement9407);
@@ -28471,12 +28417,12 @@ public class HiveParser extends Parser {
           case KW_IF: {
             alt184 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt184) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1640:48: ifExists
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1640:48: ifExists
           {
             pushFollow(FOLLOW_ifExists_in_dropFunctionStatement9409);
             ifExists616 = ifExists();
@@ -28485,7 +28431,7 @@ public class HiveParser extends Parser {
 
             stream_ifExists.add(ifExists616.getTree());
           }
-          break;
+            break;
         }
 
         pushFollow(FOLLOW_functionIdentifier_in_dropFunctionStatement9412);
@@ -28620,9 +28566,8 @@ public class HiveParser extends Parser {
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:1648:32: ^( TOK_RELOADFUNCTION )
           {
             CommonTree root_1 = (CommonTree) adaptor.nil();
-            root_1 =
-                (CommonTree) adaptor.becomeRoot((CommonTree) adaptor.create(TOK_RELOADFUNCTION, "TOK_RELOADFUNCTION"),
-                    root_1);
+            root_1 = (CommonTree) adaptor
+                .becomeRoot((CommonTree) adaptor.create(TOK_RELOADFUNCTION, "TOK_RELOADFUNCTION"), root_1);
 
             adaptor.addChild(root_0, root_1);
           }
@@ -28932,12 +28877,12 @@ public class HiveParser extends Parser {
           case KW_WITH: {
             alt185 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt185) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1654:14: columnNameTypeList
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1654:14: columnNameTypeList
           {
             pushFollow(FOLLOW_columnNameTypeList_in_createMacroStatement9536);
             columnNameTypeList625 = columnNameTypeList();
@@ -28946,7 +28891,7 @@ public class HiveParser extends Parser {
 
             stream_columnNameTypeList.add(columnNameTypeList625.getTree());
           }
-          break;
+            break;
         }
 
         RPAREN626 = (Token) match(input, RPAREN, FOLLOW_RPAREN_in_createMacroStatement9539);
@@ -29065,12 +29010,12 @@ public class HiveParser extends Parser {
           case KW_IF: {
             alt186 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt186) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1661:37: ifExists
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1661:37: ifExists
           {
             pushFollow(FOLLOW_ifExists_in_dropMacroStatement9591);
             ifExists631 = ifExists();
@@ -29079,7 +29024,7 @@ public class HiveParser extends Parser {
 
             stream_ifExists.add(ifExists631.getTree());
           }
-          break;
+            break;
         }
 
         Identifier632 = (Token) match(input, Identifier, FOLLOW_Identifier_in_dropMacroStatement9594);
@@ -29212,12 +29157,12 @@ public class HiveParser extends Parser {
           case KW_OR: {
             alt187 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt187) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1670:18: orReplace
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1670:18: orReplace
           {
             pushFollow(FOLLOW_orReplace_in_createViewStatement9639);
             orReplace634 = orReplace();
@@ -29226,7 +29171,7 @@ public class HiveParser extends Parser {
 
             stream_orReplace.add(orReplace634.getTree());
           }
-          break;
+            break;
         }
 
         KW_VIEW635 = (Token) match(input, KW_VIEW, FOLLOW_KW_VIEW_in_createViewStatement9643);
@@ -29238,12 +29183,12 @@ public class HiveParser extends Parser {
           case KW_IF: {
             alt188 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt188) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1670:39: ifNotExists
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1670:39: ifNotExists
           {
             pushFollow(FOLLOW_ifNotExists_in_createViewStatement9646);
             ifNotExists636 = ifNotExists();
@@ -29252,7 +29197,7 @@ public class HiveParser extends Parser {
 
             stream_ifNotExists.add(ifNotExists636.getTree());
           }
-          break;
+            break;
         }
 
         pushFollow(FOLLOW_tableName_in_createViewStatement9652);
@@ -29268,12 +29213,12 @@ public class HiveParser extends Parser {
           case LPAREN: {
             alt189 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt189) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1671:10: LPAREN columnNameCommentList RPAREN
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1671:10: LPAREN columnNameCommentList RPAREN
           {
             LPAREN637 = (Token) match(input, LPAREN, FOLLOW_LPAREN_in_createViewStatement9663);
             stream_LPAREN.add(LPAREN637);
@@ -29288,7 +29233,7 @@ public class HiveParser extends Parser {
             RPAREN639 = (Token) match(input, RPAREN, FOLLOW_RPAREN_in_createViewStatement9667);
             stream_RPAREN.add(RPAREN639);
           }
-          break;
+            break;
         }
 
         // org/apache/hadoop/hive/ql/parse/HiveParser.g:1671:48: ( tableComment )?
@@ -29297,12 +29242,12 @@ public class HiveParser extends Parser {
           case KW_COMMENT: {
             alt190 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt190) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1671:48: tableComment
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1671:48: tableComment
           {
             pushFollow(FOLLOW_tableComment_in_createViewStatement9671);
             tableComment640 = tableComment();
@@ -29311,7 +29256,7 @@ public class HiveParser extends Parser {
 
             stream_tableComment.add(tableComment640.getTree());
           }
-          break;
+            break;
         }
 
         // org/apache/hadoop/hive/ql/parse/HiveParser.g:1671:62: ( viewPartition )?
@@ -29320,12 +29265,12 @@ public class HiveParser extends Parser {
           case KW_PARTITIONED: {
             alt191 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt191) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1671:62: viewPartition
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1671:62: viewPartition
           {
             pushFollow(FOLLOW_viewPartition_in_createViewStatement9674);
             viewPartition641 = viewPartition();
@@ -29334,7 +29279,7 @@ public class HiveParser extends Parser {
 
             stream_viewPartition.add(viewPartition641.getTree());
           }
-          break;
+            break;
         }
 
         // org/apache/hadoop/hive/ql/parse/HiveParser.g:1672:9: ( tablePropertiesPrefixed )?
@@ -29343,12 +29288,12 @@ public class HiveParser extends Parser {
           case KW_TBLPROPERTIES: {
             alt192 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt192) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1672:9: tablePropertiesPrefixed
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1672:9: tablePropertiesPrefixed
           {
             pushFollow(FOLLOW_tablePropertiesPrefixed_in_createViewStatement9685);
             tablePropertiesPrefixed642 = tablePropertiesPrefixed();
@@ -29357,7 +29302,7 @@ public class HiveParser extends Parser {
 
             stream_tablePropertiesPrefixed.add(tablePropertiesPrefixed642.getTree());
           }
-          break;
+            break;
         }
 
         KW_AS643 = (Token) match(input, KW_AS, FOLLOW_KW_AS_in_createViewStatement9696);
@@ -29604,12 +29549,12 @@ public class HiveParser extends Parser {
           case KW_IF: {
             alt193 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt193) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1695:23: ifExists
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1695:23: ifExists
           {
             pushFollow(FOLLOW_ifExists_in_dropViewStatement9880);
             ifExists652 = ifExists();
@@ -29618,7 +29563,7 @@ public class HiveParser extends Parser {
 
             stream_ifExists.add(ifExists652.getTree());
           }
-          break;
+            break;
         }
 
         pushFollow(FOLLOW_viewName_in_dropViewStatement9883);
@@ -29925,11 +29870,11 @@ public class HiveParser extends Parser {
         case KW_WITH: {
           alt194 = 1;
         }
-        break;
+          break;
         case StringLiteral: {
           alt194 = 2;
         }
-        break;
+          break;
         default:
           NoViableAltException nvae = new NoViableAltException("", 194, 0, input);
 
@@ -29938,7 +29883,7 @@ public class HiveParser extends Parser {
 
       switch (alt194) {
         case 1:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1701:7: functionIdentifier
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1701:7: functionIdentifier
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -29949,9 +29894,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, functionIdentifier654.getTree());
         }
-        break;
+          break;
         case 2:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1702:7: StringLiteral
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1702:7: StringLiteral
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -29959,7 +29904,7 @@ public class HiveParser extends Parser {
           StringLiteral655_tree = (CommonTree) adaptor.create(StringLiteral655);
           adaptor.addChild(root_0, StringLiteral655_tree);
         }
-        break;
+          break;
       }
       retval.stop = input.LT(-1);
 
@@ -30224,11 +30169,11 @@ public class HiveParser extends Parser {
         case KW_WITH: {
           alt195 = 1;
         }
-        break;
+          break;
         case StringLiteral: {
           alt195 = 2;
         }
-        break;
+          break;
         default:
           NoViableAltException nvae = new NoViableAltException("", 195, 0, input);
 
@@ -30237,7 +30182,7 @@ public class HiveParser extends Parser {
 
       switch (alt195) {
         case 1:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1708:7: identifier
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1708:7: identifier
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -30248,9 +30193,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, identifier656.getTree());
         }
-        break;
+          break;
         case 2:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1709:7: StringLiteral
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1709:7: StringLiteral
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -30258,7 +30203,7 @@ public class HiveParser extends Parser {
           StringLiteral657_tree = (CommonTree) adaptor.create(StringLiteral657);
           adaptor.addChild(root_0, StringLiteral657_tree);
         }
-        break;
+          break;
       }
       retval.stop = input.LT(-1);
 
@@ -30434,9 +30379,8 @@ public class HiveParser extends Parser {
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:1723:8: ^( TOK_TABLEPARTCOLS columnNameTypeList )
           {
             CommonTree root_1 = (CommonTree) adaptor.nil();
-            root_1 =
-                (CommonTree) adaptor.becomeRoot((CommonTree) adaptor.create(TOK_TABLEPARTCOLS, "TOK_TABLEPARTCOLS"),
-                    root_1);
+            root_1 = (CommonTree) adaptor
+                .becomeRoot((CommonTree) adaptor.create(TOK_TABLEPARTCOLS, "TOK_TABLEPARTCOLS"), root_1);
 
             adaptor.addChild(root_1, stream_columnNameTypeList.nextTree());
 
@@ -30548,12 +30492,12 @@ public class HiveParser extends Parser {
           case KW_SORTED: {
             alt196 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt196) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1730:67: KW_SORTED KW_BY LPAREN sortCols= columnNameOrderList RPAREN
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1730:67: KW_SORTED KW_BY LPAREN sortCols= columnNameOrderList RPAREN
           {
             KW_SORTED668 = (Token) match(input, KW_SORTED, FOLLOW_KW_SORTED_in_tableBuckets10104);
             stream_KW_SORTED.add(KW_SORTED668);
@@ -30574,7 +30518,7 @@ public class HiveParser extends Parser {
             RPAREN671 = (Token) match(input, RPAREN, FOLLOW_RPAREN_in_tableBuckets10114);
             stream_RPAREN.add(RPAREN671);
           }
-          break;
+            break;
         }
 
         KW_INTO672 = (Token) match(input, KW_INTO, FOLLOW_KW_INTO_in_tableBuckets10118);
@@ -30608,8 +30552,8 @@ public class HiveParser extends Parser {
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:1731:8: ^( TOK_ALTERTABLE_BUCKETS $bucketCols ( $sortCols)? $num)
           {
             CommonTree root_1 = (CommonTree) adaptor.nil();
-            root_1 = (CommonTree) adaptor.becomeRoot(
-                (CommonTree) adaptor.create(TOK_ALTERTABLE_BUCKETS, "TOK_ALTERTABLE_BUCKETS"), root_1);
+            root_1 = (CommonTree) adaptor
+                .becomeRoot((CommonTree) adaptor.create(TOK_ALTERTABLE_BUCKETS, "TOK_ALTERTABLE_BUCKETS"), root_1);
 
             adaptor.addChild(root_1, stream_bucketCols.nextTree());
 
@@ -30745,18 +30689,18 @@ public class HiveParser extends Parser {
                   case KW_DIRECTORIES: {
                     alt197 = 1;
                   }
-                  break;
+                    break;
                 }
               }
-              break;
+                break;
             }
           }
-          break;
+            break;
         }
 
         switch (alt197) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1738:117: storedAsDirs
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1738:117: storedAsDirs
           {
             pushFollow(FOLLOW_storedAsDirs_in_tableSkewed10201);
             storedAsDirs681 = storedAsDirs();
@@ -30765,7 +30709,7 @@ public class HiveParser extends Parser {
 
             stream_storedAsDirs.add(storedAsDirs681.getTree());
           }
-          break;
+            break;
         }
 
         // AST REWRITE
@@ -30862,25 +30806,25 @@ public class HiveParser extends Parser {
                 case KW_SERDE: {
                   alt198 = 1;
                 }
-                break;
+                  break;
                 case KW_DELIMITED: {
                   alt198 = 2;
                 }
-                break;
+                  break;
                 default:
                   NoViableAltException nvae = new NoViableAltException("", 198, 23, input);
 
                   throw nvae;
               }
             }
-            break;
+              break;
             default:
               NoViableAltException nvae = new NoViableAltException("", 198, 1, input);
 
               throw nvae;
           }
         }
-        break;
+          break;
         case EOF:
         case KW_CLUSTER:
         case KW_DISTRIBUTE:
@@ -30904,7 +30848,7 @@ public class HiveParser extends Parser {
         case RPAREN: {
           alt198 = 3;
         }
-        break;
+          break;
         default:
           NoViableAltException nvae = new NoViableAltException("", 198, 0, input);
 
@@ -30913,7 +30857,7 @@ public class HiveParser extends Parser {
 
       switch (alt198) {
         case 1:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1745:7: rowFormatSerde
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1745:7: rowFormatSerde
         {
           pushFollow(FOLLOW_rowFormatSerde_in_rowFormat10249);
           rowFormatSerde682 = rowFormatSerde();
@@ -30949,9 +30893,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 2:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1746:7: rowFormatDelimited
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1746:7: rowFormatDelimited
         {
           pushFollow(FOLLOW_rowFormatDelimited_in_rowFormat10265);
           rowFormatDelimited683 = rowFormatDelimited();
@@ -30987,9 +30931,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 3:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1747:9:
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1747:9:
         {
           // AST REWRITE
           // elements:
@@ -31016,7 +30960,7 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
       }
       retval.stop = input.LT(-1);
 
@@ -31068,7 +31012,7 @@ public class HiveParser extends Parser {
         case KW_RECORDREADER: {
           alt199 = 1;
         }
-        break;
+          break;
         case EOF:
         case KW_CLUSTER:
         case KW_DISTRIBUTE:
@@ -31089,7 +31033,7 @@ public class HiveParser extends Parser {
         case RPAREN: {
           alt199 = 2;
         }
-        break;
+          break;
         default:
           NoViableAltException nvae = new NoViableAltException("", 199, 0, input);
 
@@ -31098,7 +31042,7 @@ public class HiveParser extends Parser {
 
       switch (alt199) {
         case 1:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1753:7: KW_RECORDREADER StringLiteral
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1753:7: KW_RECORDREADER StringLiteral
         {
           KW_RECORDREADER684 = (Token) match(input, KW_RECORDREADER, FOLLOW_KW_RECORDREADER_in_recordReader10314);
           stream_KW_RECORDREADER.add(KW_RECORDREADER684);
@@ -31123,9 +31067,8 @@ public class HiveParser extends Parser {
             // org/apache/hadoop/hive/ql/parse/HiveParser.g:1753:40: ^( TOK_RECORDREADER StringLiteral )
             {
               CommonTree root_1 = (CommonTree) adaptor.nil();
-              root_1 =
-                  (CommonTree) adaptor.becomeRoot((CommonTree) adaptor.create(TOK_RECORDREADER, "TOK_RECORDREADER"),
-                      root_1);
+              root_1 = (CommonTree) adaptor
+                  .becomeRoot((CommonTree) adaptor.create(TOK_RECORDREADER, "TOK_RECORDREADER"), root_1);
 
               adaptor.addChild(root_1, stream_StringLiteral.nextNode());
 
@@ -31135,9 +31078,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 2:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1754:9:
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1754:9:
         {
           // AST REWRITE
           // elements:
@@ -31156,9 +31099,8 @@ public class HiveParser extends Parser {
             // org/apache/hadoop/hive/ql/parse/HiveParser.g:1754:12: ^( TOK_RECORDREADER )
             {
               CommonTree root_1 = (CommonTree) adaptor.nil();
-              root_1 =
-                  (CommonTree) adaptor.becomeRoot((CommonTree) adaptor.create(TOK_RECORDREADER, "TOK_RECORDREADER"),
-                      root_1);
+              root_1 = (CommonTree) adaptor
+                  .becomeRoot((CommonTree) adaptor.create(TOK_RECORDREADER, "TOK_RECORDREADER"), root_1);
 
               adaptor.addChild(root_0, root_1);
             }
@@ -31166,7 +31108,7 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
       }
       retval.stop = input.LT(-1);
 
@@ -31218,11 +31160,11 @@ public class HiveParser extends Parser {
         case KW_RECORDWRITER: {
           alt200 = 1;
         }
-        break;
+          break;
         case KW_USING: {
           alt200 = 2;
         }
-        break;
+          break;
         default:
           NoViableAltException nvae = new NoViableAltException("", 200, 0, input);
 
@@ -31231,7 +31173,7 @@ public class HiveParser extends Parser {
 
       switch (alt200) {
         case 1:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1760:7: KW_RECORDWRITER StringLiteral
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1760:7: KW_RECORDWRITER StringLiteral
         {
           KW_RECORDWRITER686 = (Token) match(input, KW_RECORDWRITER, FOLLOW_KW_RECORDWRITER_in_recordWriter10365);
           stream_KW_RECORDWRITER.add(KW_RECORDWRITER686);
@@ -31256,9 +31198,8 @@ public class HiveParser extends Parser {
             // org/apache/hadoop/hive/ql/parse/HiveParser.g:1760:40: ^( TOK_RECORDWRITER StringLiteral )
             {
               CommonTree root_1 = (CommonTree) adaptor.nil();
-              root_1 =
-                  (CommonTree) adaptor.becomeRoot((CommonTree) adaptor.create(TOK_RECORDWRITER, "TOK_RECORDWRITER"),
-                      root_1);
+              root_1 = (CommonTree) adaptor
+                  .becomeRoot((CommonTree) adaptor.create(TOK_RECORDWRITER, "TOK_RECORDWRITER"), root_1);
 
               adaptor.addChild(root_1, stream_StringLiteral.nextNode());
 
@@ -31268,9 +31209,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 2:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1761:9:
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1761:9:
         {
           // AST REWRITE
           // elements:
@@ -31289,9 +31230,8 @@ public class HiveParser extends Parser {
             // org/apache/hadoop/hive/ql/parse/HiveParser.g:1761:12: ^( TOK_RECORDWRITER )
             {
               CommonTree root_1 = (CommonTree) adaptor.nil();
-              root_1 =
-                  (CommonTree) adaptor.becomeRoot((CommonTree) adaptor.create(TOK_RECORDWRITER, "TOK_RECORDWRITER"),
-                      root_1);
+              root_1 = (CommonTree) adaptor
+                  .becomeRoot((CommonTree) adaptor.create(TOK_RECORDWRITER, "TOK_RECORDWRITER"), root_1);
 
               adaptor.addChild(root_0, root_1);
             }
@@ -31299,7 +31239,7 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
       }
       retval.stop = input.LT(-1);
 
@@ -31379,12 +31319,12 @@ public class HiveParser extends Parser {
           case KW_WITH: {
             alt201 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt201) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1767:53: KW_WITH KW_SERDEPROPERTIES serdeprops= tableProperties
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1767:53: KW_WITH KW_SERDEPROPERTIES serdeprops= tableProperties
           {
             KW_WITH691 = (Token) match(input, KW_WITH, FOLLOW_KW_WITH_in_rowFormatSerde10427);
             stream_KW_WITH.add(KW_WITH691);
@@ -31400,7 +31340,7 @@ public class HiveParser extends Parser {
 
             stream_tableProperties.add(serdeprops.getTree());
           }
-          break;
+            break;
         }
 
         // AST REWRITE
@@ -31524,12 +31464,12 @@ public class HiveParser extends Parser {
           case KW_FIELDS: {
             alt202 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt202) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1775:37: tableRowFormatFieldIdentifier
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1775:37: tableRowFormatFieldIdentifier
           {
             pushFollow(FOLLOW_tableRowFormatFieldIdentifier_in_rowFormatDelimited10491);
             tableRowFormatFieldIdentifier696 = tableRowFormatFieldIdentifier();
@@ -31538,7 +31478,7 @@ public class HiveParser extends Parser {
 
             stream_tableRowFormatFieldIdentifier.add(tableRowFormatFieldIdentifier696.getTree());
           }
-          break;
+            break;
         }
 
         // org/apache/hadoop/hive/ql/parse/HiveParser.g:1775:68: ( tableRowFormatCollItemsIdentifier )?
@@ -31547,12 +31487,12 @@ public class HiveParser extends Parser {
           case KW_COLLECTION: {
             alt203 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt203) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1775:68: tableRowFormatCollItemsIdentifier
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1775:68: tableRowFormatCollItemsIdentifier
           {
             pushFollow(FOLLOW_tableRowFormatCollItemsIdentifier_in_rowFormatDelimited10494);
             tableRowFormatCollItemsIdentifier697 = tableRowFormatCollItemsIdentifier();
@@ -31561,7 +31501,7 @@ public class HiveParser extends Parser {
 
             stream_tableRowFormatCollItemsIdentifier.add(tableRowFormatCollItemsIdentifier697.getTree());
           }
-          break;
+            break;
         }
 
         // org/apache/hadoop/hive/ql/parse/HiveParser.g:1775:103: ( tableRowFormatMapKeysIdentifier )?
@@ -31569,7 +31509,7 @@ public class HiveParser extends Parser {
         alt204 = dfa204.predict(input);
         switch (alt204) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1775:103: tableRowFormatMapKeysIdentifier
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1775:103: tableRowFormatMapKeysIdentifier
           {
             pushFollow(FOLLOW_tableRowFormatMapKeysIdentifier_in_rowFormatDelimited10497);
             tableRowFormatMapKeysIdentifier698 = tableRowFormatMapKeysIdentifier();
@@ -31578,7 +31518,7 @@ public class HiveParser extends Parser {
 
             stream_tableRowFormatMapKeysIdentifier.add(tableRowFormatMapKeysIdentifier698.getTree());
           }
-          break;
+            break;
         }
 
         // org/apache/hadoop/hive/ql/parse/HiveParser.g:1775:136: ( tableRowFormatLinesIdentifier )?
@@ -31587,12 +31527,12 @@ public class HiveParser extends Parser {
           case KW_LINES: {
             alt205 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt205) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1775:136: tableRowFormatLinesIdentifier
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1775:136: tableRowFormatLinesIdentifier
           {
             pushFollow(FOLLOW_tableRowFormatLinesIdentifier_in_rowFormatDelimited10500);
             tableRowFormatLinesIdentifier699 = tableRowFormatLinesIdentifier();
@@ -31601,7 +31541,7 @@ public class HiveParser extends Parser {
 
             stream_tableRowFormatLinesIdentifier.add(tableRowFormatLinesIdentifier699.getTree());
           }
-          break;
+            break;
         }
 
         // org/apache/hadoop/hive/ql/parse/HiveParser.g:1775:167: ( tableRowNullFormat )?
@@ -31610,12 +31550,12 @@ public class HiveParser extends Parser {
           case KW_NULL: {
             alt206 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt206) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1775:167: tableRowNullFormat
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1775:167: tableRowNullFormat
           {
             pushFollow(FOLLOW_tableRowNullFormat_in_rowFormatDelimited10503);
             tableRowNullFormat700 = tableRowNullFormat();
@@ -31624,7 +31564,7 @@ public class HiveParser extends Parser {
 
             stream_tableRowNullFormat.add(tableRowNullFormat700.getTree());
           }
-          break;
+            break;
         }
 
         // AST REWRITE
@@ -31737,25 +31677,25 @@ public class HiveParser extends Parser {
                 case KW_DELIMITED: {
                   alt207 = 1;
                 }
-                break;
+                  break;
                 case KW_SERDE: {
                   alt207 = 2;
                 }
-                break;
+                  break;
                 default:
                   NoViableAltException nvae = new NoViableAltException("", 207, 2, input);
 
                   throw nvae;
               }
             }
-            break;
+              break;
             default:
               NoViableAltException nvae = new NoViableAltException("", 207, 1, input);
 
               throw nvae;
           }
         }
-        break;
+          break;
         default:
           NoViableAltException nvae = new NoViableAltException("", 207, 0, input);
 
@@ -31764,7 +31704,7 @@ public class HiveParser extends Parser {
 
       switch (alt207) {
         case 1:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1783:7: rowFormatDelimited
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1783:7: rowFormatDelimited
         {
           pushFollow(FOLLOW_rowFormatDelimited_in_tableRowFormat10562);
           rowFormatDelimited701 = rowFormatDelimited();
@@ -31790,9 +31730,8 @@ public class HiveParser extends Parser {
             // org/apache/hadoop/hive/ql/parse/HiveParser.g:1784:8: ^( TOK_TABLEROWFORMAT rowFormatDelimited )
             {
               CommonTree root_1 = (CommonTree) adaptor.nil();
-              root_1 =
-                  (CommonTree) adaptor.becomeRoot((CommonTree) adaptor.create(TOK_TABLEROWFORMAT, "TOK_TABLEROWFORMAT"),
-                      root_1);
+              root_1 = (CommonTree) adaptor
+                  .becomeRoot((CommonTree) adaptor.create(TOK_TABLEROWFORMAT, "TOK_TABLEROWFORMAT"), root_1);
 
               adaptor.addChild(root_1, stream_rowFormatDelimited.nextTree());
 
@@ -31802,9 +31741,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 2:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1785:7: rowFormatSerde
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1785:7: rowFormatSerde
         {
           pushFollow(FOLLOW_rowFormatSerde_in_tableRowFormat10582);
           rowFormatSerde702 = rowFormatSerde();
@@ -31830,8 +31769,8 @@ public class HiveParser extends Parser {
             // org/apache/hadoop/hive/ql/parse/HiveParser.g:1786:8: ^( TOK_TABLESERIALIZER rowFormatSerde )
             {
               CommonTree root_1 = (CommonTree) adaptor.nil();
-              root_1 = (CommonTree) adaptor.becomeRoot(
-                  (CommonTree) adaptor.create(TOK_TABLESERIALIZER, "TOK_TABLESERIALIZER"), root_1);
+              root_1 = (CommonTree) adaptor
+                  .becomeRoot((CommonTree) adaptor.create(TOK_TABLESERIALIZER, "TOK_TABLESERIALIZER"), root_1);
 
               adaptor.addChild(root_1, stream_rowFormatSerde.nextTree());
 
@@ -31841,7 +31780,7 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
       }
       retval.stop = input.LT(-1);
 
@@ -31979,9 +31918,8 @@ public class HiveParser extends Parser {
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:1800:44: ^( TOK_TABLEPROPERTIES tablePropertiesList )
           {
             CommonTree root_1 = (CommonTree) adaptor.nil();
-            root_1 =
-                (CommonTree) adaptor.becomeRoot((CommonTree) adaptor.create(TOK_TABLEPROPERTIES, "TOK_TABLEPROPERTIES"),
-                    root_1);
+            root_1 = (CommonTree) adaptor
+                .becomeRoot((CommonTree) adaptor.create(TOK_TABLEPROPERTIES, "TOK_TABLEPROPERTIES"), root_1);
 
             adaptor.addChild(root_1, stream_tablePropertiesList.nextTree());
 
@@ -32051,19 +31989,19 @@ public class HiveParser extends Parser {
             case EQUAL: {
               alt210 = 1;
             }
-            break;
+              break;
             case COMMA:
             case RPAREN: {
               alt210 = 2;
             }
-            break;
+              break;
             default:
               NoViableAltException nvae = new NoViableAltException("", 210, 1, input);
 
               throw nvae;
           }
         }
-        break;
+          break;
         default:
           NoViableAltException nvae = new NoViableAltException("", 210, 0, input);
 
@@ -32072,7 +32010,7 @@ public class HiveParser extends Parser {
 
       switch (alt210) {
         case 1:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1807:7: keyValueProperty ( COMMA keyValueProperty )*
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1807:7: keyValueProperty ( COMMA keyValueProperty )*
         {
           pushFollow(FOLLOW_keyValueProperty_in_tablePropertiesList10710);
           keyValueProperty708 = keyValueProperty();
@@ -32082,19 +32020,18 @@ public class HiveParser extends Parser {
           stream_keyValueProperty.add(keyValueProperty708.getTree());
 
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:1807:24: ( COMMA keyValueProperty )*
-          loop208:
-          do {
+          loop208: do {
             int alt208 = 2;
             switch (input.LA(1)) {
               case COMMA: {
                 alt208 = 1;
               }
-              break;
+                break;
             }
 
             switch (alt208) {
               case 1:
-                // org/apache/hadoop/hive/ql/parse/HiveParser.g:1807:25: COMMA keyValueProperty
+              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1807:25: COMMA keyValueProperty
               {
                 COMMA709 = (Token) match(input, COMMA, FOLLOW_COMMA_in_tablePropertiesList10713);
                 stream_COMMA.add(COMMA709);
@@ -32106,7 +32043,7 @@ public class HiveParser extends Parser {
 
                 stream_keyValueProperty.add(keyValueProperty710.getTree());
               }
-              break;
+                break;
 
               default:
                 break loop208;
@@ -32130,9 +32067,8 @@ public class HiveParser extends Parser {
             // org/apache/hadoop/hive/ql/parse/HiveParser.g:1807:53: ^( TOK_TABLEPROPLIST ( keyValueProperty )+ )
             {
               CommonTree root_1 = (CommonTree) adaptor.nil();
-              root_1 =
-                  (CommonTree) adaptor.becomeRoot((CommonTree) adaptor.create(TOK_TABLEPROPLIST, "TOK_TABLEPROPLIST"),
-                      root_1);
+              root_1 = (CommonTree) adaptor
+                  .becomeRoot((CommonTree) adaptor.create(TOK_TABLEPROPLIST, "TOK_TABLEPROPLIST"), root_1);
 
               if (!(stream_keyValueProperty.hasNext())) {
                 throw new RewriteEarlyExitException();
@@ -32148,9 +32084,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 2:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1809:7: keyProperty ( COMMA keyProperty )*
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1809:7: keyProperty ( COMMA keyProperty )*
         {
           pushFollow(FOLLOW_keyProperty_in_tablePropertiesList10740);
           keyProperty711 = keyProperty();
@@ -32160,19 +32096,18 @@ public class HiveParser extends Parser {
           stream_keyProperty.add(keyProperty711.getTree());
 
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:1809:19: ( COMMA keyProperty )*
-          loop209:
-          do {
+          loop209: do {
             int alt209 = 2;
             switch (input.LA(1)) {
               case COMMA: {
                 alt209 = 1;
               }
-              break;
+                break;
             }
 
             switch (alt209) {
               case 1:
-                // org/apache/hadoop/hive/ql/parse/HiveParser.g:1809:20: COMMA keyProperty
+              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1809:20: COMMA keyProperty
               {
                 COMMA712 = (Token) match(input, COMMA, FOLLOW_COMMA_in_tablePropertiesList10743);
                 stream_COMMA.add(COMMA712);
@@ -32184,7 +32119,7 @@ public class HiveParser extends Parser {
 
                 stream_keyProperty.add(keyProperty713.getTree());
               }
-              break;
+                break;
 
               default:
                 break loop209;
@@ -32208,9 +32143,8 @@ public class HiveParser extends Parser {
             // org/apache/hadoop/hive/ql/parse/HiveParser.g:1809:43: ^( TOK_TABLEPROPLIST ( keyProperty )+ )
             {
               CommonTree root_1 = (CommonTree) adaptor.nil();
-              root_1 =
-                  (CommonTree) adaptor.becomeRoot((CommonTree) adaptor.create(TOK_TABLEPROPLIST, "TOK_TABLEPROPLIST"),
-                      root_1);
+              root_1 = (CommonTree) adaptor
+                  .becomeRoot((CommonTree) adaptor.create(TOK_TABLEPROPLIST, "TOK_TABLEPROPLIST"), root_1);
 
               if (!(stream_keyProperty.hasNext())) {
                 throw new RewriteEarlyExitException();
@@ -32226,7 +32160,7 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
       }
       retval.stop = input.LT(-1);
 
@@ -32305,9 +32239,8 @@ public class HiveParser extends Parser {
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:1816:54: ^( TOK_TABLEPROPERTY $key $value)
           {
             CommonTree root_1 = (CommonTree) adaptor.nil();
-            root_1 =
-                (CommonTree) adaptor.becomeRoot((CommonTree) adaptor.create(TOK_TABLEPROPERTY, "TOK_TABLEPROPERTY"),
-                    root_1);
+            root_1 = (CommonTree) adaptor
+                .becomeRoot((CommonTree) adaptor.create(TOK_TABLEPROPERTY, "TOK_TABLEPROPERTY"), root_1);
 
             adaptor.addChild(root_1, stream_key.nextNode());
 
@@ -32385,9 +32318,8 @@ public class HiveParser extends Parser {
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:1823:28: ^( TOK_TABLEPROPERTY $key TOK_NULL )
           {
             CommonTree root_1 = (CommonTree) adaptor.nil();
-            root_1 =
-                (CommonTree) adaptor.becomeRoot((CommonTree) adaptor.create(TOK_TABLEPROPERTY, "TOK_TABLEPROPERTY"),
-                    root_1);
+            root_1 = (CommonTree) adaptor
+                .becomeRoot((CommonTree) adaptor.create(TOK_TABLEPROPERTY, "TOK_TABLEPROPERTY"), root_1);
 
             adaptor.addChild(root_1, stream_key.nextNode());
 
@@ -32480,12 +32412,12 @@ public class HiveParser extends Parser {
           case KW_ESCAPED: {
             alt211 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt211) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1830:60: KW_ESCAPED KW_BY fldEscape= StringLiteral
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1830:60: KW_ESCAPED KW_BY fldEscape= StringLiteral
           {
             KW_ESCAPED718 = (Token) match(input, KW_ESCAPED, FOLLOW_KW_ESCAPED_in_tableRowFormatFieldIdentifier10899);
             stream_KW_ESCAPED.add(KW_ESCAPED718);
@@ -32496,7 +32428,7 @@ public class HiveParser extends Parser {
             fldEscape = (Token) match(input, StringLiteral, FOLLOW_StringLiteral_in_tableRowFormatFieldIdentifier10905);
             stream_StringLiteral.add(fldEscape);
           }
-          break;
+            break;
         }
 
         // AST REWRITE
@@ -32518,8 +32450,8 @@ public class HiveParser extends Parser {
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:1831:8: ^( TOK_TABLEROWFORMATFIELD $fldIdnt ( $fldEscape)? )
           {
             CommonTree root_1 = (CommonTree) adaptor.nil();
-            root_1 = (CommonTree) adaptor.becomeRoot(
-                (CommonTree) adaptor.create(TOK_TABLEROWFORMATFIELD, "TOK_TABLEROWFORMATFIELD"), root_1);
+            root_1 = (CommonTree) adaptor
+                .becomeRoot((CommonTree) adaptor.create(TOK_TABLEROWFORMATFIELD, "TOK_TABLEROWFORMATFIELD"), root_1);
 
             adaptor.addChild(root_1, stream_fldIdnt.nextNode());
 
@@ -32830,8 +32762,8 @@ public class HiveParser extends Parser {
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:1855:8: ^( TOK_TABLEROWFORMATLINES $linesIdnt)
           {
             CommonTree root_1 = (CommonTree) adaptor.nil();
-            root_1 = (CommonTree) adaptor.becomeRoot(
-                (CommonTree) adaptor.create(TOK_TABLEROWFORMATLINES, "TOK_TABLEROWFORMATLINES"), root_1);
+            root_1 = (CommonTree) adaptor
+                .becomeRoot((CommonTree) adaptor.create(TOK_TABLEROWFORMATLINES, "TOK_TABLEROWFORMATLINES"), root_1);
 
             adaptor.addChild(root_1, stream_linesIdnt.nextNode());
 
@@ -32925,8 +32857,8 @@ public class HiveParser extends Parser {
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:1863:8: ^( TOK_TABLEROWFORMATNULL $nullIdnt)
           {
             CommonTree root_1 = (CommonTree) adaptor.nil();
-            root_1 = (CommonTree) adaptor.becomeRoot(
-                (CommonTree) adaptor.create(TOK_TABLEROWFORMATNULL, "TOK_TABLEROWFORMATNULL"), root_1);
+            root_1 = (CommonTree) adaptor
+                .becomeRoot((CommonTree) adaptor.create(TOK_TABLEROWFORMATNULL, "TOK_TABLEROWFORMATNULL"), root_1);
 
             adaptor.addChild(root_1, stream_nullIdnt.nextNode());
 
@@ -33033,7 +32965,7 @@ public class HiveParser extends Parser {
                 case KW_INPUTFORMAT: {
                   alt214 = 1;
                 }
-                break;
+                  break;
                 case Identifier:
                 case KW_ADD:
                 case KW_ADMIN:
@@ -33252,25 +33184,25 @@ public class HiveParser extends Parser {
                 case KW_WITH: {
                   alt214 = 3;
                 }
-                break;
+                  break;
                 default:
                   NoViableAltException nvae = new NoViableAltException("", 214, 2, input);
 
                   throw nvae;
               }
             }
-            break;
+              break;
             case KW_BY: {
               alt214 = 2;
             }
-            break;
+              break;
             default:
               NoViableAltException nvae = new NoViableAltException("", 214, 1, input);
 
               throw nvae;
           }
         }
-        break;
+          break;
         default:
           NoViableAltException nvae = new NoViableAltException("", 214, 0, input);
 
@@ -33279,7 +33211,7 @@ public class HiveParser extends Parser {
 
       switch (alt214) {
         case 1:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1869:7: KW_STORED KW_AS KW_INPUTFORMAT inFmt= StringLiteral KW_OUTPUTFORMAT outFmt= StringLiteral ( KW_INPUTDRIVER inDriver= StringLiteral KW_OUTPUTDRIVER outDriver= StringLiteral )?
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1869:7: KW_STORED KW_AS KW_INPUTFORMAT inFmt= StringLiteral KW_OUTPUTFORMAT outFmt= StringLiteral ( KW_INPUTDRIVER inDriver= StringLiteral KW_OUTPUTDRIVER outDriver= StringLiteral )?
         {
           KW_STORED734 = (Token) match(input, KW_STORED, FOLLOW_KW_STORED_in_tableFileFormat11176);
           stream_KW_STORED.add(KW_STORED734);
@@ -33305,12 +33237,12 @@ public class HiveParser extends Parser {
             case KW_INPUTDRIVER: {
               alt212 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt212) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1869:96: KW_INPUTDRIVER inDriver= StringLiteral KW_OUTPUTDRIVER outDriver= StringLiteral
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1869:96: KW_INPUTDRIVER inDriver= StringLiteral KW_OUTPUTDRIVER outDriver= StringLiteral
             {
               KW_INPUTDRIVER738 = (Token) match(input, KW_INPUTDRIVER, FOLLOW_KW_INPUTDRIVER_in_tableFileFormat11193);
               stream_KW_INPUTDRIVER.add(KW_INPUTDRIVER738);
@@ -33325,7 +33257,7 @@ public class HiveParser extends Parser {
               outDriver = (Token) match(input, StringLiteral, FOLLOW_StringLiteral_in_tableFileFormat11203);
               stream_StringLiteral.add(outDriver);
             }
-            break;
+              break;
           }
 
           // AST REWRITE
@@ -33349,8 +33281,8 @@ public class HiveParser extends Parser {
             // org/apache/hadoop/hive/ql/parse/HiveParser.g:1870:10: ^( TOK_TABLEFILEFORMAT $inFmt $outFmt ( $inDriver)? ( $outDriver)? )
             {
               CommonTree root_1 = (CommonTree) adaptor.nil();
-              root_1 = (CommonTree) adaptor.becomeRoot(
-                  (CommonTree) adaptor.create(TOK_TABLEFILEFORMAT, "TOK_TABLEFILEFORMAT"), root_1);
+              root_1 = (CommonTree) adaptor
+                  .becomeRoot((CommonTree) adaptor.create(TOK_TABLEFILEFORMAT, "TOK_TABLEFILEFORMAT"), root_1);
 
               adaptor.addChild(root_1, stream_inFmt.nextNode());
 
@@ -33374,9 +33306,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 2:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1871:9: KW_STORED KW_BY storageHandler= StringLiteral ( KW_WITH KW_SERDEPROPERTIES serdeprops= tableProperties )?
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1871:9: KW_STORED KW_BY storageHandler= StringLiteral ( KW_WITH KW_SERDEPROPERTIES serdeprops= tableProperties )?
         {
           KW_STORED740 = (Token) match(input, KW_STORED, FOLLOW_KW_STORED_in_tableFileFormat11241);
           stream_KW_STORED.add(KW_STORED740);
@@ -33393,12 +33325,12 @@ public class HiveParser extends Parser {
             case KW_WITH: {
               alt213 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt213) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1872:11: KW_WITH KW_SERDEPROPERTIES serdeprops= tableProperties
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1872:11: KW_WITH KW_SERDEPROPERTIES serdeprops= tableProperties
             {
               KW_WITH742 = (Token) match(input, KW_WITH, FOLLOW_KW_WITH_in_tableFileFormat11259);
               stream_KW_WITH.add(KW_WITH742);
@@ -33414,7 +33346,7 @@ public class HiveParser extends Parser {
 
               stream_tableProperties.add(serdeprops.getTree());
             }
-            break;
+              break;
           }
 
           // AST REWRITE
@@ -33438,9 +33370,8 @@ public class HiveParser extends Parser {
             // org/apache/hadoop/hive/ql/parse/HiveParser.g:1873:10: ^( TOK_STORAGEHANDLER $storageHandler ( $serdeprops)? )
             {
               CommonTree root_1 = (CommonTree) adaptor.nil();
-              root_1 =
-                  (CommonTree) adaptor.becomeRoot((CommonTree) adaptor.create(TOK_STORAGEHANDLER, "TOK_STORAGEHANDLER"),
-                      root_1);
+              root_1 = (CommonTree) adaptor
+                  .becomeRoot((CommonTree) adaptor.create(TOK_STORAGEHANDLER, "TOK_STORAGEHANDLER"), root_1);
 
               adaptor.addChild(root_1, stream_storageHandler.nextNode());
 
@@ -33456,9 +33387,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 3:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1874:9: KW_STORED KW_AS genericSpec= identifier
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1874:9: KW_STORED KW_AS genericSpec= identifier
         {
           KW_STORED744 = (Token) match(input, KW_STORED, FOLLOW_KW_STORED_in_tableFileFormat11296);
           stream_KW_STORED.add(KW_STORED744);
@@ -33492,8 +33423,8 @@ public class HiveParser extends Parser {
             // org/apache/hadoop/hive/ql/parse/HiveParser.g:1875:10: ^( TOK_FILEFORMAT_GENERIC $genericSpec)
             {
               CommonTree root_1 = (CommonTree) adaptor.nil();
-              root_1 = (CommonTree) adaptor.becomeRoot(
-                  (CommonTree) adaptor.create(TOK_FILEFORMAT_GENERIC, "TOK_FILEFORMAT_GENERIC"), root_1);
+              root_1 = (CommonTree) adaptor
+                  .becomeRoot((CommonTree) adaptor.create(TOK_FILEFORMAT_GENERIC, "TOK_FILEFORMAT_GENERIC"), root_1);
 
               adaptor.addChild(root_1, stream_genericSpec.nextTree());
 
@@ -33503,7 +33434,7 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
       }
       retval.stop = input.LT(-1);
 
@@ -33560,19 +33491,18 @@ public class HiveParser extends Parser {
         stream_columnNameType.add(columnNameType746.getTree());
 
         // org/apache/hadoop/hive/ql/parse/HiveParser.g:1881:22: ( COMMA columnNameType )*
-        loop215:
-        do {
+        loop215: do {
           int alt215 = 2;
           switch (input.LA(1)) {
             case COMMA: {
               alt215 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt215) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1881:23: COMMA columnNameType
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1881:23: COMMA columnNameType
             {
               COMMA747 = (Token) match(input, COMMA, FOLLOW_COMMA_in_columnNameTypeList11347);
               stream_COMMA.add(COMMA747);
@@ -33584,7 +33514,7 @@ public class HiveParser extends Parser {
 
               stream_columnNameType.add(columnNameType748.getTree());
             }
-            break;
+              break;
 
             default:
               break loop215;
@@ -33682,19 +33612,18 @@ public class HiveParser extends Parser {
         stream_columnNameColonType.add(columnNameColonType749.getTree());
 
         // org/apache/hadoop/hive/ql/parse/HiveParser.g:1887:27: ( COMMA columnNameColonType )*
-        loop216:
-        do {
+        loop216: do {
           int alt216 = 2;
           switch (input.LA(1)) {
             case COMMA: {
               alt216 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt216) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1887:28: COMMA columnNameColonType
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1887:28: COMMA columnNameColonType
             {
               COMMA750 = (Token) match(input, COMMA, FOLLOW_COMMA_in_columnNameColonTypeList11390);
               stream_COMMA.add(COMMA750);
@@ -33706,7 +33635,7 @@ public class HiveParser extends Parser {
 
               stream_columnNameColonType.add(columnNameColonType751.getTree());
             }
-            break;
+              break;
 
             default:
               break loop216;
@@ -33803,19 +33732,18 @@ public class HiveParser extends Parser {
         stream_columnName.add(columnName752.getTree());
 
         // org/apache/hadoop/hive/ql/parse/HiveParser.g:1893:18: ( COMMA columnName )*
-        loop217:
-        do {
+        loop217: do {
           int alt217 = 2;
           switch (input.LA(1)) {
             case COMMA: {
               alt217 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt217) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1893:19: COMMA columnName
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1893:19: COMMA columnName
             {
               COMMA753 = (Token) match(input, COMMA, FOLLOW_COMMA_in_columnNameList11433);
               stream_COMMA.add(COMMA753);
@@ -33827,7 +33755,7 @@ public class HiveParser extends Parser {
 
               stream_columnName.add(columnName754.getTree());
             }
-            break;
+              break;
 
             default:
               break loop217;
@@ -33975,19 +33903,18 @@ public class HiveParser extends Parser {
         stream_columnNameOrder.add(columnNameOrder756.getTree());
 
         // org/apache/hadoop/hive/ql/parse/HiveParser.g:1906:23: ( COMMA columnNameOrder )*
-        loop218:
-        do {
+        loop218: do {
           int alt218 = 2;
           switch (input.LA(1)) {
             case COMMA: {
               alt218 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt218) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1906:24: COMMA columnNameOrder
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1906:24: COMMA columnNameOrder
             {
               COMMA757 = (Token) match(input, COMMA, FOLLOW_COMMA_in_columnNameOrderList11509);
               stream_COMMA.add(COMMA757);
@@ -33999,7 +33926,7 @@ public class HiveParser extends Parser {
 
               stream_columnNameOrder.add(columnNameOrder758.getTree());
             }
-            break;
+              break;
 
             default:
               break loop218;
@@ -34097,11 +34024,11 @@ public class HiveParser extends Parser {
         case TinyintLiteral: {
           alt219 = 1;
         }
-        break;
+          break;
         case LPAREN: {
           alt219 = 2;
         }
-        break;
+          break;
         default:
           NoViableAltException nvae = new NoViableAltException("", 219, 0, input);
 
@@ -34110,7 +34037,7 @@ public class HiveParser extends Parser {
 
       switch (alt219) {
         case 1:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1913:7: skewedColumnValues
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1913:7: skewedColumnValues
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -34121,9 +34048,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, skewedColumnValues759.getTree());
         }
-        break;
+          break;
         case 2:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1914:8: skewedColumnValuePairList
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1914:8: skewedColumnValuePairList
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -34134,7 +34061,7 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, skewedColumnValuePairList760.getTree());
         }
-        break;
+          break;
       }
       retval.stop = input.LT(-1);
 
@@ -34192,19 +34119,18 @@ public class HiveParser extends Parser {
         stream_skewedColumnValuePair.add(skewedColumnValuePair761.getTree());
 
         // org/apache/hadoop/hive/ql/parse/HiveParser.g:1920:29: ( COMMA skewedColumnValuePair )*
-        loop220:
-        do {
+        loop220: do {
           int alt220 = 2;
           switch (input.LA(1)) {
             case COMMA: {
               alt220 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt220) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1920:30: COMMA skewedColumnValuePair
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1920:30: COMMA skewedColumnValuePair
             {
               COMMA762 = (Token) match(input, COMMA, FOLLOW_COMMA_in_skewedColumnValuePairList11595);
               stream_COMMA.add(COMMA762);
@@ -34216,7 +34142,7 @@ public class HiveParser extends Parser {
 
               stream_skewedColumnValuePair.add(skewedColumnValuePair763.getTree());
             }
-            break;
+              break;
 
             default:
               break loop220;
@@ -34240,8 +34166,8 @@ public class HiveParser extends Parser {
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:1920:63: ^( TOK_TABCOLVALUE_PAIR ( skewedColumnValuePair )+ )
           {
             CommonTree root_1 = (CommonTree) adaptor.nil();
-            root_1 = (CommonTree) adaptor.becomeRoot(
-                (CommonTree) adaptor.create(TOK_TABCOLVALUE_PAIR, "TOK_TABCOLVALUE_PAIR"), root_1);
+            root_1 = (CommonTree) adaptor
+                .becomeRoot((CommonTree) adaptor.create(TOK_TABCOLVALUE_PAIR, "TOK_TABCOLVALUE_PAIR"), root_1);
 
             if (!(stream_skewedColumnValuePair.hasNext())) {
               throw new RewriteEarlyExitException();
@@ -34406,19 +34332,18 @@ public class HiveParser extends Parser {
         stream_skewedColumnValue.add(skewedColumnValue766.getTree());
 
         // org/apache/hadoop/hive/ql/parse/HiveParser.g:1934:25: ( COMMA skewedColumnValue )*
-        loop221:
-        do {
+        loop221: do {
           int alt221 = 2;
           switch (input.LA(1)) {
             case COMMA: {
               alt221 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt221) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1934:26: COMMA skewedColumnValue
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1934:26: COMMA skewedColumnValue
             {
               COMMA767 = (Token) match(input, COMMA, FOLLOW_COMMA_in_skewedColumnValues11694);
               stream_COMMA.add(COMMA767);
@@ -34430,7 +34355,7 @@ public class HiveParser extends Parser {
 
               stream_skewedColumnValue.add(skewedColumnValue768.getTree());
             }
-            break;
+              break;
 
             default:
               break loop221;
@@ -34579,11 +34504,11 @@ public class HiveParser extends Parser {
         case TinyintLiteral: {
           alt222 = 1;
         }
-        break;
+          break;
         case LPAREN: {
           alt222 = 2;
         }
-        break;
+          break;
         default:
           NoViableAltException nvae = new NoViableAltException("", 222, 0, input);
 
@@ -34592,7 +34517,7 @@ public class HiveParser extends Parser {
 
       switch (alt222) {
         case 1:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1948:7: skewedColumnValue
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1948:7: skewedColumnValue
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -34603,9 +34528,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, skewedColumnValue770.getTree());
         }
-        break;
+          break;
         case 2:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1949:8: skewedColumnValuePair
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:1949:8: skewedColumnValuePair
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -34616,7 +34541,7 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, skewedColumnValuePair771.getTree());
         }
-        break;
+          break;
       }
       retval.stop = input.LT(-1);
 
@@ -34679,28 +34604,28 @@ public class HiveParser extends Parser {
           case KW_ASC: {
             alt223 = 1;
           }
-          break;
+            break;
           case KW_DESC: {
             alt223 = 2;
           }
-          break;
+            break;
         }
 
         switch (alt223) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1955:19: asc= KW_ASC
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1955:19: asc= KW_ASC
           {
             asc = (Token) match(input, KW_ASC, FOLLOW_KW_ASC_in_columnNameOrder11819);
             stream_KW_ASC.add(asc);
           }
-          break;
+            break;
           case 2:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1955:32: desc= KW_DESC
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1955:32: desc= KW_DESC
           {
             desc = (Token) match(input, KW_DESC, FOLLOW_KW_DESC_in_columnNameOrder11825);
             stream_KW_DESC.add(desc);
           }
-          break;
+            break;
         }
 
         // AST REWRITE
@@ -34720,8 +34645,8 @@ public class HiveParser extends Parser {
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:1956:25: ^( TOK_TABSORTCOLNAMEASC identifier )
           {
             CommonTree root_1 = (CommonTree) adaptor.nil();
-            root_1 = (CommonTree) adaptor.becomeRoot(
-                (CommonTree) adaptor.create(TOK_TABSORTCOLNAMEASC, "TOK_TABSORTCOLNAMEASC"), root_1);
+            root_1 = (CommonTree) adaptor
+                .becomeRoot((CommonTree) adaptor.create(TOK_TABSORTCOLNAMEASC, "TOK_TABSORTCOLNAMEASC"), root_1);
 
             adaptor.addChild(root_1, stream_identifier.nextTree());
 
@@ -34732,8 +34657,8 @@ public class HiveParser extends Parser {
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:1957:25: ^( TOK_TABSORTCOLNAMEDESC identifier )
           {
             CommonTree root_1 = (CommonTree) adaptor.nil();
-            root_1 = (CommonTree) adaptor.becomeRoot(
-                (CommonTree) adaptor.create(TOK_TABSORTCOLNAMEDESC, "TOK_TABSORTCOLNAMEDESC"), root_1);
+            root_1 = (CommonTree) adaptor
+                .becomeRoot((CommonTree) adaptor.create(TOK_TABSORTCOLNAMEDESC, "TOK_TABSORTCOLNAMEDESC"), root_1);
 
             adaptor.addChild(root_1, stream_identifier.nextTree());
 
@@ -34799,19 +34724,18 @@ public class HiveParser extends Parser {
         stream_columnNameComment.add(columnNameComment773.getTree());
 
         // org/apache/hadoop/hive/ql/parse/HiveParser.g:1963:25: ( COMMA columnNameComment )*
-        loop224:
-        do {
+        loop224: do {
           int alt224 = 2;
           switch (input.LA(1)) {
             case COMMA: {
               alt224 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt224) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:1963:26: COMMA columnNameComment
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1963:26: COMMA columnNameComment
             {
               COMMA774 = (Token) match(input, COMMA, FOLLOW_COMMA_in_columnNameCommentList11900);
               stream_COMMA.add(COMMA774);
@@ -34823,7 +34747,7 @@ public class HiveParser extends Parser {
 
               stream_columnNameComment.add(columnNameComment775.getTree());
             }
-            break;
+              break;
 
             default:
               break loop224;
@@ -34926,12 +34850,12 @@ public class HiveParser extends Parser {
           case KW_COMMENT: {
             alt225 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt225) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1969:27: KW_COMMENT comment= StringLiteral
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1969:27: KW_COMMENT comment= StringLiteral
           {
             KW_COMMENT776 = (Token) match(input, KW_COMMENT, FOLLOW_KW_COMMENT_in_columnNameComment11945);
             stream_KW_COMMENT.add(KW_COMMENT776);
@@ -34939,7 +34863,7 @@ public class HiveParser extends Parser {
             comment = (Token) match(input, StringLiteral, FOLLOW_StringLiteral_in_columnNameComment11949);
             stream_StringLiteral.add(comment);
           }
-          break;
+            break;
         }
 
         // AST REWRITE
@@ -35042,28 +34966,28 @@ public class HiveParser extends Parser {
           case KW_ASC: {
             alt226 = 1;
           }
-          break;
+            break;
           case KW_DESC: {
             alt226 = 2;
           }
-          break;
+            break;
         }
 
         switch (alt226) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1976:19: asc= KW_ASC
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1976:19: asc= KW_ASC
           {
             asc = (Token) match(input, KW_ASC, FOLLOW_KW_ASC_in_columnRefOrder12002);
             stream_KW_ASC.add(asc);
           }
-          break;
+            break;
           case 2:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1976:32: desc= KW_DESC
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1976:32: desc= KW_DESC
           {
             desc = (Token) match(input, KW_DESC, FOLLOW_KW_DESC_in_columnRefOrder12008);
             stream_KW_DESC.add(desc);
           }
-          break;
+            break;
         }
 
         // AST REWRITE
@@ -35083,8 +35007,8 @@ public class HiveParser extends Parser {
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:1977:25: ^( TOK_TABSORTCOLNAMEASC expression )
           {
             CommonTree root_1 = (CommonTree) adaptor.nil();
-            root_1 = (CommonTree) adaptor.becomeRoot(
-                (CommonTree) adaptor.create(TOK_TABSORTCOLNAMEASC, "TOK_TABSORTCOLNAMEASC"), root_1);
+            root_1 = (CommonTree) adaptor
+                .becomeRoot((CommonTree) adaptor.create(TOK_TABSORTCOLNAMEASC, "TOK_TABSORTCOLNAMEASC"), root_1);
 
             adaptor.addChild(root_1, stream_expression.nextTree());
 
@@ -35095,8 +35019,8 @@ public class HiveParser extends Parser {
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:1978:25: ^( TOK_TABSORTCOLNAMEDESC expression )
           {
             CommonTree root_1 = (CommonTree) adaptor.nil();
-            root_1 = (CommonTree) adaptor.becomeRoot(
-                (CommonTree) adaptor.create(TOK_TABSORTCOLNAMEDESC, "TOK_TABSORTCOLNAMEDESC"), root_1);
+            root_1 = (CommonTree) adaptor
+                .becomeRoot((CommonTree) adaptor.create(TOK_TABSORTCOLNAMEDESC, "TOK_TABSORTCOLNAMEDESC"), root_1);
 
             adaptor.addChild(root_1, stream_expression.nextTree());
 
@@ -35178,12 +35102,12 @@ public class HiveParser extends Parser {
           case KW_COMMENT: {
             alt227 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt227) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1984:35: KW_COMMENT comment= StringLiteral
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1984:35: KW_COMMENT comment= StringLiteral
           {
             KW_COMMENT779 = (Token) match(input, KW_COMMENT, FOLLOW_KW_COMMENT_in_columnNameType12087);
             stream_KW_COMMENT.add(KW_COMMENT779);
@@ -35191,7 +35115,7 @@ public class HiveParser extends Parser {
             comment = (Token) match(input, StringLiteral, FOLLOW_StringLiteral_in_columnNameType12091);
             stream_StringLiteral.add(comment);
           }
-          break;
+            break;
         }
 
         // AST REWRITE
@@ -35319,12 +35243,12 @@ public class HiveParser extends Parser {
           case KW_COMMENT: {
             alt228 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt228) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:1992:41: KW_COMMENT comment= StringLiteral
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:1992:41: KW_COMMENT comment= StringLiteral
           {
             KW_COMMENT782 = (Token) match(input, KW_COMMENT, FOLLOW_KW_COMMENT_in_columnNameColonType12184);
             stream_KW_COMMENT.add(KW_COMMENT782);
@@ -35332,7 +35256,7 @@ public class HiveParser extends Parser {
             comment = (Token) match(input, StringLiteral, FOLLOW_StringLiteral_in_columnNameColonType12188);
             stream_StringLiteral.add(comment);
           }
-          break;
+            break;
         }
 
         // AST REWRITE
@@ -35489,19 +35413,18 @@ public class HiveParser extends Parser {
         stream_colType.add(colType784.getTree());
 
         // org/apache/hadoop/hive/ql/parse/HiveParser.g:2006:15: ( COMMA colType )*
-        loop229:
-        do {
+        loop229: do {
           int alt229 = 2;
           switch (input.LA(1)) {
             case COMMA: {
               alt229 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt229) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:2006:16: COMMA colType
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:2006:16: COMMA colType
             {
               COMMA785 = (Token) match(input, COMMA, FOLLOW_COMMA_in_colTypeList12302);
               stream_COMMA.add(COMMA785);
@@ -35513,7 +35436,7 @@ public class HiveParser extends Parser {
 
               stream_colType.add(colType786.getTree());
             }
-            break;
+              break;
 
             default:
               break loop229;
@@ -35620,23 +35543,23 @@ public class HiveParser extends Parser {
         case KW_VARCHAR: {
           alt230 = 1;
         }
-        break;
+          break;
         case KW_ARRAY: {
           alt230 = 2;
         }
-        break;
+          break;
         case KW_STRUCT: {
           alt230 = 3;
         }
-        break;
+          break;
         case KW_MAP: {
           alt230 = 4;
         }
-        break;
+          break;
         case KW_UNIONTYPE: {
           alt230 = 5;
         }
-        break;
+          break;
         default:
           NoViableAltException nvae = new NoViableAltException("", 230, 0, input);
 
@@ -35645,7 +35568,7 @@ public class HiveParser extends Parser {
 
       switch (alt230) {
         case 1:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:2010:7: primitiveType
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:2010:7: primitiveType
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -35656,9 +35579,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, primitiveType787.getTree());
         }
-        break;
+          break;
         case 2:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:2011:7: listType
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:2011:7: listType
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -35669,9 +35592,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, listType788.getTree());
         }
-        break;
+          break;
         case 3:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:2012:7: structType
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:2012:7: structType
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -35682,9 +35605,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, structType789.getTree());
         }
-        break;
+          break;
         case 4:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:2013:7: mapType
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:2013:7: mapType
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -35695,9 +35618,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, mapType790.getTree());
         }
-        break;
+          break;
         case 5:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:2014:7: unionType
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:2014:7: unionType
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -35708,7 +35631,7 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, unionType791.getTree());
         }
-        break;
+          break;
       }
       retval.stop = input.LT(-1);
 
@@ -35821,63 +35744,63 @@ public class HiveParser extends Parser {
         case KW_TINYINT: {
           alt233 = 1;
         }
-        break;
+          break;
         case KW_SMALLINT: {
           alt233 = 2;
         }
-        break;
+          break;
         case KW_INT: {
           alt233 = 3;
         }
-        break;
+          break;
         case KW_BIGINT: {
           alt233 = 4;
         }
-        break;
+          break;
         case KW_BOOLEAN: {
           alt233 = 5;
         }
-        break;
+          break;
         case KW_FLOAT: {
           alt233 = 6;
         }
-        break;
+          break;
         case KW_DOUBLE: {
           alt233 = 7;
         }
-        break;
+          break;
         case KW_DATE: {
           alt233 = 8;
         }
-        break;
+          break;
         case KW_DATETIME: {
           alt233 = 9;
         }
-        break;
+          break;
         case KW_TIMESTAMP: {
           alt233 = 10;
         }
-        break;
+          break;
         case KW_STRING: {
           alt233 = 11;
         }
-        break;
+          break;
         case KW_BINARY: {
           alt233 = 12;
         }
-        break;
+          break;
         case KW_DECIMAL: {
           alt233 = 13;
         }
-        break;
+          break;
         case KW_VARCHAR: {
           alt233 = 14;
         }
-        break;
+          break;
         case KW_CHAR: {
           alt233 = 15;
         }
-        break;
+          break;
         default:
           NoViableAltException nvae = new NoViableAltException("", 233, 0, input);
 
@@ -35886,7 +35809,7 @@ public class HiveParser extends Parser {
 
       switch (alt233) {
         case 1:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:2019:7: KW_TINYINT
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:2019:7: KW_TINYINT
         {
           KW_TINYINT792 = (Token) match(input, KW_TINYINT, FOLLOW_KW_TINYINT_in_primitiveType12386);
           stream_KW_TINYINT.add(KW_TINYINT792);
@@ -35910,9 +35833,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 2:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:2020:7: KW_SMALLINT
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:2020:7: KW_SMALLINT
         {
           KW_SMALLINT793 = (Token) match(input, KW_SMALLINT, FOLLOW_KW_SMALLINT_in_primitiveType12407);
           stream_KW_SMALLINT.add(KW_SMALLINT793);
@@ -35936,9 +35859,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 3:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:2021:7: KW_INT
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:2021:7: KW_INT
         {
           KW_INT794 = (Token) match(input, KW_INT, FOLLOW_KW_INT_in_primitiveType12427);
           stream_KW_INT.add(KW_INT794);
@@ -35962,9 +35885,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 4:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:2022:7: KW_BIGINT
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:2022:7: KW_BIGINT
         {
           KW_BIGINT795 = (Token) match(input, KW_BIGINT, FOLLOW_KW_BIGINT_in_primitiveType12452);
           stream_KW_BIGINT.add(KW_BIGINT795);
@@ -35988,9 +35911,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 5:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:2023:7: KW_BOOLEAN
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:2023:7: KW_BOOLEAN
         {
           KW_BOOLEAN796 = (Token) match(input, KW_BOOLEAN, FOLLOW_KW_BOOLEAN_in_primitiveType12474);
           stream_KW_BOOLEAN.add(KW_BOOLEAN796);
@@ -36014,9 +35937,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 6:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:2024:7: KW_FLOAT
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:2024:7: KW_FLOAT
         {
           KW_FLOAT797 = (Token) match(input, KW_FLOAT, FOLLOW_KW_FLOAT_in_primitiveType12495);
           stream_KW_FLOAT.add(KW_FLOAT797);
@@ -36040,9 +35963,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 7:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:2025:7: KW_DOUBLE
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:2025:7: KW_DOUBLE
         {
           KW_DOUBLE798 = (Token) match(input, KW_DOUBLE, FOLLOW_KW_DOUBLE_in_primitiveType12518);
           stream_KW_DOUBLE.add(KW_DOUBLE798);
@@ -36066,9 +35989,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 8:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:2026:7: KW_DATE
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:2026:7: KW_DATE
         {
           KW_DATE799 = (Token) match(input, KW_DATE, FOLLOW_KW_DATE_in_primitiveType12540);
           stream_KW_DATE.add(KW_DATE799);
@@ -36092,9 +36015,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 9:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:2027:7: KW_DATETIME
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:2027:7: KW_DATETIME
         {
           KW_DATETIME800 = (Token) match(input, KW_DATETIME, FOLLOW_KW_DATETIME_in_primitiveType12564);
           stream_KW_DATETIME.add(KW_DATETIME800);
@@ -36118,9 +36041,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 10:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:2028:7: KW_TIMESTAMP
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:2028:7: KW_TIMESTAMP
         {
           KW_TIMESTAMP801 = (Token) match(input, KW_TIMESTAMP, FOLLOW_KW_TIMESTAMP_in_primitiveType12584);
           stream_KW_TIMESTAMP.add(KW_TIMESTAMP801);
@@ -36144,9 +36067,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 11:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:2029:7: KW_STRING
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:2029:7: KW_STRING
         {
           KW_STRING802 = (Token) match(input, KW_STRING, FOLLOW_KW_STRING_in_primitiveType12603);
           stream_KW_STRING.add(KW_STRING802);
@@ -36170,9 +36093,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 12:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:2030:7: KW_BINARY
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:2030:7: KW_BINARY
         {
           KW_BINARY803 = (Token) match(input, KW_BINARY, FOLLOW_KW_BINARY_in_primitiveType12625);
           stream_KW_BINARY.add(KW_BINARY803);
@@ -36196,9 +36119,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 13:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:2031:7: KW_DECIMAL ( LPAREN prec= Number ( COMMA scale= Number )? RPAREN )?
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:2031:7: KW_DECIMAL ( LPAREN prec= Number ( COMMA scale= Number )? RPAREN )?
         {
           KW_DECIMAL804 = (Token) match(input, KW_DECIMAL, FOLLOW_KW_DECIMAL_in_primitiveType12647);
           stream_KW_DECIMAL.add(KW_DECIMAL804);
@@ -36209,12 +36132,12 @@ public class HiveParser extends Parser {
             case LPAREN: {
               alt232 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt232) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:2031:19: LPAREN prec= Number ( COMMA scale= Number )? RPAREN
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:2031:19: LPAREN prec= Number ( COMMA scale= Number )? RPAREN
             {
               LPAREN805 = (Token) match(input, LPAREN, FOLLOW_LPAREN_in_primitiveType12650);
               stream_LPAREN.add(LPAREN805);
@@ -36228,12 +36151,12 @@ public class HiveParser extends Parser {
                 case COMMA: {
                   alt231 = 1;
                 }
-                break;
+                  break;
               }
 
               switch (alt231) {
                 case 1:
-                  // org/apache/hadoop/hive/ql/parse/HiveParser.g:2031:39: COMMA scale= Number
+                // org/apache/hadoop/hive/ql/parse/HiveParser.g:2031:39: COMMA scale= Number
                 {
                   COMMA806 = (Token) match(input, COMMA, FOLLOW_COMMA_in_primitiveType12657);
                   stream_COMMA.add(COMMA806);
@@ -36241,13 +36164,13 @@ public class HiveParser extends Parser {
                   scale = (Token) match(input, Number, FOLLOW_Number_in_primitiveType12661);
                   stream_Number.add(scale);
                 }
-                break;
+                  break;
               }
 
               RPAREN807 = (Token) match(input, RPAREN, FOLLOW_RPAREN_in_primitiveType12665);
               stream_RPAREN.add(RPAREN807);
             }
-            break;
+              break;
           }
 
           // AST REWRITE
@@ -36289,9 +36212,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 14:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:2032:7: KW_VARCHAR LPAREN length= Number RPAREN
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:2032:7: KW_VARCHAR LPAREN length= Number RPAREN
         {
           KW_VARCHAR808 = (Token) match(input, KW_VARCHAR, FOLLOW_KW_VARCHAR_in_primitiveType12689);
           stream_KW_VARCHAR.add(KW_VARCHAR808);
@@ -36333,9 +36256,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 15:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:2033:7: KW_CHAR LPAREN length= Number RPAREN
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:2033:7: KW_CHAR LPAREN length= Number RPAREN
         {
           KW_CHAR811 = (Token) match(input, KW_CHAR, FOLLOW_KW_CHAR_in_primitiveType12722);
           stream_KW_CHAR.add(KW_CHAR811);
@@ -36377,7 +36300,7 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
       }
       retval.stop = input.LT(-1);
 
@@ -36914,12 +36837,12 @@ public class HiveParser extends Parser {
           case KW_WITH: {
             alt234 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt234) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:2073:6: w= withClause {...}?
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:2073:6: w= withClause {...}?
           {
             pushFollow(FOLLOW_withClause_in_queryStatementExpression12995);
             w = withClause();
@@ -36932,7 +36855,7 @@ public class HiveParser extends Parser {
               throw new FailedPredicateException(input, "queryStatementExpression", "topLevel");
             }
           }
-          break;
+            break;
         }
 
         pushFollow(FOLLOW_queryStatementExpressionBody_in_queryStatementExpression13005);
@@ -36943,8 +36866,8 @@ public class HiveParser extends Parser {
         stream_queryStatementExpressionBody.add(queryStatementExpressionBody832.getTree());
 
         if ((w != null ? ((CommonTree) w.tree) : null) != null) {
-          (queryStatementExpressionBody832 != null ? ((CommonTree) queryStatementExpressionBody832.tree)
-              : null).insertChild(0, (w != null ? ((CommonTree) w.tree) : null));
+          (queryStatementExpressionBody832 != null ? ((CommonTree) queryStatementExpressionBody832.tree) : null)
+              .insertChild(0, (w != null ? ((CommonTree) w.tree) : null));
         }
 
         // AST REWRITE
@@ -37011,14 +36934,14 @@ public class HiveParser extends Parser {
         case KW_FROM: {
           alt235 = 1;
         }
-        break;
+          break;
         case KW_INSERT:
         case KW_MAP:
         case KW_REDUCE:
         case KW_SELECT: {
           alt235 = 2;
         }
-        break;
+          break;
         default:
           NoViableAltException nvae = new NoViableAltException("", 235, 0, input);
 
@@ -37027,7 +36950,7 @@ public class HiveParser extends Parser {
 
       switch (alt235) {
         case 1:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:2084:5: fromStatement[topLevel]
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:2084:5: fromStatement[topLevel]
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -37038,9 +36961,9 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, fromStatement833.getTree());
         }
-        break;
+          break;
         case 2:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:2085:7: regularBody[topLevel]
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:2085:7: regularBody[topLevel]
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -37051,7 +36974,7 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, regularBody834.getTree());
         }
-        break;
+          break;
       }
       retval.stop = input.LT(-1);
 
@@ -37111,19 +37034,18 @@ public class HiveParser extends Parser {
         stream_cteStatement.add(cteStatement836.getTree());
 
         // org/apache/hadoop/hive/ql/parse/HiveParser.g:2090:24: ( COMMA cteStatement )*
-        loop236:
-        do {
+        loop236: do {
           int alt236 = 2;
           switch (input.LA(1)) {
             case COMMA: {
               alt236 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt236) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:2090:25: COMMA cteStatement
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:2090:25: COMMA cteStatement
             {
               COMMA837 = (Token) match(input, COMMA, FOLLOW_COMMA_in_withClause13071);
               stream_COMMA.add(COMMA837);
@@ -37135,7 +37057,7 @@ public class HiveParser extends Parser {
 
               stream_cteStatement.add(cteStatement838.getTree());
             }
-            break;
+              break;
 
             default:
               break loop236;
@@ -37357,19 +37279,18 @@ public class HiveParser extends Parser {
         }
 
         // org/apache/hadoop/hive/ql/parse/HiveParser.g:2101:2: (u= setOperator r= singleFromStatement -> ^( $u $r) )*
-        loop237:
-        do {
+        loop237: do {
           int alt237 = 2;
           switch (input.LA(1)) {
             case KW_UNION: {
               alt237 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt237) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:2101:3: u= setOperator r= singleFromStatement
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:2101:3: u= setOperator r= singleFromStatement
             {
               pushFollow(FOLLOW_setOperator_in_fromStatement13144);
               u = setOperator();
@@ -37418,7 +37339,7 @@ public class HiveParser extends Parser {
 
               retval.tree = root_0;
             }
-            break;
+              break;
 
             default:
               break loop237;
@@ -37473,9 +37394,8 @@ public class HiveParser extends Parser {
               // org/apache/hadoop/hive/ql/parse/HiveParser.g:2112:12: ^( TOK_DESTINATION ^( TOK_DIR TOK_TMP_FILE ) )
               {
                 CommonTree root_3 = (CommonTree) adaptor.nil();
-                root_3 =
-                    (CommonTree) adaptor.becomeRoot((CommonTree) adaptor.create(TOK_DESTINATION, "TOK_DESTINATION"),
-                        root_3);
+                root_3 = (CommonTree) adaptor
+                    .becomeRoot((CommonTree) adaptor.create(TOK_DESTINATION, "TOK_DESTINATION"), root_3);
 
                 // org/apache/hadoop/hive/ql/parse/HiveParser.g:2112:30: ^( TOK_DIR TOK_TMP_FILE )
                 {
@@ -37573,8 +37493,7 @@ public class HiveParser extends Parser {
 
         // org/apache/hadoop/hive/ql/parse/HiveParser.g:2123:5: (b+= body )+
         int cnt238 = 0;
-        loop238:
-        do {
+        loop238: do {
           int alt238 = 2;
           switch (input.LA(1)) {
             case KW_INSERT:
@@ -37583,12 +37502,12 @@ public class HiveParser extends Parser {
             case KW_SELECT: {
               alt238 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt238) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:2123:7: b+= body
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:2123:7: b+= body
             {
               pushFollow(FOLLOW_body_in_singleFromStatement13365);
               b = body();
@@ -37601,7 +37520,7 @@ public class HiveParser extends Parser {
               }
               list_b.add(b.getTree());
             }
-            break;
+              break;
 
             default:
               if (cnt238 >= 1) {
@@ -37699,13 +37618,13 @@ public class HiveParser extends Parser {
         case KW_INSERT: {
           alt240 = 1;
         }
-        break;
+          break;
         case KW_MAP:
         case KW_REDUCE:
         case KW_SELECT: {
           alt240 = 2;
         }
-        break;
+          break;
         default:
           NoViableAltException nvae = new NoViableAltException("", 240, 0, input);
 
@@ -37714,7 +37633,7 @@ public class HiveParser extends Parser {
 
       switch (alt240) {
         case 1:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:2135:4: i= insertClause (s= selectStatement[topLevel] ->| valuesClause -> ^( TOK_QUERY ^( TOK_FROM ^( TOK_VIRTUAL_TABLE ^( TOK_VIRTUAL_TABREF ^( TOK_ANONYMOUS ) ) valuesClause ) ) ^( TOK_INSERT ^( TOK_SELECT ^( TOK_SELEXPR TOK_ALLCOLREF ) ) ) ) )
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:2135:4: i= insertClause (s= selectStatement[topLevel] ->| valuesClause -> ^( TOK_QUERY ^( TOK_FROM ^( TOK_VIRTUAL_TABLE ^( TOK_VIRTUAL_TABREF ^( TOK_ANONYMOUS ) ) valuesClause ) ) ^( TOK_INSERT ^( TOK_SELECT ^( TOK_SELEXPR TOK_ALLCOLREF ) ) ) ) )
         {
           pushFollow(FOLLOW_insertClause_in_regularBody13403);
           i = insertClause();
@@ -37731,11 +37650,11 @@ public class HiveParser extends Parser {
             case KW_SELECT: {
               alt239 = 1;
             }
-            break;
+              break;
             case KW_VALUES: {
               alt239 = 2;
             }
-            break;
+              break;
             default:
               NoViableAltException nvae = new NoViableAltException("", 239, 0, input);
 
@@ -37744,7 +37663,7 @@ public class HiveParser extends Parser {
 
           switch (alt239) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:2137:4: s= selectStatement[topLevel]
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:2137:4: s= selectStatement[topLevel]
             {
               pushFollow(FOLLOW_selectStatement_in_regularBody13415);
               s = selectStatement(topLevel);
@@ -37753,8 +37672,8 @@ public class HiveParser extends Parser {
 
               stream_selectStatement.add(s.getTree());
 
-              (s != null ? ((CommonTree) s.tree) : null).getFirstChildWithType(TOK_INSERT)
-                  .replaceChildren(0, 0, (i != null ? ((CommonTree) i.tree) : null));
+              (s != null ? ((CommonTree) s.tree) : null).getFirstChildWithType(TOK_INSERT).replaceChildren(0, 0,
+                  (i != null ? ((CommonTree) i.tree) : null));
 
               // AST REWRITE
               // elements:
@@ -37775,9 +37694,9 @@ public class HiveParser extends Parser {
 
               retval.tree = root_0;
             }
-            break;
+              break;
             case 2:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:2140:6: valuesClause
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:2140:6: valuesClause
             {
               pushFollow(FOLLOW_valuesClause_in_regularBody13441);
               valuesClause846 = valuesClause();
@@ -37813,20 +37732,20 @@ public class HiveParser extends Parser {
                     // org/apache/hadoop/hive/ql/parse/HiveParser.g:2143:15: ^( TOK_VIRTUAL_TABLE ^( TOK_VIRTUAL_TABREF ^( TOK_ANONYMOUS ) ) valuesClause )
                     {
                       CommonTree root_3 = (CommonTree) adaptor.nil();
-                      root_3 = (CommonTree) adaptor.becomeRoot(
-                          (CommonTree) adaptor.create(TOK_VIRTUAL_TABLE, "TOK_VIRTUAL_TABLE"), root_3);
+                      root_3 = (CommonTree) adaptor
+                          .becomeRoot((CommonTree) adaptor.create(TOK_VIRTUAL_TABLE, "TOK_VIRTUAL_TABLE"), root_3);
 
                       // org/apache/hadoop/hive/ql/parse/HiveParser.g:2143:35: ^( TOK_VIRTUAL_TABREF ^( TOK_ANONYMOUS ) )
                       {
                         CommonTree root_4 = (CommonTree) adaptor.nil();
-                        root_4 = (CommonTree) adaptor.becomeRoot(
-                            (CommonTree) adaptor.create(TOK_VIRTUAL_TABREF, "TOK_VIRTUAL_TABREF"), root_4);
+                        root_4 = (CommonTree) adaptor
+                            .becomeRoot((CommonTree) adaptor.create(TOK_VIRTUAL_TABREF, "TOK_VIRTUAL_TABREF"), root_4);
 
                         // org/apache/hadoop/hive/ql/parse/HiveParser.g:2143:56: ^( TOK_ANONYMOUS )
                         {
                           CommonTree root_5 = (CommonTree) adaptor.nil();
-                          root_5 = (CommonTree) adaptor.becomeRoot(
-                              (CommonTree) adaptor.create(TOK_ANONYMOUS, "TOK_ANONYMOUS"), root_5);
+                          root_5 = (CommonTree) adaptor
+                              .becomeRoot((CommonTree) adaptor.create(TOK_ANONYMOUS, "TOK_ANONYMOUS"), root_5);
 
                           adaptor.addChild(root_4, root_5);
                         }
@@ -37859,9 +37778,8 @@ public class HiveParser extends Parser {
                       // org/apache/hadoop/hive/ql/parse/HiveParser.g:2145:49: ^( TOK_SELEXPR TOK_ALLCOLREF )
                       {
                         CommonTree root_4 = (CommonTree) adaptor.nil();
-                        root_4 =
-                            (CommonTree) adaptor.becomeRoot((CommonTree) adaptor.create(TOK_SELEXPR, "TOK_SELEXPR"),
-                                root_4);
+                        root_4 = (CommonTree) adaptor
+                            .becomeRoot((CommonTree) adaptor.create(TOK_SELEXPR, "TOK_SELEXPR"), root_4);
 
                         adaptor.addChild(root_4, (CommonTree) adaptor.create(TOK_ALLCOLREF, "TOK_ALLCOLREF"));
 
@@ -37880,12 +37798,12 @@ public class HiveParser extends Parser {
 
               retval.tree = root_0;
             }
-            break;
+              break;
           }
         }
-        break;
+          break;
         case 2:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:2149:4: selectStatement[topLevel]
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:2149:4: selectStatement[topLevel]
         {
           root_0 = (CommonTree) adaptor.nil();
 
@@ -37896,7 +37814,7 @@ public class HiveParser extends Parser {
 
           adaptor.addChild(root_0, selectStatement847.getTree());
         }
-        break;
+          break;
       }
       retval.stop = input.LT(-1);
 
@@ -37974,19 +37892,18 @@ public class HiveParser extends Parser {
         }
 
         // org/apache/hadoop/hive/ql/parse/HiveParser.g:2154:4: (u= setOperator b= singleSelectStatement -> ^( $u $b) )*
-        loop241:
-        do {
+        loop241: do {
           int alt241 = 2;
           switch (input.LA(1)) {
             case KW_UNION: {
               alt241 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt241) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:2154:5: u= setOperator b= singleSelectStatement
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:2154:5: u= setOperator b= singleSelectStatement
             {
               pushFollow(FOLLOW_setOperator_in_selectStatement13595);
               u = setOperator();
@@ -38035,7 +37952,7 @@ public class HiveParser extends Parser {
 
               retval.tree = root_0;
             }
-            break;
+              break;
 
             default:
               break loop241;
@@ -38090,9 +38007,8 @@ public class HiveParser extends Parser {
               // org/apache/hadoop/hive/ql/parse/HiveParser.g:2165:13: ^( TOK_DESTINATION ^( TOK_DIR TOK_TMP_FILE ) )
               {
                 CommonTree root_3 = (CommonTree) adaptor.nil();
-                root_3 =
-                    (CommonTree) adaptor.becomeRoot((CommonTree) adaptor.create(TOK_DESTINATION, "TOK_DESTINATION"),
-                        root_3);
+                root_3 = (CommonTree) adaptor
+                    .becomeRoot((CommonTree) adaptor.create(TOK_DESTINATION, "TOK_DESTINATION"), root_3);
 
                 // org/apache/hadoop/hive/ql/parse/HiveParser.g:2165:31: ^( TOK_DIR TOK_TMP_FILE )
                 {
@@ -38222,12 +38138,12 @@ public class HiveParser extends Parser {
           case KW_FROM: {
             alt242 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt242) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:2175:4: fromClause
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:2175:4: fromClause
           {
             pushFollow(FOLLOW_fromClause_in_singleSelectStatement13826);
             fromClause850 = fromClause();
@@ -38236,7 +38152,7 @@ public class HiveParser extends Parser {
 
             stream_fromClause.add(fromClause850.getTree());
           }
-          break;
+            break;
         }
 
         // org/apache/hadoop/hive/ql/parse/HiveParser.g:2176:4: ( whereClause )?
@@ -38245,12 +38161,12 @@ public class HiveParser extends Parser {
           case KW_WHERE: {
             alt243 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt243) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:2176:4: whereClause
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:2176:4: whereClause
           {
             pushFollow(FOLLOW_whereClause_in_singleSelectStatement13832);
             whereClause851 = whereClause();
@@ -38259,7 +38175,7 @@ public class HiveParser extends Parser {
 
             stream_whereClause.add(whereClause851.getTree());
           }
-          break;
+            break;
         }
 
         // org/apache/hadoop/hive/ql/parse/HiveParser.g:2177:4: ( groupByClause )?
@@ -38268,12 +38184,12 @@ public class HiveParser extends Parser {
           case KW_GROUP: {
             alt244 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt244) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:2177:4: groupByClause
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:2177:4: groupByClause
           {
             pushFollow(FOLLOW_groupByClause_in_singleSelectStatement13838);
             groupByClause852 = groupByClause();
@@ -38282,7 +38198,7 @@ public class HiveParser extends Parser {
 
             stream_groupByClause.add(groupByClause852.getTree());
           }
-          break;
+            break;
         }
 
         // org/apache/hadoop/hive/ql/parse/HiveParser.g:2178:4: ( havingClause )?
@@ -38291,12 +38207,12 @@ public class HiveParser extends Parser {
           case KW_HAVING: {
             alt245 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt245) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:2178:4: havingClause
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:2178:4: havingClause
           {
             pushFollow(FOLLOW_havingClause_in_singleSelectStatement13844);
             havingClause853 = havingClause();
@@ -38305,7 +38221,7 @@ public class HiveParser extends Parser {
 
             stream_havingClause.add(havingClause853.getTree());
           }
-          break;
+            break;
         }
 
         // org/apache/hadoop/hive/ql/parse/HiveParser.g:2179:4: ( orderByClause )?
@@ -38314,12 +38230,12 @@ public class HiveParser extends Parser {
           case KW_ORDER: {
             alt246 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt246) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:2179:4: orderByClause
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:2179:4: orderByClause
           {
             pushFollow(FOLLOW_orderByClause_in_singleSelectStatement13850);
             orderByClause854 = orderByClause();
@@ -38328,7 +38244,7 @@ public class HiveParser extends Parser {
 
             stream_orderByClause.add(orderByClause854.getTree());
           }
-          break;
+            break;
         }
 
         // org/apache/hadoop/hive/ql/parse/HiveParser.g:2180:4: ( clusterByClause )?
@@ -38337,12 +38253,12 @@ public class HiveParser extends Parser {
           case KW_CLUSTER: {
             alt247 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt247) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:2180:4: clusterByClause
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:2180:4: clusterByClause
           {
             pushFollow(FOLLOW_clusterByClause_in_singleSelectStatement13856);
             clusterByClause855 = clusterByClause();
@@ -38351,7 +38267,7 @@ public class HiveParser extends Parser {
 
             stream_clusterByClause.add(clusterByClause855.getTree());
           }
-          break;
+            break;
         }
 
         // org/apache/hadoop/hive/ql/parse/HiveParser.g:2181:4: ( distributeByClause )?
@@ -38360,12 +38276,12 @@ public class HiveParser extends Parser {
           case KW_DISTRIBUTE: {
             alt248 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt248) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:2181:4: distributeByClause
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:2181:4: distributeByClause
           {
             pushFollow(FOLLOW_distributeByClause_in_singleSelectStatement13862);
             distributeByClause856 = distributeByClause();
@@ -38374,7 +38290,7 @@ public class HiveParser extends Parser {
 
             stream_distributeByClause.add(distributeByClause856.getTree());
           }
-          break;
+            break;
         }
 
         // org/apache/hadoop/hive/ql/parse/HiveParser.g:2182:4: ( sortByClause )?
@@ -38383,12 +38299,12 @@ public class HiveParser extends Parser {
           case KW_SORT: {
             alt249 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt249) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:2182:4: sortByClause
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:2182:4: sortByClause
           {
             pushFollow(FOLLOW_sortByClause_in_singleSelectStatement13868);
             sortByClause857 = sortByClause();
@@ -38397,7 +38313,7 @@ public class HiveParser extends Parser {
 
             stream_sortByClause.add(sortByClause857.getTree());
           }
-          break;
+            break;
         }
 
         // org/apache/hadoop/hive/ql/parse/HiveParser.g:2183:4: ( window_clause )?
@@ -38406,12 +38322,12 @@ public class HiveParser extends Parser {
           case KW_WINDOW: {
             alt250 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt250) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:2183:4: window_clause
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:2183:4: window_clause
           {
             pushFollow(FOLLOW_window_clause_in_singleSelectStatement13874);
             window_clause858 = window_clause();
@@ -38420,7 +38336,7 @@ public class HiveParser extends Parser {
 
             stream_window_clause.add(window_clause858.getTree());
           }
-          break;
+            break;
         }
 
         // org/apache/hadoop/hive/ql/parse/HiveParser.g:2184:4: ( limitClause )?
@@ -38429,12 +38345,12 @@ public class HiveParser extends Parser {
           case KW_LIMIT: {
             alt251 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt251) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:2184:4: limitClause
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:2184:4: limitClause
           {
             pushFollow(FOLLOW_limitClause_in_singleSelectStatement13880);
             limitClause859 = limitClause();
@@ -38443,7 +38359,7 @@ public class HiveParser extends Parser {
 
             stream_limitClause.add(limitClause859.getTree());
           }
-          break;
+            break;
         }
 
         // AST REWRITE
@@ -38479,9 +38395,8 @@ public class HiveParser extends Parser {
               // org/apache/hadoop/hive/ql/parse/HiveParser.g:2184:57: ^( TOK_DESTINATION ^( TOK_DIR TOK_TMP_FILE ) )
               {
                 CommonTree root_3 = (CommonTree) adaptor.nil();
-                root_3 =
-                    (CommonTree) adaptor.becomeRoot((CommonTree) adaptor.create(TOK_DESTINATION, "TOK_DESTINATION"),
-                        root_3);
+                root_3 = (CommonTree) adaptor
+                    .becomeRoot((CommonTree) adaptor.create(TOK_DESTINATION, "TOK_DESTINATION"), root_3);
 
                 // org/apache/hadoop/hive/ql/parse/HiveParser.g:2184:75: ^( TOK_DIR TOK_TMP_FILE )
                 {
@@ -38610,12 +38525,12 @@ public class HiveParser extends Parser {
           case KW_WITH: {
             alt252 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt252) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:2191:6: w= withClause
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:2191:6: w= withClause
           {
             pushFollow(FOLLOW_withClause_in_selectStatementWithCTE13998);
             w = withClause();
@@ -38624,7 +38539,7 @@ public class HiveParser extends Parser {
 
             stream_withClause.add(w.getTree());
           }
-          break;
+            break;
         }
 
         pushFollow(FOLLOW_selectStatement_in_selectStatementWithCTE14006);
@@ -38757,13 +38672,13 @@ public class HiveParser extends Parser {
         case KW_INSERT: {
           alt273 = 1;
         }
-        break;
+          break;
         case KW_MAP:
         case KW_REDUCE:
         case KW_SELECT: {
           alt273 = 2;
         }
-        break;
+          break;
         default:
           NoViableAltException nvae = new NoViableAltException("", 273, 0, input);
 
@@ -38772,7 +38687,7 @@ public class HiveParser extends Parser {
 
       switch (alt273) {
         case 1:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:2202:4: insertClause selectClause ( lateralView )? ( whereClause )? ( groupByClause )? ( havingClause )? ( orderByClause )? ( clusterByClause )? ( distributeByClause )? ( sortByClause )? ( window_clause )? ( limitClause )?
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:2202:4: insertClause selectClause ( lateralView )? ( whereClause )? ( groupByClause )? ( havingClause )? ( orderByClause )? ( clusterByClause )? ( distributeByClause )? ( sortByClause )? ( window_clause )? ( limitClause )?
         {
           pushFollow(FOLLOW_insertClause_in_body14037);
           insertClause861 = insertClause();
@@ -38794,12 +38709,12 @@ public class HiveParser extends Parser {
             case KW_LATERAL: {
               alt253 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt253) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:2204:4: lateralView
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:2204:4: lateralView
             {
               pushFollow(FOLLOW_lateralView_in_body14047);
               lateralView863 = lateralView();
@@ -38808,7 +38723,7 @@ public class HiveParser extends Parser {
 
               stream_lateralView.add(lateralView863.getTree());
             }
-            break;
+              break;
           }
 
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:2205:4: ( whereClause )?
@@ -38817,12 +38732,12 @@ public class HiveParser extends Parser {
             case KW_WHERE: {
               alt254 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt254) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:2205:4: whereClause
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:2205:4: whereClause
             {
               pushFollow(FOLLOW_whereClause_in_body14053);
               whereClause864 = whereClause();
@@ -38831,7 +38746,7 @@ public class HiveParser extends Parser {
 
               stream_whereClause.add(whereClause864.getTree());
             }
-            break;
+              break;
           }
 
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:2206:4: ( groupByClause )?
@@ -38840,12 +38755,12 @@ public class HiveParser extends Parser {
             case KW_GROUP: {
               alt255 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt255) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:2206:4: groupByClause
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:2206:4: groupByClause
             {
               pushFollow(FOLLOW_groupByClause_in_body14059);
               groupByClause865 = groupByClause();
@@ -38854,7 +38769,7 @@ public class HiveParser extends Parser {
 
               stream_groupByClause.add(groupByClause865.getTree());
             }
-            break;
+              break;
           }
 
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:2207:4: ( havingClause )?
@@ -38863,12 +38778,12 @@ public class HiveParser extends Parser {
             case KW_HAVING: {
               alt256 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt256) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:2207:4: havingClause
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:2207:4: havingClause
             {
               pushFollow(FOLLOW_havingClause_in_body14065);
               havingClause866 = havingClause();
@@ -38877,7 +38792,7 @@ public class HiveParser extends Parser {
 
               stream_havingClause.add(havingClause866.getTree());
             }
-            break;
+              break;
           }
 
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:2208:4: ( orderByClause )?
@@ -38886,12 +38801,12 @@ public class HiveParser extends Parser {
             case KW_ORDER: {
               alt257 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt257) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:2208:4: orderByClause
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:2208:4: orderByClause
             {
               pushFollow(FOLLOW_orderByClause_in_body14071);
               orderByClause867 = orderByClause();
@@ -38900,7 +38815,7 @@ public class HiveParser extends Parser {
 
               stream_orderByClause.add(orderByClause867.getTree());
             }
-            break;
+              break;
           }
 
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:2209:4: ( clusterByClause )?
@@ -38909,12 +38824,12 @@ public class HiveParser extends Parser {
             case KW_CLUSTER: {
               alt258 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt258) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:2209:4: clusterByClause
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:2209:4: clusterByClause
             {
               pushFollow(FOLLOW_clusterByClause_in_body14077);
               clusterByClause868 = clusterByClause();
@@ -38923,7 +38838,7 @@ public class HiveParser extends Parser {
 
               stream_clusterByClause.add(clusterByClause868.getTree());
             }
-            break;
+              break;
           }
 
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:2210:4: ( distributeByClause )?
@@ -38932,12 +38847,12 @@ public class HiveParser extends Parser {
             case KW_DISTRIBUTE: {
               alt259 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt259) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:2210:4: distributeByClause
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:2210:4: distributeByClause
             {
               pushFollow(FOLLOW_distributeByClause_in_body14083);
               distributeByClause869 = distributeByClause();
@@ -38946,7 +38861,7 @@ public class HiveParser extends Parser {
 
               stream_distributeByClause.add(distributeByClause869.getTree());
             }
-            break;
+              break;
           }
 
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:2211:4: ( sortByClause )?
@@ -38955,12 +38870,12 @@ public class HiveParser extends Parser {
             case KW_SORT: {
               alt260 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt260) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:2211:4: sortByClause
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:2211:4: sortByClause
             {
               pushFollow(FOLLOW_sortByClause_in_body14089);
               sortByClause870 = sortByClause();
@@ -38969,7 +38884,7 @@ public class HiveParser extends Parser {
 
               stream_sortByClause.add(sortByClause870.getTree());
             }
-            break;
+              break;
           }
 
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:2212:4: ( window_clause )?
@@ -38978,12 +38893,12 @@ public class HiveParser extends Parser {
             case KW_WINDOW: {
               alt261 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt261) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:2212:4: window_clause
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:2212:4: window_clause
             {
               pushFollow(FOLLOW_window_clause_in_body14095);
               window_clause871 = window_clause();
@@ -38992,7 +38907,7 @@ public class HiveParser extends Parser {
 
               stream_window_clause.add(window_clause871.getTree());
             }
-            break;
+              break;
           }
 
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:2213:4: ( limitClause )?
@@ -39001,12 +38916,12 @@ public class HiveParser extends Parser {
             case KW_LIMIT: {
               alt262 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt262) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:2213:4: limitClause
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:2213:4: limitClause
             {
               pushFollow(FOLLOW_limitClause_in_body14101);
               limitClause872 = limitClause();
@@ -39015,7 +38930,7 @@ public class HiveParser extends Parser {
 
               stream_limitClause.add(limitClause872.getTree());
             }
-            break;
+              break;
           }
 
           // AST REWRITE
@@ -39107,9 +39022,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 2:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:2217:4: selectClause ( lateralView )? ( whereClause )? ( groupByClause )? ( havingClause )? ( orderByClause )? ( clusterByClause )? ( distributeByClause )? ( sortByClause )? ( window_clause )? ( limitClause )?
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:2217:4: selectClause ( lateralView )? ( whereClause )? ( groupByClause )? ( havingClause )? ( orderByClause )? ( clusterByClause )? ( distributeByClause )? ( sortByClause )? ( window_clause )? ( limitClause )?
         {
           pushFollow(FOLLOW_selectClause_in_body14194);
           selectClause873 = selectClause();
@@ -39124,12 +39039,12 @@ public class HiveParser extends Parser {
             case KW_LATERAL: {
               alt263 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt263) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:2218:4: lateralView
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:2218:4: lateralView
             {
               pushFollow(FOLLOW_lateralView_in_body14199);
               lateralView874 = lateralView();
@@ -39138,7 +39053,7 @@ public class HiveParser extends Parser {
 
               stream_lateralView.add(lateralView874.getTree());
             }
-            break;
+              break;
           }
 
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:2219:4: ( whereClause )?
@@ -39147,12 +39062,12 @@ public class HiveParser extends Parser {
             case KW_WHERE: {
               alt264 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt264) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:2219:4: whereClause
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:2219:4: whereClause
             {
               pushFollow(FOLLOW_whereClause_in_body14205);
               whereClause875 = whereClause();
@@ -39161,7 +39076,7 @@ public class HiveParser extends Parser {
 
               stream_whereClause.add(whereClause875.getTree());
             }
-            break;
+              break;
           }
 
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:2220:4: ( groupByClause )?
@@ -39170,12 +39085,12 @@ public class HiveParser extends Parser {
             case KW_GROUP: {
               alt265 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt265) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:2220:4: groupByClause
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:2220:4: groupByClause
             {
               pushFollow(FOLLOW_groupByClause_in_body14211);
               groupByClause876 = groupByClause();
@@ -39184,7 +39099,7 @@ public class HiveParser extends Parser {
 
               stream_groupByClause.add(groupByClause876.getTree());
             }
-            break;
+              break;
           }
 
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:2221:4: ( havingClause )?
@@ -39193,12 +39108,12 @@ public class HiveParser extends Parser {
             case KW_HAVING: {
               alt266 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt266) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:2221:4: havingClause
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:2221:4: havingClause
             {
               pushFollow(FOLLOW_havingClause_in_body14217);
               havingClause877 = havingClause();
@@ -39207,7 +39122,7 @@ public class HiveParser extends Parser {
 
               stream_havingClause.add(havingClause877.getTree());
             }
-            break;
+              break;
           }
 
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:2222:4: ( orderByClause )?
@@ -39216,12 +39131,12 @@ public class HiveParser extends Parser {
             case KW_ORDER: {
               alt267 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt267) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:2222:4: orderByClause
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:2222:4: orderByClause
             {
               pushFollow(FOLLOW_orderByClause_in_body14223);
               orderByClause878 = orderByClause();
@@ -39230,7 +39145,7 @@ public class HiveParser extends Parser {
 
               stream_orderByClause.add(orderByClause878.getTree());
             }
-            break;
+              break;
           }
 
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:2223:4: ( clusterByClause )?
@@ -39239,12 +39154,12 @@ public class HiveParser extends Parser {
             case KW_CLUSTER: {
               alt268 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt268) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:2223:4: clusterByClause
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:2223:4: clusterByClause
             {
               pushFollow(FOLLOW_clusterByClause_in_body14229);
               clusterByClause879 = clusterByClause();
@@ -39253,7 +39168,7 @@ public class HiveParser extends Parser {
 
               stream_clusterByClause.add(clusterByClause879.getTree());
             }
-            break;
+              break;
           }
 
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:2224:4: ( distributeByClause )?
@@ -39262,12 +39177,12 @@ public class HiveParser extends Parser {
             case KW_DISTRIBUTE: {
               alt269 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt269) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:2224:4: distributeByClause
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:2224:4: distributeByClause
             {
               pushFollow(FOLLOW_distributeByClause_in_body14235);
               distributeByClause880 = distributeByClause();
@@ -39276,7 +39191,7 @@ public class HiveParser extends Parser {
 
               stream_distributeByClause.add(distributeByClause880.getTree());
             }
-            break;
+              break;
           }
 
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:2225:4: ( sortByClause )?
@@ -39285,12 +39200,12 @@ public class HiveParser extends Parser {
             case KW_SORT: {
               alt270 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt270) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:2225:4: sortByClause
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:2225:4: sortByClause
             {
               pushFollow(FOLLOW_sortByClause_in_body14241);
               sortByClause881 = sortByClause();
@@ -39299,7 +39214,7 @@ public class HiveParser extends Parser {
 
               stream_sortByClause.add(sortByClause881.getTree());
             }
-            break;
+              break;
           }
 
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:2226:4: ( window_clause )?
@@ -39308,12 +39223,12 @@ public class HiveParser extends Parser {
             case KW_WINDOW: {
               alt271 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt271) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:2226:4: window_clause
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:2226:4: window_clause
             {
               pushFollow(FOLLOW_window_clause_in_body14247);
               window_clause882 = window_clause();
@@ -39322,7 +39237,7 @@ public class HiveParser extends Parser {
 
               stream_window_clause.add(window_clause882.getTree());
             }
-            break;
+              break;
           }
 
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:2227:4: ( limitClause )?
@@ -39331,12 +39246,12 @@ public class HiveParser extends Parser {
             case KW_LIMIT: {
               alt272 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt272) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:2227:4: limitClause
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:2227:4: limitClause
             {
               pushFollow(FOLLOW_limitClause_in_body14253);
               limitClause883 = limitClause();
@@ -39345,7 +39260,7 @@ public class HiveParser extends Parser {
 
               stream_limitClause.add(limitClause883.getTree());
             }
-            break;
+              break;
           }
 
           // AST REWRITE
@@ -39370,9 +39285,8 @@ public class HiveParser extends Parser {
               // org/apache/hadoop/hive/ql/parse/HiveParser.g:2227:33: ^( TOK_DESTINATION ^( TOK_DIR TOK_TMP_FILE ) )
               {
                 CommonTree root_2 = (CommonTree) adaptor.nil();
-                root_2 =
-                    (CommonTree) adaptor.becomeRoot((CommonTree) adaptor.create(TOK_DESTINATION, "TOK_DESTINATION"),
-                        root_2);
+                root_2 = (CommonTree) adaptor
+                    .becomeRoot((CommonTree) adaptor.create(TOK_DESTINATION, "TOK_DESTINATION"), root_2);
 
                 // org/apache/hadoop/hive/ql/parse/HiveParser.g:2227:51: ^( TOK_DIR TOK_TMP_FILE )
                 {
@@ -39455,7 +39369,7 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
       }
       retval.stop = input.LT(-1);
 
@@ -39522,18 +39436,18 @@ public class HiveParser extends Parser {
             case KW_OVERWRITE: {
               alt276 = 1;
             }
-            break;
+              break;
             case KW_INTO: {
               alt276 = 2;
             }
-            break;
+              break;
             default:
               NoViableAltException nvae = new NoViableAltException("", 276, 1, input);
 
               throw nvae;
           }
         }
-        break;
+          break;
         default:
           NoViableAltException nvae = new NoViableAltException("", 276, 0, input);
 
@@ -39542,7 +39456,7 @@ public class HiveParser extends Parser {
 
       switch (alt276) {
         case 1:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:2236:6: KW_INSERT KW_OVERWRITE destination ( ifNotExists )?
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:2236:6: KW_INSERT KW_OVERWRITE destination ( ifNotExists )?
         {
           KW_INSERT884 = (Token) match(input, KW_INSERT, FOLLOW_KW_INSERT_in_insertClause14374);
           stream_KW_INSERT.add(KW_INSERT884);
@@ -39563,12 +39477,12 @@ public class HiveParser extends Parser {
             case KW_IF: {
               alt274 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt274) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:2236:41: ifNotExists
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:2236:41: ifNotExists
             {
               pushFollow(FOLLOW_ifNotExists_in_insertClause14380);
               ifNotExists887 = ifNotExists();
@@ -39577,7 +39491,7 @@ public class HiveParser extends Parser {
 
               stream_ifNotExists.add(ifNotExists887.getTree());
             }
-            break;
+              break;
           }
 
           // AST REWRITE
@@ -39614,9 +39528,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 2:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:2237:6: KW_INSERT KW_INTO ( KW_TABLE )? tableOrPartition
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:2237:6: KW_INSERT KW_INTO ( KW_TABLE )? tableOrPartition
         {
           KW_INSERT888 = (Token) match(input, KW_INSERT, FOLLOW_KW_INSERT_in_insertClause14399);
           stream_KW_INSERT.add(KW_INSERT888);
@@ -39846,7 +39760,7 @@ public class HiveParser extends Parser {
                 case KW_WITH: {
                   alt275 = 1;
                 }
-                break;
+                  break;
                 case KW_PARTITION: {
                   switch (input.LA(3)) {
                     case DOT:
@@ -39857,10 +39771,10 @@ public class HiveParser extends Parser {
                     case KW_VALUES: {
                       alt275 = 1;
                     }
-                    break;
+                      break;
                   }
                 }
-                break;
+                  break;
                 case KW_VALUES: {
                   switch (input.LA(3)) {
                     case DOT:
@@ -39871,23 +39785,23 @@ public class HiveParser extends Parser {
                     case KW_VALUES: {
                       alt275 = 1;
                     }
-                    break;
+                      break;
                   }
                 }
-                break;
+                  break;
               }
             }
-            break;
+              break;
           }
 
           switch (alt275) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:2237:24: KW_TABLE
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:2237:24: KW_TABLE
             {
               KW_TABLE890 = (Token) match(input, KW_TABLE, FOLLOW_KW_TABLE_in_insertClause14403);
               stream_KW_TABLE.add(KW_TABLE890);
             }
-            break;
+              break;
           }
 
           pushFollow(FOLLOW_tableOrPartition_in_insertClause14406);
@@ -39925,7 +39839,7 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
       }
       retval.stop = input.LT(-1);
 
@@ -39991,11 +39905,11 @@ public class HiveParser extends Parser {
         case KW_LOCAL: {
           alt280 = 1;
         }
-        break;
+          break;
         case KW_TABLE: {
           alt280 = 2;
         }
-        break;
+          break;
         default:
           NoViableAltException nvae = new NoViableAltException("", 280, 0, input);
 
@@ -40004,7 +39918,7 @@ public class HiveParser extends Parser {
 
       switch (alt280) {
         case 1:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:2245:6: (local= KW_LOCAL )? KW_DIRECTORY StringLiteral ( tableRowFormat )? ( tableFileFormat )?
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:2245:6: (local= KW_LOCAL )? KW_DIRECTORY StringLiteral ( tableRowFormat )? ( tableFileFormat )?
         {
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:2245:6: (local= KW_LOCAL )?
           int alt277 = 2;
@@ -40012,17 +39926,17 @@ public class HiveParser extends Parser {
             case KW_LOCAL: {
               alt277 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt277) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:2245:7: local= KW_LOCAL
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:2245:7: local= KW_LOCAL
             {
               local = (Token) match(input, KW_LOCAL, FOLLOW_KW_LOCAL_in_destination14456);
               stream_KW_LOCAL.add(local);
             }
-            break;
+              break;
           }
 
           KW_DIRECTORY892 = (Token) match(input, KW_DIRECTORY, FOLLOW_KW_DIRECTORY_in_destination14460);
@@ -40037,12 +39951,12 @@ public class HiveParser extends Parser {
             case KW_ROW: {
               alt278 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt278) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:2245:53: tableRowFormat
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:2245:53: tableRowFormat
             {
               pushFollow(FOLLOW_tableRowFormat_in_destination14464);
               tableRowFormat894 = tableRowFormat();
@@ -40051,7 +39965,7 @@ public class HiveParser extends Parser {
 
               stream_tableRowFormat.add(tableRowFormat894.getTree());
             }
-            break;
+              break;
           }
 
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:2245:69: ( tableFileFormat )?
@@ -40060,12 +39974,12 @@ public class HiveParser extends Parser {
             case KW_STORED: {
               alt279 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt279) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:2245:69: tableFileFormat
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:2245:69: tableFileFormat
             {
               pushFollow(FOLLOW_tableFileFormat_in_destination14467);
               tableFileFormat895 = tableFileFormat();
@@ -40074,7 +39988,7 @@ public class HiveParser extends Parser {
 
               stream_tableFileFormat.add(tableFileFormat895.getTree());
             }
-            break;
+              break;
           }
 
           // AST REWRITE
@@ -40123,9 +40037,9 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
         case 2:
-          // org/apache/hadoop/hive/ql/parse/HiveParser.g:2247:6: KW_TABLE tableOrPartition
+        // org/apache/hadoop/hive/ql/parse/HiveParser.g:2247:6: KW_TABLE tableOrPartition
         {
           KW_TABLE896 = (Token) match(input, KW_TABLE, FOLLOW_KW_TABLE_in_destination14500);
           stream_KW_TABLE.add(KW_TABLE896);
@@ -40156,7 +40070,7 @@ public class HiveParser extends Parser {
 
           retval.tree = root_0;
         }
-        break;
+          break;
       }
       retval.stop = input.LT(-1);
 
@@ -40310,12 +40224,12 @@ public class HiveParser extends Parser {
           case KW_WHERE: {
             alt281 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt281) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:2262:33: whereClause
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:2262:33: whereClause
           {
             pushFollow(FOLLOW_whereClause_in_deleteStatement14583);
             whereClause902 = whereClause();
@@ -40324,7 +40238,7 @@ public class HiveParser extends Parser {
 
             stream_whereClause.add(whereClause902.getTree());
           }
-          break;
+            break;
         }
 
         // AST REWRITE
@@ -40487,19 +40401,18 @@ public class HiveParser extends Parser {
         stream_columnAssignmentClause.add(columnAssignmentClause907.getTree());
 
         // org/apache/hadoop/hive/ql/parse/HiveParser.g:2274:34: ( COMMA columnAssignmentClause )*
-        loop282:
-        do {
+        loop282: do {
           int alt282 = 2;
           switch (input.LA(1)) {
             case COMMA: {
               alt282 = 1;
             }
-            break;
+              break;
           }
 
           switch (alt282) {
             case 1:
-              // org/apache/hadoop/hive/ql/parse/HiveParser.g:2274:35: COMMA columnAssignmentClause
+            // org/apache/hadoop/hive/ql/parse/HiveParser.g:2274:35: COMMA columnAssignmentClause
             {
               COMMA908 = (Token) match(input, COMMA, FOLLOW_COMMA_in_setColumnsClause14646);
               stream_COMMA.add(COMMA908);
@@ -40511,7 +40424,7 @@ public class HiveParser extends Parser {
 
               stream_columnAssignmentClause.add(columnAssignmentClause909.getTree());
             }
-            break;
+              break;
 
             default:
               break loop282;
@@ -40535,8 +40448,8 @@ public class HiveParser extends Parser {
           // org/apache/hadoop/hive/ql/parse/HiveParser.g:2274:69: ^( TOK_SET_COLUMNS_CLAUSE ( columnAssignmentClause )* )
           {
             CommonTree root_1 = (CommonTree) adaptor.nil();
-            root_1 = (CommonTree) adaptor.becomeRoot(
-                (CommonTree) adaptor.create(TOK_SET_COLUMNS_CLAUSE, "TOK_SET_COLUMNS_CLAUSE"), root_1);
+            root_1 = (CommonTree) adaptor
+                .becomeRoot((CommonTree) adaptor.create(TOK_SET_COLUMNS_CLAUSE, "TOK_SET_COLUMNS_CLAUSE"), root_1);
 
             // org/apache/hadoop/hive/ql/parse/HiveParser.g:2274:94: ( columnAssignmentClause )*
             while (stream_columnAssignmentClause.hasNext()) {
@@ -40623,12 +40536,12 @@ public class HiveParser extends Parser {
           case KW_WHERE: {
             alt283 = 1;
           }
-          break;
+            break;
         }
 
         switch (alt283) {
           case 1:
-            // org/apache/hadoop/hive/ql/parse/HiveParser.g:2285:41: whereClause
+          // org/apache/hadoop/hive/ql/parse/HiveParser.g:2285:41: whereClause
           {
             pushFollow(FOLLOW_whereClause_in_updateStatement14696);
             whereClause913 = whereClause();
@@ -40637,7 +40550,7 @@ public class HiveParser extends Parser {
 
             stream_whereClause.add(whereClause913.getTree());
           }
-          break;
+            break;
         }
 
         // AST REWRITE
@@ -41202,39 +41115,35 @@ public class HiveParser extends Parser {
       + "\1\34\1\uffff\1\34\1\uffff\1\34\1\uffff\1\34\1\uffff\1\34\1\uffff"
       + "\1\34\1\uffff\1\34\1\uffff\1\34\1\uffff\1\34\1\uffff\1\34\1\uffff" + "\1\34";
   static final String DFA12_specialS = "\u00b5\uffff}>";
-  static final String[] DFA12_transitionS = {"\1\5\1\13\41\uffff\1\1\23\uffff\2\6\6\uffff\1\3\33\uffff\1\16"
+  static final String[] DFA12_transitionS = { "\1\5\1\13\41\uffff\1\1\23\uffff\2\6\6\uffff\1\3\33\uffff\1\16"
       + "\42\uffff\1\14\12\uffff\1\11\50\uffff\1\12\5\uffff\1\17\17\uffff"
-      + "\1\20\2\uffff\1\10\32\uffff\1\4\6\uffff\1\15\4\uffff\1\2",
-      "\1\24\37\uffff\1\26\15\uffff\1\32\13\uffff\1\22\55\uffff\1"
-          + "\30\50\uffff\1\23\4\uffff\1\24\25\uffff\1\26\3\uffff\1\21\36" + "\uffff\1\30", "",
-      "\1\40\55\uffff\1\42\13\uffff\1\35\126\uffff\1\37\4\uffff\1"
-          + "\40\25\uffff\1\33\3\uffff\1\36\36\uffff\1\34", "", "", "", "",
-      "\1\43\2\uffff\1\43\2\uffff\1\43\1\uffff\1\43\2\uffff\1\62\5"
-          + "\uffff\1\43\51\uffff\1\43\3\uffff\1\43\1\56\11\uffff\2\43\30"
-          + "\uffff\1\43\37\uffff\1\43\5\uffff\1\60\26\uffff\1\57\1\61\4"
-          + "\uffff\1\43\24\uffff\2\43\1\uffff\1\43\7\uffff\1\43", "", "", "", "\1\71\u0095\uffff\1\71\25\uffff\1\70", "\1\74\u0095\uffff\1\74\25\uffff\1\73",
-      "\4\111\1\76\1\77\1\111\1\uffff\17\111\2\uffff\1\111\1\uffff"
-          + "\4\111\1\uffff\6\111\1\uffff\1\111\1\101\1\uffff\1\111\3\uffff"
-          + "\2\111\1\uffff\10\111\1\110\7\111\1\uffff\2\111\1\102\1\111"
-          + "\1\uffff\1\111\1\uffff\1\111\1\uffff\4\111\1\uffff\10\111\1"
-          + "\uffff\3\111\1\uffff\1\111\1\uffff\4\111\1\uffff\2\111\1\uffff"
-          + "\3\111\1\103\5\111\1\107\6\111\1\uffff\4\111\1\uffff\6\111\1"
-          + "\104\3\111\2\uffff\4\111\1\uffff\3\111\1\uffff\4\111\1\uffff"
-          + "\1\111\1\uffff\5\111\1\uffff\2\111\1\uffff\5\111\2\uffff\14"
-          + "\111\1\uffff\22\111\1\105\10\111\1\106\14\111\1\uffff\3\111"
-          + "\1\uffff\5\111\1\uffff\4\111\1\uffff\3\111\1\uffff\3\111\1\100"
-          + "\10\111\1\uffff\1\111\2\uffff\1\111\1\uffff\1\111",
-      "\4\130\1\115\1\116\1\130\1\uffff\17\130\2\uffff\1\130\1\uffff"
-          + "\4\130\1\uffff\6\130\1\uffff\1\130\1\120\1\uffff\1\130\3\uffff"
-          + "\2\130\1\uffff\10\130\1\127\7\130\1\uffff\2\130\1\121\1\130"
-          + "\1\uffff\1\130\1\uffff\1\130\1\uffff\4\130\1\uffff\10\130\1"
-          + "\uffff\3\130\1\uffff\1\130\1\uffff\1\130\1\114\2\130\1\uffff"
-          + "\2\130\1\uffff\3\130\1\122\5\130\1\126\6\130\1\uffff\4\130\1"
-          + "\uffff\6\130\1\123\3\130\2\uffff\4\130\1\uffff\3\130\1\uffff"
-          + "\4\130\1\uffff\1\130\1\uffff\5\130\1\uffff\2\130\1\uffff\5\130"
-          + "\2\uffff\14\130\1\uffff\22\130\1\124\10\130\1\125\14\130\1\uffff"
-          + "\3\130\1\uffff\5\130\1\uffff\4\130\1\uffff\3\130\1\uffff\3\130"
-          + "\1\117\10\130\1\uffff\1\130\2\uffff\1\130\1\uffff\1\130", "", "\1\26\15\uffff\1\32\50\uffff\1\134\124\uffff\1\26", "", "", "", "", "", "", "", "", "", "", "", "", "\1\42\50\uffff\1\140", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "\1\143\u00a5\uffff\1\105\116\uffff\1\145\42\uffff\1\105", "\1\147\u00a5\uffff\1\105\116\uffff\1\151\42\uffff\1\105", "\1\153\u00a5\uffff\1\105\116\uffff\1\155\42\uffff\1\105", "\1\157\u00a5\uffff\1\105\116\uffff\1\161\42\uffff\1\105", "\1\163\u00a5\uffff\1\105\116\uffff\1\165\42\uffff\1\105", "\1\167\u00a5\uffff\1\105\116\uffff\1\171\42\uffff\1\105", "\1\173\u00a5\uffff\1\105\116\uffff\1\175\42\uffff\1\105", "", "\1\177\u00a5\uffff\1\105\116\uffff\1\u0081\42\uffff\1\105", "\1\u0083\u00a5\uffff\1\105\116\uffff\1\u0085\42\uffff\1\105", "\1\u0087\u00a5\uffff\1\105\116\uffff\1\u0089\42\uffff\1\105", "", "", "", "\1\130\153\uffff\1\130\72\uffff\1\124", "\1\u008e\153\uffff\1\u0090\71\uffff\1\124\161\uffff\1\124", "\1\u0092\153\uffff\1\u0094\71\uffff\1\124\161\uffff\1\124", "\1\u0096\153\uffff\1\u0098\71\uffff\1\124\161\uffff\1\124", "\1\u009a\153\uffff\1\u009c\71\uffff\1\124\161\uffff\1\124", "\1\u009e\153\uffff\1\u00a0\71\uffff\1\124\161\uffff\1\124", "\1\u00a2\153\uffff\1\u00a4\71\uffff\1\124\161\uffff\1\124", "\1\u00a6\153\uffff\1\u00a8\71\uffff\1\124\161\uffff\1\124", "", "\1\u00aa\153\uffff\1\u00ac\71\uffff\1\124\161\uffff\1\124", "\1\u00ae\153\uffff\1\u00b0\71\uffff\1\124\161\uffff\1\124", "\1\u00b2\153\uffff\1\u00b4\71\uffff\1\124\161\uffff\1\124", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""};
+      + "\1\20\2\uffff\1\10\32\uffff\1\4\6\uffff\1\15\4\uffff\1\2", "\1\24\37\uffff\1\26\15\uffff\1\32\13\uffff\1\22\55\uffff\1"
+          + "\30\50\uffff\1\23\4\uffff\1\24\25\uffff\1\26\3\uffff\1\21\36"
+          + "\uffff\1\30", "", "\1\40\55\uffff\1\42\13\uffff\1\35\126\uffff\1\37\4\uffff\1"
+              + "\40\25\uffff\1\33\3\uffff\1\36\36\uffff\1\34", "", "", "", "", "\1\43\2\uffff\1\43\2\uffff\1\43\1\uffff\1\43\2\uffff\1\62\5"
+                  + "\uffff\1\43\51\uffff\1\43\3\uffff\1\43\1\56\11\uffff\2\43\30"
+                  + "\uffff\1\43\37\uffff\1\43\5\uffff\1\60\26\uffff\1\57\1\61\4"
+                  + "\uffff\1\43\24\uffff\2\43\1\uffff\1\43\7\uffff\1\43", "", "", "", "\1\71\u0095\uffff\1\71\25\uffff\1\70", "\1\74\u0095\uffff\1\74\25\uffff\1\73", "\4\111\1\76\1\77\1\111\1\uffff\17\111\2\uffff\1\111\1\uffff"
+                      + "\4\111\1\uffff\6\111\1\uffff\1\111\1\101\1\uffff\1\111\3\uffff"
+                      + "\2\111\1\uffff\10\111\1\110\7\111\1\uffff\2\111\1\102\1\111"
+                      + "\1\uffff\1\111\1\uffff\1\111\1\uffff\4\111\1\uffff\10\111\1"
+                      + "\uffff\3\111\1\uffff\1\111\1\uffff\4\111\1\uffff\2\111\1\uffff"
+                      + "\3\111\1\103\5\111\1\107\6\111\1\uffff\4\111\1\uffff\6\111\1"
+                      + "\104\3\111\2\uffff\4\111\1\uffff\3\111\1\uffff\4\111\1\uffff"
+                      + "\1\111\1\uffff\5\111\1\uffff\2\111\1\uffff\5\111\2\uffff\14"
+                      + "\111\1\uffff\22\111\1\105\10\111\1\106\14\111\1\uffff\3\111"
+                      + "\1\uffff\5\111\1\uffff\4\111\1\uffff\3\111\1\uffff\3\111\1\100"
+                      + "\10\111\1\uffff\1\111\2\uffff\1\111\1\uffff\1\111", "\4\130\1\115\1\116\1\130\1\uffff\17\130\2\uffff\1\130\1\uffff"
+                          + "\4\130\1\uffff\6\130\1\uffff\1\130\1\120\1\uffff\1\130\3\uffff"
+                          + "\2\130\1\uffff\10\130\1\127\7\130\1\uffff\2\130\1\121\1\130"
+                          + "\1\uffff\1\130\1\uffff\1\130\1\uffff\4\130\1\uffff\10\130\1"
+                          + "\uffff\3\130\1\uffff\1\130\1\uffff\1\130\1\114\2\130\1\uffff"
+                          + "\2\130\1\uffff\3\130\1\122\5\130\1\126\6\130\1\uffff\4\130\1"
+                          + "\uffff\6\130\1\123\3\130\2\uffff\4\130\1\uffff\3\130\1\uffff"
+                          + "\4\130\1\uffff\1\130\1\uffff\5\130\1\uffff\2\130\1\uffff\5\130"
+                          + "\2\uffff\14\130\1\uffff\22\130\1\124\10\130\1\125\14\130\1\uffff"
+                          + "\3\130\1\uffff\5\130\1\uffff\4\130\1\uffff\3\130\1\uffff\3\130"
+                          + "\1\117\10\130\1\uffff\1\130\2\uffff\1\130\1\uffff\1\130", "", "\1\26\15\uffff\1\32\50\uffff\1\134\124\uffff\1\26", "", "", "", "", "", "", "", "", "", "", "", "", "\1\42\50\uffff\1\140", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "\1\143\u00a5\uffff\1\105\116\uffff\1\145\42\uffff\1\105", "\1\147\u00a5\uffff\1\105\116\uffff\1\151\42\uffff\1\105", "\1\153\u00a5\uffff\1\105\116\uffff\1\155\42\uffff\1\105", "\1\157\u00a5\uffff\1\105\116\uffff\1\161\42\uffff\1\105", "\1\163\u00a5\uffff\1\105\116\uffff\1\165\42\uffff\1\105", "\1\167\u00a5\uffff\1\105\116\uffff\1\171\42\uffff\1\105", "\1\173\u00a5\uffff\1\105\116\uffff\1\175\42\uffff\1\105", "", "\1\177\u00a5\uffff\1\105\116\uffff\1\u0081\42\uffff\1\105", "\1\u0083\u00a5\uffff\1\105\116\uffff\1\u0085\42\uffff\1\105", "\1\u0087\u00a5\uffff\1\105\116\uffff\1\u0089\42\uffff\1\105", "", "", "", "\1\130\153\uffff\1\130\72\uffff\1\124", "\1\u008e\153\uffff\1\u0090\71\uffff\1\124\161\uffff\1\124", "\1\u0092\153\uffff\1\u0094\71\uffff\1\124\161\uffff\1\124", "\1\u0096\153\uffff\1\u0098\71\uffff\1\124\161\uffff\1\124", "\1\u009a\153\uffff\1\u009c\71\uffff\1\124\161\uffff\1\124", "\1\u009e\153\uffff\1\u00a0\71\uffff\1\124\161\uffff\1\124", "\1\u00a2\153\uffff\1\u00a4\71\uffff\1\124\161\uffff\1\124", "\1\u00a6\153\uffff\1\u00a8\71\uffff\1\124\161\uffff\1\124", "", "\1\u00aa\153\uffff\1\u00ac\71\uffff\1\124\161\uffff\1\124", "\1\u00ae\153\uffff\1\u00b0\71\uffff\1\124\161\uffff\1\124", "\1\u00b2\153\uffff\1\u00b4\71\uffff\1\124\161\uffff\1\124", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "" };
 
   static final short[] DFA12_eot = DFA.unpackEncodedString(DFA12_eotS);
   static final short[] DFA12_eof = DFA.unpackEncodedString(DFA12_eofS);
@@ -41277,12 +41186,12 @@ public class HiveParser extends Parser {
   static final String DFA204_maxS = "\1\u012d\1\u0135\35\uffff\1\u0131\67\uffff";
   static final String DFA204_acceptS = "\2\uffff\1\2\70\uffff\1\1\33\uffff";
   static final String DFA204_specialS = "\127\uffff}>";
-  static final String[] DFA204_transitionS = {"\1\2\20\uffff\1\2\5\uffff\1\2\40\uffff\1\2\31\uffff\1\2\4\uffff"
+  static final String[] DFA204_transitionS = { "\1\2\20\uffff\1\2\5\uffff\1\2\40\uffff\1\2\31\uffff\1\2\4\uffff"
       + "\1\2\1\uffff\1\2\2\uffff\1\2\11\uffff\1\2\11\uffff\1\2\3\uffff"
       + "\2\2\2\uffff\1\2\5\uffff\1\1\12\uffff\1\2\5\uffff\1\2\31\uffff"
       + "\3\2\22\uffff\1\2\13\uffff\1\2\3\uffff\1\2\6\uffff\1\2\17\uffff"
-      + "\1\2\11\uffff\1\2\2\uffff\1\2\4\uffff\1\2\1\uffff\1\2\17\uffff" + "\1\2",
-      "\1\2\5\uffff\1\2\4\uffff\1\2\7\uffff\7\2\1\uffff\22\2\1\uffff"
+      + "\1\2\11\uffff\1\2\2\uffff\1\2\4\uffff\1\2\1\uffff\1\2\17\uffff"
+      + "\1\2", "\1\2\5\uffff\1\2\4\uffff\1\2\7\uffff\7\2\1\uffff\22\2\1\uffff"
           + "\4\2\1\uffff\6\2\1\uffff\2\2\1\uffff\1\2\1\uffff\4\2\1\uffff"
           + "\20\2\1\uffff\4\2\1\uffff\1\2\1\uffff\1\2\1\uffff\4\2\1\uffff"
           + "\10\2\1\uffff\3\2\1\uffff\1\2\1\uffff\4\2\1\uffff\23\2\1\uffff"
@@ -41290,12 +41199,11 @@ public class HiveParser extends Parser {
           + "\1\uffff\5\2\1\uffff\2\2\1\uffff\5\2\2\uffff\14\2\1\uffff\22"
           + "\2\1\uffff\25\2\1\uffff\3\2\1\uffff\5\2\1\uffff\4\2\1\uffff"
           + "\3\2\1\uffff\14\2\1\uffff\1\2\2\uffff\1\2\1\uffff\1\2\3\uffff"
-          + "\1\2\2\uffff\1\2\2\uffff\2\2\7\uffff\5\2", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "",
-      "\3\2\3\uffff\1\2\3\uffff\2\2\1\uffff\1\2\2\uffff\2\2\1\uffff"
-          + "\2\2\10\uffff\1\2\6\uffff\1\2\132\uffff\1\2\12\uffff\1\2\10"
-          + "\uffff\1\2\23\uffff\1\2\6\uffff\1\2\33\uffff\1\2\1\uffff\1\2"
-          + "\11\uffff\1\2\3\uffff\1\2\34\uffff\1\73\27\uffff\1\2\14\uffff"
-          + "\4\2\1\uffff\3\2\1\uffff\1\2\7\uffff\1\2", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""};
+          + "\1\2\2\uffff\1\2\2\uffff\2\2\7\uffff\5\2", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "\3\2\3\uffff\1\2\3\uffff\2\2\1\uffff\1\2\2\uffff\2\2\1\uffff"
+              + "\2\2\10\uffff\1\2\6\uffff\1\2\132\uffff\1\2\12\uffff\1\2\10"
+              + "\uffff\1\2\23\uffff\1\2\6\uffff\1\2\33\uffff\1\2\1\uffff\1\2"
+              + "\11\uffff\1\2\3\uffff\1\2\34\uffff\1\73\27\uffff\1\2\14\uffff"
+              + "\4\2\1\uffff\3\2\1\uffff\1\2\7\uffff\1\2", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "" };
 
   static final short[] DFA204_eot = DFA.unpackEncodedString(DFA204_eotS);
   static final short[] DFA204_eof = DFA.unpackEncodedString(DFA204_eofS);
@@ -41332,1892 +41240,1945 @@ public class HiveParser extends Parser {
     }
   }
 
-  public static final BitSet FOLLOW_explainStatement_in_statement1034 = new BitSet(new long[]{0x0000000000000000L});
-  public static final BitSet FOLLOW_EOF_in_statement1036 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_execStatement_in_statement1041 = new BitSet(new long[]{0x0000000000000000L});
-  public static final BitSet FOLLOW_EOF_in_statement1043 = new BitSet(new long[]{0x0000000000000002L});
+  public static final BitSet FOLLOW_explainStatement_in_statement1034 = new BitSet(new long[] { 0x0000000000000000L });
+  public static final BitSet FOLLOW_EOF_in_statement1036 = new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_execStatement_in_statement1041 = new BitSet(new long[] { 0x0000000000000000L });
+  public static final BitSet FOLLOW_EOF_in_statement1043 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_EXPLAIN_in_explainStatement1064 = new BitSet(
-      new long[]{0x0000004180000000L, 0x0460030040E80004L, 0x00000104A4000404L, 0x0000048401828000L, 0x0000000040029020L});
+      new long[] { 0x0000004180000000L, 0x0460030040E80004L, 0x00000104A4000404L, 0x0000048401828000L, 0x0000000040029020L });
   public static final BitSet FOLLOW_explainOption_in_explainStatement1073 = new BitSet(
-      new long[]{0x0000004180000000L, 0x0460030040E80004L, 0x00000104A4000404L, 0x0000048400828000L, 0x0000000040029020L});
-  public static final BitSet FOLLOW_execStatement_in_explainStatement1076 = new BitSet(new long[]{0x0000000000000002L});
+      new long[] { 0x0000004180000000L, 0x0460030040E80004L, 0x00000104A4000404L, 0x0000048400828000L, 0x0000000040029020L });
+  public static final BitSet FOLLOW_execStatement_in_explainStatement1076 =
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_REWRITE_in_explainStatement1107 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0040000000000000L, 0x0000000400000400L, 0x0000000400008000L, 0x0000000040000000L});
+      new long[] { 0x0000000000000000L, 0x0040000000000000L, 0x0000000400000400L, 0x0000000400008000L, 0x0000000040000000L });
   public static final BitSet FOLLOW_queryStatementExpression_in_explainStatement1109 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_queryStatementExpression_in_execStatement1178 =
-      new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_loadStatement_in_execStatement1187 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_exportStatement_in_execStatement1195 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_importStatement_in_execStatement1203 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_ddlStatement_in_execStatement1211 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_deleteStatement_in_execStatement1219 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_updateStatement_in_execStatement1227 = new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_loadStatement_in_execStatement1187 = new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_exportStatement_in_execStatement1195 =
+      new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_importStatement_in_execStatement1203 =
+      new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_ddlStatement_in_execStatement1211 = new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_deleteStatement_in_execStatement1219 =
+      new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_updateStatement_in_execStatement1227 =
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_LOAD_in_loadStatement1254 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000200L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000200L });
   public static final BitSet FOLLOW_KW_DATA_in_loadStatement1256 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000008000080L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000008000080L });
   public static final BitSet FOLLOW_KW_LOCAL_in_loadStatement1261 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000080L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000080L });
   public static final BitSet FOLLOW_KW_INPATH_in_loadStatement1265 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L });
   public static final BitSet FOLLOW_StringLiteral_in_loadStatement1270 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0200000000002000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0200000000002000L });
   public static final BitSet FOLLOW_KW_OVERWRITE_in_loadStatement1276 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000002000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000002000L });
   public static final BitSet FOLLOW_KW_INTO_in_loadStatement1280 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0040000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0040000000000000L });
   public static final BitSet FOLLOW_KW_TABLE_in_loadStatement1282 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
-  public static final BitSet FOLLOW_tableOrPartition_in_loadStatement1287 = new BitSet(new long[]{0x0000000000000002L});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
+  public static final BitSet FOLLOW_tableOrPartition_in_loadStatement1287 =
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_FOR_in_replicationClause1339 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000002000000000L, 0x0000000000200000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000002000000000L, 0x0000000000200000L });
   public static final BitSet FOLLOW_KW_METADATA_in_replicationClause1344 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000200000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000200000L });
   public static final BitSet FOLLOW_KW_REPLICATION_in_replicationClause1348 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L });
   public static final BitSet FOLLOW_LPAREN_in_replicationClause1350 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L });
   public static final BitSet FOLLOW_StringLiteral_in_replicationClause1355 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000200000000000L});
-  public static final BitSet FOLLOW_RPAREN_in_replicationClause1358 = new BitSet(new long[]{0x0000000000000002L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000200000000000L });
+  public static final BitSet FOLLOW_RPAREN_in_replicationClause1358 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_EXPORT_in_exportStatement1402 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0040000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0040000000000000L });
   public static final BitSet FOLLOW_KW_TABLE_in_exportStatement1410 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_tableOrPartition_in_exportStatement1415 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x8000000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x8000000000000000L });
   public static final BitSet FOLLOW_KW_TO_in_exportStatement1424 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L });
   public static final BitSet FOLLOW_StringLiteral_in_exportStatement1429 =
-      new BitSet(new long[]{0x0000000000000002L, 0x0008000000000000L});
+      new BitSet(new long[] { 0x0000000000000002L, 0x0008000000000000L });
   public static final BitSet FOLLOW_replicationClause_in_exportStatement1438 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_IMPORT_in_importStatement1488 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0040040000000000L, 0x0000000000000000L, 0x0040000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0040040000000000L, 0x0000000000000000L, 0x0040000000000000L });
   public static final BitSet FOLLOW_KW_EXTERNAL_in_importStatement1503 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0040000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0040000000000000L });
   public static final BitSet FOLLOW_KW_TABLE_in_importStatement1507 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_tableOrPartition_in_importStatement1512 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0040000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0040000000000000L });
   public static final BitSet FOLLOW_KW_FROM_in_importStatement1526 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L });
   public static final BitSet FOLLOW_StringLiteral_in_importStatement1531 =
-      new BitSet(new long[]{0x0000000000000002L, 0x0000000000000000L, 0x0000000010000000L});
-  public static final BitSet FOLLOW_location_in_importStatement1543 = new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L, 0x0000000000000000L, 0x0000000010000000L });
+  public static final BitSet FOLLOW_location_in_importStatement1543 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_createDatabaseStatement_in_ddlStatement1595 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_switchDatabaseStatement_in_ddlStatement1603 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_dropDatabaseStatement_in_ddlStatement1611 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_createTableStatement_in_ddlStatement1619 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_dropTableStatement_in_ddlStatement1627 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_truncateTableStatement_in_ddlStatement1635 =
-      new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_alterStatement_in_ddlStatement1643 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_descStatement_in_ddlStatement1651 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_showStatement_in_ddlStatement1659 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_metastoreCheck_in_ddlStatement1667 = new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_alterStatement_in_ddlStatement1643 = new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_descStatement_in_ddlStatement1651 = new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_showStatement_in_ddlStatement1659 = new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_metastoreCheck_in_ddlStatement1667 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_createViewStatement_in_ddlStatement1675 =
-      new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_dropViewStatement_in_ddlStatement1683 = new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_dropViewStatement_in_ddlStatement1683 =
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_createFunctionStatement_in_ddlStatement1691 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_createMacroStatement_in_ddlStatement1699 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_createIndexStatement_in_ddlStatement1707 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_dropIndexStatement_in_ddlStatement1715 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_dropFunctionStatement_in_ddlStatement1723 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_reloadFunctionStatement_in_ddlStatement1731 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_dropMacroStatement_in_ddlStatement1739 =
-      new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_analyzeStatement_in_ddlStatement1747 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_lockStatement_in_ddlStatement1755 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_unlockStatement_in_ddlStatement1763 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_lockDatabase_in_ddlStatement1771 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_unlockDatabase_in_ddlStatement1779 = new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_analyzeStatement_in_ddlStatement1747 =
+      new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_lockStatement_in_ddlStatement1755 = new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_unlockStatement_in_ddlStatement1763 =
+      new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_lockDatabase_in_ddlStatement1771 = new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_unlockDatabase_in_ddlStatement1779 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_createRoleStatement_in_ddlStatement1787 =
-      new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_dropRoleStatement_in_ddlStatement1795 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_grantPrivileges_in_ddlStatement1803 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_revokePrivileges_in_ddlStatement1811 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_showGrants_in_ddlStatement1819 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_showRoleGrants_in_ddlStatement1827 = new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_dropRoleStatement_in_ddlStatement1795 =
+      new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_grantPrivileges_in_ddlStatement1803 =
+      new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_revokePrivileges_in_ddlStatement1811 =
+      new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_showGrants_in_ddlStatement1819 = new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_showRoleGrants_in_ddlStatement1827 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_showRolePrincipals_in_ddlStatement1835 =
-      new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_showRoles_in_ddlStatement1843 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_grantRole_in_ddlStatement1851 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_revokeRole_in_ddlStatement1859 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_setRole_in_ddlStatement1867 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_showCurrentRole_in_ddlStatement1875 = new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_showRoles_in_ddlStatement1843 = new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_grantRole_in_ddlStatement1851 = new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_revokeRole_in_ddlStatement1859 = new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_setRole_in_ddlStatement1867 = new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_showCurrentRole_in_ddlStatement1875 =
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_IF_in_ifExists1902 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000004000000000L});
-  public static final BitSet FOLLOW_KW_EXISTS_in_ifExists1904 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_KW_RESTRICT_in_restrictOrCascade1941 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_KW_CASCADE_in_restrictOrCascade1959 = new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000004000000000L });
+  public static final BitSet FOLLOW_KW_EXISTS_in_ifExists1904 = new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_KW_RESTRICT_in_restrictOrCascade1941 =
+      new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_KW_CASCADE_in_restrictOrCascade1959 =
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_IF_in_ifNotExists1996 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000080000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000080000000000L });
   public static final BitSet FOLLOW_KW_NOT_in_ifNotExists1998 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000004000000000L});
-  public static final BitSet FOLLOW_KW_EXISTS_in_ifNotExists2000 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_KW_STORED_in_storedAsDirs2037 = new BitSet(new long[]{0x0000001000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000004000000000L });
+  public static final BitSet FOLLOW_KW_EXISTS_in_ifNotExists2000 = new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_KW_STORED_in_storedAsDirs2037 = new BitSet(new long[] { 0x0000001000000000L });
   public static final BitSet FOLLOW_KW_AS_in_storedAsDirs2039 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000001000000L});
-  public static final BitSet FOLLOW_KW_DIRECTORIES_in_storedAsDirs2041 = new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000001000000L });
+  public static final BitSet FOLLOW_KW_DIRECTORIES_in_storedAsDirs2041 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_OR_in_orReplace2078 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000100000L});
-  public static final BitSet FOLLOW_KW_REPLACE_in_orReplace2080 = new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000100000L });
+  public static final BitSet FOLLOW_KW_REPLACE_in_orReplace2080 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_IGNORE_in_ignoreProtection2121 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000040L});
-  public static final BitSet FOLLOW_KW_PROTECTION_in_ignoreProtection2123 = new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000040L });
+  public static final BitSet FOLLOW_KW_PROTECTION_in_ignoreProtection2123 =
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_CREATE_in_createDatabaseStatement2168 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000400L, 0x0000000000000000L, 0x0000000100000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000400L, 0x0000000000000000L, 0x0000000100000000L });
   public static final BitSet FOLLOW_KW_DATABASE_in_createDatabaseStatement2171 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFFL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFFL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_KW_SCHEMA_in_createDatabaseStatement2173 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFFL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFFL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_ifNotExists_in_createDatabaseStatement2184 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_identifier_in_createDatabaseStatement2197 = new BitSet(
-      new long[]{0x0800000000000002L, 0x0000000000000000L, 0x0000000010000000L, 0x0000000000000000L, 0x0000000040000000L});
+      new long[] { 0x0800000000000002L, 0x0000000000000000L, 0x0000000010000000L, 0x0000000000000000L, 0x0000000040000000L });
   public static final BitSet FOLLOW_databaseComment_in_createDatabaseStatement2207 = new BitSet(
-      new long[]{0x0000000000000002L, 0x0000000000000000L, 0x0000000010000000L, 0x0000000000000000L, 0x0000000040000000L});
+      new long[] { 0x0000000000000002L, 0x0000000000000000L, 0x0000000010000000L, 0x0000000000000000L, 0x0000000040000000L });
   public static final BitSet FOLLOW_location_in_createDatabaseStatement2218 = new BitSet(
-      new long[]{0x0000000000000002L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000040000000L});
+      new long[] { 0x0000000000000002L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000040000000L });
   public static final BitSet FOLLOW_KW_WITH_in_createDatabaseStatement2230 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000004000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000004000L });
   public static final BitSet FOLLOW_KW_DBPROPERTIES_in_createDatabaseStatement2232 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L });
   public static final BitSet FOLLOW_dbProperties_in_createDatabaseStatement2236 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_LOCATION_in_location2297 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L});
-  public static final BitSet FOLLOW_StringLiteral_in_location2301 = new BitSet(new long[]{0x0000000000000002L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L });
+  public static final BitSet FOLLOW_StringLiteral_in_location2301 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_LPAREN_in_dbProperties2343 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L });
   public static final BitSet FOLLOW_dbPropertiesList_in_dbProperties2345 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000200000000000L});
-  public static final BitSet FOLLOW_RPAREN_in_dbProperties2347 = new BitSet(new long[]{0x0000000000000002L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000200000000000L });
+  public static final BitSet FOLLOW_RPAREN_in_dbProperties2347 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_keyValueProperty_in_dbPropertiesList2388 =
-      new BitSet(new long[]{0x0000000000000402L});
+      new BitSet(new long[] { 0x0000000000000402L });
   public static final BitSet FOLLOW_COMMA_in_dbPropertiesList2391 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L });
   public static final BitSet FOLLOW_keyValueProperty_in_dbPropertiesList2393 =
-      new BitSet(new long[]{0x0000000000000402L});
+      new BitSet(new long[] { 0x0000000000000402L });
   public static final BitSet FOLLOW_KW_USE_in_switchDatabaseStatement2432 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_identifier_in_switchDatabaseStatement2434 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_DROP_in_dropDatabaseStatement2473 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000400L, 0x0000000000000000L, 0x0000000100000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000400L, 0x0000000000000000L, 0x0000000100000000L });
   public static final BitSet FOLLOW_KW_DATABASE_in_dropDatabaseStatement2476 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFFL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFFL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_KW_SCHEMA_in_dropDatabaseStatement2478 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFFL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFFL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_ifExists_in_dropDatabaseStatement2481 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_identifier_in_dropDatabaseStatement2484 =
-      new BitSet(new long[]{0x0001000000000002L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000400000L});
+      new BitSet(new long[] { 0x0001000000000002L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000400000L });
   public static final BitSet FOLLOW_restrictOrCascade_in_dropDatabaseStatement2486 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_COMMENT_in_databaseComment2532 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L});
-  public static final BitSet FOLLOW_StringLiteral_in_databaseComment2536 = new BitSet(new long[]{0x0000000000000002L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L });
+  public static final BitSet FOLLOW_StringLiteral_in_databaseComment2536 =
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_CREATE_in_createTableStatement2576 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000040000000000L, 0x0000000000000000L, 0x0440000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000040000000000L, 0x0000000000000000L, 0x0440000000000000L });
   public static final BitSet FOLLOW_KW_TEMPORARY_in_createTableStatement2581 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000040000000000L, 0x0000000000000000L, 0x0040000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000040000000000L, 0x0000000000000000L, 0x0040000000000000L });
   public static final BitSet FOLLOW_KW_EXTERNAL_in_createTableStatement2588 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0040000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0040000000000000L });
   public static final BitSet FOLLOW_KW_TABLE_in_createTableStatement2592 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFFL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFFL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_ifNotExists_in_createTableStatement2594 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_tableName_in_createTableStatement2599 = new BitSet(
-      new long[]{0x0840001000000002L, 0x0000000000000000L, 0x2000000010800000L, 0x0204100040000000L, 0x0000000400000000L});
+      new long[] { 0x0840001000000002L, 0x0000000000000000L, 0x2000000010800000L, 0x0204100040000000L, 0x0000000400000000L });
   public static final BitSet FOLLOW_KW_LIKE_in_createTableStatement2612 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_tableName_in_createTableStatement2616 =
-      new BitSet(new long[]{0x0000000000000002L, 0x0000000000000000L, 0x0000000010000000L, 0x0204000040000000L});
+      new BitSet(new long[] { 0x0000000000000002L, 0x0000000000000000L, 0x0000000010000000L, 0x0204000040000000L });
   public static final BitSet FOLLOW_tableRowFormat_in_createTableStatement2627 =
-      new BitSet(new long[]{0x0000000000000002L, 0x0000000000000000L, 0x0000000010000000L, 0x0204000000000000L});
+      new BitSet(new long[] { 0x0000000000000002L, 0x0000000000000000L, 0x0000000010000000L, 0x0204000000000000L });
   public static final BitSet FOLLOW_tableFileFormat_in_createTableStatement2639 =
-      new BitSet(new long[]{0x0000000000000002L, 0x0000000000000000L, 0x0000000010000000L, 0x0200000000000000L});
+      new BitSet(new long[] { 0x0000000000000002L, 0x0000000000000000L, 0x0000000010000000L, 0x0200000000000000L });
   public static final BitSet FOLLOW_location_in_createTableStatement2651 =
-      new BitSet(new long[]{0x0000000000000002L, 0x0000000000000000L, 0x0000000000000000L, 0x0200000000000000L});
+      new BitSet(new long[] { 0x0000000000000002L, 0x0000000000000000L, 0x0000000000000000L, 0x0200000000000000L });
   public static final BitSet FOLLOW_tablePropertiesPrefixed_in_createTableStatement2663 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_LPAREN_in_createTableStatement2676 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_columnNameTypeList_in_createTableStatement2678 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000200000000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000200000000000L });
   public static final BitSet FOLLOW_RPAREN_in_createTableStatement2680 =
-      new BitSet(new long[]{0x0840001000000002L, 0x0000000000000000L, 0x2000000010000000L, 0x0204100040000000L});
+      new BitSet(new long[] { 0x0840001000000002L, 0x0000000000000000L, 0x2000000010000000L, 0x0204100040000000L });
   public static final BitSet FOLLOW_tableComment_in_createTableStatement2693 =
-      new BitSet(new long[]{0x0040001000000002L, 0x0000000000000000L, 0x2000000010000000L, 0x0204100040000000L});
+      new BitSet(new long[] { 0x0040001000000002L, 0x0000000000000000L, 0x2000000010000000L, 0x0204100040000000L });
   public static final BitSet FOLLOW_tablePartition_in_createTableStatement2705 =
-      new BitSet(new long[]{0x0040001000000002L, 0x0000000000000000L, 0x0000000010000000L, 0x0204100040000000L});
+      new BitSet(new long[] { 0x0040001000000002L, 0x0000000000000000L, 0x0000000010000000L, 0x0204100040000000L });
   public static final BitSet FOLLOW_tableBuckets_in_createTableStatement2717 =
-      new BitSet(new long[]{0x0000001000000002L, 0x0000000000000000L, 0x0000000010000000L, 0x0204100040000000L});
+      new BitSet(new long[] { 0x0000001000000002L, 0x0000000000000000L, 0x0000000010000000L, 0x0204100040000000L });
   public static final BitSet FOLLOW_tableSkewed_in_createTableStatement2729 =
-      new BitSet(new long[]{0x0000001000000002L, 0x0000000000000000L, 0x0000000010000000L, 0x0204000040000000L});
+      new BitSet(new long[] { 0x0000001000000002L, 0x0000000000000000L, 0x0000000010000000L, 0x0204000040000000L });
   public static final BitSet FOLLOW_tableRowFormat_in_createTableStatement2741 =
-      new BitSet(new long[]{0x0000001000000002L, 0x0000000000000000L, 0x0000000010000000L, 0x0204000000000000L});
+      new BitSet(new long[] { 0x0000001000000002L, 0x0000000000000000L, 0x0000000010000000L, 0x0204000000000000L });
   public static final BitSet FOLLOW_tableFileFormat_in_createTableStatement2753 =
-      new BitSet(new long[]{0x0000001000000002L, 0x0000000000000000L, 0x0000000010000000L, 0x0200000000000000L});
+      new BitSet(new long[] { 0x0000001000000002L, 0x0000000000000000L, 0x0000000010000000L, 0x0200000000000000L });
   public static final BitSet FOLLOW_location_in_createTableStatement2765 =
-      new BitSet(new long[]{0x0000001000000002L, 0x0000000000000000L, 0x0000000000000000L, 0x0200000000000000L});
+      new BitSet(new long[] { 0x0000001000000002L, 0x0000000000000000L, 0x0000000000000000L, 0x0200000000000000L });
   public static final BitSet FOLLOW_tablePropertiesPrefixed_in_createTableStatement2777 =
-      new BitSet(new long[]{0x0000001000000002L});
+      new BitSet(new long[] { 0x0000001000000002L });
   public static final BitSet FOLLOW_KW_AS_in_createTableStatement2790 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L, 0x0000000400008000L, 0x0000000040000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L, 0x0000000400008000L, 0x0000000040000000L });
   public static final BitSet FOLLOW_selectStatementWithCTE_in_createTableStatement2792 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_TRUNCATE_in_truncateTableStatement2999 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0040000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0040000000000000L });
   public static final BitSet FOLLOW_KW_TABLE_in_truncateTableStatement3001 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_tablePartitionPrefix_in_truncateTableStatement3003 =
-      new BitSet(new long[]{0x0400000000000002L});
+      new BitSet(new long[] { 0x0400000000000002L });
   public static final BitSet FOLLOW_KW_COLUMNS_in_truncateTableStatement3006 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L });
   public static final BitSet FOLLOW_LPAREN_in_truncateTableStatement3008 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_columnNameList_in_truncateTableStatement3010 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000200000000000L});
-  public static final BitSet FOLLOW_RPAREN_in_truncateTableStatement3012 = new BitSet(new long[]{0x0000000000000002L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000200000000000L });
+  public static final BitSet FOLLOW_RPAREN_in_truncateTableStatement3012 =
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_CREATE_in_createIndexStatement3047 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000010L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000010L });
   public static final BitSet FOLLOW_KW_INDEX_in_createIndexStatement3049 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_identifier_in_createIndexStatement3053 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0001000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0001000000000000L });
   public static final BitSet FOLLOW_KW_ON_in_createIndexStatement3061 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0040000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0040000000000000L });
   public static final BitSet FOLLOW_KW_TABLE_in_createIndexStatement3063 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_tableName_in_createIndexStatement3067 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L });
   public static final BitSet FOLLOW_LPAREN_in_createIndexStatement3069 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_columnNameList_in_createIndexStatement3073 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000200000000000L});
-  public static final BitSet FOLLOW_RPAREN_in_createIndexStatement3075 = new BitSet(new long[]{0x0000001000000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000200000000000L });
+  public static final BitSet FOLLOW_RPAREN_in_createIndexStatement3075 = new BitSet(new long[] { 0x0000001000000000L });
   public static final BitSet FOLLOW_KW_AS_in_createIndexStatement3083 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L });
   public static final BitSet FOLLOW_StringLiteral_in_createIndexStatement3087 = new BitSet(
-      new long[]{0x0800000000000002L, 0x8000000000000000L, 0x0000000010000008L, 0x0204000040000000L, 0x0000000040000000L});
+      new long[] { 0x0800000000000002L, 0x8000000000000000L, 0x0000000010000008L, 0x0204000040000000L, 0x0000000040000000L });
   public static final BitSet FOLLOW_autoRebuild_in_createIndexStatement3095 =
-      new BitSet(new long[]{0x0800000000000002L, 0x8000000000000000L, 0x0000000010000008L, 0x0204000040000000L});
+      new BitSet(new long[] { 0x0800000000000002L, 0x8000000000000000L, 0x0000000010000008L, 0x0204000040000000L });
   public static final BitSet FOLLOW_indexPropertiesPrefixed_in_createIndexStatement3104 =
-      new BitSet(new long[]{0x0800000000000002L, 0x0000000000000000L, 0x0000000010000008L, 0x0204000040000000L});
+      new BitSet(new long[] { 0x0800000000000002L, 0x0000000000000000L, 0x0000000010000008L, 0x0204000040000000L });
   public static final BitSet FOLLOW_indexTblName_in_createIndexStatement3113 =
-      new BitSet(new long[]{0x0800000000000002L, 0x0000000000000000L, 0x0000000010000000L, 0x0204000040000000L});
+      new BitSet(new long[] { 0x0800000000000002L, 0x0000000000000000L, 0x0000000010000000L, 0x0204000040000000L });
   public static final BitSet FOLLOW_tableRowFormat_in_createIndexStatement3122 =
-      new BitSet(new long[]{0x0800000000000002L, 0x0000000000000000L, 0x0000000010000000L, 0x0204000000000000L});
+      new BitSet(new long[] { 0x0800000000000002L, 0x0000000000000000L, 0x0000000010000000L, 0x0204000000000000L });
   public static final BitSet FOLLOW_tableFileFormat_in_createIndexStatement3131 =
-      new BitSet(new long[]{0x0800000000000002L, 0x0000000000000000L, 0x0000000010000000L, 0x0200000000000000L});
+      new BitSet(new long[] { 0x0800000000000002L, 0x0000000000000000L, 0x0000000010000000L, 0x0200000000000000L });
   public static final BitSet FOLLOW_location_in_createIndexStatement3140 =
-      new BitSet(new long[]{0x0800000000000002L, 0x0000000000000000L, 0x0000000000000000L, 0x0200000000000000L});
+      new BitSet(new long[] { 0x0800000000000002L, 0x0000000000000000L, 0x0000000000000000L, 0x0200000000000000L });
   public static final BitSet FOLLOW_tablePropertiesPrefixed_in_createIndexStatement3149 =
-      new BitSet(new long[]{0x0800000000000002L});
+      new BitSet(new long[] { 0x0800000000000002L });
   public static final BitSet FOLLOW_indexComment_in_createIndexStatement3158 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_COMMENT_in_indexComment3315 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L});
-  public static final BitSet FOLLOW_StringLiteral_in_indexComment3319 = new BitSet(new long[]{0x0000000000000002L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L });
+  public static final BitSet FOLLOW_StringLiteral_in_indexComment3319 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_WITH_in_autoRebuild3360 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000020000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000020000L });
   public static final BitSet FOLLOW_KW_DEFERRED_in_autoRebuild3362 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000001000L});
-  public static final BitSet FOLLOW_KW_REBUILD_in_autoRebuild3364 = new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000001000L });
+  public static final BitSet FOLLOW_KW_REBUILD_in_autoRebuild3364 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_IN_in_indexTblName3400 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0040000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0040000000000000L });
   public static final BitSet FOLLOW_KW_TABLE_in_indexTblName3402 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
-  public static final BitSet FOLLOW_tableName_in_indexTblName3406 = new BitSet(new long[]{0x0000000000000002L});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
+  public static final BitSet FOLLOW_tableName_in_indexTblName3406 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_IDXPROPERTIES_in_indexPropertiesPrefixed3453 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L });
   public static final BitSet FOLLOW_indexProperties_in_indexPropertiesPrefixed3456 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_LPAREN_in_indexProperties3489 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L });
   public static final BitSet FOLLOW_indexPropertiesList_in_indexProperties3491 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000200000000000L});
-  public static final BitSet FOLLOW_RPAREN_in_indexProperties3493 = new BitSet(new long[]{0x0000000000000002L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000200000000000L });
+  public static final BitSet FOLLOW_RPAREN_in_indexProperties3493 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_keyValueProperty_in_indexPropertiesList3534 =
-      new BitSet(new long[]{0x0000000000000402L});
+      new BitSet(new long[] { 0x0000000000000402L });
   public static final BitSet FOLLOW_COMMA_in_indexPropertiesList3537 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L });
   public static final BitSet FOLLOW_keyValueProperty_in_indexPropertiesList3539 =
-      new BitSet(new long[]{0x0000000000000402L});
+      new BitSet(new long[] { 0x0000000000000402L });
   public static final BitSet FOLLOW_KW_DROP_in_dropIndexStatement3577 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000010L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000010L });
   public static final BitSet FOLLOW_KW_INDEX_in_dropIndexStatement3579 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFFL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFFL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_ifExists_in_dropIndexStatement3581 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_identifier_in_dropIndexStatement3586 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0001000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0001000000000000L });
   public static final BitSet FOLLOW_KW_ON_in_dropIndexStatement3588 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
-  public static final BitSet FOLLOW_tableName_in_dropIndexStatement3592 = new BitSet(new long[]{0x0000000000000002L});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
+  public static final BitSet FOLLOW_tableName_in_dropIndexStatement3592 =
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_DROP_in_dropTableStatement3637 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0040000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0040000000000000L });
   public static final BitSet FOLLOW_KW_TABLE_in_dropTableStatement3639 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFFL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFFL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_ifExists_in_dropTableStatement3641 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_tableName_in_dropTableStatement3644 =
-      new BitSet(new long[]{0x0000000000000002L, 0x0008000000000000L, 0x0000000000000000L, 0x0000000000000080L});
+      new BitSet(new long[] { 0x0000000000000002L, 0x0008000000000000L, 0x0000000000000000L, 0x0000000000000080L });
   public static final BitSet FOLLOW_KW_PURGE_in_dropTableStatement3646 =
-      new BitSet(new long[]{0x0000000000000002L, 0x0008000000000000L});
+      new BitSet(new long[] { 0x0000000000000002L, 0x0008000000000000L });
   public static final BitSet FOLLOW_replicationClause_in_dropTableStatement3649 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_ALTER_in_alterStatement3698 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0040000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0040000000000000L });
   public static final BitSet FOLLOW_KW_TABLE_in_alterStatement3700 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_tableName_in_alterStatement3702 = new BitSet(
-      new long[]{0x9048000408000000L, 0x0000001244000000L, 0x1000080000002000L, 0x0000108000140000L, 0x000000000000A041L});
+      new long[] { 0x9048000408000000L, 0x0000001244000000L, 0x1000080000002000L, 0x0000108000140000L, 0x000000000000A041L });
   public static final BitSet FOLLOW_alterTableStatementSuffix_in_alterStatement3704 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_ALTER_in_alterStatement3722 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000002000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000002000000L });
   public static final BitSet FOLLOW_KW_VIEW_in_alterStatement3724 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_tableName_in_alterStatement3726 = new BitSet(
-      new long[]{0x0000001008000000L, 0x0000000040000000L, 0x0000000400000000L, 0x0000008400048000L, 0x0000000040002000L});
+      new long[] { 0x0000001008000000L, 0x0000000040000000L, 0x0000000400000000L, 0x0000008400048000L, 0x0000000040002000L });
   public static final BitSet FOLLOW_KW_AS_in_alterStatement3728 = new BitSet(
-      new long[]{0x0000000008000000L, 0x0000000040000000L, 0x0000000400000000L, 0x0000008400048000L, 0x0000000040002000L});
+      new long[] { 0x0000000008000000L, 0x0000000040000000L, 0x0000000400000000L, 0x0000008400048000L, 0x0000000040002000L });
   public static final BitSet FOLLOW_alterViewStatementSuffix_in_alterStatement3731 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_ALTER_in_alterStatement3749 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000010L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000010L });
   public static final BitSet FOLLOW_KW_INDEX_in_alterStatement3751 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_alterIndexStatementSuffix_in_alterStatement3753 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_ALTER_in_alterStatement3765 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000400L, 0x0000000000000000L, 0x0000000100000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000400L, 0x0000000000000000L, 0x0000000100000000L });
   public static final BitSet FOLLOW_KW_DATABASE_in_alterStatement3768 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_KW_SCHEMA_in_alterStatement3770 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_alterDatabaseStatementSuffix_in_alterStatement3773 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_alterStatementSuffixRename_in_alterTableStatementSuffix3804 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_alterStatementSuffixUpdateStatsCol_in_alterTableStatementSuffix3813 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_alterStatementSuffixDropPartitions_in_alterTableStatementSuffix3821 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_alterStatementSuffixAddPartitions_in_alterTableStatementSuffix3830 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_alterStatementSuffixTouch_in_alterTableStatementSuffix3839 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_alterStatementSuffixArchive_in_alterTableStatementSuffix3847 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_alterStatementSuffixUnArchive_in_alterTableStatementSuffix3855 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_alterStatementSuffixProperties_in_alterTableStatementSuffix3863 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_alterStatementSuffixSkewedby_in_alterTableStatementSuffix3871 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_alterStatementSuffixExchangePartition_in_alterTableStatementSuffix3879 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_alterStatementPartitionKeyType_in_alterTableStatementSuffix3887 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_partitionSpec_in_alterTableStatementSuffix3895 = new BitSet(
-      new long[]{0x9048000008000000L, 0x0000000204000000L, 0x0000080000002000L, 0x0000008000140000L, 0x0000000000008000L});
+      new long[] { 0x9048000008000000L, 0x0000000204000000L, 0x0000080000002000L, 0x0000008000140000L, 0x0000000000008000L });
   public static final BitSet FOLLOW_alterTblPartitionStatementSuffix_in_alterTableStatementSuffix3898 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_alterStatementSuffixFileFormat_in_alterTblPartitionStatementSuffix3930 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_alterStatementSuffixLocation_in_alterTblPartitionStatementSuffix3936 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_alterStatementSuffixProtectMode_in_alterTblPartitionStatementSuffix3942 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_alterStatementSuffixMergeFiles_in_alterTblPartitionStatementSuffix3948 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_alterStatementSuffixSerdeProperties_in_alterTblPartitionStatementSuffix3954 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_alterStatementSuffixRenamePart_in_alterTblPartitionStatementSuffix3960 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_alterStatementSuffixBucketNum_in_alterTblPartitionStatementSuffix3966 =
-      new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet
-      FOLLOW_alterTblPartitionStatementSuffixSkewedLocation_in_alterTblPartitionStatementSuffix3972 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_alterTblPartitionStatementSuffixSkewedLocation_in_alterTblPartitionStatementSuffix3972 =
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_alterStatementSuffixClusterbySortby_in_alterTblPartitionStatementSuffix3978 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_alterStatementSuffixCompact_in_alterTblPartitionStatementSuffix3984 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_alterStatementSuffixUpdateStatsCol_in_alterTblPartitionStatementSuffix3990 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_alterStatementSuffixRenameCol_in_alterTblPartitionStatementSuffix3996 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_alterStatementSuffixAddCol_in_alterTblPartitionStatementSuffix4002 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_PARTITION_in_alterStatementPartitionKeyType4024 =
-      new BitSet(new long[]{0x0200000000000000L});
+      new BitSet(new long[] { 0x0200000000000000L });
   public static final BitSet FOLLOW_KW_COLUMN_in_alterStatementPartitionKeyType4026 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L });
   public static final BitSet FOLLOW_LPAREN_in_alterStatementPartitionKeyType4028 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_columnNameType_in_alterStatementPartitionKeyType4030 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000200000000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000200000000000L });
   public static final BitSet FOLLOW_RPAREN_in_alterStatementPartitionKeyType4032 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_alterViewSuffixProperties_in_alterViewStatementSuffix4065 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_alterStatementSuffixRename_in_alterViewStatementSuffix4073 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_alterStatementSuffixAddPartitions_in_alterViewStatementSuffix4082 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_alterStatementSuffixDropPartitions_in_alterViewStatementSuffix4091 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_selectStatementWithCTE_in_alterViewStatementSuffix4100 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_identifier_in_alterIndexStatementSuffix4129 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0001000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0001000000000000L });
   public static final BitSet FOLLOW_KW_ON_in_alterIndexStatementSuffix4131 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_tableName_in_alterIndexStatementSuffix4133 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x1000000000000000L, 0x0000008000001000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x1000000000000000L, 0x0000008000001000L });
   public static final BitSet FOLLOW_partitionSpec_in_alterIndexStatementSuffix4135 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000008000001000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000008000001000L });
   public static final BitSet FOLLOW_KW_REBUILD_in_alterIndexStatementSuffix4150 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_SET_in_alterIndexStatementSuffix4183 =
-      new BitSet(new long[]{0x0000000000000000L, 0x8000000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x8000000000000000L });
   public static final BitSet FOLLOW_KW_IDXPROPERTIES_in_alterIndexStatementSuffix4185 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L });
   public static final BitSet FOLLOW_indexProperties_in_alterIndexStatementSuffix4193 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_alterDatabaseSuffixProperties_in_alterDatabaseStatementSuffix4244 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_alterDatabaseSuffixSetOwner_in_alterDatabaseStatementSuffix4252 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_identifier_in_alterDatabaseSuffixProperties4281 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000008000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000008000000000L });
   public static final BitSet FOLLOW_KW_SET_in_alterDatabaseSuffixProperties4283 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000004000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000004000L });
   public static final BitSet FOLLOW_KW_DBPROPERTIES_in_alterDatabaseSuffixProperties4285 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L });
   public static final BitSet FOLLOW_dbProperties_in_alterDatabaseSuffixProperties4287 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_identifier_in_alterDatabaseSuffixSetOwner4331 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000008000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000008000000000L });
   public static final BitSet FOLLOW_KW_SET_in_alterDatabaseSuffixSetOwner4333 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0400000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0400000000000000L });
   public static final BitSet FOLLOW_KW_OWNER_in_alterDatabaseSuffixSetOwner4335 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0800000000000000L, 0x0000000000000000L, 0x0000000008000000L, 0x0000000000040000L});
+      new long[] { 0x0000000000000000L, 0x0800000000000000L, 0x0000000000000000L, 0x0000000008000000L, 0x0000000000040000L });
   public static final BitSet FOLLOW_principalName_in_alterDatabaseSuffixSetOwner4337 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_RENAME_in_alterStatementSuffixRename4380 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x8000000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x8000000000000000L });
   public static final BitSet FOLLOW_KW_TO_in_alterStatementSuffixRename4382 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_tableName_in_alterStatementSuffixRename4384 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_ADD_in_alterStatementSuffixAddCol4451 =
-      new BitSet(new long[]{0x0400000000000000L});
+      new BitSet(new long[] { 0x0400000000000000L });
   public static final BitSet FOLLOW_KW_REPLACE_in_alterStatementSuffixAddCol4457 =
-      new BitSet(new long[]{0x0400000000000000L});
+      new BitSet(new long[] { 0x0400000000000000L });
   public static final BitSet FOLLOW_KW_COLUMNS_in_alterStatementSuffixAddCol4460 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L });
   public static final BitSet FOLLOW_LPAREN_in_alterStatementSuffixAddCol4462 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_columnNameTypeList_in_alterStatementSuffixAddCol4464 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000200000000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000200000000000L });
   public static final BitSet FOLLOW_RPAREN_in_alterStatementSuffixAddCol4466 =
-      new BitSet(new long[]{0x0001000000000002L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000400000L});
+      new BitSet(new long[] { 0x0001000000000002L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000400000L });
   public static final BitSet FOLLOW_restrictOrCascade_in_alterStatementSuffixAddCol4468 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_CHANGE_in_alterStatementSuffixRenameCol4544 = new BitSet(
-      new long[]{0xFFE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFFE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_KW_COLUMN_in_alterStatementSuffixRenameCol4546 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_identifier_in_alterStatementSuffixRenameCol4551 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_identifier_in_alterStatementSuffixRenameCol4555 = new BitSet(
-      new long[]{0x00100E0800000000L, 0x000200002000B000L, 0x0000000400000800L, 0x6030200000000000L, 0x0000000001000400L});
+      new long[] { 0x00100E0800000000L, 0x000200002000B000L, 0x0000000400000800L, 0x6030200000000000L, 0x0000000001000400L });
   public static final BitSet FOLLOW_colType_in_alterStatementSuffixRenameCol4557 =
-      new BitSet(new long[]{0x0801000020000002L, 0x0001000000000000L, 0x0000000000000000L, 0x0000000000400000L});
+      new BitSet(new long[] { 0x0801000020000002L, 0x0001000000000000L, 0x0000000000000000L, 0x0000000000400000L });
   public static final BitSet FOLLOW_KW_COMMENT_in_alterStatementSuffixRenameCol4560 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L });
   public static final BitSet FOLLOW_StringLiteral_in_alterStatementSuffixRenameCol4564 =
-      new BitSet(new long[]{0x0001000020000002L, 0x0001000000000000L, 0x0000000000000000L, 0x0000000000400000L});
+      new BitSet(new long[] { 0x0001000020000002L, 0x0001000000000000L, 0x0000000000000000L, 0x0000000000400000L });
   public static final BitSet FOLLOW_alterStatementChangeColPosition_in_alterStatementSuffixRenameCol4568 =
-      new BitSet(new long[]{0x0001000000000002L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000400000L});
+      new BitSet(new long[] { 0x0001000000000002L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000400000L });
   public static final BitSet FOLLOW_restrictOrCascade_in_alterStatementSuffixRenameCol4571 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_UPDATE_in_alterStatementSuffixUpdateStatsCol4626 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0002000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0002000000000000L });
   public static final BitSet FOLLOW_KW_STATISTICS_in_alterStatementSuffixUpdateStatsCol4628 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0008000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0008000000000000L });
   public static final BitSet FOLLOW_KW_FOR_in_alterStatementSuffixUpdateStatsCol4630 = new BitSet(
-      new long[]{0xFFE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFFE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_KW_COLUMN_in_alterStatementSuffixUpdateStatsCol4632 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_identifier_in_alterStatementSuffixUpdateStatsCol4637 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000008000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000008000000000L });
   public static final BitSet FOLLOW_KW_SET_in_alterStatementSuffixUpdateStatsCol4639 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L });
   public static final BitSet FOLLOW_tableProperties_in_alterStatementSuffixUpdateStatsCol4641 =
-      new BitSet(new long[]{0x0800000000000002L});
+      new BitSet(new long[] { 0x0800000000000002L });
   public static final BitSet FOLLOW_KW_COMMENT_in_alterStatementSuffixUpdateStatsCol4644 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L });
   public static final BitSet FOLLOW_StringLiteral_in_alterStatementSuffixUpdateStatsCol4648 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_FIRST_in_alterStatementChangeColPosition4687 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_AFTER_in_alterStatementChangeColPosition4689 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_identifier_in_alterStatementChangeColPosition4693 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_ADD_in_alterStatementSuffixAddPartitions4746 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x1000000000000001L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x1000000000000001L });
   public static final BitSet FOLLOW_ifNotExists_in_alterStatementSuffixAddPartitions4748 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x1000000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x1000000000000000L });
   public static final BitSet FOLLOW_alterStatementSuffixAddPartitionsElement_in_alterStatementSuffixAddPartitions4751 =
-      new BitSet(new long[]{0x0000000000000002L, 0x0000000000000000L, 0x1000000000000000L});
+      new BitSet(new long[] { 0x0000000000000002L, 0x0000000000000000L, 0x1000000000000000L });
   public static final BitSet FOLLOW_partitionSpec_in_alterStatementSuffixAddPartitionsElement4814 =
-      new BitSet(new long[]{0x0000000000000002L, 0x0000800000000000L, 0x0000000010000000L, 0x0000002000000000L});
+      new BitSet(new long[] { 0x0000000000000002L, 0x0000800000000000L, 0x0000000010000000L, 0x0000002000000000L });
   public static final BitSet FOLLOW_partitionFileFormat_in_alterStatementSuffixAddPartitionsElement4816 =
-      new BitSet(new long[]{0x0000000000000002L, 0x0000000000000000L, 0x0000000010000000L, 0x0000002000000000L});
+      new BitSet(new long[] { 0x0000000000000002L, 0x0000000000000000L, 0x0000000010000000L, 0x0000002000000000L });
   public static final BitSet FOLLOW_partitionSerdeProperties_in_alterStatementSuffixAddPartitionsElement4819 =
-      new BitSet(new long[]{0x0000000000000002L, 0x0000000000000000L, 0x0000000010000000L});
+      new BitSet(new long[] { 0x0000000000000002L, 0x0000000000000000L, 0x0000000010000000L });
   public static final BitSet FOLLOW_location_in_alterStatementSuffixAddPartitionsElement4822 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_TOUCH_in_alterStatementSuffixTouch4850 =
-      new BitSet(new long[]{0x0000000000000002L, 0x0000000000000000L, 0x1000000000000000L});
+      new BitSet(new long[] { 0x0000000000000002L, 0x0000000000000000L, 0x1000000000000000L });
   public static final BitSet FOLLOW_partitionSpec_in_alterStatementSuffixTouch4853 =
-      new BitSet(new long[]{0x0000000000000002L, 0x0000000000000000L, 0x1000000000000000L});
+      new BitSet(new long[] { 0x0000000000000002L, 0x0000000000000000L, 0x1000000000000000L });
   public static final BitSet FOLLOW_KW_ARCHIVE_in_alterStatementSuffixArchive4897 =
-      new BitSet(new long[]{0x0000000000000002L, 0x0000000000000000L, 0x1000000000000000L});
+      new BitSet(new long[] { 0x0000000000000002L, 0x0000000000000000L, 0x1000000000000000L });
   public static final BitSet FOLLOW_partitionSpec_in_alterStatementSuffixArchive4900 =
-      new BitSet(new long[]{0x0000000000000002L, 0x0000000000000000L, 0x1000000000000000L});
+      new BitSet(new long[] { 0x0000000000000002L, 0x0000000000000000L, 0x1000000000000000L });
   public static final BitSet FOLLOW_KW_UNARCHIVE_in_alterStatementSuffixUnArchive4944 =
-      new BitSet(new long[]{0x0000000000000002L, 0x0000000000000000L, 0x1000000000000000L});
+      new BitSet(new long[] { 0x0000000000000002L, 0x0000000000000000L, 0x1000000000000000L });
   public static final BitSet FOLLOW_partitionSpec_in_alterStatementSuffixUnArchive4947 =
-      new BitSet(new long[]{0x0000000000000002L, 0x0000000000000000L, 0x1000000000000000L});
+      new BitSet(new long[] { 0x0000000000000002L, 0x0000000000000000L, 0x1000000000000000L });
   public static final BitSet FOLLOW_KW_FILEFORMAT_in_partitionFileFormat4991 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
-  public static final BitSet FOLLOW_fileFormat_in_partitionFileFormat4993 = new BitSet(new long[]{0x0000000000000002L});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
+  public static final BitSet FOLLOW_fileFormat_in_partitionFileFormat4993 =
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_SERDEPROPERTIES_in_partitionSerdeProperties5028 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L });
   public static final BitSet FOLLOW_tableProperties_in_partitionSerdeProperties5030 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_DROP_in_alterStatementSuffixDropPartitions5066 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x1000000000000001L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x1000000000000001L });
   public static final BitSet FOLLOW_ifExists_in_alterStatementSuffixDropPartitions5068 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x1000000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x1000000000000000L });
   public static final BitSet FOLLOW_dropPartitionSpec_in_alterStatementSuffixDropPartitions5071 =
-      new BitSet(new long[]{0x0000000000000402L, 0x0008000000000000L, 0x0000000000000002L, 0x0000000000000080L});
+      new BitSet(new long[] { 0x0000000000000402L, 0x0008000000000000L, 0x0000000000000002L, 0x0000000000000080L });
   public static final BitSet FOLLOW_COMMA_in_alterStatementSuffixDropPartitions5074 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x1000000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x1000000000000000L });
   public static final BitSet FOLLOW_dropPartitionSpec_in_alterStatementSuffixDropPartitions5076 =
-      new BitSet(new long[]{0x0000000000000402L, 0x0008000000000000L, 0x0000000000000002L, 0x0000000000000080L});
+      new BitSet(new long[] { 0x0000000000000402L, 0x0008000000000000L, 0x0000000000000002L, 0x0000000000000080L });
   public static final BitSet FOLLOW_ignoreProtection_in_alterStatementSuffixDropPartitions5080 =
-      new BitSet(new long[]{0x0000000000000002L, 0x0008000000000000L, 0x0000000000000000L, 0x0000000000000080L});
+      new BitSet(new long[] { 0x0000000000000002L, 0x0008000000000000L, 0x0000000000000000L, 0x0000000000000080L });
   public static final BitSet FOLLOW_KW_PURGE_in_alterStatementSuffixDropPartitions5083 =
-      new BitSet(new long[]{0x0000000000000002L, 0x0008000000000000L});
+      new BitSet(new long[] { 0x0000000000000002L, 0x0008000000000000L });
   public static final BitSet FOLLOW_replicationClause_in_alterStatementSuffixDropPartitions5086 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_SET_in_alterStatementSuffixProperties5174 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0200000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0200000000000000L });
   public static final BitSet FOLLOW_KW_TBLPROPERTIES_in_alterStatementSuffixProperties5176 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L });
   public static final BitSet FOLLOW_tableProperties_in_alterStatementSuffixProperties5178 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_UNSET_in_alterStatementSuffixProperties5198 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0200000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0200000000000000L });
   public static final BitSet FOLLOW_KW_TBLPROPERTIES_in_alterStatementSuffixProperties5200 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000001L, 0x0000000000000000L, 0x0000000400000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000001L, 0x0000000000000000L, 0x0000000400000000L });
   public static final BitSet FOLLOW_ifExists_in_alterStatementSuffixProperties5202 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L });
   public static final BitSet FOLLOW_tableProperties_in_alterStatementSuffixProperties5205 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_SET_in_alterViewSuffixProperties5247 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0200000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0200000000000000L });
   public static final BitSet FOLLOW_KW_TBLPROPERTIES_in_alterViewSuffixProperties5249 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L });
   public static final BitSet FOLLOW_tableProperties_in_alterViewSuffixProperties5251 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_UNSET_in_alterViewSuffixProperties5271 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0200000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0200000000000000L });
   public static final BitSet FOLLOW_KW_TBLPROPERTIES_in_alterViewSuffixProperties5273 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000001L, 0x0000000000000000L, 0x0000000400000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000001L, 0x0000000000000000L, 0x0000000400000000L });
   public static final BitSet FOLLOW_ifExists_in_alterViewSuffixProperties5275 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L });
   public static final BitSet FOLLOW_tableProperties_in_alterViewSuffixProperties5278 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_SET_in_alterStatementSuffixSerdeProperties5320 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000001000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000001000000000L });
   public static final BitSet FOLLOW_KW_SERDE_in_alterStatementSuffixSerdeProperties5322 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L });
   public static final BitSet FOLLOW_StringLiteral_in_alterStatementSuffixSerdeProperties5326 = new BitSet(
-      new long[]{0x0000000000000002L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000040000000L});
+      new long[] { 0x0000000000000002L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000040000000L });
   public static final BitSet FOLLOW_KW_WITH_in_alterStatementSuffixSerdeProperties5329 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000002000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000002000000000L });
   public static final BitSet FOLLOW_KW_SERDEPROPERTIES_in_alterStatementSuffixSerdeProperties5331 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L });
   public static final BitSet FOLLOW_tableProperties_in_alterStatementSuffixSerdeProperties5333 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_SET_in_alterStatementSuffixSerdeProperties5359 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000002000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000002000000000L });
   public static final BitSet FOLLOW_KW_SERDEPROPERTIES_in_alterStatementSuffixSerdeProperties5361 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L });
   public static final BitSet FOLLOW_tableProperties_in_alterStatementSuffixSerdeProperties5363 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_tableName_in_tablePartitionPrefix5400 =
-      new BitSet(new long[]{0x0000000000000002L, 0x0000000000000000L, 0x1000000000000000L});
+      new BitSet(new long[] { 0x0000000000000002L, 0x0000000000000000L, 0x1000000000000000L });
   public static final BitSet FOLLOW_partitionSpec_in_tablePartitionPrefix5402 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_SET_in_alterStatementSuffixFileFormat5437 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000800000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000800000000000L });
   public static final BitSet FOLLOW_KW_FILEFORMAT_in_alterStatementSuffixFileFormat5439 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_fileFormat_in_alterStatementSuffixFileFormat5441 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_NOT_in_alterStatementSuffixClusterbySortby5472 =
-      new BitSet(new long[]{0x0040000000000000L});
+      new BitSet(new long[] { 0x0040000000000000L });
   public static final BitSet FOLLOW_KW_CLUSTERED_in_alterStatementSuffixClusterbySortby5474 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_NOT_in_alterStatementSuffixClusterbySortby5488 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000800000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000800000000000L });
   public static final BitSet FOLLOW_KW_SORTED_in_alterStatementSuffixClusterbySortby5490 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_tableBuckets_in_alterStatementSuffixClusterbySortby5504 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_SET_in_alterTblPartitionStatementSuffixSkewedLocation5535 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000100000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000100000000000L });
   public static final BitSet FOLLOW_KW_SKEWED_in_alterTblPartitionStatementSuffixSkewedLocation5537 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000010000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000010000000L });
   public static final BitSet FOLLOW_KW_LOCATION_in_alterTblPartitionStatementSuffixSkewedLocation5539 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L });
   public static final BitSet FOLLOW_skewedLocations_in_alterTblPartitionStatementSuffixSkewedLocation5541 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_LPAREN_in_skewedLocations5584 = new BitSet(
-      new long[]{0x0000000000042080L, 0x0000080000001000L, 0x0000000000000000L, 0x2000000000000000L, 0x002C010400000010L});
+      new long[] { 0x0000000000042080L, 0x0000080000001000L, 0x0000000000000000L, 0x2000000000000000L, 0x002C010400000010L });
   public static final BitSet FOLLOW_skewedLocationsList_in_skewedLocations5586 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000200000000000L});
-  public static final BitSet FOLLOW_RPAREN_in_skewedLocations5588 = new BitSet(new long[]{0x0000000000000002L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000200000000000L });
+  public static final BitSet FOLLOW_RPAREN_in_skewedLocations5588 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_skewedLocationMap_in_skewedLocationsList5629 =
-      new BitSet(new long[]{0x0000000000000402L});
+      new BitSet(new long[] { 0x0000000000000402L });
   public static final BitSet FOLLOW_COMMA_in_skewedLocationsList5632 = new BitSet(
-      new long[]{0x0000000000042080L, 0x0000080000001000L, 0x0000000000000000L, 0x2000000000000000L, 0x002C010400000010L});
+      new long[] { 0x0000000000042080L, 0x0000080000001000L, 0x0000000000000000L, 0x2000000000000000L, 0x002C010400000010L });
   public static final BitSet FOLLOW_skewedLocationMap_in_skewedLocationsList5634 =
-      new BitSet(new long[]{0x0000000000000402L});
+      new BitSet(new long[] { 0x0000000000000402L });
   public static final BitSet FOLLOW_skewedValueLocationElement_in_skewedLocationMap5680 =
-      new BitSet(new long[]{0x0000000000100000L});
+      new BitSet(new long[] { 0x0000000000100000L });
   public static final BitSet FOLLOW_EQUAL_in_skewedLocationMap5682 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L });
   public static final BitSet FOLLOW_StringLiteral_in_skewedLocationMap5686 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_SET_in_alterStatementSuffixLocation5723 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000010000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000010000000L });
   public static final BitSet FOLLOW_location_in_alterStatementSuffixLocation5725 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_tableSkewed_in_alterStatementSuffixSkewedby5752 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_NOT_in_alterStatementSuffixSkewedby5767 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000100000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000100000000000L });
   public static final BitSet FOLLOW_KW_SKEWED_in_alterStatementSuffixSkewedby5769 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_NOT_in_alterStatementSuffixSkewedby5782 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0004000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0004000000000000L });
   public static final BitSet FOLLOW_storedAsDirs_in_alterStatementSuffixSkewedby5784 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_EXCHANGE_in_alterStatementSuffixExchangePartition5815 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x1000000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x1000000000000000L });
   public static final BitSet FOLLOW_partitionSpec_in_alterStatementSuffixExchangePartition5817 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000040000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000040000000L });
   public static final BitSet FOLLOW_KW_WITH_in_alterStatementSuffixExchangePartition5819 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0040000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0040000000000000L });
   public static final BitSet FOLLOW_KW_TABLE_in_alterStatementSuffixExchangePartition5821 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_tableName_in_alterStatementSuffixExchangePartition5825 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_alterProtectMode_in_alterStatementSuffixProtectMode5867 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_RENAME_in_alterStatementSuffixRenamePart5906 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x8000000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x8000000000000000L });
   public static final BitSet FOLLOW_KW_TO_in_alterStatementSuffixRenamePart5908 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x1000000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x1000000000000000L });
   public static final BitSet FOLLOW_partitionSpec_in_alterStatementSuffixRenamePart5910 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_UPDATE_in_alterStatementSuffixStatsPart5948 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0002000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0002000000000000L });
   public static final BitSet FOLLOW_KW_STATISTICS_in_alterStatementSuffixStatsPart5950 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0008000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0008000000000000L });
   public static final BitSet FOLLOW_KW_FOR_in_alterStatementSuffixStatsPart5952 = new BitSet(
-      new long[]{0xFFE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFFE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_KW_COLUMN_in_alterStatementSuffixStatsPart5954 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_identifier_in_alterStatementSuffixStatsPart5959 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000008000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000008000000000L });
   public static final BitSet FOLLOW_KW_SET_in_alterStatementSuffixStatsPart5961 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L });
   public static final BitSet FOLLOW_tableProperties_in_alterStatementSuffixStatsPart5963 =
-      new BitSet(new long[]{0x0800000000000002L});
+      new BitSet(new long[] { 0x0800000000000002L });
   public static final BitSet FOLLOW_KW_COMMENT_in_alterStatementSuffixStatsPart5966 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L });
   public static final BitSet FOLLOW_StringLiteral_in_alterStatementSuffixStatsPart5970 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_CONCATENATE_in_alterStatementSuffixMergeFiles6017 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_ENABLE_in_alterProtectMode6054 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000900000000000L, 0x0000000000000400L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000900000000000L, 0x0000000000000400L });
   public static final BitSet FOLLOW_alterProtectModeMode_in_alterProtectMode6056 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_DISABLE_in_alterProtectMode6073 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000900000000000L, 0x0000000000000400L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000900000000000L, 0x0000000000000400L });
   public static final BitSet FOLLOW_alterProtectModeMode_in_alterProtectMode6075 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_OFFLINE_in_alterProtectModeMode6111 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_NO_DROP_in_alterProtectModeMode6126 =
-      new BitSet(new long[]{0x0001000000000002L});
+      new BitSet(new long[] { 0x0001000000000002L });
   public static final BitSet FOLLOW_KW_CASCADE_in_alterProtectModeMode6128 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_READONLY_in_alterProtectModeMode6146 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_INTO_in_alterStatementSuffixBucketNum6180 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000010000000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000010000000000L });
   public static final BitSet FOLLOW_Number_in_alterStatementSuffixBucketNum6184 =
-      new BitSet(new long[]{0x0000400000000000L});
+      new BitSet(new long[] { 0x0000400000000000L });
   public static final BitSet FOLLOW_KW_BUCKETS_in_alterStatementSuffixBucketNum6186 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_COMPACT_in_alterStatementSuffixCompact6226 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L });
   public static final BitSet FOLLOW_StringLiteral_in_alterStatementSuffixCompact6230 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_INPUTFORMAT_in_fileFormat6271 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L });
   public static final BitSet FOLLOW_StringLiteral_in_fileFormat6275 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0080000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0080000000000000L });
   public static final BitSet FOLLOW_KW_OUTPUTFORMAT_in_fileFormat6277 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L });
   public static final BitSet FOLLOW_StringLiteral_in_fileFormat6281 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000001000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000001000000000L });
   public static final BitSet FOLLOW_KW_SERDE_in_fileFormat6283 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L });
   public static final BitSet FOLLOW_StringLiteral_in_fileFormat6287 =
-      new BitSet(new long[]{0x0000000000000002L, 0x0000000000000000L, 0x0000000000000100L});
+      new BitSet(new long[] { 0x0000000000000002L, 0x0000000000000000L, 0x0000000000000100L });
   public static final BitSet FOLLOW_KW_INPUTDRIVER_in_fileFormat6290 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L });
   public static final BitSet FOLLOW_StringLiteral_in_fileFormat6294 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0040000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0040000000000000L });
   public static final BitSet FOLLOW_KW_OUTPUTDRIVER_in_fileFormat6296 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L});
-  public static final BitSet FOLLOW_StringLiteral_in_fileFormat6300 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_identifier_in_fileFormat6341 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_identifier_in_tabTypeExpr6377 = new BitSet(new long[]{0x0000000000020002L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L });
+  public static final BitSet FOLLOW_StringLiteral_in_fileFormat6300 = new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_identifier_in_fileFormat6341 = new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_identifier_in_tabTypeExpr6377 = new BitSet(new long[] { 0x0000000000020002L });
   public static final BitSet FOLLOW_DOT_in_tabTypeExpr6380 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
-  public static final BitSet FOLLOW_KW_ELEM_TYPE_in_tabTypeExpr6384 = new BitSet(new long[]{0x0000000000020002L});
-  public static final BitSet FOLLOW_KW_KEY_TYPE_in_tabTypeExpr6388 = new BitSet(new long[]{0x0000000000020002L});
-  public static final BitSet FOLLOW_KW_VALUE_TYPE_in_tabTypeExpr6392 = new BitSet(new long[]{0x0000000000020002L});
-  public static final BitSet FOLLOW_identifier_in_tabTypeExpr6396 = new BitSet(new long[]{0x0000000000020002L});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
+  public static final BitSet FOLLOW_KW_ELEM_TYPE_in_tabTypeExpr6384 = new BitSet(new long[] { 0x0000000000020002L });
+  public static final BitSet FOLLOW_KW_KEY_TYPE_in_tabTypeExpr6388 = new BitSet(new long[] { 0x0000000000020002L });
+  public static final BitSet FOLLOW_KW_VALUE_TYPE_in_tabTypeExpr6392 = new BitSet(new long[] { 0x0000000000020002L });
+  public static final BitSet FOLLOW_identifier_in_tabTypeExpr6396 = new BitSet(new long[] { 0x0000000000020002L });
   public static final BitSet FOLLOW_identifier_in_descTabTypeExpr6425 = new BitSet(
-      new long[]{0xFDE9FFFDFC020002L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC020002L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_DOT_in_descTabTypeExpr6428 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_KW_ELEM_TYPE_in_descTabTypeExpr6432 = new BitSet(
-      new long[]{0xFDE9FFFDFC020002L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC020002L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_KW_KEY_TYPE_in_descTabTypeExpr6436 = new BitSet(
-      new long[]{0xFDE9FFFDFC020002L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC020002L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_KW_VALUE_TYPE_in_descTabTypeExpr6440 = new BitSet(
-      new long[]{0xFDE9FFFDFC020002L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC020002L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_identifier_in_descTabTypeExpr6444 = new BitSet(
-      new long[]{0xFDE9FFFDFC020002L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
-  public static final BitSet FOLLOW_identifier_in_descTabTypeExpr6449 = new BitSet(new long[]{0x0000000000000002L});
+      new long[] { 0xFDE9FFFDFC020002L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
+  public static final BitSet FOLLOW_identifier_in_descTabTypeExpr6449 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_tabTypeExpr_in_partTypeExpr6477 =
-      new BitSet(new long[]{0x0000000000000002L, 0x0000000000000000L, 0x1000000000000000L});
-  public static final BitSet FOLLOW_partitionSpec_in_partTypeExpr6479 = new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L, 0x0000000000000000L, 0x1000000000000000L });
+  public static final BitSet FOLLOW_partitionSpec_in_partTypeExpr6479 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_descTabTypeExpr_in_descPartTypeExpr6519 =
-      new BitSet(new long[]{0x0000000000000002L, 0x0000000000000000L, 0x1000000000000000L});
-  public static final BitSet FOLLOW_partitionSpec_in_descPartTypeExpr6521 = new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L, 0x0000000000000000L, 0x1000000000000000L });
+  public static final BitSet FOLLOW_partitionSpec_in_descPartTypeExpr6521 =
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_DESCRIBE_in_descStatement6561 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000400L, 0x0000000000000000L, 0x0000000100000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000400L, 0x0000000000000000L, 0x0000000100000000L });
   public static final BitSet FOLLOW_KW_DESC_in_descStatement6563 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000400L, 0x0000000000000000L, 0x0000000100000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000400L, 0x0000000000000000L, 0x0000000100000000L });
   public static final BitSet FOLLOW_KW_DATABASE_in_descStatement6567 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFFEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFFEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_KW_SCHEMA_in_descStatement6569 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFFEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFFEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_KW_EXTENDED_in_descStatement6572 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
-  public static final BitSet FOLLOW_identifier_in_descStatement6578 = new BitSet(new long[]{0x0000000000000002L});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
+  public static final BitSet FOLLOW_identifier_in_descStatement6578 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_DESCRIBE_in_descStatement6600 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFFEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFFEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_KW_DESC_in_descStatement6602 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFFEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFFEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_KW_FORMATTED_in_descStatement6608 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_KW_EXTENDED_in_descStatement6612 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_KW_PRETTY_in_descStatement6616 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
-  public static final BitSet FOLLOW_descPartTypeExpr_in_descStatement6623 = new BitSet(new long[]{0x0000000000000002L});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
+  public static final BitSet FOLLOW_descPartTypeExpr_in_descStatement6623 =
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_DESCRIBE_in_descStatement6646 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0100000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0100000000000000L });
   public static final BitSet FOLLOW_KW_DESC_in_descStatement6648 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0100000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0100000000000000L });
   public static final BitSet FOLLOW_KW_FUNCTION_in_descStatement6651 = new BitSet(
-      new long[]{0xFDEBFFFFFDB0C070L, 0xDEBBFFEAF7FFFB16L, 0xF6FEFF7DFFBDFFFFL, 0xEEFFFFFBFFFF7FF9L, 0x001A02E356FFF77BL});
+      new long[] { 0xFDEBFFFFFDB0C070L, 0xDEBBFFEAF7FFFB16L, 0xF6FEFF7DFFBDFFFFL, 0xEEFFFFFBFFFF7FF9L, 0x001A02E356FFF77BL });
   public static final BitSet FOLLOW_KW_EXTENDED_in_descStatement6653 = new BitSet(
-      new long[]{0xFDEBFFFFFDB0C070L, 0xDEBBFDEAF7FFFB16L, 0xF6FEFF7DFFBDFFFFL, 0xEEFFFFFBFFFF7FF9L, 0x001A02E356FFF77BL});
-  public static final BitSet FOLLOW_descFuncNames_in_descStatement6659 = new BitSet(new long[]{0x0000000000000002L});
+      new long[] { 0xFDEBFFFFFDB0C070L, 0xDEBBFDEAF7FFFB16L, 0xF6FEFF7DFFBDFFFFL, 0xEEFFFFFBFFFF7FF9L, 0x001A02E356FFF77BL });
+  public static final BitSet FOLLOW_descFuncNames_in_descStatement6659 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_ANALYZE_in_analyzeStatement6700 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0040000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0040000000000000L });
   public static final BitSet FOLLOW_KW_TABLE_in_analyzeStatement6702 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_tableOrPartition_in_analyzeStatement6707 =
-      new BitSet(new long[]{0x4000000000000000L});
+      new BitSet(new long[] { 0x4000000000000000L });
   public static final BitSet FOLLOW_KW_COMPUTE_in_analyzeStatement6710 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0002000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0002000000000000L });
   public static final BitSet FOLLOW_KW_STATISTICS_in_analyzeStatement6712 =
-      new BitSet(new long[]{0x0000000000000002L, 0x0008000000000000L, 0x0800040000000000L});
-  public static final BitSet FOLLOW_KW_NOSCAN_in_analyzeStatement6718 = new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L, 0x0008000000000000L, 0x0800040000000000L });
+  public static final BitSet FOLLOW_KW_NOSCAN_in_analyzeStatement6718 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_PARTIALSCAN_in_analyzeStatement6726 =
-      new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_KW_FOR_in_analyzeStatement6787 = new BitSet(new long[]{0x0400000000000000L});
+      new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_KW_FOR_in_analyzeStatement6787 = new BitSet(new long[] { 0x0400000000000000L });
   public static final BitSet FOLLOW_KW_COLUMNS_in_analyzeStatement6789 = new BitSet(
-      new long[]{0xFDE9FFFDFC000002L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000002L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_columnNameList_in_analyzeStatement6794 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_SHOW_in_showStatement6856 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000800L, 0x0000000000000000L, 0x0000000200000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000800L, 0x0000000000000000L, 0x0000000200000000L });
   public static final BitSet FOLLOW_KW_DATABASES_in_showStatement6859 =
-      new BitSet(new long[]{0x0000000000000002L, 0x0000000000000000L, 0x0000000000800000L});
+      new BitSet(new long[] { 0x0000000000000002L, 0x0000000000000000L, 0x0000000000800000L });
   public static final BitSet FOLLOW_KW_SCHEMAS_in_showStatement6861 =
-      new BitSet(new long[]{0x0000000000000002L, 0x0000000000000000L, 0x0000000000800000L});
+      new BitSet(new long[] { 0x0000000000000002L, 0x0000000000000000L, 0x0000000000800000L });
   public static final BitSet FOLLOW_KW_LIKE_in_showStatement6865 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0008000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0008000052FFF77BL });
   public static final BitSet FOLLOW_showStmtIdentifier_in_showStatement6867 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_SHOW_in_showStatement6886 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0080000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0080000000000000L });
   public static final BitSet FOLLOW_KW_TABLES_in_showStatement6888 = new BitSet(
-      new long[]{0xFDE9FFFDFC000002L, 0xDEFBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0008000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000002L, 0xDEFBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0008000052FFF77BL });
   public static final BitSet FOLLOW_KW_FROM_in_showStatement6892 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_KW_IN_in_showStatement6894 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_identifier_in_showStatement6899 = new BitSet(
-      new long[]{0xFDE9FFFDFC000002L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0008000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000002L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0008000052FFF77BL });
   public static final BitSet FOLLOW_KW_LIKE_in_showStatement6904 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0008000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0008000052FFF77BL });
   public static final BitSet FOLLOW_showStmtIdentifier_in_showStatement6906 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_showStmtIdentifier_in_showStatement6908 =
-      new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_KW_SHOW_in_showStatement6936 = new BitSet(new long[]{0x0400000000000000L});
+      new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_KW_SHOW_in_showStatement6936 = new BitSet(new long[] { 0x0400000000000000L });
   public static final BitSet FOLLOW_KW_COLUMNS_in_showStatement6938 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0040000000000000L, 0x0000000000000008L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0040000000000000L, 0x0000000000000008L });
   public static final BitSet FOLLOW_KW_FROM_in_showStatement6941 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_KW_IN_in_showStatement6943 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_tableName_in_showStatement6946 =
-      new BitSet(new long[]{0x0000000000000002L, 0x0040000000000000L, 0x0000000000000008L});
+      new BitSet(new long[] { 0x0000000000000002L, 0x0040000000000000L, 0x0000000000000008L });
   public static final BitSet FOLLOW_KW_FROM_in_showStatement6950 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_KW_IN_in_showStatement6952 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
-  public static final BitSet FOLLOW_identifier_in_showStatement6957 = new BitSet(new long[]{0x0000000000000002L});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
+  public static final BitSet FOLLOW_identifier_in_showStatement6957 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_SHOW_in_showStatement6983 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0200000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0200000000000000L });
   public static final BitSet FOLLOW_KW_FUNCTIONS_in_showStatement6985 = new BitSet(
-      new long[]{0xFDE9FFFDFC000002L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0008000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000002L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0008000052FFF77BL });
   public static final BitSet FOLLOW_KW_LIKE_in_showStatement6988 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0008000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0008000052FFF77BL });
   public static final BitSet FOLLOW_showFunctionIdentifier_in_showStatement6990 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_showFunctionIdentifier_in_showStatement6992 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_SHOW_in_showStatement7015 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x4000000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x4000000000000000L });
   public static final BitSet FOLLOW_KW_PARTITIONS_in_showStatement7017 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_tableName_in_showStatement7021 =
-      new BitSet(new long[]{0x0000000000000002L, 0x0000000000000000L, 0x1000000000000000L});
-  public static final BitSet FOLLOW_partitionSpec_in_showStatement7023 = new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L, 0x0000000000000000L, 0x1000000000000000L });
+  public static final BitSet FOLLOW_partitionSpec_in_showStatement7023 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_SHOW_in_showStatement7045 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000004L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000004L });
   public static final BitSet FOLLOW_KW_CREATE_in_showStatement7047 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0040000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0040000000000000L });
   public static final BitSet FOLLOW_KW_TABLE_in_showStatement7049 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
-  public static final BitSet FOLLOW_tableName_in_showStatement7053 = new BitSet(new long[]{0x0000000000000002L});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
+  public static final BitSet FOLLOW_tableName_in_showStatement7053 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_SHOW_in_showStatement7070 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0040000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0040000000000000L });
   public static final BitSet FOLLOW_KW_TABLE_in_showStatement7072 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000020000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000020000000000L });
   public static final BitSet FOLLOW_KW_EXTENDED_in_showStatement7074 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0040000000000000L, 0x0000000000800008L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0040000000000000L, 0x0000000000800008L });
   public static final BitSet FOLLOW_KW_FROM_in_showStatement7078 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_KW_IN_in_showStatement7080 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_identifier_in_showStatement7085 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000800000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000800000L });
   public static final BitSet FOLLOW_KW_LIKE_in_showStatement7089 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0008000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0008000052FFF77BL });
   public static final BitSet FOLLOW_showStmtIdentifier_in_showStatement7091 =
-      new BitSet(new long[]{0x0000000000000002L, 0x0000000000000000L, 0x1000000000000000L});
-  public static final BitSet FOLLOW_partitionSpec_in_showStatement7093 = new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L, 0x0000000000000000L, 0x1000000000000000L });
+  public static final BitSet FOLLOW_partitionSpec_in_showStatement7093 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_SHOW_in_showStatement7121 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0200000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0200000000000000L });
   public static final BitSet FOLLOW_KW_TBLPROPERTIES_in_showStatement7123 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_tableName_in_showStatement7125 = new BitSet(
-      new long[]{0x0000000000000002L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L});
+      new long[] { 0x0000000000000002L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L });
   public static final BitSet FOLLOW_LPAREN_in_showStatement7128 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L });
   public static final BitSet FOLLOW_StringLiteral_in_showStatement7132 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000200000000000L});
-  public static final BitSet FOLLOW_RPAREN_in_showStatement7134 = new BitSet(new long[]{0x0000000000000002L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000200000000000L });
+  public static final BitSet FOLLOW_RPAREN_in_showStatement7134 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_SHOW_in_showStatement7156 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000040000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000040000000L });
   public static final BitSet FOLLOW_KW_LOCKS_in_showStatement7158 = new BitSet(
-      new long[]{0xFDE9FFFDFC000002L, 0xDEBBFFEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000002L, 0xDEBBFFEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_partTypeExpr_in_showStatement7163 =
-      new BitSet(new long[]{0x0000000000000002L, 0x0000020000000000L});
-  public static final BitSet FOLLOW_KW_EXTENDED_in_showStatement7170 = new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L, 0x0000020000000000L });
+  public static final BitSet FOLLOW_KW_EXTENDED_in_showStatement7170 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_SHOW_in_showStatement7194 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000040000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000040000000L });
   public static final BitSet FOLLOW_KW_LOCKS_in_showStatement7196 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000400L, 0x0000000000000000L, 0x0000000100000000L});
-  public static final BitSet FOLLOW_KW_DATABASE_in_showStatement7199 = new BitSet(new long[]{0x0000000004000000L});
-  public static final BitSet FOLLOW_KW_SCHEMA_in_showStatement7201 = new BitSet(new long[]{0x0000000004000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000400L, 0x0000000000000000L, 0x0000000100000000L });
+  public static final BitSet FOLLOW_KW_DATABASE_in_showStatement7199 = new BitSet(new long[] { 0x0000000004000000L });
+  public static final BitSet FOLLOW_KW_SCHEMA_in_showStatement7201 = new BitSet(new long[] { 0x0000000004000000L });
   public static final BitSet FOLLOW_Identifier_in_showStatement7207 =
-      new BitSet(new long[]{0x0000000000000002L, 0x0000020000000000L});
-  public static final BitSet FOLLOW_KW_EXTENDED_in_showStatement7213 = new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L, 0x0000020000000000L });
+  public static final BitSet FOLLOW_KW_EXTENDED_in_showStatement7213 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_SHOW_in_showStatement7236 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0020000000000000L, 0x0000000000000030L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0020000000000000L, 0x0000000000000030L });
   public static final BitSet FOLLOW_KW_FORMATTED_in_showStatement7241 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000030L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000030L });
   public static final BitSet FOLLOW_KW_INDEX_in_showStatement7246 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0001000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0001000000000000L });
   public static final BitSet FOLLOW_KW_INDEXES_in_showStatement7248 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0001000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0001000000000000L });
   public static final BitSet FOLLOW_KW_ON_in_showStatement7251 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0008000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0008000052FFF77BL });
   public static final BitSet FOLLOW_showStmtIdentifier_in_showStatement7253 =
-      new BitSet(new long[]{0x0000000000000002L, 0x0040000000000000L, 0x0000000000000008L});
+      new BitSet(new long[] { 0x0000000000000002L, 0x0040000000000000L, 0x0000000000000008L });
   public static final BitSet FOLLOW_KW_FROM_in_showStatement7257 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_KW_IN_in_showStatement7259 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
-  public static final BitSet FOLLOW_identifier_in_showStatement7264 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_KW_SHOW_in_showStatement7294 = new BitSet(new long[]{0x2000000000000000L});
-  public static final BitSet FOLLOW_KW_COMPACTIONS_in_showStatement7296 = new BitSet(new long[]{0x0000000000000002L});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
+  public static final BitSet FOLLOW_identifier_in_showStatement7264 = new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_KW_SHOW_in_showStatement7294 = new BitSet(new long[] { 0x2000000000000000L });
+  public static final BitSet FOLLOW_KW_COMPACTIONS_in_showStatement7296 =
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_SHOW_in_showStatement7310 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000002L});
-  public static final BitSet FOLLOW_KW_TRANSACTIONS_in_showStatement7312 = new BitSet(new long[]{0x0000000000000002L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000002L });
+  public static final BitSet FOLLOW_KW_TRANSACTIONS_in_showStatement7312 =
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_SHOW_in_showStatement7326 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000001L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000001L });
   public static final BitSet FOLLOW_KW_CONF_in_showStatement7328 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L});
-  public static final BitSet FOLLOW_StringLiteral_in_showStatement7330 = new BitSet(new long[]{0x0000000000000002L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L });
+  public static final BitSet FOLLOW_StringLiteral_in_showStatement7330 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_LOCK_in_lockStatement7365 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0040000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0040000000000000L });
   public static final BitSet FOLLOW_KW_TABLE_in_lockStatement7367 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_tableName_in_lockStatement7369 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000002000000000L, 0x1000000000000000L, 0x0000020000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000002000000000L, 0x1000000000000000L, 0x0000020000000000L });
   public static final BitSet FOLLOW_partitionSpec_in_lockStatement7371 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000002000000000L, 0x0000000000000000L, 0x0000020000000000L});
-  public static final BitSet FOLLOW_lockMode_in_lockStatement7374 = new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000002000000000L, 0x0000000000000000L, 0x0000020000000000L });
+  public static final BitSet FOLLOW_lockMode_in_lockStatement7374 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_LOCK_in_lockDatabase7414 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000400L, 0x0000000000000000L, 0x0000000100000000L});
-  public static final BitSet FOLLOW_KW_DATABASE_in_lockDatabase7417 = new BitSet(new long[]{0x0000000004000000L});
-  public static final BitSet FOLLOW_KW_SCHEMA_in_lockDatabase7419 = new BitSet(new long[]{0x0000000004000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000400L, 0x0000000000000000L, 0x0000000100000000L });
+  public static final BitSet FOLLOW_KW_DATABASE_in_lockDatabase7417 = new BitSet(new long[] { 0x0000000004000000L });
+  public static final BitSet FOLLOW_KW_SCHEMA_in_lockDatabase7419 = new BitSet(new long[] { 0x0000000004000000L });
   public static final BitSet FOLLOW_Identifier_in_lockDatabase7425 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000002000000000L, 0x0000000000000000L, 0x0000020000000000L});
-  public static final BitSet FOLLOW_lockMode_in_lockDatabase7428 = new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000002000000000L, 0x0000000000000000L, 0x0000020000000000L });
+  public static final BitSet FOLLOW_lockMode_in_lockDatabase7428 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_UNLOCK_in_unlockStatement7497 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0040000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0040000000000000L });
   public static final BitSet FOLLOW_KW_TABLE_in_unlockStatement7499 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_tableName_in_unlockStatement7501 =
-      new BitSet(new long[]{0x0000000000000002L, 0x0000000000000000L, 0x1000000000000000L});
-  public static final BitSet FOLLOW_partitionSpec_in_unlockStatement7503 = new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L, 0x0000000000000000L, 0x1000000000000000L });
+  public static final BitSet FOLLOW_partitionSpec_in_unlockStatement7503 =
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_UNLOCK_in_unlockDatabase7543 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000400L, 0x0000000000000000L, 0x0000000100000000L});
-  public static final BitSet FOLLOW_KW_DATABASE_in_unlockDatabase7546 = new BitSet(new long[]{0x0000000004000000L});
-  public static final BitSet FOLLOW_KW_SCHEMA_in_unlockDatabase7548 = new BitSet(new long[]{0x0000000004000000L});
-  public static final BitSet FOLLOW_Identifier_in_unlockDatabase7554 = new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000400L, 0x0000000000000000L, 0x0000000100000000L });
+  public static final BitSet FOLLOW_KW_DATABASE_in_unlockDatabase7546 = new BitSet(new long[] { 0x0000000004000000L });
+  public static final BitSet FOLLOW_KW_SCHEMA_in_unlockDatabase7548 = new BitSet(new long[] { 0x0000000004000000L });
+  public static final BitSet FOLLOW_Identifier_in_unlockDatabase7554 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_CREATE_in_createRoleStatement7591 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000008000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000008000000L });
   public static final BitSet FOLLOW_KW_ROLE_in_createRoleStatement7593 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
-  public static final BitSet FOLLOW_identifier_in_createRoleStatement7597 = new BitSet(new long[]{0x0000000000000002L});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
+  public static final BitSet FOLLOW_identifier_in_createRoleStatement7597 =
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_DROP_in_dropRoleStatement7637 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000008000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000008000000L });
   public static final BitSet FOLLOW_KW_ROLE_in_dropRoleStatement7639 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
-  public static final BitSet FOLLOW_identifier_in_dropRoleStatement7643 = new BitSet(new long[]{0x0000000000000002L});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
+  public static final BitSet FOLLOW_identifier_in_dropRoleStatement7643 =
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_GRANT_in_grantPrivileges7683 = new BitSet(
-      new long[]{0x00000000C0000000L, 0x0000000040080004L, 0x0000000020000410L, 0x0000080400000000L, 0x0000000000008000L});
+      new long[] { 0x00000000C0000000L, 0x0000000040080004L, 0x0000000020000410L, 0x0000080400000000L, 0x0000000000008000L });
   public static final BitSet FOLLOW_privilegeList_in_grantPrivileges7687 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0001000000000000L, 0x8000000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0001000000000000L, 0x8000000000000000L });
   public static final BitSet FOLLOW_privilegeObject_in_grantPrivileges7695 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x8000000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x8000000000000000L });
   public static final BitSet FOLLOW_KW_TO_in_grantPrivileges7704 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0800000000000000L, 0x0000000000000000L, 0x0000000008000000L, 0x0000000000040000L});
+      new long[] { 0x0000000000000000L, 0x0800000000000000L, 0x0000000000000000L, 0x0000000008000000L, 0x0000000000040000L });
   public static final BitSet FOLLOW_principalSpecification_in_grantPrivileges7706 = new BitSet(
-      new long[]{0x0000000000000002L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000040000000L});
+      new long[] { 0x0000000000000002L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000040000000L });
   public static final BitSet FOLLOW_withGrantOption_in_grantPrivileges7714 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_REVOKE_in_revokePrivileges7763 = new BitSet(
-      new long[]{0x00000000C0000000L, 0x0400000040080004L, 0x0000000020000410L, 0x0000080400000000L, 0x0000000000008000L});
+      new long[] { 0x00000000C0000000L, 0x0400000040080004L, 0x0000000020000410L, 0x0000080400000000L, 0x0000000000008000L });
   public static final BitSet FOLLOW_grantOptionFor_in_revokePrivileges7765 = new BitSet(
-      new long[]{0x00000000C0000000L, 0x0000000040080004L, 0x0000000020000410L, 0x0000080400000000L, 0x0000000000008000L});
+      new long[] { 0x00000000C0000000L, 0x0000000040080004L, 0x0000000020000410L, 0x0000080400000000L, 0x0000000000008000L });
   public static final BitSet FOLLOW_privilegeList_in_revokePrivileges7768 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0040000000000000L, 0x0001000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0040000000000000L, 0x0001000000000000L });
   public static final BitSet FOLLOW_privilegeObject_in_revokePrivileges7770 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0040000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0040000000000000L });
   public static final BitSet FOLLOW_KW_FROM_in_revokePrivileges7773 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0800000000000000L, 0x0000000000000000L, 0x0000000008000000L, 0x0000000000040000L});
+      new long[] { 0x0000000000000000L, 0x0800000000000000L, 0x0000000000000000L, 0x0000000008000000L, 0x0000000000040000L });
   public static final BitSet FOLLOW_principalSpecification_in_revokePrivileges7775 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_GRANT_in_grantRole7822 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_KW_ROLE_in_grantRole7824 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_identifier_in_grantRole7827 =
-      new BitSet(new long[]{0x0000000000000400L, 0x0000000000000000L, 0x0000000000000000L, 0x8000000000000000L});
+      new BitSet(new long[] { 0x0000000000000400L, 0x0000000000000000L, 0x0000000000000000L, 0x8000000000000000L });
   public static final BitSet FOLLOW_COMMA_in_grantRole7830 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_identifier_in_grantRole7832 =
-      new BitSet(new long[]{0x0000000000000400L, 0x0000000000000000L, 0x0000000000000000L, 0x8000000000000000L});
+      new BitSet(new long[] { 0x0000000000000400L, 0x0000000000000000L, 0x0000000000000000L, 0x8000000000000000L });
   public static final BitSet FOLLOW_KW_TO_in_grantRole7836 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0800000000000000L, 0x0000000000000000L, 0x0000000008000000L, 0x0000000000040000L});
+      new long[] { 0x0000000000000000L, 0x0800000000000000L, 0x0000000000000000L, 0x0000000008000000L, 0x0000000000040000L });
   public static final BitSet FOLLOW_principalSpecification_in_grantRole7838 = new BitSet(
-      new long[]{0x0000000000000002L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000040000000L});
-  public static final BitSet FOLLOW_withAdminOption_in_grantRole7840 = new BitSet(new long[]{0x0000000000000002L});
+      new long[] { 0x0000000000000002L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000040000000L });
+  public static final BitSet FOLLOW_withAdminOption_in_grantRole7840 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_REVOKE_in_revokeRole7886 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_adminOptionFor_in_revokeRole7888 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_KW_ROLE_in_revokeRole7891 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_identifier_in_revokeRole7894 =
-      new BitSet(new long[]{0x0000000000000400L, 0x0040000000000000L});
+      new BitSet(new long[] { 0x0000000000000400L, 0x0040000000000000L });
   public static final BitSet FOLLOW_COMMA_in_revokeRole7897 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_identifier_in_revokeRole7899 =
-      new BitSet(new long[]{0x0000000000000400L, 0x0040000000000000L});
+      new BitSet(new long[] { 0x0000000000000400L, 0x0040000000000000L });
   public static final BitSet FOLLOW_KW_FROM_in_revokeRole7903 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0800000000000000L, 0x0000000000000000L, 0x0000000008000000L, 0x0000000000040000L});
+      new long[] { 0x0000000000000000L, 0x0800000000000000L, 0x0000000000000000L, 0x0000000008000000L, 0x0000000000040000L });
   public static final BitSet FOLLOW_principalSpecification_in_revokeRole7905 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_SHOW_in_showRoleGrants7950 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000008000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000008000000L });
   public static final BitSet FOLLOW_KW_ROLE_in_showRoleGrants7952 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0400000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0400000000000000L });
   public static final BitSet FOLLOW_KW_GRANT_in_showRoleGrants7954 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0800000000000000L, 0x0000000000000000L, 0x0000000008000000L, 0x0000000000040000L});
-  public static final BitSet FOLLOW_principalName_in_showRoleGrants7956 = new BitSet(new long[]{0x0000000000000002L});
+      new long[] { 0x0000000000000000L, 0x0800000000000000L, 0x0000000000000000L, 0x0000000008000000L, 0x0000000000040000L });
+  public static final BitSet FOLLOW_principalName_in_showRoleGrants7956 =
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_SHOW_in_showRoles7996 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000010000000L});
-  public static final BitSet FOLLOW_KW_ROLES_in_showRoles7998 = new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000010000000L });
+  public static final BitSet FOLLOW_KW_ROLES_in_showRoles7998 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_SHOW_in_showCurrentRole8035 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000020L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000020L });
   public static final BitSet FOLLOW_KW_CURRENT_in_showCurrentRole8037 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000010000000L});
-  public static final BitSet FOLLOW_KW_ROLES_in_showCurrentRole8039 = new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000010000000L });
+  public static final BitSet FOLLOW_KW_ROLES_in_showCurrentRole8039 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_SET_in_setRole8076 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000008000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000008000000L });
   public static final BitSet FOLLOW_KW_ROLE_in_setRole8078 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
-  public static final BitSet FOLLOW_identifier_in_setRole8082 = new BitSet(new long[]{0x0000000000000002L});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
+  public static final BitSet FOLLOW_identifier_in_setRole8082 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_SHOW_in_showGrants8122 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0400000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0400000000000000L });
   public static final BitSet FOLLOW_KW_GRANT_in_showGrants8124 = new BitSet(
-      new long[]{0x0000000000000002L, 0x0800000000000000L, 0x0001000000000000L, 0x0000000008000000L, 0x0000000000040000L});
+      new long[] { 0x0000000000000002L, 0x0800000000000000L, 0x0001000000000000L, 0x0000000008000000L, 0x0000000000040000L });
   public static final BitSet FOLLOW_principalName_in_showGrants8126 =
-      new BitSet(new long[]{0x0000000000000002L, 0x0000000000000000L, 0x0001000000000000L});
+      new BitSet(new long[] { 0x0000000000000002L, 0x0000000000000000L, 0x0001000000000000L });
   public static final BitSet FOLLOW_KW_ON_in_showGrants8130 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFF16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFF16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_privilegeIncludeColObject_in_showGrants8132 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_SHOW_in_showRolePrincipals8177 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000010L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000010L });
   public static final BitSet FOLLOW_KW_PRINCIPALS_in_showRolePrincipals8179 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
-  public static final BitSet FOLLOW_identifier_in_showRolePrincipals8183 = new BitSet(new long[]{0x0000000000000002L});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
+  public static final BitSet FOLLOW_identifier_in_showRolePrincipals8183 =
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_ALL_in_privilegeIncludeColObject8224 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_privObjectCols_in_privilegeIncludeColObject8238 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_ON_in_privilegeObject8273 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFF16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
-  public static final BitSet FOLLOW_privObject_in_privilegeObject8275 = new BitSet(new long[]{0x0000000000000002L});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFF16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
+  public static final BitSet FOLLOW_privObject_in_privilegeObject8275 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_DATABASE_in_privObject8302 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_KW_SCHEMA_in_privObject8304 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
-  public static final BitSet FOLLOW_identifier_in_privObject8307 = new BitSet(new long[]{0x0000000000000002L});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
+  public static final BitSet FOLLOW_identifier_in_privObject8307 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_TABLE_in_privObject8323 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_tableName_in_privObject8326 =
-      new BitSet(new long[]{0x0000000000000002L, 0x0000000000000000L, 0x1000000000000000L});
-  public static final BitSet FOLLOW_partitionSpec_in_privObject8328 = new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L, 0x0000000000000000L, 0x1000000000000000L });
+  public static final BitSet FOLLOW_partitionSpec_in_privObject8328 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_URI_in_privObject8348 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L});
-  public static final BitSet FOLLOW_StringLiteral_in_privObject8353 = new BitSet(new long[]{0x0000000000000002L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L });
+  public static final BitSet FOLLOW_StringLiteral_in_privObject8353 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_SERVER_in_privObject8372 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
-  public static final BitSet FOLLOW_identifier_in_privObject8374 = new BitSet(new long[]{0x0000000000000002L});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
+  public static final BitSet FOLLOW_identifier_in_privObject8374 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_DATABASE_in_privObjectCols8400 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_KW_SCHEMA_in_privObjectCols8402 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
-  public static final BitSet FOLLOW_identifier_in_privObjectCols8405 = new BitSet(new long[]{0x0000000000000002L});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
+  public static final BitSet FOLLOW_identifier_in_privObjectCols8405 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_TABLE_in_privObjectCols8421 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_tableName_in_privObjectCols8424 = new BitSet(
-      new long[]{0x0000000000000002L, 0x0000000000000000L, 0x1000000000000000L, 0x0000000000000000L, 0x0000000400000000L});
+      new long[] { 0x0000000000000002L, 0x0000000000000000L, 0x1000000000000000L, 0x0000000000000000L, 0x0000000400000000L });
   public static final BitSet FOLLOW_LPAREN_in_privObjectCols8427 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_columnNameList_in_privObjectCols8431 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000200000000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000200000000000L });
   public static final BitSet FOLLOW_RPAREN_in_privObjectCols8433 =
-      new BitSet(new long[]{0x0000000000000002L, 0x0000000000000000L, 0x1000000000000000L});
-  public static final BitSet FOLLOW_partitionSpec_in_privObjectCols8437 = new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L, 0x0000000000000000L, 0x1000000000000000L });
+  public static final BitSet FOLLOW_partitionSpec_in_privObjectCols8437 =
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_URI_in_privObjectCols8461 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L});
-  public static final BitSet FOLLOW_StringLiteral_in_privObjectCols8466 = new BitSet(new long[]{0x0000000000000002L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L });
+  public static final BitSet FOLLOW_StringLiteral_in_privObjectCols8466 =
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_SERVER_in_privObjectCols8485 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
-  public static final BitSet FOLLOW_identifier_in_privObjectCols8487 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_privlegeDef_in_privilegeList8522 = new BitSet(new long[]{0x0000000000000402L});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
+  public static final BitSet FOLLOW_identifier_in_privObjectCols8487 = new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_privlegeDef_in_privilegeList8522 = new BitSet(new long[] { 0x0000000000000402L });
   public static final BitSet FOLLOW_COMMA_in_privilegeList8525 = new BitSet(
-      new long[]{0x00000000C0000000L, 0x0000000040080004L, 0x0000000020000410L, 0x0000080400000000L, 0x0000000000008000L});
-  public static final BitSet FOLLOW_privlegeDef_in_privilegeList8527 = new BitSet(new long[]{0x0000000000000402L});
+      new long[] { 0x00000000C0000000L, 0x0000000040080004L, 0x0000000020000410L, 0x0000080400000000L, 0x0000000000008000L });
+  public static final BitSet FOLLOW_privlegeDef_in_privilegeList8527 = new BitSet(new long[] { 0x0000000000000402L });
   public static final BitSet FOLLOW_privilegeType_in_privlegeDef8569 = new BitSet(
-      new long[]{0x0000000000000002L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L});
+      new long[] { 0x0000000000000002L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L });
   public static final BitSet FOLLOW_LPAREN_in_privlegeDef8572 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_columnNameList_in_privlegeDef8576 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000200000000000L});
-  public static final BitSet FOLLOW_RPAREN_in_privlegeDef8578 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_KW_ALL_in_privilegeType8623 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_KW_ALTER_in_privilegeType8637 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_KW_UPDATE_in_privilegeType8651 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_KW_CREATE_in_privilegeType8665 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_KW_DROP_in_privilegeType8679 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_KW_INDEX_in_privilegeType8693 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_KW_LOCK_in_privilegeType8707 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_KW_SELECT_in_privilegeType8721 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_KW_SHOW_DATABASE_in_privilegeType8735 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_KW_INSERT_in_privilegeType8749 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_KW_DELETE_in_privilegeType8763 = new BitSet(new long[]{0x0000000000000002L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000200000000000L });
+  public static final BitSet FOLLOW_RPAREN_in_privlegeDef8578 = new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_KW_ALL_in_privilegeType8623 = new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_KW_ALTER_in_privilegeType8637 = new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_KW_UPDATE_in_privilegeType8651 = new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_KW_CREATE_in_privilegeType8665 = new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_KW_DROP_in_privilegeType8679 = new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_KW_INDEX_in_privilegeType8693 = new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_KW_LOCK_in_privilegeType8707 = new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_KW_SELECT_in_privilegeType8721 = new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_KW_SHOW_DATABASE_in_privilegeType8735 =
+      new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_KW_INSERT_in_privilegeType8749 = new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_KW_DELETE_in_privilegeType8763 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_principalName_in_principalSpecification8796 =
-      new BitSet(new long[]{0x0000000000000402L});
+      new BitSet(new long[] { 0x0000000000000402L });
   public static final BitSet FOLLOW_COMMA_in_principalSpecification8799 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0800000000000000L, 0x0000000000000000L, 0x0000000008000000L, 0x0000000000040000L});
+      new long[] { 0x0000000000000000L, 0x0800000000000000L, 0x0000000000000000L, 0x0000000008000000L, 0x0000000000040000L });
   public static final BitSet FOLLOW_principalName_in_principalSpecification8801 =
-      new BitSet(new long[]{0x0000000000000402L});
+      new BitSet(new long[] { 0x0000000000000402L });
   public static final BitSet FOLLOW_KW_USER_in_principalName8839 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000080052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000080052FFF77BL });
   public static final BitSet FOLLOW_principalIdentifier_in_principalName8841 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_GROUP_in_principalName8857 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000080052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000080052FFF77BL });
   public static final BitSet FOLLOW_principalIdentifier_in_principalName8859 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_ROLE_in_principalName8875 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
-  public static final BitSet FOLLOW_identifier_in_principalName8877 = new BitSet(new long[]{0x0000000000000002L});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
+  public static final BitSet FOLLOW_identifier_in_principalName8877 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_WITH_in_withGrantOption8912 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0400000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0400000000000000L });
   public static final BitSet FOLLOW_KW_GRANT_in_withGrantOption8914 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0002000000000000L});
-  public static final BitSet FOLLOW_KW_OPTION_in_withGrantOption8916 = new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0002000000000000L });
+  public static final BitSet FOLLOW_KW_OPTION_in_withGrantOption8916 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_GRANT_in_grantOptionFor8953 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0002000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0002000000000000L });
   public static final BitSet FOLLOW_KW_OPTION_in_grantOptionFor8955 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0008000000000000L});
-  public static final BitSet FOLLOW_KW_FOR_in_grantOptionFor8957 = new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0008000000000000L });
+  public static final BitSet FOLLOW_KW_FOR_in_grantOptionFor8957 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_ADMIN_in_adminOptionFor8990 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0002000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0002000000000000L });
   public static final BitSet FOLLOW_KW_OPTION_in_adminOptionFor8992 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0008000000000000L});
-  public static final BitSet FOLLOW_KW_FOR_in_adminOptionFor8994 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_KW_WITH_in_withAdminOption9027 = new BitSet(new long[]{0x0000000010000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0008000000000000L });
+  public static final BitSet FOLLOW_KW_FOR_in_adminOptionFor8994 = new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_KW_WITH_in_withAdminOption9027 = new BitSet(new long[] { 0x0000000010000000L });
   public static final BitSet FOLLOW_KW_ADMIN_in_withAdminOption9029 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0002000000000000L});
-  public static final BitSet FOLLOW_KW_OPTION_in_withAdminOption9031 = new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0002000000000000L });
+  public static final BitSet FOLLOW_KW_OPTION_in_withAdminOption9031 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_MSCK_in_metastoreCheck9068 =
-      new BitSet(new long[]{0x0000000000000002L, 0x0000000000000000L, 0x0000000000000000L, 0x0040000000080000L});
+      new BitSet(new long[] { 0x0000000000000002L, 0x0000000000000000L, 0x0000000000000000L, 0x0040000000080000L });
   public static final BitSet FOLLOW_KW_REPAIR_in_metastoreCheck9073 =
-      new BitSet(new long[]{0x0000000000000002L, 0x0000000000000000L, 0x0000000000000000L, 0x0040000000000000L});
+      new BitSet(new long[] { 0x0000000000000002L, 0x0000000000000000L, 0x0000000000000000L, 0x0040000000000000L });
   public static final BitSet FOLLOW_KW_TABLE_in_metastoreCheck9078 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_tableName_in_metastoreCheck9080 =
-      new BitSet(new long[]{0x0000000000000402L, 0x0000000000000000L, 0x1000000000000000L});
-  public static final BitSet FOLLOW_partitionSpec_in_metastoreCheck9082 = new BitSet(new long[]{0x0000000000000402L});
+      new BitSet(new long[] { 0x0000000000000402L, 0x0000000000000000L, 0x1000000000000000L });
+  public static final BitSet FOLLOW_partitionSpec_in_metastoreCheck9082 =
+      new BitSet(new long[] { 0x0000000000000402L });
   public static final BitSet FOLLOW_COMMA_in_metastoreCheck9086 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x1000000000000000L});
-  public static final BitSet FOLLOW_partitionSpec_in_metastoreCheck9088 = new BitSet(new long[]{0x0000000000000402L});
-  public static final BitSet FOLLOW_resource_in_resourceList9141 = new BitSet(new long[]{0x0000000000000402L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x1000000000000000L });
+  public static final BitSet FOLLOW_partitionSpec_in_metastoreCheck9088 =
+      new BitSet(new long[] { 0x0000000000000402L });
+  public static final BitSet FOLLOW_resource_in_resourceList9141 = new BitSet(new long[] { 0x0000000000000402L });
   public static final BitSet FOLLOW_COMMA_in_resourceList9144 =
-      new BitSet(new long[]{0x0000000400000000L, 0x0000400000000000L, 0x0000000000010000L});
-  public static final BitSet FOLLOW_resource_in_resourceList9146 = new BitSet(new long[]{0x0000000000000402L});
+      new BitSet(new long[] { 0x0000000400000000L, 0x0000400000000000L, 0x0000000000010000L });
+  public static final BitSet FOLLOW_resource_in_resourceList9146 = new BitSet(new long[] { 0x0000000000000402L });
   public static final BitSet FOLLOW_resourceType_in_resource9184 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L});
-  public static final BitSet FOLLOW_StringLiteral_in_resource9188 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_KW_JAR_in_resourceType9225 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_KW_FILE_in_resourceType9239 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_KW_ARCHIVE_in_resourceType9253 = new BitSet(new long[]{0x0000000000000002L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L });
+  public static final BitSet FOLLOW_StringLiteral_in_resource9188 = new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_KW_JAR_in_resourceType9225 = new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_KW_FILE_in_resourceType9239 = new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_KW_ARCHIVE_in_resourceType9253 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_CREATE_in_createFunctionStatement9284 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0100000000000000L, 0x0000000000000000L, 0x0400000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0100000000000000L, 0x0000000000000000L, 0x0400000000000000L });
   public static final BitSet FOLLOW_KW_TEMPORARY_in_createFunctionStatement9289 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0100000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0100000000000000L });
   public static final BitSet FOLLOW_KW_FUNCTION_in_createFunctionStatement9293 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_functionIdentifier_in_createFunctionStatement9295 =
-      new BitSet(new long[]{0x0000001000000000L});
+      new BitSet(new long[] { 0x0000001000000000L });
   public static final BitSet FOLLOW_KW_AS_in_createFunctionStatement9297 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L });
   public static final BitSet FOLLOW_StringLiteral_in_createFunctionStatement9299 = new BitSet(
-      new long[]{0x0000000000000002L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000080000L});
+      new long[] { 0x0000000000000002L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000080000L });
   public static final BitSet FOLLOW_KW_USING_in_createFunctionStatement9308 =
-      new BitSet(new long[]{0x0000000400000000L, 0x0000400000000000L, 0x0000000000010000L});
+      new BitSet(new long[] { 0x0000000400000000L, 0x0000400000000000L, 0x0000000000010000L });
   public static final BitSet FOLLOW_resourceList_in_createFunctionStatement9312 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_DROP_in_dropFunctionStatement9398 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0100000000000000L, 0x0000000000000000L, 0x0400000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0100000000000000L, 0x0000000000000000L, 0x0400000000000000L });
   public static final BitSet FOLLOW_KW_TEMPORARY_in_dropFunctionStatement9403 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0100000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0100000000000000L });
   public static final BitSet FOLLOW_KW_FUNCTION_in_dropFunctionStatement9407 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFFL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFFL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_ifExists_in_dropFunctionStatement9409 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_functionIdentifier_in_dropFunctionStatement9412 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_RELOAD_in_reloadFunctionStatement9490 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0100000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0100000000000000L });
   public static final BitSet FOLLOW_KW_FUNCTION_in_reloadFunctionStatement9492 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_CREATE_in_createMacroStatement9520 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0400000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0400000000000000L });
   public static final BitSet FOLLOW_KW_TEMPORARY_in_createMacroStatement9522 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000200000000L});
-  public static final BitSet FOLLOW_KW_MACRO_in_createMacroStatement9524 = new BitSet(new long[]{0x0000000004000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000200000000L });
+  public static final BitSet FOLLOW_KW_MACRO_in_createMacroStatement9524 =
+      new BitSet(new long[] { 0x0000000004000000L });
   public static final BitSet FOLLOW_Identifier_in_createMacroStatement9526 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L });
   public static final BitSet FOLLOW_LPAREN_in_createMacroStatement9534 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000200052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000200052FFF77BL });
   public static final BitSet FOLLOW_columnNameTypeList_in_createMacroStatement9536 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000200000000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000200000000000L });
   public static final BitSet FOLLOW_RPAREN_in_createMacroStatement9539 = new BitSet(
-      new long[]{0xFDEFFFFDFC042080L, 0xDEBBFDEAF7FFFBD6L, 0xF6FAFF7DFFBDFFFFL, 0xEEFFFFFBFFFF7FF9L, 0x003C032452FFF77BL});
+      new long[] { 0xFDEFFFFDFC042080L, 0xDEBBFDEAF7FFFBD6L, 0xF6FAFF7DFFBDFFFFL, 0xEEFFFFFBFFFF7FF9L, 0x003C032452FFF77BL });
   public static final BitSet FOLLOW_expression_in_createMacroStatement9541 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_DROP_in_dropMacroStatement9585 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0400000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0400000000000000L });
   public static final BitSet FOLLOW_KW_TEMPORARY_in_dropMacroStatement9587 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000200000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000200000000L });
   public static final BitSet FOLLOW_KW_MACRO_in_dropMacroStatement9589 =
-      new BitSet(new long[]{0x0000000004000000L, 0x0000000000000000L, 0x0000000000000001L});
-  public static final BitSet FOLLOW_ifExists_in_dropMacroStatement9591 = new BitSet(new long[]{0x0000000004000000L});
-  public static final BitSet FOLLOW_Identifier_in_dropMacroStatement9594 = new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000004000000L, 0x0000000000000000L, 0x0000000000000001L });
+  public static final BitSet FOLLOW_ifExists_in_dropMacroStatement9591 = new BitSet(new long[] { 0x0000000004000000L });
+  public static final BitSet FOLLOW_Identifier_in_dropMacroStatement9594 =
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_CREATE_in_createViewStatement9636 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0004000000000000L, 0x0000000000000000L, 0x0000000002000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0004000000000000L, 0x0000000000000000L, 0x0000000002000000L });
   public static final BitSet FOLLOW_orReplace_in_createViewStatement9639 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000002000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000002000000L });
   public static final BitSet FOLLOW_KW_VIEW_in_createViewStatement9643 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFFL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFFL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_ifNotExists_in_createViewStatement9646 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_tableName_in_createViewStatement9652 = new BitSet(
-      new long[]{0x0800001000000000L, 0x0000000000000000L, 0x2000000000000000L, 0x0200000000000000L, 0x0000000400000000L});
+      new long[] { 0x0800001000000000L, 0x0000000000000000L, 0x2000000000000000L, 0x0200000000000000L, 0x0000000400000000L });
   public static final BitSet FOLLOW_LPAREN_in_createViewStatement9663 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_columnNameCommentList_in_createViewStatement9665 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000200000000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000200000000000L });
   public static final BitSet FOLLOW_RPAREN_in_createViewStatement9667 =
-      new BitSet(new long[]{0x0800001000000000L, 0x0000000000000000L, 0x2000000000000000L, 0x0200000000000000L});
+      new BitSet(new long[] { 0x0800001000000000L, 0x0000000000000000L, 0x2000000000000000L, 0x0200000000000000L });
   public static final BitSet FOLLOW_tableComment_in_createViewStatement9671 =
-      new BitSet(new long[]{0x0000001000000000L, 0x0000000000000000L, 0x2000000000000000L, 0x0200000000000000L});
+      new BitSet(new long[] { 0x0000001000000000L, 0x0000000000000000L, 0x2000000000000000L, 0x0200000000000000L });
   public static final BitSet FOLLOW_viewPartition_in_createViewStatement9674 =
-      new BitSet(new long[]{0x0000001000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0200000000000000L});
+      new BitSet(new long[] { 0x0000001000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0200000000000000L });
   public static final BitSet FOLLOW_tablePropertiesPrefixed_in_createViewStatement9685 =
-      new BitSet(new long[]{0x0000001000000000L});
+      new BitSet(new long[] { 0x0000001000000000L });
   public static final BitSet FOLLOW_KW_AS_in_createViewStatement9696 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L, 0x0000000400008000L, 0x0000000040000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L, 0x0000000400008000L, 0x0000000040000000L });
   public static final BitSet FOLLOW_selectStatementWithCTE_in_createViewStatement9706 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_PARTITIONED_in_viewPartition9829 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0001000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0001000000000000L });
   public static final BitSet FOLLOW_KW_ON_in_viewPartition9831 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L });
   public static final BitSet FOLLOW_LPAREN_in_viewPartition9833 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_columnNameList_in_viewPartition9835 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000200000000000L});
-  public static final BitSet FOLLOW_RPAREN_in_viewPartition9837 = new BitSet(new long[]{0x0000000000000002L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000200000000000L });
+  public static final BitSet FOLLOW_RPAREN_in_viewPartition9837 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_DROP_in_dropViewStatement9876 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000002000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000002000000L });
   public static final BitSet FOLLOW_KW_VIEW_in_dropViewStatement9878 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFFL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFFL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_ifExists_in_dropViewStatement9880 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
-  public static final BitSet FOLLOW_viewName_in_dropViewStatement9883 = new BitSet(new long[]{0x0000000000000002L});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
+  public static final BitSet FOLLOW_viewName_in_dropViewStatement9883 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_functionIdentifier_in_showFunctionIdentifier9921 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_StringLiteral_in_showFunctionIdentifier9929 =
-      new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_identifier_in_showStmtIdentifier9956 = new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_identifier_in_showStmtIdentifier9956 =
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_StringLiteral_in_showStmtIdentifier9964 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_COMMENT_in_tableComment9997 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L});
-  public static final BitSet FOLLOW_StringLiteral_in_tableComment10001 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_KW_PARTITIONED_in_tablePartition10038 = new BitSet(new long[]{0x0000800000000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L });
+  public static final BitSet FOLLOW_StringLiteral_in_tableComment10001 = new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_KW_PARTITIONED_in_tablePartition10038 =
+      new BitSet(new long[] { 0x0000800000000000L });
   public static final BitSet FOLLOW_KW_BY_in_tablePartition10040 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L });
   public static final BitSet FOLLOW_LPAREN_in_tablePartition10042 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_columnNameTypeList_in_tablePartition10044 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000200000000000L});
-  public static final BitSet FOLLOW_RPAREN_in_tablePartition10046 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_KW_CLUSTERED_in_tableBuckets10091 = new BitSet(new long[]{0x0000800000000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000200000000000L });
+  public static final BitSet FOLLOW_RPAREN_in_tablePartition10046 = new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_KW_CLUSTERED_in_tableBuckets10091 = new BitSet(new long[] { 0x0000800000000000L });
   public static final BitSet FOLLOW_KW_BY_in_tableBuckets10093 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L });
   public static final BitSet FOLLOW_LPAREN_in_tableBuckets10095 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_columnNameList_in_tableBuckets10099 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000200000000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000200000000000L });
   public static final BitSet FOLLOW_RPAREN_in_tableBuckets10101 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000002000L, 0x0000800000000000L});
-  public static final BitSet FOLLOW_KW_SORTED_in_tableBuckets10104 = new BitSet(new long[]{0x0000800000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000002000L, 0x0000800000000000L });
+  public static final BitSet FOLLOW_KW_SORTED_in_tableBuckets10104 = new BitSet(new long[] { 0x0000800000000000L });
   public static final BitSet FOLLOW_KW_BY_in_tableBuckets10106 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L });
   public static final BitSet FOLLOW_LPAREN_in_tableBuckets10108 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_columnNameOrderList_in_tableBuckets10112 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000200000000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000200000000000L });
   public static final BitSet FOLLOW_RPAREN_in_tableBuckets10114 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000002000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000002000L });
   public static final BitSet FOLLOW_KW_INTO_in_tableBuckets10118 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000010000000000L});
-  public static final BitSet FOLLOW_Number_in_tableBuckets10122 = new BitSet(new long[]{0x0000400000000000L});
-  public static final BitSet FOLLOW_KW_BUCKETS_in_tableBuckets10124 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_KW_SKEWED_in_tableSkewed10176 = new BitSet(new long[]{0x0000800000000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000010000000000L });
+  public static final BitSet FOLLOW_Number_in_tableBuckets10122 = new BitSet(new long[] { 0x0000400000000000L });
+  public static final BitSet FOLLOW_KW_BUCKETS_in_tableBuckets10124 = new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_KW_SKEWED_in_tableSkewed10176 = new BitSet(new long[] { 0x0000800000000000L });
   public static final BitSet FOLLOW_KW_BY_in_tableSkewed10178 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L });
   public static final BitSet FOLLOW_LPAREN_in_tableSkewed10180 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_columnNameList_in_tableSkewed10184 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000200000000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000200000000000L });
   public static final BitSet FOLLOW_RPAREN_in_tableSkewed10186 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0001000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0001000000000000L });
   public static final BitSet FOLLOW_KW_ON_in_tableSkewed10188 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L });
   public static final BitSet FOLLOW_LPAREN_in_tableSkewed10190 = new BitSet(
-      new long[]{0x0000000000042080L, 0x0000080000001000L, 0x0000000000000000L, 0x2000000000000000L, 0x002C010400000010L});
+      new long[] { 0x0000000000042080L, 0x0000080000001000L, 0x0000000000000000L, 0x2000000000000000L, 0x002C010400000010L });
   public static final BitSet FOLLOW_skewedValueElement_in_tableSkewed10195 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000200000000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000200000000000L });
   public static final BitSet FOLLOW_RPAREN_in_tableSkewed10198 =
-      new BitSet(new long[]{0x0000000000000002L, 0x0000000000000000L, 0x0000000000000000L, 0x0004000000000000L});
-  public static final BitSet FOLLOW_storedAsDirs_in_tableSkewed10201 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_rowFormatSerde_in_rowFormat10249 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_rowFormatDelimited_in_rowFormat10265 = new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L, 0x0000000000000000L, 0x0000000000000000L, 0x0004000000000000L });
+  public static final BitSet FOLLOW_storedAsDirs_in_tableSkewed10201 = new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_rowFormatSerde_in_rowFormat10249 = new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_rowFormatDelimited_in_rowFormat10265 =
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_RECORDREADER_in_recordReader10314 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L});
-  public static final BitSet FOLLOW_StringLiteral_in_recordReader10316 = new BitSet(new long[]{0x0000000000000002L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L });
+  public static final BitSet FOLLOW_StringLiteral_in_recordReader10316 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_RECORDWRITER_in_recordWriter10365 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L});
-  public static final BitSet FOLLOW_StringLiteral_in_recordWriter10367 = new BitSet(new long[]{0x0000000000000002L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L });
+  public static final BitSet FOLLOW_StringLiteral_in_recordWriter10367 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_ROW_in_rowFormatSerde10416 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0010000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0010000000000000L });
   public static final BitSet FOLLOW_KW_FORMAT_in_rowFormatSerde10418 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000001000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000001000000000L });
   public static final BitSet FOLLOW_KW_SERDE_in_rowFormatSerde10420 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L });
   public static final BitSet FOLLOW_StringLiteral_in_rowFormatSerde10424 = new BitSet(
-      new long[]{0x0000000000000002L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000040000000L});
+      new long[] { 0x0000000000000002L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000040000000L });
   public static final BitSet FOLLOW_KW_WITH_in_rowFormatSerde10427 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000002000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000002000000000L });
   public static final BitSet FOLLOW_KW_SERDEPROPERTIES_in_rowFormatSerde10429 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L });
   public static final BitSet FOLLOW_tableProperties_in_rowFormatSerde10433 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_ROW_in_rowFormatDelimited10485 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0010000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0010000000000000L });
   public static final BitSet FOLLOW_KW_FORMAT_in_rowFormatDelimited10487 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000100000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000100000L });
   public static final BitSet FOLLOW_KW_DELIMITED_in_rowFormatDelimited10489 =
-      new BitSet(new long[]{0x0100000000000002L, 0x0000200000000000L, 0x0000200402000000L});
+      new BitSet(new long[] { 0x0100000000000002L, 0x0000200000000000L, 0x0000200402000000L });
   public static final BitSet FOLLOW_tableRowFormatFieldIdentifier_in_rowFormatDelimited10491 =
-      new BitSet(new long[]{0x0100000000000002L, 0x0000000000000000L, 0x0000200402000000L});
+      new BitSet(new long[] { 0x0100000000000002L, 0x0000000000000000L, 0x0000200402000000L });
   public static final BitSet FOLLOW_tableRowFormatCollItemsIdentifier_in_rowFormatDelimited10494 =
-      new BitSet(new long[]{0x0000000000000002L, 0x0000000000000000L, 0x0000200402000000L});
+      new BitSet(new long[] { 0x0000000000000002L, 0x0000000000000000L, 0x0000200402000000L });
   public static final BitSet FOLLOW_tableRowFormatMapKeysIdentifier_in_rowFormatDelimited10497 =
-      new BitSet(new long[]{0x0000000000000002L, 0x0000000000000000L, 0x0000200002000000L});
+      new BitSet(new long[] { 0x0000000000000002L, 0x0000000000000000L, 0x0000200002000000L });
   public static final BitSet FOLLOW_tableRowFormatLinesIdentifier_in_rowFormatDelimited10500 =
-      new BitSet(new long[]{0x0000000000000002L, 0x0000000000000000L, 0x0000200000000000L});
+      new BitSet(new long[] { 0x0000000000000002L, 0x0000000000000000L, 0x0000200000000000L });
   public static final BitSet FOLLOW_tableRowNullFormat_in_rowFormatDelimited10503 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_rowFormatDelimited_in_tableRowFormat10562 =
-      new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_rowFormatSerde_in_tableRowFormat10582 = new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_rowFormatSerde_in_tableRowFormat10582 =
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_TBLPROPERTIES_in_tablePropertiesPrefixed10629 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L });
   public static final BitSet FOLLOW_tableProperties_in_tablePropertiesPrefixed10632 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_LPAREN_in_tableProperties10665 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L });
   public static final BitSet FOLLOW_tablePropertiesList_in_tableProperties10667 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000200000000000L});
-  public static final BitSet FOLLOW_RPAREN_in_tableProperties10669 = new BitSet(new long[]{0x0000000000000002L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000200000000000L });
+  public static final BitSet FOLLOW_RPAREN_in_tableProperties10669 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_keyValueProperty_in_tablePropertiesList10710 =
-      new BitSet(new long[]{0x0000000000000402L});
+      new BitSet(new long[] { 0x0000000000000402L });
   public static final BitSet FOLLOW_COMMA_in_tablePropertiesList10713 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L });
   public static final BitSet FOLLOW_keyValueProperty_in_tablePropertiesList10715 =
-      new BitSet(new long[]{0x0000000000000402L});
+      new BitSet(new long[] { 0x0000000000000402L });
   public static final BitSet FOLLOW_keyProperty_in_tablePropertiesList10740 =
-      new BitSet(new long[]{0x0000000000000402L});
+      new BitSet(new long[] { 0x0000000000000402L });
   public static final BitSet FOLLOW_COMMA_in_tablePropertiesList10743 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L });
   public static final BitSet FOLLOW_keyProperty_in_tablePropertiesList10745 =
-      new BitSet(new long[]{0x0000000000000402L});
+      new BitSet(new long[] { 0x0000000000000402L });
   public static final BitSet FOLLOW_StringLiteral_in_keyValueProperty10791 =
-      new BitSet(new long[]{0x0000000000100000L});
+      new BitSet(new long[] { 0x0000000000100000L });
   public static final BitSet FOLLOW_EQUAL_in_keyValueProperty10793 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L });
   public static final BitSet FOLLOW_StringLiteral_in_keyValueProperty10797 =
-      new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_StringLiteral_in_keyProperty10844 = new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_StringLiteral_in_keyProperty10844 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_FIELDS_in_tableRowFormatFieldIdentifier10888 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0800000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0800000000000000L });
   public static final BitSet FOLLOW_KW_TERMINATED_in_tableRowFormatFieldIdentifier10890 =
-      new BitSet(new long[]{0x0000800000000000L});
+      new BitSet(new long[] { 0x0000800000000000L });
   public static final BitSet FOLLOW_KW_BY_in_tableRowFormatFieldIdentifier10892 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L });
   public static final BitSet FOLLOW_StringLiteral_in_tableRowFormatFieldIdentifier10896 =
-      new BitSet(new long[]{0x0000000000000002L, 0x0000000800000000L});
+      new BitSet(new long[] { 0x0000000000000002L, 0x0000000800000000L });
   public static final BitSet FOLLOW_KW_ESCAPED_in_tableRowFormatFieldIdentifier10899 =
-      new BitSet(new long[]{0x0000800000000000L});
+      new BitSet(new long[] { 0x0000800000000000L });
   public static final BitSet FOLLOW_KW_BY_in_tableRowFormatFieldIdentifier10901 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L });
   public static final BitSet FOLLOW_StringLiteral_in_tableRowFormatFieldIdentifier10905 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_COLLECTION_in_tableRowFormatCollItemsIdentifier10957 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000008000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000008000L });
   public static final BitSet FOLLOW_KW_ITEMS_in_tableRowFormatCollItemsIdentifier10959 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0800000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0800000000000000L });
   public static final BitSet FOLLOW_KW_TERMINATED_in_tableRowFormatCollItemsIdentifier10961 =
-      new BitSet(new long[]{0x0000800000000000L});
+      new BitSet(new long[] { 0x0000800000000000L });
   public static final BitSet FOLLOW_KW_BY_in_tableRowFormatCollItemsIdentifier10963 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L });
   public static final BitSet FOLLOW_StringLiteral_in_tableRowFormatCollItemsIdentifier10967 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_MAP_in_tableRowFormatMapKeysIdentifier11013 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000040000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000040000L });
   public static final BitSet FOLLOW_KW_KEYS_in_tableRowFormatMapKeysIdentifier11015 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0800000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0800000000000000L });
   public static final BitSet FOLLOW_KW_TERMINATED_in_tableRowFormatMapKeysIdentifier11017 =
-      new BitSet(new long[]{0x0000800000000000L});
+      new BitSet(new long[] { 0x0000800000000000L });
   public static final BitSet FOLLOW_KW_BY_in_tableRowFormatMapKeysIdentifier11019 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L });
   public static final BitSet FOLLOW_StringLiteral_in_tableRowFormatMapKeysIdentifier11023 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_LINES_in_tableRowFormatLinesIdentifier11069 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0800000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0800000000000000L });
   public static final BitSet FOLLOW_KW_TERMINATED_in_tableRowFormatLinesIdentifier11071 =
-      new BitSet(new long[]{0x0000800000000000L});
+      new BitSet(new long[] { 0x0000800000000000L });
   public static final BitSet FOLLOW_KW_BY_in_tableRowFormatLinesIdentifier11073 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L });
   public static final BitSet FOLLOW_StringLiteral_in_tableRowFormatLinesIdentifier11077 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_NULL_in_tableRowNullFormat11123 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000040000L});
-  public static final BitSet FOLLOW_KW_DEFINED_in_tableRowNullFormat11125 = new BitSet(new long[]{0x0000001000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000040000L });
+  public static final BitSet FOLLOW_KW_DEFINED_in_tableRowNullFormat11125 =
+      new BitSet(new long[] { 0x0000001000000000L });
   public static final BitSet FOLLOW_KW_AS_in_tableRowNullFormat11127 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L });
   public static final BitSet FOLLOW_StringLiteral_in_tableRowNullFormat11131 =
-      new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_KW_STORED_in_tableFileFormat11176 = new BitSet(new long[]{0x0000001000000000L});
+      new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_KW_STORED_in_tableFileFormat11176 = new BitSet(new long[] { 0x0000001000000000L });
   public static final BitSet FOLLOW_KW_AS_in_tableFileFormat11178 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000200L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000200L });
   public static final BitSet FOLLOW_KW_INPUTFORMAT_in_tableFileFormat11180 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L });
   public static final BitSet FOLLOW_StringLiteral_in_tableFileFormat11184 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0080000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0080000000000000L });
   public static final BitSet FOLLOW_KW_OUTPUTFORMAT_in_tableFileFormat11186 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L });
   public static final BitSet FOLLOW_StringLiteral_in_tableFileFormat11190 =
-      new BitSet(new long[]{0x0000000000000002L, 0x0000000000000000L, 0x0000000000000100L});
+      new BitSet(new long[] { 0x0000000000000002L, 0x0000000000000000L, 0x0000000000000100L });
   public static final BitSet FOLLOW_KW_INPUTDRIVER_in_tableFileFormat11193 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L });
   public static final BitSet FOLLOW_StringLiteral_in_tableFileFormat11197 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0040000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0040000000000000L });
   public static final BitSet FOLLOW_KW_OUTPUTDRIVER_in_tableFileFormat11199 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L});
-  public static final BitSet FOLLOW_StringLiteral_in_tableFileFormat11203 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_KW_STORED_in_tableFileFormat11241 = new BitSet(new long[]{0x0000800000000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L });
+  public static final BitSet FOLLOW_StringLiteral_in_tableFileFormat11203 =
+      new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_KW_STORED_in_tableFileFormat11241 = new BitSet(new long[] { 0x0000800000000000L });
   public static final BitSet FOLLOW_KW_BY_in_tableFileFormat11243 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L });
   public static final BitSet FOLLOW_StringLiteral_in_tableFileFormat11247 = new BitSet(
-      new long[]{0x0000000000000002L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000040000000L});
+      new long[] { 0x0000000000000002L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000040000000L });
   public static final BitSet FOLLOW_KW_WITH_in_tableFileFormat11259 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000002000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000002000000000L });
   public static final BitSet FOLLOW_KW_SERDEPROPERTIES_in_tableFileFormat11261 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L });
   public static final BitSet FOLLOW_tableProperties_in_tableFileFormat11265 =
-      new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_KW_STORED_in_tableFileFormat11296 = new BitSet(new long[]{0x0000001000000000L});
+      new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_KW_STORED_in_tableFileFormat11296 = new BitSet(new long[] { 0x0000001000000000L });
   public static final BitSet FOLLOW_KW_AS_in_tableFileFormat11298 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
-  public static final BitSet FOLLOW_identifier_in_tableFileFormat11302 = new BitSet(new long[]{0x0000000000000002L});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
+  public static final BitSet FOLLOW_identifier_in_tableFileFormat11302 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_columnNameType_in_columnNameTypeList11344 =
-      new BitSet(new long[]{0x0000000000000402L});
+      new BitSet(new long[] { 0x0000000000000402L });
   public static final BitSet FOLLOW_COMMA_in_columnNameTypeList11347 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_columnNameType_in_columnNameTypeList11349 =
-      new BitSet(new long[]{0x0000000000000402L});
+      new BitSet(new long[] { 0x0000000000000402L });
   public static final BitSet FOLLOW_columnNameColonType_in_columnNameColonTypeList11387 =
-      new BitSet(new long[]{0x0000000000000402L});
+      new BitSet(new long[] { 0x0000000000000402L });
   public static final BitSet FOLLOW_COMMA_in_columnNameColonTypeList11390 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_columnNameColonType_in_columnNameColonTypeList11392 =
-      new BitSet(new long[]{0x0000000000000402L});
-  public static final BitSet FOLLOW_columnName_in_columnNameList11430 = new BitSet(new long[]{0x0000000000000402L});
+      new BitSet(new long[] { 0x0000000000000402L });
+  public static final BitSet FOLLOW_columnName_in_columnNameList11430 = new BitSet(new long[] { 0x0000000000000402L });
   public static final BitSet FOLLOW_COMMA_in_columnNameList11433 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
-  public static final BitSet FOLLOW_columnName_in_columnNameList11435 = new BitSet(new long[]{0x0000000000000402L});
-  public static final BitSet FOLLOW_identifier_in_columnName11479 = new BitSet(new long[]{0x0000000000000002L});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
+  public static final BitSet FOLLOW_columnName_in_columnNameList11435 = new BitSet(new long[] { 0x0000000000000402L });
+  public static final BitSet FOLLOW_identifier_in_columnName11479 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_columnNameOrder_in_columnNameOrderList11506 =
-      new BitSet(new long[]{0x0000000000000402L});
+      new BitSet(new long[] { 0x0000000000000402L });
   public static final BitSet FOLLOW_COMMA_in_columnNameOrderList11509 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_columnNameOrder_in_columnNameOrderList11511 =
-      new BitSet(new long[]{0x0000000000000402L});
+      new BitSet(new long[] { 0x0000000000000402L });
   public static final BitSet FOLLOW_skewedColumnValues_in_skewedValueElement11556 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_skewedColumnValuePairList_in_skewedValueElement11565 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_skewedColumnValuePair_in_skewedColumnValuePairList11592 =
-      new BitSet(new long[]{0x0000000000000402L});
+      new BitSet(new long[] { 0x0000000000000402L });
   public static final BitSet FOLLOW_COMMA_in_skewedColumnValuePairList11595 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L });
   public static final BitSet FOLLOW_skewedColumnValuePair_in_skewedColumnValuePairList11597 =
-      new BitSet(new long[]{0x0000000000000402L});
+      new BitSet(new long[] { 0x0000000000000402L });
   public static final BitSet FOLLOW_LPAREN_in_skewedColumnValuePair11642 = new BitSet(
-      new long[]{0x0000000000042080L, 0x0000080000001000L, 0x0000000000000000L, 0x2000000000000000L, 0x002C010000000010L});
+      new long[] { 0x0000000000042080L, 0x0000080000001000L, 0x0000000000000000L, 0x2000000000000000L, 0x002C010000000010L });
   public static final BitSet FOLLOW_skewedColumnValues_in_skewedColumnValuePair11646 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000200000000000L});
-  public static final BitSet FOLLOW_RPAREN_in_skewedColumnValuePair11648 = new BitSet(new long[]{0x0000000000000002L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000200000000000L });
+  public static final BitSet FOLLOW_RPAREN_in_skewedColumnValuePair11648 =
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_skewedColumnValue_in_skewedColumnValues11691 =
-      new BitSet(new long[]{0x0000000000000402L});
+      new BitSet(new long[] { 0x0000000000000402L });
   public static final BitSet FOLLOW_COMMA_in_skewedColumnValues11694 = new BitSet(
-      new long[]{0x0000000000042080L, 0x0000080000001000L, 0x0000000000000000L, 0x2000000000000000L, 0x002C010000000010L});
+      new long[] { 0x0000000000042080L, 0x0000080000001000L, 0x0000000000000000L, 0x2000000000000000L, 0x002C010000000010L });
   public static final BitSet FOLLOW_skewedColumnValue_in_skewedColumnValues11696 =
-      new BitSet(new long[]{0x0000000000000402L});
-  public static final BitSet FOLLOW_constant_in_skewedColumnValue11740 = new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000402L });
+  public static final BitSet FOLLOW_constant_in_skewedColumnValue11740 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_skewedColumnValue_in_skewedValueLocationElement11774 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_skewedColumnValuePair_in_skewedValueLocationElement11783 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_identifier_in_columnNameOrder11814 =
-      new BitSet(new long[]{0x0000002000000002L, 0x0000000000400000L});
-  public static final BitSet FOLLOW_KW_ASC_in_columnNameOrder11819 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_KW_DESC_in_columnNameOrder11825 = new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000002000000002L, 0x0000000000400000L });
+  public static final BitSet FOLLOW_KW_ASC_in_columnNameOrder11819 = new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_KW_DESC_in_columnNameOrder11825 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_columnNameComment_in_columnNameCommentList11897 =
-      new BitSet(new long[]{0x0000000000000402L});
+      new BitSet(new long[] { 0x0000000000000402L });
   public static final BitSet FOLLOW_COMMA_in_columnNameCommentList11900 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_columnNameComment_in_columnNameCommentList11902 =
-      new BitSet(new long[]{0x0000000000000402L});
-  public static final BitSet FOLLOW_identifier_in_columnNameComment11942 = new BitSet(new long[]{0x0800000000000002L});
+      new BitSet(new long[] { 0x0000000000000402L });
+  public static final BitSet FOLLOW_identifier_in_columnNameComment11942 =
+      new BitSet(new long[] { 0x0800000000000002L });
   public static final BitSet FOLLOW_KW_COMMENT_in_columnNameComment11945 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L });
   public static final BitSet FOLLOW_StringLiteral_in_columnNameComment11949 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_expression_in_columnRefOrder11997 =
-      new BitSet(new long[]{0x0000002000000002L, 0x0000000000400000L});
-  public static final BitSet FOLLOW_KW_ASC_in_columnRefOrder12002 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_KW_DESC_in_columnRefOrder12008 = new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000002000000002L, 0x0000000000400000L });
+  public static final BitSet FOLLOW_KW_ASC_in_columnRefOrder12002 = new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_KW_DESC_in_columnRefOrder12008 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_identifier_in_columnNameType12082 = new BitSet(
-      new long[]{0x00100E0800000000L, 0x000200002000B000L, 0x0000000400000800L, 0x6030200000000000L, 0x0000000001000400L});
-  public static final BitSet FOLLOW_colType_in_columnNameType12084 = new BitSet(new long[]{0x0800000000000002L});
+      new long[] { 0x00100E0800000000L, 0x000200002000B000L, 0x0000000400000800L, 0x6030200000000000L, 0x0000000001000400L });
+  public static final BitSet FOLLOW_colType_in_columnNameType12084 = new BitSet(new long[] { 0x0800000000000002L });
   public static final BitSet FOLLOW_KW_COMMENT_in_columnNameType12087 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L});
-  public static final BitSet FOLLOW_StringLiteral_in_columnNameType12091 = new BitSet(new long[]{0x0000000000000002L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L });
+  public static final BitSet FOLLOW_StringLiteral_in_columnNameType12091 =
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_identifier_in_columnNameColonType12177 =
-      new BitSet(new long[]{0x0000000000000200L});
+      new BitSet(new long[] { 0x0000000000000200L });
   public static final BitSet FOLLOW_COLON_in_columnNameColonType12179 = new BitSet(
-      new long[]{0x00100E0800000000L, 0x000200002000B000L, 0x0000000400000800L, 0x6030200000000000L, 0x0000000001000400L});
-  public static final BitSet FOLLOW_colType_in_columnNameColonType12181 = new BitSet(new long[]{0x0800000000000002L});
+      new long[] { 0x00100E0800000000L, 0x000200002000B000L, 0x0000000400000800L, 0x6030200000000000L, 0x0000000001000400L });
+  public static final BitSet FOLLOW_colType_in_columnNameColonType12181 =
+      new BitSet(new long[] { 0x0800000000000002L });
   public static final BitSet FOLLOW_KW_COMMENT_in_columnNameColonType12184 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L });
   public static final BitSet FOLLOW_StringLiteral_in_columnNameColonType12188 =
-      new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_type_in_colType12272 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_colType_in_colTypeList12299 = new BitSet(new long[]{0x0000000000000402L});
+      new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_type_in_colType12272 = new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_colType_in_colTypeList12299 = new BitSet(new long[] { 0x0000000000000402L });
   public static final BitSet FOLLOW_COMMA_in_colTypeList12302 = new BitSet(
-      new long[]{0x00100E0800000000L, 0x000200002000B000L, 0x0000000400000800L, 0x6030200000000000L, 0x0000000001000400L});
-  public static final BitSet FOLLOW_colType_in_colTypeList12304 = new BitSet(new long[]{0x0000000000000402L});
-  public static final BitSet FOLLOW_primitiveType_in_type12332 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_listType_in_type12340 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_structType_in_type12348 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_mapType_in_type12356 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_unionType_in_type12364 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_KW_TINYINT_in_primitiveType12386 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_KW_SMALLINT_in_primitiveType12407 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_KW_INT_in_primitiveType12427 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_KW_BIGINT_in_primitiveType12452 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_KW_BOOLEAN_in_primitiveType12474 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_KW_FLOAT_in_primitiveType12495 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_KW_DOUBLE_in_primitiveType12518 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_KW_DATE_in_primitiveType12540 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_KW_DATETIME_in_primitiveType12564 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_KW_TIMESTAMP_in_primitiveType12584 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_KW_STRING_in_primitiveType12603 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_KW_BINARY_in_primitiveType12625 = new BitSet(new long[]{0x0000000000000002L});
+      new long[] { 0x00100E0800000000L, 0x000200002000B000L, 0x0000000400000800L, 0x6030200000000000L, 0x0000000001000400L });
+  public static final BitSet FOLLOW_colType_in_colTypeList12304 = new BitSet(new long[] { 0x0000000000000402L });
+  public static final BitSet FOLLOW_primitiveType_in_type12332 = new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_listType_in_type12340 = new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_structType_in_type12348 = new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_mapType_in_type12356 = new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_unionType_in_type12364 = new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_KW_TINYINT_in_primitiveType12386 = new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_KW_SMALLINT_in_primitiveType12407 = new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_KW_INT_in_primitiveType12427 = new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_KW_BIGINT_in_primitiveType12452 = new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_KW_BOOLEAN_in_primitiveType12474 = new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_KW_FLOAT_in_primitiveType12495 = new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_KW_DOUBLE_in_primitiveType12518 = new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_KW_DATE_in_primitiveType12540 = new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_KW_DATETIME_in_primitiveType12564 = new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_KW_TIMESTAMP_in_primitiveType12584 = new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_KW_STRING_in_primitiveType12603 = new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_KW_BINARY_in_primitiveType12625 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_DECIMAL_in_primitiveType12647 = new BitSet(
-      new long[]{0x0000000000000002L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L});
+      new long[] { 0x0000000000000002L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L });
   public static final BitSet FOLLOW_LPAREN_in_primitiveType12650 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000010000000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000010000000000L });
   public static final BitSet FOLLOW_Number_in_primitiveType12654 = new BitSet(
-      new long[]{0x0000000000000400L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000200000000000L});
+      new long[] { 0x0000000000000400L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000200000000000L });
   public static final BitSet FOLLOW_COMMA_in_primitiveType12657 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000010000000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000010000000000L });
   public static final BitSet FOLLOW_Number_in_primitiveType12661 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000200000000000L});
-  public static final BitSet FOLLOW_RPAREN_in_primitiveType12665 = new BitSet(new long[]{0x0000000000000002L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000200000000000L });
+  public static final BitSet FOLLOW_RPAREN_in_primitiveType12665 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_VARCHAR_in_primitiveType12689 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L });
   public static final BitSet FOLLOW_LPAREN_in_primitiveType12691 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000010000000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000010000000000L });
   public static final BitSet FOLLOW_Number_in_primitiveType12695 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000200000000000L});
-  public static final BitSet FOLLOW_RPAREN_in_primitiveType12697 = new BitSet(new long[]{0x0000000000000002L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000200000000000L });
+  public static final BitSet FOLLOW_RPAREN_in_primitiveType12697 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_CHAR_in_primitiveType12722 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L });
   public static final BitSet FOLLOW_LPAREN_in_primitiveType12724 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000010000000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000010000000000L });
   public static final BitSet FOLLOW_Number_in_primitiveType12728 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000200000000000L});
-  public static final BitSet FOLLOW_RPAREN_in_primitiveType12730 = new BitSet(new long[]{0x0000000000000002L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000200000000000L });
+  public static final BitSet FOLLOW_RPAREN_in_primitiveType12730 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_ARRAY_in_listType12774 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000100000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000100000000L });
   public static final BitSet FOLLOW_LESSTHAN_in_listType12776 = new BitSet(
-      new long[]{0x00100E0800000000L, 0x000200002000B000L, 0x0000000400000800L, 0x6030200000000000L, 0x0000000001000400L});
-  public static final BitSet FOLLOW_type_in_listType12778 = new BitSet(new long[]{0x0000000000800000L});
-  public static final BitSet FOLLOW_GREATERTHAN_in_listType12780 = new BitSet(new long[]{0x0000000000000002L});
+      new long[] { 0x00100E0800000000L, 0x000200002000B000L, 0x0000000400000800L, 0x6030200000000000L, 0x0000000001000400L });
+  public static final BitSet FOLLOW_type_in_listType12778 = new BitSet(new long[] { 0x0000000000800000L });
+  public static final BitSet FOLLOW_GREATERTHAN_in_listType12780 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_STRUCT_in_structType12817 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000100000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000100000000L });
   public static final BitSet FOLLOW_LESSTHAN_in_structType12819 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_columnNameColonTypeList_in_structType12821 =
-      new BitSet(new long[]{0x0000000000800000L});
-  public static final BitSet FOLLOW_GREATERTHAN_in_structType12823 = new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000800000L });
+  public static final BitSet FOLLOW_GREATERTHAN_in_structType12823 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_MAP_in_mapType12858 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000100000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000100000000L });
   public static final BitSet FOLLOW_LESSTHAN_in_mapType12860 = new BitSet(
-      new long[]{0x00100E0000000000L, 0x000200002000B000L, 0x0000000000000800L, 0x6010200000000000L, 0x0000000001000000L});
-  public static final BitSet FOLLOW_primitiveType_in_mapType12864 = new BitSet(new long[]{0x0000000000000400L});
+      new long[] { 0x00100E0000000000L, 0x000200002000B000L, 0x0000000000000800L, 0x6010200000000000L, 0x0000000001000000L });
+  public static final BitSet FOLLOW_primitiveType_in_mapType12864 = new BitSet(new long[] { 0x0000000000000400L });
   public static final BitSet FOLLOW_COMMA_in_mapType12866 = new BitSet(
-      new long[]{0x00100E0800000000L, 0x000200002000B000L, 0x0000000400000800L, 0x6030200000000000L, 0x0000000001000400L});
-  public static final BitSet FOLLOW_type_in_mapType12870 = new BitSet(new long[]{0x0000000000800000L});
-  public static final BitSet FOLLOW_GREATERTHAN_in_mapType12872 = new BitSet(new long[]{0x0000000000000002L});
+      new long[] { 0x00100E0800000000L, 0x000200002000B000L, 0x0000000400000800L, 0x6030200000000000L, 0x0000000001000400L });
+  public static final BitSet FOLLOW_type_in_mapType12870 = new BitSet(new long[] { 0x0000000000800000L });
+  public static final BitSet FOLLOW_GREATERTHAN_in_mapType12872 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_UNIONTYPE_in_unionType12915 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000100000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000100000000L });
   public static final BitSet FOLLOW_LESSTHAN_in_unionType12917 = new BitSet(
-      new long[]{0x00100E0800000000L, 0x000200002000B000L, 0x0000000400000800L, 0x6030200000000000L, 0x0000000001000400L});
-  public static final BitSet FOLLOW_colTypeList_in_unionType12919 = new BitSet(new long[]{0x0000000000800000L});
-  public static final BitSet FOLLOW_GREATERTHAN_in_unionType12921 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_KW_UNION_in_setOperator12956 = new BitSet(new long[]{0x0000000040000000L});
-  public static final BitSet FOLLOW_KW_ALL_in_setOperator12958 = new BitSet(new long[]{0x0000000000000002L});
+      new long[] { 0x00100E0800000000L, 0x000200002000B000L, 0x0000000400000800L, 0x6030200000000000L, 0x0000000001000400L });
+  public static final BitSet FOLLOW_colTypeList_in_unionType12919 = new BitSet(new long[] { 0x0000000000800000L });
+  public static final BitSet FOLLOW_GREATERTHAN_in_unionType12921 = new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_KW_UNION_in_setOperator12956 = new BitSet(new long[] { 0x0000000040000000L });
+  public static final BitSet FOLLOW_KW_ALL_in_setOperator12958 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_withClause_in_queryStatementExpression12995 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0040000000000000L, 0x0000000400000400L, 0x0000000400008000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0040000000000000L, 0x0000000400000400L, 0x0000000400008000L });
   public static final BitSet FOLLOW_queryStatementExpressionBody_in_queryStatementExpression13005 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_fromStatement_in_queryStatementExpressionBody13039 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_regularBody_in_queryStatementExpressionBody13048 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_WITH_in_withClause13066 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
-  public static final BitSet FOLLOW_cteStatement_in_withClause13068 = new BitSet(new long[]{0x0000000000000402L});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
+  public static final BitSet FOLLOW_cteStatement_in_withClause13068 = new BitSet(new long[] { 0x0000000000000402L });
   public static final BitSet FOLLOW_COMMA_in_withClause13071 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
-  public static final BitSet FOLLOW_cteStatement_in_withClause13073 = new BitSet(new long[]{0x0000000000000402L});
-  public static final BitSet FOLLOW_identifier_in_cteStatement13099 = new BitSet(new long[]{0x0000001000000000L});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
+  public static final BitSet FOLLOW_cteStatement_in_withClause13073 = new BitSet(new long[] { 0x0000000000000402L });
+  public static final BitSet FOLLOW_identifier_in_cteStatement13099 = new BitSet(new long[] { 0x0000001000000000L });
   public static final BitSet FOLLOW_KW_AS_in_cteStatement13101 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L });
   public static final BitSet FOLLOW_LPAREN_in_cteStatement13103 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0040000000000000L, 0x0000000400000400L, 0x0000000400008000L, 0x0000000040000000L});
+      new long[] { 0x0000000000000000L, 0x0040000000000000L, 0x0000000400000400L, 0x0000000400008000L, 0x0000000040000000L });
   public static final BitSet FOLLOW_queryStatementExpression_in_cteStatement13105 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000200000000000L});
-  public static final BitSet FOLLOW_RPAREN_in_cteStatement13108 = new BitSet(new long[]{0x0000000000000002L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000200000000000L });
+  public static final BitSet FOLLOW_RPAREN_in_cteStatement13108 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_singleFromStatement_in_fromStatement13132 = new BitSet(
-      new long[]{0x0000000000000002L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000200L});
+      new long[] { 0x0000000000000002L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000200L });
   public static final BitSet FOLLOW_setOperator_in_fromStatement13144 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0040000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0040000000000000L });
   public static final BitSet FOLLOW_singleFromStatement_in_fromStatement13148 = new BitSet(
-      new long[]{0x0000000000000002L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000200L});
+      new long[] { 0x0000000000000002L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000200L });
   public static final BitSet FOLLOW_fromClause_in_singleFromStatement13355 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000400000400L, 0x0000000400008000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000400L, 0x0000000400008000L });
   public static final BitSet FOLLOW_body_in_singleFromStatement13365 =
-      new BitSet(new long[]{0x0000000000000002L, 0x0000000000000000L, 0x0000000400000400L, 0x0000000400008000L});
+      new BitSet(new long[] { 0x0000000000000002L, 0x0000000000000000L, 0x0000000400000400L, 0x0000000400008000L });
   public static final BitSet FOLLOW_insertClause_in_regularBody13403 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L, 0x0000000400008000L, 0x0000000000400000L});
-  public static final BitSet FOLLOW_selectStatement_in_regularBody13415 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_valuesClause_in_regularBody13441 = new BitSet(new long[]{0x0000000000000002L});
-  public static final BitSet FOLLOW_selectStatement_in_regularBody13565 = new BitSet(new long[]{0x0000000000000002L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L, 0x0000000400008000L, 0x0000000000400000L });
+  public static final BitSet FOLLOW_selectStatement_in_regularBody13415 =
+      new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_valuesClause_in_regularBody13441 = new BitSet(new long[] { 0x0000000000000002L });
+  public static final BitSet FOLLOW_selectStatement_in_regularBody13565 =
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_singleSelectStatement_in_selectStatement13582 = new BitSet(
-      new long[]{0x0000000000000002L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000200L});
+      new long[] { 0x0000000000000002L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000200L });
   public static final BitSet FOLLOW_setOperator_in_selectStatement13595 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L, 0x0000000400008000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L, 0x0000000400008000L });
   public static final BitSet FOLLOW_singleSelectStatement_in_selectStatement13599 = new BitSet(
-      new long[]{0x0000000000000002L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000200L});
+      new long[] { 0x0000000000000002L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000200L });
   public static final BitSet FOLLOW_selectClause_in_singleSelectStatement13821 = new BitSet(
-      new long[]{0x0020000000000002L, 0x2840000010000000L, 0x0008000001000000L, 0x0000400000000000L, 0x0000000028000000L});
+      new long[] { 0x0020000000000002L, 0x2840000010000000L, 0x0008000001000000L, 0x0000400000000000L, 0x0000000028000000L });
   public static final BitSet FOLLOW_fromClause_in_singleSelectStatement13826 = new BitSet(
-      new long[]{0x0020000000000002L, 0x2800000010000000L, 0x0008000001000000L, 0x0000400000000000L, 0x0000000028000000L});
+      new long[] { 0x0020000000000002L, 0x2800000010000000L, 0x0008000001000000L, 0x0000400000000000L, 0x0000000028000000L });
   public static final BitSet FOLLOW_whereClause_in_singleSelectStatement13832 = new BitSet(
-      new long[]{0x0020000000000002L, 0x2800000010000000L, 0x0008000001000000L, 0x0000400000000000L, 0x0000000020000000L});
+      new long[] { 0x0020000000000002L, 0x2800000010000000L, 0x0008000001000000L, 0x0000400000000000L, 0x0000000020000000L });
   public static final BitSet FOLLOW_groupByClause_in_singleSelectStatement13838 = new BitSet(
-      new long[]{0x0020000000000002L, 0x2000000010000000L, 0x0008000001000000L, 0x0000400000000000L, 0x0000000020000000L});
+      new long[] { 0x0020000000000002L, 0x2000000010000000L, 0x0008000001000000L, 0x0000400000000000L, 0x0000000020000000L });
   public static final BitSet FOLLOW_havingClause_in_singleSelectStatement13844 = new BitSet(
-      new long[]{0x0020000000000002L, 0x0000000010000000L, 0x0008000001000000L, 0x0000400000000000L, 0x0000000020000000L});
+      new long[] { 0x0020000000000002L, 0x0000000010000000L, 0x0008000001000000L, 0x0000400000000000L, 0x0000000020000000L });
   public static final BitSet FOLLOW_orderByClause_in_singleSelectStatement13850 = new BitSet(
-      new long[]{0x0020000000000002L, 0x0000000010000000L, 0x0000000001000000L, 0x0000400000000000L, 0x0000000020000000L});
+      new long[] { 0x0020000000000002L, 0x0000000010000000L, 0x0000000001000000L, 0x0000400000000000L, 0x0000000020000000L });
   public static final BitSet FOLLOW_clusterByClause_in_singleSelectStatement13856 = new BitSet(
-      new long[]{0x0000000000000002L, 0x0000000010000000L, 0x0000000001000000L, 0x0000400000000000L, 0x0000000020000000L});
+      new long[] { 0x0000000000000002L, 0x0000000010000000L, 0x0000000001000000L, 0x0000400000000000L, 0x0000000020000000L });
   public static final BitSet FOLLOW_distributeByClause_in_singleSelectStatement13862 = new BitSet(
-      new long[]{0x0000000000000002L, 0x0000000000000000L, 0x0000000001000000L, 0x0000400000000000L, 0x0000000020000000L});
+      new long[] { 0x0000000000000002L, 0x0000000000000000L, 0x0000000001000000L, 0x0000400000000000L, 0x0000000020000000L });
   public static final BitSet FOLLOW_sortByClause_in_singleSelectStatement13868 = new BitSet(
-      new long[]{0x0000000000000002L, 0x0000000000000000L, 0x0000000001000000L, 0x0000000000000000L, 0x0000000020000000L});
+      new long[] { 0x0000000000000002L, 0x0000000000000000L, 0x0000000001000000L, 0x0000000000000000L, 0x0000000020000000L });
   public static final BitSet FOLLOW_window_clause_in_singleSelectStatement13874 =
-      new BitSet(new long[]{0x0000000000000002L, 0x0000000000000000L, 0x0000000001000000L});
+      new BitSet(new long[] { 0x0000000000000002L, 0x0000000000000000L, 0x0000000001000000L });
   public static final BitSet FOLLOW_limitClause_in_singleSelectStatement13880 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_withClause_in_selectStatementWithCTE13998 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L, 0x0000000400008000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L, 0x0000000400008000L });
   public static final BitSet FOLLOW_selectStatement_in_selectStatementWithCTE14006 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_insertClause_in_body14037 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L, 0x0000000400008000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000400000000L, 0x0000000400008000L });
   public static final BitSet FOLLOW_selectClause_in_body14042 = new BitSet(
-      new long[]{0x0020000000000002L, 0x2800000010000000L, 0x0008000001100000L, 0x0000400000000000L, 0x0000000028000000L});
+      new long[] { 0x0020000000000002L, 0x2800000010000000L, 0x0008000001100000L, 0x0000400000000000L, 0x0000000028000000L });
   public static final BitSet FOLLOW_lateralView_in_body14047 = new BitSet(
-      new long[]{0x0020000000000002L, 0x2800000010000000L, 0x0008000001000000L, 0x0000400000000000L, 0x0000000028000000L});
+      new long[] { 0x0020000000000002L, 0x2800000010000000L, 0x0008000001000000L, 0x0000400000000000L, 0x0000000028000000L });
   public static final BitSet FOLLOW_whereClause_in_body14053 = new BitSet(
-      new long[]{0x0020000000000002L, 0x2800000010000000L, 0x0008000001000000L, 0x0000400000000000L, 0x0000000020000000L});
+      new long[] { 0x0020000000000002L, 0x2800000010000000L, 0x0008000001000000L, 0x0000400000000000L, 0x0000000020000000L });
   public static final BitSet FOLLOW_groupByClause_in_body14059 = new BitSet(
-      new long[]{0x0020000000000002L, 0x2000000010000000L, 0x0008000001000000L, 0x0000400000000000L, 0x0000000020000000L});
+      new long[] { 0x0020000000000002L, 0x2000000010000000L, 0x0008000001000000L, 0x0000400000000000L, 0x0000000020000000L });
   public static final BitSet FOLLOW_havingClause_in_body14065 = new BitSet(
-      new long[]{0x0020000000000002L, 0x0000000010000000L, 0x0008000001000000L, 0x0000400000000000L, 0x0000000020000000L});
+      new long[] { 0x0020000000000002L, 0x0000000010000000L, 0x0008000001000000L, 0x0000400000000000L, 0x0000000020000000L });
   public static final BitSet FOLLOW_orderByClause_in_body14071 = new BitSet(
-      new long[]{0x0020000000000002L, 0x0000000010000000L, 0x0000000001000000L, 0x0000400000000000L, 0x0000000020000000L});
+      new long[] { 0x0020000000000002L, 0x0000000010000000L, 0x0000000001000000L, 0x0000400000000000L, 0x0000000020000000L });
   public static final BitSet FOLLOW_clusterByClause_in_body14077 = new BitSet(
-      new long[]{0x0000000000000002L, 0x0000000010000000L, 0x0000000001000000L, 0x0000400000000000L, 0x0000000020000000L});
+      new long[] { 0x0000000000000002L, 0x0000000010000000L, 0x0000000001000000L, 0x0000400000000000L, 0x0000000020000000L });
   public static final BitSet FOLLOW_distributeByClause_in_body14083 = new BitSet(
-      new long[]{0x0000000000000002L, 0x0000000000000000L, 0x0000000001000000L, 0x0000400000000000L, 0x0000000020000000L});
+      new long[] { 0x0000000000000002L, 0x0000000000000000L, 0x0000000001000000L, 0x0000400000000000L, 0x0000000020000000L });
   public static final BitSet FOLLOW_sortByClause_in_body14089 = new BitSet(
-      new long[]{0x0000000000000002L, 0x0000000000000000L, 0x0000000001000000L, 0x0000000000000000L, 0x0000000020000000L});
+      new long[] { 0x0000000000000002L, 0x0000000000000000L, 0x0000000001000000L, 0x0000000000000000L, 0x0000000020000000L });
   public static final BitSet FOLLOW_window_clause_in_body14095 =
-      new BitSet(new long[]{0x0000000000000002L, 0x0000000000000000L, 0x0000000001000000L});
-  public static final BitSet FOLLOW_limitClause_in_body14101 = new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L, 0x0000000000000000L, 0x0000000001000000L });
+  public static final BitSet FOLLOW_limitClause_in_body14101 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_selectClause_in_body14194 = new BitSet(
-      new long[]{0x0020000000000002L, 0x2800000010000000L, 0x0008000001100000L, 0x0000400000000000L, 0x0000000028000000L});
+      new long[] { 0x0020000000000002L, 0x2800000010000000L, 0x0008000001100000L, 0x0000400000000000L, 0x0000000028000000L });
   public static final BitSet FOLLOW_lateralView_in_body14199 = new BitSet(
-      new long[]{0x0020000000000002L, 0x2800000010000000L, 0x0008000001000000L, 0x0000400000000000L, 0x0000000028000000L});
+      new long[] { 0x0020000000000002L, 0x2800000010000000L, 0x0008000001000000L, 0x0000400000000000L, 0x0000000028000000L });
   public static final BitSet FOLLOW_whereClause_in_body14205 = new BitSet(
-      new long[]{0x0020000000000002L, 0x2800000010000000L, 0x0008000001000000L, 0x0000400000000000L, 0x0000000020000000L});
+      new long[] { 0x0020000000000002L, 0x2800000010000000L, 0x0008000001000000L, 0x0000400000000000L, 0x0000000020000000L });
   public static final BitSet FOLLOW_groupByClause_in_body14211 = new BitSet(
-      new long[]{0x0020000000000002L, 0x2000000010000000L, 0x0008000001000000L, 0x0000400000000000L, 0x0000000020000000L});
+      new long[] { 0x0020000000000002L, 0x2000000010000000L, 0x0008000001000000L, 0x0000400000000000L, 0x0000000020000000L });
   public static final BitSet FOLLOW_havingClause_in_body14217 = new BitSet(
-      new long[]{0x0020000000000002L, 0x0000000010000000L, 0x0008000001000000L, 0x0000400000000000L, 0x0000000020000000L});
+      new long[] { 0x0020000000000002L, 0x0000000010000000L, 0x0008000001000000L, 0x0000400000000000L, 0x0000000020000000L });
   public static final BitSet FOLLOW_orderByClause_in_body14223 = new BitSet(
-      new long[]{0x0020000000000002L, 0x0000000010000000L, 0x0000000001000000L, 0x0000400000000000L, 0x0000000020000000L});
+      new long[] { 0x0020000000000002L, 0x0000000010000000L, 0x0000000001000000L, 0x0000400000000000L, 0x0000000020000000L });
   public static final BitSet FOLLOW_clusterByClause_in_body14229 = new BitSet(
-      new long[]{0x0000000000000002L, 0x0000000010000000L, 0x0000000001000000L, 0x0000400000000000L, 0x0000000020000000L});
+      new long[] { 0x0000000000000002L, 0x0000000010000000L, 0x0000000001000000L, 0x0000400000000000L, 0x0000000020000000L });
   public static final BitSet FOLLOW_distributeByClause_in_body14235 = new BitSet(
-      new long[]{0x0000000000000002L, 0x0000000000000000L, 0x0000000001000000L, 0x0000400000000000L, 0x0000000020000000L});
+      new long[] { 0x0000000000000002L, 0x0000000000000000L, 0x0000000001000000L, 0x0000400000000000L, 0x0000000020000000L });
   public static final BitSet FOLLOW_sortByClause_in_body14241 = new BitSet(
-      new long[]{0x0000000000000002L, 0x0000000000000000L, 0x0000000001000000L, 0x0000000000000000L, 0x0000000020000000L});
+      new long[] { 0x0000000000000002L, 0x0000000000000000L, 0x0000000001000000L, 0x0000000000000000L, 0x0000000020000000L });
   public static final BitSet FOLLOW_window_clause_in_body14247 =
-      new BitSet(new long[]{0x0000000000000002L, 0x0000000000000000L, 0x0000000001000000L});
-  public static final BitSet FOLLOW_limitClause_in_body14253 = new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L, 0x0000000000000000L, 0x0000000001000000L });
+  public static final BitSet FOLLOW_limitClause_in_body14253 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_INSERT_in_insertClause14374 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0200000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0200000000000000L });
   public static final BitSet FOLLOW_KW_OVERWRITE_in_insertClause14376 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000002000000L, 0x0000000008000000L, 0x0040000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000002000000L, 0x0000000008000000L, 0x0040000000000000L });
   public static final BitSet FOLLOW_destination_in_insertClause14378 =
-      new BitSet(new long[]{0x0000000000000002L, 0x0000000000000000L, 0x0000000000000001L});
-  public static final BitSet FOLLOW_ifNotExists_in_insertClause14380 = new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L, 0x0000000000000000L, 0x0000000000000001L });
+  public static final BitSet FOLLOW_ifNotExists_in_insertClause14380 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_INSERT_in_insertClause14399 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000002000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000002000L });
   public static final BitSet FOLLOW_KW_INTO_in_insertClause14401 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_KW_TABLE_in_insertClause14403 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
-  public static final BitSet FOLLOW_tableOrPartition_in_insertClause14406 = new BitSet(new long[]{0x0000000000000002L});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
+  public static final BitSet FOLLOW_tableOrPartition_in_insertClause14406 =
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_LOCAL_in_destination14456 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000002000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000002000000L });
   public static final BitSet FOLLOW_KW_DIRECTORY_in_destination14460 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0008000000000000L });
   public static final BitSet FOLLOW_StringLiteral_in_destination14462 =
-      new BitSet(new long[]{0x0000000000000002L, 0x0000000000000000L, 0x0000000000000000L, 0x0004000040000000L});
+      new BitSet(new long[] { 0x0000000000000002L, 0x0000000000000000L, 0x0000000000000000L, 0x0004000040000000L });
   public static final BitSet FOLLOW_tableRowFormat_in_destination14464 =
-      new BitSet(new long[]{0x0000000000000002L, 0x0000000000000000L, 0x0000000000000000L, 0x0004000000000000L});
-  public static final BitSet FOLLOW_tableFileFormat_in_destination14467 = new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L, 0x0000000000000000L, 0x0000000000000000L, 0x0004000000000000L });
+  public static final BitSet FOLLOW_tableFileFormat_in_destination14467 =
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_TABLE_in_destination14500 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
-  public static final BitSet FOLLOW_tableOrPartition_in_destination14502 = new BitSet(new long[]{0x0000000000000002L});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
+  public static final BitSet FOLLOW_tableOrPartition_in_destination14502 =
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_LIMIT_in_limitClause14534 = new BitSet(
-      new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000010000000000L});
-  public static final BitSet FOLLOW_Number_in_limitClause14538 = new BitSet(new long[]{0x0000000000000002L});
+      new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000010000000000L });
+  public static final BitSet FOLLOW_Number_in_limitClause14538 = new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_DELETE_in_deleteStatement14576 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0040000000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0040000000000000L });
   public static final BitSet FOLLOW_KW_FROM_in_deleteStatement14578 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_tableName_in_deleteStatement14580 = new BitSet(
-      new long[]{0x0000000000000002L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000008000000L});
-  public static final BitSet FOLLOW_whereClause_in_deleteStatement14583 = new BitSet(new long[]{0x0000000000000002L});
+      new long[] { 0x0000000000000002L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000008000000L });
+  public static final BitSet FOLLOW_whereClause_in_deleteStatement14583 =
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_tableOrColumn_in_columnAssignmentClause14616 =
-      new BitSet(new long[]{0x0000000000100000L});
+      new BitSet(new long[] { 0x0000000000100000L });
   public static final BitSet FOLLOW_EQUAL_in_columnAssignmentClause14618 = new BitSet(
-      new long[]{0xFDEFFFFDFC042080L, 0xDEBBFDEAF7FFFBD6L, 0xF6FAF77DFFBDFFFFL, 0xEEFFFFFBFFFF7FF9L, 0x003C032452FFF77BL});
+      new long[] { 0xFDEFFFFDFC042080L, 0xDEBBFDEAF7FFFBD6L, 0xF6FAF77DFFBDFFFFL, 0xEEFFFFFBFFFF7FF9L, 0x003C032452FFF77BL });
   public static final BitSet FOLLOW_precedencePlusExpression_in_columnAssignmentClause14621 =
-      new BitSet(new long[]{0x0000000000000002L});
+      new BitSet(new long[] { 0x0000000000000002L });
   public static final BitSet FOLLOW_KW_SET_in_setColumnsClause14641 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_columnAssignmentClause_in_setColumnsClause14643 =
-      new BitSet(new long[]{0x0000000000000402L});
+      new BitSet(new long[] { 0x0000000000000402L });
   public static final BitSet FOLLOW_COMMA_in_setColumnsClause14646 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_columnAssignmentClause_in_setColumnsClause14648 =
-      new BitSet(new long[]{0x0000000000000402L});
+      new BitSet(new long[] { 0x0000000000000402L });
   public static final BitSet FOLLOW_KW_UPDATE_in_updateStatement14690 = new BitSet(
-      new long[]{0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL});
+      new long[] { 0xFDE9FFFDFC000000L, 0xDEBBFDEAF7FFFB16L, 0xF6FAF779FFBDFFFEL, 0xEEFFFFFBFFFF7FF9L, 0x0000000052FFF77BL });
   public static final BitSet FOLLOW_tableName_in_updateStatement14692 =
-      new BitSet(new long[]{0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000008000000000L});
+      new BitSet(new long[] { 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000008000000000L });
   public static final BitSet FOLLOW_setColumnsClause_in_updateStatement14694 = new BitSet(
-      new long[]{0x0000000000000002L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000008000000L});
-  public static final BitSet FOLLOW_whereClause_in_updateStatement14696 = new BitSet(new long[]{0x0000000000000002L});
+      new long[] { 0x0000000000000002L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000000000000L, 0x0000000008000000L });
+  public static final BitSet FOLLOW_whereClause_in_updateStatement14696 =
+      new BitSet(new long[] { 0x0000000000000002L });
 }
+//spotless:on

@@ -1,19 +1,10 @@
 /**
- * Copyright 2020 LinkedIn Corporation. All rights reserved.
+ * Copyright 2020-2021 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
 package com.linkedin.coral.hive.hive2rel.functions;
 
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-import com.google.common.io.Resources;
-import groovy.grape.Grape;
-import groovy.lang.GroovyClassLoader;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -25,8 +16,21 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
+import com.google.common.io.Resources;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import groovy.grape.Grape;
+import groovy.lang.GroovyClassLoader;
+
 
 public class ArtifactsResolver {
   private static final Logger LOG = LoggerFactory.getLogger(ArtifactsResolver.class);
@@ -52,13 +56,11 @@ public class ArtifactsResolver {
   public List<URI> downloadDependencies(URI artifactUri) {
     final Map<String, Object> artifactMap = Maps.newHashMap();
     final String authority = artifactUri.getAuthority();
-    Preconditions.checkArgument(
-        authority != null,
+    Preconditions.checkArgument(authority != null,
         "Invalid artifactUri: Expected artifactUri's authority as 'org:module:version', found null");
 
     String[] authorityTokens = authority.split(":");
-    Preconditions.checkArgument(
-        authorityTokens.length == 3,
+    Preconditions.checkArgument(authorityTokens.length == 3,
         "Invalid artifactUri: Expected 'org:module:version', found " + authority);
 
     artifactMap.put("org", authorityTokens[0]);
@@ -91,8 +93,7 @@ public class ArtifactsResolver {
 
     for (String token : tokens) {
       String[] kvPair = token.split("=");
-      Preconditions.checkArgument(
-          kvPair.length == 2,
+      Preconditions.checkArgument(kvPair.length == 2,
           "Invalid query string: " + queryString + ". Token: " + token + " not a key-value " + "pair separated by '='");
 
       if (kvPair[0].equals("exclude")) {
@@ -119,8 +120,8 @@ public class ArtifactsResolver {
       Map<String, String> artifactMap = Maps.newHashMap();
       if (exclude.indexOf(':') != -1) {
         final String[] args = exclude.split(":");
-        Preconditions.checkArgument(
-            args.length == 2, "Invalid exclude string: expected 'org[:module]?', found: " + exclude);
+        Preconditions.checkArgument(args.length == 2,
+            "Invalid exclude string: expected 'org[:module]?', found: " + exclude);
 
         artifactMap.put("group", args[0]);
         artifactMap.put("module", args[1]);
@@ -175,8 +176,7 @@ public class ArtifactsResolver {
       final File settingsFile = new File(s);
       if (!settingsFile.exists()) {
         throw new RuntimeException(
-            "Ivy settings file: " + settingsFile + " specified under " + IVY_SETTINGS_LOCATION
-                + " does not exist");
+            "Ivy settings file: " + settingsFile + " specified under " + IVY_SETTINGS_LOCATION + " does not exist");
       }
       LOG.info("Reading Ivy settings from: " + settingsFile);
       return settingsFile;
@@ -265,4 +265,3 @@ public class ArtifactsResolver {
     }
   }
 }
-

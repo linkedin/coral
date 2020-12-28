@@ -1,20 +1,24 @@
 /**
- * Copyright 2019 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2021 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
 package com.linkedin.coral.hive.hive2rel;
 
-import com.google.common.base.Preconditions;
-import com.linkedin.coral.hive.hive2rel.parsetree.ParseTreeBuilder;
 import java.util.List;
+
 import javax.annotation.Nonnull;
+
+import com.google.common.base.Preconditions;
+
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.rel.RelRoot;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.util.Util;
 import org.apache.hadoop.hive.metastore.api.Table;
+
+import com.linkedin.coral.hive.hive2rel.parsetree.ParseTreeBuilder;
 
 
 /**
@@ -47,10 +51,8 @@ public class HiveViewExpander implements RelOptTable.ViewExpander {
     if (table == null) {
       throw new RuntimeException(String.format("Table %s.%s not found", dbName, tableName));
     }
-    ParseTreeBuilder treeBuilder = new ParseTreeBuilder(msc,
-        relContextProvider.getParseTreeBuilderConfig(),
-        relContextProvider.getHiveFunctionRegistry(),
-        relContextProvider.getDynamicHiveFunctionRegistry());
+    ParseTreeBuilder treeBuilder = new ParseTreeBuilder(msc, relContextProvider.getParseTreeBuilderConfig(),
+        relContextProvider.getHiveFunctionRegistry(), relContextProvider.getDynamicHiveFunctionRegistry());
     SqlNode viewNode = treeBuilder.processViewOrTable(table);
     return relContextProvider.getSqlToRelConverter().convertQuery(viewNode, true, true);
   }

@@ -1,5 +1,5 @@
 /**
- * Copyright 2019 LinkedIn Corporation. All rights reserved.
+ * Copyright 2019-2021 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -24,8 +24,7 @@ import org.apache.calcite.sql.type.SqlTypeName;
  */
 public class UnsupportedPigTypeException extends RuntimeException {
 
-  private static final String UNSUPPORTED_PIG_TYPE_TEMPLATE =
-      "SQL/Calcite type '%s' is not supported in Pig Latin.";
+  private static final String UNSUPPORTED_PIG_TYPE_TEMPLATE = "SQL/Calcite type '%s' is not supported in Pig Latin.";
 
   public UnsupportedPigTypeException(SqlTypeName sqlTypeName) {
     super(String.format(UNSUPPORTED_PIG_TYPE_TEMPLATE, sqlTypeName.getName()));
