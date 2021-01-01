@@ -15,6 +15,7 @@ import com.linkedin.coral.hive.hive2rel.functions.HiveFunctionRegistry;
 import com.linkedin.coral.hive.hive2rel.functions.HiveFunctionResolver;
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 import com.linkedin.coral.hive.hive2rel.parsetree.parser.ASTNode;
+import com.linkedin.coral.hive.hive2rel.parsetree.parser.CoralParseDriver;
 import com.linkedin.coral.hive.hive2rel.parsetree.parser.Node;
 import com.linkedin.coral.hive.hive2rel.parsetree.parser.ParseDriver;
 import com.linkedin.coral.hive.hive2rel.parsetree.parser.ParseException;
@@ -153,7 +154,7 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
   }
 
   SqlNode process(String sql, @Nullable Table hiveView) {
-    ParseDriver pd = new ParseDriver();
+    ParseDriver pd = new CoralParseDriver();
     try {
       ASTNode root = pd.parse(sql);
       return processAST(root, hiveView);

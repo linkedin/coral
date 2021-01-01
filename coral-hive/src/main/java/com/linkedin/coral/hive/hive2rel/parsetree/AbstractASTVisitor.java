@@ -57,7 +57,7 @@ public abstract class AbstractASTVisitor<R, C> {
         return visitFrom(node, ctx);
 
       case HiveParser.TOK_UNIONTYPE:
-      case HiveParser.TOK_UNION:
+      case HiveParser.TOK_UNIONALL:
         return visitUnion(node, ctx);
 
       case HiveParser.TOK_QUERY:
@@ -232,7 +232,7 @@ public abstract class AbstractASTVisitor<R, C> {
       case HiveParser.TOK_TIMESTAMP:
         return visitTimestamp(node, ctx);
 
-        // joins
+      // joins
       case HiveParser.TOK_JOIN:
         return visitJoin(node, ctx);
 

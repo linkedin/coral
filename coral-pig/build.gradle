@@ -17,6 +17,7 @@ dependencies {
   // Use shaded hive-exec/hive-metastore dependencies for Coral to prevent classpath
   // conflicts with DaliStorage/PiggyBank.
   compile(deps.'hive'.'hive-exec-core') {
+    //transitive = false
     exclude group: 'org.apache.avro', module: 'avro-tools'
     // These exclusions are required to prevent duplicate classes since we include
     // shaded coral-calcite jar above

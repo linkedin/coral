@@ -41,6 +41,13 @@ subprojects {
 
     exclude '**/*.avsc'
     exclude '**/*.json'
+    // Exclude auto-generated code since the license is not generated at the beginning of the file
+    exclude '**/HiveLexer.java'
+    exclude '**/HiveParser.java'
+    exclude '**/HiveParser_FromClauseParser.java'
+    exclude '**/HiveParser_IdentifiersParser.java'
+    exclude '**/HiveParser_SelectClauseParser.java'
+
   }
 
   plugins.withType(JavaPlugin) {

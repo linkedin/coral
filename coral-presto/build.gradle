@@ -8,6 +8,7 @@ dependencies {
   testCompile deps.'presto-parser'
 
   testCompile(deps.'hive'.'hive-exec-core') {
+    //transitive = false
     exclude group: 'org.apache.avro', module: 'avro-tools'
     // These exclusions are required to prevent duplicate classes since we include
     // shaded jar above
