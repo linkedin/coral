@@ -1,5 +1,5 @@
 /**
- * Copyright 2019 LinkedIn Corporation. All rights reserved.
+ * Copyright 2018-2021 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -23,7 +23,6 @@ public class HiveRLikeOperator extends SqlSpecialOperator {
   public static final HiveRLikeOperator RLIKE = new HiveRLikeOperator("RLIKE", false);
   public static final HiveRLikeOperator REGEXP = new HiveRLikeOperator("REGEXP", false);
 
-
   private final boolean negated;
 
   /**
@@ -32,12 +31,7 @@ public class HiveRLikeOperator extends SqlSpecialOperator {
    * @param negated Whether this is 'NOT LIKE'
    */
   public HiveRLikeOperator(String name, boolean negated) {
-    super(name,
-        SqlKind.LIKE,
-        32,
-        false,
-        ReturnTypes.BOOLEAN_NULLABLE,
-        InferTypes.FIRST_KNOWN,
+    super(name, SqlKind.LIKE, 32, false, ReturnTypes.BOOLEAN_NULLABLE, InferTypes.FIRST_KNOWN,
         OperandTypes.STRING_SAME_SAME);
     this.negated = negated;
   }
@@ -50,18 +44,12 @@ public class HiveRLikeOperator extends SqlSpecialOperator {
     return SqlOperandCountRanges.of(2);
   }
 
-  public boolean checkOperandTypes(
-      SqlCallBinding callBinding,
-      boolean throwOnFailure) {
+  public boolean checkOperandTypes(SqlCallBinding callBinding, boolean throwOnFailure) {
     return OperandTypes.STRING_SAME_SAME.checkOperandTypes(callBinding, throwOnFailure)
         && SqlTypeUtil.isCharTypeComparable(callBinding, callBinding.operands(), throwOnFailure);
   }
 
-  public void unparse(
-      SqlWriter writer,
-      SqlCall call,
-      int leftPrec,
-      int rightPrec) {
+  public void unparse(SqlWriter writer, SqlCall call, int leftPrec, int rightPrec) {
     final SqlWriter.Frame frame = writer.startList("", "");
     call.operand(0).unparse(writer, getLeftPrec(), getRightPrec());
     writer.sep(getName());

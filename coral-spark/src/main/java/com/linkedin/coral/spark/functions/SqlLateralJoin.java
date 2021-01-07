@@ -1,10 +1,9 @@
 /**
- * Copyright 2019 LinkedIn Corporation. All rights reserved.
+ * Copyright 2018-2021 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
 package com.linkedin.coral.spark.functions;
-
 
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlJoin;
@@ -55,17 +54,12 @@ public class SqlLateralJoin extends SqlJoin {
       return SqlSyntax.SPECIAL;
     }
 
-
     @Override
     public void unparse(SqlWriter writer, SqlCall call, int leftPrec, int rightPrec) {
       final SqlLateralJoin join = (SqlLateralJoin) call;
 
-      final SqlWriter.Frame joinFrame =
-          writer.startList(SqlWriter.FrameTypeEnum.JOIN);
-      join.left.unparse(
-          writer,
-          leftPrec,
-          getLeftPrec());
+      final SqlWriter.Frame joinFrame = writer.startList(SqlWriter.FrameTypeEnum.JOIN);
+      join.left.unparse(writer, leftPrec, getLeftPrec());
 
       switch (join.getJoinType()) {
         case COMMA:

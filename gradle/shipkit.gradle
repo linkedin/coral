@@ -9,7 +9,13 @@ shipkit {
 
   git.releasableBranchRegex = "master|release/.+"
 
-  team.developers = ['wmoustafa:Walaa Eldin Moustafa', 'khaitranq:Khai Tranh', 'funcheetah:Wenye Zhang', 'shardulm94:Shardul Mahadik', 'hotsushi:Sushant Raikar']
+  team.developers = [
+    'wmoustafa:Walaa Eldin Moustafa',
+    'khaitranq:Khai Tranh',
+    'funcheetah:Wenye Zhang',
+    'shardulm94:Shardul Mahadik',
+    'hotsushi:Sushant Raikar'
+  ]
 }
 
 allprojects {
@@ -27,7 +33,14 @@ allprojects {
         userOrg = 'linkedin'
         name = 'coral'
         licenses = ['BSD 2-Clause']
-        labels = ['coral', 'sql', 'presto', 'spark', 'hive', 'views']
+        labels = [
+          'coral',
+          'sql',
+          'presto',
+          'spark',
+          'hive',
+          'views'
+        ]
         vcsUrl = "https://github.com/linkedin/coral.git"
         description = "A library for analyzing, processing, and rewriting views defined in the Hive Metastore, and sharing them across multiple execution engines"
       }

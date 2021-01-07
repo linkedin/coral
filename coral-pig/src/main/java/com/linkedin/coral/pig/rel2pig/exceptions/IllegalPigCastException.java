@@ -1,5 +1,5 @@
 /**
- * Copyright 2019 LinkedIn Corporation. All rights reserved.
+ * Copyright 2019-2021 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -23,8 +23,7 @@ import com.linkedin.coral.pig.rel2pig.rel.operators.PigCastFunction;
  */
 public class IllegalPigCastException extends RuntimeException {
 
-  private static final String ILLEGAL_PIG_CAST_TEMPLATE =
-      "CAST operation from '%s' to '%s' is not valid in Pig Latin.";
+  private static final String ILLEGAL_PIG_CAST_TEMPLATE = "CAST operation from '%s' to '%s' is not valid in Pig Latin.";
 
   public IllegalPigCastException(PigCastFunction.PigType fromType, PigCastFunction.PigType toType) {
     super(String.format(ILLEGAL_PIG_CAST_TEMPLATE, fromType.getName(), toType.getName()));

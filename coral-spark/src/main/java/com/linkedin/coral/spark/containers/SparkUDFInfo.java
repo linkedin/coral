@@ -1,5 +1,5 @@
 /**
- * Copyright 2019 LinkedIn Corporation. All rights reserved.
+ * Copyright 2018-2021 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -18,7 +18,9 @@ public class SparkUDFInfo {
   // need to distinguish different UDF types because we use different mechanisms
   // to register different UDF types.
   public enum UDFTYPE {
-    HIVE_BUILTIN_FUNCTION, HIVE_CUSTOM_UDF, TRANSPORTABLE_UDF
+    HIVE_BUILTIN_FUNCTION,
+    HIVE_CUSTOM_UDF,
+    TRANSPORTABLE_UDF
   }
 
   private String className;

@@ -1,5 +1,5 @@
 /**
- * Copyright 2019 LinkedIn Corporation. All rights reserved.
+ * Copyright 2018-2021 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -15,9 +15,7 @@ public class Utils {
    * @return input with quotes removed
    */
   public static String stripQuotes(String id) {
-    if ((id.startsWith("'") && id.endsWith("'"))
-        || (id.startsWith("\"") && id.endsWith("\""))
-        ) {
+    if ((id.startsWith("'") && id.endsWith("'")) || (id.startsWith("\"") && id.endsWith("\""))) {
       return id.substring(1, id.length() - 1);
     }
     return id;

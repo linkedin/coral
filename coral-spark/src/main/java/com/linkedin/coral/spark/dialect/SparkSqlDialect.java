@@ -1,5 +1,5 @@
 /**
- * Copyright 2019 LinkedIn Corporation. All rights reserved.
+ * Copyright 2018-2021 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -29,9 +29,7 @@ import org.apache.calcite.sql.fun.SqlSubstringFunction;
 public class SparkSqlDialect extends SqlDialect {
 
   public static final SparkSqlDialect INSTANCE = new SparkSqlDialect(
-      emptyContext()
-          .withDatabaseProduct(DatabaseProduct.HIVE)
-          .withNullCollation(NullCollation.HIGH));
+      emptyContext().withDatabaseProduct(DatabaseProduct.HIVE).withNullCollation(NullCollation.HIGH));
 
   private SparkSqlDialect(Context context) {
     super(context);
@@ -69,8 +67,7 @@ public class SparkSqlDialect extends SqlDialect {
    * */
   private void unparseSubstring(SqlWriter writer, SqlCall call) {
     writer.keyword("SUBSTRING");
-    final SqlWriter.Frame frame =
-        writer.startList(SqlWriter.FrameTypeEnum.FUN_CALL, "(", ")");
+    final SqlWriter.Frame frame = writer.startList(SqlWriter.FrameTypeEnum.FUN_CALL, "(", ")");
     for (SqlNode operand : call.getOperandList()) {
       writer.sep(",");
       operand.unparse(writer, 0, 0);
@@ -85,8 +82,7 @@ public class SparkSqlDialect extends SqlDialect {
    * */
   private void unparseUnnest(SqlWriter writer, SqlCall call) {
     writer.keyword("EXPLODE");
-    final SqlWriter.Frame frame =
-        writer.startList(SqlWriter.FrameTypeEnum.FUN_CALL, "(", ")");
+    final SqlWriter.Frame frame = writer.startList(SqlWriter.FrameTypeEnum.FUN_CALL, "(", ")");
     for (SqlNode operand : call.getOperandList()) {
       writer.sep(",");
       operand.unparse(writer, 0, 0);
@@ -98,9 +94,7 @@ public class SparkSqlDialect extends SqlDialect {
    *  Converts ARRAY[] to ARRAY()
    *  Converts MAP[] to MAP()
    * */
-  private void unparseMapOrArray(
-      SqlWriter writer,
-      SqlCall call) {
+  private void unparseMapOrArray(SqlWriter writer, SqlCall call) {
     writer.keyword(call.getOperator().getName()); // "MULTISET" or "ARRAY"
     final SqlWriter.Frame frame = writer.startList("(", ")");
     for (SqlNode operand : call.getOperandList()) {
@@ -129,8 +123,7 @@ public class SparkSqlDialect extends SqlDialect {
     return false;
   }
 
-  public void unparseOffsetFetch(SqlWriter writer, SqlNode offset,
-      SqlNode fetch) {
+  public void unparseOffsetFetch(SqlWriter writer, SqlNode offset, SqlNode fetch) {
     unparseFetchUsingLimit(writer, offset, fetch);
   }
 

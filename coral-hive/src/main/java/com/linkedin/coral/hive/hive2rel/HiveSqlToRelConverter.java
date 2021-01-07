@@ -1,13 +1,13 @@
 /**
- * Copyright 2019 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2021 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
 package com.linkedin.coral.hive.hive2rel;
 
-import com.linkedin.coral.hive.hive2rel.rel.HiveUncollect;
 import java.util.ArrayList;
 import java.util.List;
+
 import org.apache.calcite.linq4j.Ord;
 import org.apache.calcite.plan.Convention;
 import org.apache.calcite.plan.RelOptCluster;
@@ -33,6 +33,8 @@ import org.apache.calcite.sql.validate.SqlValidator;
 import org.apache.calcite.sql2rel.SqlRexConvertletTable;
 import org.apache.calcite.sql2rel.SqlToRelConverter;
 
+import com.linkedin.coral.hive.hive2rel.rel.HiveUncollect;
+
 
 /**
  * Class to convert Hive SQL to Calcite RelNode. This class
@@ -50,29 +52,22 @@ class HiveSqlToRelConverter extends SqlToRelConverter {
   // 1. This does not validate the type of converted rel rowType with that of validated node. This is because
   //    hive is lax in enforcing view schemas.
   // 2. This skips calling some methods because (1) those are private, and (2) not required for our usecase
-  public RelRoot convertQuery(
-      SqlNode query,
-      final boolean needsValidation,
-      final boolean top) {
+  public RelRoot convertQuery(SqlNode query, final boolean needsValidation, final boolean top) {
     if (needsValidation) {
       query = validator.validate(query);
     }
 
-    RelMetadataQuery.THREAD_PROVIDERS.set(
-        JaninoRelMetadataProvider.of(cluster.getMetadataProvider()));
+    RelMetadataQuery.THREAD_PROVIDERS.set(JaninoRelMetadataProvider.of(cluster.getMetadataProvider()));
     RelNode result = convertQueryRecursive(query, top, null).rel;
     RelCollation collation = RelCollations.EMPTY;
 
     if (SQL2REL_LOGGER.isDebugEnabled()) {
-      SQL2REL_LOGGER.debug(
-          RelOptUtil.dumpPlan("Plan after converting SqlNode to RelNode",
-              result, SqlExplainFormat.TEXT,
-              SqlExplainLevel.EXPPLAN_ATTRIBUTES));
+      SQL2REL_LOGGER.debug(RelOptUtil.dumpPlan("Plan after converting SqlNode to RelNode", result,
+          SqlExplainFormat.TEXT, SqlExplainLevel.EXPPLAN_ATTRIBUTES));
     }
 
     final RelDataType validatedRowType = validator.getValidatedNodeType(query);
-    return RelRoot.of(result, validatedRowType, query.getKind())
-        .withCollation(collation);
+    return RelRoot.of(result, validatedRowType, query.getKind()).withCollation(collation);
   }
 
   @Override
@@ -105,11 +100,10 @@ class HiveSqlToRelConverter extends SqlToRelConverter {
       exprs.add(bb.convertExpression(node.e));
       fieldNames.add(validator.deriveAlias(node.e, node.i));
     }
-    final RelNode input =
-        RelOptUtil.createProject((null != bb.root) ? bb.root
-                : LogicalValues.createOneRow(cluster), exprs, fieldNames,
-            true);
-    Uncollect uncollect = new HiveUncollect(cluster, cluster.traitSetOf(Convention.NONE), input, operator.withOrdinality);
+    final RelNode input = RelOptUtil.createProject((null != bb.root) ? bb.root : LogicalValues.createOneRow(cluster),
+        exprs, fieldNames, true);
+    Uncollect uncollect =
+        new HiveUncollect(cluster, cluster.traitSetOf(Convention.NONE), input, operator.withOrdinality);
     bb.setRoot(uncollect, true);
   }
 }

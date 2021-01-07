@@ -1,5 +1,5 @@
 /**
- * Copyright 2019 LinkedIn Corporation. All rights reserved.
+ * Copyright 2019-2021 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -39,14 +39,12 @@ import org.apache.calcite.util.Static;
  * This is because it is difficult to derive the return type of an external GenericProject call in a Dali View.
  */
 public class GenericProjectFunction extends SqlUserDefinedFunction {
-  public static final GenericProjectFunction
-      GENERIC_PROJECT = new GenericProjectFunction(null);
+  public static final GenericProjectFunction GENERIC_PROJECT = new GenericProjectFunction(null);
 
   private final RelDataType tableDataType;
 
   public GenericProjectFunction(RelDataType tableDataType) {
-    super(new SqlIdentifier("generic_project", SqlParserPos.ZERO), null, null,
-        null, null, null);
+    super(new SqlIdentifier("generic_project", SqlParserPos.ZERO), null, null, null, null, null);
     this.tableDataType = tableDataType;
   }
 

@@ -1,20 +1,22 @@
 /**
- * Copyright 2019 LinkedIn Corporation. All rights reserved.
+ * Copyright 2019-2021 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
 package com.linkedin.coral.pig.rel2pig.rel.functions;
 
-import com.linkedin.coral.com.google.common.collect.ImmutableList;
-import com.linkedin.coral.hive.hive2rel.functions.VersionedSqlUserDefinedFunction;
-import com.linkedin.coral.pig.rel2pig.rel.PigRexUtils;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexNode;
+
+import com.linkedin.coral.com.google.common.collect.ImmutableList;
+import com.linkedin.coral.hive.hive2rel.functions.VersionedSqlUserDefinedFunction;
+import com.linkedin.coral.pig.rel2pig.rel.PigRexUtils;
 
 
 /**
@@ -38,7 +40,7 @@ public class PigUDF extends Function {
   private static final String FUNCTION_CALL_TEMPLATE = "%s(%s)";
   private static final String DEFINE_PIG_BUILTIN_UDF_TEMPLATE = "DEFINE %s dali.data.pig.udf.HiveUDF('%s'%s);";
   private static final String CONSTANT_PARAMETER_TEMPLATE = ", \\'(%s)\\'";
-  private static final String NOT_ALPHA_NUMERIC_UNDERSCORE_REGEX  = "[^a-zA-Z0-9_]";
+  private static final String NOT_ALPHA_NUMERIC_UNDERSCORE_REGEX = "[^a-zA-Z0-9_]";
 
   // Name of function in Hive
   private final String hiveFunctionName;
@@ -91,8 +93,7 @@ public class PigUDF extends Function {
   @Override
   public final String unparse(RexCall rexCall, List<String> inputFieldNames) {
     final List<String> operands = rexCall.getOperands().stream()
-        .map(operand ->
-            PigRexUtils.convertRexNodeToPigExpression(operand, inputFieldNames))
+        .map(operand -> PigRexUtils.convertRexNodeToPigExpression(operand, inputFieldNames))
         .collect(Collectors.toList());
     final String functionName = translateFunctionName(rexCall, inputFieldNames);
     final String functionCall = String.format(FUNCTION_CALL_TEMPLATE, functionName, String.join(", ", operands));
@@ -114,9 +115,8 @@ public class PigUDF extends Function {
    */
   public List<String> getFunctionDefinitions(RexCall rexCall, List<String> inputFieldNames) {
     final String constantParameterStatement = getConstantParameterStatement(rexCall, inputFieldNames);
-    return ImmutableList.of(String.format(
-        DEFINE_PIG_BUILTIN_UDF_TEMPLATE, translateFunctionName(rexCall, inputFieldNames), hiveFunctionName,
-        constantParameterStatement));
+    return ImmutableList.of(String.format(DEFINE_PIG_BUILTIN_UDF_TEMPLATE,
+        translateFunctionName(rexCall, inputFieldNames), hiveFunctionName, constantParameterStatement));
   }
 
   /**
@@ -134,13 +134,11 @@ public class PigUDF extends Function {
     // We need to add the constant parameters to its name to ensure uniqueness of function names
     // for different constant parameters.
     if (!constantParameters.isEmpty()) {
-      final String constantParametersPostfix = constantParameters.stream()
-          .map(parameterIndex -> {
-            final RexNode operand = rexCall.getOperands().get(parameterIndex);
-            final String operandExpression = PigRexUtils.convertRexNodeToPigExpression(operand, inputFieldNames);
-            return operandExpression;
-          }).collect(Collectors.joining("_"))
-          .replaceAll(NOT_ALPHA_NUMERIC_UNDERSCORE_REGEX, "_");
+      final String constantParametersPostfix = constantParameters.stream().map(parameterIndex -> {
+        final RexNode operand = rexCall.getOperands().get(parameterIndex);
+        final String operandExpression = PigRexUtils.convertRexNodeToPigExpression(operand, inputFieldNames);
+        return operandExpression;
+      }).collect(Collectors.joining("_")).replaceAll(NOT_ALPHA_NUMERIC_UNDERSCORE_REGEX, "_");
       versionedpigFunctionName = String.join("_", versionedpigFunctionName, constantParametersPostfix);
     }
 
@@ -164,12 +162,10 @@ public class PigUDF extends Function {
    */
   private String getVersionedFunctionName(RexCall rexCall) {
     if (!(rexCall.getOperator() instanceof VersionedSqlUserDefinedFunction)) {
-      return String.format(PIG_UDF_ALIAS_TEMPLATE, hiveFunctionName.replace(
-          NOT_ALPHA_NUMERIC_UNDERSCORE_REGEX, "_"));
+      return String.format(PIG_UDF_ALIAS_TEMPLATE, hiveFunctionName.replace(NOT_ALPHA_NUMERIC_UNDERSCORE_REGEX, "_"));
     }
 
-    final VersionedSqlUserDefinedFunction versionedFunction =
-        (VersionedSqlUserDefinedFunction) rexCall.getOperator();
+    final VersionedSqlUserDefinedFunction versionedFunction = (VersionedSqlUserDefinedFunction) rexCall.getOperator();
     return String.join("_", PIG_UDF_ALIAS_TEMPLATE, versionedFunction.getViewDependentFunctionName())
         .replace(NOT_ALPHA_NUMERIC_UNDERSCORE_REGEX, "_");
   }
@@ -204,8 +200,7 @@ public class PigUDF extends Function {
         parameters.add("null");
       } else {
         final RexNode operand = rexCall.getOperands().get(i);
-        final String operandExpression =
-            PigRexUtils.convertRexNodeToPigExpression(operand, inputFieldNames);
+        final String operandExpression = PigRexUtils.convertRexNodeToPigExpression(operand, inputFieldNames);
 
         parameters.add(operandExpression);
       }

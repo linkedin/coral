@@ -1,13 +1,15 @@
 /**
- * Copyright 2019 LinkedIn Corporation. All rights reserved.
+ * Copyright 2018-2021 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
 package com.linkedin.coral.hive.hive2rel.functions;
 
-import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.google.common.collect.ImmutableList;
+
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeField;
@@ -51,8 +53,7 @@ public class HiveInOperator extends SqlSpecialOperator {
   public static final HiveInOperator IN = new HiveInOperator();
 
   public HiveInOperator() {
-    super("IN", SqlKind.OTHER, 32, true, ReturnTypes.BOOLEAN_NULLABLE,
-        InferTypes.FIRST_KNOWN, null);
+    super("IN", SqlKind.OTHER, 32, true, ReturnTypes.BOOLEAN_NULLABLE, InferTypes.FIRST_KNOWN, null);
   }
 
   @Override
@@ -73,10 +74,7 @@ public class HiveInOperator extends SqlSpecialOperator {
   }
 
   // copied from Calcite' SqlInOperator
-  public RelDataType deriveType(
-      SqlValidator validator,
-      SqlValidatorScope scope,
-      SqlCall call) {
+  public RelDataType deriveType(SqlValidator validator, SqlValidatorScope scope, SqlCall call) {
     final List<SqlNode> operands = call.getOperandList();
     assert operands.size() == 2;
     final SqlNode left = operands.get(0);
@@ -106,8 +104,7 @@ public class HiveInOperator extends SqlSpecialOperator {
         rightType = validator.getTypeCoercion().getWiderTypeFor(rightTypeList, true);
       }
       if (null == rightType) {
-        throw validator.newValidationError(right,
-            RESOURCE.incompatibleTypesInList());
+        throw validator.newValidationError(right, RESOURCE.incompatibleTypesInList());
       }
 
       // Record the RHS type for use by SqlToRelConverter.
@@ -119,8 +116,7 @@ public class HiveInOperator extends SqlSpecialOperator {
     SqlCallBinding callBinding = new SqlCallBinding(validator, scope, call);
     // Coerce type first.
     if (callBinding.getValidator().isTypeCoercionEnabled()) {
-      boolean coerced = callBinding.getValidator().getTypeCoercion()
-          .inOperationCoercion(callBinding);
+      boolean coerced = callBinding.getValidator().getTypeCoercion().inOperationCoercion(callBinding);
       if (coerced) {
         // Update the node data type if we coerced any type.
         leftType = validator.deriveType(scope, call.operand(0));
@@ -132,36 +128,23 @@ public class HiveInOperator extends SqlSpecialOperator {
     // type of the list. Same strategy as the '=' operator.
     // Normalize the types on both sides to be row types
     // for the purposes of compatibility-checking.
-    RelDataType leftRowType =
-        SqlTypeUtil.promoteToRowType(
-            typeFactory,
-            leftType,
-            null);
-    RelDataType rightRowType =
-        SqlTypeUtil.promoteToRowType(
-            typeFactory,
-            rightType,
-            null);
+    RelDataType leftRowType = SqlTypeUtil.promoteToRowType(typeFactory, leftType, null);
+    RelDataType rightRowType = SqlTypeUtil.promoteToRowType(typeFactory, rightType, null);
 
     final ComparableOperandTypeChecker checker =
-        (ComparableOperandTypeChecker)
-            OperandTypes.COMPARABLE_UNORDERED_COMPARABLE_UNORDERED;
+        (ComparableOperandTypeChecker) OperandTypes.COMPARABLE_UNORDERED_COMPARABLE_UNORDERED;
     if (!checker.checkOperandTypes(
-        new ExplicitOperatorBinding(
-            callBinding,
-            ImmutableList.of(leftRowType, rightRowType)), callBinding)) {
-      throw validator.newValidationError(call,
-          RESOURCE.incompatibleValueType(SqlStdOperatorTable.IN.getName()));
+        new ExplicitOperatorBinding(callBinding, ImmutableList.of(leftRowType, rightRowType)), callBinding)) {
+      throw validator.newValidationError(call, RESOURCE.incompatibleValueType(SqlStdOperatorTable.IN.getName()));
     }
 
     // Result is a boolean, nullable if there are any nullable types
     // on either side.
-    return typeFactory.createTypeWithNullability(
-        typeFactory.createSqlType(SqlTypeName.BOOLEAN),
-        anyNullable(leftRowType.getFieldList())
-            || anyNullable(rightRowType.getFieldList()));
+    return typeFactory.createTypeWithNullability(typeFactory.createSqlType(SqlTypeName.BOOLEAN),
+        anyNullable(leftRowType.getFieldList()) || anyNullable(rightRowType.getFieldList()));
   }
-    private static boolean anyNullable(List<RelDataTypeField> fieldList) {
+
+  private static boolean anyNullable(List<RelDataTypeField> fieldList) {
     for (RelDataTypeField field : fieldList) {
       if (field.getType().isNullable()) {
         return true;

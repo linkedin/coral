@@ -1,16 +1,16 @@
 /**
- * Copyright 2019 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2021 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
 package com.linkedin.coral.presto.rel2presto;
 
-import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Correlate;
 import org.apache.calcite.rel.core.Project;
@@ -37,6 +37,8 @@ import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.validate.SqlValidatorUtil;
 import org.apache.calcite.util.Util;
+
+import com.linkedin.coral.com.google.common.collect.ImmutableList;
 
 import static com.linkedin.coral.presto.rel2presto.Calcite2PrestoUDFConverter.*;
 
@@ -93,8 +95,7 @@ public class RelToPrestoConverter extends RelToSqlConverter {
       return x;
     }
 
-    final Builder builder =
-        x.builder(e, Clause.SELECT);
+    final Builder builder = x.builder(e, Clause.SELECT);
     final List<SqlNode> selectList = new ArrayList<>();
     for (RexNode ref : e.getChildExps()) {
       SqlNode sqlExpr = builder.context.toSql(null, ref);
@@ -125,8 +126,7 @@ public class RelToPrestoConverter extends RelToSqlConverter {
   }
 
   private SqlCall as(SqlNode e, String alias) {
-    return SqlStdOperatorTable.AS.createCall(POS, e,
-        new SqlIdentifier(alias, POS));
+    return SqlStdOperatorTable.AS.createCall(POS, e, new SqlIdentifier(alias, POS));
   }
 
   private boolean isUnnestAll(Project project) {
@@ -138,8 +138,7 @@ public class RelToPrestoConverter extends RelToSqlConverter {
     }
 
     for (int i = 0; i < projExps.size(); i++) {
-      if (!(projExps.get(i) instanceof RexInputRef)
-        || ((RexInputRef) projExps.get(i)).getIndex() != i) {
+      if (!(projExps.get(i) instanceof RexInputRef) || ((RexInputRef) projExps.get(i)).getIndex() != i) {
         return false;
       }
     }
@@ -188,8 +187,7 @@ public class RelToPrestoConverter extends RelToSqlConverter {
     if (qualifiedName.size() > 2) {
       qualifiedName = qualifiedName.subList(qualifiedName.size() - 2, qualifiedName.size()); // take last two entries
     }
-    final SqlIdentifier identifier =
-        new SqlIdentifier(qualifiedName, SqlParserPos.ZERO);
+    final SqlIdentifier identifier = new SqlIdentifier(qualifiedName, SqlParserPos.ZERO);
     return result(identifier, ImmutableList.of(Clause.FROM), e, null);
   }
 
@@ -226,9 +224,8 @@ public class RelToPrestoConverter extends RelToSqlConverter {
           SqlStdOperatorTable.AS.createCall(POS, rightLateral, new SqlIdentifier(rightResult.neededAlias, POS));
     }
 
-    final SqlNode join =
-        new SqlJoin(POS, leftResult.asFrom(), SqlLiteral.createBoolean(false, POS), JoinType.CROSS.symbol(POS),
-            rightLateral, JoinConditionType.NONE.symbol(POS), null);
+    final SqlNode join = new SqlJoin(POS, leftResult.asFrom(), SqlLiteral.createBoolean(false, POS),
+        JoinType.CROSS.symbol(POS), rightLateral, JoinConditionType.NONE.symbol(POS), null);
     return result(join, leftResult, rightResult);
   }
 

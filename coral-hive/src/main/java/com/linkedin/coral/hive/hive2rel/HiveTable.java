@@ -1,21 +1,22 @@
 /**
- * Copyright 2019 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2021 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
 package com.linkedin.coral.hive.hive2rel;
 
-import com.google.common.base.Preconditions;
-import com.google.common.base.Splitter;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
-import com.linkedin.coral.com.google.common.base.Throwables;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
+
 import org.apache.calcite.DataContext;
 import org.apache.calcite.config.CalciteConnectionConfig;
 import org.apache.calcite.linq4j.Enumerable;
@@ -36,6 +37,8 @@ import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
 import org.apache.hadoop.hive.serde2.Deserializer;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
+
+import com.linkedin.coral.com.google.common.base.Throwables;
 
 
 /**
@@ -70,13 +73,10 @@ public class HiveTable implements ScannableTable {
    */
   static final String TBLPROPERTIES_DEPENDENCIES_KEY = "dependencies";
 
-  private static Splitter tblpropertiesSplitter = Splitter
-      .on(Pattern.compile("\\s+"))
-      .omitEmptyStrings()
-      .trimResults();
+  private static Splitter tblpropertiesSplitter = Splitter.on(Pattern.compile("\\s+")).omitEmptyStrings().trimResults();
 
-  private static Splitter.MapSplitter functionsKeyValueSplitter = tblpropertiesSplitter
-      .withKeyValueSeparator(Splitter.on(":").limit(2));
+  private static Splitter.MapSplitter functionsKeyValueSplitter =
+      tblpropertiesSplitter.withKeyValueSeparator(Splitter.on(":").limit(2));
 
   /**
    * Constructor to create bridge from hive table to calcite table
@@ -118,9 +118,8 @@ public class HiveTable implements ScannableTable {
     checkDaliTable();
     final String propertyValue = hiveTable.getParameters().get(TBLPROPERTIES_DEPENDENCIES_KEY);
     if (propertyValue != null) {
-      return tblpropertiesSplitter.splitToList(propertyValue).stream().map(
-          s -> s.toLowerCase().startsWith("ivy://") ? s : "ivy://" + s
-      ).collect(Collectors.toList());
+      return tblpropertiesSplitter.splitToList(propertyValue).stream()
+          .map(s -> s.toLowerCase().startsWith("ivy://") ? s : "ivy://" + s).collect(Collectors.toList());
     }
     return ImmutableList.of();
   }
@@ -131,7 +130,7 @@ public class HiveTable implements ScannableTable {
 
   private void checkDaliTable() {
     // FIXME: this fails unit test right now
-   // Preconditions.checkState(isDaliTable());
+    // Preconditions.checkState(isDaliTable());
   }
 
   @Override
@@ -203,8 +202,8 @@ public class HiveTable implements ScannableTable {
         return Schema.TableType.TABLE;
       case INDEX_TABLE:
         return Schema.TableType.INDEX;
-        default:
-          throw new RuntimeException("Unknown table type: " + hiveTable.getTableType());
+      default:
+        throw new RuntimeException("Unknown table type: " + hiveTable.getTableType());
     }
   }
 

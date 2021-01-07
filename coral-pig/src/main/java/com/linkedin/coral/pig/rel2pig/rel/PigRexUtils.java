@@ -1,20 +1,12 @@
 /**
- * Copyright 2019 LinkedIn Corporation. All rights reserved.
+ * Copyright 2019-2021 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
 package com.linkedin.coral.pig.rel2pig.rel;
 
-import com.linkedin.coral.pig.rel2pig.exceptions.UnsupportedRexNodeException;
-import com.linkedin.coral.pig.rel2pig.rel.operators.PigBinaryOperator;
-import com.linkedin.coral.pig.rel2pig.rel.operators.PigCaseOperator;
-import com.linkedin.coral.pig.rel2pig.rel.operators.PigCastFunction;
-import com.linkedin.coral.pig.rel2pig.rel.operators.PigOperator;
-import com.linkedin.coral.pig.rel2pig.rel.operators.PigPostfixOperator;
-import com.linkedin.coral.pig.rel2pig.rel.operators.PigPrefixOperator;
-import com.linkedin.coral.pig.rel2pig.rel.operators.PigSpecialOperator;
-import com.linkedin.coral.pig.rel2pig.rel.operators.PigFunction;
 import java.util.List;
+
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexFieldAccess;
 import org.apache.calcite.rex.RexInputRef;
@@ -27,6 +19,16 @@ import org.apache.calcite.sql.SqlSpecialOperator;
 import org.apache.calcite.sql.fun.SqlCaseOperator;
 import org.apache.calcite.sql.fun.SqlCastFunction;
 import org.apache.calcite.util.NlsString;
+
+import com.linkedin.coral.pig.rel2pig.exceptions.UnsupportedRexNodeException;
+import com.linkedin.coral.pig.rel2pig.rel.operators.PigBinaryOperator;
+import com.linkedin.coral.pig.rel2pig.rel.operators.PigCaseOperator;
+import com.linkedin.coral.pig.rel2pig.rel.operators.PigCastFunction;
+import com.linkedin.coral.pig.rel2pig.rel.operators.PigFunction;
+import com.linkedin.coral.pig.rel2pig.rel.operators.PigOperator;
+import com.linkedin.coral.pig.rel2pig.rel.operators.PigPostfixOperator;
+import com.linkedin.coral.pig.rel2pig.rel.operators.PigPrefixOperator;
+import com.linkedin.coral.pig.rel2pig.rel.operators.PigSpecialOperator;
 
 
 /**

@@ -1,5 +1,5 @@
 /**
- * Copyright 2019 LinkedIn Corporation. All rights reserved.
+ * Copyright 2018-2021 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -8,6 +8,7 @@ package com.linkedin.coral.hive.hive2rel.functions;
 import java.util.AbstractList;
 import java.util.List;
 import java.util.Map;
+
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlCallBinding;
@@ -32,33 +33,29 @@ public class HiveNamedStructFunction extends SqlUserDefinedFunction {
   public static final HiveNamedStructFunction NAMED_STRUCT = new HiveNamedStructFunction();
 
   public HiveNamedStructFunction() {
-    super(new SqlIdentifier("named_struct", SqlParserPos.ZERO), null, null,
-        null, null, null);
+    super(new SqlIdentifier("named_struct", SqlParserPos.ZERO), null, null, null, null, null);
   }
 
   @Override
   public RelDataType inferReturnType(final SqlOperatorBinding opBinding) {
     checkState(opBinding instanceof SqlCallBinding);
     final SqlCallBinding callBinding = (SqlCallBinding) opBinding;
-    return opBinding.getTypeFactory().createStructType(
-        new AbstractList<Map.Entry<String, RelDataType>>() {
-          @Override
-          public int size() {
-            return opBinding.getOperandCount() / 2;
-          }
+    return opBinding.getTypeFactory().createStructType(new AbstractList<Map.Entry<String, RelDataType>>() {
+      @Override
+      public int size() {
+        return opBinding.getOperandCount() / 2;
+      }
 
-          @Override
-          public Map.Entry<String, RelDataType> get(int index) {
-            String fieldName = callBinding.operand(2 * index).toString();
-            // strip quotes
-            String fieldNameNoQuotes = fieldName.substring(1, fieldName.length() - 1);
-            //Comparable colName = opBinding.getOperandLiteralValue(2 * index);
+      @Override
+      public Map.Entry<String, RelDataType> get(int index) {
+        String fieldName = callBinding.operand(2 * index).toString();
+        // strip quotes
+        String fieldNameNoQuotes = fieldName.substring(1, fieldName.length() - 1);
+        //Comparable colName = opBinding.getOperandLiteralValue(2 * index);
 
-            return Pair.of(fieldNameNoQuotes,
-                opBinding.getOperandType(2 * index + 1));
-          }
-        }
-    );
+        return Pair.of(fieldNameNoQuotes, opBinding.getOperandType(2 * index + 1));
+      }
+    });
   }
 
   @Override

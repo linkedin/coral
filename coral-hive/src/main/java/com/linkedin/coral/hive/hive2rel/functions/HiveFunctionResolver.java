@@ -1,21 +1,20 @@
 /**
- * Copyright 2019 LinkedIn Corporation. All rights reserved.
+ * Copyright 2018-2021 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
 package com.linkedin.coral.hive.hive2rel.functions;
 
-import com.linkedin.coral.com.google.common.base.Preconditions;
-import com.linkedin.coral.com.google.common.collect.ImmutableList;
-import com.linkedin.coral.hive.hive2rel.HiveTable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+
 import org.apache.calcite.sql.SqlBinaryOperator;
 import org.apache.calcite.sql.SqlFunctionCategory;
 import org.apache.calcite.sql.SqlIdentifier;
@@ -28,6 +27,10 @@ import org.apache.calcite.sql.type.SqlOperandTypeChecker;
 import org.apache.calcite.sql.type.SqlTypeFamily;
 import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
 import org.apache.hadoop.hive.metastore.api.Table;
+
+import com.linkedin.coral.com.google.common.base.Preconditions;
+import com.linkedin.coral.com.google.common.collect.ImmutableList;
+import com.linkedin.coral.hive.hive2rel.HiveTable;
 
 import static com.google.common.base.Preconditions.*;
 import static org.apache.calcite.sql.parser.SqlParserPos.*;
@@ -60,11 +63,9 @@ public class HiveFunctionResolver {
   public SqlOperator resolveUnaryOperator(String name) {
     final String lowerCaseOperator = name.toLowerCase();
     List<SqlOperator> matches = operators.stream()
-        .filter(o -> o.getName().toLowerCase().equals(lowerCaseOperator)
-            && o instanceof SqlPrefixOperator)
+        .filter(o -> o.getName().toLowerCase().equals(lowerCaseOperator) && o instanceof SqlPrefixOperator)
         .collect(Collectors.toList());
-    checkState(matches.size() == 1, "%s operator %s",
-        operators.isEmpty() ? "Unknown" : "Ambiguous", name);
+    checkState(matches.size() == 1, "%s operator %s", operators.isEmpty() ? "Unknown" : "Ambiguous", name);
     return matches.get(0);
   }
 
@@ -76,10 +77,8 @@ public class HiveFunctionResolver {
    */
   public SqlOperator resolveBinaryOperator(String name) {
     final String lowerCaseOperator = name.toLowerCase();
-    List<SqlOperator> matches = operators.stream()
-        .filter(o -> o.getName().toLowerCase().equals(lowerCaseOperator)
-            && (o instanceof SqlBinaryOperator || o instanceof SqlSpecialOperator))
-        .collect(Collectors.toList());
+    List<SqlOperator> matches = operators.stream().filter(o -> o.getName().toLowerCase().equals(lowerCaseOperator)
+        && (o instanceof SqlBinaryOperator || o instanceof SqlSpecialOperator)).collect(Collectors.toList());
     if (matches.size() == 0) {
       HiveFunction f = tryResolve(lowerCaseOperator, false, null, 2);
       if (f != null) {
@@ -97,8 +96,7 @@ public class HiveFunctionResolver {
       return SqlStdOperatorTable.MINUS;
     }
 
-    checkState(matches.size() == 1, "%s operator %s",
-        operators.isEmpty() ? "Unknown" : "Ambiguous", name);
+    checkState(matches.size() == 1, "%s operator %s", operators.isEmpty() ? "Unknown" : "Ambiguous", name);
     return matches.get(0);
   }
 
@@ -117,9 +115,7 @@ public class HiveFunctionResolver {
    * @return resolved hive functions
    * @throws UnknownSqlFunctionException if the function name can not be resolved.
    */
-  public HiveFunction tryResolve(@Nonnull String functionName,
-      boolean isCaseSensitive,
-      @Nullable Table hiveTable,
+  public HiveFunction tryResolve(@Nonnull String functionName, boolean isCaseSensitive, @Nullable Table hiveTable,
       int numOfOperands) {
     checkNotNull(functionName);
     Collection<HiveFunction> functions = registry.lookup(functionName, isCaseSensitive);
@@ -170,8 +166,7 @@ public class HiveFunctionResolver {
    *   dali function name format of db_tableName_functionName
    * @throws UnknownSqlFunctionException if the function name is in Dali function name format but there is no mapping
    */
-  public Collection<HiveFunction> tryResolveAsDaliFunction(String functionName,
-      @Nonnull Table table,
+  public Collection<HiveFunction> tryResolveAsDaliFunction(String functionName, @Nonnull Table table,
       int numOfOperands) {
     Preconditions.checkNotNull(table);
     String functionPrefix = String.format("%s_%s_", table.getDbName(), table.getTableName());
@@ -189,10 +184,8 @@ public class HiveFunctionResolver {
     }
     final Collection<HiveFunction> hiveFunctions = registry.lookup(funcClassName, true);
     if (hiveFunctions.size() == 0) {
-      Collection<HiveFunction> dynamicResolvedHiveFunctions = resolveDaliFunctionDynamically(functionName,
-          funcClassName,
-          hiveTable,
-          numOfOperands);
+      Collection<HiveFunction> dynamicResolvedHiveFunctions =
+          resolveDaliFunctionDynamically(functionName, funcClassName, hiveTable, numOfOperands);
 
       if (dynamicResolvedHiveFunctions.size() == 0) {
         // we want to see class name in the exception message for coverage testing
@@ -203,35 +196,20 @@ public class HiveFunctionResolver {
       return dynamicResolvedHiveFunctions;
     }
 
-    return hiveFunctions.stream().map(f -> new HiveFunction(
-        f.getHiveFunctionName(),
-        new VersionedSqlUserDefinedFunction(
-            (SqlUserDefinedFunction) f.getSqlOperator(),
-            hiveTable.getDaliUdfDependencies(),
-            functionName
-        )
-    )).collect(Collectors.toList());
+    return hiveFunctions.stream()
+        .map(f -> new HiveFunction(f.getHiveFunctionName(), new VersionedSqlUserDefinedFunction(
+            (SqlUserDefinedFunction) f.getSqlOperator(), hiveTable.getDaliUdfDependencies(), functionName)))
+        .collect(Collectors.toList());
   }
 
-  private @Nonnull Collection<HiveFunction> resolveDaliFunctionDynamically(String functionName,
-      String funcClassName,
-      HiveTable hiveTable,
-      int numOfOperands) {
-    HiveFunction hiveFunction = new HiveFunction(
-        funcClassName,
+  private @Nonnull Collection<HiveFunction> resolveDaliFunctionDynamically(String functionName, String funcClassName,
+      HiveTable hiveTable, int numOfOperands) {
+    HiveFunction hiveFunction = new HiveFunction(funcClassName,
         new VersionedSqlUserDefinedFunction(
-            new SqlUserDefinedFunction(
-                new SqlIdentifier(funcClassName, ZERO),
-                new HiveGenericUDFReturnTypeInference(funcClassName, hiveTable.getDaliUdfDependencies()),
-                null,
-                createSqlOperandTypeChecker(numOfOperands),
-                null,
-                null
-            ),
-            hiveTable.getDaliUdfDependencies(),
-            functionName
-        )
-    );
+            new SqlUserDefinedFunction(new SqlIdentifier(funcClassName, ZERO),
+                new HiveGenericUDFReturnTypeInference(funcClassName, hiveTable.getDaliUdfDependencies()), null,
+                createSqlOperandTypeChecker(numOfOperands), null, null),
+            hiveTable.getDaliUdfDependencies(), functionName));
     dynamicFunctionRegistry.put(funcClassName, hiveFunction);
     return ImmutableList.of(hiveFunction);
   }
@@ -239,8 +217,7 @@ public class HiveFunctionResolver {
   private @Nonnull HiveFunction unresolvedFunction(String functionName, Table table) {
     SqlIdentifier funcIdentifier = createFunctionIdentifier(functionName, table);
     return new HiveFunction(functionName,
-        new SqlUnresolvedFunction(funcIdentifier, null, null,
-            null, null, SqlFunctionCategory.USER_DEFINED_FUNCTION));
+        new SqlUnresolvedFunction(funcIdentifier, null, null, null, null, SqlFunctionCategory.USER_DEFINED_FUNCTION));
   }
 
   private @Nonnull SqlIdentifier createFunctionIdentifier(String functionName, @Nullable Table table) {

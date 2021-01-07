@@ -1,14 +1,16 @@
 /**
- * Copyright 2019 LinkedIn Corporation. All rights reserved.
+ * Copyright 2019-2021 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
 package com.linkedin.coral.pig.rel2pig.rel.functions;
 
-import com.linkedin.coral.pig.rel2pig.rel.PigRexUtils;
 import java.util.Arrays;
 import java.util.List;
+
 import org.apache.calcite.rex.RexCall;
+
+import com.linkedin.coral.pig.rel2pig.rel.PigRexUtils;
 
 
 /**
@@ -54,8 +56,8 @@ public class PigSubstringFunction extends PigBuiltinFunction {
     // Otherwise, the endIndex can be set as:
     //     endIndex = SIZE(string)
     final String endIndex = rexCall.getOperands().size() >= 3
-        ? String.format(ADDITION_TEMPLATE, startIndex, PigRexUtils.convertRexNodeToPigExpression(
-            rexCall.getOperands().get(2), inputFieldNames))
+        ? String.format(ADDITION_TEMPLATE, startIndex,
+            PigRexUtils.convertRexNodeToPigExpression(rexCall.getOperands().get(2), inputFieldNames))
         : String.format(SIZE_FUNCTION_TEMPLATE, value);
     return Arrays.asList(value, startIndex, endIndex);
   }

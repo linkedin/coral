@@ -1,11 +1,12 @@
 /**
- * Copyright 2019 LinkedIn Corporation. All rights reserved.
+ * Copyright 2018-2021 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
 package com.linkedin.coral.hive.hive2rel.functions;
 
 import com.google.common.base.Preconditions;
+
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.sql.SqlBasicCall;
 import org.apache.calcite.sql.SqlBinaryOperator;
@@ -36,15 +37,10 @@ import org.apache.calcite.sql.validate.SqlValidatorScope;
  *
  */
 public class FunctionFieldReferenceOperator extends SqlBinaryOperator {
-  public static final FunctionFieldReferenceOperator
-      DOT = new FunctionFieldReferenceOperator();
+  public static final FunctionFieldReferenceOperator DOT = new FunctionFieldReferenceOperator();
 
   public FunctionFieldReferenceOperator() {
-    super(".", SqlKind.DOT,
-        80,
-        true,
-        null,
-        null, OperandTypes.ANY_ANY);
+    super(".", SqlKind.DOT, 80, true, null, null, OperandTypes.ANY_ANY);
   }
 
   @Override
@@ -55,10 +51,7 @@ public class FunctionFieldReferenceOperator extends SqlBinaryOperator {
   }
 
   @Override
-  public <R> void acceptCall(
-      SqlVisitor<R> visitor,
-      SqlCall call,
-      boolean onlyExpressions,
+  public <R> void acceptCall(SqlVisitor<R> visitor, SqlCall call, boolean onlyExpressions,
       SqlBasicVisitor.ArgHandler<R> argHandler) {
     argHandler.visitChild(visitor, call, 0, call.operand(0));
   }
@@ -68,7 +61,7 @@ public class FunctionFieldReferenceOperator extends SqlBinaryOperator {
     call.operand(0).unparse(writer, getLeftPrec(), getRightPrec());
     writer.literal(".");
     writer.setNeedWhitespace(false);
-      // strip quotes from fieldName
+    // strip quotes from fieldName
     String fieldName = fieldNameStripQuotes(call.operand(1));
     writer.identifier(fieldName, true);
   }

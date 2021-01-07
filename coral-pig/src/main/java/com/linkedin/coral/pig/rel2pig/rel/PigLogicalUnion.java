@@ -1,11 +1,12 @@
 /**
- * Copyright 2019 LinkedIn Corporation. All rights reserved.
+ * Copyright 2019-2021 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
 package com.linkedin.coral.pig.rel2pig.rel;
 
 import java.util.List;
+
 import org.apache.calcite.rel.logical.LogicalUnion;
 
 
@@ -31,8 +32,8 @@ public class PigLogicalUnion {
    */
   public static String getScript(LogicalUnion logicalUnion, String outputRelation, List<String> inputRelations) {
     if (inputRelations.size() < 2) {
-      throw new RuntimeException(String.format(
-          "LogicalUnion was performed with fewer than two tables in query: %s", logicalUnion.toString()));
+      throw new RuntimeException(
+          String.format("LogicalUnion was performed with fewer than two tables in query: %s", logicalUnion.toString()));
     }
 
     return String.format(LOGICAL_UNION_TEMPLATE, outputRelation, String.join(", ", inputRelations));
