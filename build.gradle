@@ -24,6 +24,7 @@ allprojects {
   }
 
   spotless {
+    ratchetFrom 'origin/master'
     groovyGradle {
       target '**/*.gradle'
       endWithNewline()
