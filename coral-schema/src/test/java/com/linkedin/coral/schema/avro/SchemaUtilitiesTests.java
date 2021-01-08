@@ -18,7 +18,6 @@ public class SchemaUtilitiesTests {
   @Test
   public void testCloneFieldList() {
     Schema dummySchema = SchemaBuilder.record("test").fields().name("a").type().intType().noDefault().endRecord();
-    dummySchema.addProp("key", "value");
     Schema.Field field1 =
         new Schema.Field("one", dummySchema, "", dummySchema.getJsonProp("key"), Schema.Field.Order.IGNORE);
     field1.addProp("field_key1", "field_value1");
@@ -39,5 +38,21 @@ public class SchemaUtilitiesTests {
         new Schema.Field("one", dummySchema, "", dummySchema.getJsonProp("key"), Schema.Field.Order.IGNORE);
     field3.addProp("field_key1", "random");
     Assert.assertFalse(resultList.contains(field3));
+  }
+
+  @Test
+  public void testSchemaPropReplicate() {
+    Schema dummySchema = SchemaBuilder.record("test").fields().name("a").type().intType().noDefault().endRecord();
+    dummySchema.addProp("schema_key", "schema_value");
+    Schema schemaReplicate = SchemaBuilder.record("test").fields().name("a").type().intType().noDefault().endRecord();
+    Assert.assertNotEquals(schemaReplicate, dummySchema);
+    SchemaUtilities.replicateSchemaProps(dummySchema, schemaReplicate);
+    Assert.assertEquals(schemaReplicate, dummySchema);
+
+    // Testing overwrite behavior: No overwrite should happen.
+    Schema dummySchema2 = SchemaBuilder.record("test").fields().name("a").type().intType().noDefault().endRecord();
+    dummySchema2.addProp("schema_key", "schema_value_overwrite");
+    SchemaUtilities.replicateSchemaProps(dummySchema2, schemaReplicate);
+    Assert.assertEquals(schemaReplicate.getProp("schema_key"), "schema_value");
   }
 }

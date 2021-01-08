@@ -280,7 +280,9 @@ class SchemaUtilities {
 
   static void replicateSchemaProps(Schema srcSchema, Schema targetSchema) {
     for (Map.Entry<String, JsonNode> prop : srcSchema.getJsonProps().entrySet()) {
-      targetSchema.addProp(prop.getKey(), prop.getValue());
+      if (targetSchema.getProp(prop.getKey()) == null) {
+        targetSchema.addProp(prop.getKey(), prop.getValue());
+      }
     }
   }
 
@@ -333,7 +335,10 @@ class SchemaUtilities {
     Schema combinedSchema =
         Schema.createRecord(leftSchema.getName(), leftSchema.getDoc(), leftSchema.getNamespace(), leftSchema.isError());
     combinedSchema.setFields(combinedSchemaFields);
-    // While we replicate schema-level props in addPartitionColsToSchema(), we avoid doing this here since it may lead to conflict
+    // In case there are conflicts of property values among leftSchema and rightSchema, the former-applied leftSchema
+    // will be the winner as Schema object doesn't support prop-overwrite.
+    replicateSchemaProps(leftSchema, combinedSchema);
+    replicateSchemaProps(rightSchema, combinedSchema);
 
     return combinedSchema;
   }
