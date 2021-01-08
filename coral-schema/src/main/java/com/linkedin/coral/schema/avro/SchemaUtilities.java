@@ -15,6 +15,8 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
 import org.apache.calcite.rel.type.RelDataType;
@@ -31,7 +33,6 @@ import org.codehaus.jackson.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.linkedin.coral.com.google.common.base.Preconditions;
 import com.linkedin.coral.com.google.common.base.Strings;
 import com.linkedin.coral.schema.avro.exceptions.SchemaNotFoundException;
@@ -317,13 +318,13 @@ class SchemaUtilities {
     Preconditions.checkNotNull(leftSchema);
     Preconditions.checkNotNull(rightSchema);
 
-    List<Schema.Field> combinedSchemaFields = new ArrayList<>(cloneFieldList(leftSchema.getFields()));
+    List<Schema.Field> combinedSchemaFields = cloneFieldList(leftSchema.getFields());
     combinedSchemaFields.addAll(cloneFieldList(rightSchema.getFields()));
 
     Schema combinedSchema =
         Schema.createRecord(leftSchema.getName(), leftSchema.getDoc(), leftSchema.getNamespace(), leftSchema.isError());
     combinedSchema.setFields(combinedSchemaFields);
-    // Not replicate schema level props as it may not be well-defined in joined schema.
+    // While we replicate schema-level props in addPartitionColsToSchema(), we avoid doing this here since it may lead to conflict
 
     return combinedSchema;
   }
