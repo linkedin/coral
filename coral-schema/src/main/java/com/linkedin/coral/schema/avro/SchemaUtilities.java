@@ -31,6 +31,7 @@ import org.codehaus.jackson.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.linkedin.coral.com.google.common.base.Preconditions;
 import com.linkedin.coral.com.google.common.base.Strings;
 import com.linkedin.coral.schema.avro.exceptions.SchemaNotFoundException;
@@ -252,6 +253,27 @@ class SchemaUtilities {
     return (partitionColumns.size() != 0);
   }
 
+  @VisibleForTesting
+  static List<Schema.Field> cloneFieldList(List<Schema.Field> fieldList) {
+    List<Schema.Field> result = new ArrayList<>();
+    for (Schema.Field field : fieldList) {
+      Schema.Field clonedField =
+          new Schema.Field(field.name(), field.schema(), field.doc(), field.defaultValue(), field.order());
+      // Copy field level properties, which could be critical for things like logical type.
+      for (Map.Entry<String, JsonNode> prop : field.getJsonProps().entrySet()) {
+        clonedField.addProp(prop.getKey(), prop.getValue());
+      }
+      result.add(clonedField);
+    }
+    return result;
+  }
+
+  static void replicateSchemaProps(Schema srcSchema, Schema targetSchema) {
+    for (Map.Entry<String, JsonNode> prop : srcSchema.getJsonProps().entrySet()) {
+      targetSchema.addProp(prop.getKey(), prop.getValue());
+    }
+  }
+
   static Schema addPartitionColsToSchema(@Nonnull Schema schema, @Nonnull Table tableOrView) {
     Preconditions.checkNotNull(schema);
     Preconditions.checkNotNull(tableOrView);
@@ -263,23 +285,15 @@ class SchemaUtilities {
     Schema partitionColumnsSchema =
         convertFieldSchemaToAvroSchema("partitionCols", "partitionCols", false, tableOrView.getPartitionKeys());
 
-    List<Schema.Field> fieldsWithPartitionColumns = new ArrayList<>();
-
-    for (Schema.Field field : schema.getFields()) {
-      fieldsWithPartitionColumns
-          .add(new Schema.Field(field.name(), field.schema(), field.doc(), field.defaultValue(), field.order()));
-    }
-
-    for (Schema.Field field : partitionColumnsSchema.getFields()) {
-      fieldsWithPartitionColumns.add(new Schema.Field(field.name(), field.schema(),
-          "This is the partition column. "
-              + "Partition columns, if present in the schema, should also be projected in the data.",
-          field.defaultValue(), field.order()));
-    }
+    List<Schema.Field> fieldsWithPartitionColumns = cloneFieldList(schema.getFields());
+    fieldsWithPartitionColumns.addAll(cloneFieldList(partitionColumnsSchema.getFields()));
 
     Schema schemaWithPartitionColumns =
         Schema.createRecord(schema.getName(), schema.getDoc(), schema.getNamespace(), schema.isError());
     schemaWithPartitionColumns.setFields(fieldsWithPartitionColumns);
+
+    // Copy schema level properties
+    replicateSchemaProps(schema, schemaWithPartitionColumns);
 
     return schemaWithPartitionColumns;
   }
@@ -303,21 +317,13 @@ class SchemaUtilities {
     Preconditions.checkNotNull(leftSchema);
     Preconditions.checkNotNull(rightSchema);
 
-    List<Schema.Field> combinedSchemaFields = new ArrayList<>();
-
-    for (Schema.Field field : leftSchema.getFields()) {
-      combinedSchemaFields
-          .add(new Schema.Field(field.name(), field.schema(), field.doc(), field.defaultValue(), field.order()));
-    }
-
-    for (Schema.Field field : rightSchema.getFields()) {
-      combinedSchemaFields
-          .add(new Schema.Field(field.name(), field.schema(), field.doc(), field.defaultValue(), field.order()));
-    }
+    List<Schema.Field> combinedSchemaFields = new ArrayList<>(cloneFieldList(leftSchema.getFields()));
+    combinedSchemaFields.addAll(cloneFieldList(rightSchema.getFields()));
 
     Schema combinedSchema =
         Schema.createRecord(leftSchema.getName(), leftSchema.getDoc(), leftSchema.getNamespace(), leftSchema.isError());
     combinedSchema.setFields(combinedSchemaFields);
+    // Not replicate schema level props as it may not be well-defined in joined schema.
 
     return combinedSchema;
   }
@@ -604,11 +610,7 @@ class SchemaUtilities {
 
     Schema avroSchema = Schema.createRecord(schemaName, schema.getDoc(), schema.getNamespace(), schema.isError());
 
-    List<Schema.Field> fields = new ArrayList<>();
-
-    for (Schema.Field field : schema.getFields()) {
-      fields.add(new Schema.Field(field.name(), field.schema(), field.doc(), field.defaultValue(), field.order()));
-    }
+    List<Schema.Field> fields = cloneFieldList(schema.getFields());
     avroSchema.setFields(fields);
 
     return avroSchema;
