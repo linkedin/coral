@@ -15,6 +15,8 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
 import org.apache.calcite.rel.type.RelDataType;
@@ -252,6 +254,38 @@ class SchemaUtilities {
     return (partitionColumns.size() != 0);
   }
 
+  private static List<Schema.Field> cloneFieldList(List<Schema.Field> fieldList, boolean isPartCol) {
+    List<Schema.Field> result = new ArrayList<>();
+    for (Schema.Field field : fieldList) {
+      String fieldDoc = isPartCol ? "This is the partition column. "
+          + "Partition columns, if present in the schema, should also be projected in the data." : field.doc();
+      Schema.Field clonedField =
+          new Schema.Field(field.name(), field.schema(), fieldDoc, field.defaultValue(), field.order());
+      // Copy field level properties, which could be critical for things like logical type.
+      for (Map.Entry<String, JsonNode> prop : field.getJsonProps().entrySet()) {
+        clonedField.addProp(prop.getKey(), prop.getValue());
+      }
+      result.add(clonedField);
+    }
+    return result;
+  }
+
+  /**
+   * Exposed method for cloning fieldList as `isPartCol=false` is an internal case.
+   */
+  @VisibleForTesting
+  static List<Schema.Field> cloneFieldList(List<Schema.Field> fieldList) {
+    return cloneFieldList(fieldList, false);
+  }
+
+  static void replicateSchemaProps(Schema srcSchema, Schema targetSchema) {
+    for (Map.Entry<String, JsonNode> prop : srcSchema.getJsonProps().entrySet()) {
+      if (targetSchema.getProp(prop.getKey()) == null) {
+        targetSchema.addProp(prop.getKey(), prop.getValue());
+      }
+    }
+  }
+
   static Schema addPartitionColsToSchema(@Nonnull Schema schema, @Nonnull Table tableOrView) {
     Preconditions.checkNotNull(schema);
     Preconditions.checkNotNull(tableOrView);
@@ -263,23 +297,15 @@ class SchemaUtilities {
     Schema partitionColumnsSchema =
         convertFieldSchemaToAvroSchema("partitionCols", "partitionCols", false, tableOrView.getPartitionKeys());
 
-    List<Schema.Field> fieldsWithPartitionColumns = new ArrayList<>();
-
-    for (Schema.Field field : schema.getFields()) {
-      fieldsWithPartitionColumns
-          .add(new Schema.Field(field.name(), field.schema(), field.doc(), field.defaultValue(), field.order()));
-    }
-
-    for (Schema.Field field : partitionColumnsSchema.getFields()) {
-      fieldsWithPartitionColumns.add(new Schema.Field(field.name(), field.schema(),
-          "This is the partition column. "
-              + "Partition columns, if present in the schema, should also be projected in the data.",
-          field.defaultValue(), field.order()));
-    }
+    List<Schema.Field> fieldsWithPartitionColumns = cloneFieldList(schema.getFields());
+    fieldsWithPartitionColumns.addAll(cloneFieldList(partitionColumnsSchema.getFields(), true));
 
     Schema schemaWithPartitionColumns =
         Schema.createRecord(schema.getName(), schema.getDoc(), schema.getNamespace(), schema.isError());
     schemaWithPartitionColumns.setFields(fieldsWithPartitionColumns);
+
+    // Copy schema level properties
+    replicateSchemaProps(schema, schemaWithPartitionColumns);
 
     return schemaWithPartitionColumns;
   }
@@ -303,21 +329,16 @@ class SchemaUtilities {
     Preconditions.checkNotNull(leftSchema);
     Preconditions.checkNotNull(rightSchema);
 
-    List<Schema.Field> combinedSchemaFields = new ArrayList<>();
-
-    for (Schema.Field field : leftSchema.getFields()) {
-      combinedSchemaFields
-          .add(new Schema.Field(field.name(), field.schema(), field.doc(), field.defaultValue(), field.order()));
-    }
-
-    for (Schema.Field field : rightSchema.getFields()) {
-      combinedSchemaFields
-          .add(new Schema.Field(field.name(), field.schema(), field.doc(), field.defaultValue(), field.order()));
-    }
+    List<Schema.Field> combinedSchemaFields = cloneFieldList(leftSchema.getFields());
+    combinedSchemaFields.addAll(cloneFieldList(rightSchema.getFields()));
 
     Schema combinedSchema =
         Schema.createRecord(leftSchema.getName(), leftSchema.getDoc(), leftSchema.getNamespace(), leftSchema.isError());
     combinedSchema.setFields(combinedSchemaFields);
+    // In case there are conflicts of property values among leftSchema and rightSchema, the former-applied leftSchema
+    // will be the winner as Schema object doesn't support prop-overwrite.
+    replicateSchemaProps(leftSchema, combinedSchema);
+    replicateSchemaProps(rightSchema, combinedSchema);
 
     return combinedSchema;
   }
@@ -604,11 +625,7 @@ class SchemaUtilities {
 
     Schema avroSchema = Schema.createRecord(schemaName, schema.getDoc(), schema.getNamespace(), schema.isError());
 
-    List<Schema.Field> fields = new ArrayList<>();
-
-    for (Schema.Field field : schema.getFields()) {
-      fields.add(new Schema.Field(field.name(), field.schema(), field.doc(), field.defaultValue(), field.order()));
-    }
+    List<Schema.Field> fields = cloneFieldList(schema.getFields());
     avroSchema.setFields(fields);
 
     return avroSchema;
