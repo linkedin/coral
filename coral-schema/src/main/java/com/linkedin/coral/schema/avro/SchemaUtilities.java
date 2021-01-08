@@ -254,12 +254,13 @@ class SchemaUtilities {
     return (partitionColumns.size() != 0);
   }
 
-  @VisibleForTesting
-  static List<Schema.Field> cloneFieldList(List<Schema.Field> fieldList) {
+  private static List<Schema.Field> cloneFieldList(List<Schema.Field> fieldList, boolean isPartCol) {
     List<Schema.Field> result = new ArrayList<>();
     for (Schema.Field field : fieldList) {
+      String fieldDoc = isPartCol ? "This is the partition column. "
+          + "Partition columns, if present in the schema, should also be projected in the data." : field.doc();
       Schema.Field clonedField =
-          new Schema.Field(field.name(), field.schema(), field.doc(), field.defaultValue(), field.order());
+          new Schema.Field(field.name(), field.schema(), fieldDoc, field.defaultValue(), field.order());
       // Copy field level properties, which could be critical for things like logical type.
       for (Map.Entry<String, JsonNode> prop : field.getJsonProps().entrySet()) {
         clonedField.addProp(prop.getKey(), prop.getValue());
@@ -267,6 +268,14 @@ class SchemaUtilities {
       result.add(clonedField);
     }
     return result;
+  }
+
+  /**
+   * Exposed method for cloning fieldList as `isPartCol=false` is an internal case.
+   */
+  @VisibleForTesting
+  static List<Schema.Field> cloneFieldList(List<Schema.Field> fieldList) {
+    return cloneFieldList(fieldList, false);
   }
 
   static void replicateSchemaProps(Schema srcSchema, Schema targetSchema) {
@@ -287,7 +296,7 @@ class SchemaUtilities {
         convertFieldSchemaToAvroSchema("partitionCols", "partitionCols", false, tableOrView.getPartitionKeys());
 
     List<Schema.Field> fieldsWithPartitionColumns = cloneFieldList(schema.getFields());
-    fieldsWithPartitionColumns.addAll(cloneFieldList(partitionColumnsSchema.getFields()));
+    fieldsWithPartitionColumns.addAll(cloneFieldList(partitionColumnsSchema.getFields(), true));
 
     Schema schemaWithPartitionColumns =
         Schema.createRecord(schema.getName(), schema.getDoc(), schema.getNamespace(), schema.isError());

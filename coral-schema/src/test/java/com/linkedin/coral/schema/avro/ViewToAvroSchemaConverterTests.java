@@ -580,7 +580,7 @@ public class ViewToAvroSchemaConverterTests {
   }
 
   @Test
-  public void testBaseTableWithPartiton() {
+  public void testBaseTableWithPartition() {
     ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
     Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "basecasepreservation");
 
