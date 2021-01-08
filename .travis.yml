@@ -11,6 +11,11 @@ jdk:
 install:
   - true
 
+# We need to checkout origin/master for Spotless ratchetFrom functionality,
+# so remove the --depth clone argument since it implies --single-branch.
+git:
+  depth: false
+
 #Don't build tags
 branches:
   except:
