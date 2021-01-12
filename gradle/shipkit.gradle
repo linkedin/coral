@@ -1,50 +1,18 @@
-shipkit {
-  gitHub.repository = "linkedin/coral"
+apply plugin: "org.shipkit.shipkit-auto-version"
+apply plugin: "org.shipkit.shipkit-changelog"
+apply plugin: "org.shipkit.shipkit-github-release"
 
-  gitHub.readOnlyAuthToken = "361a43a2b351e61e2243c5ea15792f33a3c9b467"
-
-  // The GitHub write token is required for committing release notes and bumping up project version
-  // Ensure that the release machine or Travis CI has this env variable exported
-  gitHub.writeAuthToken = System.getenv("GH_WRITE_TOKEN")
-
-  git.releasableBranchRegex = "master|release/.+"
-
-  team.developers = [
-    'wmoustafa:Walaa Eldin Moustafa',
-    'khaitranq:Khai Tranh',
-    'funcheetah:Wenye Zhang',
-    'shardulm94:Shardul Mahadik',
-    'hotsushi:Sushant Raikar'
-  ]
+tasks.named("generateChangelog") {
+  previousRevision = project.ext.'shipkit-auto-version.previous-tag'
+  githubToken = System.getenv("GH_WRITE_TOKEN")
+  repository = "linkedin/coral"
 }
 
-allprojects {
-  plugins.withId("org.shipkit.bintray") {
-
-    //Bintray configuration is handled by JFrog Bintray Gradle Plugin
-    //For reference see the official documentation: https://github.com/bintray/gradle-bintray-plugin
-    bintray {
-      // The Bintray API token is required to publish artifacts to Bintray
-      // Ensure that the release machine or Travis CI has this env variable exported
-      key = System.getenv("BINTRAY_API_KEY")
-      pkg {
-        repo = 'maven'
-        user = 'lnkd-apa'
-        userOrg = 'linkedin'
-        name = 'coral'
-        licenses = ['BSD 2-Clause']
-        labels = [
-          'coral',
-          'sql',
-          'presto',
-          'spark',
-          'hive',
-          'views'
-        ]
-        vcsUrl = "https://github.com/linkedin/coral.git"
-        description = "A library for analyzing, processing, and rewriting views defined in the Hive Metastore, and sharing them across multiple execution engines"
-      }
-      publish = true
-    }
-  }
+tasks.named("githubRelease") {
+  def genTask = tasks.named("generateChangelog").get()
+  dependsOn genTask
+  repository = genTask.repository
+  changelog = genTask.outputFile
+  githubToken = System.getenv("GH_WRITE_TOKEN")
+  newTagRevision = System.getenv("TRAVIS_COMMIT")
 }
