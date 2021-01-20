@@ -7,11 +7,11 @@ def versions = [
   'slf4j': '1.7.25',
   'kryo': '2.22',
   'testing': '6.4',
-
   'coral-calcite': '0.0.3',
   'hive': '1.2.2',
   'hadoop': '2.7.0',
-  'pig': '0.15.0'
+  'pig': '0.15.0',
+  'ivy': '2.4.0'
 ]
 
 ext.deps = [
@@ -24,6 +24,7 @@ ext.deps = [
   'slf4j-log4j12': "org.slf4j:slf4j-log4j12:${versions['slf4j']}",
   'kryo': "com.esotericsoftware.kryo:kryo:${versions['kryo']}",
   'testing': "org.testng:testng:${versions['testing']}",
+  'ivy': "org.apache.ivy:ivy:${versions['ivy']}",
 
   'hive':[
     'hive-metastore': "org.apache.hive:hive-metastore:${versions['hive']}",
