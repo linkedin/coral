@@ -5,10 +5,10 @@
  */
 package com.linkedin.coral.hive.hive2rel.functions;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.List;
@@ -28,6 +28,7 @@ public class HiveGenericUDFReturnTypeInference implements SqlReturnTypeInference
   private final String _udfClassName;
   private final List<String> _udfDependencies;
   private final ArtifactsResolver _artifactsResolver;
+  private URLClassLoader _udfClassLoader = null;
 
   public HiveGenericUDFReturnTypeInference(String udfClassName, List<String> udfDependencies) {
     _udfClassName = udfClassName;
@@ -40,15 +41,15 @@ public class HiveGenericUDFReturnTypeInference implements SqlReturnTypeInference
     int operandCount = sqlOperatorBinding.getOperandCount();
     ObjectInspector[] inputObjectInspectors = new ObjectInspector[operandCount];
     for (int i = 0; i < sqlOperatorBinding.getOperandCount(); i++) {
-      inputObjectInspectors[i] = getHiveObjectInspector(sqlOperatorBinding.getOperandType(i));
+      inputObjectInspectors[i] = getObjectInspector(sqlOperatorBinding.getOperandType(i));
     }
-    Object[] inputObjectInspectorsParam = { inputObjectInspectors };
-
     try {
-      Class udfClass = getUDFClass();
-
-      return getCalciteRelDataType((ObjectInspector) udfClass.getMethod("initialize", ObjectInspector[].class)
-          .invoke(udfClass.newInstance(), inputObjectInspectorsParam), sqlOperatorBinding.getTypeFactory());
+      Class dynamicallyLoadedUdfClass = getDynamicallyLoadedUdfClass();
+      return getRelDataType(
+          (ObjectInspector) dynamicallyLoadedUdfClass
+              .getMethod("initialize", getDynamicallyLoadedObjectInspectorArrayClass()).invoke(
+                  dynamicallyLoadedUdfClass.newInstance(), getDynamicallyLoadedObjectInspectors(inputObjectInspectors)),
+          sqlOperatorBinding.getTypeFactory());
     } catch (NoSuchMethodException e) {
       throw new RuntimeException(
           "Unable to find org.apache.hadoop.hive.ql.udf.generic.GenericUDF.initialize() on: " + _udfClassName, e);
@@ -68,11 +69,9 @@ public class HiveGenericUDFReturnTypeInference implements SqlReturnTypeInference
    * @param relDataType RelDataType to convert to ObjectInspector
    * @return converted ObjectInspector based on input RelDataType
    */
-  private ObjectInspector getHiveObjectInspector(RelDataType relDataType) {
+  private ObjectInspector getObjectInspector(RelDataType relDataType) {
     TypeInfo typeInfo = TypeConverter.convert(relDataType);
-    ObjectInspector objectInspector = TypeInfoUtils.getStandardJavaObjectInspectorFromTypeInfo(typeInfo);
-
-    return objectInspector;
+    return TypeInfoUtils.getStandardJavaObjectInspectorFromTypeInfo(typeInfo);
   }
 
   /**
@@ -82,34 +81,72 @@ public class HiveGenericUDFReturnTypeInference implements SqlReturnTypeInference
    * @param relDataTypeFactory RelDataTypeFactory used during the conversion
    * @return converted RelDataType based on input ObjectInspector
    */
-  private RelDataType getCalciteRelDataType(ObjectInspector hiveObjectInspector,
-      RelDataTypeFactory relDataTypeFactory) {
+  private RelDataType getRelDataType(ObjectInspector hiveObjectInspector, RelDataTypeFactory relDataTypeFactory) {
     TypeInfo typeInfo = TypeInfoUtils.getTypeInfoFromObjectInspector(hiveObjectInspector);
-    RelDataType relDataType = TypeConverter.convert(typeInfo, relDataTypeFactory);
-
-    return relDataType;
+    return TypeConverter.convert(typeInfo, relDataTypeFactory);
   }
 
-  private final Class getUDFClass() throws ClassNotFoundException {
+  private URLClassLoader getUdfClassLoader() {
+    if (_udfClassLoader == null) {
+      URL[] urls =
+          _udfDependencies.stream().flatMap(udfDependency -> _artifactsResolver.resolve(udfDependency).stream())
+              .map(file -> url(file.toURI())).toArray(URL[]::new);
+
+      _udfClassLoader = new URLClassLoader(urls, ClassLoader.getSystemClassLoader());
+    }
+    return _udfClassLoader;
+  }
+
+  private final Class getDynamicallyLoadedUdfClass() throws ClassNotFoundException {
+    return Class.forName(_udfClassName, true, getUdfClassLoader());
+  }
+
+  private final Class getDynamicallyLoadedObjectInspectorArrayClass() throws ClassNotFoundException {
+    return Class.forName("[Lorg.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;", true, getUdfClassLoader());
+  }
+
+  private final Object getDynamicallyLoadedObjectInspectors(ObjectInspector[] ois) {
     try {
-      URL[] urls = _udfDependencies.stream()
-          .flatMap(udfDependency -> _artifactsResolver.downloadDependencies(uri(udfDependency)).stream())
-          .map(uri -> url(uri)).toArray(URL[]::new);
-
-      URLClassLoader classLoader = new URLClassLoader(urls, ClassLoader.getSystemClassLoader());
-
-      return Class.forName(_udfClassName, true, classLoader);
+      Class objectInspectorClass =
+          Class.forName("org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector", true, getUdfClassLoader());
+      Object objectInspectorArray = Array.newInstance(objectInspectorClass, ois.length);
+      for (int i = 0; i < ois.length; i++) {
+        Array.set(objectInspectorArray, i, getDynamicallyLoadedObjectInspector(
+            TypeInfoUtils.getTypeInfoFromObjectInspector(ois[i]).getQualifiedName()));
+      }
+      return objectInspectorArray;
     } catch (ClassNotFoundException e) {
-      throw new ClassNotFoundException("Could not load class " + _udfClassName, e);
+      throw new RuntimeException("Could not get UDF ObjectInspector from context class loader ObjectInspector.", e);
     }
   }
 
-  private static URI uri(String dependency) {
-    String ivyDependency = dependency.startsWith("ivy://") ? dependency : "ivy://" + dependency;
+  private final Object getDynamicallyLoadedObjectInspector(String typeName) {
     try {
-      return new URI(ivyDependency);
-    } catch (URISyntaxException e) {
-      throw new IllegalArgumentException("Invalid UDF dependency syntax in DaliView definition: " + ivyDependency, e);
+      Class typeInfoUtilsClass =
+          Class.forName("org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils", true, getUdfClassLoader());
+      Class typeInfoClass = Class.forName("org.apache.hadoop.hive.serde2.typeinfo.TypeInfo", true, getUdfClassLoader());
+      Object typeInfo = typeInfoUtilsClass.getMethod("getTypeInfoFromTypeString", String.class).invoke(null, typeName);
+      return typeInfoUtilsClass.getMethod("getStandardJavaObjectInspectorFromTypeInfo", typeInfoClass).invoke(null,
+          typeInfo);
+    } catch (ClassNotFoundException | NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
+      throw new RuntimeException("Could not get UDF ObjectInspector from String type name.", e);
+    }
+  }
+
+  private final ObjectInspector getContextObjectInspector(Object oi) {
+    try {
+      Class objectInspectorClass =
+          Class.forName("org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector", true, getUdfClassLoader());
+      Class typeInfoUtilsClass =
+          Class.forName("org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils", true, getUdfClassLoader());
+      Class typeInfoClass = Class.forName("org.apache.hadoop.hive.serde2.typeinfo.TypeInfo", true, getUdfClassLoader());
+      Object typeInfo =
+          typeInfoUtilsClass.getMethod("getTypeInfoFromObjectInspector", objectInspectorClass).invoke(null, oi);
+      String typeInfoString = (String) typeInfoClass.getMethod("getQualifiedName").invoke(typeInfo);
+      return TypeInfoUtils
+          .getStandardJavaObjectInspectorFromTypeInfo(TypeInfoUtils.getTypeInfoFromTypeString(typeInfoString));
+    } catch (ClassNotFoundException | NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
+      throw new RuntimeException("Could not get Context ObjectInspector from UDF ObjectInspector.", e);
     }
   }
 

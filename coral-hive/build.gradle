@@ -17,8 +17,7 @@ dependencies {
     exclude group: 'org.apache.avro', module: 'avro-tools'
   }
   compile deps.'hadoop'.'hadoop-common'
-
-  compile 'org.codehaus.groovy:groovy-all:2.4.4'
+  compile deps.'ivy'
 
   // required for hiveSQL parser code
   compile deps.'antlr-runtime'
