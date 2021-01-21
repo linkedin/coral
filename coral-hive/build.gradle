@@ -1,4 +1,4 @@
-apply plugin: 'java'
+apply from: "$rootDir/gradle/java-publication.gradle"
 
 dependencies {
   compile('com.linkedin.calcite:calcite-core:1.21.0.140') {

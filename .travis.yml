@@ -23,9 +23,17 @@ branches:
 
 #Build and perform release (if needed)
 script:
-  # Print output every minute to avoid travis timeout
+
+  # 1. Print output every minute to avoid travis timeout
   - while sleep 1m; do echo "=====[ $SECONDS seconds elapsed -- still running ]====="; done &
-  - ./gradlew build -s && ./gradlew ciPerformRelease -s
-  # Killing background sleep loop
+
+  # 2. To validate changes, we run building and bintray upload in dry run. This happens on every build, even PRs.
+  # To publish, we perform github release and perform bintray upload (no dry run). This only for main branch builds.
+  - >
+    ./gradlew build bintrayUpload --s -PbintrayDryRun
+    && if [ "$TRAVIS_PULL_REQUEST" = "false" ] && [ "$TRAVIS_BRANCH" = "master" ];
+      then ./gradlew githubRelease bintrayUpload --s; fi
+
+  # 3. Killing background sleep loop
   - kill %1
 

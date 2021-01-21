@@ -1,0 +1,126 @@
+apply plugin: "java"
+apply plugin: "maven-publish"
+apply plugin: "com.jfrog.bintray"
+
+def licenseSpec = copySpec {
+  from project.rootDir
+  include "LICENSE"
+}
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+  classifier 'sources'
+  from sourceSets.main.allSource
+  with licenseSpec
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+  classifier 'javadoc'
+  from tasks.javadoc
+  with licenseSpec
+}
+
+jar {
+  with licenseSpec
+}
+
+artifacts {
+  archives sourcesJar
+  archives javadocJar
+}
+
+//Gradle Maven publishing plugin configuration (https://docs.gradle.org/current/userguide/publishing_maven.html)
+apply plugin: "maven-publish"
+publishing {
+  publications {
+    javaLibrary(MavenPublication) {
+      //name of the publication
+      from components.java
+      artifact sourcesJar
+      artifact javadocJar
+
+      artifactId = project.archivesBaseName
+
+      pom {
+        name = artifactId
+        description = "A library for analyzing, processing, and rewriting views defined in the Hive Metastore, and sharing them across multiple execution engines"
+
+        url = "https://github.com/linkedin/coral"
+        licenses {
+          license {
+            name = 'The MIT License'
+            url = 'https://github.com/linkedin/coral/blob/master/LICENSE'
+            distribution = 'repo'
+          }
+        }
+        developers {
+          [
+            'wmoustafa:Walaa Eldin Moustafa',
+            'khaitranq:Khai Tranh',
+            'funcheetah:Wenye Zhang',
+            'shardulm94:Shardul Mahadik',
+            'hotsushi:Sushant Raikar'
+          ].each { devData ->
+            developer {
+              def devInfo = devData.split(':')
+              id = devInfo[0]
+              name = devInfo[1]
+              url = 'https://github.com/' + devInfo[0]
+              roles = ["Core developer"]
+            }
+          }
+        }
+        scm {
+          url = 'https://github.com/linkedin/coral.git'
+        }
+        issueManagement {
+          url = 'https://github.com/linkedin/coral/issues'
+          system = 'GitHub issues'
+        }
+        ciManagement {
+          url = 'https://travis-ci.com/linkedin/coral'
+          system = 'Travis CI'
+        }
+      }
+    }
+  }
+
+  //useful for testing - running "publish" will create artifacts/pom in a local dir
+  repositories { maven { url = "$rootProject.buildDir/repo" } }
+}
+
+//fleshes out problems with Maven pom generation when building
+tasks.build.dependsOn("publishJavaLibraryPublicationToMavenLocal")
+
+//Bintray configuration is handled by JFrog Bintray Gradle Plugin
+//For reference see the official documentation: https://github.com/bintray/gradle-bintray-plugin
+bintray {
+  user = 'lnkd-apa'
+  // The Bintray API token is required to publish artifacts to Bintray
+  // Ensure that the release machine or Travis CI has this env variable exported
+  key = System.getenv("BINTRAY_API_KEY")
+  publish = true //can be changed to 'false' for testing
+  dryRun = project.hasProperty("bintrayDryRun")
+  publications = ['javaLibrary']
+
+  pkg {
+    repo = 'maven'
+
+    userOrg = 'linkedin'
+    name = 'coral'
+    licenses = ['BSD 2-Clause']
+    labels = [
+      'coral',
+      'sql',
+      'presto',
+      'spark',
+      'hive',
+      'views'
+    ]
+    vcsUrl = "https://github.com/linkedin/coral.git"
+
+    version {
+      name = project.version
+      vcsTag = "v$project.version"
+    }
+  }
+}
