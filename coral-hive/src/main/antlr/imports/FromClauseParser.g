@@ -14,6 +14,9 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 */
+
+// This file is copied from FromClauseParser.g of Hive 1.2.1
+
 parser grammar FromClauseParser;
 
 options

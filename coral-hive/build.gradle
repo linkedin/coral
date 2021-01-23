@@ -2,7 +2,7 @@ apply plugin: 'java'
 apply plugin: 'antlr'
 
 dependencies {
-  antlr 'org.antlr:antlr:3.4'
+  antlr deps.'antlr'
   compile('com.linkedin.calcite:calcite-core:1.21.0.140') {
     artifact {
       name = 'calcite-core'
@@ -40,24 +40,8 @@ dependencies {
 sourceSets.main.antlr.srcDirs = ['src/main/antlr/roots']
 
 generateGrammarSource {
-  maxHeapSize = "4g"
   arguments += ['-lib', 'src/main/antlr/imports']
 }
-
-task copyAntlrGeneratedSourceFiles(type: Copy) {
-  from "${buildDir}/generated-src/antlr/main"
-  into "src/main/java/com/linkedin/coral/hive/hive2rel/parsetree/parser"
-  include "*.java"
-}
-
-task deleteAntlrGeneratedSourceFiles(type: Delete) {
-  delete fileTree("${buildDir}/generated-src/antlr/main") {
-    include '**/*.java'
-  }
-}
-deleteAntlrGeneratedSourceFiles.dependsOn copyAntlrGeneratedSourceFiles
-copyAntlrGeneratedSourceFiles.dependsOn generateGrammarSource
-compileJava.dependsOn deleteAntlrGeneratedSourceFiles
 
 artifacts {
   archives jar, javadocJar, sourcesJar
