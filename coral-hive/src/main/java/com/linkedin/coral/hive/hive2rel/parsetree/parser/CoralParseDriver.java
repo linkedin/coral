@@ -6,6 +6,7 @@
 package com.linkedin.coral.hive.hive2rel.parsetree.parser;
 
 import java.util.ArrayList;
+
 import org.antlr.runtime.CharStream;
 import org.antlr.runtime.NoViableAltException;
 import org.antlr.runtime.RecognitionException;
@@ -16,7 +17,8 @@ import org.apache.commons.logging.LogFactory;
 
 public class CoralParseDriver extends ParseDriver {
 
-  private static final Log LOG = LogFactory.getLog("com.linkedin.coral.hive.hive2rel.parsetree.parser.CoralParseDriver");
+  private static final Log LOG =
+      LogFactory.getLog("com.linkedin.coral.hive.hive2rel.parsetree.parser.CoralParseDriver");
 
   @Override
   public ASTNode parse(String command) throws ParseException {

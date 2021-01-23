@@ -5,20 +5,6 @@
  */
 package com.linkedin.coral.hive.hive2rel.parsetree;
 
-import com.google.common.collect.ImmutableList;
-import com.linkedin.coral.com.google.common.collect.Iterables;
-import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
-import com.linkedin.coral.hive.hive2rel.functions.FunctionFieldReferenceOperator;
-import com.linkedin.coral.hive.hive2rel.functions.HiveExplodeOperator;
-import com.linkedin.coral.hive.hive2rel.functions.HiveFunction;
-import com.linkedin.coral.hive.hive2rel.functions.HiveFunctionRegistry;
-import com.linkedin.coral.hive.hive2rel.functions.HiveFunctionResolver;
-import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
-import com.linkedin.coral.hive.hive2rel.parsetree.parser.ASTNode;
-import com.linkedin.coral.hive.hive2rel.parsetree.parser.CoralParseDriver;
-import com.linkedin.coral.hive.hive2rel.parsetree.parser.Node;
-import com.linkedin.coral.hive.hive2rel.parsetree.parser.ParseDriver;
-import com.linkedin.coral.hive.hive2rel.parsetree.parser.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -59,6 +45,7 @@ import com.linkedin.coral.hive.hive2rel.functions.HiveFunctionRegistry;
 import com.linkedin.coral.hive.hive2rel.functions.HiveFunctionResolver;
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 import com.linkedin.coral.hive.hive2rel.parsetree.parser.ASTNode;
+import com.linkedin.coral.hive.hive2rel.parsetree.parser.CoralParseDriver;
 import com.linkedin.coral.hive.hive2rel.parsetree.parser.Node;
 import com.linkedin.coral.hive.hive2rel.parsetree.parser.ParseDriver;
 import com.linkedin.coral.hive.hive2rel.parsetree.parser.ParseException;
