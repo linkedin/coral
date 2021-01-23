@@ -40,8 +40,10 @@ dependencies {
 sourceSets.main.antlr.srcDirs = ['src/main/antlr/roots']
 
 generateGrammarSource {
-  arguments += ['-lib', 'src/main/antlr/imports']
-}
+  arguments += [
+    '-lib',
+    'src/main/antlr/imports'
+  ]}
 
 artifacts {
   archives jar, javadocJar, sourcesJar
