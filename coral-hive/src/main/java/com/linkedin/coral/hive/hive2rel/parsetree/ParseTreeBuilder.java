@@ -1,5 +1,5 @@
 /**
- * Copyright 2019 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2021 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -24,8 +24,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+
+import com.google.common.collect.ImmutableList;
+
 import org.apache.calcite.sql.JoinConditionType;
 import org.apache.calcite.sql.JoinType;
 import org.apache.calcite.sql.SqlAsOperator;
@@ -45,6 +49,19 @@ import org.apache.calcite.sql.SqlTypeNameSpec;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.hadoop.hive.metastore.api.Table;
+
+import com.linkedin.coral.com.google.common.collect.Iterables;
+import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
+import com.linkedin.coral.hive.hive2rel.functions.FunctionFieldReferenceOperator;
+import com.linkedin.coral.hive.hive2rel.functions.HiveExplodeOperator;
+import com.linkedin.coral.hive.hive2rel.functions.HiveFunction;
+import com.linkedin.coral.hive.hive2rel.functions.HiveFunctionRegistry;
+import com.linkedin.coral.hive.hive2rel.functions.HiveFunctionResolver;
+import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
+import com.linkedin.coral.hive.hive2rel.parsetree.parser.ASTNode;
+import com.linkedin.coral.hive.hive2rel.parsetree.parser.Node;
+import com.linkedin.coral.hive.hive2rel.parsetree.parser.ParseDriver;
+import com.linkedin.coral.hive.hive2rel.parsetree.parser.ParseException;
 
 import static com.google.common.base.Preconditions.*;
 import static org.apache.calcite.sql.parser.SqlParserPos.*;
@@ -82,10 +99,7 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
    * @param registry Static Hive function registry
    * @param dynamicRegistry Dynamic Hive function registry (inferred at runtime)
    */
-  public ParseTreeBuilder(
-      HiveMetastoreClient hiveMetastoreClient,
-      Config config,
-      HiveFunctionRegistry registry,
+  public ParseTreeBuilder(HiveMetastoreClient hiveMetastoreClient, Config config, HiveFunctionRegistry registry,
       ConcurrentHashMap<String, HiveFunction> dynamicRegistry) {
     checkNotNull(config);
     checkState(config.catalogName.isEmpty() || !config.defaultDBName.isEmpty(),
@@ -109,6 +123,7 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     this.config = config;
     this.functionResolver = new HiveFunctionResolver(new StaticHiveFunctionRegistry(), new ConcurrentHashMap<>());
   }
+
   /**
    * Creates a parse tree for a hive view using the expanded view text from hive metastore.
    * This table name is required for handling dali function name resolution.
@@ -224,14 +239,12 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
         SqlStdOperatorTable.AS.createCall(ZERO, unnestCall.operand(0), aliasOperands.get(2)));
     SqlNode unnestAlias =
         SqlStdOperatorTable.AS.createCall(ZERO, unnestCall, aliasOperands.get(1), aliasOperands.get(2));
-    SqlNode rightSelect =
-        new SqlSelect(ZERO, null, new SqlNodeList(ImmutableList.of(SqlIdentifier.star(ZERO)), ZERO), unnestAlias, null,
-            null, null, null, null, null, null);
+    SqlNode rightSelect = new SqlSelect(ZERO, null, new SqlNodeList(ImmutableList.of(SqlIdentifier.star(ZERO)), ZERO),
+        unnestAlias, null, null, null, null, null, null, null);
     SqlNode lateralCall = SqlStdOperatorTable.LATERAL.createCall(ZERO, rightSelect);
     aliasCall = SqlStdOperatorTable.AS.createCall(ZERO, lateralCall, aliasOperands.get(1), aliasOperands.get(2));
-    SqlNode joinNode =
-        new SqlJoin(ZERO, sqlNodes.get(1), SqlLiteral.createBoolean(false, ZERO), JoinType.COMMA.symbol(ZERO), aliasCall/*lateralCall*/,
-            JoinConditionType.NONE.symbol(ZERO), null);
+    SqlNode joinNode = new SqlJoin(ZERO, sqlNodes.get(1), SqlLiteral.createBoolean(false, ZERO),
+        JoinType.COMMA.symbol(ZERO), aliasCall/*lateralCall*/, JoinConditionType.NONE.symbol(ZERO), null);
     return joinNode;
   }
 
@@ -277,14 +290,8 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
       condition = children.get(2);
     }
 
-    return new SqlJoin(ZERO,
-        children.get(0),
-        SqlLiteral.createBoolean(false, ZERO),
-        joinType.symbol(ZERO),
-        children.get(1),
-        conditionType.symbol(ZERO),
-        condition
-    );
+    return new SqlJoin(ZERO, children.get(0), SqlLiteral.createBoolean(false, ZERO), joinType.symbol(ZERO),
+        children.get(1), conditionType.symbol(ZERO), condition);
   }
 
   @Override
@@ -357,7 +364,7 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     if (!descending) {
       return children.get(0);
     }
-    return new SqlBasicCall(SqlStdOperatorTable.DESC, new SqlNode[]{children.get(0)}, ZERO);
+    return new SqlBasicCall(SqlStdOperatorTable.DESC, new SqlNode[] { children.get(0) }, ZERO);
   }
 
   @Override
@@ -424,13 +431,10 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
   @Override
   protected SqlNode visitFunctionStar(ASTNode node, ParseContext ctx) {
     ASTNode functionNode = (ASTNode) node.getChildren().get(0);
-    List<SqlOperator> functions = SqlStdOperatorTable.instance()
-        .getOperatorList()
-        .stream()
-        .filter(f -> functionNode.getText().equalsIgnoreCase(f.getName()))
-        .collect(Collectors.toList());
+    List<SqlOperator> functions = SqlStdOperatorTable.instance().getOperatorList().stream()
+        .filter(f -> functionNode.getText().equalsIgnoreCase(f.getName())).collect(Collectors.toList());
     checkState(functions.size() == 1);
-    return new SqlBasicCall(functions.get(0), new SqlNode[]{new SqlIdentifier("", ZERO)}, ZERO);
+    return new SqlBasicCall(functions.get(0), new SqlNode[] { new SqlIdentifier("", ZERO) }, ZERO);
   }
 
   @Override
@@ -449,9 +453,7 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     ASTNode functionNode = (ASTNode) children.get(0);
     String functionName = functionNode.getText();
     List<SqlNode> sqlOperands = visitChildren(children, ctx);
-    HiveFunction hiveFunction = functionResolver.tryResolve(functionName,
-        false,
-        ctx.hiveTable.orElse(null),
+    HiveFunction hiveFunction = functionResolver.tryResolve(functionName, false, ctx.hiveTable.orElse(null),
         // The first element of sqlOperands is the operator itself. The actual # of operands is sqlOperands.size() - 1
         sqlOperands.size() - 1);
     return hiveFunction.createCall(sqlOperands.get(0), sqlOperands.subList(1, sqlOperands.size()), quantifier);
@@ -466,7 +468,7 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
       return new SqlBasicCall(SqlStdOperatorTable.AS, sqlNodes.toArray(new SqlNode[0]), ZERO);
     } else if (sqlNodes.size() == 3) {
       // lateral view alias have 3 args
-      SqlNode[] nodes = new SqlNode[]{sqlNodes.get(0), sqlNodes.get(2), sqlNodes.get(1)};
+      SqlNode[] nodes = new SqlNode[] { sqlNodes.get(0), sqlNodes.get(2), sqlNodes.get(1) };
       return new SqlBasicCall(SqlStdOperatorTable.AS, nodes, ZERO);
     } else {
       throw new UnhandledASTTokenException(node);

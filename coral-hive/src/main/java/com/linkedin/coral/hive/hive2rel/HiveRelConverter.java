@@ -1,5 +1,5 @@
 /**
- * Copyright 2019 LinkedIn Corporation. All rights reserved.
+ * Copyright 2018-2021 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -8,6 +8,7 @@ package com.linkedin.coral.hive.hive2rel;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
+
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelShuttleImpl;
 import org.apache.calcite.rel.core.Project;
@@ -125,9 +126,7 @@ public class HiveRelConverter extends RelShuttleImpl {
   public RelNode visit(LogicalProject project) {
     Project oldProject = (Project) super.visit(project);
     HiveRexConverter rexTransformer = new HiveRexConverter(project.getCluster().getRexBuilder());
-    List<RexNode> newProjects = project.getProjects().stream()
-        .map(rexTransformer::apply)
-        .collect(Collectors.toList());
+    List<RexNode> newProjects = project.getProjects().stream().map(rexTransformer::apply).collect(Collectors.toList());
     return LogicalProject.create(oldProject.getInput(), newProjects, oldProject.getRowType().getFieldNames());
   }
 
@@ -153,8 +152,7 @@ public class HiveRelConverter extends RelShuttleImpl {
       if (call.getOperator().equals(SqlStdOperatorTable.ITEM)) {
         RexNode columnRef = call.getOperands().get(0);
         RexNode itemRef = call.getOperands().get(1);
-        if (columnRef.getType() instanceof ArraySqlType
-            && itemRef.isA(SqlKind.LITERAL)
+        if (columnRef.getType() instanceof ArraySqlType && itemRef.isA(SqlKind.LITERAL)
             && itemRef.getType().getSqlTypeName().equals(SqlTypeName.INTEGER)) {
           Integer val = ((RexLiteral) itemRef).getValueAs(Integer.class);
           RexLiteral newItemRef = rexBuilder.makeExactLiteral(new BigDecimal(val + 1), itemRef.getType());

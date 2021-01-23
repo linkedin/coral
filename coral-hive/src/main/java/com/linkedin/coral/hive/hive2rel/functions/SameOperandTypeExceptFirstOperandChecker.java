@@ -1,14 +1,16 @@
 /**
- * Copyright 2019 LinkedIn Corporation. All rights reserved.
+ * Copyright 2018-2021 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
 package com.linkedin.coral.hive.hive2rel.functions;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import java.util.Collections;
 import java.util.List;
+
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.sql.SqlCallBinding;
 import org.apache.calcite.sql.SqlOperator;
@@ -35,8 +37,7 @@ public class SameOperandTypeExceptFirstOperandChecker extends SameOperandTypeChe
     this.firstOperandTypeName = firstOperandTypeName;
   }
 
-  protected boolean checkOperandTypesImpl(SqlOperatorBinding opBinding,
-      boolean throwOnFailure,
+  protected boolean checkOperandTypesImpl(SqlOperatorBinding opBinding, boolean throwOnFailure,
       SqlCallBinding callBinding) {
     int actualOperands = nOperands;
     if (actualOperands == -1) {
@@ -64,13 +65,11 @@ public class SameOperandTypeExceptFirstOperandChecker extends SameOperandTypeChe
   public String getAllowedSignatures(SqlOperator op, String opName) {
     final String typeName = getTypeName();
     if (nOperands == -1) {
-      return SqlUtil.getAliasedSignature(op, opName,
-          ImmutableList.of("...", typeName, typeName));
+      return SqlUtil.getAliasedSignature(op, opName, ImmutableList.of("...", typeName, typeName));
     } else {
       @SuppressWarnings("unchecked")
       List<String> types = new ImmutableList.Builder().add(firstOperandTypeName)
-          .addAll(Collections.nCopies(nOperands - 1, typeName))
-          .build();
+          .addAll(Collections.nCopies(nOperands - 1, typeName)).build();
       return SqlUtil.getAliasedSignature(op, opName, types);
     }
   }

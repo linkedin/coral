@@ -1,11 +1,12 @@
 /**
- * Copyright 2019 LinkedIn Corporation. All rights reserved.
+ * Copyright 2018-2021 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
 package com.linkedin.coral.hive.hive2rel.rel;
 
 import java.util.List;
+
 import org.apache.calcite.plan.Convention;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelTraitSet;
@@ -47,11 +48,10 @@ public class HiveUncollect extends Uncollect {
 
   @Override
   protected RelDataType deriveRowType() {
-   RelDataType inputType = input.getRowType();
+    RelDataType inputType = input.getRowType();
     assert inputType.isStruct() : inputType + " is not a struct";
     final List<RelDataTypeField> fields = inputType.getFieldList();
-    final RelDataTypeFactory.Builder builder =
-        input.getCluster().getTypeFactory().builder();
+    final RelDataTypeFactory.Builder builder = input.getCluster().getTypeFactory().builder();
     for (RelDataTypeField field : fields) {
       if (field.getType() instanceof MapSqlType) {
         builder.add(SqlUnnestOperator.MAP_KEY_COLUMN_NAME, field.getType().getKeyType());
@@ -62,8 +62,7 @@ public class HiveUncollect extends Uncollect {
       }
     }
     if (withOrdinality) {
-      builder.add(SqlUnnestOperator.ORDINALITY_COLUMN_NAME,
-          SqlTypeName.INTEGER);
+      builder.add(SqlUnnestOperator.ORDINALITY_COLUMN_NAME, SqlTypeName.INTEGER);
     }
     return builder.build();
   }

@@ -1,11 +1,10 @@
 /**
- * Copyright 2019 LinkedIn Corporation. All rights reserved.
+ * Copyright 2019-2021 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
 package com.linkedin.coral.presto.rel2presto.functions;
 
-import com.linkedin.coral.com.google.common.base.Preconditions;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlCallBinding;
@@ -17,6 +16,8 @@ import org.apache.calcite.sql.type.SqlOperandTypeChecker;
 import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
 import org.apache.calcite.sql.validate.SqlValidator;
 import org.apache.calcite.sql.validate.SqlValidatorScope;
+
+import com.linkedin.coral.com.google.common.base.Preconditions;
 
 
 /**
@@ -38,8 +39,7 @@ abstract class GenericTemplateFunction extends SqlUserDefinedFunction {
   private final RelDataType genericDataType;
 
   public GenericTemplateFunction(RelDataType genericDataType, String functionName) {
-    super(new SqlIdentifier(functionName, SqlParserPos.ZERO), null, null,
-        null, null, null);
+    super(new SqlIdentifier(functionName, SqlParserPos.ZERO), null, null, null, null, null);
     this.genericDataType = genericDataType;
   }
 

@@ -1,14 +1,16 @@
 /**
- * Copyright 2019 LinkedIn Corporation. All rights reserved.
+ * Copyright 2019-2021 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
 package com.linkedin.coral.pig.rel2pig.rel.functions;
 
-import com.linkedin.coral.pig.rel2pig.rel.PigRexUtils;
 import java.util.List;
 import java.util.stream.Collectors;
+
 import org.apache.calcite.rex.RexCall;
+
+import com.linkedin.coral.pig.rel2pig.rel.PigRexUtils;
 
 
 /**
@@ -43,8 +45,7 @@ public class PigBuiltinFunction extends Function {
   @Override
   public String unparse(RexCall rexCall, List<String> inputFieldNames) {
     final String functionName = transformFunctionName(rexCall, inputFieldNames);
-    final String operands = transformOperands(rexCall, inputFieldNames).stream()
-        .collect(Collectors.joining(", "));
+    final String operands = transformOperands(rexCall, inputFieldNames).stream().collect(Collectors.joining(", "));
     return String.format(FUNCTION_CALL_TEMPLATE, functionName, operands);
   }
 
@@ -70,8 +71,7 @@ public class PigBuiltinFunction extends Function {
    */
   List<String> transformOperands(RexCall rexCall, List<String> inputFieldNames) {
     final List<String> operands = rexCall.getOperands().stream()
-        .map(operand ->
-            PigRexUtils.convertRexNodeToPigExpression(operand, inputFieldNames))
+        .map(operand -> PigRexUtils.convertRexNodeToPigExpression(operand, inputFieldNames))
         .collect(Collectors.toList());
     return operands;
   }

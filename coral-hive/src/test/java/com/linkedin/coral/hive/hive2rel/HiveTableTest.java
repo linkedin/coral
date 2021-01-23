@@ -1,14 +1,16 @@
 /**
- * Copyright 2019 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2020 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
 package com.linkedin.coral.hive.hive2rel;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.util.Map;
+
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+
 import org.apache.calcite.jdbc.JavaTypeFactoryImpl;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
@@ -106,6 +108,7 @@ public class HiveTableTest {
     assertTrue(t instanceof HiveTable);
     return ((HiveTable) t);
   }
+
   /**
    * Provide instance of Table given db and table name. This expects that db exists
    * @param db database name

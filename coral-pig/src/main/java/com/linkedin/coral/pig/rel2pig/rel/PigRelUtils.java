@@ -1,24 +1,26 @@
 /**
- * Copyright 2019 LinkedIn Corporation. All rights reserved.
+ * Copyright 2019-2021 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
 package com.linkedin.coral.pig.rel2pig.rel;
 
-import com.linkedin.coral.pig.rel2pig.rel.functions.Function;
-import com.linkedin.coral.pig.rel2pig.rel.functions.PigUDF;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.logical.LogicalFilter;
 import org.apache.calcite.rel.logical.LogicalJoin;
 import org.apache.calcite.rel.logical.LogicalProject;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexNode;
+
+import com.linkedin.coral.pig.rel2pig.rel.functions.Function;
+import com.linkedin.coral.pig.rel2pig.rel.functions.PigUDF;
 
 
 /**
@@ -51,8 +53,7 @@ public class PigRelUtils {
    * @return Mapping from list-index field reference to its associated Pig alias.
    */
   public static List<String> getOutputFieldNames(RelNode relNode) {
-    return relNode.getRowType().getFieldList().stream()
-        .map(field -> field.getKey().replace('$', 'x'))
+    return relNode.getRowType().getFieldList().stream().map(field -> field.getKey().replace('$', 'x'))
         .collect(Collectors.toList());
   }
 

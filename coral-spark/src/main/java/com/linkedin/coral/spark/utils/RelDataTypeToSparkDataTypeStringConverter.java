@@ -1,5 +1,5 @@
 /**
- * Copyright 2019 LinkedIn Corporation. All rights reserved.
+ * Copyright 2019-2021 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -9,11 +9,13 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rel.type.RelRecordType;
 import org.apache.calcite.sql.type.ArraySqlType;
 import org.apache.calcite.sql.type.MapSqlType;
+
 
 /**
  * RelDataTypeToSparkDataTypeStringConverter converts a RelDataType to a Spark DataType JSON schema string.
@@ -123,7 +125,6 @@ public class RelDataTypeToSparkDataTypeStringConverter {
     return jsonEle.toString();
   }
 
-
   /**
    * Converts a RelDataType to a JSON object representing its schema in Spark.DataType
    * @param relDataType a given RelDataType object
@@ -180,7 +181,8 @@ public class RelDataTypeToSparkDataTypeStringConverter {
       case OTHER:
         return new JsonPrimitive("binary");
       default:
-        throw new RuntimeException(String.format("Unhandled RelDataType %s in Converter from RelDataType to Spark DataType", relDataType.getSqlTypeName()));
+        throw new RuntimeException(String.format(
+            "Unhandled RelDataType %s in Converter from RelDataType to Spark DataType", relDataType.getSqlTypeName()));
     }
   }
 

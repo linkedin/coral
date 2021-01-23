@@ -1,18 +1,20 @@
 /**
- * Copyright 2019 LinkedIn Corporation. All rights reserved.
+ * Copyright 2019-2021 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
 package com.linkedin.coral.pig.rel2pig.rel.operators;
 
-import com.linkedin.coral.hive.hive2rel.functions.UnknownSqlFunctionException;
-import com.linkedin.coral.pig.rel2pig.exceptions.UnsupportedRexCallException;
-import com.linkedin.coral.pig.rel2pig.rel.PigRexUtils;
 import java.util.List;
 import java.util.stream.Collectors;
+
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.type.MapSqlType;
+
+import com.linkedin.coral.hive.hive2rel.functions.UnknownSqlFunctionException;
+import com.linkedin.coral.pig.rel2pig.exceptions.UnsupportedRexCallException;
+import com.linkedin.coral.pig.rel2pig.rel.PigRexUtils;
 
 
 /**
@@ -83,8 +85,7 @@ public class PigSpecialOperator extends PigOperator {
    */
   private String convertMapOperatorCall() {
     final String key = PigRexUtils.convertRexNodeToPigExpression(rexCall.getOperands().get(1), inputFieldNames);
-    final String map = PigRexUtils.convertRexNodeToPigExpression(
-        rexCall.getOperands().get(0), inputFieldNames);
+    final String map = PigRexUtils.convertRexNodeToPigExpression(rexCall.getOperands().get(0), inputFieldNames);
 
     return String.format("%s#%s", map, key);
   }

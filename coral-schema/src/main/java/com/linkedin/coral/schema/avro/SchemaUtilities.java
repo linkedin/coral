@@ -1,14 +1,10 @@
 /**
- * Copyright 2019 LinkedIn Corporation. All rights reserved.
+ * Copyright 2019-2021 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
 package com.linkedin.coral.schema.avro;
 
-import com.linkedin.coral.com.google.common.base.Preconditions;
-import com.linkedin.coral.com.google.common.base.Strings;
-import org.apache.commons.lang3.StringUtils;
-import com.linkedin.coral.schema.avro.exceptions.SchemaNotFoundException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -16,13 +12,18 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
 import javax.annotation.Nonnull;
+
+import com.google.common.annotations.VisibleForTesting;
+
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexNode;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.hadoop.hive.serde2.avro.AvroSerdeUtils;
@@ -31,6 +32,10 @@ import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
 import org.codehaus.jackson.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.linkedin.coral.com.google.common.base.Preconditions;
+import com.linkedin.coral.com.google.common.base.Strings;
+import com.linkedin.coral.schema.avro.exceptions.SchemaNotFoundException;
 
 
 class SchemaUtilities {
@@ -103,11 +108,7 @@ class SchemaUtilities {
       cols.addAll(getPartitionCols(table));
     }
 
-    return convertFieldSchemaToAvroSchema(
-        recordName,
-        recordNamespace,
-        true,
-        cols);
+    return convertFieldSchemaToAvroSchema(recordName, recordNamespace, true, cols);
   }
 
   /**
@@ -140,10 +141,7 @@ class SchemaUtilities {
     }
   }
 
-
-
-  static void appendField(@Nonnull Schema.Field field,
-      @Nonnull SchemaBuilder.FieldAssembler<Schema> fieldAssembler) {
+  static void appendField(@Nonnull Schema.Field field, @Nonnull SchemaBuilder.FieldAssembler<Schema> fieldAssembler) {
     Preconditions.checkNotNull(field);
     Preconditions.checkNotNull(fieldAssembler);
 
@@ -164,10 +162,8 @@ class SchemaUtilities {
    * @param fieldRelDataType
    * @param fieldAssembler
    */
-  static void appendField(@Nonnull String fieldName,
-      @Nonnull RelDataType fieldRelDataType,
-      @Nonnull SchemaBuilder.FieldAssembler<Schema> fieldAssembler,
-      @Nonnull boolean isNullable) {
+  static void appendField(@Nonnull String fieldName, @Nonnull RelDataType fieldRelDataType,
+      @Nonnull SchemaBuilder.FieldAssembler<Schema> fieldAssembler, @Nonnull boolean isNullable) {
     Preconditions.checkNotNull(fieldName);
     Preconditions.checkNotNull(fieldRelDataType);
     Preconditions.checkNotNull(fieldAssembler);
@@ -209,8 +205,7 @@ class SchemaUtilities {
     return false;
   }
 
-  static void appendField(@Nonnull String fieldName,
-      @Nonnull Schema.Field field,
+  static void appendField(@Nonnull String fieldName, @Nonnull Schema.Field field,
       @Nonnull SchemaBuilder.FieldAssembler<Schema> fieldAssembler) {
     Preconditions.checkNotNull(fieldName);
     Preconditions.checkNotNull(field);
@@ -259,6 +254,38 @@ class SchemaUtilities {
     return (partitionColumns.size() != 0);
   }
 
+  private static List<Schema.Field> cloneFieldList(List<Schema.Field> fieldList, boolean isPartCol) {
+    List<Schema.Field> result = new ArrayList<>();
+    for (Schema.Field field : fieldList) {
+      String fieldDoc = isPartCol ? "This is the partition column. "
+          + "Partition columns, if present in the schema, should also be projected in the data." : field.doc();
+      Schema.Field clonedField =
+          new Schema.Field(field.name(), field.schema(), fieldDoc, field.defaultValue(), field.order());
+      // Copy field level properties, which could be critical for things like logical type.
+      for (Map.Entry<String, JsonNode> prop : field.getJsonProps().entrySet()) {
+        clonedField.addProp(prop.getKey(), prop.getValue());
+      }
+      result.add(clonedField);
+    }
+    return result;
+  }
+
+  /**
+   * Exposed method for cloning fieldList as `isPartCol=false` is an internal case.
+   */
+  @VisibleForTesting
+  static List<Schema.Field> cloneFieldList(List<Schema.Field> fieldList) {
+    return cloneFieldList(fieldList, false);
+  }
+
+  static void replicateSchemaProps(Schema srcSchema, Schema targetSchema) {
+    for (Map.Entry<String, JsonNode> prop : srcSchema.getJsonProps().entrySet()) {
+      if (targetSchema.getProp(prop.getKey()) == null) {
+        targetSchema.addProp(prop.getKey(), prop.getValue());
+      }
+    }
+  }
+
   static Schema addPartitionColsToSchema(@Nonnull Schema schema, @Nonnull Table tableOrView) {
     Preconditions.checkNotNull(schema);
     Preconditions.checkNotNull(tableOrView);
@@ -267,41 +294,23 @@ class SchemaUtilities {
       return schema;
     }
 
-    Schema partitionColumnsSchema = convertFieldSchemaToAvroSchema("partitionCols",
-                                                               "partitionCols",
-                                                                false,
-                                                                              tableOrView.getPartitionKeys());
+    Schema partitionColumnsSchema =
+        convertFieldSchemaToAvroSchema("partitionCols", "partitionCols", false, tableOrView.getPartitionKeys());
 
-    List<Schema.Field> fieldsWithPartitionColumns = new ArrayList<>();
+    List<Schema.Field> fieldsWithPartitionColumns = cloneFieldList(schema.getFields());
+    fieldsWithPartitionColumns.addAll(cloneFieldList(partitionColumnsSchema.getFields(), true));
 
-    for (Schema.Field field : schema.getFields()) {
-      fieldsWithPartitionColumns.add(new Schema.Field(field.name(),
-                                                      field.schema(),
-                                                      field.doc(),
-                                                      field.defaultValue(),
-                                                      field.order()));
-    }
-
-    for (Schema.Field field : partitionColumnsSchema.getFields()) {
-      fieldsWithPartitionColumns.add(new Schema.Field(field.name(),
-          field.schema(),
-          "This is the partition column. "
-          + "Partition columns, if present in the schema, should also be projected in the data.",
-          field.defaultValue(),
-          field.order()));
-    }
-
-    Schema schemaWithPartitionColumns = Schema.createRecord(schema.getName(),
-                                                            schema.getDoc(),
-                                                            schema.getNamespace(),
-                                                            schema.isError());
+    Schema schemaWithPartitionColumns =
+        Schema.createRecord(schema.getName(), schema.getDoc(), schema.getNamespace(), schema.isError());
     schemaWithPartitionColumns.setFields(fieldsWithPartitionColumns);
+
+    // Copy schema level properties
+    replicateSchemaProps(schema, schemaWithPartitionColumns);
 
     return schemaWithPartitionColumns;
   }
 
-  static Schema setupNameAndNamespace(@Nonnull Schema schema,
-      @Nonnull String schemaName,
+  static Schema setupNameAndNamespace(@Nonnull Schema schema, @Nonnull String schemaName,
       @Nonnull String schemaNamespace) {
     Preconditions.checkNotNull(schema);
     Preconditions.checkNotNull(schemaName);
@@ -320,44 +329,28 @@ class SchemaUtilities {
     Preconditions.checkNotNull(leftSchema);
     Preconditions.checkNotNull(rightSchema);
 
-    List<Schema.Field> combinedSchemaFields = new ArrayList<>();
+    List<Schema.Field> combinedSchemaFields = cloneFieldList(leftSchema.getFields());
+    combinedSchemaFields.addAll(cloneFieldList(rightSchema.getFields()));
 
-    for (Schema.Field field : leftSchema.getFields()) {
-      combinedSchemaFields.add(new Schema.Field(field.name(),
-          field.schema(),
-          field.doc(),
-          field.defaultValue(),
-          field.order()));
-    }
-
-    for (Schema.Field field : rightSchema.getFields()) {
-      combinedSchemaFields.add(new Schema.Field(field.name(),
-          field.schema(),
-          field.doc(),
-          field.defaultValue(),
-          field.order()));
-    }
-
-    Schema combinedSchema = Schema.createRecord(leftSchema.getName(),
-        leftSchema.getDoc(),
-        leftSchema.getNamespace(),
-        leftSchema.isError());
+    Schema combinedSchema =
+        Schema.createRecord(leftSchema.getName(), leftSchema.getDoc(), leftSchema.getNamespace(), leftSchema.isError());
     combinedSchema.setFields(combinedSchemaFields);
+    // In case there are conflicts of property values among leftSchema and rightSchema, the former-applied leftSchema
+    // will be the winner as Schema object doesn't support prop-overwrite.
+    replicateSchemaProps(leftSchema, combinedSchema);
+    replicateSchemaProps(rightSchema, combinedSchema);
 
     return combinedSchema;
   }
 
-  static Schema mergeUnionSchema(@Nonnull Schema leftSchema,
-      @Nonnull Schema rightSchema,
-      boolean strictMode) {
+  static Schema mergeUnionSchema(@Nonnull Schema leftSchema, @Nonnull Schema rightSchema, boolean strictMode) {
     Preconditions.checkNotNull(leftSchema);
     Preconditions.checkNotNull(rightSchema);
 
     if (!leftSchema.toString(true).equals(rightSchema.toString(true))) {
       if (!SchemaUtilities.isUnionRecordSchemaCompatible(leftSchema, rightSchema, strictMode)) {
-        throw new RuntimeException("Input schemas of LogicalUnion operator are not compatible. "
-            + "inputSchema1 is: " + leftSchema.toString(true) + ", "
-            + "inputSchema2 is: " + rightSchema.toString(true));
+        throw new RuntimeException("Input schemas of LogicalUnion operator are not compatible. " + "inputSchema1 is: "
+            + leftSchema.toString(true) + ", " + "inputSchema2 is: " + rightSchema.toString(true));
       }
     }
 
@@ -374,8 +367,7 @@ class SchemaUtilities {
    * @param rightSchema
    * @return return true if two schemas are union compatible; false otherwise.
    */
-  static boolean isUnionRecordSchemaCompatible(@Nonnull Schema leftSchema,
-      @Nonnull Schema rightSchema,
+  static boolean isUnionRecordSchemaCompatible(@Nonnull Schema leftSchema, @Nonnull Schema rightSchema,
       boolean strictMode) {
     Preconditions.checkNotNull(leftSchema);
     Preconditions.checkNotNull(rightSchema);
@@ -383,9 +375,9 @@ class SchemaUtilities {
     if (strictMode) {
       // we requires namespace matches in strictMode
       if (!Objects.equals(leftSchema.getNamespace(), rightSchema.getNamespace())) {
-        LOG.error("Found namespace mismatch while configured with strict mode. "
-            + "Namespace for " + leftSchema.getName() + " is: " + leftSchema.getNamespace() + ". "
-            + "Namespace for " + rightSchema.getName() + " is: " + rightSchema.getNamespace());
+        LOG.error("Found namespace mismatch while configured with strict mode. " + "Namespace for "
+            + leftSchema.getName() + " is: " + leftSchema.getNamespace() + ". " + "Namespace for "
+            + rightSchema.getName() + " is: " + rightSchema.getNamespace());
 
         return false;
       }
@@ -395,11 +387,9 @@ class SchemaUtilities {
     List<Schema.Field> rightSchemaFields = rightSchema.getFields();
 
     Map<String, Schema.Field> leftSchemaFieldsMap =
-        leftSchemaFields.stream().collect(Collectors.toMap(Schema.Field::name,
-                                                           Function.identity()));
+        leftSchemaFields.stream().collect(Collectors.toMap(Schema.Field::name, Function.identity()));
     Map<String, Schema.Field> rightSchemaFieldsMap =
-        rightSchemaFields.stream().collect(Collectors.toMap(Schema.Field::name,
-                                                            Function.identity()));
+        rightSchemaFields.stream().collect(Collectors.toMap(Schema.Field::name, Function.identity()));
 
     for (Schema.Field field : leftSchemaFields) {
       if (!rightSchemaFieldsMap.containsKey(field.name())) {
@@ -433,8 +423,7 @@ class SchemaUtilities {
     return true;
   }
 
-  private static boolean isUnionSchemaCompatible(@Nonnull Schema leftSchema,
-      @Nonnull Schema rightSchema,
+  private static boolean isUnionSchemaCompatible(@Nonnull Schema leftSchema, @Nonnull Schema rightSchema,
       boolean strictMode) {
     Preconditions.checkNotNull(leftSchema);
     Preconditions.checkNotNull(rightSchema);
@@ -473,8 +462,8 @@ class SchemaUtilities {
 
       case UNION:
         boolean isSameUnionType = (leftSchema.getType() == rightSchema.getType());
-        boolean isBothNullableType = AvroSerdeUtils.isNullableType(leftSchema)
-                                  && AvroSerdeUtils.isNullableType(rightSchema);
+        boolean isBothNullableType =
+            AvroSerdeUtils.isNullableType(leftSchema) && AvroSerdeUtils.isNullableType(rightSchema);
 
         Schema leftOtherType = AvroSerdeUtils.getOtherTypeFromNullableType(leftSchema);
         Schema rightOtherType = AvroSerdeUtils.getOtherTypeFromNullableType(rightSchema);
@@ -483,13 +472,12 @@ class SchemaUtilities {
         return isSameUnionType && isBothNullableType && isOtherTypeUnionCompatible;
 
       default:
-        throw new IllegalArgumentException("Unsupported Avro type " + leftSchema.getType()
-            + " in schema: " + leftSchema.toString(true));
+        throw new IllegalArgumentException(
+            "Unsupported Avro type " + leftSchema.getType() + " in schema: " + leftSchema.toString(true));
     }
   }
 
-  private static void appendFieldWithNewNamespace(@Nonnull Schema.Field field,
-      @Nonnull String namespace,
+  private static void appendFieldWithNewNamespace(@Nonnull Schema.Field field, @Nonnull String namespace,
       @Nonnull SchemaBuilder.FieldAssembler<Schema> fieldAssembler) {
     Preconditions.checkNotNull(field);
     Preconditions.checkNotNull(namespace);
@@ -498,10 +486,8 @@ class SchemaUtilities {
     Schema fieldSchema = field.schema();
     switch (field.schema().getType()) {
       case ENUM:
-        fieldSchema = Schema.createEnum(fieldSchema.getName(),
-                                        fieldSchema.getDoc(),
-                                        namespace,
-                                        fieldSchema.getEnumSymbols());
+        fieldSchema =
+            Schema.createEnum(fieldSchema.getName(), fieldSchema.getDoc(), namespace, fieldSchema.getEnumSymbols());
         break;
       default:
         break;
@@ -521,14 +507,12 @@ class SchemaUtilities {
     Preconditions.checkNotNull(namespace);
 
     if (!schema.getType().equals(Schema.Type.RECORD)) {
-      throw new IllegalArgumentException("Input schemas must be of RECORD type. "
-          + "The actual type is: " + schema.getType());
+      throw new IllegalArgumentException(
+          "Input schemas must be of RECORD type. " + "The actual type is: " + schema.getType());
     }
 
-    SchemaBuilder.FieldAssembler<Schema> fieldAssembler = SchemaBuilder.
-        record(schema.getName()).
-        namespace(namespace).
-        fields();
+    SchemaBuilder.FieldAssembler<Schema> fieldAssembler =
+        SchemaBuilder.record(schema.getName()).namespace(namespace).fields();
 
     String nestedNamespace = namespace + "." + schema.getName();
 
@@ -547,20 +531,14 @@ class SchemaUtilities {
           break;
         case MAP:
           Schema newMapFieldSchema = setupNestedNamespace(field.schema(), nestedNamespace);
-          Schema.Field newMapField = new Schema.Field(field.name(),
-              newMapFieldSchema,
-              field.doc(),
-              field.defaultValue(),
-              field.order());
+          Schema.Field newMapField =
+              new Schema.Field(field.name(), newMapFieldSchema, field.doc(), field.defaultValue(), field.order());
           appendField(newMapField, fieldAssembler);
           break;
         case ARRAY:
           Schema newArrayFieldSchema = setupNestedNamespace(field.schema(), nestedNamespace);
-          Schema.Field newArrayField = new Schema.Field(field.name(),
-              newArrayFieldSchema,
-              field.doc(),
-              field.defaultValue(),
-              field.order());
+          Schema.Field newArrayField =
+              new Schema.Field(field.name(), newArrayFieldSchema, field.doc(), field.defaultValue(), field.order());
           appendField(newArrayField, fieldAssembler);
           break;
         case ENUM:
@@ -568,20 +546,14 @@ class SchemaUtilities {
           break;
         case RECORD:
           Schema recordSchemaWithNestedNamespace = setupNestedNamespaceForRecord(field.schema(), nestedNamespace);
-          Schema.Field newRecordFiled = new Schema.Field(field.name(),
-              recordSchemaWithNestedNamespace,
-              field.doc(),
-              field.defaultValue(),
-              field.order());
+          Schema.Field newRecordFiled = new Schema.Field(field.name(), recordSchemaWithNestedNamespace, field.doc(),
+              field.defaultValue(), field.order());
           appendField(newRecordFiled, fieldAssembler);
           break;
         case UNION:
           Schema unionSchemaWithNestedNamespace = setupNestedNamespace(field.schema(), nestedNamespace);
-          Schema.Field newUnionField = new Schema.Field(field.name(),
-              unionSchemaWithNestedNamespace,
-              field.doc(),
-              field.defaultValue(),
-              field.order());
+          Schema.Field newUnionField = new Schema.Field(field.name(), unionSchemaWithNestedNamespace, field.doc(),
+              field.defaultValue(), field.order());
           appendField(newUnionField, fieldAssembler);
           break;
         default:
@@ -620,10 +592,8 @@ class SchemaUtilities {
 
         return arraySchema;
       case ENUM:
-        Schema enumSchemaWithNestedNamespace = Schema.createEnum(schema.getName(),
-            schema.getDoc(),
-            namespace,
-            schema.getEnumSymbols());
+        Schema enumSchemaWithNestedNamespace =
+            Schema.createEnum(schema.getName(), schema.getDoc(), namespace, schema.getEnumSymbols());
 
         return enumSchemaWithNestedNamespace;
       case RECORD:
@@ -641,8 +611,8 @@ class SchemaUtilities {
 
           return unionSchema;
         } else {
-          throw new IllegalArgumentException(schema.toString(true) + " is unsupported UNION type. "
-              + "Only nullable UNION is supported");
+          throw new IllegalArgumentException(
+              schema.toString(true) + " is unsupported UNION type. " + "Only nullable UNION is supported");
         }
       default:
         throw new IllegalArgumentException("Unsupported Schema type: " + schema.getType().toString());
@@ -655,20 +625,14 @@ class SchemaUtilities {
 
     Schema avroSchema = Schema.createRecord(schemaName, schema.getDoc(), schema.getNamespace(), schema.isError());
 
-    List<Schema.Field> fields = new ArrayList<>();
-
-
-    for (Schema.Field field : schema.getFields()) {
-      fields.add(new Schema.Field(field.name(), field.schema(), field.doc(), field.defaultValue(), field.order()));
-    }
+    List<Schema.Field> fields = cloneFieldList(schema.getFields());
     avroSchema.setFields(fields);
 
     return avroSchema;
   }
 
   private static Schema convertFieldSchemaToAvroSchema(@Nonnull final String recordName,
-      @Nonnull final String recordNamespace,
-      @Nonnull final boolean mkFieldsOptional,
+      @Nonnull final String recordNamespace, @Nonnull final boolean mkFieldsOptional,
       @Nonnull final List<FieldSchema> columns) {
     Preconditions.checkNotNull(recordName);
     Preconditions.checkNotNull(recordNamespace);
@@ -683,11 +647,8 @@ class SchemaUtilities {
       columnsTypeInfo.add(TypeInfoUtils.getTypeInfoFromTypeString(fs.getType()));
     });
 
-    return new TypeInfoToAvroSchemaConverter(recordNamespace, mkFieldsOptional)
-        .convertFieldsTypeInfoToAvroSchema("",
-            SchemaUtilities.getStandardName(recordName),
-            columnNames,
-            columnsTypeInfo);
+    return new TypeInfoToAvroSchemaConverter(recordNamespace, mkFieldsOptional).convertFieldsTypeInfoToAvroSchema("",
+        SchemaUtilities.getStandardName(recordName), columnNames, columnsTypeInfo);
   }
 
   private static List<FieldSchema> getPartitionCols(@Nonnull Table tableOrView) {
@@ -713,10 +674,8 @@ class SchemaUtilities {
 
     String schemaStr = table.getParameters().get(AvroSerdeUtils.AvroTableProperties.SCHEMA_LITERAL.getPropName());
     if (Strings.isNullOrEmpty(schemaStr)) {
-      schemaStr = table.getSd()
-                      .getSerdeInfo()
-                      .getParameters()
-                      .get(AvroSerdeUtils.AvroTableProperties.SCHEMA_LITERAL.getPropName());
+      schemaStr = table.getSd().getSerdeInfo().getParameters()
+          .get(AvroSerdeUtils.AvroTableProperties.SCHEMA_LITERAL.getPropName());
     }
 
     if (Strings.isNullOrEmpty(schemaStr)) {

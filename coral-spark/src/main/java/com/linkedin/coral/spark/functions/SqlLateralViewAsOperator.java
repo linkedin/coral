@@ -1,5 +1,5 @@
 /**
- * Copyright 2019 LinkedIn Corporation. All rights reserved.
+ * Copyright 2018-2021 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -20,21 +20,13 @@ public class SqlLateralViewAsOperator extends SqlSpecialOperator {
   public static SqlLateralViewAsOperator instance = new SqlLateralViewAsOperator();
 
   public SqlLateralViewAsOperator() {
-    super("LAS",
-        SqlKind.AS,
-        20,
-        true,
-        ReturnTypes.ARG0,
-        InferTypes.RETURN_TYPE,
-        OperandTypes.ANY_ANY);
+    super("LAS", SqlKind.AS, 20, true, ReturnTypes.ARG0, InferTypes.RETURN_TYPE, OperandTypes.ANY_ANY);
   }
 
   @Override
   public void unparse(SqlWriter writer, SqlCall call, int leftPrec, int rightPrec) {
     assert call.operandCount() >= 2;
-    final SqlWriter.Frame frame =
-        writer.startList(
-            SqlWriter.FrameTypeEnum.SIMPLE);
+    final SqlWriter.Frame frame = writer.startList(SqlWriter.FrameTypeEnum.SIMPLE);
     call.operand(0).unparse(writer, leftPrec, getLeftPrec());
     final boolean needsSpace = true;
     writer.setNeedWhitespace(needsSpace);
@@ -42,8 +34,7 @@ public class SqlLateralViewAsOperator extends SqlSpecialOperator {
     writer.sep("AS");
     writer.setNeedWhitespace(needsSpace);
     if (call.operandCount() > 2) {
-      final SqlWriter.Frame frame1 =
-          writer.startList(SqlWriter.FrameTypeEnum.SIMPLE);
+      final SqlWriter.Frame frame1 = writer.startList(SqlWriter.FrameTypeEnum.SIMPLE);
       for (SqlNode operand : Util.skip(call.getOperandList(), 2)) {
         writer.sep(",", false);
         operand.unparse(writer, 0, 0);

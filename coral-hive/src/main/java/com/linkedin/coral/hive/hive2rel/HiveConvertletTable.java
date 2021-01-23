@@ -1,17 +1,15 @@
 /**
- * Copyright 2019 LinkedIn Corporation. All rights reserved.
+ * Copyright 2018-2021 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
 package com.linkedin.coral.hive.hive2rel;
 
-import com.google.common.base.Preconditions;
-import com.linkedin.coral.com.google.common.collect.ImmutableList;
-import com.linkedin.coral.hive.hive2rel.functions.FunctionFieldReferenceOperator;
-import com.linkedin.coral.hive.hive2rel.functions.HiveInOperator;
-import com.linkedin.coral.hive.hive2rel.functions.HiveNamedStructFunction;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.google.common.base.Preconditions;
+
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.SqlCall;
@@ -26,6 +24,13 @@ import org.apache.calcite.sql2rel.ReflectiveConvertletTable;
 import org.apache.calcite.sql2rel.SqlRexContext;
 import org.apache.calcite.sql2rel.SqlRexConvertlet;
 import org.apache.calcite.sql2rel.StandardConvertletTable;
+
+import com.linkedin.coral.com.google.common.collect.ImmutableList;
+import com.linkedin.coral.hive.hive2rel.functions.FunctionFieldReferenceOperator;
+import com.linkedin.coral.hive.hive2rel.functions.HiveInOperator;
+import com.linkedin.coral.hive.hive2rel.functions.HiveNamedStructFunction;
+
+
 /**
  * ConvertletTable for Hive Operators
  * @see ReflectiveConvertletTable documentation for method naming and visibility rules
@@ -49,7 +54,7 @@ public class HiveConvertletTable extends ReflectiveConvertletTable {
     Preconditions.checkState(operandList.size() == 2 && operandList.get(1) instanceof SqlNodeList);
     RexNode lhs = cx.convertExpression(operandList.get(0));
     SqlNodeList rhsNodes = (SqlNodeList) operandList.get(1);
-    ImmutableList.Builder<RexNode> rexNodes = ImmutableList.<RexNode>builder().add(lhs);
+    ImmutableList.Builder<RexNode> rexNodes = ImmutableList.<RexNode> builder().add(lhs);
     for (int i = 0; i < rhsNodes.size(); i++) {
       rexNodes.add(cx.convertExpression(rhsNodes.get(i)));
     }

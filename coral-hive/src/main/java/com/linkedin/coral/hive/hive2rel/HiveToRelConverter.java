@@ -1,18 +1,20 @@
 /**
- * Copyright 2019 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2021 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
 package com.linkedin.coral.hive.hive2rel;
 
-import com.linkedin.coral.com.google.common.annotations.VisibleForTesting;
-import com.linkedin.coral.hive.hive2rel.parsetree.ParseTreeBuilder;
 import java.util.List;
 import java.util.Map;
+
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelRoot;
 import org.apache.calcite.schema.Table;
 import org.apache.calcite.sql.SqlNode;
+
+import com.linkedin.coral.com.google.common.annotations.VisibleForTesting;
+import com.linkedin.coral.hive.hive2rel.parsetree.ParseTreeBuilder;
 
 import static com.google.common.base.Preconditions.*;
 
@@ -112,12 +114,10 @@ public class HiveToRelConverter {
   ParseTreeBuilder getTreeBuilder() {
     if (relContextProvider.getHiveSchema() == null) {
       return new ParseTreeBuilder(null, relContextProvider.getParseTreeBuilderConfig(),
-          relContextProvider.getHiveFunctionRegistry(),
-          relContextProvider.getDynamicHiveFunctionRegistry());
+          relContextProvider.getHiveFunctionRegistry(), relContextProvider.getDynamicHiveFunctionRegistry());
     }
     return new ParseTreeBuilder(relContextProvider.getHiveMetastoreClient(),
-        relContextProvider.getParseTreeBuilderConfig(),
-        relContextProvider.getHiveFunctionRegistry(),
+        relContextProvider.getParseTreeBuilderConfig(), relContextProvider.getHiveFunctionRegistry(),
         relContextProvider.getDynamicHiveFunctionRegistry());
   }
 

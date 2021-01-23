@@ -1,15 +1,10 @@
 /**
- * Copyright 2019 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2021 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
 package com.linkedin.coral.presto.rel2presto;
 
-import com.linkedin.coral.com.google.common.collect.ImmutableList;
-import com.linkedin.coral.com.google.common.collect.ImmutableMultimap;
-import com.linkedin.coral.com.google.common.collect.Multimap;
-import com.linkedin.coral.hive.hive2rel.functions.GenericProjectFunction;
-import com.linkedin.coral.presto.rel2presto.functions.GenericProjectToPrestoConverter;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelShuttle;
 import org.apache.calcite.rel.RelShuttleImpl;
@@ -34,6 +29,12 @@ import org.apache.calcite.rex.RexShuttle;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.type.SqlTypeFamily;
+
+import com.linkedin.coral.com.google.common.collect.ImmutableList;
+import com.linkedin.coral.com.google.common.collect.ImmutableMultimap;
+import com.linkedin.coral.com.google.common.collect.Multimap;
+import com.linkedin.coral.hive.hive2rel.functions.GenericProjectFunction;
+import com.linkedin.coral.presto.rel2presto.functions.GenericProjectToPrestoConverter;
 
 
 public class Calcite2PrestoUDFConverter {
@@ -140,9 +141,8 @@ public class Calcite2PrestoUDFConverter {
     // type-castable SqlTypeFamilies.
     private static final Multimap<SqlTypeFamily, SqlTypeFamily> SUPPORTED_TYPE_CAST_MAP;
     static {
-      SUPPORTED_TYPE_CAST_MAP = ImmutableMultimap.<SqlTypeFamily, SqlTypeFamily>builder()
-          .putAll(SqlTypeFamily.CHARACTER, SqlTypeFamily.NUMERIC, SqlTypeFamily.BOOLEAN)
-          .build();
+      SUPPORTED_TYPE_CAST_MAP = ImmutableMultimap.<SqlTypeFamily, SqlTypeFamily> builder()
+          .putAll(SqlTypeFamily.CHARACTER, SqlTypeFamily.NUMERIC, SqlTypeFamily.BOOLEAN).build();
     }
 
     public PrestoRexConverter(RexBuilder rexBuilder) {

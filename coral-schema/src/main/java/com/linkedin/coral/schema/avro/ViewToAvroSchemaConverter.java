@@ -1,18 +1,19 @@
 /**
- * Copyright 2019 LinkedIn Corporation. All rights reserved.
+ * Copyright 2019-2021 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
 package com.linkedin.coral.schema.avro;
 
-import com.linkedin.coral.com.google.common.base.Preconditions;
-import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
-import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
 import org.apache.avro.Schema;
 import org.apache.calcite.rel.RelNode;
 import org.apache.hadoop.hive.metastore.api.Table;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.linkedin.coral.com.google.common.base.Preconditions;
+import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
+import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
 
 
 /**
@@ -66,9 +67,7 @@ public class ViewToAvroSchemaConverter {
    *
    * @return avro schema for a given Dali view [dbName, viewName]
    */
-public Schema toAvroSchema(String dbName,
-    String tableOrViewName,
-    boolean strictMode) {
+  public Schema toAvroSchema(String dbName, String tableOrViewName, boolean strictMode) {
     Preconditions.checkNotNull(dbName);
     Preconditions.checkNotNull(tableOrViewName);
 
@@ -93,9 +92,7 @@ public Schema toAvroSchema(String dbName,
     return avroSchema;
   }
 
-  private Schema inferAvroSchema(String dbName,
-      String tableOrViewName,
-      boolean strictMode) {
+  private Schema inferAvroSchema(String dbName, String tableOrViewName, boolean strictMode) {
     Preconditions.checkNotNull(dbName);
     Preconditions.checkNotNull(tableOrViewName);
 
@@ -118,10 +115,7 @@ public Schema toAvroSchema(String dbName,
 
       // In flex mode, we assign a new set of namespace
       if (!strictMode) {
-        avroSchema = SchemaUtilities.setupNameAndNamespace(
-            schema,
-            tableOrViewName,
-            dbName + "." + tableOrViewName);
+        avroSchema = SchemaUtilities.setupNameAndNamespace(schema, tableOrViewName, dbName + "." + tableOrViewName);
       }
 
       return avroSchema;

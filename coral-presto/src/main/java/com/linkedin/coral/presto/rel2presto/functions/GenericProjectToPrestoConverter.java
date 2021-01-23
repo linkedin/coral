@@ -1,5 +1,5 @@
 /**
- * Copyright 2019 LinkedIn Corporation. All rights reserved.
+ * Copyright 2019-2021 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -7,6 +7,7 @@ package com.linkedin.coral.presto.rel2presto.functions;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rel.type.RelRecordType;
@@ -199,8 +200,8 @@ public class GenericProjectToPrestoConverter {
         return (RexCall) builder.makeCall(arrayFunction, builder.makeLiteral(arrayDataTypeArgumentString));
       case MAP:
         // Create a Presto TRANSFORM_VALUES RexCall
-        String mapDataTypeArgumentString = mapDataTypeArgumentString((MapSqlType) fromDataType,
-            (MapSqlType) toDataType, transformColumnFieldName);
+        String mapDataTypeArgumentString =
+            mapDataTypeArgumentString((MapSqlType) fromDataType, (MapSqlType) toDataType, transformColumnFieldName);
         SqlOperator mapFunction = new PrestoMapTransformValuesFunction(toDataType);
         return (RexCall) builder.makeCall(mapFunction, builder.makeLiteral(mapDataTypeArgumentString));
       default:
@@ -235,10 +236,10 @@ public class GenericProjectToPrestoConverter {
       String fieldNameReference) {
     String mapKeyFieldReference = "k";
     String mapValueFieldReference = "v";
-    String valueTransformedFieldString = relDataTypeFieldAccessString(fromDataType.getValueType(),
-        toDataType.getValueType(), mapValueFieldReference);
-    return String.format("%s, (%s, %s) -> %s", fieldNameReference, mapKeyFieldReference,
-        mapValueFieldReference, valueTransformedFieldString);
+    String valueTransformedFieldString =
+        relDataTypeFieldAccessString(fromDataType.getValueType(), toDataType.getValueType(), mapValueFieldReference);
+    return String.format("%s, (%s, %s) -> %s", fieldNameReference, mapKeyFieldReference, mapValueFieldReference,
+        valueTransformedFieldString);
   }
 
   /**
@@ -299,7 +300,8 @@ public class GenericProjectToPrestoConverter {
    */
   private static String structDataTypeArgumentString(RelRecordType fromDataType, RelRecordType toDataType,
       String fieldNameReference) {
-    String structFieldsAccessString = buildStructRelDataTypeFieldAccessString(fromDataType, toDataType, fieldNameReference);
+    String structFieldsAccessString =
+        buildStructRelDataTypeFieldAccessString(fromDataType, toDataType, fieldNameReference);
     String castToRowTypeString = RelDataTypeToPrestoTypeStringConverter.buildPrestoTypeString(toDataType);
     return String.format("%s as %s", structFieldsAccessString, castToRowTypeString);
   }
@@ -343,12 +345,12 @@ public class GenericProjectToPrestoConverter {
     for (RelDataTypeField toDataTypeField : toDataType.getFieldList()) {
       RelDataTypeField fromDataTypeField = fromDataType.getField(toDataTypeField.getName(), false, false);
       if (fromDataTypeField == null) {
-        throw new RuntimeException(String.format("Field %s was not found in column %s.", toDataTypeField.getName(),
-            fieldNameReference));
+        throw new RuntimeException(
+            String.format("Field %s was not found in column %s.", toDataTypeField.getName(), fieldNameReference));
       }
       String fromDataTypeFieldName = String.join(".", fieldNameReference, fromDataTypeField.getName());
-      structSelectedFieldStrings.add(relDataTypeFieldAccessString(fromDataTypeField.getType(),
-          toDataTypeField.getType(), fromDataTypeFieldName));
+      structSelectedFieldStrings.add(
+          relDataTypeFieldAccessString(fromDataTypeField.getType(), toDataTypeField.getType(), fromDataTypeFieldName));
     }
 
     String subFieldsString = String.join(", ", structSelectedFieldStrings);
