@@ -16,7 +16,7 @@ def versions = [
 
 ext.deps = [
   'antlr': "org.antlr:antlr:${versions['antlr']}",
-    'antlr-runtime': "org.antlr:antlr-runtime:${versions['antlr']}",
+  'antlr-runtime': "org.antlr:antlr-runtime:${versions['antlr']}",
   'javax-annotation': "com.google.code.findbugs:jsr305:${versions['jsr305']}",
   'jline': "jline:jline:${versions['jline']}",
   'gson': "com.google.code.gson:gson:${versions['gson']}",
