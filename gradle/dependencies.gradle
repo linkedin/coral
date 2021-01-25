@@ -1,5 +1,5 @@
 def versions = [
-  'antlr-runtime': '3.4',
+  'antlr': '3.4',
   'jsr305': '3.0.2',
   'jline': '0.9.94',
   'gson': '2.8.1',
@@ -15,7 +15,8 @@ def versions = [
 ]
 
 ext.deps = [
-  'antlr-runtime': "org.antlr:antlr-runtime:${versions['antlr-runtime']}",
+  'antlr': "org.antlr:antlr:${versions['antlr']}",
+  'antlr-runtime': "org.antlr:antlr-runtime:${versions['antlr']}",
   'javax-annotation': "com.google.code.findbugs:jsr305:${versions['jsr305']}",
   'jline': "jline:jline:${versions['jline']}",
   'gson': "com.google.code.gson:gson:${versions['gson']}",
