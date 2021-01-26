@@ -30,7 +30,6 @@ import org.apache.calcite.schema.Schema;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.util.ChainedSqlOperatorTable;
-import org.apache.calcite.sql.validate.SqlConformanceEnum;
 import org.apache.calcite.sql2rel.SqlToRelConverter;
 import org.apache.calcite.tools.FrameworkConfig;
 import org.apache.calcite.tools.Frameworks;
@@ -41,6 +40,8 @@ import com.linkedin.coral.hive.hive2rel.functions.HiveFunction;
 import com.linkedin.coral.hive.hive2rel.functions.HiveFunctionRegistry;
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 import com.linkedin.coral.hive.hive2rel.parsetree.ParseTreeBuilder;
+
+import static com.linkedin.coral.hive.hive2rel.HiveSqlConformance.HIVE_SQL;
 
 
 /**
@@ -196,7 +197,7 @@ public class RelContextProvider {
   HiveSqlValidator getHiveSqlValidator() {
     if (sqlValidator == null) {
       sqlValidator = new HiveSqlValidator(config.getOperatorTable(), getCalciteCatalogReader(),
-          ((JavaTypeFactory) relBuilder.getTypeFactory()), SqlConformanceEnum.PRAGMATIC_2003);
+          ((JavaTypeFactory) relBuilder.getTypeFactory()), HIVE_SQL);
     }
     return sqlValidator;
   }

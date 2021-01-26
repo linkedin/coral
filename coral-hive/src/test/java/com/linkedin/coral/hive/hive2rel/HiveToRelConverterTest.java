@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2020 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2021 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -314,6 +314,14 @@ public class HiveToRelConverterTest {
 
     final String expectedSql = "SELECT *\n" + "FROM hive.default.table_localstore";
     assertEquals(relToHql(rel), expectedSql);
+  }
+
+  @Test
+  public void testCurrentUser() {
+    final String sql = "SELECT current_user() as cu";
+    String generated = relToString(sql);
+    final String expected = "LogicalProject(cu=[CURRENT_USER])\n  LogicalValues(tuples=[[{ 0 }]])\n";
+    assertEquals(generated, expected);
   }
 
   private String relToString(String sql) {
