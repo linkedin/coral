@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2020 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2021 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -457,5 +457,12 @@ public class RelToPrestoConverterTest {
     String sql3 = "SELECT CAST(varbinaryfield AS VARBINARY(123)) FROM " + tableThree;
     String expectedSql3 = formatSql("SELECT CAST(varbinaryfield AS VARBINARY) FROM " + tableThree);
     testConversion(sql3, expectedSql3);
+  }
+
+  @Test
+  public void testCurrentUser() {
+    String sql = "SELECT current_user";
+    String expected = formatSql("SELECT CURRENT_USER AS \"CURRENT_USER\"\nFROM (VALUES  (0)) AS \"t\" (\"ZERO\")");
+    testConversion(sql, expected);
   }
 }
