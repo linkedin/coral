@@ -465,4 +465,19 @@ public class RelToPrestoConverterTest {
     String expected = formatSql("SELECT CURRENT_USER AS \"CURRENT_USER\"\nFROM (VALUES  (0)) AS \"t\" (\"ZERO\")");
     testConversion(sql, expected);
   }
+
+  @Test
+  public void testCurrentTimestamp() {
+    String sql = "SELECT current_timestamp";
+    String expected =
+        formatSql("SELECT CURRENT_TIMESTAMP AS \"CURRENT_TIMESTAMP\"\nFROM (VALUES  (0)) AS \"t\" (\"ZERO\")");
+    testConversion(sql, expected);
+  }
+
+  @Test
+  public void testCurrentDate() {
+    String sql = "SELECT current_date";
+    String expected = formatSql("SELECT CURRENT_DATE AS \"CURRENT_DATE\"\nFROM (VALUES  (0)) AS \"t\" (\"ZERO\")");
+    testConversion(sql, expected);
+  }
 }

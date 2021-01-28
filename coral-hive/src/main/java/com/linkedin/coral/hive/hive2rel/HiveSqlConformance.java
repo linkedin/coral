@@ -6,6 +6,7 @@
 package com.linkedin.coral.hive.hive2rel;
 
 import org.apache.calcite.sql.validate.SqlConformance;
+import org.apache.calcite.sql.validate.SqlConformanceEnum;
 import org.apache.calcite.sql.validate.SqlDelegatingConformance;
 
 
@@ -14,7 +15,7 @@ public class HiveSqlConformance extends SqlDelegatingConformance {
   public static SqlConformance HIVE_SQL = new HiveSqlConformance();
 
   private HiveSqlConformance() {
-    super(PRAGMATIC_2003);
+    super(SqlConformanceEnum.PRAGMATIC_2003);
   }
 
   @Override

@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2020 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2021 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -99,7 +99,10 @@ public class ParseTreeBuilderTest {
         "SELECT a, count(distinct b), count(distinct c) from foo group by a",
 
         // order by
-        "SELECT * from foo order by a"
+        "SELECT * from foo order by a",
+
+        //NiladicParentheses
+        "SELECT current_timestamp", "SELECT current_date"
 
     // window
     // Not yet implemented
