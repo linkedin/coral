@@ -48,7 +48,7 @@ Please see the [Contribution Agreement](CONTRIBUTING.md).
 
 ## Community
 
-- Join the chat on [Slack](https://join.slack.com/t/coral-sql/shared_invite/zt-j9jw5idg-mkt3fjA~wgoUEMXXZqMr6g)!
+- Join the chat on [Slack](https://join.slack.com/t/coral-sql/shared_invite/zt-krbxjj9w-YkIWKVAufVtlHyoKtU6DWQ)!
 
 ## Resources
 
