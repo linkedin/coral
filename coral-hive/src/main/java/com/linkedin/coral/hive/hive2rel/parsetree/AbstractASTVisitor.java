@@ -71,6 +71,8 @@ public abstract class AbstractASTVisitor<R, C> {
       case HiveParser.TOK_TABNAME:
         return visitTabnameNode(node, ctx);
 
+      case HiveParser.KW_CURRENT_DATE:
+      case HiveParser.KW_CURRENT_TIMESTAMP:
       case HiveParser.Identifier:
         return visitIdentifier(node, ctx);
 
@@ -82,9 +84,6 @@ public abstract class AbstractASTVisitor<R, C> {
 
       case HiveParser.TOK_INSERT:
         return visitInsert(node, ctx);
-
-      case HiveParser.TOK_DESTINATION:
-        return null;
 
       case HiveParser.TOK_SELECTDI:
         return visitSelectDistinct(node, ctx);
@@ -173,8 +172,10 @@ public abstract class AbstractASTVisitor<R, C> {
       case HiveParser.TOK_TABLE_OR_COL:
         return visitTableTokOrCol(node, ctx);
 
+      case HiveParser.TOK_DESTINATION:
       case HiveParser.EOF:
         return null;
+
       // add function names here
       case HiveParser.TOK_ISNOTNULL:
       case HiveParser.TOK_ISNULL:
