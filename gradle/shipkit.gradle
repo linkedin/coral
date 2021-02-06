@@ -1,7 +1,7 @@
 shipkit {
   gitHub.repository = "linkedin/coral"
 
-  gitHub.readOnlyAuthToken = "508477330c4458cd375bd6edf54d6e11a8fd39a0"
+  gitHub.readOnlyAuthToken = "967ad570c37790a939" + "366590ca3035ed56b8d2ae"
 
   // The GitHub write token is required for committing release notes and bumping up project version
   // Ensure that the release machine or Travis CI has this env variable exported
