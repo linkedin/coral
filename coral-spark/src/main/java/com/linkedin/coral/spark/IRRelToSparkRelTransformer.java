@@ -211,8 +211,9 @@ class IRRelToSparkRelTransformer {
     private Optional<RexNode> convertDaliUDF(RexCall call) {
       Optional<SparkUDFInfo> sparkUDFInfo = TransportableUDFMap.lookup(call.getOperator().getName());
       sparkUDFInfo.ifPresent(sparkUDFInfos::add);
-      return sparkUDFInfo.map(sparkUDFInfo1 -> rexBuilder.makeCall(
-          createUDF(sparkUDFInfo1.getFunctionName(), call.getOperator().getReturnTypeInference()), call.getOperands()));
+      return sparkUDFInfo.map(sparkUDFInfo1 -> rexBuilder
+          .makeCall(createUDF(((VersionedSqlUserDefinedFunction) call.getOperator()).getViewDependentFunctionName(),
+              call.getOperator().getReturnTypeInference()), call.getOperands()));
     }
 
     private Optional<RexNode> convertBuiltInUDF(RexCall call) {
