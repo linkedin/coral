@@ -99,6 +99,9 @@ public class CoralSparkTest {
     String udfClassName = udfJars.get(0).getClassName();
     String targetClassName = "com.linkedin.coral.spark.CoralTestUDF";
     assertEquals(udfClassName, targetClassName);
+    String udfFunctionName = udfJars.get(0).getFunctionName();
+    String targetFunctionName = "default_foo_dali_udf_LessThanHundred";
+    assertEquals(udfFunctionName, targetFunctionName);
     // check if CoralSpark can fetch artifactory url from TransportableUDFMap
     List<String> listOfUriStrings = convertToListOfUriStrings(udfJars.get(0).getArtifactoryUrls());
     String targetArtifactoryUrl = "ivy://com.linkedin.coral.spark.CoralTestUDF";
