@@ -1,5 +1,5 @@
 /**
- * Copyright 2018-2020 LinkedIn Corporation. All rights reserved.
+ * Copyright 2018-2021 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -45,8 +45,8 @@ public class CoralSparkTest {
 
     UnsupportedHiveUDFsInSpark.add("com.linkedin.coral.hive.hive2rel.CoralTestUnsupportedUDF");
 
-    TransportableUDFMap.add("com.linkedin.coral.hive.hive2rel.CoralTestUDF", "coralTestUDF",
-        "com.linkedin.coral.spark.CoralTestUDF", "ivy://com.linkedin.coral.spark.CoralTestUDF");
+    TransportableUDFMap.add("com.linkedin.coral.hive.hive2rel.CoralTestUDF", "com.linkedin.coral.spark.CoralTestUDF",
+        "ivy://com.linkedin.coral.spark.CoralTestUDF");
   }
 
   @Test
@@ -100,7 +100,7 @@ public class CoralSparkTest {
     String targetClassName = "com.linkedin.coral.spark.CoralTestUDF";
     assertEquals(udfClassName, targetClassName);
     String udfFunctionName = udfJars.get(0).getFunctionName();
-    String targetFunctionName = "coralTestUDF";
+    String targetFunctionName = "default_foo_dali_udf_LessThanHundred";
     assertEquals(udfFunctionName, targetFunctionName);
     // check if CoralSpark can fetch artifactory url from TransportableUDFMap
     List<String> listOfUriStrings = convertToListOfUriStrings(udfJars.get(0).getArtifactoryUrls());
@@ -111,7 +111,7 @@ public class CoralSparkTest {
     SparkUDFInfo.UDFTYPE targetUdfType = SparkUDFInfo.UDFTYPE.TRANSPORTABLE_UDF;
     assertEquals(testUdfType, targetUdfType);
     String sparkSqlStmt = coralSpark.getSparkSql();
-    String targetSqlStmt = "SELECT coralTestUDF(a)\nFROM default.foo";
+    String targetSqlStmt = "SELECT default_foo_dali_udf_LessThanHundred(a)\nFROM default.foo";
     assertEquals(sparkSqlStmt, targetSqlStmt);
   }
 
