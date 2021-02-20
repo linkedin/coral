@@ -50,6 +50,9 @@ public class CalcitePrestoUDFMap {
     createUDFMapEntry(UDF_MAP, HiveRLikeOperator.RLIKE, 2, "REGEXP_LIKE");
     createUDFMapEntry(UDF_MAP, HiveRLikeOperator.REGEXP, 2, "REGEXP_LIKE");
 
+    // JSON Functions
+    createUDFMapEntry(UDF_MAP, hiveToCalciteOp("get_json_object"), 2, "json_extract");
+
     // map various hive functions
     createUDFMapEntry(UDF_MAP, hiveToCalciteOp("base64"), 1, "to_base64");
     createUDFMapEntry(UDF_MAP, hiveToCalciteOp("unbase64"), 1, "from_base64");
