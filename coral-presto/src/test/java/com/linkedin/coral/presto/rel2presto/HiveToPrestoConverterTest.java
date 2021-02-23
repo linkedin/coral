@@ -5,13 +5,14 @@
  */
 package com.linkedin.coral.presto.rel2presto;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Maps;
-import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Maps;
+
 import org.apache.calcite.rel.RelNode;
 import org.apache.hadoop.hive.metastore.api.Database;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
@@ -25,12 +26,15 @@ import org.testng.annotations.BeforeTest;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
+
 import static org.testng.Assert.*;
 
 
 public class HiveToPrestoConverterTest {
 
-  private final HiveToPrestoConverter hiveToPrestoConverter = HiveToPrestoConverter.create(new HiveMetastoreClientStub());
+  private final HiveToPrestoConverter hiveToPrestoConverter =
+      HiveToPrestoConverter.create(new HiveMetastoreClientStub());
   RelToPrestoConverter relToPrestoConverter;
 
   @BeforeTest
@@ -101,12 +105,10 @@ public class HiveToPrestoConverterTest {
 
   @Test
   public void testFromUnixTimestampSelect() {
-    String sql = "select from_unixtime(CAST(foo/1000 as BIGINT), 'yyyyMMdd') " +
-      "from test_db.test_table limit 1";
+    String sql = "select from_unixtime(CAST(foo/1000 as BIGINT), 'yyyyMMdd') " + "from test_db.test_table limit 1";
 
-    String expectedSql = "SELECT \"format_datetime\"(\"from_unixtime\"(CAST(\"foo\" / 1000 AS BIGINT)), 'yyyyMMdd')\n" +
-      "FROM \"test_db\".\"test_table\"\n" +
-      "LIMIT 1";
+    String expectedSql = "SELECT \"format_datetime\"(\"from_unixtime\"(CAST(\"foo\" / 1000 AS BIGINT)), 'yyyyMMdd')\n"
+        + "FROM \"test_db\".\"test_table\"\n" + "LIMIT 1";
 
     Assert.assertEquals(hiveToPrestoConverter.toPrestoSql(sql), expectedSql);
   }
@@ -120,9 +122,8 @@ public class HiveToPrestoConverterTest {
 
     @Override
     public Database getDatabase(String dbName) {
-      return new Database("test_db",
-        "database for testing hive to presto query translation",
-        "hdfs://location", Maps.newHashMap());
+      return new Database("test_db", "database for testing hive to presto query translation", "hdfs://location",
+          Maps.newHashMap());
     }
 
     @Override
@@ -138,18 +139,15 @@ public class HiveToPrestoConverterTest {
       List<FieldSchema> partColumns = new ArrayList<>();
       partColumns.add(new FieldSchema("dt", "string", ""));
       partColumns.add(new FieldSchema("blurb", "string", ""));
-      SerDeInfo serdeInfo = new SerDeInfo("LBCSerDe",
-        "org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe", new HashMap<>());
-      StorageDescriptor storageDescriptor
-        = new StorageDescriptor(columns, null,
-        "org.apache.hadoop.hive.ql.io.RCFileInputFormat",
-        "org.apache.hadoop.hive.ql.io.RCFileOutputFormat",
-        false, 0, serdeInfo, null, null, null);
+      SerDeInfo serdeInfo =
+          new SerDeInfo("LBCSerDe", "org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe", new HashMap<>());
+      StorageDescriptor storageDescriptor =
+          new StorageDescriptor(columns, null, "org.apache.hadoop.hive.ql.io.RCFileInputFormat",
+              "org.apache.hadoop.hive.ql.io.RCFileOutputFormat", false, 0, serdeInfo, null, null, null);
       Map<String, String> tableParameters = new HashMap<>();
       tableParameters.put("hive.hcatalog.partition.spec.grouping.enabled", "true");
-      return new Table(tableName, dbName, "", 0, 0, 0,
-        storageDescriptor, partColumns, tableParameters, "", "",
-        org.apache.hadoop.hive.metastore.TableType.MANAGED_TABLE.name());
+      return new Table(tableName, dbName, "", 0, 0, 0, storageDescriptor, partColumns, tableParameters, "", "",
+          org.apache.hadoop.hive.metastore.TableType.MANAGED_TABLE.name());
     }
   }
 }

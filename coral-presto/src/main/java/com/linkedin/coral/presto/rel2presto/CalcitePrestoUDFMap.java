@@ -69,7 +69,7 @@ public class CalcitePrestoUDFMap {
     createUDFMapEntry(UDF_MAP, hiveToCalciteOp("concat_ws"), 3, "concat_ws");
     createUDFMapEntry(UDF_MAP, hiveToCalciteOp("from_unixtime"), 1, "from_unixtime");
     createUDFMapEntry(UDF_MAP, hiveToCalciteOp("from_unixtime"), 2, "format_datetime",
-      "[{\"op\":\"from_unixtime\",\"operands\":[{\"input\":1}]},{\"input\":2}]", null);
+        "[{\"op\":\"from_unixtime\",\"operands\":[{\"input\":1}]},{\"input\":2}]", null);
 
     // DALI functions
     // Most "com.linkedin..." UDFs follow convention of having UDF names mapped from their class name by converting
