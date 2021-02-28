@@ -1,5 +1,7 @@
 apply plugin: 'java'
 apply plugin: 'antlr'
+apply plugin: 'maven-publish'
+apply plugin: 'signing'
 
 dependencies {
   antlr deps.'antlr'
@@ -46,7 +48,7 @@ generateGrammarSource {
   ]}
 
 artifacts {
-  archives jar, javadocJar, sourcesJar
+  archives jar
 }
 
 

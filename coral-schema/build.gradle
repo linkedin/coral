@@ -1,5 +1,6 @@
 apply plugin: 'java'
 apply plugin: 'maven-publish'
+apply plugin: 'signing'
 
 dependencies {
   compile deps.'slf4j-api'
@@ -22,5 +23,5 @@ dependencies {
 }
 
 artifacts {
-  archives jar, javadocJar, sourcesJar
+  archives jar
 }

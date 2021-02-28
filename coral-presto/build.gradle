@@ -1,4 +1,6 @@
 apply plugin: 'java'
+apply plugin: 'maven-publish'
+apply plugin: 'signing'
 
 dependencies {
   compile deps.'gson'
@@ -20,5 +22,5 @@ dependencies {
 }
 
 artifacts {
-  archives jar, javadocJar, sourcesJar
+  archives jar
 }
