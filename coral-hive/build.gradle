@@ -1,4 +1,4 @@
-apply plugin: 'java'
+apply from: "$rootDir/gradle/java-publication.gradle"
 apply plugin: 'antlr'
 
 dependencies {

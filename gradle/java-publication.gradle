@@ -1,0 +1,96 @@
+apply plugin: "java"
+
+def licenseSpec = copySpec {
+  from project.rootDir
+  include "LICENSE"
+}
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+  classifier 'sources'
+  from sourceSets.main.allSource
+  with licenseSpec
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+  classifier 'javadoc'
+  from tasks.javadoc
+  with licenseSpec
+}
+
+jar {
+  with licenseSpec
+}
+
+artifacts {
+  archives sourcesJar
+  archives javadocJar
+}
+
+apply plugin: "maven-publish" //https://docs.gradle.org/current/userguide/publishing_maven.html
+publishing {
+  publications {
+    javaLibrary(MavenPublication) {
+      from components.java
+      artifact sourcesJar
+      artifact javadocJar
+
+      artifactId = project.archivesBaseName
+
+      pom {
+        name = artifactId
+        description = "A library for analyzing, processing, and rewriting views defined in the Hive Metastore, and sharing them across multiple execution engines"
+
+        url = "https://github.com/linkedin/coral"
+        licenses {
+          license {
+            name = 'The MIT License'
+            url = 'https://github.com/linkedin/coral/blob/master/LICENSE'
+            distribution = 'repo'
+          }
+        }
+        developers {
+          [
+            'wmoustafa:Walaa Eldin Moustafa',
+            'khaitranq:Khai Tranh',
+            'funcheetah:Wenye Zhang',
+            'shardulm94:Shardul Mahadik',
+            'hotsushi:Sushant Raikar'
+          ].each { devData ->
+            developer {
+              def devInfo = devData.split(':')
+              id = devInfo[0]
+              name = devInfo[1]
+              url = 'https://github.com/' + devInfo[0]
+              roles = ["Core developer"]
+            }
+          }
+        }
+        scm {
+          url = 'https://github.com/linkedin/coral.git'
+        }
+        issueManagement {
+          url = 'https://github.com/linkedin/coral/issues'
+          system = 'GitHub issues'
+        }
+        ciManagement {
+          url = 'https://travis-ci.com/linkedin/coral'
+          system = 'Travis CI'
+        }
+      }
+    }
+  }
+
+  //useful for testing - running "publish" will create artifacts/pom in a local dir
+  repositories { maven { url = "$rootProject.buildDir/repo" } }
+}
+
+//fleshes out problems with Maven pom generation when building
+tasks.build.dependsOn("publishJavaLibraryPublicationToMavenLocal")
+
+apply plugin: 'signing' //https://docs.gradle.org/current/userguide/signing_plugin.html
+signing {
+  if (System.getenv("PGP_KEY")) {
+    useInMemoryPgpKeys(System.getenv("PGP_KEY"), System.getenv("PGP_PWD"))
+    sign publishing.publications.javaLibrary
+  }
+}
