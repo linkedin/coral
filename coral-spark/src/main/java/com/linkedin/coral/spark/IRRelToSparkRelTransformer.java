@@ -273,8 +273,8 @@ class IRRelToSparkRelTransformer {
             RexLiteral newItemRef = rexBuilder.makeExactLiteral(new BigDecimal(val - 1), itemRef.getType());
             return Optional.of(rexBuilder.makeCall(call.op, columnRef, newItemRef));
           } else {
-            RexNode oneBasedIndex = rexBuilder.makeCall(
-                SqlStdOperatorTable.MINUS, itemRef, rexBuilder.makeExactLiteral(BigDecimal.ONE));
+            RexNode oneBasedIndex =
+                rexBuilder.makeCall(SqlStdOperatorTable.MINUS, itemRef, rexBuilder.makeExactLiteral(BigDecimal.ONE));
             return Optional.of(rexBuilder.makeCall(call.op, columnRef, oneBasedIndex));
           }
         }

@@ -158,8 +158,8 @@ public class HiveRelConverter extends RelShuttleImpl {
             RexLiteral newItemRef = rexBuilder.makeExactLiteral(new BigDecimal(val + 1), itemRef.getType());
             return rexBuilder.makeCall(call.op, columnRef, newItemRef);
           } else {
-            RexNode oneBasedIndex = rexBuilder.makeCall(
-                SqlStdOperatorTable.PLUS, itemRef, rexBuilder.makeExactLiteral(BigDecimal.ONE));
+            RexNode oneBasedIndex =
+                rexBuilder.makeCall(SqlStdOperatorTable.PLUS, itemRef, rexBuilder.makeExactLiteral(BigDecimal.ONE));
             return rexBuilder.makeCall(call.op, columnRef, oneBasedIndex);
           }
         }
