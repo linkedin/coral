@@ -226,6 +226,16 @@ public class CoralSparkTest {
   }
 
   @Test
+  public void testArrayElementWithFunctionArgument() {
+    RelNode relNode = TestUtils.toRelNode(String.join("\n", "",
+        "SELECT c[size(c) - 1]", "FROM complex"));
+
+    String targetSql = String.join("\n",
+        "SELECT c[size(c) - 1 + 1 - 1]", "FROM default.complex");
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+  }
+
+  @Test
   public void testDataTypeNamedStruct() {
     RelNode relNode =
         TestUtils.toRelNode(String.join("\n", "", "SELECT named_struct('abc', 123, 'def', 'xyz').def", "FROM bar"));
