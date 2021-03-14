@@ -480,4 +480,11 @@ public class RelToPrestoConverterTest {
     String expected = formatSql("SELECT CURRENT_DATE AS \"CURRENT_DATE\"\nFROM (VALUES  (0)) AS \"t\" (\"ZERO\")");
     testConversion(sql, expected);
   }
+
+  @Test
+  public void testCardinality() {
+    String sql = "SELECT cardinality(acol) FROM " + tableFour;
+    String expected = formatSql("SELECT CAST(CARDINALITY(acol) AS INTEGER) FROM " + tableFour);
+    testConversion(sql, expected);
+  }
 }
