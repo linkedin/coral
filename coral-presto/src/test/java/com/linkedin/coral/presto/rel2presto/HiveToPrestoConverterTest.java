@@ -14,9 +14,7 @@ import org.testng.annotations.Test;
 
 import static org.testng.Assert.*;
 
-
 public class HiveToPrestoConverterTest {
-
   RelToPrestoConverter relToPrestoConverter;
 
   @BeforeTest
@@ -82,6 +80,8 @@ public class HiveToPrestoConverterTest {
 
         { "test", "current_date_and_timestamp_view", "SELECT CURRENT_TIMESTAMP, TRIM(CAST(CURRENT_TIMESTAMP AS VARCHAR(65535))) AS \"ct\", CURRENT_DATE, CURRENT_DATE AS \"cd\", \"a\"\nFROM \"test\".\"tablea\"" },
 
-        { "test", "get_json_object_view", "SELECT \"json_extract\"(\"b\".\"b1\", '$.name')\nFROM \"test\".\"tablea\"" } };
+        { "test", "get_json_object_view", "SELECT \"json_extract\"(\"b\".\"b1\", '$.name')\nFROM \"test\".\"tablea\"" },
+
+        { "test", "translate_view", "SELECT \"translate\"(\"b\".\"b1\", 'a', 'b')\nFROM \"test\".\"tablea\"" } };
   }
 }

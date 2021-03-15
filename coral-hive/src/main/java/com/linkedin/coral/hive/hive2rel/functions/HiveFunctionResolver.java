@@ -52,6 +52,7 @@ public class HiveFunctionResolver {
     this.operators = new ArrayList<>(SqlStdOperatorTable.instance().getOperatorList());
     operators.add(HiveRLikeOperator.REGEXP);
     operators.add(HiveRLikeOperator.RLIKE);
+    operators.add(HiveTranslateFunction.TRANSLATE);
   }
 
   /**

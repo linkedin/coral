@@ -254,6 +254,8 @@ public class TestUtils {
         "SELECT CURRENT_TIMESTAMP, trim(cast(CURRENT_TIMESTAMP as string)) as ct, CURRENT_DATE, CURRENT_DATE as cd, a from test.tableA"));
     run(driver, String.join("\n", "CREATE VIEW IF NOT EXISTS test.get_json_object_view AS ",
         "SELECT get_json_object(b.b1, '$.name') FROM test.tableA"));
+    run(driver, String.join("\n", "CREATE VIEW IF NOT EXISTS test.translate_view AS ",
+            "SELECT translate(b.b1, 'a', 'b') FROM test.tableA"));
   }
 
   public static RelNode convertView(String db, String view) {

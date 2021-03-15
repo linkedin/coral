@@ -15,6 +15,8 @@ import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import com.linkedin.coral.com.google.common.base.CaseFormat;
 import com.linkedin.coral.com.google.common.base.Converter;
 import com.linkedin.coral.com.google.common.collect.ImmutableMultimap;
+import com.linkedin.coral.hive.hive2rel.functions.HiveTranslateFunction;
+import com.linkedin.coral.presto.rel2presto.functions.PrestoElementAtFunction;
 import com.linkedin.coral.hive.hive2rel.functions.HiveFunction;
 import com.linkedin.coral.hive.hive2rel.functions.HiveRLikeOperator;
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
@@ -64,6 +66,7 @@ public class CalcitePrestoUDFMap {
     createUDFMapEntry(UDF_MAP, hiveToCalciteOp("instr"), 2, "strpos");
     createRuntimeUDFMapEntry(UDF_MAP, hiveToCalciteOp("decode"), 2,
         "[{\"regex\":\"(?i)('utf-8')\", \"input\":2, \"name\":\"from_utf8\"}]", "[{\"input\":1}]", null);
+    createUDFMapEntry(UDF_MAP, hiveToCalciteOp("translate"), 3, "translate");
 
     // FIXME: this is incorrect. Adding this to test correctness of the overall system
     createUDFMapEntry(UDF_MAP, hiveToCalciteOp("concat_ws"), 3, "concat_ws");
