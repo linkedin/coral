@@ -186,7 +186,7 @@ public class TestUtils {
     HiveMetastoreClient hiveMetastoreClient = new HiveMscAdapter(Hive.get(conf).getMSC());
     hiveToRelConverter = HiveToRelConverter.create(hiveMetastoreClient);
 
-    // Views and tables used in FuzzyUnionViewTest
+    // Views and tables used in HiveToPrestoConverterTest
     run(driver, "CREATE DATABASE IF NOT EXISTS test");
 
     run(driver, "CREATE TABLE IF NOT EXISTS test.tableA(a int, b struct<b1:string>)");
