@@ -33,6 +33,7 @@ import org.apache.hadoop.hive.ql.CommandNeedRetryException;
 import org.apache.hadoop.hive.ql.Driver;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
+import org.apache.hadoop.hive.ql.processors.CommandProcessorResponse;
 import org.apache.hadoop.hive.ql.session.SessionState;
 
 import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
@@ -165,7 +166,10 @@ public class TestUtils {
   static void run(Driver driver, String sql) {
     while (true) {
       try {
-        driver.run(sql);
+        CommandProcessorResponse result = driver.run(sql);
+        if (result.getException() != null) {
+          throw new RuntimeException("Execution failed for: " + sql, result.getException());
+        }
       } catch (CommandNeedRetryException e) {
         continue;
       }
