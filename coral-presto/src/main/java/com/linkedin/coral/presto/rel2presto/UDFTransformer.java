@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import com.google.common.collect.ImmutableList;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -124,6 +125,9 @@ public class UDFTransformer {
     OP_MAP.put("*", SqlStdOperatorTable.MULTIPLY);
     OP_MAP.put("/", SqlStdOperatorTable.DIVIDE);
     OP_MAP.put("^", SqlStdOperatorTable.POWER);
+    OP_MAP.put("from_unixtime",
+        new SqlUserDefinedFunction(new SqlIdentifier(ImmutableList.of("from_unixtime"), SqlParserPos.ZERO),
+            HiveReturnTypes.STRING, null, null, null, null));
     OP_MAP.put("hive_pattern_to_presto",
         new SqlUserDefinedFunction(new SqlIdentifier("hive_pattern_to_presto", SqlParserPos.ZERO),
             HiveReturnTypes.STRING, null, OperandTypes.STRING, null, null));
