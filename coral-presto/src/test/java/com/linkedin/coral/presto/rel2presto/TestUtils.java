@@ -6,6 +6,7 @@
 package com.linkedin.coral.presto.rel2presto;
 
 import java.io.InputStream;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -32,6 +33,7 @@ import org.apache.hadoop.hive.ql.CommandNeedRetryException;
 import org.apache.hadoop.hive.ql.Driver;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
+import org.apache.hadoop.hive.ql.processors.CommandProcessorResponse;
 import org.apache.hadoop.hive.ql.session.SessionState;
 
 import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
@@ -39,6 +41,7 @@ import com.linkedin.coral.hive.hive2rel.HiveMscAdapter;
 import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
 
 import static com.linkedin.coral.presto.rel2presto.TestTable.*;
+import static java.lang.String.format;
 
 
 public class TestUtils {
@@ -163,7 +166,10 @@ public class TestUtils {
   static void run(Driver driver, String sql) {
     while (true) {
       try {
-        driver.run(sql);
+        CommandProcessorResponse result = driver.run(sql);
+        if (result.getException() != null) {
+          throw new RuntimeException("Execution failed for: " + sql, result.getException());
+        }
       } catch (CommandNeedRetryException e) {
         continue;
       }
@@ -179,8 +185,9 @@ public class TestUtils {
     Hook.REL_BUILDER_SIMPLIFY.add(Hook.propertyJ(false));
   }
 
-  public static void initializeViews() throws HiveException, MetaException {
+  public static void initializeViews(Path metastoreDbDirectory) throws HiveException, MetaException {
     HiveConf conf = loadResourceHiveConf();
+    conf.set("javax.jdo.option.ConnectionURL", format("jdbc:derby:;databaseName=%s;create=true", metastoreDbDirectory));
     SessionState.start(conf);
     Driver driver = new Driver(conf);
     HiveMetastoreClient hiveMetastoreClient = new HiveMscAdapter(Hive.get(conf).getMSC());
