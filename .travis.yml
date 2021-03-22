@@ -23,9 +23,14 @@ branches:
 
 #Build and perform release (if needed)
 script:
-  # Print output every minute to avoid travis timeout
+
+  # 1. Print output every minute to avoid travis timeout
   - while sleep 1m; do echo "=====[ $SECONDS seconds elapsed -- still running ]====="; done &
-  - ./gradlew build -s && ./gradlew ciPerformRelease -s
-  # Killing background sleep loop
+
+  # 2. Run build (we're moving to GH Actions, this is just to compare build times Travis vs. GH Actions
+  - >
+    ./gradlew build
+
+  # 3. Killing background sleep loop
   - kill %1
 
