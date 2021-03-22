@@ -152,11 +152,16 @@ public class HiveRelConverter extends RelShuttleImpl {
       if (call.getOperator().equals(SqlStdOperatorTable.ITEM)) {
         RexNode columnRef = call.getOperands().get(0);
         RexNode itemRef = call.getOperands().get(1);
-        if (columnRef.getType() instanceof ArraySqlType && itemRef.isA(SqlKind.LITERAL)
-            && itemRef.getType().getSqlTypeName().equals(SqlTypeName.INTEGER)) {
-          Integer val = ((RexLiteral) itemRef).getValueAs(Integer.class);
-          RexLiteral newItemRef = rexBuilder.makeExactLiteral(new BigDecimal(val + 1), itemRef.getType());
-          return rexBuilder.makeCall(call.op, columnRef, newItemRef);
+        if (columnRef.getType() instanceof ArraySqlType) {
+          if (itemRef.isA(SqlKind.LITERAL) && itemRef.getType().getSqlTypeName().equals(SqlTypeName.INTEGER)) {
+            Integer val = ((RexLiteral) itemRef).getValueAs(Integer.class);
+            RexLiteral newItemRef = rexBuilder.makeExactLiteral(new BigDecimal(val + 1), itemRef.getType());
+            return rexBuilder.makeCall(call.op, columnRef, newItemRef);
+          } else {
+            RexNode oneBasedIndex =
+                rexBuilder.makeCall(SqlStdOperatorTable.PLUS, itemRef, rexBuilder.makeExactLiteral(BigDecimal.ONE));
+            return rexBuilder.makeCall(call.op, columnRef, oneBasedIndex);
+          }
         }
       }
       return call;

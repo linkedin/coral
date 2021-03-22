@@ -207,6 +207,14 @@ public class HiveToRelConverterTest {
   }
 
   @Test
+  public void testSelectArrayElemWithFunctionArgument() {
+    final String sql = "SELECT c[size(c) - 1] FROM complex";
+    final String expected = "LogicalProject(EXPR$0=[ITEM($2, +(-(CARDINALITY($2), 1), 1))])\n"
+        + "  LogicalTableScan(table=[[hive, default, complex]])\n";
+    assertEquals(relToString(sql), expected);
+  }
+
+  @Test
   public void testMapType() {
     final String sql = "SELECT map('abc', 123, 'def', 567)";
     String generated = relToString(sql);

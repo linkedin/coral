@@ -5,24 +5,36 @@
  */
 package com.linkedin.coral.presto.rel2presto;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+
 import org.apache.calcite.rel.RelNode;
-import org.apache.hadoop.hive.metastore.api.MetaException;
-import org.apache.hadoop.hive.ql.metadata.HiveException;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import static com.google.common.io.MoreFiles.deleteRecursively;
+import static com.google.common.io.RecursiveDeleteOption.ALLOW_INSECURE;
 import static org.testng.Assert.*;
 
 
 public class HiveToPrestoConverterTest {
 
+  Path metastoreDbDirectory;
   RelToPrestoConverter relToPrestoConverter;
 
   @BeforeTest
-  public void beforeClass() throws HiveException, MetaException {
-    TestUtils.initializeViews();
+  public void beforeClass() throws Exception {
+    metastoreDbDirectory = Files.createTempFile("coral-presto", "metastore.db");
+    Files.delete(metastoreDbDirectory); // it will be re-created
+    TestUtils.initializeViews(metastoreDbDirectory);
     relToPrestoConverter = new RelToPrestoConverter();
+  }
+
+  @AfterClass(alwaysRun = true)
+  public void afterClass() throws Exception {
+    deleteRecursively(metastoreDbDirectory, ALLOW_INSECURE);
   }
 
   @Test(dataProvider = "viewTestCases")
