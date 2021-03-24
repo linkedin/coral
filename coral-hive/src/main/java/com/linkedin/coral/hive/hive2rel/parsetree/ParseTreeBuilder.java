@@ -219,11 +219,11 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
       HiveFunction hiveIfFunction = functionResolver.tryResolve("if", false, null, 1);
       SqlCall ifFunctionCall = hiveIfFunction.createCall(SqlLiteral.createCharString("if", ZERO),
           ImmutableList.of(ifCondition, unnestOperand, arrOfNull), null);
-      unnestCall = HiveExplodeOperator.EXPLODE.createCall(ZERO, ifFunctionCall);
+      unnestOperand = ifFunctionCall;
     }
 
     unnestCall = HiveExplodeOperator.EXPLODE.createCall(ZERO,
-        SqlStdOperatorTable.AS.createCall(ZERO, unnestCall.operand(0), aliasOperands.get(2)));
+        SqlStdOperatorTable.AS.createCall(ZERO, unnestOperand, aliasOperands.get(2)));
     SqlNode unnestAlias =
         SqlStdOperatorTable.AS.createCall(ZERO, unnestCall, aliasOperands.get(1), aliasOperands.get(2));
     SqlNode rightSelect = new SqlSelect(ZERO, null, new SqlNodeList(ImmutableList.of(SqlIdentifier.star(ZERO)), ZERO),
