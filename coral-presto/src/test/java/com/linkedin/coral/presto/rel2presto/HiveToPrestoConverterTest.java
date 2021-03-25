@@ -16,7 +16,7 @@ import org.testng.annotations.Test;
 
 import static com.google.common.io.MoreFiles.deleteRecursively;
 import static com.google.common.io.RecursiveDeleteOption.ALLOW_INSECURE;
-import static org.testng.Assert.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 
 public class HiveToPrestoConverterTest {
@@ -41,7 +41,7 @@ public class HiveToPrestoConverterTest {
   public void testViews(String database, String view, String expectedSql) {
     RelNode relNode = TestUtils.convertView(database, view);
     String expandedSql = relToPrestoConverter.convert(relNode);
-    assertTrue(expandedSql.contains(expectedSql));
+    assertThat(expandedSql).contains(expectedSql);
   }
 
   @DataProvider(name = "viewTestCases")
