@@ -453,10 +453,13 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
       return sqlNodes.get(0);
     } else if (sqlNodes.size() == 2) {
       return new SqlBasicCall(SqlStdOperatorTable.AS, sqlNodes.toArray(new SqlNode[0]), ZERO);
-    } else if (sqlNodes.size() == 3) {
-      // lateral view alias have 3 args
-      SqlNode[] nodes = new SqlNode[] { sqlNodes.get(0), sqlNodes.get(2), sqlNodes.get(1) };
-      return new SqlBasicCall(SqlStdOperatorTable.AS, nodes, ZERO);
+    } else if (sqlNodes.size() >= 3) {
+      // lateral view alias have 3+ args
+      List<SqlNode> nodes = new ArrayList<>();
+      nodes.add(sqlNodes.get(0));
+      nodes.add(sqlNodes.get(sqlNodes.size() - 1)); // last
+      nodes.addAll(sqlNodes.subList(1, sqlNodes.size() - 1));
+      return new SqlBasicCall(SqlStdOperatorTable.AS, nodes.toArray(new SqlNode[0]), ZERO);
     } else {
       throw new UnhandledASTTokenException(node);
     }

@@ -19,7 +19,6 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
-import com.linkedin.coral.hive.hive2rel.parsetree.UnhandledASTTokenException;
 import com.linkedin.coral.spark.containers.SparkUDFInfo;
 import com.linkedin.coral.spark.exceptions.UnsupportedUDFException;
 
@@ -275,7 +274,7 @@ public class CoralSparkTest {
     CoralSpark.create(relNode);
   }
 
-  @Test(expectedExceptions = UnhandledASTTokenException.class)
+  @Test(expectedExceptions = IllegalStateException.class)
   public void testLateralViewMapNotSupported() {
     RelNode relNode = TestUtils.toRelNode(String.join("\n", "", "SELECT a, t.ccol1, t.ccol2", "FROM complex",
         "LATERAL VIEW explode(complex.m) t as ccol1, ccol2"));

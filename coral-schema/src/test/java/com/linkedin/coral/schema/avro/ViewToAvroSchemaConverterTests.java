@@ -13,7 +13,6 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
-import com.linkedin.coral.hive.hive2rel.parsetree.UnhandledASTTokenException;
 
 
 public class ViewToAvroSchemaConverterTests {
@@ -408,8 +407,8 @@ public class ViewToAvroSchemaConverterTests {
   }
 
   // Currently coral-hive does not support lateral view on map type and
-  // it throws UnhandledASTTokenException while converting it to RelNode
-  @Test(expectedExceptions = UnhandledASTTokenException.class)
+  // it throws IllegalStateException while converting it to RelNode
+  @Test(expectedExceptions = IllegalStateException.class)
   public void testLateralViewMap() {
     String viewSql = "CREATE VIEW v AS " + "SELECT bl.Id AS Id_View_Col, t.Col1, t.Col2 " + "FROM baselateralview bl "
         + "LATERAL VIEW explode(bl.Map_Col_String) t as Col1, Col2";
