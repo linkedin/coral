@@ -21,7 +21,6 @@ import org.apache.calcite.rel.core.Window;
 import org.apache.calcite.rel.rel2sql.RelToSqlConverter;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
-import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.JoinConditionType;
@@ -85,15 +84,6 @@ public class RelToPrestoConverter extends RelToSqlConverter {
     e.getVariablesSet();
     Result x = visitChild(0, e.getInput());
     parseCorrelTable(e, x);
-    // base class method will return x if isStar(). That causes problems if any of the views
-    // alias column names - returning x will make it pass through to the base table and the aliasing
-    // information is lost which causes problems.
-    // Removing isStar() check caused regression with lateral views. Removing isStar() will
-    // create SELECT x from UNNEST(..). Presto does not like SELECT around UNNEST. Hence, we return
-    // 'x' for unnest() clauses without adding select around it.
-    if (isUnnestAll(e)) {
-      return x;
-    }
 
     final Builder builder = x.builder(e, Clause.SELECT);
     final List<SqlNode> selectList = new ArrayList<>();
@@ -127,22 +117,6 @@ public class RelToPrestoConverter extends RelToSqlConverter {
 
   private SqlCall as(SqlNode e, String alias) {
     return SqlStdOperatorTable.AS.createCall(POS, e, new SqlIdentifier(alias, POS));
-  }
-
-  private boolean isUnnestAll(Project project) {
-    final List<RexNode> projExps = project.getChildExps();
-
-    if (projExps.size() != project.getInput().getRowType().getFieldCount()
-        || !(project.getInput() instanceof Uncollect)) {
-      return false;
-    }
-
-    for (int i = 0; i < projExps.size(); i++) {
-      if (!(projExps.get(i) instanceof RexInputRef) || ((RexInputRef) projExps.get(i)).getIndex() != i) {
-        return false;
-      }
-    }
-    return true;
   }
 
   public Result visit(Uncollect e) {
@@ -219,6 +193,7 @@ public class RelToPrestoConverter extends RelToSqlConverter {
     parseCorrelTable(e, leftResult);
     final Result rightResult = visitChild(1, e.getRight());
     SqlNode rightLateral = rightResult.node;
+    rightLateral = SqlStdOperatorTable.LATERAL.createCall(POS, rightLateral);
     if (rightLateral.getKind() != SqlKind.AS) {
       rightLateral =
           SqlStdOperatorTable.AS.createCall(POS, rightLateral, new SqlIdentifier(rightResult.neededAlias, POS));
