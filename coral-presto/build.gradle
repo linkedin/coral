@@ -5,6 +5,7 @@ dependencies {
   compile deps.'javax-annotation'
   compile project(path: ':coral-hive')
 
+  testCompile deps.'assertj'
   testCompile deps.'presto-parser'
 
   testCompile(deps.'hive'.'hive-exec-core') {
