@@ -256,6 +256,12 @@ public class TestUtils {
     run(driver,
         "ALTER TABLE test.tableN CHANGE COLUMN b b struct<b1:string, m1:map<string, struct<b1:string, a1:array<struct<b0:string, b1:string>>>>>");
 
+    run(driver, "CREATE TABLE test.table_with_string_array(a int, b array<string>)");
+    run(driver,
+        "CREATE VIEW test.view_with_explode_string_array AS SELECT a, c FROM test.table_with_string_array LATERAL VIEW EXPLODE(b) t AS c");
+    run(driver,
+        "CREATE VIEW test.view_with_outer_explode_string_array AS SELECT a, c FROM test.table_with_string_array LATERAL VIEW OUTER EXPLODE(b) t AS c");
+
     run(driver, "CREATE VIEW IF NOT EXISTS test.current_date_and_timestamp_view AS \n"
         + "SELECT CURRENT_TIMESTAMP, trim(cast(CURRENT_TIMESTAMP as string)) as ct, CURRENT_DATE, CURRENT_DATE as cd, a from test.tableA");
     run(driver, "CREATE VIEW IF NOT EXISTS test.get_json_object_view AS \n"

@@ -92,6 +92,14 @@ public class HiveToPrestoConverterTest {
             + "SELECT \"a\", CAST(row(b.b1, transform_values(b.m1, (k, v) -> cast(row(v.b1, transform(v.a1, x -> cast(row(x.b1) as row(b1 varchar)))) as row(b1 varchar, a1 array(row(b1 varchar)))))) as row(b1 varchar, m1 map(varchar, row(b1 varchar, a1 array(row(b1 varchar)))))) AS \"b\"\nFROM \"test\".\"tablen\"\nUNION ALL\n"
             + "SELECT \"a\", \"b\"\n" + "FROM \"test\".\"tableo\")" },
 
+        { "test", "view_with_explode_string_array", "SELECT \"$cor0\".\"a\" AS \"a\", \"t48\".\"c\" AS \"c\"\n"
+            + "FROM \"test\".\"table_with_string_array\" AS \"$cor0\"\n"
+            + "CROSS JOIN UNNEST(\"$cor0\".\"b\") AS \"t48\" (\"c\")" },
+
+        { "test", "view_with_outer_explode_string_array", "SELECT \"$cor1\".\"a\" AS \"a\", \"t51\".\"c\" AS \"c\"\n"
+            + "FROM \"test\".\"table_with_string_array\" AS \"$cor1\"\n"
+            + "CROSS JOIN UNNEST(\"if\"(\"$cor1\".\"b\" IS NOT NULL AND CARDINALITY(\"$cor1\".\"b\") > 0, \"$cor1\".\"b\", ARRAY[NULL])) AS \"t51\" (\"c\")" },
+
         { "test", "current_date_and_timestamp_view", "SELECT CURRENT_TIMESTAMP, TRIM(CAST(CURRENT_TIMESTAMP AS VARCHAR(65535))) AS \"ct\", CURRENT_DATE, CURRENT_DATE AS \"cd\", \"a\"\nFROM \"test\".\"tablea\"" },
 
         { "test", "get_json_object_view", "SELECT \"json_extract\"(\"b\".\"b1\", '$.name')\nFROM \"test\".\"tablea\"" } };
