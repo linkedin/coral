@@ -43,6 +43,8 @@ import com.linkedin.coral.hive.hive2rel.functions.HiveExplodeOperator;
 import com.linkedin.coral.hive.hive2rel.functions.HiveFunction;
 import com.linkedin.coral.hive.hive2rel.functions.HiveFunctionRegistry;
 import com.linkedin.coral.hive.hive2rel.functions.HiveFunctionResolver;
+import com.linkedin.coral.hive.hive2rel.functions.HiveJsonTupleOperator;
+import com.linkedin.coral.hive.hive2rel.functions.HiveRLikeOperator;
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 import com.linkedin.coral.hive.hive2rel.parsetree.parser.ASTNode;
 import com.linkedin.coral.hive.hive2rel.parsetree.parser.CoralParseDriver;
@@ -50,8 +52,9 @@ import com.linkedin.coral.hive.hive2rel.parsetree.parser.Node;
 import com.linkedin.coral.hive.hive2rel.parsetree.parser.ParseDriver;
 import com.linkedin.coral.hive.hive2rel.parsetree.parser.ParseException;
 
-import static com.google.common.base.Preconditions.*;
-import static org.apache.calcite.sql.parser.SqlParserPos.*;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+import static org.apache.calcite.sql.parser.SqlParserPos.ZERO;
 
 
 /**
@@ -196,13 +199,21 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     checkState(sqlNodes.size() == 2 && sqlNodes.get(0) instanceof SqlNodeList);
 
     // rightNode is AS.createCall(unnest, t, col)
-    SqlNode rightNode = ((SqlNodeList) sqlNodes.get(0)).get(0);
+    SqlNode rightNode = Iterables.getOnlyElement((SqlNodeList) sqlNodes.get(0));
     checkState(rightNode instanceof SqlCall);
     SqlCall aliasCall = (SqlCall) rightNode;
     checkState(aliasCall.getOperator() instanceof SqlAsOperator);
     List<SqlNode> aliasOperands = aliasCall.getOperandList();
-    checkState(aliasOperands.size() == 3 && aliasOperands.get(0) instanceof SqlCall);
-    SqlCall unnestCall = (SqlCall) aliasOperands.get(0);
+    checkState(aliasOperands.get(0) instanceof SqlCall);
+    SqlCall tableFunctionCall = (SqlCall) aliasOperands.get(0);
+
+    if (tableFunctionCall.getOperator() instanceof HiveJsonTupleOperator) {
+      return visitLateralViewJsonTuple(sqlNodes, aliasOperands, tableFunctionCall);
+    }
+
+    checkState(aliasOperands.size() == 3);
+    // TODO The code below assumes LATERAL VIEW is used with UNNEST EXPLODE only. It should be made more generic.
+    SqlCall unnestCall = tableFunctionCall;
     SqlNode unnestOperand = unnestCall.operand(0);
     // colNode is the column name in aliased table relation
     SqlNode colNode = aliasCall.operand(2);
@@ -232,6 +243,64 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     aliasCall = SqlStdOperatorTable.AS.createCall(ZERO, lateralCall, aliasOperands.get(1), aliasOperands.get(2));
     SqlNode joinNode = new SqlJoin(ZERO, sqlNodes.get(1), SqlLiteral.createBoolean(false, ZERO),
         JoinType.COMMA.symbol(ZERO), aliasCall/*lateralCall*/, JoinConditionType.NONE.symbol(ZERO), null);
+    return joinNode;
+  }
+
+  private SqlNode visitLateralViewJsonTuple(List<SqlNode> sqlNodes, List<SqlNode> aliasOperands, SqlCall sqlCall) {
+    /*
+     Represent
+        LATERAL VIEW json_tuple(json, p1, p2) jt AS a, b
+     as
+        LATERAL (
+          SELECT
+            IF(p1 is supported JSON key, get_json_object(json, '$["${p1}"]'), NULL) a,
+            IF(p2 is supported JSON key, get_json_object(json, '$["${p1}"]'), NULL) b
+        ) AS jt(a, b)
+     TODO the relation alias `jt` is being lost by downstream transformations
+     */
+
+    HiveFunction getJsonObjectFunction = functionResolver.tryResolve("get_json_object", false, null, 2);
+    HiveFunction ifFunction = functionResolver.tryResolve("if", false, null, 3);
+
+    List<SqlNode> jsonTupleOperands = sqlCall.getOperandList();
+    SqlNode jsonInput = jsonTupleOperands.get(0);
+
+    List<SqlNode> projections = new ArrayList<>();
+    for (int jsonKeyPosition = 0; jsonKeyPosition < jsonTupleOperands.size() - 1; jsonKeyPosition++) {
+      SqlNode jsonKey = jsonTupleOperands.get(1 + jsonKeyPosition);
+      SqlNode keyAlias = aliasOperands.get(2 + jsonKeyPosition);
+
+      // '$["jsonKey"]'
+      SqlCall jsonPath = SqlStdOperatorTable.CONCAT.createCall(ZERO,
+          SqlStdOperatorTable.CONCAT.createCall(ZERO, SqlLiteral.createCharString("$[\"", ZERO), jsonKey),
+          SqlLiteral.createCharString("\"]", ZERO));
+
+      SqlCall getJsonObjectCall = getJsonObjectFunction.createCall(
+          SqlLiteral.createCharString(getJsonObjectFunction.getHiveFunctionName(), ZERO),
+          ImmutableList.of(jsonInput, jsonPath), null);
+      // TODO Hive get_json_object returns a string, but currently is mapped in Trino to json_extract which returns a json. Once fixed, remove the CAST
+      SqlCall castToString = SqlStdOperatorTable.CAST.createCall(ZERO, getJsonObjectCall,
+          // TODO This results in CAST to VARCHAR(65535), which may be too short, but there seems to be no way to avoid that.
+          //  even `new SqlDataTypeSpec(new SqlBasicTypeNameSpec(SqlTypeName.VARCHAR, Integer.MAX_VALUE - 1, ZERO), ZERO)` results in a limited VARCHAR precision.
+          createBasicTypeSpec(SqlTypeName.VARCHAR));
+      // TODO support jsonKey containing a quotation mark (") or backslash (\)
+      SqlCall ifCondition =
+          HiveRLikeOperator.RLIKE.createCall(ZERO, jsonKey, SqlLiteral.createCharString("^[^\\\"]*$", ZERO));
+      SqlCall ifFunctionCall =
+          ifFunction.createCall(SqlLiteral.createCharString(ifFunction.getHiveFunctionName(), ZERO),
+              ImmutableList.of(ifCondition, castToString, SqlLiteral.createNull(ZERO)), null);
+      SqlNode projection = ifFunctionCall;
+      // Currently only explicit aliasing is supported. Implicit alias would be c0, c1, etc.
+      projections.add(SqlStdOperatorTable.AS.createCall(ZERO, projection, keyAlias));
+    }
+
+    SqlNode select =
+        new SqlSelect(ZERO, null, new SqlNodeList(projections, ZERO), null, null, null, null, null, null, null, null);
+    SqlNode lateral = SqlStdOperatorTable.LATERAL.createCall(ZERO, select);
+    SqlCall lateralAlias = SqlStdOperatorTable.AS.createCall(ZERO,
+        ImmutableList.<SqlNode> builder().add(lateral).addAll(aliasOperands.subList(1, aliasOperands.size())).build());
+    SqlNode joinNode = new SqlJoin(ZERO, sqlNodes.get(1), SqlLiteral.createBoolean(false, ZERO),
+        JoinType.COMMA.symbol(ZERO), lateralAlias, JoinConditionType.NONE.symbol(ZERO), null);
     return joinNode;
   }
 
@@ -453,10 +522,13 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
       return sqlNodes.get(0);
     } else if (sqlNodes.size() == 2) {
       return new SqlBasicCall(SqlStdOperatorTable.AS, sqlNodes.toArray(new SqlNode[0]), ZERO);
-    } else if (sqlNodes.size() == 3) {
-      // lateral view alias have 3 args
-      SqlNode[] nodes = new SqlNode[] { sqlNodes.get(0), sqlNodes.get(2), sqlNodes.get(1) };
-      return new SqlBasicCall(SqlStdOperatorTable.AS, nodes, ZERO);
+    } else if (sqlNodes.size() >= 3) {
+      // lateral view alias have 3+ args
+      List<SqlNode> nodes = new ArrayList<>();
+      nodes.add(sqlNodes.get(0));
+      nodes.add(sqlNodes.get(sqlNodes.size() - 1)); // last
+      nodes.addAll(sqlNodes.subList(1, sqlNodes.size() - 1));
+      return new SqlBasicCall(SqlStdOperatorTable.AS, nodes.toArray(new SqlNode[0]), ZERO);
     } else {
       throw new UnhandledASTTokenException(node);
     }

@@ -92,15 +92,29 @@ public class HiveToPrestoConverterTest {
             + "SELECT \"a\", CAST(row(b.b1, transform_values(b.m1, (k, v) -> cast(row(v.b1, transform(v.a1, x -> cast(row(x.b1) as row(b1 varchar)))) as row(b1 varchar, a1 array(row(b1 varchar)))))) as row(b1 varchar, m1 map(varchar, row(b1 varchar, a1 array(row(b1 varchar)))))) AS \"b\"\nFROM \"test\".\"tablen\"\nUNION ALL\n"
             + "SELECT \"a\", \"b\"\n" + "FROM \"test\".\"tableo\")" },
 
-        { "test", "view_with_explode_string_array", "SELECT \"$cor0\".\"a\" AS \"a\", \"t48\".\"c\" AS \"c\"\n"
+        { "test", "view_with_explode_string_array", "SELECT \"$cor0\".\"a\" AS \"a\", \"t49\".\"c\" AS \"c\"\n"
             + "FROM \"test\".\"table_with_string_array\" AS \"$cor0\"\n"
-            + "CROSS JOIN UNNEST(\"$cor0\".\"b\") AS \"t48\" (\"c\")" },
+            + "CROSS JOIN LATERAL (SELECT \"c\"\nFROM UNNEST(\"$cor0\".\"b\") AS \"t48\" (\"c\")) AS \"t49\"" },
 
-        { "test", "view_with_outer_explode_string_array", "SELECT \"$cor1\".\"a\" AS \"a\", \"t51\".\"c\" AS \"c\"\n"
+        { "test", "view_with_outer_explode_string_array", "SELECT \"$cor1\".\"a\" AS \"a\", \"t53\".\"c\" AS \"c\"\n"
             + "FROM \"test\".\"table_with_string_array\" AS \"$cor1\"\n"
-            + "CROSS JOIN UNNEST(\"if\"(\"$cor1\".\"b\" IS NOT NULL AND CARDINALITY(\"$cor1\".\"b\") > 0, \"$cor1\".\"b\", ARRAY[NULL])) AS \"t51\" (\"c\")" },
+            + "CROSS JOIN LATERAL (SELECT \"c\"\nFROM UNNEST(\"if\"(\"$cor1\".\"b\" IS NOT NULL AND CARDINALITY(\"$cor1\".\"b\") > 0, \"$cor1\".\"b\", ARRAY[NULL])) AS \"t52\" (\"c\")) AS \"t53\"" },
 
         { "test", "current_date_and_timestamp_view", "SELECT CURRENT_TIMESTAMP, TRIM(CAST(CURRENT_TIMESTAMP AS VARCHAR(65535))) AS \"ct\", CURRENT_DATE, CURRENT_DATE AS \"cd\", \"a\"\nFROM \"test\".\"tablea\"" },
+
+        { "test", "lateral_view_json_tuple_view", "SELECT \"$cor4\".\"a\" AS \"a\", \"t57\".\"d\" AS \"d\", \"t57\".\"e\" AS \"e\", \"t57\".\"f\" AS \"f\"\n"
+            + "FROM \"test\".\"tablea\" AS \"$cor4\"\nCROSS JOIN LATERAL (SELECT "
+            + "\"if\"(\"REGEXP_LIKE\"('trino', '^[^\\\"]*$'), CAST(\"json_extract\"(\"$cor4\".\"b\".\"b1\", '$[\"' || 'trino' || '\"]') AS VARCHAR(65535)), NULL) AS \"d\", "
+            + "\"if\"(\"REGEXP_LIKE\"('always', '^[^\\\"]*$'), CAST(\"json_extract\"(\"$cor4\".\"b\".\"b1\", '$[\"' || 'always' || '\"]') AS VARCHAR(65535)), NULL) AS \"e\", "
+            + "\"if\"(\"REGEXP_LIKE\"('rocks', '^[^\\\"]*$'), CAST(\"json_extract\"(\"$cor4\".\"b\".\"b1\", '$[\"' || 'rocks' || '\"]') AS VARCHAR(65535)), NULL) AS \"f\"\n"
+            + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")) AS \"t57\"" },
+
+        { "test", "lateral_view_json_tuple_view_qualified", "SELECT \"$cor7\".\"a\" AS \"a\", \"t60\".\"d\" AS \"d\", \"t60\".\"e\" AS \"e\", \"t60\".\"f\" AS \"f\"\n"
+            + "FROM \"test\".\"tablea\" AS \"$cor7\"\nCROSS JOIN LATERAL (SELECT "
+            + "\"if\"(\"REGEXP_LIKE\"('trino', '^[^\\\"]*$'), CAST(\"json_extract\"(\"$cor7\".\"b\".\"b1\", '$[\"' || 'trino' || '\"]') AS VARCHAR(65535)), NULL) AS \"d\", "
+            + "\"if\"(\"REGEXP_LIKE\"('always', '^[^\\\"]*$'), CAST(\"json_extract\"(\"$cor7\".\"b\".\"b1\", '$[\"' || 'always' || '\"]') AS VARCHAR(65535)), NULL) AS \"e\", "
+            + "\"if\"(\"REGEXP_LIKE\"('rocks', '^[^\\\"]*$'), CAST(\"json_extract\"(\"$cor7\".\"b\".\"b1\", '$[\"' || 'rocks' || '\"]') AS VARCHAR(65535)), NULL) AS \"f\"\n"
+            + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")) AS \"t60\"" },
 
         { "test", "get_json_object_view", "SELECT \"json_extract\"(\"b\".\"b1\", '$.name')\nFROM \"test\".\"tablea\"" } };
   }
