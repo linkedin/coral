@@ -54,6 +54,7 @@ import com.linkedin.coral.hive.hive2rel.parsetree.parser.ParseException;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static java.lang.String.format;
 import static org.apache.calcite.sql.parser.SqlParserPos.ZERO;
 
 
@@ -200,9 +201,10 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
 
     // rightNode is AS.createCall(unnest, t, col)
     SqlNode rightNode = Iterables.getOnlyElement((SqlNodeList) sqlNodes.get(0));
-    checkState(rightNode instanceof SqlCall);
+    if (!(rightNode instanceof SqlCall) || !(((SqlCall) rightNode).getOperator() instanceof SqlAsOperator)) {
+      throw new UnsupportedOperationException(format("Unsupported LATERAL VIEW without AS: %s", rightNode));
+    }
     SqlCall aliasCall = (SqlCall) rightNode;
-    checkState(aliasCall.getOperator() instanceof SqlAsOperator);
     List<SqlNode> aliasOperands = aliasCall.getOperandList();
     checkState(aliasOperands.get(0) instanceof SqlCall);
     SqlCall tableFunctionCall = (SqlCall) aliasOperands.get(0);
