@@ -40,80 +40,82 @@ public class HiveToPrestoConverterTest {
     RelNode relNode = TestUtils.convertView(database, view);
     RelToPrestoConverter relToPrestoConverter = new RelToPrestoConverter();
     String expandedSql = relToPrestoConverter.convert(relNode);
-    assertThat(expandedSql).contains(expectedSql);
+    assertThat(expandedSql).isEqualTo(expectedSql);
   }
 
   @DataProvider(name = "viewTestCases")
   public Object[][] viewTestCasesProvider() {
-    return new Object[][] { { "test", "fuzzy_union_view", "SELECT \"a\", \"b\"\nFROM ("
-        + "SELECT \"a\", \"b\"\nFROM \"test\".\"tablea\"\nUNION ALL\n"
-        + "SELECT \"a\", \"b\"\nFROM \"test\".\"tablea\")" },
+    return new Object[][] {
+
+        { "test", "fuzzy_union_view", "SELECT \"a\", \"b\"\nFROM ("
+            + "SELECT \"a\", \"b\"\nFROM \"test\".\"tablea\"\nUNION ALL\n"
+            + "SELECT \"a\", \"b\"\nFROM \"test\".\"tablea\") AS \"t1\"" },
 
         { "test", "fuzzy_union_view_with_more_than_two_tables", "SELECT \"a\", \"b\"\nFROM (SELECT *\nFROM ("
             + "SELECT \"a\", \"b\"\nFROM \"test\".\"tablea\"\nUNION ALL\n"
             + "SELECT \"a\", \"b\"\nFROM \"test\".\"tablea\")\nUNION ALL\n"
-            + "SELECT \"a\", \"b\"\nFROM \"test\".\"tablea\")" },
+            + "SELECT \"a\", \"b\"\nFROM \"test\".\"tablea\") AS \"t3\"" },
 
         { "test", "fuzzy_union_view_with_alias", "SELECT \"a\", \"b\"\nFROM ("
             + "SELECT \"a\", \"b\"\nFROM \"test\".\"tablea\"\nUNION ALL\n"
-            + "SELECT \"a\", \"b\"\nFROM \"test\".\"tablea\")" },
+            + "SELECT \"a\", \"b\"\nFROM \"test\".\"tablea\") AS \"t1\"" },
 
         { "test", "fuzzy_union_view_single_branch_evolved", "SELECT \"a\", \"b\"\nFROM ("
             + "SELECT \"a\", \"b\"\nFROM \"test\".\"tableb\"\nUNION ALL\n"
-            + "SELECT \"a\", CAST(row(b.b1) as row(b1 varchar)) AS \"b\"\nFROM \"test\".\"tablec\")" },
+            + "SELECT \"a\", CAST(row(b.b1) as row(b1 varchar)) AS \"b\"\nFROM \"test\".\"tablec\") AS \"t1\"" },
 
         { "test", "fuzzy_union_view_double_branch_evolved_same", "SELECT \"a\", \"b\"\nFROM ("
             + "SELECT \"a\", CAST(row(b.b1) as row(b1 varchar)) AS \"b\"\nFROM \"test\".\"tabled\"\nUNION ALL\n"
-            + "SELECT \"a\", CAST(row(b.b1) as row(b1 varchar)) AS \"b\"\nFROM \"test\".\"tablee\")" },
+            + "SELECT \"a\", CAST(row(b.b1) as row(b1 varchar)) AS \"b\"\nFROM \"test\".\"tablee\") AS \"t1\"" },
 
         { "test", "fuzzy_union_view_double_branch_evolved_different", "SELECT \"a\", \"b\"\nFROM ("
             + "SELECT \"a\", CAST(row(b.b1) as row(b1 varchar)) AS \"b\"\nFROM \"test\".\"tablef\"\nUNION ALL\n"
-            + "SELECT \"a\", CAST(row(b.b1) as row(b1 varchar)) AS \"b\"\nFROM \"test\".\"tableg\")" },
+            + "SELECT \"a\", CAST(row(b.b1) as row(b1 varchar)) AS \"b\"\nFROM \"test\".\"tableg\") AS \"t1\"" },
 
         { "test", "fuzzy_union_view_more_than_two_branches_evolved", "SELECT \"a\", \"b\"\nFROM (SELECT *\nFROM ("
             + "SELECT \"a\", CAST(row(b.b1) as row(b1 varchar)) AS \"b\"\nFROM \"test\".\"tablef\"\nUNION ALL\n"
             + "SELECT \"a\", CAST(row(b.b1) as row(b1 varchar)) AS \"b\"\nFROM \"test\".\"tableg\")\nUNION ALL\n"
-            + "SELECT \"a\", CAST(row(b.b1) as row(b1 varchar)) AS \"b\"\nFROM \"test\".\"tablef\")" },
+            + "SELECT \"a\", CAST(row(b.b1) as row(b1 varchar)) AS \"b\"\nFROM \"test\".\"tablef\") AS \"t3\"" },
 
         { "test", "fuzzy_union_view_map_with_struct_value_evolved", "SELECT \"a\", \"b\"\nFROM ("
             + "SELECT \"a\", TRANSFORM_VALUES(b, (k, v) -> cast(row(v.b1) as row(b1 varchar))) AS \"b\"\nFROM \"test\".\"tableh\"\nUNION ALL\n"
-            + "SELECT \"a\", \"b\"\nFROM \"test\".\"tablei\")" },
+            + "SELECT \"a\", \"b\"\nFROM \"test\".\"tablei\") AS \"t1\"" },
 
         { "test", "fuzzy_union_view_array_with_struct_value_evolved", "SELECT \"a\", \"b\"\nFROM ("
             + "SELECT \"a\", TRANSFORM(b, x -> cast(row(x.b1) as row(b1 varchar))) AS \"b\"\nFROM \"test\".\"tablej\"\nUNION ALL\n"
-            + "SELECT \"a\", \"b\"\nFROM \"test\".\"tablek\")" },
+            + "SELECT \"a\", \"b\"\nFROM \"test\".\"tablek\") AS \"t1\"" },
 
         { "test", "fuzzy_union_view_deeply_nested_struct_evolved", "" + "SELECT \"a\", \"b\"\nFROM ("
             + "SELECT \"a\", CAST(row(b.b1, cast(row(b.b2.b3, cast(row(b.b2.b4.b5) as row(b5 varchar))) as row(b3 varchar, b4 row(b5 varchar)))) as row(b1 varchar, b2 row(b3 varchar, b4 row(b5 varchar)))) AS \"b\"\nFROM \"test\".\"tablel\"\nUNION ALL\n"
-            + "SELECT \"a\", \"b\"\n" + "FROM \"test\".\"tablem\")" },
+            + "SELECT \"a\", \"b\"\n" + "FROM \"test\".\"tablem\") AS \"t1\"" },
 
         { "test", "fuzzy_union_view_deeply_nested_complex_struct_evolved", "" + "SELECT \"a\", \"b\"\nFROM ("
             + "SELECT \"a\", CAST(row(b.b1, transform_values(b.m1, (k, v) -> cast(row(v.b1, transform(v.a1, x -> cast(row(x.b1) as row(b1 varchar)))) as row(b1 varchar, a1 array(row(b1 varchar)))))) as row(b1 varchar, m1 map(varchar, row(b1 varchar, a1 array(row(b1 varchar)))))) AS \"b\"\nFROM \"test\".\"tablen\"\nUNION ALL\n"
-            + "SELECT \"a\", \"b\"\n" + "FROM \"test\".\"tableo\")" },
+            + "SELECT \"a\", \"b\"\n" + "FROM \"test\".\"tableo\") AS \"t1\"" },
 
-        { "test", "view_with_explode_string_array", "SELECT \"$cor0\".\"a\" AS \"a\", \"t49\".\"c\" AS \"c\"\n"
+        { "test", "view_with_explode_string_array", "SELECT \"$cor0\".\"a\" AS \"a\", \"t1\".\"c\" AS \"c\"\n"
             + "FROM \"test\".\"table_with_string_array\" AS \"$cor0\"\n"
-            + "CROSS JOIN LATERAL (SELECT \"c\"\nFROM UNNEST(\"$cor0\".\"b\") AS \"t48\" (\"c\")) AS \"t49\"" },
+            + "CROSS JOIN LATERAL (SELECT \"c\"\nFROM UNNEST(\"$cor0\".\"b\") AS \"t0\" (\"c\")) AS \"t1\"" },
 
-        { "test", "view_with_outer_explode_string_array", "SELECT \"$cor1\".\"a\" AS \"a\", \"t53\".\"c\" AS \"c\"\n"
+        { "test", "view_with_outer_explode_string_array", "SELECT \"$cor1\".\"a\" AS \"a\", \"t1\".\"c\" AS \"c\"\n"
             + "FROM \"test\".\"table_with_string_array\" AS \"$cor1\"\n"
-            + "CROSS JOIN LATERAL (SELECT \"c\"\nFROM UNNEST(\"if\"(\"$cor1\".\"b\" IS NOT NULL AND CARDINALITY(\"$cor1\".\"b\") > 0, \"$cor1\".\"b\", ARRAY[NULL])) AS \"t52\" (\"c\")) AS \"t53\"" },
+            + "CROSS JOIN LATERAL (SELECT \"c\"\nFROM UNNEST(\"if\"(\"$cor1\".\"b\" IS NOT NULL AND CARDINALITY(\"$cor1\".\"b\") > 0, \"$cor1\".\"b\", ARRAY[NULL])) AS \"t0\" (\"c\")) AS \"t1\"" },
 
         { "test", "current_date_and_timestamp_view", "SELECT CURRENT_TIMESTAMP, TRIM(CAST(CURRENT_TIMESTAMP AS VARCHAR(65535))) AS \"ct\", CURRENT_DATE, CURRENT_DATE AS \"cd\", \"a\"\nFROM \"test\".\"tablea\"" },
 
-        { "test", "lateral_view_json_tuple_view", "SELECT \"$cor4\".\"a\" AS \"a\", \"t57\".\"d\" AS \"d\", \"t57\".\"e\" AS \"e\", \"t57\".\"f\" AS \"f\"\n"
+        { "test", "lateral_view_json_tuple_view", "SELECT \"$cor4\".\"a\" AS \"a\", \"t0\".\"d\" AS \"d\", \"t0\".\"e\" AS \"e\", \"t0\".\"f\" AS \"f\"\n"
             + "FROM \"test\".\"tablea\" AS \"$cor4\"\nCROSS JOIN LATERAL (SELECT "
             + "\"if\"(\"REGEXP_LIKE\"('trino', '^[^\\\"]*$'), CAST(\"json_extract\"(\"$cor4\".\"b\".\"b1\", '$[\"' || 'trino' || '\"]') AS VARCHAR(65535)), NULL) AS \"d\", "
             + "\"if\"(\"REGEXP_LIKE\"('always', '^[^\\\"]*$'), CAST(\"json_extract\"(\"$cor4\".\"b\".\"b1\", '$[\"' || 'always' || '\"]') AS VARCHAR(65535)), NULL) AS \"e\", "
             + "\"if\"(\"REGEXP_LIKE\"('rocks', '^[^\\\"]*$'), CAST(\"json_extract\"(\"$cor4\".\"b\".\"b1\", '$[\"' || 'rocks' || '\"]') AS VARCHAR(65535)), NULL) AS \"f\"\n"
-            + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")) AS \"t57\"" },
+            + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")) AS \"t0\"" },
 
-        { "test", "lateral_view_json_tuple_view_qualified", "SELECT \"$cor7\".\"a\" AS \"a\", \"t60\".\"d\" AS \"d\", \"t60\".\"e\" AS \"e\", \"t60\".\"f\" AS \"f\"\n"
+        { "test", "lateral_view_json_tuple_view_qualified", "SELECT \"$cor7\".\"a\" AS \"a\", \"t0\".\"d\" AS \"d\", \"t0\".\"e\" AS \"e\", \"t0\".\"f\" AS \"f\"\n"
             + "FROM \"test\".\"tablea\" AS \"$cor7\"\nCROSS JOIN LATERAL (SELECT "
             + "\"if\"(\"REGEXP_LIKE\"('trino', '^[^\\\"]*$'), CAST(\"json_extract\"(\"$cor7\".\"b\".\"b1\", '$[\"' || 'trino' || '\"]') AS VARCHAR(65535)), NULL) AS \"d\", "
             + "\"if\"(\"REGEXP_LIKE\"('always', '^[^\\\"]*$'), CAST(\"json_extract\"(\"$cor7\".\"b\".\"b1\", '$[\"' || 'always' || '\"]') AS VARCHAR(65535)), NULL) AS \"e\", "
             + "\"if\"(\"REGEXP_LIKE\"('rocks', '^[^\\\"]*$'), CAST(\"json_extract\"(\"$cor7\".\"b\".\"b1\", '$[\"' || 'rocks' || '\"]') AS VARCHAR(65535)), NULL) AS \"f\"\n"
-            + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")) AS \"t60\"" },
+            + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")) AS \"t0\"" },
 
         { "test", "get_json_object_view", "SELECT \"json_extract\"(\"b\".\"b1\", '$.name')\nFROM \"test\".\"tablea\"" } };
   }
