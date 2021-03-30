@@ -209,16 +209,23 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     checkState(aliasOperands.get(0) instanceof SqlCall);
     SqlCall tableFunctionCall = (SqlCall) aliasOperands.get(0);
 
+    if (tableFunctionCall.getOperator() instanceof HiveExplodeOperator) {
+      return visitLateralViewExplode(sqlNodes, aliasOperands, tableFunctionCall, isOuter);
+    }
+
     if (tableFunctionCall.getOperator() instanceof HiveJsonTupleOperator) {
       return visitLateralViewJsonTuple(sqlNodes, aliasOperands, tableFunctionCall);
     }
 
+    throw new UnsupportedOperationException(format("Unsupported LATERAL VIEW operator: %s", tableFunctionCall));
+  }
+
+  private SqlNode visitLateralViewExplode(List<SqlNode> sqlNodes, List<SqlNode> aliasOperands,
+      SqlCall tableFunctionCall, boolean isOuter) {
     checkState(aliasOperands.size() == 3);
     // TODO The code below assumes LATERAL VIEW is used with UNNEST EXPLODE only. It should be made more generic.
     SqlCall unnestCall = tableFunctionCall;
     SqlNode unnestOperand = unnestCall.operand(0);
-    // colNode is the column name in aliased table relation
-    SqlNode colNode = aliasCall.operand(2);
 
     if (isOuter) {
       // transforms unnest(b) to unnest( if(b is null or cardinality(b) = 0, [null], b))
@@ -242,7 +249,8 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     SqlNode rightSelect = new SqlSelect(ZERO, null, new SqlNodeList(ImmutableList.of(SqlIdentifier.star(ZERO)), ZERO),
         unnestAlias, null, null, null, null, null, null, null);
     SqlNode lateralCall = SqlStdOperatorTable.LATERAL.createCall(ZERO, rightSelect);
-    aliasCall = SqlStdOperatorTable.AS.createCall(ZERO, lateralCall, aliasOperands.get(1), aliasOperands.get(2));
+    SqlCall aliasCall =
+        SqlStdOperatorTable.AS.createCall(ZERO, lateralCall, aliasOperands.get(1), aliasOperands.get(2));
     SqlNode joinNode = new SqlJoin(ZERO, sqlNodes.get(1), SqlLiteral.createBoolean(false, ZERO),
         JoinType.COMMA.symbol(ZERO), aliasCall/*lateralCall*/, JoinConditionType.NONE.symbol(ZERO), null);
     return joinNode;
