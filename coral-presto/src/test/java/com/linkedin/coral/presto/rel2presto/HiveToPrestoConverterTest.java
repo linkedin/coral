@@ -22,14 +22,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class HiveToPrestoConverterTest {
 
   Path metastoreDbDirectory;
-  RelToPrestoConverter relToPrestoConverter;
 
   @BeforeTest
   public void beforeClass() throws Exception {
     metastoreDbDirectory = Files.createTempFile("coral-presto", "metastore.db");
     Files.delete(metastoreDbDirectory); // it will be re-created
     TestUtils.initializeViews(metastoreDbDirectory);
-    relToPrestoConverter = new RelToPrestoConverter();
   }
 
   @AfterClass(alwaysRun = true)
@@ -40,6 +38,7 @@ public class HiveToPrestoConverterTest {
   @Test(dataProvider = "viewTestCases")
   public void testViews(String database, String view, String expectedSql) {
     RelNode relNode = TestUtils.convertView(database, view);
+    RelToPrestoConverter relToPrestoConverter = new RelToPrestoConverter();
     String expandedSql = relToPrestoConverter.convert(relNode);
     assertThat(expandedSql).contains(expectedSql);
   }
