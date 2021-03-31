@@ -73,8 +73,8 @@ publishing {
           system = 'GitHub issues'
         }
         ciManagement {
-          url = 'https://travis-ci.com/linkedin/coral'
-          system = 'Travis CI'
+          url = 'https://github.com/linkedin/coral/actions'
+          system = 'GitHub Actions'
         }
       }
     }
