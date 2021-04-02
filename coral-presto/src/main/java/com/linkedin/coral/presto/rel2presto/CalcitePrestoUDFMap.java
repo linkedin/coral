@@ -18,6 +18,7 @@ import com.linkedin.coral.com.google.common.collect.ImmutableMultimap;
 import com.linkedin.coral.hive.hive2rel.functions.HiveFunction;
 import com.linkedin.coral.hive.hive2rel.functions.HiveRLikeOperator;
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
+import com.linkedin.coral.presto.rel2presto.functions.PrestoCardinalityFunction;
 import com.linkedin.coral.presto.rel2presto.functions.PrestoElementAtFunction;
 
 import static com.linkedin.coral.presto.rel2presto.UDFMapUtils.*;
@@ -34,6 +35,7 @@ public class CalcitePrestoUDFMap {
     createUDFMapEntry(UDF_MAP, hiveToCalciteOp("nvl"), 2, "coalesce");
     // Array and map functions
     createUDFMapEntry(UDF_MAP, SqlStdOperatorTable.ITEM, 2, PrestoElementAtFunction.INSTANCE);
+    createUDFMapEntry(UDF_MAP, SqlStdOperatorTable.CARDINALITY, 1, PrestoCardinalityFunction.INSTANCE);
 
     // Math Functions
     createUDFMapEntry(UDF_MAP, SqlStdOperatorTable.RAND, 0, "RANDOM");
