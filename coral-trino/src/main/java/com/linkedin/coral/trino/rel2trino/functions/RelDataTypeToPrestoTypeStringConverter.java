@@ -3,7 +3,7 @@
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
-package com.linkedin.coral.presto.rel2presto.functions;
+package com.linkedin.coral.trino.rel2trino.functions;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,7 +14,7 @@ import org.apache.calcite.rel.type.RelRecordType;
 import org.apache.calcite.sql.type.ArraySqlType;
 import org.apache.calcite.sql.type.MapSqlType;
 
-import static com.linkedin.coral.presto.rel2presto.functions.PrestoKeywordsConverter.quoteReservedKeyword;
+import static com.linkedin.coral.trino.rel2trino.functions.PrestoKeywordsConverter.quoteReservedKeyword;
 
 
 /**

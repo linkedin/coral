@@ -3,7 +3,7 @@
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
-package com.linkedin.coral.presto.rel2presto;
+package com.linkedin.coral.trino.rel2trino;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -39,7 +39,7 @@ import org.apache.calcite.util.Util;
 
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
 
-import static com.linkedin.coral.presto.rel2presto.Calcite2PrestoUDFConverter.*;
+import static com.linkedin.coral.trino.rel2trino.Calcite2PrestoUDFConverter.*;
 
 
 public class RelToPrestoConverter extends RelToSqlConverter {

@@ -3,7 +3,7 @@
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
-package com.linkedin.coral.presto.rel2presto;
+package com.linkedin.coral.trino.rel2trino;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,7 +25,7 @@ import org.apache.calcite.tools.FrameworkConfig;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
-import static com.linkedin.coral.presto.rel2presto.TestTable.*;
+import static com.linkedin.coral.trino.rel2trino.TestTable.*;
 import static org.testng.Assert.*;
 
 

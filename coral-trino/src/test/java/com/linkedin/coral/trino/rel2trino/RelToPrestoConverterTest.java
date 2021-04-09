@@ -3,7 +3,7 @@
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
-package com.linkedin.coral.presto.rel2presto;
+package com.linkedin.coral.trino.rel2trino;
 
 import com.facebook.presto.sql.parser.SqlParser;
 import com.facebook.presto.sql.tree.Statement;
@@ -12,8 +12,8 @@ import org.apache.calcite.tools.FrameworkConfig;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
-import static com.linkedin.coral.presto.rel2presto.TestTable.*;
-import static com.linkedin.coral.presto.rel2presto.TestUtils.*;
+import static com.linkedin.coral.trino.rel2trino.TestTable.*;
+import static com.linkedin.coral.trino.rel2trino.TestUtils.*;
 import static org.testng.Assert.*;
 
 

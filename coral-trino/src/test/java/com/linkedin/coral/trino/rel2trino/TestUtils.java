@@ -3,7 +3,7 @@
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
-package com.linkedin.coral.presto.rel2presto;
+package com.linkedin.coral.trino.rel2trino;
 
 import java.io.InputStream;
 import java.nio.file.Path;
@@ -40,7 +40,7 @@ import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
 import com.linkedin.coral.hive.hive2rel.HiveMscAdapter;
 import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
 
-import static com.linkedin.coral.presto.rel2presto.TestTable.*;
+import static com.linkedin.coral.trino.rel2trino.TestTable.*;
 import static java.lang.String.format;
 
 
