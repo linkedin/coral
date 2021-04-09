@@ -5,12 +5,13 @@
  */
 package com.linkedin.coral.trino.rel2trino;
 
-import com.facebook.presto.sql.parser.SqlParser;
-import com.facebook.presto.sql.tree.Statement;
-
 import org.apache.calcite.tools.FrameworkConfig;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
+
+import io.trino.sql.parser.ParsingOptions;
+import io.trino.sql.parser.SqlParser;
+import io.trino.sql.tree.Statement;
 
 import static com.linkedin.coral.trino.rel2trino.TestTable.*;
 import static com.linkedin.coral.trino.rel2trino.TestUtils.*;
@@ -27,8 +28,7 @@ import static org.testng.Assert.*;
 public class RelToTrinoConverterTest {
 
   static FrameworkConfig config;
-  // TODO use Trino's SqlParser
-  static SqlParser prestoParser = new SqlParser();
+  static SqlParser trinoParser = new SqlParser();
   static final String tableOne = TABLE_ONE.getTableName();
   static final String tableTwo = TABLE_TWO.getTableName();
   static final String tableThree = TABLE_THREE.getTableName();
@@ -47,7 +47,8 @@ public class RelToTrinoConverterTest {
 
   private void validate(String trinoSql, String expected) {
     try {
-      Statement statement = prestoParser.createStatement(trinoSql);
+      Statement statement =
+          trinoParser.createStatement(trinoSql, new ParsingOptions(ParsingOptions.DecimalLiteralTreatment.AS_DECIMAL));
       assertNotNull(statement);
     } catch (Exception e) {
       assertTrue(false, "Failed to parse sql: " + trinoSql);
