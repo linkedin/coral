@@ -26,11 +26,11 @@ public class UDFMapUtils {
    * @param udfMap Map to store the result
    * @param calciteOp Calcite SQL operator
    * @param numOperands Number of operands
-   * @param prestoUDFName Name of Presto UDF
+   * @param trinoUDFName Name of Presto UDF
    */
   static void createUDFMapEntry(Map<String, UDFTransformer> udfMap, SqlOperator calciteOp, int numOperands,
-      String prestoUDFName) {
-    createUDFMapEntry(udfMap, calciteOp, numOperands, prestoUDFName, null, null);
+      String trinoUDFName) {
+    createUDFMapEntry(udfMap, calciteOp, numOperands, trinoUDFName, null, null);
   }
 
   /**
@@ -39,15 +39,15 @@ public class UDFMapUtils {
    * @param udfMap Map to store the result
    * @param calciteOp Calcite SQL operator
    * @param numOperands Number of operands
-   * @param prestoSqlOperator The Presto Sql Operator that is used as the target operator in the map
+   * @param trinoSqlOperator The Presto Sql Operator that is used as the target operator in the map
    * @param operandTransformer Operand transformers, null for identity transformation
    * @param resultTransformer Result transformer, null for identity transformation
    */
   static void createUDFMapEntry(Map<String, UDFTransformer> udfMap, SqlOperator calciteOp, int numOperands,
-      SqlOperator prestoSqlOperator, String operandTransformer, String resultTransformer) {
+      SqlOperator trinoSqlOperator, String operandTransformer, String resultTransformer) {
 
     udfMap.put(getKey(calciteOp.getName(), numOperands),
-        UDFTransformer.of(calciteOp.getName(), prestoSqlOperator, operandTransformer, resultTransformer, null));
+        UDFTransformer.of(calciteOp.getName(), trinoSqlOperator, operandTransformer, resultTransformer, null));
   }
 
   /**
@@ -56,11 +56,11 @@ public class UDFMapUtils {
    * @param udfMap Map to store the result
    * @param calciteOp Calcite SQL operator
    * @param numOperands Number of operands
-   * @param prestoSqlOperator The Presto Sql Operator that is used as the target operator in the map
+   * @param trinoSqlOperator The Presto Sql Operator that is used as the target operator in the map
    */
   static void createUDFMapEntry(Map<String, UDFTransformer> udfMap, SqlOperator calciteOp, int numOperands,
-      SqlOperator prestoSqlOperator) {
-    createUDFMapEntry(udfMap, calciteOp, numOperands, prestoSqlOperator, null, null);
+      SqlOperator trinoSqlOperator) {
+    createUDFMapEntry(udfMap, calciteOp, numOperands, trinoSqlOperator, null, null);
   }
 
   /**
@@ -71,13 +71,13 @@ public class UDFMapUtils {
    * @param udfMap Map to store the result
    * @param calciteOp Calcite SQL operator
    * @param numOperands Number of operands
-   * @param prestoUDFName Name of Presto UDF
+   * @param trinoUDFName Name of Presto UDF
    * @param operandTransformer Operand transformers, null for identity transformation
    * @param resultTransformer Result transformer, null for identity transformation
    */
   static void createUDFMapEntry(Map<String, UDFTransformer> udfMap, SqlOperator calciteOp, int numOperands,
-      String prestoUDFName, String operandTransformer, String resultTransformer) {
-    createUDFMapEntry(udfMap, calciteOp, numOperands, createUDF(prestoUDFName, calciteOp.getReturnTypeInference()),
+      String trinoUDFName, String operandTransformer, String resultTransformer) {
+    createUDFMapEntry(udfMap, calciteOp, numOperands, createUDF(trinoUDFName, calciteOp.getReturnTypeInference()),
         operandTransformer, resultTransformer);
   }
 

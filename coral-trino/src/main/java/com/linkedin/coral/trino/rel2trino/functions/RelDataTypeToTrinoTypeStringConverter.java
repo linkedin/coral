@@ -70,7 +70,7 @@ class RelDataTypeToTrinoTypeStringConverter {
    * @param relDataType a given RelDataType
    * @return a syntactically and semantically correct Presto type string for relDataType
    */
-  public static String buildPrestoTypeString(RelDataType relDataType) {
+  public static String buildTrinoTypeString(RelDataType relDataType) {
     switch (relDataType.getSqlTypeName()) {
       case ROW:
         return buildStructDataTypeString((RelRecordType) relDataType);
@@ -137,7 +137,7 @@ class RelDataTypeToTrinoTypeStringConverter {
     List<String> structFieldStrings = new ArrayList<>();
     for (RelDataTypeField relDataTypeField : relRecordType.getFieldList()) {
       structFieldStrings.add(String.format("%s %s", quoteReservedKeyword(relDataTypeField.getName()),
-          buildPrestoTypeString(relDataTypeField.getType())));
+          buildTrinoTypeString(relDataTypeField.getType())));
     }
     String subFieldsString = String.join(", ", structFieldStrings);
     return String.format("row(%s)", subFieldsString);
@@ -150,7 +150,7 @@ class RelDataTypeToTrinoTypeStringConverter {
    * @return a string that represents the given arraySqlType
    */
   private static String buildArrayDataTypeString(ArraySqlType arraySqlType) {
-    String elementDataTypeString = buildPrestoTypeString(arraySqlType.getComponentType());
+    String elementDataTypeString = buildTrinoTypeString(arraySqlType.getComponentType());
     return String.format("array(%s)", elementDataTypeString);
   }
 
@@ -161,8 +161,8 @@ class RelDataTypeToTrinoTypeStringConverter {
    * @return a string that represents the given mapSqlType
    */
   private static String buildMapDataTypeString(MapSqlType mapSqlType) {
-    String keyDataTypeString = buildPrestoTypeString(mapSqlType.getKeyType());
-    String valueDataTypeString = buildPrestoTypeString(mapSqlType.getValueType());
+    String keyDataTypeString = buildTrinoTypeString(mapSqlType.getKeyType());
+    String valueDataTypeString = buildTrinoTypeString(mapSqlType.getValueType());
     return String.format("map(%s, %s)", keyDataTypeString, valueDataTypeString);
   }
 }

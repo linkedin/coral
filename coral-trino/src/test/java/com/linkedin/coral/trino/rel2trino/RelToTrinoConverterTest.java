@@ -27,6 +27,7 @@ import static org.testng.Assert.*;
 public class RelToTrinoConverterTest {
 
   static FrameworkConfig config;
+  // TODO use Trino's SqlParser
   static SqlParser prestoParser = new SqlParser();
   static final String tableOne = TABLE_ONE.getTableName();
   static final String tableTwo = TABLE_TWO.getTableName();
@@ -40,21 +41,21 @@ public class RelToTrinoConverterTest {
   }
 
   private void testConversion(String inputSql, String expectedSql) {
-    String prestoSql = toPrestoSql(inputSql);
-    validate(prestoSql, expectedSql);
+    String trinoSql = toTrinoSql(inputSql);
+    validate(trinoSql, expectedSql);
   }
 
-  private void validate(String prestoSql, String expected) {
+  private void validate(String trinoSql, String expected) {
     try {
-      Statement statement = prestoParser.createStatement(prestoSql);
+      Statement statement = prestoParser.createStatement(trinoSql);
       assertNotNull(statement);
     } catch (Exception e) {
-      assertTrue(false, "Failed to parse sql: " + prestoSql);
+      assertTrue(false, "Failed to parse sql: " + trinoSql);
     }
-    assertEquals(prestoSql, expected);
+    assertEquals(trinoSql, expected);
   }
 
-  private String toPrestoSql(String sql) {
+  private String toTrinoSql(String sql) {
     RelToTrinoConverter converter = new RelToTrinoConverter();
     return converter.convert(TestUtils.toRel(sql, config));
   }
@@ -414,7 +415,7 @@ public class RelToTrinoConverterTest {
   }
 
   @Test
-  public void testTryCastIntPresto() {
+  public void testTryCastIntTrino() {
     String sql =
         "SELECT CASE WHEN a.scol= 0 THEN TRUE ELSE FALSE END AS testcol FROM " + tableOne + " a WHERE a.scol = 1";
     String expectedSql =
@@ -424,7 +425,7 @@ public class RelToTrinoConverterTest {
   }
 
   @Test
-  public void testTryCastBooleanPresto() {
+  public void testTryCastBooleanTrino() {
     String sql = "SELECT CASE WHEN a.scol= TRUE THEN TRUE ELSE FALSE END AS testcol FROM " + tableOne
         + " a WHERE a.scol = FALSE";
     String expectedSql =

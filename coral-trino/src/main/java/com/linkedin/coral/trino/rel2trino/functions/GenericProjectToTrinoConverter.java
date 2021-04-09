@@ -302,7 +302,7 @@ public class GenericProjectToTrinoConverter {
       String fieldNameReference) {
     String structFieldsAccessString =
         buildStructRelDataTypeFieldAccessString(fromDataType, toDataType, fieldNameReference);
-    String castToRowTypeString = RelDataTypeToTrinoTypeStringConverter.buildPrestoTypeString(toDataType);
+    String castToRowTypeString = RelDataTypeToTrinoTypeStringConverter.buildTrinoTypeString(toDataType);
     return String.format("%s as %s", structFieldsAccessString, castToRowTypeString);
   }
 

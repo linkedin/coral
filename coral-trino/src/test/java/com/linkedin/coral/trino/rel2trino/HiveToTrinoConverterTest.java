@@ -38,8 +38,8 @@ public class HiveToTrinoConverterTest {
   @Test(dataProvider = "viewTestCases")
   public void testViews(String database, String view, String expectedSql) {
     RelNode relNode = TestUtils.convertView(database, view);
-    RelToTrinoConverter relToPrestoConverter = new RelToTrinoConverter();
-    String expandedSql = relToPrestoConverter.convert(relNode);
+    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+    String expandedSql = relToTrinoConverter.convert(relNode);
     assertThat(expandedSql).isEqualTo(expectedSql);
   }
 

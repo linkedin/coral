@@ -51,80 +51,80 @@ public class Calcite2TrinoUDFConverter {
     RelShuttle converter = new RelShuttleImpl() {
       @Override
       public RelNode visit(LogicalProject project) {
-        return super.visit(project).accept(getPrestoRexConverter(project));
+        return super.visit(project).accept(getTrinoRexConverter(project));
       }
 
       @Override
       public RelNode visit(LogicalFilter inputFilter) {
-        return super.visit(inputFilter).accept(getPrestoRexConverter(inputFilter));
+        return super.visit(inputFilter).accept(getTrinoRexConverter(inputFilter));
       }
 
       @Override
       public RelNode visit(LogicalAggregate aggregate) {
-        return super.visit(aggregate).accept(getPrestoRexConverter(aggregate));
+        return super.visit(aggregate).accept(getTrinoRexConverter(aggregate));
       }
 
       @Override
       public RelNode visit(LogicalMatch match) {
-        return super.visit(match).accept(getPrestoRexConverter(match));
+        return super.visit(match).accept(getTrinoRexConverter(match));
       }
 
       @Override
       public RelNode visit(TableScan scan) {
-        return super.visit(scan).accept(getPrestoRexConverter(scan));
+        return super.visit(scan).accept(getTrinoRexConverter(scan));
       }
 
       @Override
       public RelNode visit(TableFunctionScan scan) {
-        return super.visit(scan).accept(getPrestoRexConverter(scan));
+        return super.visit(scan).accept(getTrinoRexConverter(scan));
       }
 
       @Override
       public RelNode visit(LogicalValues values) {
-        return super.visit(values).accept(getPrestoRexConverter(values));
+        return super.visit(values).accept(getTrinoRexConverter(values));
       }
 
       @Override
       public RelNode visit(LogicalJoin join) {
-        return super.visit(join).accept(getPrestoRexConverter(join));
+        return super.visit(join).accept(getTrinoRexConverter(join));
       }
 
       @Override
       public RelNode visit(LogicalCorrelate correlate) {
-        return super.visit(correlate).accept(getPrestoRexConverter(correlate));
+        return super.visit(correlate).accept(getTrinoRexConverter(correlate));
       }
 
       @Override
       public RelNode visit(LogicalUnion union) {
-        return super.visit(union).accept(getPrestoRexConverter(union));
+        return super.visit(union).accept(getTrinoRexConverter(union));
       }
 
       @Override
       public RelNode visit(LogicalIntersect intersect) {
-        return super.visit(intersect).accept(getPrestoRexConverter(intersect));
+        return super.visit(intersect).accept(getTrinoRexConverter(intersect));
       }
 
       @Override
       public RelNode visit(LogicalMinus minus) {
-        return super.visit(minus).accept(getPrestoRexConverter(minus));
+        return super.visit(minus).accept(getTrinoRexConverter(minus));
       }
 
       @Override
       public RelNode visit(LogicalSort sort) {
-        return super.visit(sort).accept(getPrestoRexConverter(sort));
+        return super.visit(sort).accept(getTrinoRexConverter(sort));
       }
 
       @Override
       public RelNode visit(LogicalExchange exchange) {
-        return super.visit(exchange).accept(getPrestoRexConverter(exchange));
+        return super.visit(exchange).accept(getTrinoRexConverter(exchange));
       }
 
       @Override
       public RelNode visit(RelNode other) {
-        return super.visit(other).accept(getPrestoRexConverter(other));
+        return super.visit(other).accept(getTrinoRexConverter(other));
       }
 
-      private TrinoRexConverter getPrestoRexConverter(RelNode node) {
+      private TrinoRexConverter getTrinoRexConverter(RelNode node) {
         return new TrinoRexConverter(node.getCluster().getRexBuilder());
       }
     };

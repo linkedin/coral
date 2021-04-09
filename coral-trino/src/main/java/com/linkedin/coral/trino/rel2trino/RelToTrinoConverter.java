@@ -120,7 +120,7 @@ public class RelToTrinoConverter extends RelToSqlConverter {
   }
 
   public Result visit(Uncollect e) {
-    if (!isPrestoSupportedUnnest(e)) {
+    if (!isTrinoSupportedUnnest(e)) {
       throw new UnsupportedOperationException("PrestoSQL does not allow unnest a result of a queries");
     }
     // Remove SELECT in  UNNEST(SELECT <unnestColumns> FROM (VALUES(0)))
@@ -174,7 +174,7 @@ public class RelToTrinoConverter extends RelToSqlConverter {
    * Presto does not support UNNEST a query: UNNEST(SELECT ..).
    *  TODO: verify for HIVE parser if we get a Calcite plan for lateral view explode() in this same structure
    */
-  private boolean isPrestoSupportedUnnest(Uncollect uncollect) {
+  private boolean isTrinoSupportedUnnest(Uncollect uncollect) {
     if (!(uncollect.getInput() instanceof Project)
         || !(((Project) uncollect.getInput()).getInput() instanceof Values)) {
       return false;

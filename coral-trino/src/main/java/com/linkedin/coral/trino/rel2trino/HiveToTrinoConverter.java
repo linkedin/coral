@@ -16,18 +16,18 @@ import static com.google.common.base.Preconditions.*;
 public class HiveToTrinoConverter {
 
   private final HiveToRelConverter hiveToRelConverter;
-  private final RelToTrinoConverter relToPrestoConverter;
+  private final RelToTrinoConverter relToTrinoConverter;
 
   public static HiveToTrinoConverter create(HiveMetastoreClient mscClient) {
     checkNotNull(mscClient);
     HiveToRelConverter hiveToRelConverter = HiveToRelConverter.create(mscClient);
-    RelToTrinoConverter relToPrestoConverter = new RelToTrinoConverter();
-    return new HiveToTrinoConverter(hiveToRelConverter, relToPrestoConverter);
+    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+    return new HiveToTrinoConverter(hiveToRelConverter, relToTrinoConverter);
   }
 
-  private HiveToTrinoConverter(HiveToRelConverter hiveToRelConverter, RelToTrinoConverter relToPrestoConverter) {
+  private HiveToTrinoConverter(HiveToRelConverter hiveToRelConverter, RelToTrinoConverter relToTrinoConverter) {
     this.hiveToRelConverter = hiveToRelConverter;
-    this.relToPrestoConverter = relToPrestoConverter;
+    this.relToTrinoConverter = relToTrinoConverter;
   }
 
   /**
@@ -36,9 +36,9 @@ public class HiveToTrinoConverter {
    * @param hiveSql hive sql query string
    * @return presto sql string representing input hiveSql
    */
-  public String toPrestoSql(String hiveSql) {
+  public String toTrinoSql(String hiveSql) {
     RelNode rel = hiveToRelConverter.convertSql(hiveSql);
-    return relToPrestoConverter.convert(rel);
+    return relToTrinoConverter.convert(rel);
   }
 
   /**
@@ -47,8 +47,8 @@ public class HiveToTrinoConverter {
    * @param viewName hive view base name
    * @return Presto SQL matching input view definition
    */
-  public String toPrestoSql(String dbName, String viewName) {
+  public String toTrinoSql(String dbName, String viewName) {
     RelNode rel = hiveToRelConverter.convertView(dbName, viewName);
-    return relToPrestoConverter.convert(rel);
+    return relToTrinoConverter.convert(rel);
   }
 }
