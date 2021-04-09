@@ -34,11 +34,11 @@ import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import com.linkedin.coral.com.google.common.collect.ImmutableMultimap;
 import com.linkedin.coral.com.google.common.collect.Multimap;
 import com.linkedin.coral.hive.hive2rel.functions.GenericProjectFunction;
-import com.linkedin.coral.trino.rel2trino.functions.GenericProjectToPrestoConverter;
+import com.linkedin.coral.trino.rel2trino.functions.GenericProjectToTrinoConverter;
 
 
-public class Calcite2PrestoUDFConverter {
-  private Calcite2PrestoUDFConverter() {
+public class Calcite2TrinoUDFConverter {
+  private Calcite2TrinoUDFConverter() {
   }
 
   /**
@@ -124,8 +124,8 @@ public class Calcite2PrestoUDFConverter {
         return super.visit(other).accept(getPrestoRexConverter(other));
       }
 
-      private PrestoRexConverter getPrestoRexConverter(RelNode node) {
-        return new PrestoRexConverter(node.getCluster().getRexBuilder());
+      private TrinoRexConverter getPrestoRexConverter(RelNode node) {
+        return new TrinoRexConverter(node.getCluster().getRexBuilder());
       }
     };
     return calciteNode.accept(converter);
@@ -134,7 +134,7 @@ public class Calcite2PrestoUDFConverter {
   /**
    * For replacing a certain Calcite SQL operator with Presto UDFs in a relational expression
    */
-  public static class PrestoRexConverter extends RexShuttle {
+  public static class TrinoRexConverter extends RexShuttle {
     private final RexBuilder rexBuilder;
 
     // SUPPORTED_TYPE_CAST_MAP is a static mapping that maps a SqlTypeFamily key to its set of
@@ -145,7 +145,7 @@ public class Calcite2PrestoUDFConverter {
           .putAll(SqlTypeFamily.CHARACTER, SqlTypeFamily.NUMERIC, SqlTypeFamily.BOOLEAN).build();
     }
 
-    public PrestoRexConverter(RexBuilder rexBuilder) {
+    public TrinoRexConverter(RexBuilder rexBuilder) {
       this.rexBuilder = rexBuilder;
     }
 
@@ -157,11 +157,11 @@ public class Calcite2PrestoUDFConverter {
       //     - syntax is difficult for Calcite to parse
       //   - the return type varies based on a desired schema to be projected
       if (call.getOperator() instanceof GenericProjectFunction) {
-        return GenericProjectToPrestoConverter.convertGenericProject(rexBuilder, call);
+        return GenericProjectToTrinoConverter.convertGenericProject(rexBuilder, call);
       }
 
       final UDFTransformer transformer =
-          CalcitePrestoUDFMap.getUDFTransformer(call.getOperator().getName(), call.operands.size());
+          CalciteTrinoUDFMap.getUDFTransformer(call.getOperator().getName(), call.operands.size());
       if (transformer != null) {
         return super.visitCall((RexCall) transformer.transformCall(rexBuilder, call.getOperands()));
       }
@@ -189,7 +189,7 @@ public class Calcite2PrestoUDFConverter {
       if (SUPPORTED_TYPE_CAST_MAP.containsEntry(leftOperand.getType().getSqlTypeName().getFamily(),
           rightOperand.getType().getSqlTypeName().getFamily())) {
         final RexNode tryCastNode =
-            rexBuilder.makeCall(rightOperand.getType(), PrestoTryCastFunction.INSTANCE, ImmutableList.of(leftOperand));
+            rexBuilder.makeCall(rightOperand.getType(), TrinoTryCastFunction.INSTANCE, ImmutableList.of(leftOperand));
         return (RexCall) rexBuilder.makeCall(op, tryCastNode, rightOperand);
       }
       return call;

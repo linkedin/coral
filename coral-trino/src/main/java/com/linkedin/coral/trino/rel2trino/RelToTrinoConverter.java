@@ -39,16 +39,16 @@ import org.apache.calcite.util.Util;
 
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
 
-import static com.linkedin.coral.trino.rel2trino.Calcite2PrestoUDFConverter.*;
+import static com.linkedin.coral.trino.rel2trino.Calcite2TrinoUDFConverter.*;
 
 
-public class RelToPrestoConverter extends RelToSqlConverter {
+public class RelToTrinoConverter extends RelToSqlConverter {
 
   /**
-   * Creates a RelToSqlConverter.
+   * Creates a RelToTrinoConverter.
    */
-  public RelToPrestoConverter() {
-    super(PrestoSqlDialect.INSTANCE);
+  public RelToTrinoConverter() {
+    super(TrinoSqlDialect.INSTANCE);
   }
 
   /**
@@ -58,7 +58,7 @@ public class RelToPrestoConverter extends RelToSqlConverter {
    */
   public String convert(RelNode relNode) {
     RelNode rel = convertRel(relNode);
-    return convertToSqlNode(rel).accept(new PrestoSqlRewriter()).toSqlString(PrestoSqlDialect.INSTANCE).toString();
+    return convertToSqlNode(rel).accept(new TrinoSqlRewriter()).toSqlString(TrinoSqlDialect.INSTANCE).toString();
   }
 
   /**
@@ -207,7 +207,7 @@ public class RelToPrestoConverter extends RelToSqlConverter {
   @Override
   public Context aliasContext(Map<String, RelDataType> aliases, boolean qualified) {
     // easier to keep inner class for accessing 'aliases' and 'qualified' variables as closure
-    return new AliasContext(PrestoSqlDialect.INSTANCE, aliases, qualified) {
+    return new AliasContext(TrinoSqlDialect.INSTANCE, aliases, qualified) {
       @Override
       public SqlNode field(int ordinal) {
         for (Map.Entry<String, RelDataType> alias : aliases.entrySet()) {

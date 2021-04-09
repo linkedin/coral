@@ -22,7 +22,7 @@ import org.apache.calcite.sql.util.SqlShuttle;
 /**
  * Rewrites the SqlNode tree to adapt to Presto specification
  */
-public class PrestoSqlRewriter extends SqlShuttle {
+public class TrinoSqlRewriter extends SqlShuttle {
 
   /**
    * Replace Calcite data types present in the SQL query with their respective Presto data types
@@ -38,7 +38,7 @@ public class PrestoSqlRewriter extends SqlShuttle {
     } else if (type instanceof SqlRowTypeSpec) {
       SqlRowTypeSpec rowType = (SqlRowTypeSpec) type;
       return new SqlRowTypeSpec(rowType.getFieldNames(),
-          rowType.getFieldTypeSpecs().stream().map(PrestoSqlRewriter::convertTypeSpec).collect(Collectors.toList()),
+          rowType.getFieldTypeSpecs().stream().map(TrinoSqlRewriter::convertTypeSpec).collect(Collectors.toList()),
           rowType.getParserPosition());
     } else {
       assert type.getTypeNameSpec() instanceof SqlBasicTypeNameSpec;

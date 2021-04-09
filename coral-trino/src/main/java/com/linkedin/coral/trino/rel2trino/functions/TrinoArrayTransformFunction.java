@@ -9,7 +9,7 @@ import org.apache.calcite.rel.type.RelDataType;
 
 
 /**
- * PrestoArrayTransformFunction represents the Presto built-in UDF, transform, defined to take an array input and
+ * TrinoArrayTransformFunction represents the Presto built-in UDF, transform, defined to take an array input and
  * a lambda function to apply over the array.
  *
  * This UDF requires a special definition outside the CalcitePrestoUDFMap because of the following:
@@ -19,8 +19,8 @@ import org.apache.calcite.rel.type.RelDataType;
  * Instead, we represent the input to this UDF as a string and we set its return type is passed as a parameter
  * on creation.
  */
-class PrestoArrayTransformFunction extends GenericTemplateFunction {
-  public PrestoArrayTransformFunction(RelDataType transformDataType) {
+class TrinoArrayTransformFunction extends GenericTemplateFunction {
+  public TrinoArrayTransformFunction(RelDataType transformDataType) {
     super(transformDataType, "transform");
   }
 }

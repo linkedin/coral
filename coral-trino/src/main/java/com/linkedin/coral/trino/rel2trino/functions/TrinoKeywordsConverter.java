@@ -11,11 +11,11 @@ import com.google.common.collect.ImmutableMap;
 
 
 /**
- * Presto Keywords Converter maintains the Presto Keywords and related utility functions
+ * Trino Keywords Converter maintains the Presto Keywords and related utility functions
  */
-public final class PrestoKeywordsConverter {
+public final class TrinoKeywordsConverter {
 
-  private PrestoKeywordsConverter() {
+  private TrinoKeywordsConverter() {
 
   }
 

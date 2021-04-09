@@ -14,7 +14,7 @@ import org.apache.calcite.rel.type.RelRecordType;
 import org.apache.calcite.sql.type.ArraySqlType;
 import org.apache.calcite.sql.type.MapSqlType;
 
-import static com.linkedin.coral.trino.rel2trino.functions.PrestoKeywordsConverter.quoteReservedKeyword;
+import static com.linkedin.coral.trino.rel2trino.functions.TrinoKeywordsConverter.quoteReservedKeyword;
 
 
 /**
@@ -23,8 +23,8 @@ import static com.linkedin.coral.trino.rel2trino.functions.PrestoKeywordsConvert
  * If a column, colA, has a RelDataType, relDataTypeA, with a Presto type string, prestoTypeStringA = buildStructDataTypeString(relDataTypeA),
  * then the following operation is syntactically and semantically correct in Presto: CAST(colA as prestoTypeStringA)
  */
-class RelDataTypeToPrestoTypeStringConverter {
-  private RelDataTypeToPrestoTypeStringConverter() {
+class RelDataTypeToTrinoTypeStringConverter {
+  private RelDataTypeToTrinoTypeStringConverter() {
   }
 
   /**

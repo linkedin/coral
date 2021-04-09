@@ -19,10 +19,10 @@ import org.apache.calcite.sql.type.SqlReturnTypeInference;
 import com.linkedin.coral.com.google.common.base.Preconditions;
 
 
-public class PrestoTryCastFunction extends SqlFunction {
-  public static final PrestoTryCastFunction INSTANCE = new PrestoTryCastFunction();
+public class TrinoTryCastFunction extends SqlFunction {
+  public static final TrinoTryCastFunction INSTANCE = new TrinoTryCastFunction();
 
-  public PrestoTryCastFunction() {
+  public TrinoTryCastFunction() {
     super("try_cast", SqlKind.CAST, new SqlReturnTypeInference() {
       @Override
       public RelDataType inferReturnType(SqlOperatorBinding opBinding) {

@@ -21,7 +21,7 @@ import org.apache.calcite.sql.type.MapSqlType;
 
 
 /**
- * GenericProjectToPrestoConverter takes a GenericProject RexCall call and rewrites its function call to be suitable
+ * GenericProjectToTrinoConverter takes a GenericProject RexCall call and rewrites its function call to be suitable
  * to Presto.
  *
  * Presto does not support the GenericProject UDF which can be done in Hive and Spark because the return type of
@@ -93,8 +93,8 @@ import org.apache.calcite.sql.type.MapSqlType;
  *         )
  *
  */
-public class GenericProjectToPrestoConverter {
-  private GenericProjectToPrestoConverter() {
+public class GenericProjectToTrinoConverter {
+  private GenericProjectToTrinoConverter() {
   }
 
   /**
@@ -190,19 +190,19 @@ public class GenericProjectToPrestoConverter {
         // Create a Presto CAST RexCall
         String structDataTypeArgumentString = structDataTypeArgumentString((RelRecordType) fromDataType,
             (RelRecordType) toDataType, transformColumnFieldName);
-        SqlOperator structFunction = new PrestoStructCastRowFunction(toDataType);
+        SqlOperator structFunction = new TrinoStructCastRowFunction(toDataType);
         return (RexCall) builder.makeCall(structFunction, builder.makeLiteral(structDataTypeArgumentString));
       case ARRAY:
         // Create a Presto TRANSFORM RexCall
         String arrayDataTypeArgumentString = arrayDataTypeArgumentString((ArraySqlType) fromDataType,
             (ArraySqlType) toDataType, transformColumnFieldName);
-        SqlOperator arrayFunction = new PrestoArrayTransformFunction(toDataType);
+        SqlOperator arrayFunction = new TrinoArrayTransformFunction(toDataType);
         return (RexCall) builder.makeCall(arrayFunction, builder.makeLiteral(arrayDataTypeArgumentString));
       case MAP:
         // Create a Presto TRANSFORM_VALUES RexCall
         String mapDataTypeArgumentString =
             mapDataTypeArgumentString((MapSqlType) fromDataType, (MapSqlType) toDataType, transformColumnFieldName);
-        SqlOperator mapFunction = new PrestoMapTransformValuesFunction(toDataType);
+        SqlOperator mapFunction = new TrinoMapTransformValuesFunction(toDataType);
         return (RexCall) builder.makeCall(mapFunction, builder.makeLiteral(mapDataTypeArgumentString));
       default:
         return call;
@@ -302,7 +302,7 @@ public class GenericProjectToPrestoConverter {
       String fieldNameReference) {
     String structFieldsAccessString =
         buildStructRelDataTypeFieldAccessString(fromDataType, toDataType, fieldNameReference);
-    String castToRowTypeString = RelDataTypeToPrestoTypeStringConverter.buildPrestoTypeString(toDataType);
+    String castToRowTypeString = RelDataTypeToTrinoTypeStringConverter.buildPrestoTypeString(toDataType);
     return String.format("%s as %s", structFieldsAccessString, castToRowTypeString);
   }
 

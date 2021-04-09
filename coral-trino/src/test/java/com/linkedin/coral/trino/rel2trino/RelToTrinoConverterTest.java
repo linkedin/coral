@@ -24,7 +24,7 @@ import static org.testng.Assert.*;
 // This makes it easier to generate RelNodes for testing. The input sql is
 // in Calcite sql syntax (not Hive)
 // Disabled tests are failing tests
-public class RelToPrestoConverterTest {
+public class RelToTrinoConverterTest {
 
   static FrameworkConfig config;
   static SqlParser prestoParser = new SqlParser();
@@ -55,7 +55,7 @@ public class RelToPrestoConverterTest {
   }
 
   private String toPrestoSql(String sql) {
-    RelToPrestoConverter converter = new RelToPrestoConverter();
+    RelToTrinoConverter converter = new RelToTrinoConverter();
     return converter.convert(TestUtils.toRel(sql, config));
   }
 

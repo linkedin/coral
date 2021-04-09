@@ -19,7 +19,7 @@ import static com.google.common.io.RecursiveDeleteOption.ALLOW_INSECURE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 
-public class HiveToPrestoConverterTest {
+public class HiveToTrinoConverterTest {
 
   Path metastoreDbDirectory;
 
@@ -38,7 +38,7 @@ public class HiveToPrestoConverterTest {
   @Test(dataProvider = "viewTestCases")
   public void testViews(String database, String view, String expectedSql) {
     RelNode relNode = TestUtils.convertView(database, view);
-    RelToPrestoConverter relToPrestoConverter = new RelToPrestoConverter();
+    RelToTrinoConverter relToPrestoConverter = new RelToTrinoConverter();
     String expandedSql = relToPrestoConverter.convert(relNode);
     assertThat(expandedSql).isEqualTo(expectedSql);
   }

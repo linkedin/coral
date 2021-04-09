@@ -27,20 +27,20 @@ import org.apache.calcite.sql.type.SqlTypeName;
 
 
 /**
- * PrestoElementAtFunction represents a SQL operator that maps to the subscript [] operator in SQL standard. In the
+ * TrinoElementAtFunction represents a SQL operator that maps to the subscript [] operator in SQL standard. In the
  * case of arrays it access the nth element of an array, and in case of maps it looks up the value corresponding to the
  * given key. The implementation is identical to the Calcite ITEM operator (from {@link org.apache.calcite.sql.SqlSpecialOperator})
  * but uses the "element_at" name, and unparses to the element_at(map, key) syntax.
  */
-public class PrestoElementAtFunction extends SqlSpecialOperator {
+public class TrinoElementAtFunction extends SqlSpecialOperator {
 
-  public static final PrestoElementAtFunction INSTANCE = new PrestoElementAtFunction();
+  public static final TrinoElementAtFunction INSTANCE = new TrinoElementAtFunction();
 
   private static final SqlSingleOperandTypeChecker ARRAY_OR_MAP =
       OperandTypes.or(OperandTypes.family(SqlTypeFamily.ARRAY), OperandTypes.family(SqlTypeFamily.MAP),
           OperandTypes.family(SqlTypeFamily.ANY));
 
-  private PrestoElementAtFunction() {
+  private TrinoElementAtFunction() {
     super("element_at", SqlKind.OTHER_FUNCTION, 100, true, null, null, null);
   }
 

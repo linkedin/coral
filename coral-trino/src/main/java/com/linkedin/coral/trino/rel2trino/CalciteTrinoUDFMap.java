@@ -18,13 +18,13 @@ import com.linkedin.coral.com.google.common.collect.ImmutableMultimap;
 import com.linkedin.coral.hive.hive2rel.functions.HiveFunction;
 import com.linkedin.coral.hive.hive2rel.functions.HiveRLikeOperator;
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
-import com.linkedin.coral.trino.rel2trino.functions.PrestoElementAtFunction;
+import com.linkedin.coral.trino.rel2trino.functions.TrinoElementAtFunction;
 
 import static com.linkedin.coral.trino.rel2trino.UDFMapUtils.*;
 
 
-public class CalcitePrestoUDFMap {
-  private CalcitePrestoUDFMap() {
+public class CalciteTrinoUDFMap {
+  private CalciteTrinoUDFMap() {
   }
 
   private static final Map<String, UDFTransformer> UDF_MAP = new HashMap();
@@ -33,7 +33,7 @@ public class CalcitePrestoUDFMap {
     // conditional functions
     createUDFMapEntry(UDF_MAP, hiveToCalciteOp("nvl"), 2, "coalesce");
     // Array and map functions
-    createUDFMapEntry(UDF_MAP, SqlStdOperatorTable.ITEM, 2, PrestoElementAtFunction.INSTANCE);
+    createUDFMapEntry(UDF_MAP, SqlStdOperatorTable.ITEM, 2, TrinoElementAtFunction.INSTANCE);
 
     // Math Functions
     createUDFMapEntry(UDF_MAP, SqlStdOperatorTable.RAND, 0, "RANDOM");
