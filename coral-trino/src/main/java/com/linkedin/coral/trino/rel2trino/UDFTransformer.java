@@ -59,11 +59,11 @@ import com.linkedin.coral.hive.hive2rel.functions.HiveReturnTypes;
  * any digit from the position numDigitAfterDot after the dot, like truncate(11.45, 0) = 11,
  * truncate(11.45, 1) = 11.4
  *
- * In PrestoSQL, TRUNCATE(aDouble) only takes one argument and removes all digits after the dot,
+ * In Trino, TRUNCATE(aDouble) only takes one argument and removes all digits after the dot,
  * like truncate(11.45) = 11.
  *
- * The transformation from Calcite TRUNCATE to PrestoSQL TRUNCATE is represented as follows:
- * 1. PrestoSQL name: TRUNCATE
+ * The transformation from Calcite TRUNCATE to Trino TRUNCATE is represented as follows:
+ * 1. Trino name: TRUNCATE
  *
  * 2. Operand transformers:
  * g(b1) = a1 * 10 ^ a2, with JSON format:
@@ -92,12 +92,12 @@ import com.linkedin.coral.hive.hive2rel.functions.HiveReturnTypes;
  *
  * Example 2:
  * In Calcite, there exists a hive-derived function to decode binary data given a format, DECODE(binary, scheme).
- * In Presto, there is no generic decoding function that takes a decoding-scheme.
+ * In Trino, there is no generic decoding function that takes a decoding-scheme.
  * Instead, there exist specific decoding functions that are first-class functions like FROM_UTF8(binary).
  * Consequently, we would need to know the operands in the function in order to determine the corresponding call.
  *
- * The transformation from Calcite DECODE to a PRESTO equivalent is represented as follows:
- * 1. PrestoSQL name: There is no function name determined at compile time.
+ * The transformation from Calcite DECODE to a Trino equivalent is represented as follows:
+ * 1. Trino name: There is no function name determined at compile time.
  * null
  *
  * 2. Operand transformers: We want to retain column 1 and drop column 2:
@@ -124,8 +124,8 @@ public class UDFTransformer {
     OP_MAP.put("*", SqlStdOperatorTable.MULTIPLY);
     OP_MAP.put("/", SqlStdOperatorTable.DIVIDE);
     OP_MAP.put("^", SqlStdOperatorTable.POWER);
-    OP_MAP.put("hive_pattern_to_presto",
-        new SqlUserDefinedFunction(new SqlIdentifier("hive_pattern_to_presto", SqlParserPos.ZERO),
+    OP_MAP.put("hive_pattern_to_trino",
+        new SqlUserDefinedFunction(new SqlIdentifier("hive_pattern_to_trino", SqlParserPos.ZERO),
             HiveReturnTypes.STRING, null, OperandTypes.STRING, null, null));
   }
 
@@ -225,7 +225,7 @@ public class UDFTransformer {
     if (newTargetOperator == null || newTargetOperator.getName().isEmpty()) {
       String operands = sourceOperands.stream().map(i -> i.toString()).collect(Collectors.joining(","));
       throw new IllegalArgumentException(String.format(
-          "An equivalent Presto operator was not found for the function call: %s(%s)", calciteOperatorName, operands));
+          "An equivalent Trino operator was not found for the function call: %s(%s)", calciteOperatorName, operands));
     }
     final List<RexNode> newOperands = transformOperands(rexBuilder, sourceOperands);
     final RexNode newCall = rexBuilder.makeCall(newTargetOperator, newOperands);

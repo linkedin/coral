@@ -32,7 +32,7 @@ import org.apache.calcite.util.Static;
  * The second parameter is necessary to pass the name of the column to rewriters that need to know the column name
  * in the RexCall/RexNode (Relational Algebra) phase.
  *
- * Currently, this GenericProject UDF is used internally to indicate that coral-spark/coral-presto need to perform
+ * Currently, this GenericProject UDF is used internally to indicate that coral-spark/coral-trino need to perform
  * rewrites to further update the query because there is an inconsistent branch in a union function.
  *
  * The GenericProject function should be limited to be used by internal APIs and not in external Dali Views.

@@ -18,7 +18,7 @@ import static org.testng.Assert.*;
 
 
 /**
- * Tests conversion from Calcite RelNode to Presto Sql
+ * Tests conversion from Calcite RelNode to Trino's SQL
  */
 // All tests use a starting sql and use calcite parser to generate parse tree.
 // This makes it easier to generate RelNodes for testing. The input sql is

@@ -60,7 +60,7 @@ public class CalciteTrinoUDFMap {
     createUDFMapEntry(UDF_MAP, hiveToCalciteOp("unhex"), 1, "from_hex");
     createUDFMapEntry(UDF_MAP, hiveToCalciteOp("array_contains"), 2, "contains");
     createUDFMapEntry(UDF_MAP, hiveToCalciteOp("regexp_extract"), 3, "regexp_extract",
-        "[{\"input\": 1}, {\"op\": \"hive_pattern_to_presto\", \"operands\":[{\"input\": 2}]}, {\"input\": 3}]", null);
+        "[{\"input\": 1}, {\"op\": \"hive_pattern_to_trino\", \"operands\":[{\"input\": 2}]}, {\"input\": 3}]", null);
     createUDFMapEntry(UDF_MAP, hiveToCalciteOp("instr"), 2, "strpos");
     createRuntimeUDFMapEntry(UDF_MAP, hiveToCalciteOp("decode"), 2,
         "[{\"regex\":\"(?i)('utf-8')\", \"input\":2, \"name\":\"from_utf8\"}]", "[{\"input\":1}]", null);

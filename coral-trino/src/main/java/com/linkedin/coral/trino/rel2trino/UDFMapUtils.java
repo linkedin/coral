@@ -21,12 +21,12 @@ public class UDFMapUtils {
   }
 
   /**
-   * Creates a mapping for Calcite SQL operator to Presto UDF.
+   * Creates a mapping for Calcite SQL operator to Trino UDF.
    *
    * @param udfMap Map to store the result
    * @param calciteOp Calcite SQL operator
    * @param numOperands Number of operands
-   * @param trinoUDFName Name of Presto UDF
+   * @param trinoUDFName Name of Trino UDF
    */
   static void createUDFMapEntry(Map<String, UDFTransformer> udfMap, SqlOperator calciteOp, int numOperands,
       String trinoUDFName) {
@@ -34,12 +34,12 @@ public class UDFMapUtils {
   }
 
   /**
-   * Creates a mapping from Calcite SQL operator to Presto UDF with Presto SqlOperator, operands transformer, and result transformers.
+   * Creates a mapping from Calcite SQL operator to Trino UDF with Trino SqlOperator, operands transformer, and result transformers.
    *
    * @param udfMap Map to store the result
    * @param calciteOp Calcite SQL operator
    * @param numOperands Number of operands
-   * @param trinoSqlOperator The Presto Sql Operator that is used as the target operator in the map
+   * @param trinoSqlOperator The Trino Sql Operator that is used as the target operator in the map
    * @param operandTransformer Operand transformers, null for identity transformation
    * @param resultTransformer Result transformer, null for identity transformation
    */
@@ -51,12 +51,12 @@ public class UDFMapUtils {
   }
 
   /**
-   * Creates a mapping from Calcite SQL operator to Presto UDF with Presto SqlOperator.
+   * Creates a mapping from Calcite SQL operator to Trino UDF with Trino SqlOperator.
    *
    * @param udfMap Map to store the result
    * @param calciteOp Calcite SQL operator
    * @param numOperands Number of operands
-   * @param trinoSqlOperator The Presto Sql Operator that is used as the target operator in the map
+   * @param trinoSqlOperator The Trino Sql Operator that is used as the target operator in the map
    */
   static void createUDFMapEntry(Map<String, UDFTransformer> udfMap, SqlOperator calciteOp, int numOperands,
       SqlOperator trinoSqlOperator) {
@@ -64,14 +64,14 @@ public class UDFMapUtils {
   }
 
   /**
-   * Creates a mapping from Calcite SQL operator to Presto UDF with Presto UDF name, operands transformer, and result transformers.
-   * To construct Presto SqlOperator from Presto UDF name, this method reuses the return type inference from calciteOp,
+   * Creates a mapping from Calcite SQL operator to Trino UDF with Trino UDF name, operands transformer, and result transformers.
+   * To construct Trino SqlOperator from Trino UDF name, this method reuses the return type inference from calciteOp,
    * assuming equivalence.
    *
    * @param udfMap Map to store the result
    * @param calciteOp Calcite SQL operator
    * @param numOperands Number of operands
-   * @param trinoUDFName Name of Presto UDF
+   * @param trinoUDFName Name of Trino UDF
    * @param operandTransformer Operand transformers, null for identity transformation
    * @param resultTransformer Result transformer, null for identity transformation
    */
@@ -82,7 +82,7 @@ public class UDFMapUtils {
   }
 
   /**
-   * Creates a mapping from a Calcite SQL operator to a Presto UDF determined at runtime
+   * Creates a mapping from a Calcite SQL operator to a Trino UDF determined at runtime
    * by the values of input parameters with operand and result transformers.
    *
    * @param udfMap Map to store the result
@@ -99,7 +99,7 @@ public class UDFMapUtils {
   }
 
   /**
-   * Creates Presto UDF for a given Presto UDF name and return type inference.
+   * Creates Trino UDF for a given Trino UDF name and return type inference.
    *
    * @param udfName udf name
    * @param typeInference {@link SqlReturnTypeInference} of return type

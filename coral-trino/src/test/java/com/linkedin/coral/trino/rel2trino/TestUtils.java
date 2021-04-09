@@ -67,7 +67,7 @@ public class TestUtils {
       RelRoot rel = planner.rel(validate);
       //RelNode relNode = rel.project();
       return rel.project();
-      //return Calcite2PrestoUDFConverter.convertRel(relNode);
+      //return Calcite2TrinoUDFConverter.convertRel(relNode);
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
@@ -193,7 +193,7 @@ public class TestUtils {
     HiveMetastoreClient hiveMetastoreClient = new HiveMscAdapter(Hive.get(conf).getMSC());
     hiveToRelConverter = HiveToRelConverter.create(hiveMetastoreClient);
 
-    // Views and tables used in HiveToPrestoConverterTest
+    // Views and tables used in HiveToTrinoConverterTest
     run(driver, "CREATE DATABASE IF NOT EXISTS test");
 
     run(driver, "CREATE TABLE IF NOT EXISTS test.tableA(a int, b struct<b1:string>)");
@@ -280,9 +280,9 @@ public class TestUtils {
     InputStream hiveConfStream = TestUtils.class.getClassLoader().getResourceAsStream("hive.xml");
     HiveConf hiveConf = new HiveConf();
     hiveConf.addResource(hiveConfStream);
-    hiveConf.set("mapreduce.framework.name", "local-presto");
-    hiveConf.set("_hive.hdfs.session.path", "/tmp/coral/presto");
-    hiveConf.set("_hive.local.session.path", "/tmp/coral/presto");
+    hiveConf.set("mapreduce.framework.name", "local-trino");
+    hiveConf.set("_hive.hdfs.session.path", "/tmp/coral/trino");
+    hiveConf.set("_hive.local.session.path", "/tmp/coral/trino");
     return hiveConf;
   }
 }

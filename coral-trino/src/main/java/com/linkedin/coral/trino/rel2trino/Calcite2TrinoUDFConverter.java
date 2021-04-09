@@ -42,10 +42,10 @@ public class Calcite2TrinoUDFConverter {
   }
 
   /**
-   * Replaces Calcite SQL operators with Presto UDF to obtain the PrestoSQL-compatible Calcite plan.
+   * Replaces Calcite SQL operators with Trino UDF to obtain the Trino-compatible Calcite plan.
    *
    * @param calciteNode Original Calcite plan
-   * @return PrestoSQL-compatible Calcite plan
+   * @return Trino-compatible Calcite plan
    */
   public static RelNode convertRel(RelNode calciteNode) {
     RelShuttle converter = new RelShuttleImpl() {
@@ -132,7 +132,7 @@ public class Calcite2TrinoUDFConverter {
   }
 
   /**
-   * For replacing a certain Calcite SQL operator with Presto UDFs in a relational expression
+   * For replacing a certain Calcite SQL operator with Trino UDFs in a relational expression
    */
   public static class TrinoRexConverter extends RexShuttle {
     private final RexBuilder rexBuilder;
@@ -152,7 +152,7 @@ public class Calcite2TrinoUDFConverter {
     @Override
     public RexNode visitCall(RexCall call) {
       // GenericProject requires a nontrivial function rewrite because of the following:
-      //   - makes use of Presto built-in UDFs transform_values for map objects and transform for array objects
+      //   - makes use of Trino built-in UDFs transform_values for map objects and transform for array objects
       //     which has lambda functions as parameters
       //     - syntax is difficult for Calcite to parse
       //   - the return type varies based on a desired schema to be projected

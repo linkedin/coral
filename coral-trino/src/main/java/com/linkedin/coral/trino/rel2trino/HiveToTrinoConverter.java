@@ -31,10 +31,10 @@ public class HiveToTrinoConverter {
   }
 
   /**
-   * Converts input HiveQL to Presto SQL
+   * Converts input HiveQL to Trino's SQL
    *
    * @param hiveSql hive sql query string
-   * @return presto sql string representing input hiveSql
+   * @return Trino-compatible SQL string representing input hiveSql
    */
   public String toTrinoSql(String hiveSql) {
     RelNode rel = hiveToRelConverter.convertSql(hiveSql);
@@ -42,10 +42,10 @@ public class HiveToTrinoConverter {
   }
 
   /**
-   * Converts input view definition to Presto SQL
+   * Converts input view definition to Trino SQL
    * @param dbName hive DB name
    * @param viewName hive view base name
-   * @return Presto SQL matching input view definition
+   * @return Trino-compatible SQL matching input view definition
    */
   public String toTrinoSql(String dbName, String viewName) {
     RelNode rel = hiveToRelConverter.convertView(dbName, viewName);

@@ -25,7 +25,7 @@ public class HiveToTrinoConverterTest {
 
   @BeforeTest
   public void beforeClass() throws Exception {
-    metastoreDbDirectory = Files.createTempFile("coral-presto", "metastore.db");
+    metastoreDbDirectory = Files.createTempFile("coral-trino", "metastore.db");
     Files.delete(metastoreDbDirectory); // it will be re-created
     TestUtils.initializeViews(metastoreDbDirectory);
   }

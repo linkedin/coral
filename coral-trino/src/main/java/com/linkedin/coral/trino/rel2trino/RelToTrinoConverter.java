@@ -52,7 +52,7 @@ public class RelToTrinoConverter extends RelToSqlConverter {
   }
 
   /**
-   * Convert relational algebra to Presto SQL
+   * Convert relational algebra to Trino's SQL
    * @param relNode calcite relational algebra representation of SQL
    * @return SQL string
    */
@@ -121,7 +121,7 @@ public class RelToTrinoConverter extends RelToSqlConverter {
 
   public Result visit(Uncollect e) {
     if (!isTrinoSupportedUnnest(e)) {
-      throw new UnsupportedOperationException("PrestoSQL does not allow unnest a result of a queries");
+      throw new UnsupportedOperationException("Trino does not allow unnest a result of a queries");
     }
     // Remove SELECT in  UNNEST(SELECT <unnestColumns> FROM (VALUES(0)))
     // and generate UNNEST(<unnestColumns>) AS <alias>(<columnList>) instead.
@@ -147,10 +147,10 @@ public class RelToTrinoConverter extends RelToSqlConverter {
    * This overridden function makes sure that the basetable names in the output SQL
    * will be in the form of "dbname.tablename" instead of "catalogname.dbname.tablename"
    *
-   * Presto can have configurable catalog names. In that case the HiveToRelConverter's default "hive" catalog will
-   * cause failures:  https://github.com/prestosql/presto/issues/5785. If catalogname is not prepended, presto uses
-   * the catalog name of the view being translated. If for example a view "hive2.db.view" whose coral-presto
-   * translation returns "SELECT * FROM db.table" will be evaluated as "SELECT * FROM hive2.db.table" in presto.
+   * Trino can have configurable catalog names. In that case the HiveToRelConverter's default "hive" catalog will
+   * cause failures:  https://github.com/trinodb/trino/issues/5785. If catalogname is not prepended, Trino uses
+   * the catalog name of the view being translated. If for example a view "hive2.db.view" whose coral-trino
+   * translation returns "SELECT * FROM db.table" will be evaluated as "SELECT * FROM hive2.db.table" in Trino.
    *
    * Example:
    *  hive.default.foo_bar -&gt; default.foo_bar
@@ -166,12 +166,12 @@ public class RelToTrinoConverter extends RelToSqlConverter {
   }
 
   /**
-   * Checks whether we do unnest in Presto. In this case the plan should have this structure:
+   * Checks whether we do unnest in Trino. In this case the plan should have this structure:
    *    Uncollect
    *      LogicalProject(<List of projections>)
    *        LogicalValues(tuples=[[{ 0 }]])
-   * Then when producing presto SQL, we just generate UNNEST(<List of projections>). For other cases
-   * Presto does not support UNNEST a query: UNNEST(SELECT ..).
+   * Then when producing Trino SQL, we just generate UNNEST(<List of projections>). For other cases
+   * Trino does not support UNNEST a query: UNNEST(SELECT ..).
    *  TODO: verify for HIVE parser if we get a Calcite plan for lateral view explode() in this same structure
    */
   private boolean isTrinoSupportedUnnest(Uncollect uncollect) {

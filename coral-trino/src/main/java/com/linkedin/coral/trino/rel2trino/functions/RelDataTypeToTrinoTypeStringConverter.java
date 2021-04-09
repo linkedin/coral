@@ -18,57 +18,57 @@ import static com.linkedin.coral.trino.rel2trino.functions.TrinoKeywordsConverte
 
 
 /**
- * Transforms a RelDataType to a Presto type string such that it is parseable and semantically correct.
- * The output of the utility's entry-point, buildPrestoTypeString, can be used as a castable type in Presto.
- * If a column, colA, has a RelDataType, relDataTypeA, with a Presto type string, prestoTypeStringA = buildStructDataTypeString(relDataTypeA),
- * then the following operation is syntactically and semantically correct in Presto: CAST(colA as prestoTypeStringA)
+ * Transforms a RelDataType to a Trino type string such that it is parseable and semantically correct.
+ * The output of the utility's entry-point, buildTrinoTypeString, can be used as a castable type in Trino.
+ * If a column, colA, has a RelDataType, relDataTypeA, with a Trino type string, trinoTypeStringA = buildStructDataTypeString(relDataTypeA),
+ * then the following operation is syntactically and semantically correct in Trino: CAST(colA as trinoTypeStringA)
  */
 class RelDataTypeToTrinoTypeStringConverter {
   private RelDataTypeToTrinoTypeStringConverter() {
   }
 
   /**
-   * Creates a Presto type string for a given RelDataType
-   * Some examples of Presto type strings produced for a RelDataType are as follows:
+   * Creates a Trino type string for a given RelDataType
+   * Some examples of Trino type strings produced for a RelDataType are as follows:
    *
    *   Example 1:
    *     - RelDataType:
    *       - map(string, string)
-   *     - Presto type String
+   *     - Trino type String
    *       - map(varchar, varchar)
    *
    *   Example 2:
    *     - RelDataType:
    *       - array(string)
-   *     - Presto type string:
+   *     - Trino type string:
    *       - array(varchar)
    *
    *   Example 3:
    *     - RelDataType:
    *       - struct(a:string, b:int)
-   *     - Presto type string:
+   *     - Trino type string:
    *       - row(a varchar, b integer)
    *
    *   Example 4:
    *     - RelDataType:
    *       - array(struct(a:string, b:int))
-   *     - Presto type string:
+   *     - Trino type string:
    *       - array(row(a varchar, b integer))
    *
    *   Example 5:
    *     - RelDataType:
    *       - map(string, struct(a:string, b:int))
-   *     - Presto type string:
+   *     - Trino type string:
    *       - map(varchar, row(a varchar, b integer))
    *
    *   Example 6:
    *     - RelDataType:
    *       - map(array(struct(a:string, b:struct(c:int))))
-   *     - Presto type string:
+   *     - Trino type string:
    *       - map(array(row(a varchar, b row(c integer))))
    *
    * @param relDataType a given RelDataType
-   * @return a syntactically and semantically correct Presto type string for relDataType
+   * @return a syntactically and semantically correct Trino type string for relDataType
    */
   public static String buildTrinoTypeString(RelDataType relDataType) {
     switch (relDataType.getSqlTypeName()) {
@@ -128,7 +128,7 @@ class RelDataTypeToTrinoTypeStringConverter {
   }
 
   /**
-   * Build a Presto struct/row string with format:
+   * Build a Trino struct/row string with format:
    *   row([field_name] [field_type], ...)
    * @param relRecordType a given struct RelDataType
    * @return a string that represents the given relRecordType
@@ -144,7 +144,7 @@ class RelDataTypeToTrinoTypeStringConverter {
   }
 
   /**
-   * Build a Presto array string with format:
+   * Build a Trino array string with format:
    *   array([field_type])
    * @param arraySqlType a given array RelDataType
    * @return a string that represents the given arraySqlType
@@ -155,7 +155,7 @@ class RelDataTypeToTrinoTypeStringConverter {
   }
 
   /**
-   * Build a Presto map string with format:
+   * Build a Trino map string with format:
    *   map([key_type], [value_type])
    * @param mapSqlType a given map RelDataType
    * @return a string that represents the given mapSqlType

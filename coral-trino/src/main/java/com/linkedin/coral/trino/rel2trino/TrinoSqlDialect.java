@@ -17,7 +17,7 @@ public class TrinoSqlDialect extends SqlDialect {
   private static final String IDENTIFIER_QUOTE_STRING = "\"";
 
   public static final TrinoSqlDialect INSTANCE =
-      new TrinoSqlDialect(emptyContext().withDatabaseProduct(DatabaseProduct.UNKNOWN).withDatabaseProductName("Presto")
+      new TrinoSqlDialect(emptyContext().withDatabaseProduct(DatabaseProduct.UNKNOWN).withDatabaseProductName("Trino")
           .withIdentifierQuoteString(IDENTIFIER_QUOTE_STRING).withNullCollation(NullCollation.LAST));
 
   private TrinoSqlDialect(Context context) {
@@ -35,7 +35,7 @@ public class TrinoSqlDialect extends SqlDialect {
 
   @Override
   public String quoteIdentifier(String name) {
-    // Assume that quote string is not allowed in Presto SQL identifiers
+    // Assume that quote string is not allowed in Trino SQL identifiers
     if (name.contains(IDENTIFIER_QUOTE_STRING)) {
       // This mean the identifiers within the name were quoted before.
       return name;

@@ -20,12 +20,12 @@ import org.apache.calcite.sql.util.SqlShuttle;
 
 
 /**
- * Rewrites the SqlNode tree to adapt to Presto specification
+ * Rewrites the SqlNode tree to adapt to Trino specification
  */
 public class TrinoSqlRewriter extends SqlShuttle {
 
   /**
-   * Replace Calcite data types present in the SQL query with their respective Presto data types
+   * Replace Calcite data types present in the SQL query with their respective Trino data types
    */
   private static SqlDataTypeSpec convertTypeSpec(SqlDataTypeSpec type) {
     if (type instanceof SqlArrayTypeSpec) {

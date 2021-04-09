@@ -11,7 +11,7 @@ import com.google.common.collect.ImmutableMap;
 
 
 /**
- * Trino Keywords Converter maintains the Presto Keywords and related utility functions
+ * Trino Keywords Converter maintains the Trino Keywords and related utility functions
  */
 public final class TrinoKeywordsConverter {
 
@@ -20,7 +20,7 @@ public final class TrinoKeywordsConverter {
   }
 
   /**
-   * Map of Presto Reserved Keywords with the mark to distinguish if the word is reserved SQL:2016 keyword ONLY
+   * Map of Trino Reserved Keywords with the mark to distinguish if the word is reserved SQL:2016 keyword ONLY
    */
   public static final Map<String, Boolean> RESERVED_KEYWORDS = ImmutableMap.<String, Boolean> builder()
       .put("ALTER", Boolean.FALSE).put("AND", Boolean.FALSE).put("AS", Boolean.FALSE).put("BETWEEN", Boolean.FALSE)
@@ -45,7 +45,7 @@ public final class TrinoKeywordsConverter {
       .put("WITH", Boolean.FALSE).build();
 
   /**
-   * Quote the value iif it is a reserved Presto keyword
+   * Quote the value iif it is a reserved Trino keyword
    *
    * @param value input value
    * @return if the value is a reserved keyword, a double quote will be added as a return value.
