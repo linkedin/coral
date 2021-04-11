@@ -80,7 +80,7 @@ import com.linkedin.coral.hive.hive2rel.functions.GenericProjectFunction;
  * The first parameter will be a reference to the column to be fixed.
  * The second parameter will be a string literal containing the name of the column.
  *
- * It is up to the coral modules for a specific engine (spark/presto) to resolve the schema of b.f1.
+ * It is up to the coral modules for a specific engine (spark/trino) to resolve the schema of b.f1.
  */
 class FuzzyUnionSqlRewriter extends SqlShuttle {
 

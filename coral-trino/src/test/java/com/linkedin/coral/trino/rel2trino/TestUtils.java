@@ -3,7 +3,7 @@
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
-package com.linkedin.coral.presto.rel2presto;
+package com.linkedin.coral.trino.rel2trino;
 
 import java.io.InputStream;
 import java.nio.file.Path;
@@ -40,7 +40,7 @@ import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
 import com.linkedin.coral.hive.hive2rel.HiveMscAdapter;
 import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
 
-import static com.linkedin.coral.presto.rel2presto.TestTable.*;
+import static com.linkedin.coral.trino.rel2trino.TestTable.*;
 import static java.lang.String.format;
 
 
@@ -67,7 +67,7 @@ public class TestUtils {
       RelRoot rel = planner.rel(validate);
       //RelNode relNode = rel.project();
       return rel.project();
-      //return Calcite2PrestoUDFConverter.convertRel(relNode);
+      //return Calcite2TrinoUDFConverter.convertRel(relNode);
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
@@ -193,7 +193,7 @@ public class TestUtils {
     HiveMetastoreClient hiveMetastoreClient = new HiveMscAdapter(Hive.get(conf).getMSC());
     hiveToRelConverter = HiveToRelConverter.create(hiveMetastoreClient);
 
-    // Views and tables used in HiveToPrestoConverterTest
+    // Views and tables used in HiveToTrinoConverterTest
     run(driver, "CREATE DATABASE IF NOT EXISTS test");
 
     run(driver, "CREATE TABLE IF NOT EXISTS test.tableA(a int, b struct<b1:string>)");
@@ -280,9 +280,9 @@ public class TestUtils {
     InputStream hiveConfStream = TestUtils.class.getClassLoader().getResourceAsStream("hive.xml");
     HiveConf hiveConf = new HiveConf();
     hiveConf.addResource(hiveConfStream);
-    hiveConf.set("mapreduce.framework.name", "local-presto");
-    hiveConf.set("_hive.hdfs.session.path", "/tmp/coral/presto");
-    hiveConf.set("_hive.local.session.path", "/tmp/coral/presto");
+    hiveConf.set("mapreduce.framework.name", "local-trino");
+    hiveConf.set("_hive.hdfs.session.path", "/tmp/coral/trino");
+    hiveConf.set("_hive.local.session.path", "/tmp/coral/trino");
     return hiveConf;
   }
 }

@@ -21,7 +21,7 @@ and implementing query rewrite algorithms for data governance and query optimiza
 **Coral** consists of following modules:
 
 - Coral-Hive: Converts definitions of Hive views with UDFs to equivalent view logical plan.
-- Coral-Presto: Converts view logical plan to Trino (formerly PrestoSQL) SQL.
+- Coral-Trino: Converts view logical plan to Trino (formerly PrestoSQL) SQL.
 - Coral-Spark: Converts view logical plan to Spark SQL.
 - Coral-Pig: Converts view logical plan to Pig-latin.
 - Coral-Schema: Derives Avro schema of view using view logical plan and input Avro schemas of base tables.

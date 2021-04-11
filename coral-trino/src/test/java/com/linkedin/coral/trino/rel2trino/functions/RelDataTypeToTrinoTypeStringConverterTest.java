@@ -3,7 +3,7 @@
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
-package com.linkedin.coral.presto.rel2presto.functions;
+package com.linkedin.coral.trino.rel2trino.functions;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,7 +26,7 @@ import org.testng.annotations.Test;
 import static org.testng.Assert.*;
 
 
-public class RelDataTypeToPrestoTypeStringConverterTest {
+public class RelDataTypeToTrinoTypeStringConverterTest {
 
   private static final String CHAR = "char";
   private static final String VARCHAR = "varchar";
@@ -44,60 +44,60 @@ public class RelDataTypeToPrestoTypeStringConverterTest {
 
   @Test
   public void testPrimitiveRelDataType() {
-    Multimap<String, SqlTypeName> prestoTypeCastStringToSqlTypeNameMap =
+    Multimap<String, SqlTypeName> trinoTypeCastStringToSqlTypeNameMap =
         new ImmutableMultimap.Builder<String, SqlTypeName>().put(CHAR, SqlTypeName.CHAR)
             .put(VARCHAR, SqlTypeName.VARCHAR).put(INTEGER, SqlTypeName.INTEGER).put(SMALLINT, SqlTypeName.SMALLINT)
             .put(TINYINT, SqlTypeName.TINYINT).put(BIGINT, SqlTypeName.BIGINT).put(DOUBLE, SqlTypeName.DOUBLE)
             .put(REAL, SqlTypeName.REAL).put(REAL, SqlTypeName.FLOAT).put(BOOLEAN, SqlTypeName.BOOLEAN)
             .put(DATE, SqlTypeName.DATE).put(TIMESTAMP, SqlTypeName.TIMESTAMP).put(TIME, SqlTypeName.TIME)
             .put(VARBINARY, SqlTypeName.BINARY).put(VARBINARY, SqlTypeName.VARBINARY).build();
-    for (Map.Entry<String, SqlTypeName> entry : prestoTypeCastStringToSqlTypeNameMap.entries()) {
-      String expectedPrestoTypeCastString = entry.getKey();
+    for (Map.Entry<String, SqlTypeName> entry : trinoTypeCastStringToSqlTypeNameMap.entries()) {
+      String expectedTrinoTypeCastString = entry.getKey();
       SqlTypeName sqlTypeName = entry.getValue();
       RelDataType relDataType = new BasicSqlType(RelDataTypeSystem.DEFAULT, sqlTypeName);
-      String prestoTypeCastString = RelDataTypeToPrestoTypeStringConverter.buildPrestoTypeString(relDataType);
-      assertEquals(prestoTypeCastString, expectedPrestoTypeCastString);
+      String trinoTypeCastString = RelDataTypeToTrinoTypeStringConverter.buildTrinoTypeString(relDataType);
+      assertEquals(trinoTypeCastString, expectedTrinoTypeCastString);
     }
   }
 
   @Test
   public void testStructRelDataType() {
-    String expectedPrestoTypeCastString = "row(str varchar, int integer)";
+    String expectedTrinoTypeCastString = "row(str varchar, int integer)";
 
     List<RelDataTypeField> fields = new ArrayList();
     fields.add(new RelDataTypeFieldImpl("str", 0, new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.VARCHAR)));
     fields.add(new RelDataTypeFieldImpl("int", 0, new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.INTEGER)));
 
     RelRecordType relRecordType = new RelRecordType(fields);
-    String prestoTypeCastString = RelDataTypeToPrestoTypeStringConverter.buildPrestoTypeString(relRecordType);
-    assertEquals(prestoTypeCastString, expectedPrestoTypeCastString);
+    String trinoTypeCastString = RelDataTypeToTrinoTypeStringConverter.buildTrinoTypeString(relRecordType);
+    assertEquals(trinoTypeCastString, expectedTrinoTypeCastString);
   }
 
   @Test
   public void testArrayRelDataType() {
-    String expectedPrestoTypeCastString = "array(integer)";
+    String expectedTrinoTypeCastString = "array(integer)";
 
     ArraySqlType arraySqlType =
         new ArraySqlType(new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.INTEGER), true);
-    String prestoTypeCastString = RelDataTypeToPrestoTypeStringConverter.buildPrestoTypeString(arraySqlType);
+    String trinoTypeCastString = RelDataTypeToTrinoTypeStringConverter.buildTrinoTypeString(arraySqlType);
 
-    assertEquals(prestoTypeCastString, expectedPrestoTypeCastString);
+    assertEquals(trinoTypeCastString, expectedTrinoTypeCastString);
   }
 
   @Test
   public void testMapRelDataType() {
-    String expectedPrestoTypeCastString = "map(integer, integer)";
+    String expectedTrinoTypeCastString = "map(integer, integer)";
 
     MapSqlType mapSqlType = new MapSqlType(new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.INTEGER),
         new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.INTEGER), true);
-    String prestoTypeCastString = RelDataTypeToPrestoTypeStringConverter.buildPrestoTypeString(mapSqlType);
+    String trinoTypeCastString = RelDataTypeToTrinoTypeStringConverter.buildTrinoTypeString(mapSqlType);
 
-    assertEquals(prestoTypeCastString, expectedPrestoTypeCastString);
+    assertEquals(trinoTypeCastString, expectedTrinoTypeCastString);
   }
 
   @Test
   public void testNestedStructRelDataType() {
-    String expectedPrestoTypeCastString = "row(str varchar, struct row(\"values\" varchar, int integer))";
+    String expectedTrinoTypeCastString = "row(str varchar, struct row(\"values\" varchar, int integer))";
 
     List<RelDataTypeField> nestedFields = new ArrayList();
     nestedFields
@@ -112,13 +112,13 @@ public class RelDataTypeToPrestoTypeStringConverterTest {
     fields.add(new RelDataTypeFieldImpl("struct", 0, nestedRelRecordType));
 
     RelRecordType relRecordType = new RelRecordType(fields);
-    String prestoTypeCastString = RelDataTypeToPrestoTypeStringConverter.buildPrestoTypeString(relRecordType);
-    assertEquals(prestoTypeCastString, expectedPrestoTypeCastString);
+    String trinoTypeCastString = RelDataTypeToTrinoTypeStringConverter.buildTrinoTypeString(relRecordType);
+    assertEquals(trinoTypeCastString, expectedTrinoTypeCastString);
   }
 
   @Test
   public void testMapWithStructValueRelDataType() {
-    String expectedPrestoTypeCastString = "map(integer, row(\"values\" varchar, int integer))";
+    String expectedTrinoTypeCastString = "map(integer, row(\"values\" varchar, int integer))";
 
     List<RelDataTypeField> fields = new ArrayList();
     fields.add(new RelDataTypeFieldImpl("values", 0, new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.VARCHAR)));
@@ -128,14 +128,14 @@ public class RelDataTypeToPrestoTypeStringConverterTest {
 
     MapSqlType mapSqlType =
         new MapSqlType(new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.INTEGER), relRecordType, true);
-    String prestoTypeCastString = RelDataTypeToPrestoTypeStringConverter.buildPrestoTypeString(mapSqlType);
+    String trinoTypeCastString = RelDataTypeToTrinoTypeStringConverter.buildTrinoTypeString(mapSqlType);
 
-    assertEquals(prestoTypeCastString, expectedPrestoTypeCastString);
+    assertEquals(trinoTypeCastString, expectedTrinoTypeCastString);
   }
 
   @Test
   public void testArrayWithStructEleRelDataType() {
-    String expectedPrestoTypeCastString = "array(row(\"values\" varchar, int integer))";
+    String expectedTrinoTypeCastString = "array(row(\"values\" varchar, int integer))";
 
     List<RelDataTypeField> fields = new ArrayList();
     fields.add(new RelDataTypeFieldImpl("values", 0, new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.VARCHAR)));
@@ -144,14 +144,14 @@ public class RelDataTypeToPrestoTypeStringConverterTest {
     RelRecordType relRecordType = new RelRecordType(fields);
 
     ArraySqlType arraySqlType = new ArraySqlType(relRecordType, true);
-    String prestoTypeCastString = RelDataTypeToPrestoTypeStringConverter.buildPrestoTypeString(arraySqlType);
+    String trinoTypeCastString = RelDataTypeToTrinoTypeStringConverter.buildTrinoTypeString(arraySqlType);
 
-    assertEquals(prestoTypeCastString, expectedPrestoTypeCastString);
+    assertEquals(trinoTypeCastString, expectedTrinoTypeCastString);
   }
 
   @Test
   public void testComplexRelDataType() {
-    String expectedPrestoTypeCastString =
+    String expectedTrinoTypeCastString =
         "map(integer, array(row(str varchar, struct row(\"values\" varchar, int integer))))";
 
     List<RelDataTypeField> nestedFields = new ArrayList();
@@ -172,14 +172,14 @@ public class RelDataTypeToPrestoTypeStringConverterTest {
 
     MapSqlType mapSqlType =
         new MapSqlType(new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.INTEGER), arraySqlType, true);
-    String prestoTypeCastString = RelDataTypeToPrestoTypeStringConverter.buildPrestoTypeString(mapSqlType);
+    String trinoTypeCastString = RelDataTypeToTrinoTypeStringConverter.buildTrinoTypeString(mapSqlType);
 
-    assertEquals(prestoTypeCastString, expectedPrestoTypeCastString);
+    assertEquals(trinoTypeCastString, expectedTrinoTypeCastString);
   }
 
   @Test
   public void testDifferentTypeStructRelDataType() {
-    String expectedPrestoTypeCastString = "row(" + "int integer, " + "small smallint, " + "tiny tinyint, "
+    String expectedTrinoTypeCastString = "row(" + "int integer, " + "small smallint, " + "tiny tinyint, "
         + "big bigint, " + "rea real, " + "flo real, " + "bool boolean, " + "ch char, " + "vch varchar, " + "dat date, "
         + "tstamp timestamp, " + "tim time, " + "bin varbinary, " + "vbin varbinary)";
 
@@ -201,7 +201,7 @@ public class RelDataTypeToPrestoTypeStringConverterTest {
     fields.add(new RelDataTypeFieldImpl("vbin", 0, new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.VARBINARY)));
 
     RelRecordType relRecordType = new RelRecordType(fields);
-    String prestoTypeCastString = RelDataTypeToPrestoTypeStringConverter.buildPrestoTypeString(relRecordType);
-    assertEquals(prestoTypeCastString, expectedPrestoTypeCastString);
+    String trinoTypeCastString = RelDataTypeToTrinoTypeStringConverter.buildTrinoTypeString(relRecordType);
+    assertEquals(trinoTypeCastString, expectedTrinoTypeCastString);
   }
 }

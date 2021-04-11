@@ -8,11 +8,11 @@
 <configuration>
   <property>
     <name>hive.exec.scratchdir</name>
-    <value>${java.io.tmpdir}/coral/presto/hive-scratch-dir</value>
+    <value>${java.io.tmpdir}/coral/trino/hive-scratch-dir</value>
   </property>
   <property>
     <name>hive.metastore.warehouse.dir</name>
-    <value>${java.io.tmpdir}/coral/presto/warehouse</value>
+    <value>${java.io.tmpdir}/coral/trino/warehouse</value>
   </property>
   <property>
     <name>javax.jdo.option.ConnectionDriverName</name>

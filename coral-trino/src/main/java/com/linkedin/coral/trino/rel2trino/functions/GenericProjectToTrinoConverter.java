@@ -3,7 +3,7 @@
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
-package com.linkedin.coral.presto.rel2presto.functions;
+package com.linkedin.coral.trino.rel2trino.functions;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,15 +21,15 @@ import org.apache.calcite.sql.type.MapSqlType;
 
 
 /**
- * GenericProjectToPrestoConverter takes a GenericProject RexCall call and rewrites its function call to be suitable
- * to Presto.
+ * GenericProjectToTrinoConverter takes a GenericProject RexCall call and rewrites its function call to be suitable
+ * to Trino.
  *
- * Presto does not support the GenericProject UDF which can be done in Hive and Spark because the return type of
- * GenericProject can only be determined at runtime based on the schema. Presto has compile-time validations that will
+ * Trino does not support the GenericProject UDF which can be done in Hive and Spark because the return type of
+ * GenericProject can only be determined at runtime based on the schema. Trino has compile-time validations that will
  * fail because the return type of GenericProject cannot be validated.
  *
  * At the language-level, we can apply a set of transformations over each data type to perform similar functionalities
- * to GenericProject by calling Presto built-in UDFs in conjunction:
+ * to GenericProject by calling Trino built-in UDFs in conjunction:
  *   - struct/row
  *     - CAST(ROW([selected_row_field_references]) as ROW([selected_row_field_types]))
  *   - array
@@ -49,7 +49,7 @@ import org.apache.calcite.sql.type.MapSqlType;
  *           struct(a:int, b:int),
  *           struct(a:int)
  *         )
- *     - Presto rewrite
+ *     - Trino rewrite
  *       - cast(row(col.a) as row(a int))
  *
  *   Example 2:
@@ -58,7 +58,7 @@ import org.apache.calcite.sql.type.MapSqlType;
  *           array(struct(a:int, b:int)),
  *           array(struct(a:int))
  *         )
- *     - Presto rewrite
+ *     - Trino rewrite
  *       - transform(col, x -&gt; cast(row(x.a) as row(a int)))
  *
  *   Example 3:
@@ -67,7 +67,7 @@ import org.apache.calcite.sql.type.MapSqlType;
  *           map(string, struct(a:int, b:int)),
  *           map(string, struct(a:int))
  *         )
- *     - Presto rewrite
+ *     - Trino rewrite
  *       - transform_values(col, (k, v) -&gt; cast(row(v.a) as row(a int)))
  *
  *   Example 4:
@@ -76,7 +76,7 @@ import org.apache.calcite.sql.type.MapSqlType;
  *           struct(a:int, s:struct(b:int, c:int)),
  *           struct(a:int, s:struct(b:int))
  *         )
- *     - Presto rewrite
+ *     - Trino rewrite
  *       - cast(row(col.a, cast(row(col.s.b) as row(b int))) as row(a int, s row(b int)))
  *
  *   Example 5:
@@ -85,7 +85,7 @@ import org.apache.calcite.sql.type.MapSqlType;
  *           map(string, array(struct(a:int, s:struct(b:int, c:int)))),
  *           map(string, array(struct(a:int, s:struct(b:int))))
  *         )
- *     - Presto rewrite
+ *     - Trino rewrite
  *       - transform_values(col, (k, v) -&gt;
  *           transform(v, x -&gt;
  *             cast(row(x.a, cast(row(x.s.b) as row(b int))) as row(a int, s row(b int)))
@@ -93,13 +93,13 @@ import org.apache.calcite.sql.type.MapSqlType;
  *         )
  *
  */
-public class GenericProjectToPrestoConverter {
-  private GenericProjectToPrestoConverter() {
+public class GenericProjectToTrinoConverter {
+  private GenericProjectToTrinoConverter() {
   }
 
   /**
-   * Create a RexCall that performs GenericProject-like operations for Presto depending on the given return type.
-   * The Presto UDF for each data type is as follows:
+   * Create a RexCall that performs GenericProject-like operations for Trino depending on the given return type.
+   * The Trino UDF for each data type is as follows:
    *   - struct/row
    *     - CAST
    *   - array
@@ -110,7 +110,7 @@ public class GenericProjectToPrestoConverter {
    *     - N/A
    * @param builder RexBuilder for the call
    * @param call a GenericProject call
-   * @return a Presto UDF call equivalent for the given GenericProject call
+   * @return a Trino UDF call equivalent for the given GenericProject call
    */
   public static RexCall convertGenericProject(RexBuilder builder, RexCall call) {
     // We build a RexCall to a UDF based on the outermost return type.
@@ -134,8 +134,8 @@ public class GenericProjectToPrestoConverter {
     //        RexBuilder
     //        - we cannot retrieve the name of the column from the RexBuilder from the numbered reference
     //
-    // 2. Transforms the original RexCall 'call' to a transformed call using a Presto UDF
-    //               [RexCall:Presto_UDF_call(`arg_0`)]
+    // 2. Transforms the original RexCall 'call' to a transformed call using a Trino UDF
+    //               [RexCall:Trino_UDF_call(`arg_0`)]
     //                                 |
     //            [RexLiteral:input_transformation_string]
     //
@@ -187,22 +187,22 @@ public class GenericProjectToPrestoConverter {
     RelDataType toDataType = call.getOperator().inferReturnType(null);
     switch (toDataType.getSqlTypeName()) {
       case ROW:
-        // Create a Presto CAST RexCall
+        // Create a Trino CAST RexCall
         String structDataTypeArgumentString = structDataTypeArgumentString((RelRecordType) fromDataType,
             (RelRecordType) toDataType, transformColumnFieldName);
-        SqlOperator structFunction = new PrestoStructCastRowFunction(toDataType);
+        SqlOperator structFunction = new TrinoStructCastRowFunction(toDataType);
         return (RexCall) builder.makeCall(structFunction, builder.makeLiteral(structDataTypeArgumentString));
       case ARRAY:
-        // Create a Presto TRANSFORM RexCall
+        // Create a Trino TRANSFORM RexCall
         String arrayDataTypeArgumentString = arrayDataTypeArgumentString((ArraySqlType) fromDataType,
             (ArraySqlType) toDataType, transformColumnFieldName);
-        SqlOperator arrayFunction = new PrestoArrayTransformFunction(toDataType);
+        SqlOperator arrayFunction = new TrinoArrayTransformFunction(toDataType);
         return (RexCall) builder.makeCall(arrayFunction, builder.makeLiteral(arrayDataTypeArgumentString));
       case MAP:
-        // Create a Presto TRANSFORM_VALUES RexCall
+        // Create a Trino TRANSFORM_VALUES RexCall
         String mapDataTypeArgumentString =
             mapDataTypeArgumentString((MapSqlType) fromDataType, (MapSqlType) toDataType, transformColumnFieldName);
-        SqlOperator mapFunction = new PrestoMapTransformValuesFunction(toDataType);
+        SqlOperator mapFunction = new TrinoMapTransformValuesFunction(toDataType);
         return (RexCall) builder.makeCall(mapFunction, builder.makeLiteral(mapDataTypeArgumentString));
       default:
         return call;
@@ -224,7 +224,7 @@ public class GenericProjectToPrestoConverter {
   }
 
   /**
-   * Create the argument string to a TRANSFORM_VALUES() Presto UDF call to convert fromDataType to toDataType.
+   * Create the argument string to a TRANSFORM_VALUES() Trino UDF call to convert fromDataType to toDataType.
    * The argument string follows the following format:
    *   [selected_map_field_reference], (k, v) -> [transform v as necessary]
    * @param fromDataType given map RelDataType
@@ -258,7 +258,7 @@ public class GenericProjectToPrestoConverter {
   }
 
   /**
-   * Create the argument string to a TRANSFORM() Presto UDF call to convert fromDataType to toDataType.
+   * Create the argument string to a TRANSFORM() Trino UDF call to convert fromDataType to toDataType.
    * The argument string follows the following format:
    *   [selected_array_field_reference], x -> [transform x as necessary]
    * @param fromDataType given array RelDataType
@@ -290,7 +290,7 @@ public class GenericProjectToPrestoConverter {
   }
 
   /**
-   * Create the argument string to a CAST() Presto UDF call to convert fromDataType to toDataType.
+   * Create the argument string to a CAST() Trino UDF call to convert fromDataType to toDataType.
    * The argument string follows the following format:
    *   ROW([selected_row_field_references]) AS ROW([selected_row_field_types])
    * @param fromDataType given array RelDataType
@@ -302,7 +302,7 @@ public class GenericProjectToPrestoConverter {
       String fieldNameReference) {
     String structFieldsAccessString =
         buildStructRelDataTypeFieldAccessString(fromDataType, toDataType, fieldNameReference);
-    String castToRowTypeString = RelDataTypeToPrestoTypeStringConverter.buildPrestoTypeString(toDataType);
+    String castToRowTypeString = RelDataTypeToTrinoTypeStringConverter.buildTrinoTypeString(toDataType);
     return String.format("%s as %s", structFieldsAccessString, castToRowTypeString);
   }
 

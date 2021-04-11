@@ -83,7 +83,7 @@ public class RelContextProvider {
     // this is to ensure that jdbc:calcite driver is correctly registered
     // before initializing framework (which needs it)
     // We don't want each engine to register the driver. It may not also load correctly
-    // if the service uses its own service loader (see Presto)
+    // if the service uses its own service loader (see Trino)
     driver = new Driver();
     config = Frameworks.newConfigBuilder().convertletTable(convertletTable).defaultSchema(schemaPlus)
         .typeSystem(new HiveTypeSystem()).traitDefs((List<RelTraitDef>) null)
@@ -107,7 +107,7 @@ public class RelContextProvider {
     // this is to ensure that jdbc:calcite driver is correctly registered
     // before initializing framework (which needs it)
     // We don't want each engine to register the driver. It may not also load correctly
-    // if the service uses its own service loader (see Presto)
+    // if the service uses its own service loader (see Trino)
     driver = new Driver();
     config = Frameworks.newConfigBuilder().convertletTable(convertletTable).defaultSchema(schemaPlus)
         .typeSystem(new HiveTypeSystem()).traitDefs((List<RelTraitDef>) null)

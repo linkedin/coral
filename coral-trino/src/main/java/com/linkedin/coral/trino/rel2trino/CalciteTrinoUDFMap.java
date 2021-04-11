@@ -3,7 +3,7 @@
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
-package com.linkedin.coral.presto.rel2presto;
+package com.linkedin.coral.trino.rel2trino;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -18,13 +18,13 @@ import com.linkedin.coral.com.google.common.collect.ImmutableMultimap;
 import com.linkedin.coral.hive.hive2rel.functions.HiveFunction;
 import com.linkedin.coral.hive.hive2rel.functions.HiveRLikeOperator;
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
-import com.linkedin.coral.presto.rel2presto.functions.PrestoElementAtFunction;
+import com.linkedin.coral.trino.rel2trino.functions.TrinoElementAtFunction;
 
-import static com.linkedin.coral.presto.rel2presto.UDFMapUtils.*;
+import static com.linkedin.coral.trino.rel2trino.UDFMapUtils.*;
 
 
-public class CalcitePrestoUDFMap {
-  private CalcitePrestoUDFMap() {
+public class CalciteTrinoUDFMap {
+  private CalciteTrinoUDFMap() {
   }
 
   private static final Map<String, UDFTransformer> UDF_MAP = new HashMap();
@@ -33,7 +33,7 @@ public class CalcitePrestoUDFMap {
     // conditional functions
     createUDFMapEntry(UDF_MAP, hiveToCalciteOp("nvl"), 2, "coalesce");
     // Array and map functions
-    createUDFMapEntry(UDF_MAP, SqlStdOperatorTable.ITEM, 2, PrestoElementAtFunction.INSTANCE);
+    createUDFMapEntry(UDF_MAP, SqlStdOperatorTable.ITEM, 2, TrinoElementAtFunction.INSTANCE);
 
     // Math Functions
     createUDFMapEntry(UDF_MAP, SqlStdOperatorTable.RAND, 0, "RANDOM");
@@ -60,7 +60,7 @@ public class CalcitePrestoUDFMap {
     createUDFMapEntry(UDF_MAP, hiveToCalciteOp("unhex"), 1, "from_hex");
     createUDFMapEntry(UDF_MAP, hiveToCalciteOp("array_contains"), 2, "contains");
     createUDFMapEntry(UDF_MAP, hiveToCalciteOp("regexp_extract"), 3, "regexp_extract",
-        "[{\"input\": 1}, {\"op\": \"hive_pattern_to_presto\", \"operands\":[{\"input\": 2}]}, {\"input\": 3}]", null);
+        "[{\"input\": 1}, {\"op\": \"hive_pattern_to_trino\", \"operands\":[{\"input\": 2}]}, {\"input\": 3}]", null);
     createUDFMapEntry(UDF_MAP, hiveToCalciteOp("instr"), 2, "strpos");
     createRuntimeUDFMapEntry(UDF_MAP, hiveToCalciteOp("decode"), 2,
         "[{\"regex\":\"(?i)('utf-8')\", \"input\":2, \"name\":\"from_utf8\"}]", "[{\"input\":1}]", null);

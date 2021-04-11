@@ -3,31 +3,32 @@
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
-package com.linkedin.coral.presto.rel2presto;
-
-import com.facebook.presto.sql.parser.SqlParser;
-import com.facebook.presto.sql.tree.Statement;
+package com.linkedin.coral.trino.rel2trino;
 
 import org.apache.calcite.tools.FrameworkConfig;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
-import static com.linkedin.coral.presto.rel2presto.TestTable.*;
-import static com.linkedin.coral.presto.rel2presto.TestUtils.*;
+import io.trino.sql.parser.ParsingOptions;
+import io.trino.sql.parser.SqlParser;
+import io.trino.sql.tree.Statement;
+
+import static com.linkedin.coral.trino.rel2trino.TestTable.*;
+import static com.linkedin.coral.trino.rel2trino.TestUtils.*;
 import static org.testng.Assert.*;
 
 
 /**
- * Tests conversion from Calcite RelNode to Presto Sql
+ * Tests conversion from Calcite RelNode to Trino's SQL
  */
 // All tests use a starting sql and use calcite parser to generate parse tree.
 // This makes it easier to generate RelNodes for testing. The input sql is
 // in Calcite sql syntax (not Hive)
 // Disabled tests are failing tests
-public class RelToPrestoConverterTest {
+public class RelToTrinoConverterTest {
 
   static FrameworkConfig config;
-  static SqlParser prestoParser = new SqlParser();
+  static SqlParser trinoParser = new SqlParser();
   static final String tableOne = TABLE_ONE.getTableName();
   static final String tableTwo = TABLE_TWO.getTableName();
   static final String tableThree = TABLE_THREE.getTableName();
@@ -40,22 +41,23 @@ public class RelToPrestoConverterTest {
   }
 
   private void testConversion(String inputSql, String expectedSql) {
-    String prestoSql = toPrestoSql(inputSql);
-    validate(prestoSql, expectedSql);
+    String trinoSql = toTrinoSql(inputSql);
+    validate(trinoSql, expectedSql);
   }
 
-  private void validate(String prestoSql, String expected) {
+  private void validate(String trinoSql, String expected) {
     try {
-      Statement statement = prestoParser.createStatement(prestoSql);
+      Statement statement =
+          trinoParser.createStatement(trinoSql, new ParsingOptions(ParsingOptions.DecimalLiteralTreatment.AS_DECIMAL));
       assertNotNull(statement);
     } catch (Exception e) {
-      assertTrue(false, "Failed to parse sql: " + prestoSql);
+      assertTrue(false, "Failed to parse sql: " + trinoSql);
     }
-    assertEquals(prestoSql, expected);
+    assertEquals(trinoSql, expected);
   }
 
-  private String toPrestoSql(String sql) {
-    RelToPrestoConverter converter = new RelToPrestoConverter();
+  private String toTrinoSql(String sql) {
+    RelToTrinoConverter converter = new RelToTrinoConverter();
     return converter.convert(TestUtils.toRel(sql, config));
   }
 
@@ -414,7 +416,7 @@ public class RelToPrestoConverterTest {
   }
 
   @Test
-  public void testTryCastIntPresto() {
+  public void testTryCastIntTrino() {
     String sql =
         "SELECT CASE WHEN a.scol= 0 THEN TRUE ELSE FALSE END AS testcol FROM " + tableOne + " a WHERE a.scol = 1";
     String expectedSql =
@@ -424,7 +426,7 @@ public class RelToPrestoConverterTest {
   }
 
   @Test
-  public void testTryCastBooleanPresto() {
+  public void testTryCastBooleanTrino() {
     String sql = "SELECT CASE WHEN a.scol= TRUE THEN TRUE ELSE FALSE END AS testcol FROM " + tableOne
         + " a WHERE a.scol = FALSE";
     String expectedSql =

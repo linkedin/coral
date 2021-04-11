@@ -3,7 +3,7 @@
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
-package com.linkedin.coral.presto.rel2presto;
+package com.linkedin.coral.trino.rel2trino;
 
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelShuttle;
@@ -34,107 +34,107 @@ import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import com.linkedin.coral.com.google.common.collect.ImmutableMultimap;
 import com.linkedin.coral.com.google.common.collect.Multimap;
 import com.linkedin.coral.hive.hive2rel.functions.GenericProjectFunction;
-import com.linkedin.coral.presto.rel2presto.functions.GenericProjectToPrestoConverter;
+import com.linkedin.coral.trino.rel2trino.functions.GenericProjectToTrinoConverter;
 
 
-public class Calcite2PrestoUDFConverter {
-  private Calcite2PrestoUDFConverter() {
+public class Calcite2TrinoUDFConverter {
+  private Calcite2TrinoUDFConverter() {
   }
 
   /**
-   * Replaces Calcite SQL operators with Presto UDF to obtain the PrestoSQL-compatible Calcite plan.
+   * Replaces Calcite SQL operators with Trino UDF to obtain the Trino-compatible Calcite plan.
    *
    * @param calciteNode Original Calcite plan
-   * @return PrestoSQL-compatible Calcite plan
+   * @return Trino-compatible Calcite plan
    */
   public static RelNode convertRel(RelNode calciteNode) {
     RelShuttle converter = new RelShuttleImpl() {
       @Override
       public RelNode visit(LogicalProject project) {
-        return super.visit(project).accept(getPrestoRexConverter(project));
+        return super.visit(project).accept(getTrinoRexConverter(project));
       }
 
       @Override
       public RelNode visit(LogicalFilter inputFilter) {
-        return super.visit(inputFilter).accept(getPrestoRexConverter(inputFilter));
+        return super.visit(inputFilter).accept(getTrinoRexConverter(inputFilter));
       }
 
       @Override
       public RelNode visit(LogicalAggregate aggregate) {
-        return super.visit(aggregate).accept(getPrestoRexConverter(aggregate));
+        return super.visit(aggregate).accept(getTrinoRexConverter(aggregate));
       }
 
       @Override
       public RelNode visit(LogicalMatch match) {
-        return super.visit(match).accept(getPrestoRexConverter(match));
+        return super.visit(match).accept(getTrinoRexConverter(match));
       }
 
       @Override
       public RelNode visit(TableScan scan) {
-        return super.visit(scan).accept(getPrestoRexConverter(scan));
+        return super.visit(scan).accept(getTrinoRexConverter(scan));
       }
 
       @Override
       public RelNode visit(TableFunctionScan scan) {
-        return super.visit(scan).accept(getPrestoRexConverter(scan));
+        return super.visit(scan).accept(getTrinoRexConverter(scan));
       }
 
       @Override
       public RelNode visit(LogicalValues values) {
-        return super.visit(values).accept(getPrestoRexConverter(values));
+        return super.visit(values).accept(getTrinoRexConverter(values));
       }
 
       @Override
       public RelNode visit(LogicalJoin join) {
-        return super.visit(join).accept(getPrestoRexConverter(join));
+        return super.visit(join).accept(getTrinoRexConverter(join));
       }
 
       @Override
       public RelNode visit(LogicalCorrelate correlate) {
-        return super.visit(correlate).accept(getPrestoRexConverter(correlate));
+        return super.visit(correlate).accept(getTrinoRexConverter(correlate));
       }
 
       @Override
       public RelNode visit(LogicalUnion union) {
-        return super.visit(union).accept(getPrestoRexConverter(union));
+        return super.visit(union).accept(getTrinoRexConverter(union));
       }
 
       @Override
       public RelNode visit(LogicalIntersect intersect) {
-        return super.visit(intersect).accept(getPrestoRexConverter(intersect));
+        return super.visit(intersect).accept(getTrinoRexConverter(intersect));
       }
 
       @Override
       public RelNode visit(LogicalMinus minus) {
-        return super.visit(minus).accept(getPrestoRexConverter(minus));
+        return super.visit(minus).accept(getTrinoRexConverter(minus));
       }
 
       @Override
       public RelNode visit(LogicalSort sort) {
-        return super.visit(sort).accept(getPrestoRexConverter(sort));
+        return super.visit(sort).accept(getTrinoRexConverter(sort));
       }
 
       @Override
       public RelNode visit(LogicalExchange exchange) {
-        return super.visit(exchange).accept(getPrestoRexConverter(exchange));
+        return super.visit(exchange).accept(getTrinoRexConverter(exchange));
       }
 
       @Override
       public RelNode visit(RelNode other) {
-        return super.visit(other).accept(getPrestoRexConverter(other));
+        return super.visit(other).accept(getTrinoRexConverter(other));
       }
 
-      private PrestoRexConverter getPrestoRexConverter(RelNode node) {
-        return new PrestoRexConverter(node.getCluster().getRexBuilder());
+      private TrinoRexConverter getTrinoRexConverter(RelNode node) {
+        return new TrinoRexConverter(node.getCluster().getRexBuilder());
       }
     };
     return calciteNode.accept(converter);
   }
 
   /**
-   * For replacing a certain Calcite SQL operator with Presto UDFs in a relational expression
+   * For replacing a certain Calcite SQL operator with Trino UDFs in a relational expression
    */
-  public static class PrestoRexConverter extends RexShuttle {
+  public static class TrinoRexConverter extends RexShuttle {
     private final RexBuilder rexBuilder;
 
     // SUPPORTED_TYPE_CAST_MAP is a static mapping that maps a SqlTypeFamily key to its set of
@@ -145,23 +145,23 @@ public class Calcite2PrestoUDFConverter {
           .putAll(SqlTypeFamily.CHARACTER, SqlTypeFamily.NUMERIC, SqlTypeFamily.BOOLEAN).build();
     }
 
-    public PrestoRexConverter(RexBuilder rexBuilder) {
+    public TrinoRexConverter(RexBuilder rexBuilder) {
       this.rexBuilder = rexBuilder;
     }
 
     @Override
     public RexNode visitCall(RexCall call) {
       // GenericProject requires a nontrivial function rewrite because of the following:
-      //   - makes use of Presto built-in UDFs transform_values for map objects and transform for array objects
+      //   - makes use of Trino built-in UDFs transform_values for map objects and transform for array objects
       //     which has lambda functions as parameters
       //     - syntax is difficult for Calcite to parse
       //   - the return type varies based on a desired schema to be projected
       if (call.getOperator() instanceof GenericProjectFunction) {
-        return GenericProjectToPrestoConverter.convertGenericProject(rexBuilder, call);
+        return GenericProjectToTrinoConverter.convertGenericProject(rexBuilder, call);
       }
 
       final UDFTransformer transformer =
-          CalcitePrestoUDFMap.getUDFTransformer(call.getOperator().getName(), call.operands.size());
+          CalciteTrinoUDFMap.getUDFTransformer(call.getOperator().getName(), call.operands.size());
       if (transformer != null) {
         return super.visitCall((RexCall) transformer.transformCall(rexBuilder, call.getOperands()));
       }
@@ -189,7 +189,7 @@ public class Calcite2PrestoUDFConverter {
       if (SUPPORTED_TYPE_CAST_MAP.containsEntry(leftOperand.getType().getSqlTypeName().getFamily(),
           rightOperand.getType().getSqlTypeName().getFamily())) {
         final RexNode tryCastNode =
-            rexBuilder.makeCall(rightOperand.getType(), PrestoTryCastFunction.INSTANCE, ImmutableList.of(leftOperand));
+            rexBuilder.makeCall(rightOperand.getType(), TrinoTryCastFunction.INSTANCE, ImmutableList.of(leftOperand));
         return (RexCall) rexBuilder.makeCall(op, tryCastNode, rightOperand);
       }
       return call;

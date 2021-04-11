@@ -3,7 +3,7 @@
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
-package com.linkedin.coral.presto.rel2presto;
+package com.linkedin.coral.trino.rel2trino;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -19,13 +19,13 @@ import static com.google.common.io.RecursiveDeleteOption.ALLOW_INSECURE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 
-public class HiveToPrestoConverterTest {
+public class HiveToTrinoConverterTest {
 
   Path metastoreDbDirectory;
 
   @BeforeTest
   public void beforeClass() throws Exception {
-    metastoreDbDirectory = Files.createTempFile("coral-presto", "metastore.db");
+    metastoreDbDirectory = Files.createTempFile("coral-trino", "metastore.db");
     Files.delete(metastoreDbDirectory); // it will be re-created
     TestUtils.initializeViews(metastoreDbDirectory);
   }
@@ -38,8 +38,8 @@ public class HiveToPrestoConverterTest {
   @Test(dataProvider = "viewTestCases")
   public void testViews(String database, String view, String expectedSql) {
     RelNode relNode = TestUtils.convertView(database, view);
-    RelToPrestoConverter relToPrestoConverter = new RelToPrestoConverter();
-    String expandedSql = relToPrestoConverter.convert(relNode);
+    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+    String expandedSql = relToTrinoConverter.convert(relNode);
     assertThat(expandedSql).isEqualTo(expectedSql);
   }
 
