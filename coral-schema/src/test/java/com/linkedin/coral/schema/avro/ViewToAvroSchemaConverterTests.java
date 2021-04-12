@@ -618,4 +618,15 @@ public class ViewToAvroSchemaConverterTests {
   }
 
   // TODO: add more unit tests
+  @Test
+  public void testSelectNull() {
+    String viewSql = "CREATE VIEW v AS SELECT NULL Null_Field FROM basecomplex";
+
+    TestUtils.executeCreateViewQuery("default", "v", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v", false);
+
+    Assert.assertEquals(actualSchema.toString(true), TestUtils.loadSchema("testSelectNull-expected.avsc"));
+  }
 }
