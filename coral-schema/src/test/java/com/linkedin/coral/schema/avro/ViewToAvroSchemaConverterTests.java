@@ -627,7 +627,7 @@ public class ViewToAvroSchemaConverterTests {
     ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
     Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v", false);
 
-    Assert.assertEquals(actualSchema.toString(true), TestUtils.loadSchema("testSelectNull-expected.avsc"));
+    Assert.assertEquals(actualSchema.toString(true), TestUtils.loadSchema("testSelectNullUnionNullField-expected.avsc"));
   }
 
   // TODO: add more unit tests
