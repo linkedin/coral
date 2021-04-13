@@ -171,7 +171,7 @@ class SchemaUtilities {
     Schema fieldSchema = RelDataTypeToAvroType.relDataTypeToAvroTypeNonNullable(fieldRelDataType, fieldName);
 
     // TODO: handle default value properly
-    if (isNullable) {
+    if (isNullable && fieldSchema.getType() != Schema.Type.NULL) {
       Schema fieldSchemaNullable = Schema.createUnion(Arrays.asList(fieldSchema, Schema.create(Schema.Type.NULL)));
       fieldAssembler.name(fieldName).type(fieldSchemaNullable).noDefault();
     } else {
@@ -436,6 +436,7 @@ class SchemaUtilities {
       case INT:
       case LONG:
       case STRING:
+      case NULL:
         return leftSchema.getType() == rightSchema.getType();
       case FIXED:
         boolean isSameType = leftSchema.getType() == rightSchema.getType();
@@ -526,6 +527,7 @@ class SchemaUtilities {
         case LONG:
         case STRING:
         case FIXED:
+        case NULL:
           // TODO: verify whether FIXED type has namespace
           appendField(field, fieldAssembler);
           break;
