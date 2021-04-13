@@ -618,9 +618,9 @@ public class ViewToAvroSchemaConverterTests {
   }
 
   @Test
-  public void testSelectNull() {
+  public void testSelectNullUnionNullField() {
     String viewSql =
-        "CREATE VIEW v AS SELECT NULL Null_Field FROM basecomplex UNION ALL SELECT NULL Null_Field FROM basecomplexunioncompatible";
+        "CREATE VIEW v AS SELECT NULL Null_Field FROM basecomplex UNION ALL SELECT Null_Field FROM basenulltypefield";
 
     TestUtils.executeCreateViewQuery("default", "v", viewSql);
 
