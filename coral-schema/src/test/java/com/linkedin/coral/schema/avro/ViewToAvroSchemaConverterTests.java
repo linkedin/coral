@@ -617,5 +617,19 @@ public class ViewToAvroSchemaConverterTests {
     // TODO: implement this test
   }
 
+  @Test
+  public void testSelectNullUnionNullField() {
+    String viewSql =
+        "CREATE VIEW v AS SELECT NULL Null_Field FROM basecomplex UNION ALL SELECT Null_Field FROM basenulltypefield";
+
+    TestUtils.executeCreateViewQuery("default", "v", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v", false);
+
+    Assert.assertEquals(actualSchema.toString(true),
+        TestUtils.loadSchema("testSelectNullUnionNullField-expected.avsc"));
+  }
+
   // TODO: add more unit tests
 }
