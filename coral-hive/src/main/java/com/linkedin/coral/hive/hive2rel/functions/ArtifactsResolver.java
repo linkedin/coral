@@ -40,7 +40,7 @@ public class ArtifactsResolver {
   private final Ivy _ivyInstance;
   public ArtifactsResolver() {
     // Ivy spews a lot of junk on the console. Hiding it
-    Message.setDefaultLogger(new DefaultMessageLogger(getIvyLogLevel()));
+    Message.setDefaultLogger(new DefaultMessageLogger(Message.MSG_ERR));
     final IvySettings settings = setupIvySettings();
     _ivyInstance = Ivy.newInstance(settings);
   }
