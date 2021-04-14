@@ -46,9 +46,10 @@ public class HiveGenericUDFReturnTypeInference implements SqlReturnTypeInference
     try {
       Class dynamicallyLoadedUdfClass = getDynamicallyLoadedUdfClass();
       return getRelDataType(
-          (ObjectInspector) dynamicallyLoadedUdfClass
-              .getMethod("initialize", getDynamicallyLoadedObjectInspectorArrayClass()).invoke(
-                  dynamicallyLoadedUdfClass.newInstance(), getDynamicallyLoadedObjectInspectors(inputObjectInspectors)),
+          getContextObjectInspector(
+              dynamicallyLoadedUdfClass.getMethod("initialize", getDynamicallyLoadedObjectInspectorArrayClass()).invoke(
+                  dynamicallyLoadedUdfClass.newInstance(),
+                  new Object[] { getDynamicallyLoadedObjectInspectors(inputObjectInspectors) })),
           sqlOperatorBinding.getTypeFactory());
     } catch (NoSuchMethodException e) {
       throw new RuntimeException(
@@ -146,7 +147,7 @@ public class HiveGenericUDFReturnTypeInference implements SqlReturnTypeInference
       return TypeInfoUtils
           .getStandardJavaObjectInspectorFromTypeInfo(TypeInfoUtils.getTypeInfoFromTypeString(typeInfoString));
     } catch (ClassNotFoundException | NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
-      throw new RuntimeException("Could not get Context ObjectInspector from UDF ObjectInspector.", e);
+      throw new RuntimeException("Could not get Context ObjectInspector from dynamically loaded ObjectInspector.", e);
     }
   }
 
