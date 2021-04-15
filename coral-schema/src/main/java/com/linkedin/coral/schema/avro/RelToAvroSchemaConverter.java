@@ -255,7 +255,7 @@ public class RelToAvroSchemaConverter {
       Schema inputSchema1 = schemaMap.get(logicalUnion.getInput(0));
       Schema inputSchema2 = schemaMap.get(logicalUnion.getInput(1));
 
-      Schema mergedSchema = SchemaUtilities.mergeUnionSchema(inputSchema1, inputSchema2, strictMode);
+      Schema mergedSchema = SchemaUtilities.mergeUnionRecordSchema(inputSchema1, inputSchema2, strictMode);
 
       schemaMap.put(logicalUnion, mergedSchema);
 
