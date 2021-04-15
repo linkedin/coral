@@ -646,7 +646,7 @@ public class ViewToAvroSchemaConverterTests {
   }
 
   @Test
-  public void testNullFuzzyUnionNotNullableField() {
+  public void testNullUnionNotNullableField() {
     String viewSql = "CREATE VIEW v AS SELECT NULL Field FROM basecomplex UNION ALL SELECT Id Field FROM basecomplex";
 
     TestUtils.executeCreateViewQuery("default", "v", viewSql);
@@ -654,12 +654,11 @@ public class ViewToAvroSchemaConverterTests {
     ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
     Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v", false);
 
-    Assert.assertEquals(actualSchema.toString(true),
-        TestUtils.loadSchema("testNullFuzzyUnionNonNullField-expected.avsc"));
+    Assert.assertEquals(actualSchema.toString(true), TestUtils.loadSchema("testNullUnionNonNullField-expected.avsc"));
   }
 
   @Test
-  public void testNullFuzzyUnionNullableField() {
+  public void testNullUnionNullableField() {
     String viewSql =
         "CREATE VIEW v AS SELECT NULL Field FROM basenulltypefield UNION ALL SELECT Nullable_Field Field FROM basenulltypefield";
 
@@ -668,8 +667,7 @@ public class ViewToAvroSchemaConverterTests {
     ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
     Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v", false);
 
-    Assert.assertEquals(actualSchema.toString(true),
-        TestUtils.loadSchema("testNullFuzzyUnionNonNullField-expected.avsc"));
+    Assert.assertEquals(actualSchema.toString(true), TestUtils.loadSchema("testNullUnionNonNullField-expected.avsc"));
   }
 
   @Test
@@ -682,8 +680,7 @@ public class ViewToAvroSchemaConverterTests {
     ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
     Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v", false);
 
-    Assert.assertEquals(actualSchema.toString(true),
-        TestUtils.loadSchema("testNullFuzzyUnionNonNullField-expected.avsc"));
+    Assert.assertEquals(actualSchema.toString(true), TestUtils.loadSchema("testNullUnionNonNullField-expected.avsc"));
   }
   // TODO: add more unit tests
 }
