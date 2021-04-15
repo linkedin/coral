@@ -348,9 +348,9 @@ class SchemaUtilities {
    *
    * @param leftSchema Left schema to be merged
    * @param rightSchema Right schema to be merged
-   * @param strictMode If set to true, namespaces are required to be same and fuzzy union of types is not allowed.
-   *                   If set to false, we don't check namespace and fuzzy union of types is allowed.
-   *                   Examples of fuzzy union:
+   * @param strictMode If set to true, namespaces are required to be same and the any mismatch of field types will
+   *                   cause an exception.
+   *                   If set to false, we don't check namespace and the following union of field types is allowed.
    *                   null UNION ALL int -> [null, int]
    *                   null UNION ALL [null, int] -> [null, int]
    *                   int UNION ALL [null, int] -> [null, int]
@@ -468,7 +468,7 @@ class SchemaUtilities {
           return isBothNullableType && unionFieldSchema != null
               ? Schema.createUnion(Arrays.asList(Schema.create(Schema.Type.NULL), unionFieldSchema)) : null;
         } else {
-          if (!strictMode && AvroSerdeUtils.isNullableType(leftSchema)) { // try to do fuzzy union
+          if (!strictMode && AvroSerdeUtils.isNullableType(leftSchema)) {
             Schema leftOtherType = AvroSerdeUtils.getOtherTypeFromNullableType(leftSchema);
             return rightSchema.getType() == Schema.Type.NULL
                 || getUnionFieldSchema(leftOtherType, rightSchema, strictMode) != null ? leftSchema : null;
@@ -481,7 +481,6 @@ class SchemaUtilities {
         } else if (rightSchema.getType() == Schema.Type.NULL) {
           return leftSchema;
         } else {
-          // try to do fuzzy union if strictMode is false
           return strictMode ? null : Schema.createUnion(Arrays.asList(leftSchema, rightSchema));
         }
       default:
