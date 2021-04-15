@@ -344,7 +344,7 @@ class SchemaUtilities {
   }
 
   /**
-   * This method merge two input schemas of LogicalUnion operator, and throw exception if they can't be merged.
+   * This method merges two input schemas of LogicalUnion operator, or throws exception if they can't be merged.
    *
    * @param leftSchema Left schema to be merged
    * @param rightSchema Right schema to be merged
@@ -399,16 +399,16 @@ class SchemaUtilities {
 
     for (Schema.Field leftField : leftSchemaFields) {
       Schema.Field rightField = rightSchemaFieldsMap.get(leftField.name());
-      Schema fuzzyUnionFieldSchema = getUnionFieldSchema(leftField.schema(), rightField.schema(), strictMode);
-      if (fuzzyUnionFieldSchema == null) {
-        fuzzyUnionFieldSchema = getUnionFieldSchema(rightField.schema(), leftField.schema(), strictMode);
+      Schema unionFieldSchema = getUnionFieldSchema(leftField.schema(), rightField.schema(), strictMode);
+      if (unionFieldSchema == null) {
+        unionFieldSchema = getUnionFieldSchema(rightField.schema(), leftField.schema(), strictMode);
       }
-      if (fuzzyUnionFieldSchema == null) { // types of leftField and rightField are not compatible
+      if (unionFieldSchema == null) { // types of leftField and rightField are not compatible
         throw new RuntimeException(leftField.name() + " is not compatible with " + rightField.name()
             + " for LogicalUnion operator. " + "inputSchema1 is: " + leftSchema.toString(true) + ", "
             + "inputSchema2 is: " + rightSchema.toString(true));
       }
-      Schema.Field unionField = new Schema.Field(leftField.name(), fuzzyUnionFieldSchema, leftField.doc(),
+      Schema.Field unionField = new Schema.Field(leftField.name(), unionFieldSchema, leftField.doc(),
           leftField.defaultValue(), leftField.order());
       leftField.aliases().forEach(unionField::addAlias);
       leftField.getJsonProps().forEach(unionField::addProp);
@@ -464,12 +464,12 @@ class SchemaUtilities {
 
           Schema leftOtherType = AvroSerdeUtils.getOtherTypeFromNullableType(leftSchema);
           Schema rightOtherType = AvroSerdeUtils.getOtherTypeFromNullableType(rightSchema);
-          final Schema fuzzyUnionFieldSchema = getUnionFieldSchema(leftOtherType, rightOtherType, strictMode);
-          return isBothNullableType && fuzzyUnionFieldSchema != null
-              ? Schema.createUnion(Arrays.asList(Schema.create(Schema.Type.NULL), fuzzyUnionFieldSchema)) : null;
+          final Schema unionFieldSchema = getUnionFieldSchema(leftOtherType, rightOtherType, strictMode);
+          return isBothNullableType && unionFieldSchema != null
+              ? Schema.createUnion(Arrays.asList(Schema.create(Schema.Type.NULL), unionFieldSchema)) : null;
         } else {
-          if (!strictMode && AvroSerdeUtils.isNullableType(leftSchema)) {
-            Schema leftOtherType = AvroSerdeUtils.getOtherTypeFromNullableType(leftSchema); // try to do fuzzy union
+          if (!strictMode && AvroSerdeUtils.isNullableType(leftSchema)) { // try to do fuzzy union
+            Schema leftOtherType = AvroSerdeUtils.getOtherTypeFromNullableType(leftSchema);
             return rightSchema.getType() == Schema.Type.NULL
                 || getUnionFieldSchema(leftOtherType, rightSchema, strictMode) != null ? leftSchema : null;
           }
