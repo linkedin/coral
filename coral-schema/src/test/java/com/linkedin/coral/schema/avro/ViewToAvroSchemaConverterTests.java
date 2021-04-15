@@ -645,5 +645,45 @@ public class ViewToAvroSchemaConverterTests {
         TestUtils.loadSchema("testSelectNullUnionNullField-expected.avsc"));
   }
 
+  @Test
+  public void testNullFuzzyUnionNotNullableField() {
+    String viewSql = "CREATE VIEW v AS SELECT NULL Field FROM basecomplex UNION ALL SELECT Id Field FROM basecomplex";
+
+    TestUtils.executeCreateViewQuery("default", "v", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v", false);
+
+    Assert.assertEquals(actualSchema.toString(true),
+        TestUtils.loadSchema("testNullFuzzyUnionNonNullField-expected.avsc"));
+  }
+
+  @Test
+  public void testNullFuzzyUnionNullableField() {
+    String viewSql =
+        "CREATE VIEW v AS SELECT NULL Field FROM basenulltypefield UNION ALL SELECT Nullable_Field Field FROM basenulltypefield";
+
+    TestUtils.executeCreateViewQuery("default", "v", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v", false);
+
+    Assert.assertEquals(actualSchema.toString(true),
+        TestUtils.loadSchema("testNullFuzzyUnionNonNullField-expected.avsc"));
+  }
+
+  @Test
+  public void testNotNullableFieldUnionNullableField() {
+    String viewSql =
+        "CREATE VIEW v AS SELECT Not_Nullable_Field Field FROM basenulltypefield UNION ALL SELECT Nullable_Field Field FROM basenulltypefield";
+
+    TestUtils.executeCreateViewQuery("default", "v", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v", false);
+
+    Assert.assertEquals(actualSchema.toString(true),
+        TestUtils.loadSchema("testNullFuzzyUnionNonNullField-expected.avsc"));
+  }
   // TODO: add more unit tests
 }
