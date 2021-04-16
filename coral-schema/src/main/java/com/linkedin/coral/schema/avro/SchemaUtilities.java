@@ -438,23 +438,30 @@ class SchemaUtilities {
 
         return isSameType && (!strictMode || isSameNamespace) ? leftSchema : null;
       case ENUM:
-        boolean isSameEnumType = (leftSchema.getType() == rightSchema.getType());
+        if (leftSchema.getType() != rightSchema.getType()) {
+          return null;
+        }
         boolean isSameSymbolSize = (leftSchema.getEnumSymbols().size() == rightSchema.getEnumSymbols().size());
         boolean isSameEnumNamespace = Objects.equals(leftSchema.getNamespace(), rightSchema.getNamespace());
 
-        return isSameEnumType && isSameSymbolSize && (!strictMode || isSameEnumNamespace) ? leftSchema : null;
+        return isSameSymbolSize && (!strictMode || isSameEnumNamespace) ? leftSchema : null;
       case RECORD:
         return leftSchema.getType() == rightSchema.getType()
             ? mergeUnionRecordSchema(leftSchema, rightSchema, strictMode) : null;
 
       case MAP:
+        if (leftSchema.getType() != rightSchema.getType()) {
+          return null;
+        }
         Schema valueType = getUnionFieldSchema(leftSchema.getValueType(), rightSchema.getValueType(), strictMode);
-        return leftSchema.getType() == rightSchema.getType() && valueType != null ? Schema.createMap(valueType) : null;
+        return valueType != null ? Schema.createMap(valueType) : null;
 
       case ARRAY:
+        if (leftSchema.getType() != rightSchema.getType()) {
+          return null;
+        }
         Schema elementType = getUnionFieldSchema(leftSchema.getElementType(), rightSchema.getElementType(), strictMode);
-        return leftSchema.getType() == rightSchema.getType() && elementType != null ? Schema.createArray(elementType)
-            : null;
+        return elementType != null ? Schema.createArray(elementType) : null;
 
       case UNION:
         if (leftSchema.getType() == rightSchema.getType()) {
