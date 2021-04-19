@@ -1,5 +1,5 @@
 /**
- * Copyright 2018-2020 LinkedIn Corporation. All rights reserved.
+ * Copyright 2018-2021 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -163,6 +163,18 @@ public class TestUtils {
         "AS", "SELECT *", "from fuzzy_union.tableL", "union all", "SELECT *", "from fuzzy_union.tableM"));
     run(driver, String.join("\n", "",
         "ALTER TABLE fuzzy_union.tableL CHANGE COLUMN b b struct<b1:string, b2:struct<b3:string, b4:struct<b5:string, b6:string>>>"));
+
+    run(driver, String.join("\n", "", "CREATE TABLE IF NOT EXISTS fuzzy_union.tableN(a int, b struct<b1:string>)"));
+    run(driver, String.join("\n", "", "CREATE TABLE IF NOT EXISTS fuzzy_union.tableO(a int, b struct<b1:string>)"));
+    run(driver,
+        String.join("\n", "",
+            "CREATE VIEW IF NOT EXISTS fuzzy_union.union_view_same_schema_evolution_with_different_ordering", "AS",
+            "SELECT *", "from fuzzy_union.tableN", "union all", "SELECT *", "from fuzzy_union.tableO"));
+    run(driver,
+        String.join("\n", "", "ALTER TABLE fuzzy_union.tableN CHANGE COLUMN b b struct<b2:double, b1:string, b0:int>"));
+    run(driver,
+        String.join("\n", "", "ALTER TABLE fuzzy_union.tableO CHANGE COLUMN b b struct<b0:int, b1:string, b2:int>"));
+
     run(driver, String.join("\n", "", "CREATE TABLE IF NOT EXISTS schema_promotion(a int, b array<int>)"));
     run(driver,
         String.join("\n", "", "CREATE VIEW IF NOT EXISTS view_schema_promotion AS SELECT * from schema_promotion"));

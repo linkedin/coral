@@ -256,6 +256,15 @@ public class TestUtils {
     run(driver,
         "ALTER TABLE test.tableN CHANGE COLUMN b b struct<b1:string, m1:map<string, struct<b1:string, a1:array<struct<b0:string, b1:string>>>>>");
 
+    run(driver, String.join("\n", "", "CREATE TABLE IF NOT EXISTS test.tableP(a int, b struct<b1:string>)"));
+    run(driver, String.join("\n", "", "CREATE TABLE IF NOT EXISTS test.tableQ(a int, b struct<b1:string>)"));
+    run(driver,
+        String.join("\n", "", "CREATE VIEW IF NOT EXISTS test.union_view_same_schema_evolution_with_different_ordering",
+            "AS", "SELECT *", "from test.tableP", "union all", "SELECT *", "from test.tableQ"));
+    run(driver,
+        String.join("\n", "", "ALTER TABLE test.tableP CHANGE COLUMN b b struct<b2:double, b1:string, b0:int>"));
+    run(driver, String.join("\n", "", "ALTER TABLE test.tableQ CHANGE COLUMN b b struct<b0:int, b1:string, b2:int>"));
+
     run(driver, "CREATE TABLE test.table_with_string_array(a int, b array<string>)");
     run(driver,
         "CREATE VIEW test.view_with_explode_string_array AS SELECT a, c FROM test.table_with_string_array LATERAL VIEW EXPLODE(b) t AS c");

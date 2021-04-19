@@ -131,6 +131,13 @@ public class TestUtils {
       driver.run(
           "ALTER TABLE fuzzy_union.tableL CHANGE COLUMN b b struct<b1:string, b2:struct<b3:string, b4:struct<b5:string, b6:string>>>");
 
+      driver.run("CREATE TABLE IF NOT EXISTS fuzzy_union.tableN(a int, b struct<b1:string>)");
+      driver.run("CREATE TABLE IF NOT EXISTS fuzzy_union.tableO(a int, b struct<b1:string>)");
+      driver.run(
+          "CREATE VIEW IF NOT EXISTS fuzzy_union.union_view_same_schema_evolution_with_different_ordering AS SELECT * from fuzzy_union.tableN union all SELECT * from fuzzy_union.tableO");
+      driver.run("ALTER TABLE fuzzy_union.tableN CHANGE COLUMN b b struct<b2:double, b1:string, b0:int>");
+      driver.run("ALTER TABLE fuzzy_union.tableO CHANGE COLUMN b b struct<b0:int, b1:string, b2:int>");
+
       driver.run("CREATE TABLE IF NOT EXISTS foo(a int, b varchar(30), c double)");
       driver.run("CREATE TABLE IF NOT EXISTS bar(x int, y double)");
       driver.run("CREATE VIEW IF NOT EXISTS foo_view AS SELECT b as bcol, sum(c) as sum_c from foo group by b");
@@ -162,7 +169,7 @@ public class TestUtils {
                       "union_view_with_alias", "union_view_single_branch_evolved",
                       "union_view_double_branch_evolved_different", "union_view_map_with_struct_value_evolved",
                       "union_view_array_with_struct_value_evolved", "union_view_deeply_nested_struct_evolved",
-                      "union_view_more_than_two_branches_evolved")));
+                      "union_view_more_than_two_branches_evolved", "union_view_same_schema_evolution_with_different_ordering")));
 
       // add some Dali functions to table properties
       IMetaStoreClient msc = testHive.getMetastoreClient();

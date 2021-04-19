@@ -5,6 +5,7 @@
  */
 package com.linkedin.coral.hive.hive2rel;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -12,10 +13,11 @@ import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Sets;
 
 import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeField;
-import org.apache.calcite.schema.Table;
 import org.apache.calcite.sql.SqlAsOperator;
 import org.apache.calcite.sql.SqlBasicCall;
 import org.apache.calcite.sql.SqlCall;
@@ -26,6 +28,7 @@ import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlNodeList;
 import org.apache.calcite.sql.SqlSelect;
 import org.apache.calcite.sql.parser.SqlParserPos;
+import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.sql.util.SqlShuttle;
 
 import com.linkedin.coral.hive.hive2rel.functions.GenericProjectFunction;
@@ -85,22 +88,26 @@ import com.linkedin.coral.hive.hive2rel.functions.GenericProjectFunction;
 class FuzzyUnionSqlRewriter extends SqlShuttle {
 
   private final String tableName;
-  private final RelDataType tableDataType;
   private final RelContextProvider relContextProvider;
-  private final List<String> columnNames;
 
-  public FuzzyUnionSqlRewriter(@Nonnull Table table, @Nonnull String tableName,
-      @Nonnull RelContextProvider relContextProvider) {
+  public FuzzyUnionSqlRewriter(@Nonnull String tableName, @Nonnull RelContextProvider relContextProvider) {
     this.relContextProvider = relContextProvider;
     this.tableName = tableName;
-    this.tableDataType = table.getRowType(relContextProvider.getHiveSqlValidator().getTypeFactory());
-    this.columnNames = tableDataType.getFieldNames();
   }
 
   @Override
   public SqlNode visit(SqlCall call) {
     if (call.getOperator().getKind() == SqlKind.UNION) {
-      call = addFuzzyUnionToUnionCall(call);
+      // Since a union is represented as a binary operator in calcite, chaining unions would have an AST like:
+      // Given A UNION B UNION C, the SqlNode AST would look something like:
+      //      U
+      //     / \
+      //    A   U
+      //       / \
+      //      B   C
+      // We need to compare the schemas of all leaves of the union (A,B,C) and adjust if necessary.
+      final RelDataType expectedDataType = getUnionDataType(call);
+      call = addFuzzyUnionToUnionCall(call, expectedDataType);
     }
     ArgHandler<SqlNode> argHandler = new CallCopyingArgHandler(call, false);
     call.getOperator().acceptCall(this, call, false, argHandler);
@@ -111,13 +118,12 @@ class FuzzyUnionSqlRewriter extends SqlShuttle {
    * Create a SqlNode that calls GenericProject for the given column
    * @param columnName The name of the column that is to be fixed
    */
-  private SqlNode createGenericProject(String columnName) {
+  private SqlNode createGenericProject(String columnName, RelDataType expectedType) {
     SqlNode[] genericProjectOperands = new SqlNode[2];
     genericProjectOperands[0] = new SqlIdentifier(ImmutableList.of(tableName, columnName), SqlParserPos.ZERO);
     genericProjectOperands[1] = SqlLiteral.createCharString(columnName, SqlParserPos.ZERO);
-    RelDataTypeField columnField = tableDataType.getField(columnName, false, true);
     SqlBasicCall genericProjectCall =
-        new SqlBasicCall(new GenericProjectFunction(columnField.getType()), genericProjectOperands, SqlParserPos.ZERO);
+        new SqlBasicCall(new GenericProjectFunction(expectedType), genericProjectOperands, SqlParserPos.ZERO);
     SqlNode[] castAsColumnOperands = new SqlNode[2];
     castAsColumnOperands[0] = genericProjectCall;
     castAsColumnOperands[1] = new SqlIdentifier(columnName, SqlParserPos.ZERO);
@@ -137,17 +143,14 @@ class FuzzyUnionSqlRewriter extends SqlShuttle {
    *           - else
    *             - use a generic projection over the struct column fixing the schema to be tableDataType.structField
    */
-  private SqlNodeList createProjectedFieldsNodeList(RelDataType fromNodeDataType) {
-    SqlNodeList projectedFields = new SqlNodeList(SqlParserPos.ZERO);
-    for (RelDataTypeField field : tableDataType.getFieldList()) {
-      SqlNode projectedField;
-      RelDataTypeField schemaDataTypeField = tableDataType.getField(field.getName(), false, false);
-      RelDataTypeField inputDataTypeField = fromNodeDataType.getField(field.getName(), false, false);
-      if (field.getType().getFullTypeString().contains("RecordType")
-          && !schemaDataTypeField.equals(inputDataTypeField)) {
-        projectedField = createGenericProject(field.getName());
-      } else {
-        projectedField = new SqlIdentifier(ImmutableList.of(tableName, field.getName()), SqlParserPos.ZERO);
+  private SqlNodeList createProjectedFieldsNodeList(RelDataType fromNodeDataType, RelDataType expectedDataType) {
+    final SqlNodeList projectedFields = new SqlNodeList(SqlParserPos.ZERO);
+
+    for (final RelDataTypeField expectedField : expectedDataType.getFieldList()) {
+      final RelDataTypeField inputField = fromNodeDataType.getField(expectedField.getName(), false, false);
+      SqlNode projectedField = new SqlIdentifier(ImmutableList.of(tableName, inputField.getName()), SqlParserPos.ZERO);
+      if (!equivalentDataTypes(expectedField.getType(), inputField.getType())) {
+        projectedField = createGenericProject(inputField.getName(), expectedField.getType());
       }
       projectedFields.add(projectedField);
     }
@@ -160,44 +163,27 @@ class FuzzyUnionSqlRewriter extends SqlShuttle {
    * a RelDataType that is a superset of the fields that exist in the tableDataType and is not strictly the equivalent
    * to tableDataType.
    * @param unionBranch SqlNode node that is a branch in a union
+   * @param expectedDataType The expected data type for the UNION branch
    * @return SqlNode that has its schema fixed to the schema of the table
    */
-  private SqlNode addFuzzyUnionToUnionBranch(SqlNode unionBranch) {
+  private SqlNode addFuzzyUnionToUnionBranch(SqlNode unionBranch, RelDataType expectedDataType) {
 
     // Retrieve the datatype of the node if known.
     // If it is known, retrieve it from the node.
     // Otherwise, return the passed in SqlNode.
     // The SqlShuttle will derive the view graph bottom up (from base tables to views above it).
     // In this case, the SqlValidator will always fix the schemas from tables to the view and will not fail.
-    RelDataType fromNodeDataType = relContextProvider.getHiveSqlValidator().getValidatedNodeTypeIfKnown(unionBranch);
-    if (fromNodeDataType == null) {
-      relContextProvider.getHiveSqlValidator().validate(unionBranch);
-      fromNodeDataType = relContextProvider.getHiveSqlValidator().getValidatedNodeType(unionBranch);
-    }
-    // tableDataType is always a view RelDataType. View RelDataTypes are inferred from Hive's storage
-    // descriptor. Unlike view RelDataTypes, base table RelDataTypes are inferred from Hive SerDe
-    // library corresponding to the table. See {@link com.linkedin.coral.hive.hive2rel.HiveTable.getRowType}
-    // for more details. This results in the view schema (tableDataType) being always lower-cased, and the
-    // (potentially) base table schema (fromNodeDataType) being properly cased. Case difference
-    // between view schema and underlying union branch schema should not warrant a fuzzy union,
-    // and hence we ignore cases when comparing fromNodeDataType and tableDataType.
-    if (tableDataType.getFullTypeString().equalsIgnoreCase(fromNodeDataType.getFullTypeString())
-        || !fromNodeDataType.isStruct() || fromNodeDataType.getFieldCount() < tableDataType.getFieldCount()) {
-      return unionBranch;
-    }
-
-    // The table schema will be projected over a branch if and only if the branch contains a superset of the
-    // fields in the provided table schema and does not have the same schema as the table schema.
-    Set<String> fromNodeFieldNames =
-        fromNodeDataType.getFieldList().stream().map(f -> f.getName()).collect(Collectors.toSet());
-
-    if (!fromNodeFieldNames.containsAll(columnNames)) {
-      return unionBranch;
-    }
+    //    RelDataType fromNodeDataType = relContextProvider.getHiveSqlValidator().getValidatedNodeTypeIfKnown(unionBranch);
+    //    if (fromNodeDataType == null) {
+    //      relContextProvider.getHiveSqlValidator().validate(unionBranch);
+    //      fromNodeDataType = relContextProvider.getHiveSqlValidator().getValidatedNodeType(unionBranch);
+    //    }
+    RelDataType fromNodeDataType =
+        relContextProvider.getSqlToRelConverter().convertQuery(unionBranch, true, true).rel.getRowType();
 
     // Create a SqlNode that has a string equivalent to the following query:
     // SELECT table_name.col1, generic_project(table_name.col2), ... FROM (unionBranch) as table_name
-    SqlNodeList projectedFields = createProjectedFieldsNodeList(fromNodeDataType);
+    SqlNodeList projectedFields = createProjectedFieldsNodeList(fromNodeDataType, expectedDataType);
     SqlNode[] castTableOperands = { unionBranch, new SqlIdentifier(tableName, SqlParserPos.ZERO) };
     SqlBasicCall castTableCall = new SqlBasicCall(new SqlAsOperator(), castTableOperands, SqlParserPos.ZERO);
     SqlSelect selectOperator = new SqlSelect(SqlParserPos.ZERO, new SqlNodeList(SqlParserPos.ZERO), projectedFields,
@@ -212,24 +198,126 @@ class FuzzyUnionSqlRewriter extends SqlShuttle {
    * @param unionCall Union operator SqlCall
    * @return a Union operator SqlCall with fuzzy union semantics
    */
-  private SqlCall addFuzzyUnionToUnionCall(SqlCall unionCall) {
+  private SqlCall addFuzzyUnionToUnionCall(SqlCall unionCall, RelDataType expectedDataType) {
     for (int i = 0; i < unionCall.operandCount(); ++i) {
       SqlNode operand = unionCall.operand(i);
-      // Since a union is represented as a binary operator in calcite, chaining unions would have an AST like:
-      // Given A UNION B UNION C, the SqlNode AST would look something like:
-      //      U
-      //     / \
-      //    A   U
-      //       / \
-      //      B   C
-      // From the root node, we can see that one of the operands is another union.
       // In this case, we do not need to apply fuzzy union semantics to the union itself.
       // The fuzzy union semantics only need to be applied to the children of ths union.
       if (!isUnionOperator(operand)) {
-        unionCall.setOperand(i, addFuzzyUnionToUnionBranch(operand));
+        unionCall.setOperand(i, addFuzzyUnionToUnionBranch(operand, expectedDataType));
+      } else {
+        unionCall.setOperand(i, addFuzzyUnionToUnionCall((SqlCall) operand, expectedDataType));
       }
     }
     return unionCall;
+  }
+
+  /**
+   * Returns data type given by the common subset of columns in the branches of the UNION call.
+   */
+  private RelDataType getUnionDataType(final SqlCall unionCall) {
+    final List<SqlNode> leafNodes = getUnionLeafNodes(unionCall);
+    final List<RelDataType> leafNodeDataTypes = new ArrayList<>();
+    for (final SqlNode node : leafNodes) {
+      RelDataType fromNodeDataType = relContextProvider.getHiveSqlValidator().getValidatedNodeTypeIfKnown(node);
+      if (fromNodeDataType == null) {
+        relContextProvider.getHiveSqlValidator().validate(node);
+        fromNodeDataType = relContextProvider.getHiveSqlValidator().getValidatedNodeType(node);
+      }
+      leafNodeDataTypes.add(fromNodeDataType);
+    }
+
+    return getUnionDataType(leafNodeDataTypes);
+  }
+
+  /**
+   * Returns data type given by the common subset of columns in the given dataTypes.
+   */
+  private RelDataType getUnionDataType(final List<RelDataType> dataTypes) {
+    // Use the first dataType as the model/base type.
+    // Assumes that all dataTypes in the list once shared a common type
+    // and only evolved in a backwards compatible fashion.
+    final RelDataType baseDataType = dataTypes.get(0);
+
+    if (!(baseDataType.isStruct()) && !(baseDataType.getSqlTypeName() == SqlTypeName.ARRAY)
+        && !(baseDataType.getSqlTypeName() == SqlTypeName.MAP)) {
+      return relContextProvider.getRelBuilder().getTypeFactory().createTypeWithNullability(baseDataType, true);
+    }
+
+    RelDataType expectedCommonType = null;
+
+    if (baseDataType.isStruct()) {
+      // Build the common UNION type using the first branch that appears in the query
+      final RelDataTypeFactory.Builder builder =
+          new RelDataTypeFactory.Builder(relContextProvider.getRelBuilder().getTypeFactory());
+
+      // Build a set of common fields by name in the given dataTypes
+      Set<String> commonFieldNames =
+          baseDataType.getFieldNames().stream().map(String::toLowerCase).collect(Collectors.toSet());
+      for (int i = 1; i < dataTypes.size(); ++i) {
+        final Set<String> branchFieldNames =
+            dataTypes.get(i).getFieldNames().stream().map(String::toLowerCase).collect(Collectors.toSet());
+        commonFieldNames = Sets.intersection(commonFieldNames, branchFieldNames);
+      }
+
+      // Build a new struct with the common fields using the baseDataType's struct ordering
+      for (final RelDataTypeField field : baseDataType.getFieldList()) {
+        if (!commonFieldNames.contains(field.getName().toLowerCase())) {
+          continue;
+        }
+
+        final List<RelDataType> fieldTypes = dataTypes.stream()
+            .map(type -> type.getField(field.getName(), false, false).getType()).collect(Collectors.toList());
+
+        // Recursively derive the common types for all fields of the struct
+        final RelDataType columnType = getUnionDataType(fieldTypes);
+
+        builder.add(field.getName(),
+            relContextProvider.getRelBuilder().getTypeFactory().createTypeWithNullability(columnType, true));
+      }
+
+      expectedCommonType =
+          relContextProvider.getRelBuilder().getTypeFactory().createTypeWithNullability(builder.build(), true);
+    }
+
+    if (baseDataType.getSqlTypeName() == SqlTypeName.ARRAY) {
+      // Recursively derive the common type of the component in the array
+      final List<RelDataType> nestedArrayTypes =
+          dataTypes.stream().map(RelDataType::getComponentType).collect(Collectors.toList());
+      final RelDataType expectedArrayType = getUnionDataType(nestedArrayTypes);
+      expectedCommonType = relContextProvider.getRelBuilder().getTypeFactory().createArrayType(expectedArrayType, -1);
+    }
+
+    if (baseDataType.getSqlTypeName() == SqlTypeName.MAP) {
+      // Recursively derive the common type of the value type in the map
+      final List<RelDataType> nestedValueTypes =
+          dataTypes.stream().map(RelDataType::getValueType).collect(Collectors.toList());
+      final RelDataType expectedValueType = getUnionDataType(nestedValueTypes);
+      final RelDataType expectedKeyType = relContextProvider.getRelBuilder().getTypeFactory()
+          .createTypeWithNullability(baseDataType.getKeyType(), true);
+      expectedCommonType =
+          relContextProvider.getRelBuilder().getTypeFactory().createMapType(expectedKeyType, expectedValueType);
+    }
+
+    return expectedCommonType;
+  }
+
+  /**
+   * Return a list of SqlNode branches in the UNION call ordered based on the query string.
+   * Example:
+   *     'A UNION B UNION C' => [SqlNode_A, SqlNode_B, SqlNode_C]
+   */
+  private List<SqlNode> getUnionLeafNodes(SqlCall unionCall) {
+    final List<SqlNode> leafNodes = new ArrayList<>();
+    for (int i = 0; i < unionCall.operandCount(); ++i) {
+      final SqlNode operand = unionCall.operand(i);
+      if (isUnionOperator(operand)) {
+        leafNodes.addAll(getUnionLeafNodes((SqlCall) operand));
+      } else {
+        leafNodes.add(operand);
+      }
+    }
+    return leafNodes;
   }
 
   /**
@@ -239,5 +327,40 @@ class FuzzyUnionSqlRewriter extends SqlShuttle {
    */
   private boolean isUnionOperator(SqlNode node) {
     return (node instanceof SqlCall) && ((SqlCall) node).getOperator().getKind() == SqlKind.UNION;
+  }
+
+  /**
+   * Return true if the RelDataTypes t1 and t2 are equivalent.
+   *
+   * NOTE:
+   * We don't actually check the types of columns.
+   * We just want to check that the data types have the same structure and ordering of columns.
+   */
+  private boolean equivalentDataTypes(RelDataType t1, RelDataType t2) {
+    if (t1.isStruct()) {
+      if (t1.getFieldCount() != t2.getFieldCount()) {
+        return false;
+      }
+
+      for (int i = 0; i < t1.getFieldCount(); ++i) {
+        final RelDataTypeField f1 = t1.getFieldList().get(i);
+        final RelDataTypeField f2 = t2.getFieldList().get(i);
+
+        if (!f1.getName().equalsIgnoreCase(f2.getName()) || !equivalentDataTypes(f1.getType(), f2.getType())) {
+          return false;
+        }
+      }
+    }
+
+    if (t1.getSqlTypeName() == SqlTypeName.ARRAY
+        && !equivalentDataTypes(t1.getComponentType(), t2.getComponentType())) {
+      return false;
+    }
+
+    if (t1.getSqlTypeName() == SqlTypeName.MAP && !equivalentDataTypes(t1.getValueType(), t2.getValueType())) {
+      return false;
+    }
+
+    return true;
   }
 }

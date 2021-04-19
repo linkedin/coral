@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2020 LinkedIn Corporation. All rights reserved.
+ * Copyright 2019-2021 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -93,11 +93,8 @@ public class FuzzyUnionViewTest {
     // This query currently does not have any generic_projections despite the top level view schema being inconsistent
     // because the schemas of the branches evolved the same way.
     // This unit test illustrates this behaviour; however, we can re-evaluate our desired behaviour later on.
-    String expectedSql = ""
-        + "SELECT a, generic_project(b, '{\"type\":\"struct\",\"fields\":[{\"type\":\"string\",\"name\":\"b1\",\"nullable\":true,\"metadata\":{}}]}') b\n"
-        + "FROM fuzzy_union.tabled\n" + "UNION ALL\n"
-        + "SELECT a, generic_project(b, '{\"type\":\"struct\",\"fields\":[{\"type\":\"string\",\"name\":\"b1\",\"nullable\":true,\"metadata\":{}}]}') b\n"
-        + "FROM fuzzy_union.tablee";
+    String expectedSql =
+        "SELECT *\n" + "FROM fuzzy_union.tabled\n" + "UNION ALL\n" + "SELECT *\n" + "FROM fuzzy_union.tablee";
 
     assertEquals(expandedSql, expectedSql);
   }
@@ -179,6 +176,21 @@ public class FuzzyUnionViewTest {
     String expectedSql = ""
         + "SELECT a, generic_project(b, '{\"type\":\"struct\",\"fields\":[{\"type\":\"string\",\"name\":\"b1\",\"nullable\":true,\"metadata\":{}},{\"type\":{\"type\":\"struct\",\"fields\":[{\"type\":\"string\",\"name\":\"b3\",\"nullable\":true,\"metadata\":{}},{\"type\":{\"type\":\"struct\",\"fields\":[{\"type\":\"string\",\"name\":\"b5\",\"nullable\":true,\"metadata\":{}}]},\"name\":\"b4\",\"nullable\":true,\"metadata\":{}}]},\"name\":\"b2\",\"nullable\":true,\"metadata\":{}}]}') b\n"
         + "FROM fuzzy_union.tablel\n" + "UNION ALL\n" + "SELECT *\n" + "FROM fuzzy_union.tablem";
+
+    assertEquals(expandedSql, expectedSql);
+  }
+
+  @Test
+  public void testSameSchemaEvolutionWithDifferentOrdering() throws TException {
+    String database = "fuzzy_union";
+    String view = "union_view_same_schema_evolution_with_different_ordering";
+    RelNode relNode = TestUtils.toRelNode(database, view);
+    CoralSpark coralSpark = CoralSpark.create(relNode);
+    String expandedSql = coralSpark.getSparkSql();
+
+    String expectedSql = "SELECT *\n" + "FROM fuzzy_union.tablen\n" + "UNION ALL\n"
+        + "SELECT a, generic_project(b, '{\"type\":\"struct\",\"fields\":[{\"type\":\"double\",\"name\":\"b2\",\"nullable\":true,\"metadata\":{}},{\"type\":\"string\",\"name\":\"b1\",\"nullable\":true,\"metadata\":{}},{\"type\":\"integer\",\"name\":\"b0\",\"nullable\":true,\"metadata\":{}}]}') b\n"
+        + "FROM fuzzy_union.tableo";
 
     assertEquals(expandedSql, expectedSql);
   }
