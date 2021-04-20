@@ -360,11 +360,15 @@ class SchemaUtilities {
   static Schema mergeUnionRecordSchema(@Nonnull Schema leftSchema, @Nonnull Schema rightSchema, boolean strictMode) {
     Preconditions.checkNotNull(leftSchema);
     Preconditions.checkNotNull(rightSchema);
+    if (leftSchema.toString(true).equals(rightSchema.toString(true))) {
+      return leftSchema;
+    }
+
     List<Schema.Field> leftSchemaFields = leftSchema.getFields();
     List<Schema.Field> rightSchemaFields = rightSchema.getFields();
 
     if (strictMode) {
-      // we requires namespace matches in strictMode
+      // we require namespace matches in strictMode
       if (!Objects.equals(leftSchema.getNamespace(), rightSchema.getNamespace())) {
         throw new RuntimeException("Found namespace mismatch while configured with strict mode. " + "Namespace for "
             + leftSchema.getName() + " is: " + leftSchema.getNamespace() + ". " + "Namespace for "
@@ -400,9 +404,6 @@ class SchemaUtilities {
     for (Schema.Field leftField : leftSchemaFields) {
       Schema.Field rightField = rightSchemaFieldsMap.get(leftField.name());
       Schema unionFieldSchema = getUnionFieldSchema(leftField.schema(), rightField.schema(), strictMode);
-      if (unionFieldSchema == null) {
-        unionFieldSchema = getUnionFieldSchema(rightField.schema(), leftField.schema(), strictMode);
-      }
       if (unionFieldSchema == null) { // types of leftField and rightField are not compatible
         throw new RuntimeException(leftField.name() + " is not compatible with " + rightField.name()
             + " for LogicalUnion operator. " + "inputSchema1 is: " + leftSchema.toString(true) + ", "
@@ -423,6 +424,9 @@ class SchemaUtilities {
       boolean strictMode) {
     Preconditions.checkNotNull(leftSchema);
     Preconditions.checkNotNull(rightSchema);
+    if (isUnionOrNull(rightSchema) && !isUnionOrNull(leftSchema)) {
+      return getUnionFieldSchema(rightSchema, leftSchema, strictMode);
+    }
 
     switch (leftSchema.getType()) {
       case BOOLEAN:
@@ -475,7 +479,7 @@ class SchemaUtilities {
           return isBothNullableType && unionFieldSchema != null
               ? Schema.createUnion(Arrays.asList(Schema.create(Schema.Type.NULL), unionFieldSchema)) : null;
         } else {
-          if (!strictMode && AvroSerdeUtils.isNullableType(leftSchema)) {
+          if (AvroSerdeUtils.isNullableType(leftSchema)) {
             Schema leftOtherType = AvroSerdeUtils.getOtherTypeFromNullableType(leftSchema);
             return rightSchema.getType() == Schema.Type.NULL
                 || getUnionFieldSchema(leftOtherType, rightSchema, strictMode) != null ? leftSchema : null;
@@ -483,17 +487,21 @@ class SchemaUtilities {
           return null;
         }
       case NULL:
-        if (rightSchema.getType() == Schema.Type.UNION) { // this case has been handled in UNION above
-          return null;
+        if (rightSchema.getType() == Schema.Type.UNION) {
+          return AvroSerdeUtils.isNullableType(rightSchema) ? rightSchema : null;
         } else if (rightSchema.getType() == Schema.Type.NULL) {
           return leftSchema;
         } else {
-          return strictMode ? null : Schema.createUnion(Arrays.asList(leftSchema, rightSchema));
+          return Schema.createUnion(Arrays.asList(leftSchema, rightSchema));
         }
       default:
         throw new IllegalArgumentException(
             "Unsupported Avro type " + leftSchema.getType() + " in schema: " + leftSchema.toString(true));
     }
+  }
+
+  private static boolean isUnionOrNull(Schema schema) {
+    return schema.getType() == Schema.Type.UNION || schema.getType() == Schema.Type.NULL;
   }
 
   private static void appendFieldWithNewNamespace(@Nonnull Schema.Field field, @Nonnull String namespace,

@@ -644,6 +644,18 @@ public class ViewToAvroSchemaConverterTests {
   }
 
   @Test
+  public void testNotNullableFieldUnionNull() {
+    String viewSql = "CREATE VIEW v AS SELECT Id Field FROM basecomplex UNION ALL SELECT NULL Field FROM basecomplex";
+
+    TestUtils.executeCreateViewQuery("default", "v", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v", false);
+
+    Assert.assertEquals(actualSchema.toString(true), TestUtils.loadSchema("testNullUnionNonNullField-expected.avsc"));
+  }
+
+  @Test
   public void testNullUnionNullableField() {
     String viewSql =
         "CREATE VIEW v AS SELECT NULL Field FROM basenulltypefield UNION ALL SELECT Nullable_Field Field FROM basenulltypefield";
@@ -657,9 +669,35 @@ public class ViewToAvroSchemaConverterTests {
   }
 
   @Test
+  public void testNullableFieldUnionNull() {
+    String viewSql =
+        "CREATE VIEW v AS SELECT Nullable_Field Field FROM basenulltypefield UNION ALL SELECT NULL Field FROM basenulltypefield";
+
+    TestUtils.executeCreateViewQuery("default", "v", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v", false);
+
+    Assert.assertEquals(actualSchema.toString(true), TestUtils.loadSchema("testNullUnionNonNullField-expected.avsc"));
+  }
+
+  @Test
   public void testNotNullableFieldUnionNullableField() {
     String viewSql =
         "CREATE VIEW v AS SELECT Not_Nullable_Field Field FROM basenulltypefield UNION ALL SELECT Nullable_Field Field FROM basenulltypefield";
+
+    TestUtils.executeCreateViewQuery("default", "v", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v", false);
+
+    Assert.assertEquals(actualSchema.toString(true), TestUtils.loadSchema("testNullUnionNonNullField-expected.avsc"));
+  }
+
+  @Test
+  public void testNullableFieldUnionNotNullableField() {
+    String viewSql =
+        "CREATE VIEW v AS SELECT Nullable_Field Field FROM basenulltypefield UNION ALL SELECT Not_Nullable_Field Field FROM basenulltypefield";
 
     TestUtils.executeCreateViewQuery("default", "v", viewSql);
 
