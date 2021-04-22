@@ -423,6 +423,9 @@ class SchemaUtilities {
       boolean strictMode) {
     Preconditions.checkNotNull(leftSchema);
     Preconditions.checkNotNull(rightSchema);
+
+    // Because we use leftSchema as the base of `switch`, we need to exchange leftSchema and rightSchema if rightSchema is
+    // a special type (null or union) and leftSchema is not.
     if (isUnionOrNull(rightSchema) && !isUnionOrNull(leftSchema)) {
       return getUnionFieldSchema(rightSchema, leftSchema, strictMode);
     }
