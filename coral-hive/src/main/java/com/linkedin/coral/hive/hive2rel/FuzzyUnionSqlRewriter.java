@@ -40,10 +40,11 @@ import com.linkedin.coral.hive.hive2rel.functions.GenericProjectFunction;
  * same. However, one of the tables could evolve to introduce a new field in a struct, which leads to a mismatch in the
  * schemas when taking the union of the tables in the view.
  *
- * This shuttle rewrites a SqlNode AST so that every branch of a union operator project exactly a given table schema.
+ * This shuttle rewrites a SqlNode AST so that every branch of a union operator is projected as a given schema
+ * (expectedDataType), which is the subset of columns in the all the branches of that union.
  * The schema of a struct is fixed using the GenericProject UDF.
- * The introduction of the GenericProject only occurs when the branch of the union contains a superset of the table
- * schema fields and is not strictly equivalent.
+ * The introduction of the GenericProject only occurs when the branch of the union has the different structure or
+ * ordering of columns from the given schema (expectedDataType).
  *
  * If the SqlNode AST does not have union operators, the initial SqlNode AST will be returned.
  * If the SqlNode AST has a union operator, and there exists a semantically incorrect branch, an error will be thrown.
@@ -106,6 +107,7 @@ class FuzzyUnionSqlRewriter extends SqlShuttle {
       //       / \
       //      B   C
       // We need to compare the schemas of all leaves of the union (A,B,C) and adjust if necessary.
+      // expectedDataType is the column subset of the union (A, B, C)
       final RelDataType expectedDataType = getUnionDataType(call);
       call = addFuzzyUnionToUnionCall(call, expectedDataType);
     }
@@ -117,6 +119,7 @@ class FuzzyUnionSqlRewriter extends SqlShuttle {
   /**
    * Create a SqlNode that calls GenericProject for the given column
    * @param columnName The name of the column that is to be fixed
+   * @param expectedType The expected data type
    */
   private SqlNode createGenericProject(String columnName, RelDataType expectedType) {
     SqlNode[] genericProjectOperands = new SqlNode[2];
@@ -133,15 +136,15 @@ class FuzzyUnionSqlRewriter extends SqlShuttle {
 
   /**
    * Create the SqlNodeList for the operands for a GenericProject.
-   * @param fromNodeDataType RelDataType that contains a superset of the fields in tableDataType and is not strictly
-   *                         equal to tableDataType.
-   * @return a SqlNodeList that contains all the fields in tableDataType where:
+   * @param fromNodeDataType RelDataType that might need to be projected as expectedDataType
+   * @param expectedDataType The expected data type
+   * @return a SqlNodeList that contains all the fields in expectedDataType where:
    *         - fields that do not involve structs are identity fields
    *         - fields that involve structs:
-   *           - if fromNodeDataType.structField = tableDataType.structField
+   *           - if fromNodeDataType.structField = expectedDataType.structField
    *             - identity projection
    *           - else
-   *             - use a generic projection over the struct column fixing the schema to be tableDataType.structField
+   *             - use a generic projection over the struct column fixing the schema to be expectedDataType.structField
    */
   private SqlNodeList createProjectedFieldsNodeList(RelDataType fromNodeDataType, RelDataType expectedDataType) {
     final SqlNodeList projectedFields = new SqlNodeList(SqlParserPos.ZERO);
@@ -159,10 +162,8 @@ class FuzzyUnionSqlRewriter extends SqlShuttle {
   }
 
   /**
-   * Create a SqlNode that has that has a schema fixed to the provided table if and only if the SqlNode has
-   * a RelDataType that is a superset of the fields that exist in the tableDataType and is not strictly the equivalent
-   * to tableDataType.
-   * @param unionBranch SqlNode node that is a branch in a union
+   * Create a SqlNode that has a same schema as expectedDataType
+   * @param unionBranch SqlNode node that is a branch in a union, which might need to be projected as expectedDataType
    * @param expectedDataType The expected data type for the UNION branch
    * @return SqlNode that has its schema fixed to the schema of the table
    */
@@ -173,11 +174,11 @@ class FuzzyUnionSqlRewriter extends SqlShuttle {
     // Otherwise, return the passed in SqlNode.
     // The SqlShuttle will derive the view graph bottom up (from base tables to views above it).
     // In this case, the SqlValidator will always fix the schemas from tables to the view and will not fail.
-    //    RelDataType fromNodeDataType = relContextProvider.getHiveSqlValidator().getValidatedNodeTypeIfKnown(unionBranch);
-    //    if (fromNodeDataType == null) {
-    //      relContextProvider.getHiveSqlValidator().validate(unionBranch);
-    //      fromNodeDataType = relContextProvider.getHiveSqlValidator().getValidatedNodeType(unionBranch);
-    //    }
+//        RelDataType fromNodeDataType = relContextProvider.getHiveSqlValidator().getValidatedNodeTypeIfKnown(unionBranch);
+//        if (fromNodeDataType == null) {
+//    relContextProvider.getHiveSqlValidator().validate(unionBranch);
+//    RelDataType fromNodeDataType = relContextProvider.getHiveSqlValidator().getValidatedNodeType(unionBranch);
+//        }
     RelDataType fromNodeDataType =
         relContextProvider.getSqlToRelConverter().convertQuery(unionBranch, true, true).rel.getRowType();
 
@@ -362,5 +363,6 @@ class FuzzyUnionSqlRewriter extends SqlShuttle {
     }
 
     return true;
+    "[\"null\",{\"type\" : \"int\",\"logicalType\": \"date\"}]"
   }
 }
