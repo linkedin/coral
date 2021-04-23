@@ -174,13 +174,13 @@ class FuzzyUnionSqlRewriter extends SqlShuttle {
     // Otherwise, return the passed in SqlNode.
     // The SqlShuttle will derive the view graph bottom up (from base tables to views above it).
     // In this case, the SqlValidator will always fix the schemas from tables to the view and will not fail.
-//        RelDataType fromNodeDataType = relContextProvider.getHiveSqlValidator().getValidatedNodeTypeIfKnown(unionBranch);
-//        if (fromNodeDataType == null) {
-//    relContextProvider.getHiveSqlValidator().validate(unionBranch);
-//    RelDataType fromNodeDataType = relContextProvider.getHiveSqlValidator().getValidatedNodeType(unionBranch);
-//        }
-    RelDataType fromNodeDataType =
-        relContextProvider.getSqlToRelConverter().convertQuery(unionBranch, true, true).rel.getRowType();
+        RelDataType fromNodeDataType = relContextProvider.getHiveSqlValidator().getValidatedNodeTypeIfKnown(unionBranch);
+        if (fromNodeDataType == null) {
+    relContextProvider.getHiveSqlValidator().validate(unionBranch);
+    fromNodeDataType = relContextProvider.getHiveSqlValidator().getValidatedNodeType(unionBranch);
+        }
+//    RelDataType fromNodeDataType =
+//        relContextProvider.getSqlToRelConverter().convertQuery(unionBranch, true, true).rel.getRowType();
 
     // Create a SqlNode that has a string equivalent to the following query:
     // SELECT table_name.col1, generic_project(table_name.col2), ... FROM (unionBranch) as table_name
@@ -363,6 +363,5 @@ class FuzzyUnionSqlRewriter extends SqlShuttle {
     }
 
     return true;
-    "[\"null\",{\"type\" : \"int\",\"logicalType\": \"date\"}]"
   }
 }
