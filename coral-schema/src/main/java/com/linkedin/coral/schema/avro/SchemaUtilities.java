@@ -347,12 +347,8 @@ class SchemaUtilities {
    *
    * @param leftSchema Left schema to be merged
    * @param rightSchema Right schema to be merged
-   * @param strictMode If set to true, namespaces are required to be same and the any mismatch of field types will
-   *                   cause an exception.
-   *                   If set to false, we don't check namespace and the following union of field types is allowed.
-   *                   null UNION ALL int -> [null, int]
-   *                   null UNION ALL [null, int] -> [null, int]
-   *                   int UNION ALL [null, int] -> [null, int]
+   * @param strictMode If set to true, namespaces are required to be same.
+   *                   If set to false, we don't check namespaces.
    *
    * @return Merged schema if the input schemas can be merged
    */
@@ -367,7 +363,7 @@ class SchemaUtilities {
     List<Schema.Field> rightSchemaFields = rightSchema.getFields();
 
     if (strictMode) {
-      // we require namespace matches in strictMode
+      // We require namespace to match in strictMode
       if (!Objects.equals(leftSchema.getNamespace(), rightSchema.getNamespace())) {
         throw new RuntimeException("Found namespace mismatch while configured with strict mode. " + "Namespace for "
             + leftSchema.getName() + " is: " + leftSchema.getNamespace() + ". " + "Namespace for "
@@ -425,8 +421,8 @@ class SchemaUtilities {
     Preconditions.checkNotNull(rightSchema);
 
     // Because we use leftSchema as the base of `switch`, we need to exchange leftSchema and rightSchema if rightSchema is
-    // a special type (null or union) and leftSchema is not.
-    if (isUnionOrNull(rightSchema) && !isUnionOrNull(leftSchema)) {
+    // a special type (null or nullable union) and leftSchema is not.
+    if (isNullableUnionOrNull(rightSchema) && !isNullableUnionOrNull(leftSchema)) {
       return getUnionFieldSchema(rightSchema, leftSchema, strictMode);
     }
 
@@ -502,8 +498,9 @@ class SchemaUtilities {
     }
   }
 
-  private static boolean isUnionOrNull(Schema schema) {
-    return schema.getType() == Schema.Type.UNION || schema.getType() == Schema.Type.NULL;
+  private static boolean isNullableUnionOrNull(Schema schema) {
+    return schema.getType() == Schema.Type.UNION && AvroSerdeUtils.isNullableType(schema)
+        || schema.getType() == Schema.Type.NULL;
   }
 
   private static void appendFieldWithNewNamespace(@Nonnull Schema.Field field, @Nonnull String namespace,
