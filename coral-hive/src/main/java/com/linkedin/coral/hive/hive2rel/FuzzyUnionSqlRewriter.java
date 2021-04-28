@@ -174,11 +174,11 @@ class FuzzyUnionSqlRewriter extends SqlShuttle {
     // Otherwise, return the passed in SqlNode.
     // The SqlShuttle will derive the view graph bottom up (from base tables to views above it).
     // In this case, the SqlValidator will always fix the schemas from tables to the view and will not fail.
-     RelDataType fromNodeDataType = relContextProvider.getHiveSqlValidator().getValidatedNodeTypeIfKnown(unionBranch);
-     if (fromNodeDataType == null) {
-       relContextProvider.getHiveSqlValidator().validate(unionBranch);
-       fromNodeDataType = relContextProvider.getHiveSqlValidator().getValidatedNodeType(unionBranch);
-     }
+    RelDataType fromNodeDataType = relContextProvider.getHiveSqlValidator().getValidatedNodeTypeIfKnown(unionBranch);
+    if (fromNodeDataType == null) {
+      relContextProvider.getHiveSqlValidator().validate(unionBranch);
+      fromNodeDataType = relContextProvider.getHiveSqlValidator().getValidatedNodeType(unionBranch);
+    }
 
     // Create a SqlNode that has a string equivalent to the following query:
     // SELECT table_name.col1, generic_project(table_name.col2), ... FROM (unionBranch) as table_name
@@ -192,10 +192,10 @@ class FuzzyUnionSqlRewriter extends SqlShuttle {
   }
 
   /**
-   * Looks at the union operator in the call and adds a fuzzy union projection over branches that have mismatched
+   * Look at the union operator in the call and add a fuzzy union projection over branches that have mismatched
    * schemas.
    * @param unionCall Union operator SqlCall
-   * @return a Union operator SqlCall with fuzzy union semantics
+   * @return a union operator SqlCall with fuzzy union semantics
    */
   private SqlCall addFuzzyUnionToUnionCall(SqlCall unionCall, RelDataType expectedDataType) {
     for (int i = 0; i < unionCall.operandCount(); ++i) {
@@ -212,7 +212,7 @@ class FuzzyUnionSqlRewriter extends SqlShuttle {
   }
 
   /**
-   * Returns data type given by the common subset of columns in the branches of the UNION call.
+   * Return data type given by the common subset of columns in the branches of the UNION call.
    */
   private RelDataType getUnionDataType(final SqlCall unionCall) {
     final List<SqlNode> leafNodes = getUnionLeafNodes(unionCall);
@@ -230,11 +230,11 @@ class FuzzyUnionSqlRewriter extends SqlShuttle {
   }
 
   /**
-   * Returns data type given by the common subset of columns in the given dataTypes.
+   * Return data type given by the common subset of columns in the given dataTypes.
    */
   private RelDataType getUnionDataType(final List<RelDataType> dataTypes) {
     // Use the first dataType as the model/base type.
-    // Assumes that all dataTypes in the list once shared a common type
+    // Assume that all dataTypes in the list once shared a common type
     // and only evolved in a backwards compatible fashion.
     final RelDataType baseDataType = dataTypes.get(0);
 
@@ -320,7 +320,7 @@ class FuzzyUnionSqlRewriter extends SqlShuttle {
   }
 
   /**
-   * Determines if the SqlNode is a UNION call
+   * Determine if the SqlNode is a UNION call
    * @param node a given SqlNode to evaluate
    * @return true if the SqlNode is a UNION call; false otherwise
    */

@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2020 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2021 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -169,7 +169,8 @@ public class TestUtils {
                       "union_view_with_alias", "union_view_single_branch_evolved",
                       "union_view_double_branch_evolved_different", "union_view_map_with_struct_value_evolved",
                       "union_view_array_with_struct_value_evolved", "union_view_deeply_nested_struct_evolved",
-                      "union_view_more_than_two_branches_evolved", "union_view_same_schema_evolution_with_different_ordering")));
+                      "union_view_more_than_two_branches_evolved",
+                      "union_view_same_schema_evolution_with_different_ordering")));
 
       // add some Dali functions to table properties
       IMetaStoreClient msc = testHive.getMetastoreClient();
