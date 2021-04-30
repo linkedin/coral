@@ -36,6 +36,10 @@ import com.linkedin.coral.com.google.common.base.Preconditions;
 import com.linkedin.coral.com.google.common.base.Strings;
 import com.linkedin.coral.schema.avro.exceptions.SchemaNotFoundException;
 
+import static org.apache.avro.Schema.Type.NULL;
+import static org.apache.hadoop.hive.serde2.avro.AvroSerdeUtils.getOtherTypeFromNullableType;
+import static org.apache.hadoop.hive.serde2.avro.AvroSerdeUtils.isNullableType;
+
 
 class SchemaUtilities {
   private static final Logger LOG = LoggerFactory.getLogger(SchemaUtilities.class);
@@ -399,11 +403,6 @@ class SchemaUtilities {
     for (Schema.Field leftField : leftSchemaFields) {
       Schema.Field rightField = rightSchemaFieldsMap.get(leftField.name());
       Schema unionFieldSchema = getUnionFieldSchema(leftField.schema(), rightField.schema(), strictMode);
-      if (unionFieldSchema == null) { // types of leftField and rightField are not compatible
-        throw new RuntimeException(leftField.name() + " is not compatible with " + rightField.name()
-            + " for LogicalUnion operator. " + "inputSchema1 is: " + leftSchema.toString(true) + ", "
-            + "inputSchema2 is: " + rightSchema.toString(true));
-      }
       Schema.Field unionField = new Schema.Field(leftField.name(), unionFieldSchema, leftField.doc(),
           leftField.defaultValue(), leftField.order());
       leftField.aliases().forEach(unionField::addAlias);
@@ -420,12 +419,23 @@ class SchemaUtilities {
     Preconditions.checkNotNull(leftSchema);
     Preconditions.checkNotNull(rightSchema);
 
-    // Because we use leftSchema as the base of `switch`, we need to exchange leftSchema and rightSchema if rightSchema is
-    // a special type (null or nullable union) and leftSchema is not.
-    if (isNullableUnionOrNull(rightSchema) && !isNullableUnionOrNull(leftSchema)) {
-      return getUnionFieldSchema(rightSchema, leftSchema, strictMode);
+    Schema.Type leftSchemaType = leftSchema.getType();
+    Schema.Type rightSchemaType = rightSchema.getType();
+    if (leftSchemaType == NULL) {
+      return makeNullable(rightSchema);
+    }
+    if (rightSchemaType == NULL) {
+      return makeNullable(leftSchema);
+    }
+    if (isNullableType(leftSchema) || isNullableType(rightSchema)) {
+      return makeNullable(getUnionFieldSchema(makeNonNullable(leftSchema), makeNonNullable(rightSchema), strictMode));
     }
 
+    boolean compatible = leftSchemaType == leftSchemaType;
+    Schema outputSchema;
+
+    // Each of the following case options adjusts the value of "compatible" with additional conditions
+    // and sets the value of "outputSchema". This method will return "outputSchema" if "compatible" is true.
     switch (leftSchema.getType()) {
       case BOOLEAN:
       case BYTES:
@@ -434,73 +444,62 @@ class SchemaUtilities {
       case INT:
       case LONG:
       case STRING:
-        return leftSchema.getType() == rightSchema.getType() ? leftSchema : null;
+        outputSchema = leftSchema;
+        break;
       case FIXED:
-        boolean isSameType = leftSchema.getType() == rightSchema.getType();
-        boolean isSameNamespace = Objects.equals(leftSchema.getNamespace(), rightSchema.getNamespace());
-
-        return isSameType && (!strictMode || isSameNamespace) ? leftSchema : null;
+        compatible &= isSameNamespace(leftSchema, rightSchema, strictMode);
+        outputSchema = leftSchema;
+        break;
       case ENUM:
-        if (leftSchema.getType() != rightSchema.getType()) {
-          return null;
-        }
         boolean isSameSymbolSize = (leftSchema.getEnumSymbols().size() == rightSchema.getEnumSymbols().size());
-        boolean isSameEnumNamespace = Objects.equals(leftSchema.getNamespace(), rightSchema.getNamespace());
-
-        return isSameSymbolSize && (!strictMode || isSameEnumNamespace) ? leftSchema : null;
+        compatible &= isSameSymbolSize && isSameNamespace(leftSchema, rightSchema, strictMode);
+        outputSchema = leftSchema;
+        break;
       case RECORD:
-        return leftSchema.getType() == rightSchema.getType()
-            ? mergeUnionRecordSchema(leftSchema, rightSchema, strictMode) : null;
-
+        outputSchema = mergeUnionRecordSchema(leftSchema, rightSchema, strictMode);
+        break;
       case MAP:
-        if (leftSchema.getType() != rightSchema.getType()) {
-          return null;
-        }
         Schema valueType = getUnionFieldSchema(leftSchema.getValueType(), rightSchema.getValueType(), strictMode);
-        return valueType != null ? Schema.createMap(valueType) : null;
-
+        outputSchema = Schema.createMap(valueType);
+        break;
       case ARRAY:
-        if (leftSchema.getType() != rightSchema.getType()) {
-          return null;
-        }
         Schema elementType = getUnionFieldSchema(leftSchema.getElementType(), rightSchema.getElementType(), strictMode);
-        return elementType != null ? Schema.createArray(elementType) : null;
-
+        outputSchema = Schema.createArray(elementType);
+        break;
       case UNION:
-        if (leftSchema.getType() == rightSchema.getType()) {
-          boolean isBothNullableType =
-              AvroSerdeUtils.isNullableType(leftSchema) && AvroSerdeUtils.isNullableType(rightSchema);
-
-          Schema leftOtherType = AvroSerdeUtils.getOtherTypeFromNullableType(leftSchema);
-          Schema rightOtherType = AvroSerdeUtils.getOtherTypeFromNullableType(rightSchema);
-          final Schema unionFieldSchema = getUnionFieldSchema(leftOtherType, rightOtherType, strictMode);
-          return isBothNullableType && unionFieldSchema != null
-              ? Schema.createUnion(Arrays.asList(Schema.create(Schema.Type.NULL), unionFieldSchema)) : null;
-        } else {
-          if (AvroSerdeUtils.isNullableType(leftSchema)) {
-            Schema leftOtherType = AvroSerdeUtils.getOtherTypeFromNullableType(leftSchema);
-            return rightSchema.getType() == Schema.Type.NULL
-                || getUnionFieldSchema(leftOtherType, rightSchema, strictMode) != null ? leftSchema : null;
-          }
-          return null;
-        }
-      case NULL:
-        if (rightSchema.getType() == Schema.Type.UNION) {
-          return AvroSerdeUtils.isNullableType(rightSchema) ? rightSchema : null;
-        } else if (rightSchema.getType() == Schema.Type.NULL) {
-          return leftSchema;
-        } else {
-          return Schema.createUnion(Arrays.asList(leftSchema, rightSchema));
-        }
+        // If we are in this branch, we know that neither leftSchema nor rightSchema is a nullable union, but can still be a union
+        outputSchema = getUnionFieldSchema(leftSchema, rightSchema, strictMode);
+        break;
       default:
         throw new IllegalArgumentException(
             "Unsupported Avro type " + leftSchema.getType() + " in schema: " + leftSchema.toString(true));
     }
+    if (compatible) {
+      return outputSchema;
+    } else {
+      throw new RuntimeException("Found two incompatible schemas for LogicalUnion operator. Left schema is: "
+          + leftSchema.toString(true) + ". " + "Right schema is: " + rightSchema.toString(true));
+    }
   }
 
-  private static boolean isNullableUnionOrNull(Schema schema) {
-    return schema.getType() == Schema.Type.UNION && AvroSerdeUtils.isNullableType(schema)
-        || schema.getType() == Schema.Type.NULL;
+  private static Schema makeNonNullable(Schema schema) {
+    if (isNullableType(schema)) {
+      return getOtherTypeFromNullableType(schema);
+    } else {
+      return schema;
+    }
+  }
+
+  private static Schema makeNullable(Schema schema) {
+    if (schema.getType() == NULL || isNullableType(schema)) {
+      return schema;
+    } else {
+      return Schema.createUnion(Arrays.asList(Schema.create(Schema.Type.NULL), schema));
+    }
+  }
+
+  private static boolean isSameNamespace(@Nonnull Schema leftSchema, @Nonnull Schema rightSchema, boolean strictMode) {
+    return !strictMode || Objects.equals(leftSchema.getNamespace(), rightSchema.getNamespace());
   }
 
   private static void appendFieldWithNewNamespace(@Nonnull Schema.Field field, @Nonnull String namespace,
@@ -627,8 +626,8 @@ class SchemaUtilities {
         Schema recordSchema = setupNestedNamespaceForRecord(schema, namespace);
         return recordSchema;
       case UNION:
-        if (AvroSerdeUtils.isNullableType(schema)) {
-          Schema otherType = AvroSerdeUtils.getOtherTypeFromNullableType(schema);
+        if (isNullableType(schema)) {
+          Schema otherType = getOtherTypeFromNullableType(schema);
           Schema otherTypeWithNestedNamespace = setupNestedNamespace(otherType, namespace);
           Schema nullSchema = Schema.create(Schema.Type.NULL);
           List<Schema> types = new ArrayList<>();
