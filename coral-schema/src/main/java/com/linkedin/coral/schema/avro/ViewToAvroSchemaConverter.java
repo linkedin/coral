@@ -53,7 +53,7 @@ public class ViewToAvroSchemaConverter {
   }
 
   /**
-   * This is the main API to generate the avro schema for a given Dali view
+   * An API to generate the avro schema for a view
    *
    * @param dbName database name
    * @param tableOrViewName table or view name
@@ -77,10 +77,10 @@ public class ViewToAvroSchemaConverter {
   }
 
   /**
-   * This is the main API to generate the avro schema for a given Dali view
+   * An API to generate the avro schema for a view
    *
-   * @param dbName database name used to generate Avro schema
-   * @param tableOrViewName table or view to generate Avro schema
+   * @param dbName database name
+   * @param tableOrViewName table or view name
    * @return avro schema for a given Dali view [dbName, viewName]
    */
   public Schema toAvroSchema(String dbName, String tableOrViewName) {
@@ -90,6 +90,45 @@ public class ViewToAvroSchemaConverter {
     Schema avroSchema = inferAvroSchema(dbName, tableOrViewName, false);
 
     return avroSchema;
+  }
+
+  /**
+   * An API to generate the avro schema string for a view
+   *
+   * @param dbName database name
+   * @param tableOrViewName table or view name
+   * @param strictMode if strictMode is set to True, we will not fall back to Hive schema if avro.schema.literal
+   *                        is missing in table properties. In addition, original namespace in base tables will be preserved.
+   *                   if strictMode is set to False, we will fall back to Hive schema if avro.schema.literal
+   *                        is missing in table properties. A new set of namespace will be generated for
+   *                        the resulting schema. The rule is as follows:
+   *                                1. Top level namespace is dbName.tableOrViewName
+   *                                2. Nested namespace is parentNamespace.parentFieldName
+   * @param isPrettyPrint whether to print the schema in pretty print mode
+   *
+   * @return avro schema String for a given Dali view [dbName, viewName]
+   */
+  public String toAvroSchemaString(String dbName, String tableOrViewName, boolean strictMode, boolean isPrettyPrint) {
+    return toAvroSchema(dbName, tableOrViewName, strictMode).toString(isPrettyPrint);
+  }
+
+  /**
+   * An API to generate the avro schema string for a view
+   *
+   * @param dbName database name
+   * @param tableOrViewName table or view name
+   * @param strictMode if strictMode is set to True, we will not fall back to Hive schema if avro.schema.literal
+   *                        is missing in table properties. In addition, original namespace in base tables will be preserved.
+   *                   if strictMode is set to False, we will fall back to Hive schema if avro.schema.literal
+   *                        is missing in table properties. A new set of namespace will be generated for
+   *                        the resulting schema. The rule is as follows:
+   *                                1. Top level namespace is dbName.tableOrViewName
+   *                                2. Nested namespace is parentNamespace.parentFieldName
+   *
+   * @return avro schema String for a given Dali view [dbName, viewName]
+   */
+  public String toAvroSchemaString(String dbName, String tableOrViewName, boolean strictMode) {
+    return toAvroSchemaString(dbName, tableOrViewName, strictMode, false);
   }
 
   private Schema inferAvroSchema(String dbName, String tableOrViewName, boolean strictMode) {
