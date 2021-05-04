@@ -16,7 +16,9 @@ import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.linkedin.avroutil1.compatibility.AvroCompatibilityHelper;
 
+import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
 import org.apache.calcite.rel.type.RelDataType;
@@ -145,14 +147,7 @@ class SchemaUtilities {
     Preconditions.checkNotNull(field);
     Preconditions.checkNotNull(fieldAssembler);
 
-    JsonNode defaultValue = field.defaultValue();
-
-    SchemaBuilder.GenericDefault genericDefault = fieldAssembler.name(field.name()).type(field.schema());
-    if (defaultValue != null) {
-      genericDefault.withDefault(defaultValue);
-    } else {
-      genericDefault.noDefault();
-    }
+    handleAvroDefaultValue(field, field.name(), field.schema(), fieldAssembler);
   }
 
   /**
@@ -211,14 +206,7 @@ class SchemaUtilities {
     Preconditions.checkNotNull(field);
     Preconditions.checkNotNull(fieldAssembler);
 
-    JsonNode defaultValue = field.defaultValue();
-
-    SchemaBuilder.GenericDefault genericDefault = fieldAssembler.name(fieldName).type(field.schema());
-    if (defaultValue != null) {
-      genericDefault.withDefault(defaultValue);
-    } else {
-      genericDefault.noDefault();
-    }
+    handleAvroDefaultValue(field, fieldName, field.schema(), fieldAssembler);
   }
 
   static String getFieldName(String oldName, String suggestedNewName) {
@@ -494,13 +482,7 @@ class SchemaUtilities {
         break;
     }
 
-    JsonNode defaultValue = field.defaultValue();
-    SchemaBuilder.GenericDefault genericDefault = fieldAssembler.name(field.name()).type(fieldSchema);
-    if (defaultValue != null) {
-      genericDefault.withDefault(defaultValue);
-    } else {
-      genericDefault.noDefault();
-    }
+    handleAvroDefaultValue(field, field.name(), fieldSchema, fieldAssembler);
   }
 
   private static Schema setupNestedNamespaceForRecord(@Nonnull Schema schema, @Nonnull String namespace) {
@@ -703,5 +685,16 @@ class SchemaUtilities {
       sb.append(StringUtils.capitalize(str));
     }
     return sb.toString();
+  }
+
+  private static void handleAvroDefaultValue(@Nonnull Schema.Field field, @Nonnull String fieldName,
+      @Nonnull Schema fieldSchema, @Nonnull SchemaBuilder.FieldAssembler<Schema> fieldAssembler) {
+    SchemaBuilder.GenericDefault genericDefault = fieldAssembler.name(fieldName).type(fieldSchema);
+    try {
+      Object defaultValue = AvroCompatibilityHelper.getGenericDefaultValue(field);
+      genericDefault.withDefault(defaultValue);
+    } catch (AvroRuntimeException ex) {
+      genericDefault.noDefault();
+    }
   }
 }

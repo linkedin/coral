@@ -12,7 +12,8 @@ def versions = [
   'hive': '1.2.2',
   'hadoop': '2.7.0',
   'pig': '0.15.0',
-  'ivy': '2.4.0'
+  'ivy': '2.4.0',
+  'avroCompatHelper': '0.1.10',
 ]
 
 ext.deps = [
@@ -28,6 +29,7 @@ ext.deps = [
   'kryo': "com.esotericsoftware.kryo:kryo:${versions['kryo']}",
   'testing': "org.testng:testng:${versions['testing']}",
   'ivy': "org.apache.ivy:ivy:${versions['ivy']}",
+  "avroCompatHelper": "com.linkedin.avroutil1:helper-all:${versions['avroCompatHelper']}",
 
   'hive':[
     'hive-metastore': "org.apache.hive:hive-metastore:${versions['hive']}",

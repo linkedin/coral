@@ -3,6 +3,7 @@ apply from: "$rootDir/gradle/java-publication.gradle"
 dependencies {
   compile deps.'slf4j-api'
   compile deps.'slf4j-log4j12'
+  compile deps.'avroCompatHelper'
 
   compile project(path: ':coral-hive')
 
