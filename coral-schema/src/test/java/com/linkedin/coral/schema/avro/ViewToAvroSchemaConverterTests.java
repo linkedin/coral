@@ -613,6 +613,20 @@ public class ViewToAvroSchemaConverterTests {
   }
 
   @Test
+  public void testProjectStructInnerField() {
+    String viewSql = "CREATE VIEW v AS "
+        + "SELECT bc.Id AS Id_View_Col, Struct_Col.Bool_Field AS Struct_Inner_Bool_Col, Struct_Col.Int_Field AS Struct_Inner_Int_Col, Struct_Col.Bigint_Field AS Struct_Inner_Bigint_Col "
+        + "FROM basecomplex bc " + "WHERE bc.Id > 0 AND bc.Struct_Col IS NOT NULL";
+
+    TestUtils.executeCreateViewQuery("default", "v", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v");
+
+    Assert.assertEquals(actualSchema.toString(true), TestUtils.loadSchema("testProjectStructInnerField-expected.avsc"));
+  }
+
+  @Test
   public void testSubQueryWhere() {
     // TODO: implement this test
   }
