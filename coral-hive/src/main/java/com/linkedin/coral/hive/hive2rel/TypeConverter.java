@@ -149,8 +149,10 @@ public class TypeConverter {
 
   // Mimic the StructTypeInfo conversion to convert a UnionTypeInfo to the corresponding RelDataType
   public static RelDataType convert(UnionTypeInfo unionType, RelDataTypeFactory dtFactory) {
-    List<RelDataType> fTypes = unionType.getAllUnionObjectTypeInfos().stream().map(typeInfo -> convert(typeInfo, dtFactory)).collect(Collectors.toList());
-    List<String> fNames = IntStream.range(0, unionType.getAllUnionObjectTypeInfos().size()).mapToObj(i -> "tag_" + i).collect(Collectors.toList());
+    List<RelDataType> fTypes = unionType.getAllUnionObjectTypeInfos().stream()
+        .map(typeInfo -> convert(typeInfo, dtFactory)).collect(Collectors.toList());
+    List<String> fNames = IntStream.range(0, unionType.getAllUnionObjectTypeInfos().size()).mapToObj(i -> "tag_" + i)
+        .collect(Collectors.toList());
 
     RelDataType rowType = dtFactory.createStructType(fTypes, fNames);
     return dtFactory.createTypeWithNullability(rowType, true);
