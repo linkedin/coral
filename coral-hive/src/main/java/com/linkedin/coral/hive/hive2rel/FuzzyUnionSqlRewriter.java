@@ -99,8 +99,8 @@ class FuzzyUnionSqlRewriter extends SqlShuttle {
   @Override
   public SqlNode visit(SqlCall call) {
     if (call.getOperator().getKind() == SqlKind.UNION) {
-      // Since a union is represented as a binary operator in calcite, chaining unions would have an AST like:
-      // Given A UNION B UNION C, the SqlNode AST would look something like:
+      // Since a union is represented as a binary operator in calcite, unions would have chaining unions in the AST.
+      // For example: given A UNION B UNION C, the SqlNode AST would look something like:
       //      U
       //     / \
       //    A   U
