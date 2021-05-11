@@ -105,7 +105,7 @@ public class HiveToRelConverter {
     SqlNode sqlNode = getTreeBuilder().processView(hiveDbName, hiveViewName);
     Table view = relContextProvider.getHiveSchema().getSubSchema(hiveDbName).getTable(hiveViewName);
     if (view != null) {
-      sqlNode.accept(new FuzzyUnionSqlRewriter(view, hiveViewName, relContextProvider));
+      sqlNode.accept(new FuzzyUnionSqlRewriter(hiveViewName, relContextProvider));
     }
     return toRel(sqlNode);
   }

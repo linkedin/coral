@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2020 LinkedIn Corporation. All rights reserved.
+ * Copyright 2019-2021 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -29,7 +29,7 @@ public class FuzzyUnionTest {
   private SqlNode getFuzzyUnionView(String databaseName, String viewName) throws TException {
     SqlNode node = viewToSqlNode(databaseName, viewName);
     Table view = relContextProvider.getHiveSchema().getSubSchema(databaseName).getTable(viewName);
-    node.accept(new FuzzyUnionSqlRewriter(view, viewName, getRelContextProvider()));
+    node.accept(new FuzzyUnionSqlRewriter(viewName, getRelContextProvider()));
     return node;
   }
 
@@ -96,9 +96,8 @@ public class FuzzyUnionTest {
     String view = "union_view_double_branch_evolved_same";
     SqlNode node = getFuzzyUnionView(database, view);
 
-    String expectedSql = "" + "SELECT \"a\", \"generic_project\"(\"b\", 'b') AS \"b\"\n"
-        + "FROM \"hive\".\"fuzzy_union\".\"tabled\"\n" + "UNION ALL\n"
-        + "SELECT \"a\", \"generic_project\"(\"b\", 'b') AS \"b\"\n" + "FROM \"hive\".\"fuzzy_union\".\"tablee\"";
+    String expectedSql = "" + "SELECT *\n" + "FROM \"hive\".\"fuzzy_union\".\"tabled\"\n" + "UNION ALL\n" + "SELECT *\n"
+        + "FROM \"hive\".\"fuzzy_union\".\"tablee\"";
 
     getRelContextProvider().getHiveSqlValidator().validate(node);
     String expandedSql = nodeToStr(node);
@@ -176,6 +175,20 @@ public class FuzzyUnionTest {
     String expectedSql =
         "" + "SELECT \"a\", \"generic_project\"(\"b\", 'b') AS \"b\"\n" + "FROM \"hive\".\"fuzzy_union\".\"tablel\"\n"
             + "UNION ALL\n" + "SELECT *\n" + "FROM \"hive\".\"fuzzy_union\".\"tablem\"";
+
+    getRelContextProvider().getHiveSqlValidator().validate(node);
+    String expandedSql = nodeToStr(node);
+    assertEquals(expandedSql, expectedSql);
+  }
+
+  @Test
+  public void testSameSchemaEvolutionWithDifferentOrdering() throws TException {
+    String database = "fuzzy_union";
+    String view = "union_view_same_schema_evolution_with_different_ordering";
+    SqlNode node = getFuzzyUnionView(database, view);
+
+    String expectedSql = "" + "SELECT *\n" + "FROM \"hive\".\"fuzzy_union\".\"tablen\"\n" + "UNION ALL\n"
+        + "SELECT \"a\", \"generic_project\"(\"b\", 'b') AS \"b\"\n" + "FROM \"hive\".\"fuzzy_union\".\"tableo\"";
 
     getRelContextProvider().getHiveSqlValidator().validate(node);
     String expandedSql = nodeToStr(node);
