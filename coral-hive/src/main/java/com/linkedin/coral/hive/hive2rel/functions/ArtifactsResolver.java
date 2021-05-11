@@ -126,12 +126,10 @@ public class ArtifactsResolver {
     try {
       final ResolveReport report = _ivyInstance.resolve(md, resolveOptions);
       if (report.hasError()) {
-        throw new RuntimeException("Unable to fetch dependencies: " + report.getAllProblemMessages());
+        LOG.warn("Unable to fetch dependencies: " + report.getAllProblemMessages());
       }
       return report;
-    } catch (ParseException e) {
-      throw new RuntimeException("Unable to fetch dependencies", e);
-    } catch (IOException e) {
+    } catch (ParseException | IOException e) {
       throw new RuntimeException("Unable to fetch dependencies", e);
     }
   }

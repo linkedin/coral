@@ -26,7 +26,6 @@ import org.apache.calcite.rex.RexNode;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Table;
-import org.apache.hadoop.hive.serde2.avro.AvroSerdeUtils;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
 import org.codehaus.jackson.JsonNode;
@@ -674,15 +673,14 @@ class SchemaUtilities {
   private static String readSchemaFromSchemaLiteral(@Nonnull Table table) {
     Preconditions.checkNotNull(table);
 
-    String schemaStr = table.getParameters().get(AvroSerdeUtils.AvroTableProperties.SCHEMA_LITERAL.getPropName());
+    String schemaStr = table.getParameters().get(AvroSerdeUtils.AVRO_SCHEMA_LITERAL);
     if (Strings.isNullOrEmpty(schemaStr)) {
-      schemaStr = table.getSd().getSerdeInfo().getParameters()
-          .get(AvroSerdeUtils.AvroTableProperties.SCHEMA_LITERAL.getPropName());
+      schemaStr = table.getSd().getSerdeInfo().getParameters().get(AvroSerdeUtils.AVRO_SCHEMA_LITERAL);
     }
 
     if (Strings.isNullOrEmpty(schemaStr)) {
       LOG.debug("No avro schema defined under table or serde property {} for table {}",
-          AvroSerdeUtils.AvroTableProperties.SCHEMA_LITERAL.getPropName(), getCompleteName(table));
+          AvroSerdeUtils.AVRO_SCHEMA_LITERAL, getCompleteName(table));
     }
 
     return schemaStr;

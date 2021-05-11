@@ -1,0 +1,19 @@
+{
+  "type" : "record",
+  "name" : "v",
+  "namespace" : "default.v",
+  "fields" : [ {
+    "name" : "Id_View_Col",
+    "type" : "int"
+  }, {
+    "name" : "Struct_Inner_Bool_Col",
+    "type" : "boolean"
+  }, {
+    "name" : "Struct_Inner_Int_Col",
+    "type" : [ "null", "int" ],
+    "default" : null
+  }, {
+    "name" : "Struct_Inner_Bigint_Col",
+    "type" : "long"
+  } ]
+}

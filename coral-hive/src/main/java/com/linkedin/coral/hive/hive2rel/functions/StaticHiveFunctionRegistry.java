@@ -358,6 +358,29 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
         family(SqlTypeFamily.NUMERIC, SqlTypeFamily.STRING, SqlTypeFamily.STRING));
     createAddUserDefinedFunction("com.linkedin.dali.udf.date.hive.EpochToEpochMilliseconds", BIGINT_NULLABLE, NUMERIC);
     createAddUserDefinedFunction("com.linkedin.dali.udf.sanitize.hive.Sanitize", HiveReturnTypes.STRING, STRING);
+    createAddUserDefinedFunction("org.apache.hadoop.hive.ql.udf.generic.GenericProject", ARG0,
+        family(SqlTypeFamily.ANY, SqlTypeFamily.STRING));
+    createAddUserDefinedFunction("com.linkedin.dali.view.udf.entityhandles.GetIdFromUrn", BIGINT, STRING);
+    createAddUserDefinedFunction("com.linkedin.dali.view.udf.entityhandles.GetPermissionsString",
+        HiveReturnTypes.STRING, family(SqlTypeFamily.ARRAY));
+    createAddUserDefinedFunction("com.linkedin.dali.view.udf.entityhandles.EpochTimeInSeconds", BIGINT, STRING);
+    createAddUserDefinedFunction("com.linkedin.dali.view.udf.entityhandles.EpochTimeInSecondsNullable", BIGINT_NULLABLE,
+        STRING);
+    createAddUserDefinedFunction("com.linkedin.dali.view.udf.entityhandles.PhoneNumberNormalizer",
+        HiveReturnTypes.STRING, STRING_STRING_STRING);
+    createAddUserDefinedFunction("com.linkedin.dwh.udf.profile.GetProfileUrl", HiveReturnTypes.STRING, family(
+        SqlTypeFamily.NUMERIC, SqlTypeFamily.STRING, SqlTypeFamily.STRING, SqlTypeFamily.STRING, SqlTypeFamily.STRING));
+    createAddUserDefinedFunction("com.linkedin.dali.views.premium.udf.GetFamily", HiveReturnTypes.STRING,
+        family(SqlTypeFamily.MAP));
+    createAddUserDefinedFunction("com.linkedin.dali.views.premium.udf.GetOrderUrn", HiveReturnTypes.STRING,
+        family(SqlTypeFamily.MAP, SqlTypeFamily.STRING));
+    createAddUserDefinedFunction("com.linkedin.dali.views.premium.udf.GetChooserId", HiveReturnTypes.STRING,
+        family(SqlTypeFamily.MAP));
+    createAddUserDefinedFunction("com.linkedin.etg.business.common.udfs.MapSfdcProductName", HiveReturnTypes.STRING,
+        STRING);
+    createAddUserDefinedFunction("com.linkedin.etg.business.common.udfs.MapSfdcProductCode", HiveReturnTypes.STRING,
+        STRING);
+    createAddUserDefinedFunction("com.linkedin.etg.business.common.udfs.MapSfdcProductId", ReturnTypes.INTEGER, STRING);
 
     // LIHADOOP-48502: The following UDFs are already defined using Transport UDF.
     // The class name is the corresponding Hive UDF.
@@ -393,6 +416,8 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
         family(Collections.nCopies(2, SqlTypeFamily.STRING)));
     createAddUserDefinedFunction("com.linkedin.stdudfs.parsing.hive.Ip2Str", HiveReturnTypes.STRING,
         or(family(SqlTypeFamily.STRING, SqlTypeFamily.NUMERIC, SqlTypeFamily.NUMERIC), family(SqlTypeFamily.STRING)));
+    createAddUserDefinedFunction("com.linkedin.stdudfs.daliudfs.hive.IsTestMemberId", ReturnTypes.BOOLEAN,
+        family(SqlTypeFamily.NUMERIC, SqlTypeFamily.STRING));
 
     // This is a Hive Custom UDF which is a simplified version of 'date-converter' package.
     // This UDF is not converted to a transport UDF.
