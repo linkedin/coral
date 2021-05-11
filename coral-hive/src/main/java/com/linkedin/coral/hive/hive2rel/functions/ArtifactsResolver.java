@@ -124,7 +124,7 @@ public class ArtifactsResolver {
         .setOutputReport(true).setValidate(true).setTransitive(dependencySpec.transitive);
     resolveOptions.setLog(LogOptions.LOG_QUIET);
     try {
-      ResolveReport report = _ivyInstance.resolve(md, resolveOptions);
+      final ResolveReport report = _ivyInstance.resolve(md, resolveOptions);
       if (report.hasError()) {
         LOG.warn("Unable to fetch dependencies: " + report.getAllProblemMessages());
       }
