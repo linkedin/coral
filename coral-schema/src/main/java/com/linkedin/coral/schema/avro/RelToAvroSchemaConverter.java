@@ -52,6 +52,7 @@ import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
 import org.apache.calcite.util.Pair;
 import org.apache.hadoop.hive.metastore.api.Table;
+import org.apache.hadoop.hive.serde2.avro.AvroSerdeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -449,8 +450,31 @@ public class RelToAvroSchemaConverter {
 
     @Override
     public RexNode visitFieldAccess(RexFieldAccess rexFieldAccess) {
-      // TODO: implement this method
-      return super.visitFieldAccess(rexFieldAccess);
+      if (rexFieldAccess.getReferenceExpr() instanceof RexInputRef) {
+        RexInputRef relInputRef = (RexInputRef) rexFieldAccess.getReferenceExpr();
+
+        String oldFieldName = rexFieldAccess.getField().getName();
+        String suggestNewFieldName = suggestedFieldNames.poll();
+        String newFieldName = SchemaUtilities.getFieldName(oldFieldName, suggestNewFieldName);
+
+        Schema topSchema = inputSchema.getFields().get(relInputRef.getIndex()).schema();
+        if (AvroSerdeUtils.isNullableType(topSchema)) {
+          topSchema = AvroSerdeUtils.getOtherTypeFromNullableType(topSchema);
+        }
+
+        Schema.Field accessedField = null;
+        for (Schema.Field field : topSchema.getFields()) {
+          if (field.name().equalsIgnoreCase(oldFieldName)) {
+            accessedField = field;
+            break;
+          }
+        }
+        SchemaUtilities.appendField(newFieldName, accessedField, fieldAssembler);
+
+        return rexFieldAccess;
+      } else {
+        return super.visitFieldAccess(rexFieldAccess);
+      }
     }
 
     @Override
