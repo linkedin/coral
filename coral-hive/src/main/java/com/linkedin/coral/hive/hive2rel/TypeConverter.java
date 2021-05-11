@@ -7,6 +7,8 @@ package com.linkedin.coral.hive.hive2rel;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
@@ -145,9 +147,13 @@ public class TypeConverter {
     return dtFactory.createTypeWithNullability(rowType, true);
   }
 
+  // Mimic the StructTypeInfo conversion to convert a UnionTypeInfo to the corresponding RelDataType
   public static RelDataType convert(UnionTypeInfo unionType, RelDataTypeFactory dtFactory) {
-    // Union type is not supported in Calcite.
-    throw new RuntimeException("Union type is not supported");
+    List<RelDataType> fTypes = unionType.getAllUnionObjectTypeInfos().stream().map(typeInfo -> convert(typeInfo, dtFactory)).collect(Collectors.toList());
+    List<String> fNames = IntStream.range(0, unionType.getAllUnionObjectTypeInfos().size()).mapToObj(i -> "tag_" + i).collect(Collectors.toList());
+
+    RelDataType rowType = dtFactory.createStructType(fTypes, fNames);
+    return dtFactory.createTypeWithNullability(rowType, true);
   }
 
   public static TypeInfo convert(RelDataType rType) {

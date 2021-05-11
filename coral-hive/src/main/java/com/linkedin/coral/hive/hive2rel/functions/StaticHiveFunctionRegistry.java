@@ -12,6 +12,7 @@ import java.util.function.Predicate;
 
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
+import org.apache.calcite.rel.type.RelDataTypeImpl;
 import org.apache.calcite.sql.SqlCallBinding;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlOperandCountRange;
@@ -316,6 +317,7 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
 
     createAddUserDefinedFunction("array_contains", ReturnTypes.BOOLEAN, family(SqlTypeFamily.ARRAY, SqlTypeFamily.ANY));
     createAddUserDefinedFunction("sort_array", ARG0, ARRAY);
+    createAddUserDefinedFunction("extract_union", ARG0, or(ANY, family(SqlTypeFamily.ANY, SqlTypeFamily.INTEGER)));
 
     // LinkedIn UDFs: Dali stores mapping from UDF name to the implementing Java class as table properties
     // in the HCatalog. So, an UDF implementation may be referred by different names by different views.
