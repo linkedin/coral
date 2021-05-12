@@ -73,7 +73,9 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
 
     // operators
     addFunctionEntry("RLIKE", HiveRLikeOperator.RLIKE);
+    addFunctionEntry("rlike", HiveRLikeOperator.RLIKE);
     addFunctionEntry("REGEXP", HiveRLikeOperator.REGEXP);
+    addFunctionEntry("regexp", HiveRLikeOperator.REGEXP);
     addFunctionEntry("!=", NOT_EQUALS);
     addFunctionEntry("==", EQUALS);
 
