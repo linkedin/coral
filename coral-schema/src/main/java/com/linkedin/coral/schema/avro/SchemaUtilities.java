@@ -36,6 +36,10 @@ import com.linkedin.coral.com.google.common.base.Preconditions;
 import com.linkedin.coral.com.google.common.base.Strings;
 import com.linkedin.coral.schema.avro.exceptions.SchemaNotFoundException;
 
+import static org.apache.avro.Schema.Type.NULL;
+import static org.apache.hadoop.hive.serde2.avro.AvroSerdeUtils.getOtherTypeFromNullableType;
+import static org.apache.hadoop.hive.serde2.avro.AvroSerdeUtils.isNullableType;
+
 
 class SchemaUtilities {
   private static final Logger LOG = LoggerFactory.getLogger(SchemaUtilities.class);
@@ -342,48 +346,34 @@ class SchemaUtilities {
     return combinedSchema;
   }
 
-  static Schema mergeUnionSchema(@Nonnull Schema leftSchema, @Nonnull Schema rightSchema, boolean strictMode) {
-    Preconditions.checkNotNull(leftSchema);
-    Preconditions.checkNotNull(rightSchema);
-
-    if (!leftSchema.toString(true).equals(rightSchema.toString(true))) {
-      if (!SchemaUtilities.isUnionRecordSchemaCompatible(leftSchema, rightSchema, strictMode)) {
-        throw new RuntimeException("Input schemas of LogicalUnion operator are not compatible. " + "inputSchema1 is: "
-            + leftSchema.toString(true) + ", " + "inputSchema2 is: " + rightSchema.toString(true));
-      }
-    }
-
-    return leftSchema;
-  }
-
   /**
-   * This method decides if two input schemas of LogicalUnion operator are compatible.
+   * This method merges two input schemas of LogicalUnion operator, or throws exception if they can't be merged.
    *
-   * Two schemas are compatible if they have same field names and types.
-   * namespace and doc etc are ignored.
+   * @param leftSchema Left schema to be merged
+   * @param rightSchema Right schema to be merged
+   * @param strictMode If set to true, namespaces are required to be same.
+   *                   If set to false, we don't check namespaces.
    *
-   * @param leftSchema
-   * @param rightSchema
-   * @return return true if two schemas are union compatible; false otherwise.
+   * @return Merged schema if the input schemas can be merged
    */
-  static boolean isUnionRecordSchemaCompatible(@Nonnull Schema leftSchema, @Nonnull Schema rightSchema,
-      boolean strictMode) {
+  static Schema mergeUnionRecordSchema(@Nonnull Schema leftSchema, @Nonnull Schema rightSchema, boolean strictMode) {
     Preconditions.checkNotNull(leftSchema);
     Preconditions.checkNotNull(rightSchema);
-
-    if (strictMode) {
-      // we requires namespace matches in strictMode
-      if (!Objects.equals(leftSchema.getNamespace(), rightSchema.getNamespace())) {
-        LOG.error("Found namespace mismatch while configured with strict mode. " + "Namespace for "
-            + leftSchema.getName() + " is: " + leftSchema.getNamespace() + ". " + "Namespace for "
-            + rightSchema.getName() + " is: " + rightSchema.getNamespace());
-
-        return false;
-      }
+    if (leftSchema.toString(true).equals(rightSchema.toString(true))) {
+      return leftSchema;
     }
 
     List<Schema.Field> leftSchemaFields = leftSchema.getFields();
     List<Schema.Field> rightSchemaFields = rightSchema.getFields();
+
+    if (strictMode) {
+      // We require namespace to match in strictMode
+      if (!Objects.equals(leftSchema.getNamespace(), rightSchema.getNamespace())) {
+        throw new RuntimeException("Found namespace mismatch while configured with strict mode. " + "Namespace for "
+            + leftSchema.getName() + " is: " + leftSchema.getNamespace() + ". " + "Namespace for "
+            + rightSchema.getName() + " is: " + rightSchema.getNamespace());
+      }
+    }
 
     Map<String, Schema.Field> leftSchemaFieldsMap =
         leftSchemaFields.stream().collect(Collectors.toMap(Schema.Field::name, Function.identity()));
@@ -393,88 +383,110 @@ class SchemaUtilities {
     for (Schema.Field field : leftSchemaFields) {
       if (!rightSchemaFieldsMap.containsKey(field.name())) {
         // field in leftSchema is missing in rightSchema
-        LOG.error(field.name() + " is in schema " + leftSchema.getName() + ": " + leftSchema.toString(true)
-            + ", but not in schema " + rightSchema.getName() + ": " + rightSchema.toString(true));
-        return false;
+        throw new RuntimeException(
+            field.name() + " is in schema " + leftSchema.getName() + ": " + leftSchema.toString(true)
+                + ", but not in schema " + rightSchema.getName() + ": " + rightSchema.toString(true));
       }
     }
 
     for (Schema.Field field : rightSchemaFields) {
       if (!leftSchemaFieldsMap.containsKey(field.name())) {
         // field in rightSchema is missing in leftSchema
-        LOG.error(field.name() + " is in schema " + rightSchema.getName() + ": " + rightSchema.toString(true)
-            + ", but not in schema " + leftSchema.getName() + ": " + leftSchema.toString(true));
-        return false;
+        throw new RuntimeException(
+            field.name() + " is in schema " + rightSchema.getName() + ": " + rightSchema.toString(true)
+                + ", but not in schema " + leftSchema.getName() + ": " + leftSchema.toString(true));
       }
     }
+
+    List<Schema.Field> mergedSchemaFields = new ArrayList<>();
 
     for (Schema.Field leftField : leftSchemaFields) {
       Schema.Field rightField = rightSchemaFieldsMap.get(leftField.name());
-      boolean isUnionSchemaCompatible = isUnionSchemaCompatible(leftField.schema(), rightField.schema(), strictMode);
-
-      if (!isUnionSchemaCompatible) {
-        LOG.error(leftField.name() + " is not compatible with " + rightField.name() + " for LogicalUnion operator.");
-
-        return false;
-      }
+      Schema unionFieldSchema = getUnionFieldSchema(leftField.schema(), rightField.schema(), strictMode);
+      Schema.Field unionField = new Schema.Field(leftField.name(), unionFieldSchema, leftField.doc(),
+          leftField.defaultValue(), leftField.order());
+      leftField.aliases().forEach(unionField::addAlias);
+      leftField.getJsonProps().forEach(unionField::addProp);
+      mergedSchemaFields.add(unionField);
     }
-
-    return true;
+    Schema schema = Schema.createRecord(leftSchema.getName(), leftSchema.getDoc(), leftSchema.getNamespace(), false);
+    schema.setFields(mergedSchemaFields);
+    return schema;
   }
 
-  private static boolean isUnionSchemaCompatible(@Nonnull Schema leftSchema, @Nonnull Schema rightSchema,
+  private static Schema getUnionFieldSchema(@Nonnull Schema leftSchema, @Nonnull Schema rightSchema,
       boolean strictMode) {
     Preconditions.checkNotNull(leftSchema);
     Preconditions.checkNotNull(rightSchema);
 
-    switch (leftSchema.getType()) {
-      case BOOLEAN:
-      case BYTES:
-      case DOUBLE:
-      case FLOAT:
-      case INT:
-      case LONG:
-      case STRING:
-      case NULL:
-        return leftSchema.getType() == rightSchema.getType();
-      case FIXED:
-        boolean isSameType = leftSchema.getType() == rightSchema.getType();
-        boolean isSameNamespace = Objects.equals(leftSchema.getNamespace(), rightSchema.getNamespace());
-
-        return isSameType && (!strictMode || isSameNamespace);
-      case ENUM:
-        boolean isSameEnumType = (leftSchema.getType() == rightSchema.getType());
-        boolean isSameSymbolSize = (leftSchema.getEnumSymbols().size() == rightSchema.getEnumSymbols().size());
-        boolean isSameEnumNamespace = Objects.equals(leftSchema.getNamespace(), rightSchema.getNamespace());
-
-        return isSameEnumType && isSameSymbolSize && (!strictMode || isSameEnumNamespace);
-      case RECORD:
-        return leftSchema.getType() == rightSchema.getType()
-            && isUnionRecordSchemaCompatible(leftSchema, rightSchema, strictMode);
-
-      case MAP:
-        return leftSchema.getType() == rightSchema.getType()
-            && isUnionSchemaCompatible(leftSchema.getValueType(), rightSchema.getValueType(), strictMode);
-
-      case ARRAY:
-        return leftSchema.getType() == rightSchema.getType()
-            && isUnionSchemaCompatible(leftSchema.getElementType(), rightSchema.getElementType(), strictMode);
-
-      case UNION:
-        boolean isSameUnionType = (leftSchema.getType() == rightSchema.getType());
-        boolean isBothNullableType =
-            AvroSerdeUtils.isNullableType(leftSchema) && AvroSerdeUtils.isNullableType(rightSchema);
-
-        Schema leftOtherType = AvroSerdeUtils.getOtherTypeFromNullableType(leftSchema);
-        Schema rightOtherType = AvroSerdeUtils.getOtherTypeFromNullableType(rightSchema);
-        boolean isOtherTypeUnionCompatible = isUnionSchemaCompatible(leftOtherType, rightOtherType, strictMode);
-
-        return isSameUnionType && isBothNullableType && isOtherTypeUnionCompatible;
-
-      default:
-        throw new IllegalArgumentException(
-            "Unsupported Avro type " + leftSchema.getType() + " in schema: " + leftSchema.toString(true));
+    Schema.Type leftSchemaType = leftSchema.getType();
+    Schema.Type rightSchemaType = rightSchema.getType();
+    if (leftSchemaType == NULL) {
+      return makeNullable(rightSchema);
     }
+    if (rightSchemaType == NULL) {
+      return makeNullable(leftSchema);
+    }
+    if (isNullableType(leftSchema) || isNullableType(rightSchema)) {
+      return makeNullable(getUnionFieldSchema(makeNonNullable(leftSchema), makeNonNullable(rightSchema), strictMode));
+    }
+
+    if (leftSchemaType == rightSchemaType) {
+      switch (leftSchema.getType()) {
+        case BOOLEAN:
+        case BYTES:
+        case DOUBLE:
+        case FLOAT:
+        case INT:
+        case LONG:
+        case STRING:
+          return leftSchema;
+        case FIXED:
+          if (isSameNamespace(leftSchema, rightSchema, strictMode)) {
+            return leftSchema;
+          }
+          break;
+        case ENUM:
+          if (leftSchema.getEnumSymbols().size() == rightSchema.getEnumSymbols().size()) {
+            return leftSchema;
+          }
+          break;
+        case RECORD:
+          return mergeUnionRecordSchema(leftSchema, rightSchema, strictMode);
+        case MAP:
+          Schema valueType = getUnionFieldSchema(leftSchema.getValueType(), rightSchema.getValueType(), strictMode);
+          return Schema.createMap(valueType);
+        case ARRAY:
+          Schema elementType =
+              getUnionFieldSchema(leftSchema.getElementType(), rightSchema.getElementType(), strictMode);
+          return Schema.createArray(elementType);
+        default:
+          throw new IllegalArgumentException(
+              "Unsupported Avro type " + leftSchema.getType() + " in schema: " + leftSchema.toString(true));
+      }
+    }
+    throw new RuntimeException("Found two incompatible schemas for LogicalUnion operator. Left schema is: "
+        + leftSchema.toString(true) + ". " + "Right schema is: " + rightSchema.toString(true));
+  }
+
+  private static Schema makeNonNullable(Schema schema) {
+    if (isNullableType(schema)) {
+      return getOtherTypeFromNullableType(schema);
+    } else {
+      return schema;
+    }
+  }
+
+  private static Schema makeNullable(Schema schema) {
+    if (schema.getType() == NULL || isNullableType(schema)) {
+      return schema;
+    } else {
+      return Schema.createUnion(Arrays.asList(Schema.create(Schema.Type.NULL), schema));
+    }
+  }
+
+  private static boolean isSameNamespace(@Nonnull Schema leftSchema, @Nonnull Schema rightSchema, boolean strictMode) {
+    return !strictMode || Objects.equals(leftSchema.getNamespace(), rightSchema.getNamespace());
   }
 
   private static void appendFieldWithNewNamespace(@Nonnull Schema.Field field, @Nonnull String namespace,
@@ -601,8 +613,8 @@ class SchemaUtilities {
         Schema recordSchema = setupNestedNamespaceForRecord(schema, namespace);
         return recordSchema;
       case UNION:
-        if (AvroSerdeUtils.isNullableType(schema)) {
-          Schema otherType = AvroSerdeUtils.getOtherTypeFromNullableType(schema);
+        if (isNullableType(schema)) {
+          Schema otherType = getOtherTypeFromNullableType(schema);
           Schema otherTypeWithNestedNamespace = setupNestedNamespace(otherType, namespace);
           Schema nullSchema = Schema.create(Schema.Type.NULL);
           List<Schema> types = new ArrayList<>();
