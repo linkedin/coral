@@ -168,17 +168,9 @@ class FuzzyUnionSqlRewriter extends SqlShuttle {
    * @return SqlNode that has its schema fixed to the schema of the table
    */
   private SqlNode addFuzzyUnionToUnionBranch(SqlNode unionBranch, RelDataType expectedDataType) {
-
-    // Retrieve the datatype of the node if known.
-    // If it is known, retrieve it from the node.
-    // Otherwise, return the passed in SqlNode.
-    // The SqlShuttle will derive the view graph bottom up (from base tables to views above it).
-    // In this case, the SqlValidator will always fix the schemas from tables to the view and will not fail.
-    RelDataType fromNodeDataType = relContextProvider.getHiveSqlValidator().getValidatedNodeTypeIfKnown(unionBranch);
-    if (fromNodeDataType == null) {
-      relContextProvider.getHiveSqlValidator().validate(unionBranch);
-      fromNodeDataType = relContextProvider.getHiveSqlValidator().getValidatedNodeType(unionBranch);
-    }
+    RelDataType fromNodeDataType = relContextProvider.getSqlToRelConverter().convertQuery(
+        unionBranch.accept(new FuzzyUnionSqlRewriter(tableName, relContextProvider)), true, true)
+        .rel.getRowType();
 
     // Create a SqlNode that has a string equivalent to the following query:
     // SELECT table_name.col1, generic_project(table_name.col2), ... FROM (unionBranch) as table_name
