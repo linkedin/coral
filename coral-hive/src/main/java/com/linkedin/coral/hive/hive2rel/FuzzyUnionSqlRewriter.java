@@ -168,9 +168,9 @@ class FuzzyUnionSqlRewriter extends SqlShuttle {
    * @return SqlNode that has its schema fixed to the schema of the table
    */
   private SqlNode addFuzzyUnionToUnionBranch(SqlNode unionBranch, RelDataType expectedDataType) {
-    RelDataType fromNodeDataType = relContextProvider.getSqlToRelConverter().convertQuery(
-        unionBranch.accept(new FuzzyUnionSqlRewriter(tableName, relContextProvider)), true, true)
-        .rel.getRowType();
+    RelDataType fromNodeDataType = relContextProvider.getSqlToRelConverter()
+        .convertQuery(unionBranch.accept(new FuzzyUnionSqlRewriter(tableName, relContextProvider)), true, true).rel
+            .getRowType();
 
     // Create a SqlNode that has a string equivalent to the following query:
     // SELECT table_name.col1, generic_project(table_name.col2), ... FROM (unionBranch) as table_name
