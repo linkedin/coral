@@ -431,55 +431,47 @@ class SchemaUtilities {
       return makeNullable(getUnionFieldSchema(makeNonNullable(leftSchema), makeNonNullable(rightSchema), strictMode));
     }
 
-    boolean compatible = leftSchemaType == leftSchemaType;
-    Schema outputSchema;
+    if (leftSchemaType == rightSchemaType) {
+      Schema outputSchema;
+      boolean compatible = true;
 
-    // Each of the following case options adjusts the value of "compatible" with additional conditions
-    // and sets the value of "outputSchema". This method will return "outputSchema" if "compatible" is true.
-    switch (leftSchema.getType()) {
-      case BOOLEAN:
-      case BYTES:
-      case DOUBLE:
-      case FLOAT:
-      case INT:
-      case LONG:
-      case STRING:
-        outputSchema = leftSchema;
-        break;
-      case FIXED:
-        compatible &= isSameNamespace(leftSchema, rightSchema, strictMode);
-        outputSchema = leftSchema;
-        break;
-      case ENUM:
-        boolean isSameSymbolSize = (leftSchema.getEnumSymbols().size() == rightSchema.getEnumSymbols().size());
-        compatible &= isSameSymbolSize && isSameNamespace(leftSchema, rightSchema, strictMode);
-        outputSchema = leftSchema;
-        break;
-      case RECORD:
-        outputSchema = mergeUnionRecordSchema(leftSchema, rightSchema, strictMode);
-        break;
-      case MAP:
-        Schema valueType = getUnionFieldSchema(leftSchema.getValueType(), rightSchema.getValueType(), strictMode);
-        outputSchema = Schema.createMap(valueType);
-        break;
-      case ARRAY:
-        Schema elementType = getUnionFieldSchema(leftSchema.getElementType(), rightSchema.getElementType(), strictMode);
-        outputSchema = Schema.createArray(elementType);
-        break;
-      case UNION:
-        // If we are in this branch, we know that neither leftSchema nor rightSchema is a nullable union, but can still be a union
-        outputSchema = getUnionFieldSchema(leftSchema, rightSchema, strictMode);
-        break;
-      default:
-        throw new IllegalArgumentException(
-            "Unsupported Avro type " + leftSchema.getType() + " in schema: " + leftSchema.toString(true));
+      // Each of the following case options adjusts the value of "compatible" with additional conditions
+      // and sets the value of "outputSchema". This method will return "outputSchema" if "compatible" is true.
+      switch (leftSchema.getType()) {
+        case BOOLEAN:
+        case BYTES:
+        case DOUBLE:
+        case FLOAT:
+        case INT:
+        case LONG:
+        case STRING:
+          return leftSchema;
+        case FIXED:
+          if (isSameNamespace(leftSchema, rightSchema, strictMode)) {
+            return leftSchema;
+          }
+          break;
+        case ENUM:
+          if (leftSchema.getEnumSymbols().size() == rightSchema.getEnumSymbols().size()) {
+            return leftSchema;
+          }
+          break;
+        case RECORD:
+          return mergeUnionRecordSchema(leftSchema, rightSchema, strictMode);
+        case MAP:
+          Schema valueType = getUnionFieldSchema(leftSchema.getValueType(), rightSchema.getValueType(), strictMode);
+          return Schema.createMap(valueType);
+        case ARRAY:
+          Schema elementType =
+              getUnionFieldSchema(leftSchema.getElementType(), rightSchema.getElementType(), strictMode);
+          return Schema.createArray(elementType);
+        default:
+          throw new IllegalArgumentException(
+              "Unsupported Avro type " + leftSchema.getType() + " in schema: " + leftSchema.toString(true));
+      }
     }
-    if (compatible) {
-      return outputSchema;
-    } else {
-      throw new RuntimeException("Found two incompatible schemas for LogicalUnion operator. Left schema is: "
-          + leftSchema.toString(true) + ". " + "Right schema is: " + rightSchema.toString(true));
-    }
+    throw new RuntimeException("Found two incompatible schemas for LogicalUnion operator. Left schema is: "
+        + leftSchema.toString(true) + ". " + "Right schema is: " + rightSchema.toString(true));
   }
 
   private static Schema makeNonNullable(Schema schema) {
