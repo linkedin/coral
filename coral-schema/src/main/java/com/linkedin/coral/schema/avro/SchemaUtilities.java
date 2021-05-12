@@ -432,11 +432,6 @@ class SchemaUtilities {
     }
 
     if (leftSchemaType == rightSchemaType) {
-      Schema outputSchema;
-      boolean compatible = true;
-
-      // Each of the following case options adjusts the value of "compatible" with additional conditions
-      // and sets the value of "outputSchema". This method will return "outputSchema" if "compatible" is true.
       switch (leftSchema.getType()) {
         case BOOLEAN:
         case BYTES:
