@@ -531,10 +531,15 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     List<SqlNode> sqlNodes = visitChildren(node, ctx);
     if (sqlNodes.size() == 1) {
       final SqlNode sqlNode = sqlNodes.get(0);
+      // if select a field from a struct column, like
+      // SELECT table.struct_column.field_name FROM table
+      // we need to add an alias to avoid null pointer exception:
+      // SELECT table.struct_column.field_name AS field_name FROM table
       if (sqlNode.getKind() == SqlKind.IDENTIFIER) {
-        String[] parts = sqlNode.toString().split("\\.");
-        if (parts.length > 2) {
-          return SqlStdOperatorTable.AS.createCall(ZERO, sqlNode, new SqlIdentifier(parts[parts.length - 1], ZERO));
+        List<String> names = ((SqlIdentifier) sqlNode).names;
+        final int size = names.size();
+        if (size > 2) {
+          return SqlStdOperatorTable.AS.createCall(ZERO, sqlNode, new SqlIdentifier(names.get(size - 1), ZERO));
         }
       }
       return sqlNode;
