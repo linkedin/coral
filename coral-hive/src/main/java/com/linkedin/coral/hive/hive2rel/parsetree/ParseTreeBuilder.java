@@ -529,7 +529,12 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
   protected SqlNode visitSelectExpr(ASTNode node, ParseContext ctx) {
     List<SqlNode> sqlNodes = visitChildren(node, ctx);
     if (sqlNodes.size() == 1) {
-      return sqlNodes.get(0);
+      final SqlNode sqlNode = sqlNodes.get(0);
+      String[] parts = sqlNode.toString().split("\\.");
+      if (parts.length > 2) {
+        return SqlStdOperatorTable.AS.createCall(ZERO, sqlNode, new SqlIdentifier(parts[parts.length - 1], ZERO));
+      }
+      return sqlNode;
     } else if (sqlNodes.size() == 2) {
       return new SqlBasicCall(SqlStdOperatorTable.AS, sqlNodes.toArray(new SqlNode[0]), ZERO);
     } else if (sqlNodes.size() >= 3) {
