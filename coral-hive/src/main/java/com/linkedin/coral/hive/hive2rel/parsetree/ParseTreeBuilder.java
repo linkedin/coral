@@ -25,6 +25,7 @@ import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlDataTypeSpec;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlJoin;
+import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlNodeList;
@@ -530,9 +531,11 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     List<SqlNode> sqlNodes = visitChildren(node, ctx);
     if (sqlNodes.size() == 1) {
       final SqlNode sqlNode = sqlNodes.get(0);
-      String[] parts = sqlNode.toString().split("\\.");
-      if (parts.length > 2) {
-        return SqlStdOperatorTable.AS.createCall(ZERO, sqlNode, new SqlIdentifier(parts[parts.length - 1], ZERO));
+      if (sqlNode.getKind() == SqlKind.IDENTIFIER) {
+        String[] parts = sqlNode.toString().split("\\.");
+        if (parts.length > 2) {
+          return SqlStdOperatorTable.AS.createCall(ZERO, sqlNode, new SqlIdentifier(parts[parts.length - 1], ZERO));
+        }
       }
       return sqlNode;
     } else if (sqlNodes.size() == 2) {
