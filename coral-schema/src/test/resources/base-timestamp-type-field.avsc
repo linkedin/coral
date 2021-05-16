@@ -1,0 +1,12 @@
+{
+  "type" : "record",
+  "name" : "basetimestamptypefield",
+  "namespace" : "coral.schema.avro.base.timestamp.type.field",
+  "fields" : [ {
+    "name" : "Timestamp_Field",
+    "type" : [ "null", {
+      "type" : "long",
+      "logicalType" : "timestamp-millis"
+    } ]
+  } ]
+}
