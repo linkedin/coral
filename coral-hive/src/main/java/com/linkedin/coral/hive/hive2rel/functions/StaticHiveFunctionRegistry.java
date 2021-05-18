@@ -72,6 +72,9 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
     //addFunctionEntry("in", SqlStdOperatorTable.IN);
 
     // operators
+    // We need to add both lower and upper cases for operators because DaliOperatorTable.lookupOperatorOverloads
+    // resolves the operator functions case-sensitively. If we just add the lowercase operator,
+    // DaliOperatorTable.lookupOperatorOverloads can't resolve the uppercase operator, and there will be null pointer exception.
     addFunctionEntry("RLIKE", HiveRLikeOperator.RLIKE);
     addFunctionEntry("rlike", HiveRLikeOperator.RLIKE);
     addFunctionEntry("REGEXP", HiveRLikeOperator.REGEXP);
