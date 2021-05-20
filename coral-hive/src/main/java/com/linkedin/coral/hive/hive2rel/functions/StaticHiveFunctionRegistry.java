@@ -433,7 +433,7 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
 
   /**
    * Returns a list of functions matching given name case-insensitively. This returns empty list if the
-   * function name is not found,
+   * function name is not found.
    * @param functionName function name to match
    * @return list of matching HiveFunctions or empty collection.
    */
