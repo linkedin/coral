@@ -440,8 +440,7 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
    */
   @Override
   public Collection<HiveFunction> lookup(String functionName, boolean isCaseSensitive) {
-    String name = isCaseSensitive ? functionName : functionName.toLowerCase();
-    return FUNCTION_MAP.get(name);
+    return FUNCTION_MAP.get(functionName.toLowerCase());
   }
 
   /**
@@ -452,7 +451,7 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
   }
 
   private static void addFunctionEntry(String functionName, SqlOperator operator) {
-    FUNCTION_MAP.put(functionName, new HiveFunction(functionName, operator));
+    FUNCTION_MAP.put(functionName.toLowerCase(), new HiveFunction(functionName.toLowerCase(), operator));
   }
 
   public static void createAddUserDefinedFunction(String functionName, SqlReturnTypeInference returnTypeInference,
