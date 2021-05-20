@@ -122,12 +122,12 @@ public class CalciteTrinoUDFMap {
   }
 
   private static SqlOperator hiveToCalciteOp(String functionName) {
-    Collection<HiveFunction> lookup = HIVE_REGISTRY.lookup(functionName, false);
+    Collection<HiveFunction> lookup = HIVE_REGISTRY.lookup(functionName);
     // TODO: provide overloaded function resolution
     return lookup.iterator().next().getSqlOperator();
   }
 
   private static SqlOperator daliToCalciteOp(String className) {
-    return HIVE_REGISTRY.lookup(className, true).iterator().next().getSqlOperator();
+    return HIVE_REGISTRY.lookup(className).iterator().next().getSqlOperator();
   }
 }
