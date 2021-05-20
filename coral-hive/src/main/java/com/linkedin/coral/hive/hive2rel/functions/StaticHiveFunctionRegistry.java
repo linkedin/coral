@@ -450,7 +450,7 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
   }
 
   /**
-   * Add the function to registry, the key is lowercase function name to make lookup case-insensitive.
+   * Adds the function to registry, the key is lowercase functionName to make lookup case-insensitive.
    */
   private static void addFunctionEntry(String functionName, SqlOperator operator) {
     FUNCTION_MAP.put(functionName.toLowerCase(), new HiveFunction(functionName, operator));

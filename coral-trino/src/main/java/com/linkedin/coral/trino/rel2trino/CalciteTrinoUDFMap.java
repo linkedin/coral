@@ -122,7 +122,7 @@ public class CalciteTrinoUDFMap {
   }
 
   /**
-   * Look up Hive functions using functionName case-insensitively.
+   * Looks up Hive functions using functionName case-insensitively.
    */
   private static SqlOperator hiveToCalciteOp(String functionName) {
     Collection<HiveFunction> lookup = HIVE_REGISTRY.lookup(functionName);
@@ -131,7 +131,7 @@ public class CalciteTrinoUDFMap {
   }
 
   /**
-   * Look up Dali functions using className case-insensitively.
+   * Looks up Dali functions using className case-insensitively.
    */
   private static SqlOperator daliToCalciteOp(String className) {
     return HIVE_REGISTRY.lookup(className).iterator().next().getSqlOperator();
