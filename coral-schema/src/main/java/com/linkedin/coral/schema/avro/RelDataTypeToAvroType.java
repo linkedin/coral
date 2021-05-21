@@ -102,6 +102,10 @@ class RelDataTypeToAvroType {
         return Schema.create(Schema.Type.NULL);
       case ANY:
         return Schema.create(Schema.Type.BYTES);
+      case TIMESTAMP:
+        Schema schema = Schema.create(Schema.Type.LONG);
+        schema.addProp("logicalType", "timestamp");
+        return schema;
       default:
         throw new UnsupportedOperationException(relDataType.getSqlTypeName() + " is not supported.");
     }

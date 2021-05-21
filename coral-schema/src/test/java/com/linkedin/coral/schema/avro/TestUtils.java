@@ -83,6 +83,7 @@ public class TestUtils {
     String baseComplexFieldSchema = loadSchema("base-complex-fieldschema");
     String baseNestedComplexSchema = loadSchema("base-nested-complex.avsc");
     String baseNullTypeFieldSchema = loadSchema("base-null-type-field.avsc");
+    String baseTimestampTypeFieldSchema = loadSchema("base-timestamp-type-field.avsc");
 
     executeCreateTableQuery("default", "basecomplex", baseComplexSchema);
     executeCreateTableQuery("default", "basecomplexunioncompatible", baseComplexUnionCompatible);
@@ -90,6 +91,7 @@ public class TestUtils {
     executeCreateTableQuery("default", "baselateralview", baseLateralViewSchema);
     executeCreateTableQuery("default", "basenullability", baseNullabilitySchema);
     executeCreateTableQuery("default", "basenulltypefield", baseNullTypeFieldSchema);
+    executeCreateTableQuery("default", "basetimestamptypefield", baseTimestampTypeFieldSchema);
     executeCreateTableWithPartitionQuery("default", "basecasepreservation", baseCasePreservation);
     executeCreateTableWithPartitionFieldSchemaQuery("default", "basecomplexfieldschema", baseComplexFieldSchema);
     executeCreateTableWithPartitionQuery("default", "basenestedcomplex", baseNestedComplexSchema);
