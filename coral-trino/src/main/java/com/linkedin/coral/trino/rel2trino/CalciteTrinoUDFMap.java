@@ -121,13 +121,19 @@ public class CalciteTrinoUDFMap {
     return getUDFTransformer(classString, numOperands) != null;
   }
 
+  /**
+   * Looks up Hive functions using functionName case-insensitively.
+   */
   private static SqlOperator hiveToCalciteOp(String functionName) {
-    Collection<HiveFunction> lookup = HIVE_REGISTRY.lookup(functionName, false);
+    Collection<HiveFunction> lookup = HIVE_REGISTRY.lookup(functionName);
     // TODO: provide overloaded function resolution
     return lookup.iterator().next().getSqlOperator();
   }
 
+  /**
+   * Looks up Dali functions using className case-insensitively.
+   */
   private static SqlOperator daliToCalciteOp(String className) {
-    return HIVE_REGISTRY.lookup(className, true).iterator().next().getSqlOperator();
+    return HIVE_REGISTRY.lookup(className).iterator().next().getSqlOperator();
   }
 }
