@@ -236,7 +236,7 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
       // array of [null] should be 3rd param to if function. With our type inference, calcite acts
       // smart and for unnest(array[null]) determines return type to be null
       SqlNode arrOfNull = SqlStdOperatorTable.ARRAY_VALUE_CONSTRUCTOR.createCall(ZERO, SqlLiteral.createNull(ZERO));
-      HiveFunction hiveIfFunction = functionResolver.tryResolve("if", false, null, 1);
+      HiveFunction hiveIfFunction = functionResolver.tryResolve("if", null, 1);
       SqlCall ifFunctionCall = hiveIfFunction.createCall(SqlLiteral.createCharString("if", ZERO),
           ImmutableList.of(ifCondition, unnestOperand, arrOfNull), null);
       unnestOperand = ifFunctionCall;
@@ -269,8 +269,8 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
      TODO the relation alias `jt` is being lost by downstream transformations
      */
 
-    HiveFunction getJsonObjectFunction = functionResolver.tryResolve("get_json_object", false, null, 2);
-    HiveFunction ifFunction = functionResolver.tryResolve("if", false, null, 3);
+    HiveFunction getJsonObjectFunction = functionResolver.tryResolve("get_json_object", null, 2);
+    HiveFunction ifFunction = functionResolver.tryResolve("if", null, 3);
 
     List<SqlNode> jsonTupleOperands = sqlCall.getOperandList();
     SqlNode jsonInput = jsonTupleOperands.get(0);
@@ -519,7 +519,7 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     ASTNode functionNode = (ASTNode) children.get(0);
     String functionName = functionNode.getText();
     List<SqlNode> sqlOperands = visitChildren(children, ctx);
-    HiveFunction hiveFunction = functionResolver.tryResolve(functionName, false, ctx.hiveTable.orElse(null),
+    HiveFunction hiveFunction = functionResolver.tryResolve(functionName, ctx.hiveTable.orElse(null),
         // The first element of sqlOperands is the operator itself. The actual # of operands is sqlOperands.size() - 1
         sqlOperands.size() - 1);
     return hiveFunction.createCall(sqlOperands.get(0), sqlOperands.subList(1, sqlOperands.size()), quantifier);
