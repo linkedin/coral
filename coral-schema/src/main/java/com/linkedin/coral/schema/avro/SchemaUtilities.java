@@ -27,7 +27,9 @@ import org.apache.calcite.rex.RexNode;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Table;
+import org.apache.hadoop.hive.serde2.typeinfo.StructTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
+import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
 import org.codehaus.jackson.JsonNode;
 import org.slf4j.Logger;
@@ -90,13 +92,35 @@ class SchemaUtilities {
             + "Please note every field will have lower-cased name and be nullable");
 
         tableSchema = SchemaUtilities.convertHiveSchemaToAvro(table);
+
+        return tableSchema;
       } else {
         throw new SchemaNotFoundException("strictMode is set to True and fallback to Hive schema is disabled. "
             + "Cannot determine Avro schema for table " + table.getDbName() + "." + table.getTableName() + ".");
       }
-    }
+    } else {
+      if ("org.apache.hadoop.hive.serde2.avro.AvroSerDe".equals(table.getSd().getSerdeInfo().getSerializationLib())
+          || HasDuplicateLowercaseColumnNames.visit(tableSchema)) {
+        // Case 1: If serde == AVRO, early escape; Hive column info is not reliable and can be empty for these tables
+        //         Hive itself uses avro.schema.literal as source of truth for these tables, so this should be fine
+        // Case 2: If avro.schema.literal has duplicate column names when lowercased, that means we cannot do reliable
+        //         matching with Hive schema as multiple Avro fields can map to the same Hive field
+        return tableSchema;
+      } else {
+        Schema finalTableSchema;
 
-    return tableSchema;
+        // Add partition column if table partitioned
+        final List<FieldSchema> cols = new ArrayList<>();
+
+        cols.addAll(table.getSd().getCols());
+        if (isPartitioned(table)) {
+          cols.addAll(getPartitionCols(table));
+        }
+
+        finalTableSchema = MergeHiveSchemaWithAvro.visit(structTypeInfoFromCols(cols), tableSchema);
+        return finalTableSchema;
+      }
+    }
   }
 
   static Schema convertHiveSchemaToAvro(@Nonnull final Table table) {
@@ -491,7 +515,7 @@ class SchemaUtilities {
     }
   }
 
-  private static Schema makeNullable(Schema schema) {
+  static Schema makeNullable(Schema schema) {
     if (schema.getType() == NULL || isNullableType(schema)) {
       return schema;
     } else {
@@ -727,5 +751,118 @@ class SchemaUtilities {
       sb.append(StringUtils.capitalize(str));
     }
     return sb.toString();
+  }
+
+  private static class HasDuplicateLowercaseColumnNames extends AvroSchemaVisitor<Boolean> {
+    private static boolean visit(Schema schema) {
+      return AvroSchemaVisitor.visit(schema, new HasDuplicateLowercaseColumnNames());
+    }
+
+    @Override
+    public Boolean record(Schema record, List<String> names, List<Boolean> fieldResults) {
+      return fieldResults.stream().anyMatch(x -> x) || names.stream()
+          .collect(Collectors.groupingBy(String::toLowerCase)).values().stream().anyMatch(x -> x.size() > 1);
+    }
+
+    @Override
+    public Boolean union(Schema union, List<Boolean> optionResults) {
+      return optionResults.stream().anyMatch(x -> x);
+    }
+
+    @Override
+    public Boolean array(Schema array, Boolean elementResult) {
+      return elementResult;
+    }
+
+    @Override
+    public Boolean map(Schema map, Boolean valueResult) {
+      return valueResult;
+    }
+
+    @Override
+    public Boolean primitive(Schema primitive) {
+      return false;
+    }
+  }
+
+  static Schema copyRecord(Schema record, List<Schema.Field> newFields) {
+    Schema copy;
+
+    copy = Schema.createRecord(record.getName(), record.getDoc(), record.getNamespace(), record.isError());
+    copy.setFields(cloneFieldList(newFields));
+
+    replicateSchemaProps(record, copy);
+
+    return copy;
+  }
+
+  static Schema.Field copyField(Schema.Field field, Schema newSchema) {
+    Schema.Field copy = new Schema.Field(field.name(), newSchema, field.doc(), field.defaultValue(), field.order());
+
+    for (Map.Entry<String, JsonNode> prop : field.getJsonProps().entrySet()) {
+      copy.addProp(prop.getKey(), prop.getValue());
+    }
+
+    return copy;
+  }
+
+  static String makeCompatibleName(String name) {
+    if (!validAvroName(name)) {
+      return sanitize(name);
+    }
+    return name;
+  }
+
+  static boolean validAvroName(String name) {
+    int length = name.length();
+    Preconditions.checkArgument(length > 0, "Empty name");
+    char first = name.charAt(0);
+    if (!(Character.isLetter(first) || first == '_')) {
+      return false;
+    }
+
+    for (int i = 1; i < length; i++) {
+      char character = name.charAt(i);
+      if (!(Character.isLetterOrDigit(character) || character == '_')) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  static String sanitize(String name) {
+    int length = name.length();
+    StringBuilder sb = new StringBuilder(name.length());
+    char first = name.charAt(0);
+    if (!(Character.isLetter(first) || first == '_')) {
+      sb.append(sanitize(first));
+    } else {
+      sb.append(first);
+    }
+
+    for (int i = 1; i < length; i++) {
+      char character = name.charAt(i);
+      if (!(Character.isLetterOrDigit(character) || character == '_')) {
+        sb.append(sanitize(character));
+      } else {
+        sb.append(character);
+      }
+    }
+    return sb.toString();
+  }
+
+  private static String sanitize(char character) {
+    if (Character.isDigit(character)) {
+      return "_" + character;
+    }
+    return "_x" + Integer.toHexString(character).toUpperCase();
+  }
+
+  static StructTypeInfo structTypeInfoFromCols(List<FieldSchema> cols) {
+    Preconditions.checkArgument(cols != null && cols.size() > 0, "No Hive schema present");
+    List<String> fieldNames = cols.stream().map(FieldSchema::getName).collect(Collectors.toList());
+    List<TypeInfo> fieldTypeInfos =
+        cols.stream().map(f -> TypeInfoUtils.getTypeInfoFromTypeString(f.getType())).collect(Collectors.toList());
+    return (StructTypeInfo) TypeInfoFactory.getStructTypeInfo(fieldNames, fieldTypeInfos);
   }
 }

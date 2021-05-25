@@ -17,6 +17,11 @@ https://calcite.apache.org/
 Copyright 2019 Apache Software Foundation
 License: Apache-2.0
 
+Apache Iceberg
+https://iceberg.apache.org/
+Copyright 2018-2021 Apache Software Foundation
+License: Apache-2.0
+
 ================================================================================
 
 In addition, this product automatically loads third-party code from an
