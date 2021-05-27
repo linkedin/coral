@@ -268,6 +268,12 @@ public class TestUtils {
     run(driver,
         "CREATE VIEW test.view_with_outer_explode_string_array AS SELECT a, c FROM test.table_with_string_array LATERAL VIEW OUTER EXPLODE(b) t AS c");
 
+    run(driver, "CREATE TABLE test.table_with_struct_array(a int, b array<struct<sa: int, sb: string>>)");
+    run(driver,
+        "CREATE VIEW test.view_with_explode_struct_array AS SELECT a, c FROM test.table_with_struct_array LATERAL VIEW EXPLODE(b) t AS c");
+    run(driver,
+        "CREATE VIEW test.view_with_outer_explode_struct_array AS SELECT a, c FROM test.table_with_struct_array LATERAL VIEW OUTER EXPLODE(b) t AS c");
+
     run(driver, "CREATE VIEW IF NOT EXISTS test.current_date_and_timestamp_view AS \n"
         + "SELECT CURRENT_TIMESTAMP, trim(cast(CURRENT_TIMESTAMP as string)) as ct, CURRENT_DATE, CURRENT_DATE as cd, a from test.tableA");
     run(driver, "CREATE VIEW IF NOT EXISTS test.lateral_view_json_tuple_view AS \n"
