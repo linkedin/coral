@@ -37,8 +37,8 @@ import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
 import org.apache.hadoop.hive.serde2.Deserializer;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
-
-import com.linkedin.coral.com.google.common.base.Throwables;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -50,6 +50,7 @@ import com.linkedin.coral.com.google.common.base.Throwables;
  */
 public class HiveTable implements ScannableTable {
 
+  private static final Logger LOG = LoggerFactory.getLogger(HiveTable.class);
   protected final org.apache.hadoop.hive.metastore.api.Table hiveTable;
   private Deserializer deserializer;
 
@@ -162,8 +163,10 @@ public class HiveTable implements ScannableTable {
       try {
         return MetaStoreUtils.getFieldsFromDeserializer(hiveTable.getTableName(), getDeserializer());
       } catch (Exception e) {
-        Throwables.propagateIfInstanceOf(e, RuntimeException.class);
-        throw new RuntimeException("Failed to get columns using deserializer", e);
+        // if there is an exception like failing to get the deserializer or failing to get columns using deserializer,
+        // we use sd.getCols() to avoid throwing exception
+        LOG.warn("Failed to get columns using deserializer", e);
+        return sd.getCols();
       }
     }
   }
