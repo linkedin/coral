@@ -56,8 +56,7 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
   static final Multimap<String, HiveFunction> FUNCTION_MAP = HashMultimap.create();
 
   static {
-    // NOTE: all built-in keyword-based function names should be lowercase for case-insensitive comparison.
-    // All Dali UDFs should have case sensitive function class names when we do comparison to look up.
+    // NOTE: All function names will be added as lowercase for case-insensitive comparison.
     // FIXME: This mapping is currently incomplete
     // aggregation functions
     addFunctionEntry("sum", SUM);
@@ -72,8 +71,8 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
     //addFunctionEntry("in", SqlStdOperatorTable.IN);
 
     // operators
-    addFunctionEntry("RLIKE", HiveRLikeOperator.RLIKE);
-    addFunctionEntry("REGEXP", HiveRLikeOperator.REGEXP);
+    addFunctionEntry("rlike", HiveRLikeOperator.RLIKE);
+    addFunctionEntry("regexp", HiveRLikeOperator.REGEXP);
     addFunctionEntry("!=", NOT_EQUALS);
     addFunctionEntry("==", EQUALS);
 
@@ -316,6 +315,7 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
 
     createAddUserDefinedFunction("array_contains", ReturnTypes.BOOLEAN, family(SqlTypeFamily.ARRAY, SqlTypeFamily.ANY));
     createAddUserDefinedFunction("sort_array", ARG0, ARRAY);
+    createAddUserDefinedFunction("extract_union", ARG0, or(ANY, family(SqlTypeFamily.ANY, SqlTypeFamily.INTEGER)));
 
     // LinkedIn UDFs: Dali stores mapping from UDF name to the implementing Java class as table properties
     // in the HCatalog. So, an UDF implementation may be referred by different names by different views.
@@ -433,15 +433,14 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
   }
 
   /**
-   * Returns a list of functions matching given name. This returns empty list if the
-   * function name is not found
+   * Returns a list of functions matching given name case-insensitively. This returns empty list if the
+   * function name is not found.
    * @param functionName function name to match
    * @return list of matching HiveFunctions or empty collection.
    */
   @Override
-  public Collection<HiveFunction> lookup(String functionName, boolean isCaseSensitive) {
-    String name = isCaseSensitive ? functionName : functionName.toLowerCase();
-    return FUNCTION_MAP.get(name);
+  public Collection<HiveFunction> lookup(String functionName) {
+    return FUNCTION_MAP.get(functionName.toLowerCase());
   }
 
   /**
@@ -451,8 +450,11 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
     return ImmutableMultimap.copyOf(FUNCTION_MAP);
   }
 
+  /**
+   * Adds the function to registry, the key is lowercase functionName to make lookup case-insensitive.
+   */
   private static void addFunctionEntry(String functionName, SqlOperator operator) {
-    FUNCTION_MAP.put(functionName, new HiveFunction(functionName, operator));
+    FUNCTION_MAP.put(functionName.toLowerCase(), new HiveFunction(functionName, operator));
   }
 
   public static void createAddUserDefinedFunction(String functionName, SqlReturnTypeInference returnTypeInference,

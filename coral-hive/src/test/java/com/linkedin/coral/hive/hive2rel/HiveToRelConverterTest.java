@@ -31,6 +31,7 @@ import com.linkedin.coral.hive.hive2rel.functions.UnknownSqlFunctionException;
 import static com.linkedin.coral.hive.hive2rel.ToRelConverter.*;
 import static org.apache.calcite.sql.type.OperandTypes.*;
 import static org.testng.Assert.*;
+import static org.testng.Assert.assertEquals;
 
 
 public class HiveToRelConverterTest {
@@ -330,6 +331,21 @@ public class HiveToRelConverterTest {
     String generated = relToString(sql);
     final String expected = "LogicalProject(cu=[CURRENT_USER])\n  LogicalValues(tuples=[[{ 0 }]])\n";
     assertEquals(generated, expected);
+  }
+
+  @Test
+  public void testUnionExtractUDF() {
+    final String sql1 = "SELECT extract_union(foo) from union_table";
+    String generated1 = relToString(sql1);
+    final String expected1 =
+        "LogicalProject(EXPR$0=[extract_union($0)])\n" + "  LogicalTableScan(table=[[hive, default, union_table]])\n";
+    assertEquals(generated1, expected1);
+
+    final String sql2 = "SELECT extract_union(foo, 1) from union_table";
+    String generated2 = relToString(sql2);
+    final String expected2 = "LogicalProject(EXPR$0=[extract_union($0, 1)])\n"
+        + "  LogicalTableScan(table=[[hive, default, union_table]])\n";
+    assertEquals(generated2, expected2);
   }
 
   private String relToString(String sql) {

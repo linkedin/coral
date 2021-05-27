@@ -159,11 +159,15 @@ public class TestUtils {
       if (response.getResponseCode() != 0) {
         throw new RuntimeException("Failed to setup view");
       }
+
+      driver.run(
+          "CREATE TABLE IF NOT EXISTS union_table(foo uniontype<int, double, array<string>, struct<a:int,b:string>>)");
+
       testHive.databases =
           ImmutableList.of(new TestHive.DB("test", ImmutableList.of("tableOne", "tableTwo", "tableOneView")),
               new TestHive.DB("default",
                   ImmutableList.of("bar", "complex", "foo", "foo_view", "null_check_view", "null_check_wrapper",
-                      "schema_evolve", "view_schema_evolve", "view_schema_evolve_wrapper")),
+                      "schema_evolve", "view_schema_evolve", "view_schema_evolve_wrapper", "union_table")),
               new TestHive.DB("fuzzy_union",
                   ImmutableList.of("tableA", "tableB", "tableC", "union_view", "union_view_with_more_than_two_tables",
                       "union_view_with_alias", "union_view_single_branch_evolved",

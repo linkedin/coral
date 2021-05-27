@@ -70,7 +70,7 @@ public class HiveFunctionResolver {
   }
 
   /**
-   * Resolves {@code name} to calcite binary operator
+   * Resolves {@code name} to calcite binary operator case-insensitively.
    * @param name operator text (Ex: '+' or 'LIKE')
    * @return SqlOperator matching input name
    * @throws IllegalStateException if there are zero or more than one matching operator
@@ -80,7 +80,7 @@ public class HiveFunctionResolver {
     List<SqlOperator> matches = operators.stream().filter(o -> o.getName().toLowerCase().equals(lowerCaseOperator)
         && (o instanceof SqlBinaryOperator || o instanceof SqlSpecialOperator)).collect(Collectors.toList());
     if (matches.size() == 0) {
-      HiveFunction f = tryResolve(lowerCaseOperator, false, null, 2);
+      HiveFunction f = tryResolve(lowerCaseOperator, null, 2);
       if (f != null) {
         matches.add(f.getSqlOperator());
       }
@@ -102,12 +102,11 @@ public class HiveFunctionResolver {
 
   /**
    * Resolves hive function name to specific HiveFunction. This method
-   * first attempts to resolve function by its name. If there is no match,
+   * first attempts to resolve function by its name case-insensitively. If there is no match,
    * this attempts to match dali-style function names (DB_TABLE_VERSION_FUNCTION).
    * Right now, this method does not validate parameters leaving it to
    * the subsequent validator and analyzer phases to validate parameter types.
    * @param functionName hive function name
-   * @param isCaseSensitive is function name case-sensitive
    * @param hiveTable handle to Hive table representing metastore information. This is used for resolving
    *                  Dali function names, which are resolved using table parameters
    * @param numOfOperands number of operands this function takes. This is needed to
@@ -115,10 +114,9 @@ public class HiveFunctionResolver {
    * @return resolved hive functions
    * @throws UnknownSqlFunctionException if the function name can not be resolved.
    */
-  public HiveFunction tryResolve(@Nonnull String functionName, boolean isCaseSensitive, @Nullable Table hiveTable,
-      int numOfOperands) {
+  public HiveFunction tryResolve(@Nonnull String functionName, @Nullable Table hiveTable, int numOfOperands) {
     checkNotNull(functionName);
-    Collection<HiveFunction> functions = registry.lookup(functionName, isCaseSensitive);
+    Collection<HiveFunction> functions = registry.lookup(functionName);
     if (functions.isEmpty() && hiveTable != null) {
       functions = tryResolveAsDaliFunction(functionName, hiveTable, numOfOperands);
     }
@@ -135,13 +133,12 @@ public class HiveFunctionResolver {
   }
 
   /**
-   * Resolves function to concrete operator.
+   * Resolves function to concrete operator case-insensitively.
    * @param functionName function name to resolve
-   * @param isCaseSensitive is the function name case-sensitive
    * @return list of matching HiveFunctions or empty list if there is no match
    */
-  public Collection<HiveFunction> resolve(String functionName, boolean isCaseSensitive) {
-    Collection<HiveFunction> staticLookup = registry.lookup(functionName, isCaseSensitive);
+  public Collection<HiveFunction> resolve(String functionName) {
+    Collection<HiveFunction> staticLookup = registry.lookup(functionName);
     if (!staticLookup.isEmpty()) {
       return staticLookup;
     } else {
@@ -182,7 +179,7 @@ public class HiveFunctionResolver {
     if (funcClassName == null) {
       return ImmutableList.of();
     }
-    final Collection<HiveFunction> hiveFunctions = registry.lookup(funcClassName, true);
+    final Collection<HiveFunction> hiveFunctions = registry.lookup(funcClassName);
     if (hiveFunctions.size() == 0) {
       Collection<HiveFunction> dynamicResolvedHiveFunctions =
           resolveDaliFunctionDynamically(functionName, funcClassName, hiveTable, numOfOperands);

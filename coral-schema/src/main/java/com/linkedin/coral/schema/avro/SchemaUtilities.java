@@ -132,6 +132,9 @@ class SchemaUtilities {
     // Then, try dali.row.schema
     if (Strings.isNullOrEmpty(schemaStr)) {
       schemaStr = table.getParameters().get(DALI_ROW_SCHEMA);
+      if (!Strings.isNullOrEmpty(schemaStr)) {
+        schemaStr = schemaStr.replaceAll("\n", "\\\\n");
+      }
     }
 
     if (!Strings.isNullOrEmpty(schemaStr)) {
