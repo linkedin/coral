@@ -143,7 +143,7 @@ public class RelToTrinoConverter extends RelToSqlConverter {
         //    CROSS JOIN LATERAL (SELECT arr_exp
         //    FROM UNNEST(TRANSFORM("$cor0".arr, x -> ROW(x))) AS t0 (arr_exp)) AS t1
         //
-        // The crucial part in abave transformation is call to TRANSFORM with lambda which adds extra layer of
+        // The crucial part in above transformation is call to TRANSFORM with lambda which adds extra layer of
         // ROW wrapping.
 
         RelRecordType transformDataType = new RelRecordType(
