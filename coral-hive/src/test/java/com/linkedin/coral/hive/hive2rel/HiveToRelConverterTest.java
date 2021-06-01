@@ -348,6 +348,15 @@ public class HiveToRelConverterTest {
     assertEquals(generated2, expected2);
   }
 
+  @Test
+  public void testNestedGroupBy() {
+    final String sql = "SELECT a, count(1) count FROM (SELECT a FROM foo GROUP BY a ) t GROUP BY a ";
+    RelNode rel = toRel(sql);
+    final String expectedSql =
+        "SELECT a, COUNT(*) count\nFROM (SELECT a, 1 $f1\nFROM hive.default.foo\nGROUP BY a) t1\nGROUP BY a";
+    assertEquals(relToHql(rel), expectedSql);
+  }
+
   private String relToString(String sql) {
     return RelOptUtil.toString(converter.convertSql(sql));
   }
