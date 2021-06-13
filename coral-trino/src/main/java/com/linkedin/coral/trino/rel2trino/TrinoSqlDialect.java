@@ -6,6 +6,7 @@
 package com.linkedin.coral.trino.rel2trino;
 
 import org.apache.calcite.config.NullCollation;
+import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlDialect;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlNode;
@@ -31,6 +32,17 @@ public class TrinoSqlDialect extends SqlDialect {
 
   public void unparseOffsetFetch(SqlWriter writer, SqlNode offset, SqlNode fetch) {
     unparseFetchUsingLimit(writer, offset, fetch);
+  }
+
+  @Override
+  public void unparseCall(SqlWriter writer, SqlCall call, int leftPrec, int rightPrec) {
+    switch (call.getOperator().kind) {
+      case MAP_VALUE_CONSTRUCTOR:
+        unparseMapOperator(writer, call, leftPrec, rightPrec);
+        break;
+      default:
+        super.unparseCall(writer, call, leftPrec, rightPrec);
+    }
   }
 
   @Override
@@ -61,5 +73,24 @@ public class TrinoSqlDialect extends SqlDialect {
 
   public boolean requireCastOnString() {
     return true;
+  }
+
+  private void unparseMapOperator(SqlWriter writer, SqlCall call, int leftPrec, int rightPrec) {
+    writer.keyword(call.getOperator().getName()); // "MAP"
+    final SqlWriter.Frame frame = writer.startList("(", ")");
+    writer.keyword("ARRAY[");
+    for (int i = 0; i < call.operandCount(); i += 2) {
+      writer.sep(",");
+      call.operand(i).unparse(writer, leftPrec, rightPrec);
+    }
+    writer.keyword("], ARRAY[");
+    for (int i = 1; i < call.operandCount(); i += 2) {
+      call.operand(i).unparse(writer, leftPrec, rightPrec);
+      if (i < call.operandCount() - 1) {
+        writer.sep(",");
+      }
+    }
+    writer.keyword("]");
+    writer.endList(frame);
   }
 }
