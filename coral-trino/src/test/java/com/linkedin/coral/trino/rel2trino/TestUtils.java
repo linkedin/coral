@@ -36,7 +36,6 @@ import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.processors.CommandProcessorResponse;
 import org.apache.hadoop.hive.ql.session.SessionState;
 
-import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
 import com.linkedin.coral.hive.hive2rel.HiveMscAdapter;
 import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
 
@@ -45,8 +44,7 @@ import static java.lang.String.format;
 
 
 public class TestUtils {
-
-  static HiveToRelConverter hiveToRelConverter;
+  private static HiveMscAdapter hiveMetastoreClient;
 
   public static FrameworkConfig createFrameworkConfig(TestTable... tables) {
     SchemaPlus rootSchema = Frameworks.createRootSchema(true);
@@ -190,8 +188,7 @@ public class TestUtils {
     conf.set("javax.jdo.option.ConnectionURL", format("jdbc:derby:;databaseName=%s;create=true", metastoreDbDirectory));
     SessionState.start(conf);
     Driver driver = new Driver(conf);
-    HiveMetastoreClient hiveMetastoreClient = new HiveMscAdapter(Hive.get(conf).getMSC());
-    hiveToRelConverter = HiveToRelConverter.create(hiveMetastoreClient);
+    hiveMetastoreClient = new HiveMscAdapter(Hive.get(conf).getMSC());
 
     // Views and tables used in HiveToTrinoConverterTest
     run(driver, "CREATE DATABASE IF NOT EXISTS test");
@@ -271,6 +268,12 @@ public class TestUtils {
     run(driver,
         "CREATE VIEW test.view_with_outer_explode_string_array AS SELECT a, c FROM test.table_with_string_array LATERAL VIEW OUTER EXPLODE(b) t AS c");
 
+    run(driver, "CREATE TABLE test.table_with_struct_array(a int, b array<struct<sa: int, sb: string>>)");
+    run(driver,
+        "CREATE VIEW test.view_with_explode_struct_array AS SELECT a, c FROM test.table_with_struct_array LATERAL VIEW EXPLODE(b) t AS c");
+    run(driver,
+        "CREATE VIEW test.view_with_outer_explode_struct_array AS SELECT a, c FROM test.table_with_struct_array LATERAL VIEW OUTER EXPLODE(b) t AS c");
+
     run(driver, "CREATE VIEW IF NOT EXISTS test.current_date_and_timestamp_view AS \n"
         + "SELECT CURRENT_TIMESTAMP, trim(cast(CURRENT_TIMESTAMP as string)) as ct, CURRENT_DATE, CURRENT_DATE as cd, a from test.tableA");
     run(driver, "CREATE VIEW IF NOT EXISTS test.lateral_view_json_tuple_view AS \n"
@@ -282,7 +285,7 @@ public class TestUtils {
   }
 
   public static RelNode convertView(String db, String view) {
-    return hiveToRelConverter.convertView(db, view);
+    return HiveToRelConverter.create(hiveMetastoreClient).convertView(db, view);
   }
 
   private static HiveConf loadResourceHiveConf() {
