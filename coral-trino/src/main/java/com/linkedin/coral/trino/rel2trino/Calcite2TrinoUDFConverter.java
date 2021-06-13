@@ -6,6 +6,7 @@
 package com.linkedin.coral.trino.rel2trino;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -34,6 +35,8 @@ import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexShuttle;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOperator;
+import org.apache.calcite.sql.fun.SqlMapValueConstructor;
+import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.type.SqlTypeFamily;
 
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
@@ -172,6 +175,10 @@ public class Calcite2TrinoUDFConverter {
       if (call.getOperator() instanceof GenericProjectFunction) {
         return GenericProjectToTrinoConverter.convertGenericProject(rexBuilder, call);
       }
+      // MAP(k1, v1, k2, v2) should be MAP(ARRAY(k1, k2), ARRAY(v1, v2))
+      if (call.getOperator() instanceof SqlMapValueConstructor) {
+        return this.convertMapValueConstructor(rexBuilder, call);
+      }
 
       if (call.getOperator().getName().equals("from_utc_timestamp")) {
         Optional<RexNode> modifiedCall = visitFromUtcTimestampCall(call);
@@ -268,6 +275,24 @@ public class Calcite2TrinoUDFConverter {
         return (RexCall) rexBuilder.makeCall(op, tryCastNode, rightOperand);
       }
       return call;
+    }
+
+    private RexNode convertMapValueConstructor(RexBuilder rexBuilder, RexCall call) {
+      List<RexNode> sourceOperands = visitList(call.getOperands(), (boolean[]) null);
+      final List<RexNode> results = new ArrayList<>();
+      // Even numbers are keys
+      List<RexNode> keys = new ArrayList<>();
+      for (int i = 0; i < sourceOperands.size(); i += 2) {
+        keys.add(sourceOperands.get(i));
+      }
+      results.add(rexBuilder.makeCall(SqlStdOperatorTable.ARRAY_VALUE_CONSTRUCTOR, keys));
+      // Odd numbers are values
+      List<RexNode> values = new ArrayList<>();
+      for (int i = 1; i < sourceOperands.size(); i += 2) {
+        values.add(sourceOperands.get(i));
+      }
+      results.add(rexBuilder.makeCall(SqlStdOperatorTable.ARRAY_VALUE_CONSTRUCTOR, values));
+      return rexBuilder.makeCall(call.getOperator(), results);
     }
   }
 }
