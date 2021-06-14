@@ -382,25 +382,33 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
         STRING);
     createAddUserDefinedFunction("com.linkedin.etg.business.common.udfs.MapSfdcProductId", ReturnTypes.INTEGER, STRING);
     createAddUserDefinedFunction("udfs.SeoReferrerTrkUdf", HiveReturnTypes.STRING, STRING_STRING_STRING);
-    createAddUserDefinedFunction("com.linkedin.vector.daliview.udf.PresentMediaType", HiveReturnTypes.STRING, family(SqlTypeFamily.ANY));
+    createAddUserDefinedFunction("com.linkedin.vector.daliview.udf.PresentMediaType", HiveReturnTypes.STRING,
+        family(SqlTypeFamily.ANY));
     createAddUserDefinedFunction("com.linkedin.tscp.reporting.dali.udfs.AdClickClassifier",
-        HiveReturnTypes.rowOf(ImmutableList.of("clicks", "landingPageClicks", "totalEngagements", "otherEngagements", "likes", "commentLikes",
-            "comments", "shares", "follows", "oneClickLeadFormOpens", "companyPageClicks", "fullScreenPlays", "viralClicks", "viralLandingPageClicks",
-            "viralLikes", "viralCommentLikes", "viralComments", "viralShares", "viralFollows", "viralOneClickLeadFormOpens", "viralCompanyPageClicks",
-            "viralFullScreenPlays", "viralTotalEngagements", "viralOtherEngagements", "adUnitClicks", "actionClicks", "textUrlClicks", "opens",
-            "cardClicks", "viralCardClicks", "costInUsd", "costInLocalCurrency"),
-        ImmutableList.of(SqlTypeName.INTEGER, SqlTypeName.INTEGER, SqlTypeName.INTEGER, SqlTypeName.INTEGER, SqlTypeName.INTEGER, SqlTypeName.INTEGER,
-            SqlTypeName.INTEGER, SqlTypeName.INTEGER, SqlTypeName.INTEGER, SqlTypeName.INTEGER, SqlTypeName.INTEGER, SqlTypeName.INTEGER,
-            SqlTypeName.INTEGER, SqlTypeName.INTEGER, SqlTypeName.INTEGER, SqlTypeName.INTEGER, SqlTypeName.INTEGER, SqlTypeName.INTEGER,
-            SqlTypeName.INTEGER, SqlTypeName.INTEGER, SqlTypeName.INTEGER, SqlTypeName.INTEGER, SqlTypeName.INTEGER, SqlTypeName.INTEGER,
-            SqlTypeName.INTEGER, SqlTypeName.INTEGER, SqlTypeName.INTEGER, SqlTypeName.INTEGER, SqlTypeName.INTEGER, SqlTypeName.INTEGER,
-            SqlTypeName.DOUBLE, SqlTypeName.DOUBLE)),
-        family(SqlTypeFamily.INTEGER, SqlTypeFamily.STRING, SqlTypeFamily.INTEGER, SqlTypeFamily.MAP, SqlTypeFamily.NUMERIC, SqlTypeFamily.NUMERIC,
-            SqlTypeFamily.STRING, SqlTypeFamily.MAP, SqlTypeFamily.ANY, SqlTypeFamily.STRING));
-    createAddUserDefinedFunction("com.linkedin.tscp.reporting.dali.udfs.UnifiedCampaignType", HiveReturnTypes.STRING, STRING);
-    createAddUserDefinedFunction("com.linkedin.tscp.reporting.dali.udfs.ActivityId", HiveReturnTypes.BIGINT, family(SqlTypeFamily.MAP));
-    createAddUserDefinedFunction("com.linkedin.tscp.reporting.dali.udfs.AdPlacementClassifier", HiveReturnTypes.STRING, family(SqlTypeFamily.INTEGER));
-    createAddUserDefinedFunction("com.linkedin.tscp.reporting.dali.udfs.SponsoredMessageNodeId", ReturnTypes.INTEGER, family(SqlTypeFamily.STRING));
+        HiveReturnTypes.rowOf(ImmutableList.of("clicks", "landingPageClicks", "totalEngagements", "otherEngagements",
+            "likes", "commentLikes", "comments", "shares", "follows", "oneClickLeadFormOpens", "companyPageClicks",
+            "fullScreenPlays", "viralClicks", "viralLandingPageClicks", "viralLikes", "viralCommentLikes",
+            "viralComments", "viralShares", "viralFollows", "viralOneClickLeadFormOpens", "viralCompanyPageClicks",
+            "viralFullScreenPlays", "viralTotalEngagements", "viralOtherEngagements", "adUnitClicks", "actionClicks",
+            "textUrlClicks", "opens", "cardClicks", "viralCardClicks", "costInUsd", "costInLocalCurrency"),
+            ImmutableList.of(SqlTypeName.INTEGER, SqlTypeName.INTEGER, SqlTypeName.INTEGER, SqlTypeName.INTEGER,
+                SqlTypeName.INTEGER, SqlTypeName.INTEGER, SqlTypeName.INTEGER, SqlTypeName.INTEGER, SqlTypeName.INTEGER,
+                SqlTypeName.INTEGER, SqlTypeName.INTEGER, SqlTypeName.INTEGER, SqlTypeName.INTEGER, SqlTypeName.INTEGER,
+                SqlTypeName.INTEGER, SqlTypeName.INTEGER, SqlTypeName.INTEGER, SqlTypeName.INTEGER, SqlTypeName.INTEGER,
+                SqlTypeName.INTEGER, SqlTypeName.INTEGER, SqlTypeName.INTEGER, SqlTypeName.INTEGER, SqlTypeName.INTEGER,
+                SqlTypeName.INTEGER, SqlTypeName.INTEGER, SqlTypeName.INTEGER, SqlTypeName.INTEGER, SqlTypeName.INTEGER,
+                SqlTypeName.INTEGER, SqlTypeName.DOUBLE, SqlTypeName.DOUBLE)),
+        family(SqlTypeFamily.INTEGER, SqlTypeFamily.STRING, SqlTypeFamily.INTEGER, SqlTypeFamily.MAP,
+            SqlTypeFamily.NUMERIC, SqlTypeFamily.NUMERIC, SqlTypeFamily.STRING, SqlTypeFamily.MAP, SqlTypeFamily.ANY,
+            SqlTypeFamily.STRING));
+    createAddUserDefinedFunction("com.linkedin.tscp.reporting.dali.udfs.UnifiedCampaignType", HiveReturnTypes.STRING,
+        STRING);
+    createAddUserDefinedFunction("com.linkedin.tscp.reporting.dali.udfs.ActivityId", HiveReturnTypes.BIGINT,
+        family(SqlTypeFamily.MAP));
+    createAddUserDefinedFunction("com.linkedin.tscp.reporting.dali.udfs.AdPlacementClassifier", HiveReturnTypes.STRING,
+        family(SqlTypeFamily.INTEGER));
+    createAddUserDefinedFunction("com.linkedin.tscp.reporting.dali.udfs.SponsoredMessageNodeId", ReturnTypes.INTEGER,
+        family(SqlTypeFamily.STRING));
 
     // LIHADOOP-48502: The following UDFs are already defined using Transport UDF.
     // The class name is the corresponding Hive UDF.
