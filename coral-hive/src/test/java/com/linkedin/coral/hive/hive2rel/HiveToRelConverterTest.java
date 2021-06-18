@@ -192,6 +192,21 @@ public class HiveToRelConverterTest {
   }
 
   @Test
+  public void testSelectEmptyArray() {
+    final String sql = "SELECT array()";
+    final String expected = "LogicalProject(EXPR$0=[ARRAY()])\n" + "  LogicalValues(tuples=[[{ 0 }]])\n";
+    assertEquals(RelOptUtil.toString(converter.convertSql(sql)), expected);
+  }
+
+  @Test
+  public void testEmptyArrayInFilter() {
+    String sql = "SELECT 1 WHERE array_contains(array(), '1')";
+    String expected = "LogicalProject(EXPR$0=[1])\n" + "  LogicalFilter(condition=[array_contains(ARRAY(), '1')])\n"
+        + "    LogicalValues(tuples=[[{ 0 }]])\n";
+    assertEquals(RelOptUtil.toString(converter.convertSql(sql)), expected);
+  }
+
+  @Test
   public void testSelectArrayElement() {
     final String sql = "SELECT c[0] from complex";
     final String expectedRel =
