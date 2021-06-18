@@ -3,7 +3,7 @@ apply plugin: 'antlr'
 
 dependencies {
   antlr deps.'antlr'
-  compile('com.linkedin.calcite:calcite-core:1.21.0.148') {
+  compile('com.linkedin.calcite:calcite-core:1.21.0.149') {
     artifact {
       name = 'calcite-core'
       extension = 'jar'
