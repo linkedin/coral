@@ -194,4 +194,22 @@ public class FuzzyUnionTest {
     String expandedSql = nodeToStr(node);
     assertEquals(expandedSql, expectedSql);
   }
+
+  @Test
+  public void testUnionViewWithBaseTableChange() throws TException {
+    String database = "fuzzy_union";
+    String view = "union_view_with_base_table_change";
+    SqlNode node = getFuzzyUnionView(database, view);
+
+    String expectedSql = "SELECT \"a\", \"generic_project\"(\"b\", 'b') AS \"b\"\n" + "FROM (SELECT *\n"
+        + "FROM \"hive\".\"fuzzy_union\".\"tablep\"\n" + "UNION ALL\n"
+        + "SELECT \"a\", \"generic_project\"(\"b\", 'b') AS \"b\"\n"
+        + "FROM \"hive\".\"fuzzy_union\".\"tableq\") AS \"t0\"\n" + "UNION ALL\n" + "SELECT *\n" + "FROM (SELECT *\n"
+        + "FROM \"hive\".\"fuzzy_union\".\"tabler\"\n" + "UNION ALL\n" + "SELECT *\n"
+        + "FROM \"hive\".\"fuzzy_union\".\"tables\") AS \"t\"";
+
+    getRelContextProvider().getHiveSqlValidator().validate(node);
+    String expandedSql = nodeToStr(node);
+    assertEquals(expandedSql, expectedSql);
+  }
 }

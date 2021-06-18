@@ -168,6 +168,8 @@ class FuzzyUnionSqlRewriter extends SqlShuttle {
    * @return SqlNode that has its schema fixed to the schema of the table
    */
   private SqlNode addFuzzyUnionToUnionBranch(SqlNode unionBranch, RelDataType expectedDataType) {
+    // Get the base tables' (rather than intermediate base views') RelDataType of unionBranch, so that it can pass the type
+    // validation of calcite because calcite uses base tables' RelDataType to do the type validation for union.
     RelDataType fromNodeDataType = relContextProvider.getSqlToRelConverter()
         .convertQuery(unionBranch.accept(new FuzzyUnionSqlRewriter(tableName, relContextProvider)), true, true).rel
             .getRowType();
