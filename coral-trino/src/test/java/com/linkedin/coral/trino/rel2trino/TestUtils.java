@@ -282,6 +282,7 @@ public class TestUtils {
         + "SELECT `t`.`a`, `jt`.`d`, `jt`.`e`, `jt`.`f` FROM `test`.`tableA` AS `t` LATERAL VIEW json_tuple(`t`.`b`.`b1`, \"trino\", \"always\", \"rocks\") `jt` AS `d`, `e`, `f`");
     run(driver, "CREATE VIEW IF NOT EXISTS test.get_json_object_view AS \n"
         + "SELECT get_json_object(b.b1, '$.name') FROM test.tableA");
+    run(driver, "CREATE VIEW IF NOT EXISTS test.pmod_view AS \n" + "SELECT pmod(-9, 4) FROM test.tableA");
   }
 
   public static RelNode convertView(String db, String view) {
