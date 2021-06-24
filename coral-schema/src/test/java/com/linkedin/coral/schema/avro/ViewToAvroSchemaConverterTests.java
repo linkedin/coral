@@ -406,9 +406,7 @@ public class ViewToAvroSchemaConverterTests {
         TestUtils.loadSchema("testLateralViewArrayWithComplexType-expected.avsc"));
   }
 
-  // Currently coral-hive does not support lateral view on map type and
-  // it throws IllegalStateException while converting it to RelNode
-  @Test(expectedExceptions = IllegalStateException.class)
+  @Test
   public void testLateralViewMap() {
     String viewSql = "CREATE VIEW v AS " + "SELECT bl.Id AS Id_View_Col, t.Col1, t.Col2 " + "FROM baselateralview bl "
         + "LATERAL VIEW explode(bl.Map_Col_String) t as Col1, Col2";
@@ -416,7 +414,9 @@ public class ViewToAvroSchemaConverterTests {
     TestUtils.executeCreateViewQuery("default", "v", viewSql);
 
     ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
-    viewToAvroSchemaConverter.toAvroSchema("default", "v");
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v");
+
+    Assert.assertEquals(actualSchema.toString(true), TestUtils.loadSchema("testLateralViewMap-expected.avsc"));
   }
 
   @Test
