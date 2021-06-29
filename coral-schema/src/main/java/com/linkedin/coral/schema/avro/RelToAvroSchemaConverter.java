@@ -30,6 +30,7 @@ import org.apache.calcite.rel.logical.LogicalMatch;
 import org.apache.calcite.rel.logical.LogicalMinus;
 import org.apache.calcite.rel.logical.LogicalProject;
 import org.apache.calcite.rel.logical.LogicalSort;
+import org.apache.calcite.rel.logical.LogicalTableFunctionScan;
 import org.apache.calcite.rel.logical.LogicalUnion;
 import org.apache.calcite.rel.logical.LogicalValues;
 import org.apache.calcite.rel.type.RelDataType;
@@ -323,7 +324,7 @@ public class RelToAvroSchemaConverter {
     @Override
     public RelNode visit(RelNode relNode) {
       // Handles lateral views here
-      if (relNode instanceof HiveUncollect) {
+      if (relNode instanceof HiveUncollect || relNode instanceof LogicalTableFunctionScan) {
         SchemaBuilder.FieldAssembler<Schema> hiveUncollectFieldAssembler =
             SchemaBuilder.record("LateralViews").namespace("LateralViews").fields();
 

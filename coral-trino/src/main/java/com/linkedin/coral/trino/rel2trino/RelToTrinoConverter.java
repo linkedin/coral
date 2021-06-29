@@ -10,14 +10,19 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.*;
+import org.apache.calcite.rel.logical.LogicalTableFunctionScan;
 import org.apache.calcite.rel.rel2sql.RelToSqlConverter;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rel.type.RelDataTypeFieldImpl;
 import org.apache.calcite.rel.type.RelRecordType;
+import org.apache.calcite.rex.RexCall;
+import org.apache.calcite.rex.RexCorrelVariable;
+import org.apache.calcite.rex.RexFieldAccess;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.*;
@@ -224,13 +229,36 @@ public class RelToTrinoConverter extends RelToSqlConverter {
     SqlNode rightLateral = rightResult.node;
     rightLateral = SqlStdOperatorTable.LATERAL.createCall(POS, rightLateral);
     if (rightLateral.getKind() != SqlKind.AS) {
-      rightLateral =
-          SqlStdOperatorTable.AS.createCall(POS, rightLateral, new SqlIdentifier(rightResult.neededAlias, POS));
+      if (rightResult.node.getKind() == SqlKind.OTHER_FUNCTION) {
+        List<SqlNode> aliasOperands = new ArrayList<>();
+        aliasOperands.add(rightResult.node);
+        aliasOperands.add(new SqlIdentifier(rightResult.neededAlias, POS));
+        aliasOperands.addAll(rightResult.neededType.getFieldNames().stream().map(name -> new SqlIdentifier(name, POS))
+            .collect(Collectors.toList()));
+        rightLateral = SqlStdOperatorTable.AS.createCall(POS, aliasOperands);
+      } else {
+        rightLateral =
+            SqlStdOperatorTable.AS.createCall(POS, rightLateral, new SqlIdentifier(rightResult.neededAlias, POS));
+      }
     }
 
     final SqlNode join = new SqlJoin(POS, leftResult.asFrom(), SqlLiteral.createBoolean(false, POS),
         JoinType.CROSS.symbol(POS), rightLateral, JoinConditionType.NONE.symbol(POS), null);
     return result(join, leftResult, rightResult);
+  }
+
+  public Result visit(LogicalTableFunctionScan e) {
+    RexCall call = (RexCall) e.getCall();
+    SqlOperator functionOperator = call.getOperator();
+    final List<SqlNode> functionOperands = new ArrayList<>();
+    for (RexNode rexOperand : call.getOperands()) {
+      RexFieldAccess rexFieldAccess = (RexFieldAccess) rexOperand;
+      RexCorrelVariable rexCorrelVariable = (RexCorrelVariable) rexFieldAccess.getReferenceExpr();
+      SqlNode sqlNodeOperand = correlTableMap.get(rexCorrelVariable.id).toSql(null, rexOperand);
+      functionOperands.add(sqlNodeOperand);
+    }
+    SqlCall functionOperatorCall = functionOperator.createCall(POS, functionOperands.toArray(new SqlNode[0]));
+    return result(functionOperatorCall, ImmutableList.of(Clause.FROM), e, null);
   }
 
   @Override

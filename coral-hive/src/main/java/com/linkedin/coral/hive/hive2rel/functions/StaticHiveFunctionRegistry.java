@@ -7,8 +7,13 @@ package com.linkedin.coral.hive.hive2rel.functions;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
+
+import com.google.common.base.Preconditions;
 
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
@@ -54,6 +59,8 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
 
   // TODO: Make this immutable using builder
   static final Multimap<String, HiveFunction> FUNCTION_MAP = HashMultimap.create();
+
+  public static final Map<String, ImmutableList<String>> FUNCTION_NAME_RETURN_FIELD_MAP = new HashMap<>();
 
   static {
     // NOTE: All function names will be added as lowercase for case-insensitive comparison.
@@ -456,6 +463,13 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
     addFunctionEntry("explode", HiveExplodeOperator.EXPLODE);
     addFunctionEntry("json_tuple", HiveJsonTupleOperator.JSON_TUPLE);
 
+    createAddUserDefinedTableFunction("com.linkedin.tsar.hive.udf.ToJymbiiScores",
+        ImmutableList.of("job_urn", "rank", "glmix_score", "global_model_score", "sentinel_score", "job_effect_score",
+            "member_effect_score"),
+        ImmutableList.of(SqlTypeName.VARCHAR, SqlTypeName.INTEGER, SqlTypeName.DOUBLE, SqlTypeName.DOUBLE,
+            SqlTypeName.DOUBLE, SqlTypeName.DOUBLE, SqlTypeName.DOUBLE),
+        family(SqlTypeFamily.ARRAY, SqlTypeFamily.ARRAY));
+
     // Context functions
     addFunctionEntry("current_user", CURRENT_USER);
   }
@@ -499,6 +513,27 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
       dependency = "ivy://" + dependency;
     }
     addFunctionEntry(functionName, createCalciteUDF(functionName, returnTypeInference, operandTypeChecker));
+  }
+
+  public static void createAddUserDefinedTableFunction(String functionName, ImmutableList<String> returnFieldNames,
+      ImmutableList<Object> returnFieldTypes, SqlOperandTypeChecker operandTypeChecker) {
+    Preconditions.checkArgument(!returnFieldTypes.isEmpty() && returnFieldTypes.size() == returnFieldNames.size()
+        && (returnFieldTypes.stream().allMatch(type -> type instanceof SqlTypeName)
+            || returnFieldTypes.stream().allMatch(type -> type instanceof SqlReturnTypeInference)));
+    if (returnFieldTypes.get(0) instanceof SqlTypeName) {
+      createAddUserDefinedFunction(functionName,
+          HiveReturnTypes.rowOf(returnFieldNames,
+              ImmutableList
+                  .copyOf(returnFieldTypes.stream().map(type -> (SqlTypeName) type).collect(Collectors.toList()))),
+          operandTypeChecker);
+    } else {
+      createAddUserDefinedFunction(functionName,
+          HiveReturnTypes.rowOfInference(returnFieldNames,
+              ImmutableList.copyOf(
+                  returnFieldTypes.stream().map(type -> (SqlReturnTypeInference) type).collect(Collectors.toList()))),
+          operandTypeChecker);
+    }
+    FUNCTION_NAME_RETURN_FIELD_MAP.put(functionName, returnFieldNames);
   }
 
   private static SqlOperator createCalciteUDF(String functionName, SqlReturnTypeInference returnTypeInference,

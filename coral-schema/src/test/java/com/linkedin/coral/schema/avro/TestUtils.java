@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 
 import org.apache.calcite.sql.type.ReturnTypes;
 import org.apache.calcite.sql.type.SqlTypeFamily;
+import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.ql.CommandNeedRetryException;
@@ -22,6 +23,7 @@ import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.session.SessionState;
 
+import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
 import com.linkedin.coral.hive.hive2rel.HiveMscAdapter;
 import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
@@ -71,6 +73,8 @@ public class TestUtils {
         ReturnTypes.BOOLEAN, family(SqlTypeFamily.INTEGER));
     StaticHiveFunctionRegistry.createAddUserDefinedFunction("com.linkedin.coral.hive.hive2rel.CoralTestUDF3",
         ReturnTypes.INTEGER, family(SqlTypeFamily.INTEGER));
+    StaticHiveFunctionRegistry.createAddUserDefinedTableFunction("com.linkedin.coral.hive.hive2rel.CoralTestUDTF",
+        ImmutableList.of("col1"), ImmutableList.of(SqlTypeName.INTEGER), family(SqlTypeFamily.INTEGER));
   }
 
   private static void initializeTables() {
@@ -112,6 +116,9 @@ public class TestUtils {
         "foo_dali_udf_with_operator", "foo_dali_udf_nullability");
     executeCreateFunctionQuery("default", viewsToCreateFuncSquare, "FuncSquare",
         "com.linkedin.coral.hive.hive2rel.CoralTestUDF3");
+
+    executeCreateFunctionQuery("default", Arrays.asList("foo_lateral_udtf"), "CountOfRow",
+        "com.linkedin.coral.hive.hive2rel.CoralTestUDTF");
   }
 
   private static void executeCreateTableQuery(String dbName, String tableName, String schema) {

@@ -13,11 +13,13 @@ import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.sql.type.ReturnTypes;
 import org.apache.calcite.sql.type.SqlTypeFamily;
+import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 import com.linkedin.coral.spark.containers.SparkUDFInfo;
 import com.linkedin.coral.spark.exceptions.UnsupportedUDFException;
@@ -41,6 +43,8 @@ public class CoralSparkTest {
         ReturnTypes.INTEGER, family(SqlTypeFamily.INTEGER));
     StaticHiveFunctionRegistry.createAddUserDefinedFunction("com.linkedin.coral.hive.hive2rel.CoralTestUnsupportedUDF",
         ReturnTypes.INTEGER, family(SqlTypeFamily.INTEGER));
+    StaticHiveFunctionRegistry.createAddUserDefinedTableFunction("com.linkedin.coral.hive.hive2rel.CoralTestUDTF",
+        ImmutableList.of("col1"), ImmutableList.of(SqlTypeName.INTEGER), family(SqlTypeFamily.INTEGER));
 
     UnsupportedHiveUDFsInSpark.add("com.linkedin.coral.hive.hive2rel.CoralTestUnsupportedUDF");
 
@@ -211,6 +215,14 @@ public class CoralSparkTest {
         "LATERAL VIEW explode(complex.c) t AS ccol ", "LATERAL VIEW explode(complex.c) t2 AS ccol2 "));
     String targetSql = String.join("\n", "SELECT complex.a, t1.ccol, t4.ccol2", "FROM default.complex "
         + "LATERAL VIEW EXPLODE(complex.c) t1 AS ccol " + "LATERAL VIEW EXPLODE(complex.c) t4 AS ccol2");
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+  }
+
+  @Test
+  public void testLateralUDTF() {
+    RelNode relNode = TestUtils.toRelNode("default", "foo_lateral_udtf");
+    String targetSql = "SELECT complex.a, t.col1\n"
+        + "FROM default.complex LATERAL VIEW default_foo_lateral_udtf_CountOfRow(complex.a) t AS col1";
     assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
   }
 

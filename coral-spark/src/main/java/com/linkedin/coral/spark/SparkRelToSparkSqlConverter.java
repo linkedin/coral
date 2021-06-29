@@ -12,14 +12,20 @@ import org.apache.calcite.rel.core.Correlate;
 import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rel.core.Uncollect;
+import org.apache.calcite.rel.logical.LogicalTableFunctionScan;
 import org.apache.calcite.rel.rel2sql.RelToSqlConverter;
+import org.apache.calcite.rex.RexCall;
+import org.apache.calcite.rex.RexCorrelVariable;
+import org.apache.calcite.rex.RexFieldAccess;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.JoinConditionType;
 import org.apache.calcite.sql.JoinType;
 import org.apache.calcite.sql.SqlBasicCall;
+import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlNode;
+import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.fun.SqlMultisetValueConstructor;
 import org.apache.calcite.sql.parser.SqlParserPos;
 
@@ -134,6 +140,20 @@ public class SparkRelToSparkSqlConverter extends RelToSqlConverter {
     final SqlNode unnestNode = HiveExplodeOperator.EXPLODE.createCall(POS, unnestOperands.toArray(new SqlNode[0]));
 
     return result(unnestNode, ImmutableList.of(Clause.FROM), e, null);
+  }
+
+  public Result visit(LogicalTableFunctionScan e) {
+    RexCall call = (RexCall) e.getCall();
+    SqlOperator functionOperator = call.getOperator();
+    final List<SqlNode> functionOperands = new ArrayList<>();
+    for (RexNode rexOperand : call.getOperands()) {
+      RexFieldAccess rexFieldAccess = (RexFieldAccess) rexOperand;
+      RexCorrelVariable rexCorrelVariable = (RexCorrelVariable) rexFieldAccess.getReferenceExpr();
+      SqlNode sqlNodeOperand = correlTableMap.get(rexCorrelVariable.id).toSql(null, rexOperand);
+      functionOperands.add(sqlNodeOperand);
+    }
+    SqlCall functionOperatorCall = functionOperator.createCall(POS, functionOperands.toArray(new SqlNode[0]));
+    return result(functionOperatorCall, ImmutableList.of(Clause.FROM), e, null);
   }
 
   /**

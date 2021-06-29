@@ -58,6 +58,9 @@ public class TestUtils {
         "CREATE FUNCTION default_foo_dali_udf4_GreaterThanHundred as 'com.linkedin.coral.hive.hive2rel.CoralTestUDF2'");
     run(driver,
         "CREATE FUNCTION default_foo_dali_udf5_UnsupportedUDF as 'com.linkedin.coral.hive.hive2rel.CoralTestUnsupportedUDF'");
+    run(driver,
+        "create function default_foo_lateral_udtf_CountOfRow as 'com.linkedin.coral.hive.hive2rel.CoralTestUDTF'");
+
     run(driver, String.join("\n", "", "CREATE VIEW IF NOT EXISTS foo_view", "AS", "SELECT b AS bcol, sum(c) AS sum_c",
         "FROM foo", "GROUP BY b"));
     // [LIHADOOP-47172 test date literal in view definition
@@ -93,6 +96,12 @@ public class TestUtils {
             "tblproperties('functions' = 'UnsupportedUDF:com.linkedin.coral.hive.hive2rel.CoralTestUnsupportedUDF',",
             "              'dependencies' = 'com.linkedin:udf:1.0')", "AS",
             "SELECT default_foo_dali_udf5_UnsupportedUDF(a)", "FROM foo"));
+
+    run(driver,
+        String.join("\n", "", "CREATE VIEW IF NOT EXISTS foo_lateral_udtf",
+            "tblproperties('functions' = 'CountOfRow:com.linkedin.coral.hive.hive2rel.CoralTestUDTF')", "AS",
+            "SELECT a, t.col1 FROM complex LATERAL VIEW default_foo_lateral_udtf_CountOfRow(complex.a) t"));
+
     run(driver, String.join("\n", "", "CREATE VIEW IF NOT EXISTS named_struct_view", "AS",
         "SELECT named_struct('abc', 123, 'def', 'xyz') AS named_struc", "FROM bar"));
 
