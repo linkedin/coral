@@ -142,6 +142,17 @@ public class SparkRelToSparkSqlConverter extends RelToSqlConverter {
     return result(unnestNode, ImmutableList.of(Clause.FROM), e, null);
   }
 
+  /**
+   * CORAL represents table function as an LogicalTableFunctionScan RelNode
+   *
+   * In this function we override default SQL conversion for LogicalTableFunctionScan and
+   * handle correctly converting it to a table function by resetting table name
+   *
+   * For Example:
+   *  default_foo_lateral_udtf_CountOfRow($cor0.a)
+   *            is converted to
+   *  `default_foo_lateral_udtf_CountOfRow`(`complex`.`a`)
+   */
   public Result visit(LogicalTableFunctionScan e) {
     RexCall call = (RexCall) e.getCall();
     SqlOperator functionOperator = call.getOperator();
