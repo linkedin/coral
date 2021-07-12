@@ -6,7 +6,6 @@
 package com.linkedin.coral.hive.hive2rel.parsetree;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -14,6 +13,7 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+
 
 import org.apache.calcite.sql.JoinConditionType;
 import org.apache.calcite.sql.JoinType;
@@ -236,7 +236,7 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     if (fieldNames == null) {
       throw new RuntimeException("User defined table function " + functionName + " is not registered.");
     }
-    List<SqlNode> asOperands = new LinkedList<>();
+    List<SqlNode> asOperands = new ArrayList<>();
     asOperands.add(lateralCall);
     asOperands.add(aliasOperands.get(1));
     fieldNames.forEach(name -> asOperands.add(new SqlIdentifier(name, ZERO)));
@@ -247,38 +247,50 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
 
   private SqlNode visitLateralViewExplode(List<SqlNode> sqlNodes, List<SqlNode> aliasOperands,
       SqlCall tableFunctionCall, boolean isOuter) {
-    checkState(aliasOperands.size() == 3);
+    final int operandCount = aliasOperands.size();
+    // array if operandCount == 3: LATERAL VIEW EXPLODE(op0) AS op1(op2)
+    // map if operandCount == 4: LATERAL VIEW EXPLODE(op0) AS op1(op2, op3)
+    checkState(operandCount == 3 || operandCount == 4,
+        format("Unsupported LATERAL VIEW EXPLODE operand number: %d", operandCount));
     // TODO The code below assumes LATERAL VIEW is used with UNNEST EXPLODE only. It should be made more generic.
     SqlCall unnestCall = tableFunctionCall;
     SqlNode unnestOperand = unnestCall.operand(0);
 
     if (isOuter) {
-      // transforms unnest(b) to unnest( if(b is null or cardinality(b) = 0, [null], b))
+      // transforms unnest(b) to unnest( if(b is null or cardinality(b) = 0, ARRAY(null)/MAP(null, null), b))
       SqlNode operandIsNull = SqlStdOperatorTable.IS_NOT_NULL.createCall(ZERO, unnestOperand);
       SqlNode emptyArray = SqlStdOperatorTable.GREATER_THAN.createCall(ZERO,
           SqlStdOperatorTable.CARDINALITY.createCall(ZERO, unnestOperand), SqlLiteral.createExactNumeric("0", ZERO));
       SqlNode ifCondition = SqlStdOperatorTable.AND.createCall(ZERO, operandIsNull, emptyArray);
-      // array of [null] should be 3rd param to if function. With our type inference, calcite acts
-      // smart and for unnest(array[null]) determines return type to be null
-      SqlNode arrOfNull = SqlStdOperatorTable.ARRAY_VALUE_CONSTRUCTOR.createCall(ZERO, SqlLiteral.createNull(ZERO));
+      // array of [null] or map of (null, null) should be 3rd param to if function. With our type inference, calcite acts
+      // smart and for unnest(array[null]) or unnest(map(null, null)) determines return type to be null
+      SqlNode arrayOrMapOfNull;
+      if (operandCount == 3) {
+        arrayOrMapOfNull = SqlStdOperatorTable.ARRAY_VALUE_CONSTRUCTOR.createCall(ZERO, SqlLiteral.createNull(ZERO));
+      } else {
+        arrayOrMapOfNull = SqlStdOperatorTable.MAP_VALUE_CONSTRUCTOR.createCall(ZERO, SqlLiteral.createNull(ZERO),
+            SqlLiteral.createNull(ZERO));
+      }
       HiveFunction hiveIfFunction = functionResolver.tryResolve("if", null, 1);
-      SqlCall ifFunctionCall = hiveIfFunction.createCall(SqlLiteral.createCharString("if", ZERO),
-          ImmutableList.of(ifCondition, unnestOperand, arrOfNull), null);
-      unnestOperand = ifFunctionCall;
+      unnestOperand = hiveIfFunction.createCall(SqlLiteral.createCharString("if", ZERO),
+          ImmutableList.of(ifCondition, unnestOperand, arrayOrMapOfNull), null);
     }
-
-    unnestCall = HiveExplodeOperator.EXPLODE.createCall(ZERO,
-        SqlStdOperatorTable.AS.createCall(ZERO, unnestOperand, aliasOperands.get(2)));
-    SqlNode unnestAlias =
-        SqlStdOperatorTable.AS.createCall(ZERO, unnestCall, aliasOperands.get(1), aliasOperands.get(2));
+    if (operandCount == 3) { // unnest explode array
+      unnestCall = HiveExplodeOperator.EXPLODE.createCall(ZERO,
+          SqlStdOperatorTable.AS.createCall(ZERO, unnestOperand, aliasOperands.get(2)));
+      unnestCall = SqlStdOperatorTable.AS.createCall(ZERO, unnestCall, aliasOperands.get(1), aliasOperands.get(2));
+    } else { // unnest explode map
+      unnestCall = HiveExplodeOperator.EXPLODE.createCall(ZERO, unnestOperand);
+    }
     SqlNode rightSelect = new SqlSelect(ZERO, null, new SqlNodeList(ImmutableList.of(SqlIdentifier.star(ZERO)), ZERO),
-        unnestAlias, null, null, null, null, null, null, null);
+        unnestCall, null, null, null, null, null, null, null);
     SqlNode lateralCall = SqlStdOperatorTable.LATERAL.createCall(ZERO, rightSelect);
-    SqlCall aliasCall =
-        SqlStdOperatorTable.AS.createCall(ZERO, lateralCall, aliasOperands.get(1), aliasOperands.get(2));
-    SqlNode joinNode = new SqlJoin(ZERO, sqlNodes.get(1), SqlLiteral.createBoolean(false, ZERO),
-        JoinType.COMMA.symbol(ZERO), aliasCall/*lateralCall*/, JoinConditionType.NONE.symbol(ZERO), null);
-    return joinNode;
+    List<SqlNode> aliasCallOperands = new ArrayList<>();
+    aliasCallOperands.add(lateralCall);
+    aliasCallOperands.addAll(aliasOperands.subList(1, operandCount));
+    SqlCall aliasCall = SqlStdOperatorTable.AS.createCall(ZERO, aliasCallOperands);
+    return new SqlJoin(ZERO, sqlNodes.get(1), SqlLiteral.createBoolean(false, ZERO), JoinType.COMMA.symbol(ZERO),
+        aliasCall/*lateralCall*/, JoinConditionType.NONE.symbol(ZERO), null);
   }
 
   private SqlNode visitLateralViewJsonTuple(List<SqlNode> sqlNodes, List<SqlNode> aliasOperands, SqlCall sqlCall) {

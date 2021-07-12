@@ -114,6 +114,14 @@ public class HiveToTrinoConverterTest {
             + "FROM \"test\".\"table_with_struct_array\" AS \"$cor0\"\n"
             + "CROSS JOIN LATERAL (SELECT \"c\"\nFROM UNNEST(TRANSFORM(\"if\"(\"$cor0\".\"b\" IS NOT NULL AND CARDINALITY(\"$cor0\".\"b\") > 0, \"$cor0\".\"b\", ARRAY[NULL]), x -> ROW(x))) AS \"t0\" (\"c\")) AS \"t1\"" },
 
+        { "test", "view_with_explode_map", "SELECT \"$cor0\".\"a\" AS \"a\", \"t1\".\"KEY\" AS \"c\", \"t1\".\"VALUE\" AS \"d\"\n"
+            + "FROM \"test\".\"table_with_map\" AS \"$cor0\"\n" + "CROSS JOIN LATERAL (SELECT \"KEY\", \"VALUE\"\n"
+            + "FROM UNNEST(\"$cor0\".\"b\") AS \"t0\" (\"KEY\", \"VALUE\")) AS \"t1\"" },
+
+        { "test", "view_with_outer_explode_map", "SELECT \"$cor0\".\"a\" AS \"a\", \"t1\".\"KEY\" AS \"c\", \"t1\".\"VALUE\" AS \"d\"\n"
+            + "FROM \"test\".\"table_with_map\" AS \"$cor0\"\n" + "CROSS JOIN LATERAL (SELECT \"KEY\", \"VALUE\"\n"
+            + "FROM UNNEST(\"if\"(\"$cor0\".\"b\" IS NOT NULL AND CARDINALITY(\"$cor0\".\"b\") > 0, \"$cor0\".\"b\", MAP[NULL, NULL])) AS \"t0\" (\"KEY\", \"VALUE\")) AS \"t1\"" },
+
         { "test", "current_date_and_timestamp_view", "SELECT CURRENT_TIMESTAMP, TRIM(CAST(CURRENT_TIMESTAMP AS VARCHAR(65535))) AS \"ct\", CURRENT_DATE, CURRENT_DATE AS \"cd\", \"a\"\nFROM \"test\".\"tablea\"" },
 
         { "test", "lateral_view_json_tuple_view", "SELECT \"$cor0\".\"a\" AS \"a\", \"t0\".\"d\" AS \"d\", \"t0\".\"e\" AS \"e\", \"t0\".\"f\" AS \"f\"\n"

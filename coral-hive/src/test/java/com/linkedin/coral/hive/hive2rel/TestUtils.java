@@ -138,6 +138,19 @@ public class TestUtils {
       driver.run("ALTER TABLE fuzzy_union.tableN CHANGE COLUMN b b struct<b2:double, b1:string, b0:int>");
       driver.run("ALTER TABLE fuzzy_union.tableO CHANGE COLUMN b b struct<b0:int, b1:string, b2:int>");
 
+      driver.run("CREATE TABLE IF NOT EXISTS fuzzy_union.tableP(a int, b struct<b1:string>)");
+      driver.run("CREATE TABLE IF NOT EXISTS fuzzy_union.tableQ(a int, b struct<b1:string>)");
+      driver.run(
+          "CREATE VIEW IF NOT EXISTS fuzzy_union.view_in_union_1 AS SELECT * from fuzzy_union.tableP union all SELECT * from fuzzy_union.tableQ");
+      driver.run("CREATE TABLE IF NOT EXISTS fuzzy_union.tableR(a int, b struct<b1:string>)");
+      driver.run("CREATE TABLE IF NOT EXISTS fuzzy_union.tableS(a int, b struct<b1:string>)");
+      driver.run(
+          "CREATE VIEW IF NOT EXISTS fuzzy_union.view_in_union_2 AS SELECT * from fuzzy_union.tableR union all SELECT * from fuzzy_union.tableS");
+      driver.run(
+          "CREATE VIEW IF NOT EXISTS fuzzy_union.union_view_with_base_table_change AS SELECT * from fuzzy_union.view_in_union_1 union all SELECT * from fuzzy_union.view_in_union_2");
+      driver.run("ALTER TABLE fuzzy_union.tableP CHANGE COLUMN b b struct<b2:double, b1:string, b0:int>");
+      driver.run("ALTER TABLE fuzzy_union.tableQ CHANGE COLUMN b b struct<b0:int, b1:string, b2:int>");
+
       driver.run("CREATE TABLE IF NOT EXISTS foo(a int, b varchar(30), c double)");
       driver.run("CREATE TABLE IF NOT EXISTS bar(x int, y double)");
       driver.run("CREATE VIEW IF NOT EXISTS foo_view AS SELECT b as bcol, sum(c) as sum_c from foo group by b");

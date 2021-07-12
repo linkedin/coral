@@ -207,6 +207,13 @@ public class HiveToRelConverterTest {
   }
 
   @Test
+  public void testSelectEmptyMap() {
+    final String sql = "SELECT map()";
+    final String expected = "LogicalProject(EXPR$0=[MAP()])\n" + "  LogicalValues(tuples=[[{ 0 }]])\n";
+    assertEquals(RelOptUtil.toString(converter.convertSql(sql)), expected);
+  }
+
+  @Test
   public void testSelectArrayElement() {
     final String sql = "SELECT c[0] from complex";
     final String expectedRel =

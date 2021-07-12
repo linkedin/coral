@@ -59,6 +59,30 @@ public class LateralViewTest {
   }
 
   @Test
+  public void testLateralViewMap() {
+    final String sql = "SELECT a, mkey, mvalue from complex lateral view explode(complex.m) t as mkey, mvalue";
+    String expected = "LogicalProject(a=[$0], mkey=[$6], mvalue=[$7])\n"
+        + "  LogicalCorrelate(correlation=[$cor0], joinType=[inner], requiredColumns=[{4}])\n"
+        + "    LogicalTableScan(table=[[hive, default, complex]])\n" + "    LogicalProject(KEY=[$0], VALUE=[$1])\n"
+        + "      HiveUncollect\n" + "        LogicalProject(m=[$cor0.m])\n"
+        + "          LogicalValues(tuples=[[{ 0 }]])\n";
+    assertEquals(toRelStr(sql), expected);
+  }
+
+  @Test
+  public void testLateralViewOuterMap() {
+    final String sql = "SELECT a, mkey, mvalue from complex lateral view outer explode(complex.m) t as mkey, mvalue";
+    String expected = "LogicalProject(a=[$0], mkey=[$6], mvalue=[$7])\n"
+        + "  LogicalCorrelate(correlation=[$cor0], joinType=[inner], requiredColumns=[{4}])\n"
+        + "    LogicalTableScan(table=[[hive, default, complex]])\n" + "    LogicalProject(KEY=[$0], VALUE=[$1])\n"
+        + "      HiveUncollect\n"
+        + "        LogicalProject(EXPR$0=[if(AND(IS NOT NULL($cor0.m), >(CARDINALITY($cor0.m), 0)), $cor0.m, MAP(null:NULL, null:NULL))])\n"
+        + "          LogicalValues(tuples=[[{ 0 }]])\n";
+
+    assertEquals(toRelStr(sql), expected);
+  }
+
+  @Test
   public void testMultipleMixedLateralClauses() {
     final String sql = "SELECT a, ccol, r.anotherCCol from complex "
         + " lateral view outer explode(complex.c) t as ccol " + " lateral view explode(complex.c) r as anotherCCol";

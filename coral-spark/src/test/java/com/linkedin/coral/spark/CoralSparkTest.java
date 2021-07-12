@@ -219,6 +219,24 @@ public class CoralSparkTest {
   }
 
   @Test
+  public void testLateralViewMap() {
+    RelNode relNode = TestUtils.toRelNode(String.join("\n", "", "SELECT a, t.ccol1, t.ccol2", "FROM complex",
+        "LATERAL VIEW explode(complex.m) t as ccol1, ccol2"));
+    String targetSql = String.join("\n", "SELECT complex.a, t1.KEY ccol1, t1.VALUE ccol2",
+        "FROM default.complex LATERAL VIEW EXPLODE(complex.m) t1 AS KEY, VALUE");
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+  }
+
+  @Test
+  public void testLateralViewMapOuter() {
+    RelNode relNode = TestUtils.toRelNode(String.join("\n", "", "SELECT a, t.ccol1, t.ccol2", "FROM complex",
+        "LATERAL VIEW OUTER explode(complex.m) t as ccol1, ccol2"));
+    String targetSql = String.join("\n", "SELECT complex.a, t1.KEY ccol1, t1.VALUE ccol2",
+        "FROM default.complex LATERAL VIEW OUTER EXPLODE(if(complex.m IS NOT NULL AND size(complex.m) > 0, complex.m, MAP (NULL, NULL))) t1 AS KEY, VALUE");
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+  }
+
+  @Test
   public void testLateralUDTF() {
     RelNode relNode = TestUtils.toRelNode("default", "foo_lateral_udtf");
     String targetSql = "SELECT complex.a, t.col1\n"
@@ -283,13 +301,6 @@ public class CoralSparkTest {
   public void testLateralViewStarNotSupported() {
     RelNode relNode = TestUtils
         .toRelNode(String.join("\n", "", "SELECT a, t.*", "FROM complex", "LATERAL VIEW explode(complex.c) t"));
-    CoralSpark.create(relNode);
-  }
-
-  @Test(expectedExceptions = IllegalStateException.class)
-  public void testLateralViewMapNotSupported() {
-    RelNode relNode = TestUtils.toRelNode(String.join("\n", "", "SELECT a, t.ccol1, t.ccol2", "FROM complex",
-        "LATERAL VIEW explode(complex.m) t as ccol1, ccol2"));
     CoralSpark.create(relNode);
   }
 
