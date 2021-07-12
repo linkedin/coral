@@ -14,7 +14,6 @@ import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-
 import org.apache.calcite.sql.JoinConditionType;
 import org.apache.calcite.sql.JoinType;
 import org.apache.calcite.sql.SqlAsOperator;
@@ -227,12 +226,26 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     throw new UnsupportedOperationException(format("Unsupported LATERAL VIEW operator: %s", tableFunctionCall));
   }
 
+  /**
+   * For generic UDTFs, we treat them as LinkedIn UDFs and make the following conversion:
+   *
+   * SELECT a, t.col1
+   * FROM test.tableOne
+   * LATERAL VIEW test_tableOneViewLateralUDTF_CountOfRow(tableOne.a) t
+   * ->
+   * SELECT a, t.col1
+   * FROM test.tableOne
+   * LATERAL COLLECTION_TABLE(`com.linkedin.coral.hive.hive2rel.CoralTestUDTF`(`tableone`.`a`)) AS `t` (`col1`)
+   *
+   * therefore, we need to get the return field names (`col1` in the above example) of the UDTF from
+   * `StaticHiveFunctionRegistry.UDTF_RETURN_FIELD_NAME_MAP`.
+   */
   private SqlNode visitLateralViewUDTF(List<SqlNode> sqlNodes, List<SqlNode> aliasOperands, SqlCall tableFunctionCall) {
     SqlNode lateralCall = SqlStdOperatorTable.LATERAL.createCall(ZERO,
         new SqlLateralOperator(SqlKind.COLLECTION_TABLE).createCall(ZERO, tableFunctionCall));
     final String functionName = tableFunctionCall.getOperator().getName();
     ImmutableList<String> fieldNames =
-        StaticHiveFunctionRegistry.FUNCTION_NAME_RETURN_FIELD_MAP.getOrDefault(functionName, null);
+        StaticHiveFunctionRegistry.UDTF_RETURN_FIELD_NAME_MAP.getOrDefault(functionName, null);
     if (fieldNames == null) {
       throw new RuntimeException("User defined table function " + functionName + " is not registered.");
     }

@@ -60,7 +60,9 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
   // TODO: Make this immutable using builder
   static final Multimap<String, HiveFunction> FUNCTION_MAP = HashMultimap.create();
 
-  public static final Map<String, ImmutableList<String>> FUNCTION_NAME_RETURN_FIELD_MAP = new HashMap<>();
+  // Used for registering UDTFs, the key is the function name and the value is a list of field names returned by the UDTF
+  // We need it because we need to know the return field names of UDTF to do the conversion in ParseTreeBuilder.visitLateralViewUDTF
+  public static final Map<String, ImmutableList<String>> UDTF_RETURN_FIELD_NAME_MAP = new HashMap<>();
 
   static {
     // NOTE: All function names will be added as lowercase for case-insensitive comparison.
@@ -463,6 +465,7 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
     addFunctionEntry("explode", HiveExplodeOperator.EXPLODE);
     addFunctionEntry("json_tuple", HiveJsonTupleOperator.JSON_TUPLE);
 
+    // Generic UDTFs
     createAddUserDefinedTableFunction("com.linkedin.tsar.hive.udf.ToJymbiiScores",
         ImmutableList.of("job_urn", "rank", "glmix_score", "global_model_score", "sentinel_score", "job_effect_score",
             "member_effect_score"),
@@ -515,6 +518,10 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
     addFunctionEntry(functionName, createCalciteUDF(functionName, returnTypeInference, operandTypeChecker));
   }
 
+  /**
+   * Adds the generic UDTF, which is almost same as how we register for LinkedIn UDFs except that we need to register
+   * the return field names in `UDTF_RETURN_FIELD_NAME_MAP`
+   */
   public static void createAddUserDefinedTableFunction(String functionName, ImmutableList<String> returnFieldNames,
       ImmutableList<Object> returnFieldTypes, SqlOperandTypeChecker operandTypeChecker) {
     Preconditions.checkArgument(!returnFieldTypes.isEmpty() && returnFieldTypes.size() == returnFieldNames.size()
@@ -533,7 +540,7 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
                   returnFieldTypes.stream().map(type -> (SqlReturnTypeInference) type).collect(Collectors.toList()))),
           operandTypeChecker);
     }
-    FUNCTION_NAME_RETURN_FIELD_MAP.put(functionName, returnFieldNames);
+    UDTF_RETURN_FIELD_NAME_MAP.put(functionName, returnFieldNames);
   }
 
   private static SqlOperator createCalciteUDF(String functionName, SqlReturnTypeInference returnTypeInference,
