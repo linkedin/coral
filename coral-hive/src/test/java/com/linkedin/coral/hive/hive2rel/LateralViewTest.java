@@ -1,5 +1,5 @@
 /**
- * Copyright 2018-2020 LinkedIn Corporation. All rights reserved.
+ * Copyright 2018-2021 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -44,6 +44,30 @@ public class LateralViewTest {
         + "    LogicalTableScan(table=[[hive, default, complex]])\n" + "    LogicalProject(ccol=[$0])\n"
         + "      HiveUncollect\n"
         + "        LogicalProject(ccol=[if(AND(IS NOT NULL($cor0.c), >(CARDINALITY($cor0.c), 0)), $cor0.c, ARRAY(null:NULL))])\n"
+        + "          LogicalValues(tuples=[[{ 0 }]])\n";
+
+    assertEquals(toRelStr(sql), expected);
+  }
+
+  @Test
+  public void testLateralViewMap() {
+    final String sql = "SELECT a, mkey, mvalue from complex lateral view explode(complex.m) t as mkey, mvalue";
+    String expected = "LogicalProject(a=[$0], mkey=[$6], mvalue=[$7])\n"
+        + "  LogicalCorrelate(correlation=[$cor0], joinType=[inner], requiredColumns=[{4}])\n"
+        + "    LogicalTableScan(table=[[hive, default, complex]])\n" + "    LogicalProject(KEY=[$0], VALUE=[$1])\n"
+        + "      HiveUncollect\n" + "        LogicalProject(m=[$cor0.m])\n"
+        + "          LogicalValues(tuples=[[{ 0 }]])\n";
+    assertEquals(toRelStr(sql), expected);
+  }
+
+  @Test
+  public void testLateralViewOuterMap() {
+    final String sql = "SELECT a, mkey, mvalue from complex lateral view outer explode(complex.m) t as mkey, mvalue";
+    String expected = "LogicalProject(a=[$0], mkey=[$6], mvalue=[$7])\n"
+        + "  LogicalCorrelate(correlation=[$cor0], joinType=[inner], requiredColumns=[{4}])\n"
+        + "    LogicalTableScan(table=[[hive, default, complex]])\n" + "    LogicalProject(KEY=[$0], VALUE=[$1])\n"
+        + "      HiveUncollect\n"
+        + "        LogicalProject(EXPR$0=[if(AND(IS NOT NULL($cor0.m), >(CARDINALITY($cor0.m), 0)), $cor0.m, MAP(null:NULL, null:NULL))])\n"
         + "          LogicalValues(tuples=[[{ 0 }]])\n";
 
     assertEquals(toRelStr(sql), expected);
