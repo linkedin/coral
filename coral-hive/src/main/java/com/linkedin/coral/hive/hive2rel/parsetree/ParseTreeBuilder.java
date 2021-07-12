@@ -231,7 +231,7 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
    *
    * SELECT a, t.col1
    * FROM test.tableOne
-   * LATERAL VIEW test_tableOneViewLateralUDTF_CountOfRow(tableOne.a) t
+   * LATERAL VIEW `com.linkedin.coral.hive.hive2rel.CoralTestUDTF`(`tableone`.`a`) `t`
    * ->
    * SELECT a, t.col1
    * FROM test.tableOne
