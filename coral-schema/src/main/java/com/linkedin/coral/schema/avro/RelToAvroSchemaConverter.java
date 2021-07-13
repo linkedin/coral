@@ -5,6 +5,7 @@
  */
 package com.linkedin.coral.schema.avro;
 
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -450,31 +451,60 @@ public class RelToAvroSchemaConverter {
 
     @Override
     public RexNode visitFieldAccess(RexFieldAccess rexFieldAccess) {
-      if (rexFieldAccess.getReferenceExpr() instanceof RexInputRef) {
-        RexInputRef relInputRef = (RexInputRef) rexFieldAccess.getReferenceExpr();
+      RexNode referenceExpr = rexFieldAccess.getReferenceExpr();
+      Deque<String> fieldNames = new LinkedList<>();
+      while (!(referenceExpr instanceof RexInputRef)) {
+        if (referenceExpr instanceof RexCall) {
+          referenceExpr = ((RexCall) referenceExpr).getOperands().get(0);
+        } else if (referenceExpr instanceof RexFieldAccess) {
+          fieldNames.push(((RexFieldAccess) referenceExpr).getField().getName());
+          referenceExpr = ((RexFieldAccess) referenceExpr).getReferenceExpr();
+        } else {
+          return super.visitFieldAccess(rexFieldAccess);
+        }
+      }
+      String oldFieldName = rexFieldAccess.getField().getName();
+      String suggestNewFieldName = suggestedFieldNames.poll();
+      String newFieldName = SchemaUtilities.getFieldName(oldFieldName, suggestNewFieldName);
+      Schema topSchema = inputSchema.getFields().get(((RexInputRef) referenceExpr).getIndex()).schema();
 
-        String oldFieldName = rexFieldAccess.getField().getName();
-        String suggestNewFieldName = suggestedFieldNames.poll();
-        String newFieldName = SchemaUtilities.getFieldName(oldFieldName, suggestNewFieldName);
+      if (AvroSerdeUtils.isNullableType(topSchema)) {
+        topSchema = AvroSerdeUtils.getOtherTypeFromNullableType(topSchema);
+      }
 
-        Schema topSchema = inputSchema.getFields().get(relInputRef.getIndex()).schema();
+      while (topSchema.getType() != Schema.Type.RECORD
+          || topSchema.getFields().stream().noneMatch(f -> f.name().equalsIgnoreCase(oldFieldName))) {
+        final Schema.Type type = topSchema.getType();
+        if (type == Schema.Type.MAP) {
+          topSchema = topSchema.getValueType();
+        } else if (type == Schema.Type.ARRAY) {
+          topSchema = topSchema.getElementType();
+        } else if (type == Schema.Type.RECORD) {
+          final String pop = fieldNames.pop();
+          for (Schema.Field field : topSchema.getFields()) {
+            if (field.name().equalsIgnoreCase(pop)) {
+              topSchema = field.schema();
+              break;
+            }
+          }
+        } else {
+          return super.visitFieldAccess(rexFieldAccess);
+        }
         if (AvroSerdeUtils.isNullableType(topSchema)) {
           topSchema = AvroSerdeUtils.getOtherTypeFromNullableType(topSchema);
         }
-
-        Schema.Field accessedField = null;
-        for (Schema.Field field : topSchema.getFields()) {
-          if (field.name().equalsIgnoreCase(oldFieldName)) {
-            accessedField = field;
-            break;
-          }
-        }
-        SchemaUtilities.appendField(newFieldName, accessedField, fieldAssembler);
-
-        return rexFieldAccess;
-      } else {
-        return super.visitFieldAccess(rexFieldAccess);
       }
+
+      Schema.Field accessedField = null;
+      for (Schema.Field field : topSchema.getFields()) {
+        if (field.name().equalsIgnoreCase(oldFieldName)) {
+          accessedField = field;
+          break;
+        }
+      }
+      assert accessedField != null;
+      SchemaUtilities.appendField(newFieldName, accessedField, fieldAssembler);
+      return rexFieldAccess;
     }
 
     @Override
