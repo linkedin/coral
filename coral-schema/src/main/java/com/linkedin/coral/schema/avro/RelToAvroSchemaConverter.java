@@ -460,7 +460,7 @@ public class RelToAvroSchemaConverter {
           fieldNames.push(((RexFieldAccess) referenceExpr).getField().getName());
           referenceExpr = ((RexFieldAccess) referenceExpr).getReferenceExpr();
         } else {
-          return super.visitFieldAccess(rexFieldAccess);
+          throw new IllegalArgumentException("Unsupported referenceExpr kind: " + referenceExpr.getKind());
         }
       }
       String oldFieldName = rexFieldAccess.getField().getName();
@@ -487,8 +487,12 @@ public class RelToAvroSchemaConverter {
               break;
             }
           }
+        } else if (type == Schema.Type.UNION && oldFieldName.matches("tag_\\d+")) {
+          final Schema schema = topSchema.getTypes().get(Integer.parseInt(oldFieldName.split("_")[1]));
+          SchemaUtilities.appendField(newFieldName, new Schema.Field(newFieldName, schema, null, null), fieldAssembler);
+          return rexFieldAccess;
         } else {
-          return super.visitFieldAccess(rexFieldAccess);
+          throw new IllegalArgumentException("Unsupported topSchema type: " + topSchema.getType());
         }
         if (AvroSerdeUtils.isNullableType(topSchema)) {
           topSchema = AvroSerdeUtils.getOtherTypeFromNullableType(topSchema);
