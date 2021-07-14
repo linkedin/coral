@@ -454,13 +454,14 @@ public class RelToAvroSchemaConverter {
       RexNode referenceExpr = rexFieldAccess.getReferenceExpr();
       Deque<String> fieldNames = new LinkedList<>();
       while (!(referenceExpr instanceof RexInputRef)) {
-        if (referenceExpr instanceof RexCall) {
+        if (referenceExpr instanceof RexCall
+            && ((RexCall) referenceExpr).getOperator().getName().equalsIgnoreCase("ITEM")) {
           referenceExpr = ((RexCall) referenceExpr).getOperands().get(0);
         } else if (referenceExpr instanceof RexFieldAccess) {
           fieldNames.push(((RexFieldAccess) referenceExpr).getField().getName());
           referenceExpr = ((RexFieldAccess) referenceExpr).getReferenceExpr();
         } else {
-          throw new IllegalArgumentException("Unsupported referenceExpr kind: " + referenceExpr.getKind());
+          return super.visitFieldAccess(rexFieldAccess);
         }
       }
       String oldFieldName = rexFieldAccess.getField().getName();
@@ -487,10 +488,6 @@ public class RelToAvroSchemaConverter {
               break;
             }
           }
-        } else if (type == Schema.Type.UNION && oldFieldName.matches("tag_\\d+")) {
-          final Schema schema = topSchema.getTypes().get(Integer.parseInt(oldFieldName.split("_")[1]));
-          SchemaUtilities.appendField(newFieldName, new Schema.Field(newFieldName, schema, null, null), fieldAssembler);
-          return rexFieldAccess;
         } else {
           throw new IllegalArgumentException("Unsupported topSchema type: " + topSchema.getType());
         }
