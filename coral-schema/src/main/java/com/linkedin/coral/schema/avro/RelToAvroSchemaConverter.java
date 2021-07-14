@@ -53,7 +53,6 @@ import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
 import org.apache.calcite.util.Pair;
 import org.apache.hadoop.hive.metastore.api.Table;
-import org.apache.hadoop.hive.serde2.avro.AvroSerdeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -452,13 +451,18 @@ public class RelToAvroSchemaConverter {
     @Override
     public RexNode visitFieldAccess(RexFieldAccess rexFieldAccess) {
       RexNode referenceExpr = rexFieldAccess.getReferenceExpr();
-      Deque<String> fieldNames = new LinkedList<>();
+      Deque<String> innerRecordNames = new LinkedList<>();
       while (!(referenceExpr instanceof RexInputRef)) {
         if (referenceExpr instanceof RexCall
             && ((RexCall) referenceExpr).getOperator().getName().equalsIgnoreCase("ITEM")) {
+          // While selecting `int_field` from `array_col:array<struct<int_field:int>>` using `array_col[x].int_field`,
+          // `rexFieldAccess` is like `ITEM($1, 1).int_field`, we need to set `referenceExpr` to be the first operand (`$1`) of `ITEM` function
           referenceExpr = ((RexCall) referenceExpr).getOperands().get(0);
         } else if (referenceExpr instanceof RexFieldAccess) {
-          fieldNames.push(((RexFieldAccess) referenceExpr).getField().getName());
+          // While selecting `int_field` from `struct_col:struct<inner_struct_col:struct<int_field:int>>` using `struct_col.inner_struct_col.int_field`,
+          // `rexFieldAccess` is like `$3.inner_struct_col.int_field`, we need to set `referenceExpr` to be the expr (`$3`) of itself.
+          // Besides, we need to store the field name (`inner_struct_col`) in `fieldNames` so that we can retrieve the correct inner struct from `topSchema` afterwards
+          innerRecordNames.push(((RexFieldAccess) referenceExpr).getField().getName());
           referenceExpr = ((RexFieldAccess) referenceExpr).getReferenceExpr();
         } else {
           return super.visitFieldAccess(rexFieldAccess);
@@ -469,21 +473,20 @@ public class RelToAvroSchemaConverter {
       String newFieldName = SchemaUtilities.getFieldName(oldFieldName, suggestNewFieldName);
       Schema topSchema = inputSchema.getFields().get(((RexInputRef) referenceExpr).getIndex()).schema();
 
-      if (AvroSerdeUtils.isNullableType(topSchema)) {
-        topSchema = AvroSerdeUtils.getOtherTypeFromNullableType(topSchema);
-      }
+      topSchema = SchemaUtilities.extractIfOption(topSchema);
 
       while (topSchema.getType() != Schema.Type.RECORD
           || topSchema.getFields().stream().noneMatch(f -> f.name().equalsIgnoreCase(oldFieldName))) {
+        // try to find the schema which has a field named `oldFieldName`
         final Schema.Type type = topSchema.getType();
         if (type == Schema.Type.MAP) {
           topSchema = topSchema.getValueType();
         } else if (type == Schema.Type.ARRAY) {
           topSchema = topSchema.getElementType();
         } else if (type == Schema.Type.RECORD) {
-          final String pop = fieldNames.pop();
+          final String innerRecordName = innerRecordNames.pop();
           for (Schema.Field field : topSchema.getFields()) {
-            if (field.name().equalsIgnoreCase(pop)) {
+            if (field.name().equalsIgnoreCase(innerRecordName)) {
               topSchema = field.schema();
               break;
             }
@@ -491,9 +494,7 @@ public class RelToAvroSchemaConverter {
         } else {
           throw new IllegalArgumentException("Unsupported topSchema type: " + topSchema.getType());
         }
-        if (AvroSerdeUtils.isNullableType(topSchema)) {
-          topSchema = AvroSerdeUtils.getOtherTypeFromNullableType(topSchema);
-        }
+        topSchema = SchemaUtilities.extractIfOption(topSchema);
       }
 
       Schema.Field accessedField = null;

@@ -612,7 +612,7 @@ public class ViewToAvroSchemaConverterTests {
         TestUtils.loadSchema("testSelectStarFromNestComplex-expected.avsc"));
   }
 
-  @Test(enabled = false)
+  @Test
   public void testSelectNestedStructFieldFromNestComplex() {
     String viewSql =
         "CREATE VIEW v AS SELECT array_col[0].Int_Field Int_Field, map_col['x'].Int_Field2 Int_Field2, struct_col.inner_struct_col.Int_Field3 Int_Field3 FROM basenestedcomplex";
@@ -622,7 +622,7 @@ public class ViewToAvroSchemaConverterTests {
     Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v");
 
     Assert.assertEquals(actualSchema.toString(true),
-        TestUtils.loadSchema("testSelectStarFromNestComplex-expected.avsc"));
+        TestUtils.loadSchema("testSelectNestedStructFieldFromNestComplex-expected.avsc"));
   }
 
   @Test
