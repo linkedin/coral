@@ -95,6 +95,15 @@ public class TestUtils {
     executeCreateTableWithPartitionQuery("default", "basecasepreservation", baseCasePreservation);
     executeCreateTableWithPartitionFieldSchemaQuery("default", "basecomplexfieldschema", baseComplexFieldSchema);
     executeCreateTableWithPartitionQuery("default", "basenestedcomplex", baseNestedComplexSchema);
+
+    // Creates a table with deep nested structs
+    executeQuery("DROP TABLE IF EXISTS basedeepnestedcomplex");
+    executeQuery("CREATE TABLE IF NOT EXISTS basedeepnestedcomplex("
+        + "struct_col_1 struct<struct_col_2:struct<struct_col_3:struct<int_field_1:int>>>, "
+        + "array_col_1 array<struct<array_col_2:array<struct<int_field_2:int>>>>, "
+        + "map_col_1 map<string, struct<map_col_2:map<string, struct<int_field_3:int>>>>, "
+        + "struct_col_4 struct<map_col_3: map<string, struct<struct_col_5:struct<int_field_4:int>>>, "
+        + "array_col_3: array<struct<struct_col_6:struct<int_field_5:int>>>>)");
   }
 
   private static void initializeUdfs() {

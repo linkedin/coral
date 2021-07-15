@@ -626,6 +626,21 @@ public class ViewToAvroSchemaConverterTests {
   }
 
   @Test
+  public void testSelectDeepNestStructFieldFromDeepNestComplex() {
+    String viewSql = "CREATE VIEW v AS SELECT struct_col_1.struct_col_2.struct_col_3.int_field_1 Int_Field_1, "
+        + "array_col_1[0].array_col_2[0].int_field_2 Int_Field_2, map_col_1['x'].map_col_2['y'].int_field_3 Int_Field_3, "
+        + "struct_col_4.map_col_3['x'].struct_col_5.int_field_4 Int_Field_4, "
+        + "struct_col_4.array_col_3[0].struct_col_6.int_field_5 Int_Field_5 FROM basedeepnestedcomplex";
+    TestUtils.executeCreateViewQuery("default", "v", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v");
+
+    Assert.assertEquals(actualSchema.toString(true),
+        TestUtils.loadSchema("testSelectDeepNestedStructFieldFromDeepNestComplex-expected.avsc"));
+  }
+
+  @Test
   public void testProjectStructInnerField() {
     String viewSql = "CREATE VIEW v AS "
         + "SELECT bc.Id AS Id_View_Col, Struct_Col.Bool_Field AS Struct_Inner_Bool_Col, Struct_Col.Int_Field AS Struct_Inner_Int_Col, Struct_Col.Bigint_Field AS Struct_Inner_Bigint_Col "

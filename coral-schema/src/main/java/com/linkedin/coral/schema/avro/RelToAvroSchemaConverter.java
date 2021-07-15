@@ -473,37 +473,7 @@ public class RelToAvroSchemaConverter {
       String newFieldName = SchemaUtilities.getFieldName(oldFieldName, suggestNewFieldName);
       Schema topSchema = inputSchema.getFields().get(((RexInputRef) referenceExpr).getIndex()).schema();
 
-      topSchema = SchemaUtilities.extractIfOption(topSchema);
-
-      while (topSchema.getType() != Schema.Type.RECORD
-          || topSchema.getFields().stream().noneMatch(f -> f.name().equalsIgnoreCase(oldFieldName))) {
-        // try to find the schema which has a field named `oldFieldName`
-        final Schema.Type type = topSchema.getType();
-        if (type == Schema.Type.MAP) {
-          topSchema = topSchema.getValueType();
-        } else if (type == Schema.Type.ARRAY) {
-          topSchema = topSchema.getElementType();
-        } else if (type == Schema.Type.RECORD) {
-          final String innerRecordName = innerRecordNames.pop();
-          for (Schema.Field field : topSchema.getFields()) {
-            if (field.name().equalsIgnoreCase(innerRecordName)) {
-              topSchema = field.schema();
-              break;
-            }
-          }
-        } else {
-          throw new IllegalArgumentException("Unsupported topSchema type: " + topSchema.getType());
-        }
-        topSchema = SchemaUtilities.extractIfOption(topSchema);
-      }
-
-      Schema.Field accessedField = null;
-      for (Schema.Field field : topSchema.getFields()) {
-        if (field.name().equalsIgnoreCase(oldFieldName)) {
-          accessedField = field;
-          break;
-        }
-      }
+      Schema.Field accessedField = getFieldFromTopSchema(topSchema, oldFieldName, innerRecordNames);
       assert accessedField != null;
       SchemaUtilities.appendField(newFieldName, accessedField, fieldAssembler);
       return rexFieldAccess;
@@ -530,6 +500,49 @@ public class RelToAvroSchemaConverter {
     private void appendField(RelDataType fieldType, boolean isNullable) {
       String fieldName = SchemaUtilities.getFieldName("", suggestedFieldNames.poll());
       SchemaUtilities.appendField(fieldName, fieldType, fieldAssembler, isNullable);
+    }
+
+    /**
+     * Get the field named `fieldName` in the given `topSchema` which might be nested
+     * @param innerRecordNames contains inner record names, if `topSchema` contains inner record, we need to retrieve the inner record which
+     *                         is the ancestor of field named `fieldName`
+     */
+    private Schema.Field getFieldFromTopSchema(@Nonnull Schema topSchema, @Nonnull String fieldName,
+        @Nonnull Deque<String> innerRecordNames) {
+      topSchema = SchemaUtilities.extractIfOption(topSchema);
+
+      while (topSchema.getType() != Schema.Type.RECORD
+          || topSchema.getFields().stream().noneMatch(f -> f.name().equalsIgnoreCase(fieldName))) {
+        switch (topSchema.getType()) {
+          case MAP:
+            topSchema = topSchema.getValueType();
+            break;
+          case ARRAY:
+            topSchema = topSchema.getElementType();
+            break;
+          case RECORD:
+            final String innerRecordName = innerRecordNames.pop();
+            for (Schema.Field field : topSchema.getFields()) {
+              if (field.name().equalsIgnoreCase(innerRecordName)) {
+                topSchema = field.schema();
+                break;
+              }
+            }
+            break;
+          default:
+            throw new IllegalArgumentException("Unsupported topSchema type: " + topSchema.getType());
+        }
+        topSchema = SchemaUtilities.extractIfOption(topSchema);
+      }
+
+      Schema.Field targetField = null;
+      for (Schema.Field field : topSchema.getFields()) {
+        if (field.name().equalsIgnoreCase(fieldName)) {
+          targetField = field;
+          break;
+        }
+      }
+      return targetField;
     }
   }
 }
