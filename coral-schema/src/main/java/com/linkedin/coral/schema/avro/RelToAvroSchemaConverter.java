@@ -5,6 +5,7 @@
  */
 package com.linkedin.coral.schema.avro;
 
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -52,7 +53,6 @@ import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
 import org.apache.calcite.util.Pair;
 import org.apache.hadoop.hive.metastore.api.Table;
-import org.apache.hadoop.hive.serde2.avro.AvroSerdeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -450,31 +450,33 @@ public class RelToAvroSchemaConverter {
 
     @Override
     public RexNode visitFieldAccess(RexFieldAccess rexFieldAccess) {
-      if (rexFieldAccess.getReferenceExpr() instanceof RexInputRef) {
-        RexInputRef relInputRef = (RexInputRef) rexFieldAccess.getReferenceExpr();
-
-        String oldFieldName = rexFieldAccess.getField().getName();
-        String suggestNewFieldName = suggestedFieldNames.poll();
-        String newFieldName = SchemaUtilities.getFieldName(oldFieldName, suggestNewFieldName);
-
-        Schema topSchema = inputSchema.getFields().get(relInputRef.getIndex()).schema();
-        if (AvroSerdeUtils.isNullableType(topSchema)) {
-          topSchema = AvroSerdeUtils.getOtherTypeFromNullableType(topSchema);
+      RexNode referenceExpr = rexFieldAccess.getReferenceExpr();
+      Deque<String> innerRecordNames = new LinkedList<>();
+      while (!(referenceExpr instanceof RexInputRef)) {
+        if (referenceExpr instanceof RexCall
+            && ((RexCall) referenceExpr).getOperator().getName().equalsIgnoreCase("ITEM")) {
+          // While selecting `int_field` from `array_col:array<struct<int_field:int>>` using `array_col[x].int_field`,
+          // `rexFieldAccess` is like `ITEM($1, 1).int_field`, we need to set `referenceExpr` to be the first operand (`$1`) of `ITEM` function
+          referenceExpr = ((RexCall) referenceExpr).getOperands().get(0);
+        } else if (referenceExpr instanceof RexFieldAccess) {
+          // While selecting `int_field` from `struct_col:struct<inner_struct_col:struct<int_field:int>>` using `struct_col.inner_struct_col.int_field`,
+          // `rexFieldAccess` is like `$3.inner_struct_col.int_field`, we need to set `referenceExpr` to be the expr (`$3`) of itself.
+          // Besides, we need to store the field name (`inner_struct_col`) in `fieldNames` so that we can retrieve the correct inner struct from `topSchema` afterwards
+          innerRecordNames.push(((RexFieldAccess) referenceExpr).getField().getName());
+          referenceExpr = ((RexFieldAccess) referenceExpr).getReferenceExpr();
+        } else {
+          return super.visitFieldAccess(rexFieldAccess);
         }
-
-        Schema.Field accessedField = null;
-        for (Schema.Field field : topSchema.getFields()) {
-          if (field.name().equalsIgnoreCase(oldFieldName)) {
-            accessedField = field;
-            break;
-          }
-        }
-        SchemaUtilities.appendField(newFieldName, accessedField, fieldAssembler);
-
-        return rexFieldAccess;
-      } else {
-        return super.visitFieldAccess(rexFieldAccess);
       }
+      String oldFieldName = rexFieldAccess.getField().getName();
+      String suggestNewFieldName = suggestedFieldNames.poll();
+      String newFieldName = SchemaUtilities.getFieldName(oldFieldName, suggestNewFieldName);
+      Schema topSchema = inputSchema.getFields().get(((RexInputRef) referenceExpr).getIndex()).schema();
+
+      Schema.Field accessedField = getFieldFromTopSchema(topSchema, oldFieldName, innerRecordNames);
+      assert accessedField != null;
+      SchemaUtilities.appendField(newFieldName, accessedField, fieldAssembler);
+      return rexFieldAccess;
     }
 
     @Override
@@ -498,6 +500,49 @@ public class RelToAvroSchemaConverter {
     private void appendField(RelDataType fieldType, boolean isNullable) {
       String fieldName = SchemaUtilities.getFieldName("", suggestedFieldNames.poll());
       SchemaUtilities.appendField(fieldName, fieldType, fieldAssembler, isNullable);
+    }
+
+    /**
+     * Get the field named `fieldName` in the given `topSchema` which might be nested
+     * @param innerRecordNames contains inner record names, if `topSchema` contains inner record, we need to retrieve the inner record which
+     *                         is the ancestor of field named `fieldName`
+     */
+    private Schema.Field getFieldFromTopSchema(@Nonnull Schema topSchema, @Nonnull String fieldName,
+        @Nonnull Deque<String> innerRecordNames) {
+      topSchema = SchemaUtilities.extractIfOption(topSchema);
+
+      while (topSchema.getType() != Schema.Type.RECORD
+          || topSchema.getFields().stream().noneMatch(f -> f.name().equalsIgnoreCase(fieldName))) {
+        switch (topSchema.getType()) {
+          case MAP:
+            topSchema = topSchema.getValueType();
+            break;
+          case ARRAY:
+            topSchema = topSchema.getElementType();
+            break;
+          case RECORD:
+            final String innerRecordName = innerRecordNames.pop();
+            for (Schema.Field field : topSchema.getFields()) {
+              if (field.name().equalsIgnoreCase(innerRecordName)) {
+                topSchema = field.schema();
+                break;
+              }
+            }
+            break;
+          default:
+            throw new IllegalArgumentException("Unsupported topSchema type: " + topSchema.getType());
+        }
+        topSchema = SchemaUtilities.extractIfOption(topSchema);
+      }
+
+      Schema.Field targetField = null;
+      for (Schema.Field field : topSchema.getFields()) {
+        if (field.name().equalsIgnoreCase(fieldName)) {
+          targetField = field;
+          break;
+        }
+      }
+      return targetField;
     }
   }
 }

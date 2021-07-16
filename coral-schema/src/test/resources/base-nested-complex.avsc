@@ -83,6 +83,21 @@
     } ],
     "default" : null
   }, {
+    "name" : "map_col",
+    "type" : [ "null", {
+      "type" : "map",
+      "values" : [ "null", {
+        "type" : "record",
+        "name" : "Map_col",
+        "namespace" : "coral.schema.avro.base.nested.complex.basenestedcomplex",
+        "fields" : [ {
+          "name" : "Int_Field2",
+          "type" : [ "null", "int" ]
+        } ]
+      } ]
+    } ],
+    "default" : null
+  }, {
     "name" : "struct_col",
     "type" : [ "null", {
       "type" : "record",
@@ -116,6 +131,18 @@
         "name" : "string_field",
         "type" : [ "null", "string" ],
         "default" : null
+      }, {
+        "name": "inner_struct_col",
+        "type": {
+          "name" : "Inner_Struct_col",
+          "type" : "record",
+          "namespace" : "coral.schema.avro.base.nested.complex.basenestedcomplex",
+          "fields" : [ {
+            "name" : "Int_Field3",
+            "type" : [ "null", "int" ],
+            "default" : null
+          }]
+        }
       } ]
     } ],
     "default" : null

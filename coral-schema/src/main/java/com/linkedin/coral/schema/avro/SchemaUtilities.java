@@ -417,6 +417,14 @@ class SchemaUtilities {
     return schema;
   }
 
+  static Schema extractIfOption(Schema schema) {
+    if (isNullableType(schema)) {
+      return getOtherTypeFromNullableType(schema);
+    } else {
+      return schema;
+    }
+  }
+
   private static Schema getUnionFieldSchema(@Nonnull Schema leftSchema, @Nonnull Schema rightSchema,
       boolean strictMode) {
     Preconditions.checkNotNull(leftSchema);
