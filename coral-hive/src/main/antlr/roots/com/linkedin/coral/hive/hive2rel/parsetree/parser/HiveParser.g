@@ -653,7 +653,11 @@ import org.apache.hadoop.hive.conf.HiveConf;
     this.hiveConf = hiveConf;
   }
   protected boolean useSQL11ReservedKeywordsForIdentifier() {
-    return !HiveConf.getBoolVar(hiveConf, HiveConf.ConfVars.HIVE_SUPPORT_SQL11_RESERVED_KEYWORDS);
+    try {
+      return !HiveConf.getBoolVar(hiveConf, HiveConf.ConfVars.HIVE_SUPPORT_SQL11_RESERVED_KEYWORDS);
+    } catch (Throwable throwable) {
+      return false;
+    }
   }
 }
 
