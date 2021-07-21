@@ -371,10 +371,13 @@ import java.util.Collection;
 import java.util.HashMap;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 }
 
 
 @members {
+  private static final Logger LOG = LoggerFactory.getLogger(HiveParser.class);
   ArrayList<ParseError> errors = new ArrayList<ParseError>();
   Stack msgs = new Stack<String>();
 
@@ -656,6 +659,7 @@ import org.apache.hadoop.hive.conf.HiveConf;
     try {
       return !HiveConf.getBoolVar(hiveConf, HiveConf.ConfVars.HIVE_SUPPORT_SQL11_RESERVED_KEYWORDS);
     } catch (Throwable throwable) {
+      LOG.warn(throwable.getMessage());
       return false;
     }
   }
