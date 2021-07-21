@@ -34,7 +34,12 @@ import org.apache.hadoop.hive.conf.HiveConf;
   }
 
   protected boolean allowQuotedId() {
-    String supportedQIds = HiveConf.getVar(hiveConf, HiveConf.ConfVars.HIVE_QUOTEDID_SUPPORT);
+    String supportedQIds;
+    if (hiveConf == null) {
+      supportedQIds = HiveConf.ConfVars.HIVE_QUOTEDID_SUPPORT.getDefaultValue();
+    } else {
+      supportedQIds = HiveConf.getVar(hiveConf, HiveConf.ConfVars.HIVE_QUOTEDID_SUPPORT);
+    }
     return !"none".equals(supportedQIds);
   }
 }
