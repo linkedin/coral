@@ -36,6 +36,7 @@ public class CalciteTrinoUDFMap {
     createUDFMapEntry(UDF_MAP, SqlStdOperatorTable.ITEM, 2, TrinoElementAtFunction.INSTANCE);
 
     // Math Functions
+    createUDFMapEntry(UDF_MAP, hiveToCalciteOp("pmod"), 2, "mod");
     createUDFMapEntry(UDF_MAP, SqlStdOperatorTable.RAND, 0, "RANDOM");
     createUDFMapEntry(UDF_MAP, SqlStdOperatorTable.RAND, 1, "RANDOM", "[]", null);
     createUDFMapEntry(UDF_MAP, SqlStdOperatorTable.RAND_INTEGER, 1, "RANDOM");

@@ -112,6 +112,7 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
 
     // mathematical functions
     // we need to define new strategy for hive to allow null operands by default for everything
+    createAddUserDefinedFunction("pmod", HiveReturnTypes.BIGINT, NUMERIC_NUMERIC);
     createAddUserDefinedFunction("round", DOUBLE_NULLABLE,
         family(ImmutableList.of(SqlTypeFamily.NUMERIC, SqlTypeFamily.INTEGER), optionalOrd(1)));
     createAddUserDefinedFunction("bround", DOUBLE_NULLABLE,
