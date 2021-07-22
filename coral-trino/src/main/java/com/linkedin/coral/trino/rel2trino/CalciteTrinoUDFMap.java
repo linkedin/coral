@@ -54,6 +54,9 @@ public class CalciteTrinoUDFMap {
     createUDFMapEntry(UDF_MAP, hiveToCalciteOp("get_json_object"), 2, "json_extract");
 
     // map various hive functions
+    createUDFMapEntry(UDF_MAP, hiveToCalciteOp("pmod"), 2, "mod",
+        "[{\"op\":\"+\",\"operands\":[{\"op\":\"%\",\"operands\":[{\"input\":1},{\"input\":2}]},{\"input\":2}]},{\"input\":2}]",
+        null);
     createUDFMapEntry(UDF_MAP, hiveToCalciteOp("base64"), 1, "to_base64");
     createUDFMapEntry(UDF_MAP, hiveToCalciteOp("unbase64"), 1, "from_base64");
     createUDFMapEntry(UDF_MAP, hiveToCalciteOp("hex"), 1, "to_hex");

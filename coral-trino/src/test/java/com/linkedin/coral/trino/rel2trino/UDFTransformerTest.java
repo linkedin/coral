@@ -159,10 +159,6 @@ public class UDFTransformerTest {
     testTransformation(tableOneQuery, tableOneConfig, targetUDF,
         "[{\"op\":\"*\",\"operands\":[{\"input\":2},{\"input\":3}]}, {\"input\":1}]",
         "{\"op\":\"+\",\"operands\":[{\"input\":0},{\"input\":3}]}", null, "targetFunc(icol * dcol, scol) + dcol");
-
-    testFailedTransformation(tableOneQuery, tableOneConfig, targetUDF,
-        "[{\"op\":\"%\",\"operands\":[{\"input\":2},{\"input\":3}]}, {\"input\":1}]", null, null,
-        UnsupportedOperationException.class);
   }
 
   @Test
@@ -193,6 +189,14 @@ public class UDFTransformerTest {
         "[{\"regex\":\"^.*(?i)(literal).*$\", \"input\":2, \"name\":\"firstFunc\"},"
             + "{\"regex\":\"^.*(?i)(literal).*$\", \"input\":2, \"name\":\"secondFunc\"}]",
         "firstFunc(binaryfield, 'literal')");
+  }
+
+  @Test
+  public void testUnsupportedOperatorTransformer() {
+    // Verifies that an operator transformer that not be supported.
+    testFailedTransformation(tableOneQuery, tableOneConfig, targetUDF,
+        "[{\"op\":\"@\",\"operands\":[{\"input\":2},{\"input\":3}]}, {\"input\":1}]", null, null,
+        UnsupportedOperationException.class);
   }
 
   @Test

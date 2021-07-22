@@ -124,6 +124,7 @@ public class UDFTransformer {
     OP_MAP.put("*", SqlStdOperatorTable.MULTIPLY);
     OP_MAP.put("/", SqlStdOperatorTable.DIVIDE);
     OP_MAP.put("^", SqlStdOperatorTable.POWER);
+    OP_MAP.put("%", SqlStdOperatorTable.MOD);
     OP_MAP.put("hive_pattern_to_trino",
         new SqlUserDefinedFunction(new SqlIdentifier("hive_pattern_to_trino", SqlParserPos.ZERO),
             HiveReturnTypes.STRING, null, OperandTypes.STRING, null, null));
