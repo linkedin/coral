@@ -5,6 +5,10 @@
  */
 package com.linkedin.coral.trino.rel2trino;
 
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Optional;
+
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelShuttle;
 import org.apache.calcite.rel.RelShuttleImpl;
@@ -22,6 +26,8 @@ import org.apache.calcite.rel.logical.LogicalProject;
 import org.apache.calcite.rel.logical.LogicalSort;
 import org.apache.calcite.rel.logical.LogicalUnion;
 import org.apache.calcite.rel.logical.LogicalValues;
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexNode;
@@ -35,6 +41,11 @@ import com.linkedin.coral.com.google.common.collect.ImmutableMultimap;
 import com.linkedin.coral.com.google.common.collect.Multimap;
 import com.linkedin.coral.hive.hive2rel.functions.GenericProjectFunction;
 import com.linkedin.coral.trino.rel2trino.functions.GenericProjectToTrinoConverter;
+
+import static com.linkedin.coral.trino.rel2trino.UDFMapUtils.createUDF;
+import static org.apache.calcite.sql.fun.SqlStdOperatorTable.MULTIPLY;
+import static org.apache.calcite.sql.type.ReturnTypes.explicit;
+import static org.apache.calcite.sql.type.SqlTypeName.*;
 
 
 public class Calcite2TrinoUDFConverter {
@@ -125,7 +136,7 @@ public class Calcite2TrinoUDFConverter {
       }
 
       private TrinoRexConverter getTrinoRexConverter(RelNode node) {
-        return new TrinoRexConverter(node.getCluster().getRexBuilder());
+        return new TrinoRexConverter(node.getCluster().getRexBuilder(), node.getCluster().getTypeFactory());
       }
     };
     return calciteNode.accept(converter);
@@ -136,6 +147,7 @@ public class Calcite2TrinoUDFConverter {
    */
   public static class TrinoRexConverter extends RexShuttle {
     private final RexBuilder rexBuilder;
+    private final RelDataTypeFactory typeFactory;
 
     // SUPPORTED_TYPE_CAST_MAP is a static mapping that maps a SqlTypeFamily key to its set of
     // type-castable SqlTypeFamilies.
@@ -145,8 +157,9 @@ public class Calcite2TrinoUDFConverter {
           .putAll(SqlTypeFamily.CHARACTER, SqlTypeFamily.NUMERIC, SqlTypeFamily.BOOLEAN).build();
     }
 
-    public TrinoRexConverter(RexBuilder rexBuilder) {
+    public TrinoRexConverter(RexBuilder rexBuilder, RelDataTypeFactory typeFactory) {
       this.rexBuilder = rexBuilder;
+      this.typeFactory = typeFactory;
     }
 
     @Override
@@ -160,6 +173,13 @@ public class Calcite2TrinoUDFConverter {
         return GenericProjectToTrinoConverter.convertGenericProject(rexBuilder, call);
       }
 
+      if (call.getOperator().getName().equals("from_utc_timestamp")) {
+        Optional<RexNode> modifiedCall = visitFromUtcTimestampCall(call);
+        if (modifiedCall.isPresent()) {
+          return modifiedCall.get();
+        }
+      }
+
       final UDFTransformer transformer =
           CalciteTrinoUDFMap.getUDFTransformer(call.getOperator().getName(), call.operands.size());
       if (transformer != null) {
@@ -167,6 +187,61 @@ public class Calcite2TrinoUDFConverter {
       }
       RexCall modifiedCall = adjustInconsistentTypesToEqualityOperator(call);
       return super.visitCall(modifiedCall);
+    }
+
+    private Optional<RexNode> visitFromUtcTimestampCall(RexCall call) {
+      RelDataType inputType = call.getOperands().get(0).getType();
+      // TODO(trinodb/trino#6295) support high-precision timestamp
+      RelDataType targetType = typeFactory.createSqlType(TIMESTAMP, 3);
+
+      List<RexNode> convertedOperands = visitList(call.getOperands(), (boolean[]) null);
+      RexNode sourceValue = convertedOperands.get(0);
+      RexNode timezone = convertedOperands.get(1);
+
+      // In below definitions we should use `TIMESTATMP WITH TIME ZONE`. As calcite is lacking
+      // this type we use `TIMESTAMP` instead. It does not have any practical implications as result syntax tree
+      // is not type-checked, and only used for generating output SQL for a view query.
+      SqlOperator trinoAtTimeZone = createUDF("at_timezone", explicit(TIMESTAMP /* should be WITH TIME ZONE */));
+      SqlOperator trinoWithTimeZone = createUDF("with_timezone", explicit(TIMESTAMP /* should be WITH TIME ZONE */));
+      SqlOperator trinoToUnixTime = createUDF("to_unixtime", explicit(DOUBLE));
+      SqlOperator trinoFromUnixtimeNanos =
+          createUDF("from_unixtime_nanos", explicit(TIMESTAMP /* should be WITH TIME ZONE */));
+      SqlOperator trinoFromUnixTime = createUDF("from_unixtime", explicit(TIMESTAMP /* should be WITH TIME ZONE */));
+      SqlOperator trinoCanonicalizeHiveTimezoneId = createUDF("$canonicalize_hive_timezone_id", explicit(VARCHAR));
+
+      RelDataType bigintType = typeFactory.createSqlType(BIGINT);
+      RelDataType doubleType = typeFactory.createSqlType(DOUBLE);
+
+      if (inputType.getSqlTypeName() == BIGINT || inputType.getSqlTypeName() == INTEGER
+          || inputType.getSqlTypeName() == SMALLINT || inputType.getSqlTypeName() == TINYINT) {
+
+        return Optional.of(rexBuilder.makeCast(targetType,
+            rexBuilder.makeCall(trinoAtTimeZone,
+                rexBuilder.makeCall(trinoFromUnixtimeNanos,
+                    rexBuilder.makeCall(MULTIPLY, rexBuilder.makeCast(bigintType, sourceValue),
+                        rexBuilder.makeBigintLiteral(BigDecimal.valueOf(1000000)))),
+                rexBuilder.makeCall(trinoCanonicalizeHiveTimezoneId, timezone))));
+      }
+
+      if (inputType.getSqlTypeName() == DOUBLE || inputType.getSqlTypeName() == FLOAT
+          || inputType.getSqlTypeName() == DECIMAL) {
+
+        return Optional.of(rexBuilder.makeCast(targetType,
+            rexBuilder.makeCall(trinoAtTimeZone,
+                rexBuilder.makeCall(trinoFromUnixTime, rexBuilder.makeCast(doubleType, sourceValue)),
+                rexBuilder.makeCall(trinoCanonicalizeHiveTimezoneId, timezone))));
+      }
+
+      if (inputType.getSqlTypeName() == TIMESTAMP || inputType.getSqlTypeName() == DATE) {
+        return Optional.of(rexBuilder.makeCast(targetType,
+            rexBuilder.makeCall(trinoAtTimeZone,
+                rexBuilder.makeCall(trinoFromUnixTime,
+                    rexBuilder.makeCall(trinoToUnixTime,
+                        rexBuilder.makeCall(trinoWithTimeZone, sourceValue, rexBuilder.makeLiteral("UTC")))),
+                rexBuilder.makeCall(trinoCanonicalizeHiveTimezoneId, timezone))));
+      }
+
+      return Optional.empty();
     }
 
     // [CORAL-18] Hive is inconsistent and allows everything to be string so we make

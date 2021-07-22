@@ -288,6 +288,22 @@ public class TestUtils {
         + "SELECT `t`.`a`, `jt`.`d`, `jt`.`e`, `jt`.`f` FROM `test`.`tableA` AS `t` LATERAL VIEW json_tuple(`t`.`b`.`b1`, \"trino\", \"always\", \"rocks\") `jt` AS `d`, `e`, `f`");
     run(driver, "CREATE VIEW IF NOT EXISTS test.get_json_object_view AS \n"
         + "SELECT get_json_object(b.b1, '$.name') FROM test.tableA");
+
+    run(driver,
+        "CREATE TABLE test.table_from_utc_timestamp (a_tinyint tinyint, a_smallint smallint, "
+            + "a_integer int, a_bigint bigint, a_float float, a_double double, "
+            + "a_decimal_three decimal(10,3), a_decimal_zero decimal(10,0), a_timestamp timestamp, " + "a_date date)");
+    run(driver,
+        "CREATE VIEW test.view_from_utc_timestamp AS SELECT from_utc_timestamp(a_tinyint, 'America/Los_Angeles'), "
+            + "from_utc_timestamp(a_smallint, 'America/Los_Angeles'), "
+            + "from_utc_timestamp(a_integer, 'America/Los_Angeles'), "
+            + "from_utc_timestamp(a_bigint, 'America/Los_Angeles'), "
+            + "from_utc_timestamp(a_float, 'America/Los_Angeles'), "
+            + "from_utc_timestamp(a_double, 'America/Los_Angeles'), "
+            + "from_utc_timestamp(a_decimal_three, 'America/Los_Angeles'), "
+            + "from_utc_timestamp(a_decimal_zero, 'America/Los_Angeles'), "
+            + "from_utc_timestamp(a_timestamp, 'America/Los_Angeles'), "
+            + "from_utc_timestamp(a_date, 'America/Los_Angeles')" + "FROM test.table_from_utc_timestamp");
   }
 
   public static RelNode convertView(String db, String view) {
