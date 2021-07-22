@@ -1,0 +1,253 @@
+/**
+ * Copyright 2021 LinkedIn Corporation. All rights reserved.
+ * Licensed under the BSD-2 Clause license.
+ * See LICENSE in the project root for license information.
+ */
+package com.linkedin.coral.schema.avro;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import org.apache.avro.Schema;
+import org.apache.hadoop.hive.serde2.avro.AvroSerDe;
+import org.apache.hadoop.hive.serde2.typeinfo.DecimalTypeInfo;
+import org.apache.hadoop.hive.serde2.typeinfo.ListTypeInfo;
+import org.apache.hadoop.hive.serde2.typeinfo.MapTypeInfo;
+import org.apache.hadoop.hive.serde2.typeinfo.PrimitiveTypeInfo;
+import org.apache.hadoop.hive.serde2.typeinfo.StructTypeInfo;
+import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
+import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.node.JsonNodeFactory;
+
+import com.linkedin.coral.com.google.common.base.Preconditions;
+
+import static org.apache.hadoop.hive.serde2.avro.AvroSerdeUtils.*;
+
+
+/**
+ * A {@link HiveSchemaWithPartnerVisitor} which augments a Hive schema with extra metadata from a partner Avro schema
+ * and generates a resultant "merged" Avro schema
+ *
+ * 1. Fields are matched between Hive and Avro schemas using a case insensitive search by field name
+ * 2. Copies field names, nullability, default value, field props from the Avro schema
+ * 3. Copies field type from the Hive schema.
+ *    TODO: We should also handle some cases of type promotion where the types in Avro are potentially more correct
+ *    e.g.BINARY in Hive -> FIXED in Avro, STRING in Hive -> ENUM in Avro, etc
+ * 4. Retains fields found only in the Hive schema; Ignores fields found only in the Avro schema
+ * 5. Fields found only in Hive schema are represented as optional fields in the resultant Avro schema
+ * 6. For fields found only in Hive schema, field names are sanitized to make them compatible with Avro identifier spec
+ */
+class MergeHiveSchemaWithAvro extends HiveSchemaWithPartnerVisitor<Schema, Schema.Field, Schema, Schema.Field> {
+
+  static Schema visit(StructTypeInfo typeInfo, Schema schema) {
+    return HiveSchemaWithPartnerVisitor.visit(typeInfo, schema, new MergeHiveSchemaWithAvro(),
+        AvroPartnerAccessor.INSTANCE);
+  }
+
+  private final AtomicInteger recordCounter = new AtomicInteger(0);
+
+  @Override
+  public Schema struct(StructTypeInfo struct, Schema partner, List<Schema.Field> fieldResults) {
+    boolean shouldResultBeOptional = partner == null || isNullableType(partner);
+    Schema result;
+    if (partner == null || extractIfOption(partner).getType() != Schema.Type.RECORD) {
+      // if there was no matching Avro struct, return a struct with new record/namespace
+      int recordNum = recordCounter.incrementAndGet();
+      result = Schema.createRecord("record" + recordNum, null, "namespace" + recordNum, false);
+      result.setFields(fieldResults);
+    } else {
+      result = SchemaUtilities.copyRecord(extractIfOption(partner), fieldResults);
+    }
+    return shouldResultBeOptional ? SchemaUtilities.makeNullable(result) : result;
+  }
+
+  @Override
+  public Schema.Field field(String name, TypeInfo field, Schema.Field partner, Schema fieldResult) {
+    // No need to infer `shouldResultBeOptional`. We expect other visitor methods to return optional schemas
+    // in their field results if required
+    if (partner == null) {
+      // if there was no matching Avro field, use name form the Hive schema and set a null default
+      return new Schema.Field(SchemaUtilities.makeCompatibleName(name), fieldResult, null, (JsonNode) new Object());
+    } else {
+      // TODO: How to ensure that field default value is compatible with new field type generated from Hive?
+      // Copy field type from the visitor result, copy everything else from the partner
+      // Avro requires the default value to match the first type in the option, reorder option if required
+      Schema reordered = reorderOptionIfRequired(fieldResult, partner.defaultValue());
+      return SchemaUtilities.copyField(partner, reordered);
+    }
+  }
+
+  /**
+   * Reorders an option schema so that the type of the provided default value is the first type in the option schema
+   *
+   * e.g. If the schema is (NULL, INT) and the default value is 1, the returned schema is (INT, NULL)
+   * If the schema is not an option schema or if there is no default value, schema is returned as-is
+   */
+  private Schema reorderOptionIfRequired(Schema schema, Object defaultValue) {
+    if (isNullableType(schema) && defaultValue != null) {
+      boolean isNullFirstOption = schema.getTypes().get(0).getType() == Schema.Type.NULL;
+      // TODO: verify if null works
+      if (isNullFirstOption && defaultValue.equals(null)) {
+        return schema;
+      } else {
+        return Schema.createUnion(Arrays.asList(schema.getTypes().get(1), schema.getTypes().get(0)));
+      }
+    } else {
+      return schema;
+    }
+  }
+
+  @Override
+  public Schema list(ListTypeInfo list, Schema partner, Schema elementResult) {
+    // if there was no matching Avro list, or if matching Avro list was an option, return an optional list
+    boolean shouldResultBeOptional = partner == null || isNullableType(partner);
+    Schema result = Schema.createArray(elementResult);
+    return shouldResultBeOptional ? SchemaUtilities.makeNullable(result) : result;
+  }
+
+  @Override
+  public Schema map(MapTypeInfo map, Schema partner, Schema keyResult, Schema valueResult) {
+    Preconditions.checkArgument(extractIfOption(keyResult).getType() == Schema.Type.STRING,
+        "Map keys should always be non-nullable strings. Found: %s", keyResult);
+    // if there was no matching Avro map, or if matching Avro map was an option, return an optional map
+    boolean shouldResultBeOptional = partner == null || isNullableType(partner);
+    Schema result = Schema.createMap(valueResult);
+    return shouldResultBeOptional ? SchemaUtilities.makeNullable(result) : result;
+  }
+
+  @Override
+  public Schema primitive(PrimitiveTypeInfo primitive, Schema partner) {
+    boolean shouldResultBeOptional = partner == null || isNullableType(partner);
+    Schema hivePrimitive = hivePrimitiveToAvro(primitive);
+    // if there was no matching Avro primitive, use the Hive primitive
+    Schema result = partner == null ? hivePrimitive : checkCompatibilityAndPromote(hivePrimitive, partner);
+    return shouldResultBeOptional ? SchemaUtilities.makeNullable(result) : result;
+  }
+
+  private Schema checkCompatibilityAndPromote(Schema schema, Schema partner) {
+    // TODO: Check if schema is compatible with partner
+    //       Also do type promotion if required, schema = string & partner = enum, schema = bytes & partner = fixed, etc
+    return schema;
+  }
+
+  /**
+   * A {@link PartnerAccessor} which matches the requested field from a partner Avro struct by case insensitive
+   * field name match
+   */
+  private static class AvroPartnerAccessor implements PartnerAccessor<Schema, Schema.Field> {
+    private static final AvroPartnerAccessor INSTANCE = new AvroPartnerAccessor();
+
+    private static final Schema MAP_KEY = Schema.create(Schema.Type.STRING);
+
+    @Override
+    public Schema.Field fieldPartner(Schema partner, String fieldName) {
+      Schema schema = extractIfOption(partner);
+      return (schema.getType() == Schema.Type.RECORD) ? findCaseInsensitive(schema, fieldName) : null;
+    }
+
+    @Override
+    public Schema fieldType(Schema.Field partnerField) {
+      return partnerField.schema();
+    }
+
+    @Override
+    public Schema mapKeyPartner(Schema partner) {
+      Schema schema = extractIfOption(partner);
+      return (schema.getType() == Schema.Type.MAP) ? MAP_KEY : null;
+    }
+
+    @Override
+    public Schema mapValuePartner(Schema partner) {
+      Schema schema = extractIfOption(partner);
+      return (schema.getType() == Schema.Type.MAP) ? schema.getValueType() : null;
+    }
+
+    @Override
+    public Schema listElementPartner(Schema partner) {
+      Schema schema = extractIfOption(partner);
+      return (schema.getType() == Schema.Type.ARRAY) ? schema.getElementType() : null;
+    }
+
+    private Schema.Field findCaseInsensitive(Schema struct, String fieldName) {
+      Preconditions.checkArgument(struct.getType() == Schema.Type.RECORD);
+      // TODO: Optimize? This will be called for every struct field, we will run the for loop for every struct field
+      for (Schema.Field field : struct.getFields()) {
+        if (field.name().equalsIgnoreCase(fieldName)) {
+          return field;
+        }
+      }
+      return null;
+    }
+  }
+
+  private static Schema extractIfOption(Schema schema) {
+    if (isNullableType(schema)) {
+      return getOtherTypeFromNullableType(schema);
+    } else {
+      return schema;
+    }
+  }
+
+  // Additional numeric type, similar to other logical type names in AvroSerde
+  private static final String SHORT_TYPE_NAME = "short";
+  private static final String BYTE_TYPE_NAME = "byte";
+
+  // TODO: This should be refactored into a visitor if we ever require conversion of complex types
+  public Schema hivePrimitiveToAvro(PrimitiveTypeInfo primitive) {
+    switch (primitive.getPrimitiveCategory()) {
+      case INT:
+      case BYTE:
+      case SHORT:
+        return Schema.create(Schema.Type.INT);
+
+      case LONG:
+        return Schema.create(Schema.Type.LONG);
+
+      case FLOAT:
+        return Schema.create(Schema.Type.FLOAT);
+
+      case DOUBLE:
+        return Schema.create(Schema.Type.DOUBLE);
+
+      case BOOLEAN:
+        return Schema.create(Schema.Type.BOOLEAN);
+
+      case CHAR:
+      case STRING:
+      case VARCHAR:
+        return Schema.create(Schema.Type.STRING);
+
+      case BINARY:
+        return Schema.create(Schema.Type.BYTES);
+
+      case VOID:
+        return Schema.create(Schema.Type.NULL);
+
+      case DATE:
+        Schema dateSchema = Schema.create(Schema.Type.INT);
+        dateSchema.addProp(AvroSerDe.AVRO_PROP_LOGICAL_TYPE, AvroSerDe.DATE_TYPE_NAME);
+
+        return dateSchema;
+
+      case TIMESTAMP:
+        Schema timestampSchema = Schema.create(Schema.Type.LONG);
+        timestampSchema.addProp(AvroSerDe.AVRO_PROP_LOGICAL_TYPE, AvroSerDe.TIMESTAMP_TYPE_NAME);
+
+        return timestampSchema;
+
+      case DECIMAL:
+        DecimalTypeInfo dti = (DecimalTypeInfo) primitive;
+        JsonNodeFactory factory = JsonNodeFactory.instance;
+        Schema decimalSchema = Schema.create(Schema.Type.BYTES);
+        decimalSchema.addProp(AvroSerDe.AVRO_PROP_LOGICAL_TYPE, AvroSerDe.DECIMAL_TYPE_NAME);
+        decimalSchema.addProp(AvroSerDe.AVRO_PROP_PRECISION, factory.numberNode(dti.getPrecision()));
+        decimalSchema.addProp(AvroSerDe.AVRO_PROP_SCALE, factory.numberNode(dti.getScale()));
+
+        return decimalSchema;
+
+      default:
+        throw new UnsupportedOperationException(primitive + " is not supported.");
+    }
+  }
+}
