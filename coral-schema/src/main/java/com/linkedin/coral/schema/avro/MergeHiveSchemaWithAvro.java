@@ -127,8 +127,21 @@ class MergeHiveSchemaWithAvro extends HiveSchemaWithPartnerVisitor<Schema, Schem
 
   private Schema checkCompatibilityAndPromote(Schema schema, Schema partner) {
     // TODO: Check if schema is compatible with partner
-    //       Also do type promotion if required, schema = string & partner = enum, schema = bytes & partner = fixed, etc
-    return schema;
+    Schema extractedPartnerSchema = extractIfOption(partner);
+    switch (schema.getType()) {
+      case BYTES:
+        if (extractedPartnerSchema.getType().equals(Schema.Type.FIXED)) {
+          return partner;
+        }
+        return schema;
+      case STRING:
+        if (extractedPartnerSchema.getType().equals(Schema.Type.ENUM)) {
+          return partner;
+        }
+        return schema;
+      default:
+        return schema;
+    }
   }
 
   /**
