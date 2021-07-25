@@ -68,7 +68,7 @@ class MergeHiveSchemaWithAvro extends HiveSchemaWithPartnerVisitor<Schema, Schem
     // in their field results if required
     if (partner == null) {
       // if there was no matching Avro field, use name form the Hive schema and set a null default
-      return new Schema.Field(SchemaUtilities.makeCompatibleName(name), fieldResult, null, (JsonNode) new Object());
+      return new Schema.Field(SchemaUtilities.makeCompatibleName(name), fieldResult, null, null);
     } else {
       // TODO: How to ensure that field default value is compatible with new field type generated from Hive?
       // Copy field type from the visitor result, copy everything else from the partner
