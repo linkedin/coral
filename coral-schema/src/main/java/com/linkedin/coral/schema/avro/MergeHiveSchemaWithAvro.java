@@ -31,8 +31,6 @@ import static org.apache.hadoop.hive.serde2.avro.AvroSerdeUtils.*;
  * 1. Fields are matched between Hive and Avro schemas using a case insensitive search by field name
  * 2. Copies field names, nullability, default value, field props from the Avro schema
  * 3. Copies field type from the Hive schema.
- *    TODO: We should also handle some cases of type promotion where the types in Avro are potentially more correct
- *    e.g.BINARY in Hive -> FIXED in Avro, STRING in Hive -> ENUM in Avro, etc
  * 4. Retains fields found only in the Hive schema; Ignores fields found only in the Avro schema
  * 5. Fields found only in Hive schema are represented as optional fields in the resultant Avro schema
  * 6. For fields found only in Hive schema, field names are sanitized to make them compatible with Avro identifier spec
@@ -43,7 +41,6 @@ class MergeHiveSchemaWithAvro extends HiveSchemaWithPartnerVisitor<Schema, Schem
     return HiveSchemaWithPartnerVisitor.visit(typeInfo, schema, new MergeHiveSchemaWithAvro(),
         AvroPartnerAccessor.INSTANCE);
   }
-
   private final AtomicInteger recordCounter = new AtomicInteger(0);
 
   @Override
