@@ -523,7 +523,7 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
    * the return field names in `UDTF_RETURN_FIELD_NAME_MAP`
    */
   public static void createAddUserDefinedTableFunction(String functionName, ImmutableList<String> returnFieldNames,
-      ImmutableList<Object> returnFieldTypes, SqlOperandTypeChecker operandTypeChecker) {
+      ImmutableList<?> returnFieldTypes, SqlOperandTypeChecker operandTypeChecker) {
     Preconditions.checkArgument(!returnFieldTypes.isEmpty() && returnFieldTypes.size() == returnFieldNames.size()
         && (returnFieldTypes.stream().allMatch(type -> type instanceof SqlTypeName)
             || returnFieldTypes.stream().allMatch(type -> type instanceof SqlReturnTypeInference)));
