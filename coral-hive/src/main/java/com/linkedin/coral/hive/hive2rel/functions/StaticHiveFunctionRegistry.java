@@ -524,6 +524,9 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
    */
   public static void createAddUserDefinedTableFunction(String functionName, ImmutableList<String> returnFieldNames,
       ImmutableList<?> returnFieldTypes, SqlOperandTypeChecker operandTypeChecker) {
+    // The type of returnFieldTypes can only be ImmutableList<SqlTypeName> or ImmutableList<SqlReturnTypeInference>
+    // ImmutableList<SqlTypeName> is used with HiveReturnTypes.rowOf(ImmutableList<String> fieldNames, ImmutableList<SqlTypeName> types)
+    // ImmutableList<SqlReturnTypeInference> is used with HiveReturnTypes.rowOfInference(ImmutableList<String> fieldNames, ImmutableList<SqlReturnTypeInference> types)
     Preconditions.checkArgument(!returnFieldTypes.isEmpty() && returnFieldTypes.size() == returnFieldNames.size()
         && (returnFieldTypes.stream().allMatch(type -> type instanceof SqlTypeName)
             || returnFieldTypes.stream().allMatch(type -> type instanceof SqlReturnTypeInference)));
