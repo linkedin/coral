@@ -323,6 +323,21 @@ public class ViewToAvroSchemaConverterTests {
   }
 
   @Test
+  public void testLateralUDTF() {
+    String viewSql = "CREATE VIEW foo_lateral_udtf "
+        + "tblproperties('functions' = 'CountOfRow:com.linkedin.coral.hive.hive2rel.CoralTestUDTF') " + "AS "
+        + "SELECT bc.Id AS Id_View_Col, t.col1 as Col1 " + "FROM basecomplex bc "
+        + "LATERAL VIEW default_foo_lateral_udtf_CountOfRow(bc.Id) t";
+
+    TestUtils.executeCreateViewQuery("default", "foo_lateral_udtf", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "foo_lateral_udtf");
+
+    Assert.assertEquals(actualSchema.toString(true), TestUtils.loadSchema("testLateralUDTF-expected.avsc"));
+  }
+
+  @Test
   public void testInnerJoin() {
     String viewSql = "CREATE VIEW v AS " + "SELECT bc.id, bc.struct_col, be.enum_top_col " + "FROM basecomplex bc "
         + "JOIN baseenum be ON bc.id = be.id " + "WHERE bc.id > 0 AND bc.struct_col IS NOT NULL";
