@@ -1,0 +1,16 @@
+{
+  "type" : "record",
+  "name" : "v",
+  "namespace" : "default.v",
+  "fields" : [ {
+    "name" : "Id_View_Col",
+    "type" : "int",
+    "doc" : "Sample id of the record."
+  }, {
+    "name" : "Array_Lateral_View_String_Col",
+    "type" : [ "null", "string" ]
+  }, {
+    "name" : "Array_Lateral_View_Double_Col",
+    "type" : [ "null", "double" ]
+  } ]
+}

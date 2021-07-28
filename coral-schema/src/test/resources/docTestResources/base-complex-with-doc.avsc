@@ -1,0 +1,68 @@
+{
+  "type" : "record",
+  "name" : "basecomplex",
+  "namespace" : "coral.schema.avro.base.complex",
+  "fields" : [ {
+    "name" : "Id",
+    "type" : "int",
+    "doc" : "Sample id of the record."
+  }, {
+    "name" : "Array_Col",
+    "type" : [ "null", {
+      "type" : "array",
+      "items" : [ "null", "string" ]
+    } ],
+    "doc" : "Sample array col.",
+    "default" : null
+  }, {
+    "name" : "Map_Col",
+    "type" : [ "null", {
+      "type" : "map",
+      "values" : [ "null", "string" ]
+    } ],
+    "doc" : "Sample map col.",
+    "default" : null
+  }, {
+    "name" : "Struct_Col",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "Struct_col",
+      "namespace" : "coral.schema.avro.base.complex.basecomplex",
+      "fields" : [ {
+        "name" : "Bool_Field",
+        "type" : "boolean",
+        "doc" : "Sample boolean field."
+      }, {
+        "name" : "Int_Field",
+        "type" : [ "null", "int" ],
+        "doc" : "Sample int field.",
+        "default" : null
+      }, {
+        "name" : "Bigint_Field",
+        "type" : "long",
+        "doc" : "Sample long field."
+      }, {
+        "name" : "Float_Field",
+        "type" : [ "null", "float" ],
+        "doc" : "Sample float field.",
+        "default" : null
+      }, {
+        "name" : "Double_Field",
+        "type" : "double",
+        "doc" : "Sample double field."
+      }, {
+        "name" : "Date_String_Field",
+        "type" : [ "null", "string" ],
+        "doc" : "Sample string representing date field.",
+        "default" : null
+      }, {
+        "name" : "String_Field",
+        "type" : [ "null", "string" ],
+        "doc" : "Sample string field.",
+        "default" : null
+      } ]
+    } ],
+    "doc" : "Sample struct col.",
+    "default" : null
+  } ]
+}
