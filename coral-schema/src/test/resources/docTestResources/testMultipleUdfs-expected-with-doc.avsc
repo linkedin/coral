@@ -1,0 +1,19 @@
+{
+  "type" : "record",
+  "name" : "foo_dali_multiple_udfs",
+  "namespace" : "default.foo_dali_multiple_udfs",
+  "fields" : [ {
+    "name" : "Id_Viewc_Col",
+    "type" : "int",
+    "doc" : "Sample id of the record."
+  }, {
+    "name" : "Id_View_LessThanHundred_Col",
+    "type" : "boolean"
+  }, {
+    "name" : "Id_View_GreaterThanHundred_Col",
+    "type" : "boolean"
+  }, {
+    "name" : "Id_View_FuncSquare_Col",
+    "type" : "int"
+  } ]
+}

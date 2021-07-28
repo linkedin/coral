@@ -294,7 +294,7 @@ public class RelToAvroSchemaConverter {
       for (Pair<AggregateCall, String> aggCall : logicalAggregate.getNamedAggCalls()) {
         String fieldName = SchemaUtilities.toAvroQualifiedName(aggCall.right);
         RelDataType fieldType = aggCall.left.getType();
-        SchemaUtilities.appendField(fieldName, fieldType, logicalAggregateFieldAssembler, true);
+        SchemaUtilities.appendField(fieldName, fieldType, null, logicalAggregateFieldAssembler, true);
       }
 
       schemaMap.put(logicalAggregate, logicalAggregateFieldAssembler.endRecord());
@@ -328,7 +328,7 @@ public class RelToAvroSchemaConverter {
             SchemaBuilder.record("LateralViews").namespace("LateralViews").fields();
 
         for (RelDataTypeField field : relNode.getRowType().getFieldList()) {
-          SchemaUtilities.appendField(field.getName(), field.getType(), hiveUncollectFieldAssembler, true);
+          SchemaUtilities.appendField(field.getName(), field.getType(), null, hiveUncollectFieldAssembler, true);
         }
 
         schemaMap.put(relNode, hiveUncollectFieldAssembler.endRecord());
@@ -397,11 +397,14 @@ public class RelToAvroSchemaConverter {
       return super.visitLocalRef(rexLocalRef);
     }
 
+    /*
+     * TODO: Populate doc for queries with literal.
+     */
     @Override
     public RexNode visitLiteral(RexLiteral rexLiteral) {
       RexNode rexNode = super.visitLiteral(rexLiteral);
       RelDataType fieldType = rexLiteral.getType();
-      appendField(fieldType, true);
+      appendField(fieldType, true, null);
 
       return rexNode;
     }
@@ -412,11 +415,12 @@ public class RelToAvroSchemaConverter {
         /**
          * For SqlUserDefinedFunction and SqlOperator RexCall, no need to handle it recursively
          * and only return type of udf or sql operator is relevant
+         * TODO: Populate doc for queries with rex call.
          */
         RelDataType fieldType = rexCall.getType();
         boolean isNullable = SchemaUtilities.isFieldNullable(rexCall, inputSchema);
 
-        appendField(fieldType, isNullable);
+        appendField(fieldType, isNullable, null);
 
         return rexCall;
       } else {
@@ -497,9 +501,9 @@ public class RelToAvroSchemaConverter {
       return super.visitPatternFieldRef(rexPatternFieldRef);
     }
 
-    private void appendField(RelDataType fieldType, boolean isNullable) {
+    private void appendField(RelDataType fieldType, boolean isNullable, String doc) {
       String fieldName = SchemaUtilities.getFieldName("", suggestedFieldNames.poll());
-      SchemaUtilities.appendField(fieldName, fieldType, fieldAssembler, isNullable);
+      SchemaUtilities.appendField(fieldName, fieldType, doc, fieldAssembler, isNullable);
     }
 
     /**

@@ -1,0 +1,24 @@
+{
+  "type" : "record",
+  "name" : "v",
+  "namespace" : "default.v",
+  "fields" : [ {
+    "name" : "Id_View_Col",
+    "type" : "int",
+    "doc" : "Sample id of the record."
+  }, {
+    "name" : "Additional_Int",
+    "type" : [ "null", "int" ]
+  }, {
+    "name" : "EXPR_2",
+    "type" : [ "null", "int" ]
+  }, {
+    "name" : "Array_View_Col",
+    "type" : [ "null", {
+      "type" : "array",
+      "items" : [ "null", "string" ]
+    } ],
+    "doc" : "Sample array col.",
+    "default" : null
+  } ]
+}

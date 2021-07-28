@@ -748,5 +748,122 @@ public class ViewToAvroSchemaConverterTests {
 
     Assert.assertEquals(actualSchema.toString(true), TestUtils.loadSchema("testNullUnionNonNullField-expected.avsc"));
   }
+
+  @Test
+  public void testFullOuterJoinWithDoc() {
+    String viewSql = "CREATE VIEW v AS "
+        + "SELECT bc.id, bc.struct_col, be.enum_top_col "
+        + "FROM basecomplexwithdoc bc "
+        + "FULL OUTER JOIN baseenumwithdoc be ON bc.id = be.id "
+        + "WHERE bc.id > 0 AND bc.struct_col IS NOT NULL";
+
+    TestUtils.executeCreateViewQuery("default", "v", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v");
+
+    Assert.assertEquals(actualSchema.toString(true),
+        TestUtils.loadSchema("docTestResources/testJoin-expected-with-doc.avsc"));
+  }
+
+
+  /*
+   * TODO : Discuss how to deal with expressions.
+   */
+  @Test
+  public void testSelectWithLiteralsWithDoc() {
+    String viewSql = "CREATE VIEW v AS "
+        + "SELECT bc.Id AS Id_View_Col, 100 AS Additional_Int, 200, bc.Array_Col AS Array_View_Col "
+        + "FROM basecomplexwithdoc bc "
+        + "WHERE bc.Id > 0 AND bc.Struct_Col IS NOT NULL";
+
+    TestUtils.executeCreateViewQuery("default", "v", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v");
+
+    Assert.assertEquals(actualSchema.toString(true),
+        TestUtils.loadSchema("docTestResources/testSelectWithLiterals-expected-with-doc.avsc"));
+  }
+
+  /*
+   * TODO: enhance documentation for aggregate cols.
+   */
+  @Test
+  public void testAggregateRenameWithDoc() {
+    String viewSql =
+        "CREATE VIEW v AS " + "SELECT bc.Id AS Id_View_Col, COUNT(*) AS Count_Col " + "FROM basecomplexwithdoc bc " + "WHERE bc.Id > 0 "
+            + "GROUP BY bc.Id";
+
+    TestUtils.executeCreateViewQuery("default", "v", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v");
+
+    Assert.assertEquals(actualSchema.toString(true), TestUtils.loadSchema(
+        "docTestResources/testAggregateRename-expected-with-doc.avsc"));
+  }
+
+  /*
+   * TODO: enhance handling of rex calls and modify this test case.
+   */
+  @Test
+  public void testRexCallAggregateWithDoc() {
+    String viewSql = "CREATE VIEW v AS "
+        + "SELECT 22*COUNT(bc.Id) AS Temp "
+        + "FROM basecomplexwithdoc bc";
+
+    TestUtils.executeCreateViewQuery("default", "v", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v");
+
+    Assert.assertEquals(actualSchema.toString(true),
+        TestUtils.loadSchema("docTestResources/testRexCallAggregate-expected-with-doc.avsc"));
+  }
+
+  /*
+   * TODO: Documentation of UDFs should be handled as part of enhancements of documentation for RexCall
+   */
+  @Test
+  public void testMultipleUdfsWithDoc() {
+    String viewSql = "CREATE VIEW foo_dali_multiple_udfs "
+        + "tblproperties('functions' = 'LessThanHundred:com.linkedin.coral.hive.hive2rel.CoralTestUDF1 GreaterThanHundred:com.linkedin.coral.hive.hive2rel.CoralTestUDF2 FuncSquare:com.linkedin.coral.hive.hive2rel.CoralTestUDF3', "
+        + "              'dependencies' = 'ivy://com.linkedin:udf:1.0 ivy://com.linkedin:udf:1.0 ivy://com.linkedin:udf:1.0') "
+        + "AS "
+        + "SELECT Id AS Id_Viewc_Col, "
+        + "default_foo_dali_multiple_udfs_LessThanHundred(Id) AS Id_View_LessThanHundred_Col,"
+        + "default_foo_dali_multiple_udfs_GreaterThanHundred(Id) AS Id_View_GreaterThanHundred_Col, "
+        + "default_foo_dali_multiple_udfs_FuncSquare(Id) AS Id_View_FuncSquare_Col "
+        + "FROM basecomplexwithdoc";
+
+    TestUtils.executeCreateViewQuery("default", "foo_dali_multiple_udfs", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "foo_dali_multiple_udfs");
+
+    Assert.assertEquals(actualSchema.toString(true),
+        TestUtils.loadSchema("docTestResources/testMultipleUdfs-expected-with-doc.avsc"));
+  }
+
+  /*
+   * TODO: test case need to be enhanced for when a lateral is used to generate a column.
+   */
+  @Test
+  public void testMultipleLateralViewDifferentArrayTypeWithDoc() {
+    String viewSql = "CREATE VIEW v AS "
+        + "SELECT bl.Id AS Id_View_Col, t1.Array_Lateral_View_String_Col, t2.Array_Lateral_View_Double_Col "
+        + "FROM baselateralviewwithdoc bl "
+        + "LATERAL VIEW explode(bl.Array_Col_String) t1 as Array_Lateral_View_String_Col "
+        + "LATERAL VIEW explode(bl.Array_Col_Double) t2 as Array_Lateral_View_Double_Col";
+
+    TestUtils.executeCreateViewQuery("default", "v", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v");
+
+    Assert.assertEquals(actualSchema.toString(true),
+        TestUtils.loadSchema("docTestResources/testMultipleLateralViewDifferentArrayType-expected-with-doc.avsc"));
+  }
   // TODO: add more unit tests
 }

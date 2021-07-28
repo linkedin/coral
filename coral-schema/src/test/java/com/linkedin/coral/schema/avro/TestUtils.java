@@ -96,6 +96,13 @@ public class TestUtils {
     executeCreateTableWithPartitionFieldSchemaQuery("default", "basecomplexfieldschema", baseComplexFieldSchema);
     executeCreateTableWithPartitionQuery("default", "basenestedcomplex", baseNestedComplexSchema);
 
+    String baseComplexSchemaWithDoc = loadSchema("docTestResources/base-complex-with-doc.avsc");
+    String baseEnumSchemaWithDoc = loadSchema("docTestResources/base-enum-with-doc.avsc");
+    String baseLateralViewSchemaWithDoc = loadSchema("docTestResources/base-lateralview-with-doc.avsc");
+    executeCreateTableQuery("default", "basecomplexwithdoc", baseComplexSchemaWithDoc);
+    executeCreateTableQuery("default", "baseenumwithdoc", baseEnumSchemaWithDoc);
+    executeCreateTableQuery("default", "baselateralviewwithdoc", baseLateralViewSchemaWithDoc);
+
     // Creates a table with deep nested structs
     executeQuery("DROP TABLE IF EXISTS basedeepnestedcomplex");
     executeQuery("CREATE TABLE IF NOT EXISTS basedeepnestedcomplex("

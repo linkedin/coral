@@ -17,6 +17,7 @@ import javax.annotation.Nonnull;
 
 import com.google.common.annotations.VisibleForTesting;
 
+import javax.annotation.Nullable;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
 import org.apache.calcite.rel.type.RelDataType;
@@ -153,7 +154,10 @@ class SchemaUtilities {
 
     JsonNode defaultValue = field.defaultValue();
 
-    SchemaBuilder.GenericDefault genericDefault = fieldAssembler.name(field.name()).type(field.schema());
+    SchemaBuilder.GenericDefault genericDefault = fieldAssembler
+        .name(field.name())
+        .doc(field.doc())
+        .type(field.schema());
     if (defaultValue != null) {
       genericDefault.withDefault(defaultValue);
     } else {
@@ -166,9 +170,10 @@ class SchemaUtilities {
    *
    * @param fieldName
    * @param fieldRelDataType
+   * @param doc
    * @param fieldAssembler
    */
-  static void appendField(@Nonnull String fieldName, @Nonnull RelDataType fieldRelDataType,
+  static void appendField(@Nonnull String fieldName, @Nonnull RelDataType fieldRelDataType, @Nullable String doc,
       @Nonnull SchemaBuilder.FieldAssembler<Schema> fieldAssembler, @Nonnull boolean isNullable) {
     Preconditions.checkNotNull(fieldName);
     Preconditions.checkNotNull(fieldRelDataType);
@@ -179,9 +184,9 @@ class SchemaUtilities {
     // TODO: handle default value properly
     if (isNullable && fieldSchema.getType() != Schema.Type.NULL) {
       Schema fieldSchemaNullable = Schema.createUnion(Arrays.asList(fieldSchema, Schema.create(Schema.Type.NULL)));
-      fieldAssembler.name(fieldName).type(fieldSchemaNullable).noDefault();
+      fieldAssembler.name(fieldName).doc(doc).type(fieldSchemaNullable).noDefault();
     } else {
-      fieldAssembler.name(fieldName).type(fieldSchema).noDefault();
+      fieldAssembler.name(fieldName).doc(doc).type(fieldSchema).noDefault();
     }
   }
 
@@ -219,7 +224,7 @@ class SchemaUtilities {
 
     JsonNode defaultValue = field.defaultValue();
 
-    SchemaBuilder.GenericDefault genericDefault = fieldAssembler.name(fieldName).type(field.schema());
+    SchemaBuilder.GenericDefault genericDefault = fieldAssembler.name(fieldName).doc(field.doc()).type(field.schema());
     if (defaultValue != null) {
       genericDefault.withDefault(defaultValue);
     } else {
@@ -517,7 +522,7 @@ class SchemaUtilities {
     }
 
     JsonNode defaultValue = field.defaultValue();
-    SchemaBuilder.GenericDefault genericDefault = fieldAssembler.name(field.name()).type(fieldSchema);
+    SchemaBuilder.GenericDefault genericDefault = fieldAssembler.name(field.name()).doc(field.doc()).type(fieldSchema);
     if (defaultValue != null) {
       genericDefault.withDefault(defaultValue);
     } else {
