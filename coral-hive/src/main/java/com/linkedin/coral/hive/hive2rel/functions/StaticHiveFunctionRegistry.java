@@ -7,8 +7,13 @@ package com.linkedin.coral.hive.hive2rel.functions;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
+
+import com.google.common.base.Preconditions;
 
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
@@ -54,6 +59,10 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
 
   // TODO: Make this immutable using builder
   static final Multimap<String, HiveFunction> FUNCTION_MAP = HashMultimap.create();
+
+  // Used for registering UDTFs, the key is the function name and the value is a list of field names returned by the UDTF
+  // We need it because we need to know the return field names of UDTF to do the conversion in ParseTreeBuilder.visitLateralViewUDTF
+  public static final Map<String, ImmutableList<String>> UDTF_RETURN_FIELD_NAME_MAP = new HashMap<>();
 
   static {
     // NOTE: All function names will be added as lowercase for case-insensitive comparison.
@@ -456,6 +465,14 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
     addFunctionEntry("explode", HiveExplodeOperator.EXPLODE);
     addFunctionEntry("json_tuple", HiveJsonTupleOperator.JSON_TUPLE);
 
+    // Generic UDTFs
+    createAddUserDefinedTableFunction("com.linkedin.tsar.hive.udf.ToJymbiiScores",
+        ImmutableList.of("job_urn", "rank", "glmix_score", "global_model_score", "sentinel_score", "job_effect_score",
+            "member_effect_score"),
+        ImmutableList.of(SqlTypeName.VARCHAR, SqlTypeName.INTEGER, SqlTypeName.DOUBLE, SqlTypeName.DOUBLE,
+            SqlTypeName.DOUBLE, SqlTypeName.DOUBLE, SqlTypeName.DOUBLE),
+        family(SqlTypeFamily.ARRAY, SqlTypeFamily.ARRAY));
+
     // Context functions
     addFunctionEntry("current_user", CURRENT_USER);
   }
@@ -499,6 +516,34 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
       dependency = "ivy://" + dependency;
     }
     addFunctionEntry(functionName, createCalciteUDF(functionName, returnTypeInference, operandTypeChecker));
+  }
+
+  /**
+   * Adds the generic UDTF, which is almost same as how we register for LinkedIn UDFs except that we need to register
+   * the return field names in `UDTF_RETURN_FIELD_NAME_MAP`
+   */
+  public static void createAddUserDefinedTableFunction(String functionName, ImmutableList<String> returnFieldNames,
+      ImmutableList<?> returnFieldTypes, SqlOperandTypeChecker operandTypeChecker) {
+    // The type of returnFieldTypes can only be ImmutableList<SqlTypeName> or ImmutableList<SqlReturnTypeInference>
+    // ImmutableList<SqlTypeName> is used with HiveReturnTypes.rowOf(ImmutableList<String> fieldNames, ImmutableList<SqlTypeName> types)
+    // ImmutableList<SqlReturnTypeInference> is used with HiveReturnTypes.rowOfInference(ImmutableList<String> fieldNames, ImmutableList<SqlReturnTypeInference> types)
+    Preconditions.checkArgument(!returnFieldTypes.isEmpty() && returnFieldTypes.size() == returnFieldNames.size()
+        && (returnFieldTypes.stream().allMatch(type -> type instanceof SqlTypeName)
+            || returnFieldTypes.stream().allMatch(type -> type instanceof SqlReturnTypeInference)));
+    if (returnFieldTypes.get(0) instanceof SqlTypeName) {
+      createAddUserDefinedFunction(functionName,
+          HiveReturnTypes.rowOf(returnFieldNames,
+              ImmutableList
+                  .copyOf(returnFieldTypes.stream().map(type -> (SqlTypeName) type).collect(Collectors.toList()))),
+          operandTypeChecker);
+    } else {
+      createAddUserDefinedFunction(functionName,
+          HiveReturnTypes.rowOfInference(returnFieldNames,
+              ImmutableList.copyOf(
+                  returnFieldTypes.stream().map(type -> (SqlReturnTypeInference) type).collect(Collectors.toList()))),
+          operandTypeChecker);
+    }
+    UDTF_RETURN_FIELD_NAME_MAP.put(functionName, returnFieldNames);
   }
 
   private static SqlOperator createCalciteUDF(String functionName, SqlReturnTypeInference returnTypeInference,

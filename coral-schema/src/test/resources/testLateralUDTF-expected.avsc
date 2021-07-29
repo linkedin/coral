@@ -1,0 +1,12 @@
+{
+  "type" : "record",
+  "name" : "foo_lateral_udtf",
+  "namespace" : "default.foo_lateral_udtf",
+  "fields" : [ {
+    "name" : "Id_View_Col",
+    "type" : "int"
+  }, {
+    "name" : "Col1",
+    "type" : [ "null", "int" ]
+  } ]
+}

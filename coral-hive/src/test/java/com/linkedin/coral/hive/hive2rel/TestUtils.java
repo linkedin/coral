@@ -174,6 +174,14 @@ public class TestUtils {
       }
 
       driver.run(
+          "create function test_tableOneViewLateralUDTF_CountOfRow as 'com.linkedin.coral.hive.hive2rel.CoralTestUDTF'");
+      response = driver.run(
+          "CREATE VIEW IF NOT EXISTS test.tableOneViewLateralUDTF AS SELECT a, t.col1 FROM test.tableOne LATERAL VIEW test_tableOneViewLateralUDTF_CountOfRow(tableOne.a) t");
+      if (response.getResponseCode() != 0) {
+        throw new RuntimeException("Failed to setup view");
+      }
+
+      driver.run(
           "CREATE TABLE IF NOT EXISTS union_table(foo uniontype<int, double, array<string>, struct<a:int,b:string>>)");
 
       testHive.databases =
@@ -197,7 +205,10 @@ public class TestUtils {
       msc.alter_table("default", "foo_view", fooViewTable);
       Table tableOneView = msc.getTable("test", "tableOneView");
       setOrUpdateDaliFunction(tableOneView, "LessThanHundred", "com.linkedin.coral.hive.hive2rel.CoralTestUDF");
+      Table tableOneViewLateralUDTF = msc.getTable("test", "tableOneViewLateralUDTF");
+      setOrUpdateDaliFunction(tableOneViewLateralUDTF, "CountOfRow", "com.linkedin.coral.hive.hive2rel.CoralTestUDTF");
       msc.alter_table("test", "tableOneView", tableOneView);
+      msc.alter_table("test", "tableOneViewLateralUDTF", tableOneViewLateralUDTF);
       hive = testHive;
       return hive;
     } catch (Exception e) {

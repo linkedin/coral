@@ -14,8 +14,6 @@ import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import com.google.common.collect.ImmutableList;
-
 import org.apache.calcite.sql.JoinConditionType;
 import org.apache.calcite.sql.JoinType;
 import org.apache.calcite.sql.SqlAsOperator;
@@ -25,6 +23,8 @@ import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlDataTypeSpec;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlJoin;
+import org.apache.calcite.sql.SqlKind;
+import org.apache.calcite.sql.SqlLateralOperator;
 import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlNodeList;
@@ -36,6 +36,7 @@ import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.hadoop.hive.metastore.api.Table;
 
+import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import com.linkedin.coral.com.google.common.collect.Iterables;
 import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
 import com.linkedin.coral.hive.hive2rel.functions.FunctionFieldReferenceOperator;
@@ -46,6 +47,7 @@ import com.linkedin.coral.hive.hive2rel.functions.HiveFunctionResolver;
 import com.linkedin.coral.hive.hive2rel.functions.HiveJsonTupleOperator;
 import com.linkedin.coral.hive.hive2rel.functions.HiveRLikeOperator;
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
+import com.linkedin.coral.hive.hive2rel.functions.VersionedSqlUserDefinedFunction;
 import com.linkedin.coral.hive.hive2rel.parsetree.parser.ASTNode;
 import com.linkedin.coral.hive.hive2rel.parsetree.parser.CoralParseDriver;
 import com.linkedin.coral.hive.hive2rel.parsetree.parser.Node;
@@ -217,7 +219,43 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
       return visitLateralViewJsonTuple(sqlNodes, aliasOperands, tableFunctionCall);
     }
 
+    if (tableFunctionCall.getOperator() instanceof VersionedSqlUserDefinedFunction) {
+      return visitLateralViewUDTF(sqlNodes, aliasOperands, tableFunctionCall);
+    }
+
     throw new UnsupportedOperationException(format("Unsupported LATERAL VIEW operator: %s", tableFunctionCall));
+  }
+
+  /**
+   * For generic UDTFs, we treat them as LinkedIn UDFs and make the following conversion:
+   *
+   * SELECT a, t.col1
+   * FROM test.tableOne
+   * LATERAL VIEW `com.linkedin.coral.hive.hive2rel.CoralTestUDTF`(`tableone`.`a`) `t`
+   * ->
+   * SELECT a, t.col1
+   * FROM test.tableOne
+   * LATERAL COLLECTION_TABLE(`com.linkedin.coral.hive.hive2rel.CoralTestUDTF`(`tableone`.`a`)) AS `t` (`col1`)
+   *
+   * therefore, we need to get the return field names (`col1` in the above example) of the UDTF from
+   * `StaticHiveFunctionRegistry.UDTF_RETURN_FIELD_NAME_MAP`.
+   */
+  private SqlNode visitLateralViewUDTF(List<SqlNode> sqlNodes, List<SqlNode> aliasOperands, SqlCall tableFunctionCall) {
+    SqlNode lateralCall = SqlStdOperatorTable.LATERAL.createCall(ZERO,
+        new SqlLateralOperator(SqlKind.COLLECTION_TABLE).createCall(ZERO, tableFunctionCall));
+    final String functionName = tableFunctionCall.getOperator().getName();
+    ImmutableList<String> fieldNames =
+        StaticHiveFunctionRegistry.UDTF_RETURN_FIELD_NAME_MAP.getOrDefault(functionName, null);
+    if (fieldNames == null) {
+      throw new RuntimeException("User defined table function " + functionName + " is not registered.");
+    }
+    List<SqlNode> asOperands = new ArrayList<>();
+    asOperands.add(lateralCall);
+    asOperands.add(aliasOperands.get(1));
+    fieldNames.forEach(name -> asOperands.add(new SqlIdentifier(name, ZERO)));
+    SqlCall aliasCall = SqlStdOperatorTable.AS.createCall(ZERO, asOperands);
+    return new SqlJoin(ZERO, sqlNodes.get(1), SqlLiteral.createBoolean(false, ZERO), JoinType.COMMA.symbol(ZERO),
+        aliasCall/*lateralCall*/, JoinConditionType.NONE.symbol(ZERO), null);
   }
 
   private SqlNode visitLateralViewExplode(List<SqlNode> sqlNodes, List<SqlNode> aliasOperands,

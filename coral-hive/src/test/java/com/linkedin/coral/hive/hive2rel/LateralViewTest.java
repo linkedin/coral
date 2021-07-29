@@ -9,11 +9,18 @@ import java.io.IOException;
 
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.sql.type.SqlTypeFamily;
+import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import com.linkedin.coral.com.google.common.collect.ImmutableList;
+import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
+
+import static com.linkedin.coral.hive.hive2rel.ToRelConverter.*;
+import static org.apache.calcite.sql.type.OperandTypes.*;
 import static org.testng.Assert.*;
 
 
@@ -21,6 +28,8 @@ public class LateralViewTest {
   @BeforeClass
   public static void beforeClass() throws HiveException, MetaException, IOException {
     ToRelConverter.setup();
+    StaticHiveFunctionRegistry.createAddUserDefinedTableFunction("com.linkedin.coral.hive.hive2rel.CoralTestUDTF",
+        ImmutableList.of("col1"), ImmutableList.of(SqlTypeName.INTEGER), family(SqlTypeFamily.INTEGER));
   }
 
   @Test
@@ -112,6 +121,16 @@ public class LateralViewTest {
         + "        LogicalProject(ccol=[if(>(CARDINALITY($cor0.c), 5), ARRAY(10.5:DECIMAL(3, 1)), $cor0.c)])\n"
         + "          LogicalValues(tuples=[[{ 0 }]])\n";
     assertEquals(toRelStr(sql), expected);
+  }
+
+  @Test
+  public void testLateralUDTF() {
+    RelNode rel = converter.convertView("test", "tableOneViewLateralUDTF");
+    String expectedPlan = "LogicalProject(a=[$0], col1=[$4])\n"
+        + "  LogicalCorrelate(correlation=[$cor0], joinType=[inner], requiredColumns=[{0}])\n"
+        + "    LogicalTableScan(table=[[hive, test, tableone]])\n"
+        + "    LogicalTableFunctionScan(invocation=[com.linkedin.coral.hive.hive2rel.CoralTestUDTF($cor0.a)], rowType=[RecordType(INTEGER col1)])\n";
+    assertEquals(RelOptUtil.toString(rel), expectedPlan);
   }
 
   private String toRelStr(String sql) {
