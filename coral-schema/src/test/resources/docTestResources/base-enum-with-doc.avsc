@@ -1,0 +1,85 @@
+{
+  "type" : "record",
+  "name" : "baseenum",
+  "namespace" : "coral.schema.avro.base.enum",
+  "fields" : [ {
+    "name" : "Id",
+    "type" : "int",
+    "doc" : "Id field."
+  }, {
+    "name" : "Array_Col",
+    "type" : [ "null", {
+      "type" : "array",
+      "items" : [ "null", "string" ],
+      "doc" : "Array col field."
+    } ],
+    "default" : null
+  }, {
+    "name" : "Map_Col",
+    "type" : [ "null", {
+      "type" : "map",
+      "values" : [ "null", "string" ],
+      "doc" : "Map col field."
+    } ],
+    "default" : null
+  }, {
+    "name" : "Enum_Top_Col",
+    "type" : {
+      "type" : "enum",
+      "name" : "Enum_Top_col",
+      "symbols" : [ "Spark", "Pig", "Hive", "MR" ],
+      "doc" : "Enum top col"
+    },
+    "doc" : "Enum top col."
+  }, {
+    "name" : "Struct_Col",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "Struct_col",
+      "namespace" : "coral.schema.avro.base.enum.baseenum",
+      "fields" : [ {
+        "name" : "Bool_Field",
+        "type" : "boolean",
+        "doc" : "Boolean field"
+      }, {
+        "name" : "Int_Field",
+        "type" : [ "null", "int" ],
+        "doc" : "Int field",
+        "default" : null
+      }, {
+        "name" : "Bigint_Field",
+        "type" : "long",
+        "doc" : "Big int field."
+      }, {
+        "name" : "Float_Field",
+        "type" : [ "null", "float" ],
+        "doc" : "Float field.",
+        "default" : null
+      }, {
+        "name" : "Enum_Inner_Col",
+        "type" : {
+          "type" : "enum",
+          "name" : "Enum_Inner_col",
+          "symbols" : [ "Red", "Blue", "Green" ],
+          "doc" : "Inner enum col."
+        }
+      }, {
+        "name" : "Double_Field",
+        "type" : "double",
+        "doc" : "Double field."
+      }, {
+        "name" : "Date_String_Field",
+        "type" : [ "null", "string" ],
+        "doc" : "Date string field",
+        "default" : null
+      }, {
+        "name" : "String_Field",
+        "type" : [ "null", "string" ],
+        "doc" : "String field",
+        "default" : null
+      } ]
+    } ],
+    "doc" : "Struct col.",
+    "default" : null
+  } ]
+}

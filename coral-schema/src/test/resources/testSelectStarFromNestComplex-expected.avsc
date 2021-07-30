@@ -148,6 +148,7 @@
     "default" : null
   }, {
     "name" : "datepartition",
-    "type" : "string"
+    "type" : "string",
+    "doc" : "This is the partition column. Partition columns, if present in the schema, should also be projected in the data."
   } ]
 }
