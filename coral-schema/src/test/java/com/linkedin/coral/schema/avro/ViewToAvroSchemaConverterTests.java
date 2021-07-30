@@ -751,11 +751,9 @@ public class ViewToAvroSchemaConverterTests {
 
   @Test
   public void testFullOuterJoinWithDoc() {
-    String viewSql = "CREATE VIEW v AS "
-        + "SELECT bc.id, bc.struct_col, be.enum_top_col "
-        + "FROM basecomplexwithdoc bc "
-        + "FULL OUTER JOIN baseenumwithdoc be ON bc.id = be.id "
-        + "WHERE bc.id > 0 AND bc.struct_col IS NOT NULL";
+    String viewSql =
+        "CREATE VIEW v AS " + "SELECT bc.id, bc.struct_col, be.enum_top_col " + "FROM basecomplexwithdoc bc "
+            + "FULL OUTER JOIN baseenumwithdoc be ON bc.id = be.id " + "WHERE bc.id > 0 AND bc.struct_col IS NOT NULL";
 
     TestUtils.executeCreateViewQuery("default", "v", viewSql);
 
@@ -766,16 +764,14 @@ public class ViewToAvroSchemaConverterTests {
         TestUtils.loadSchema("docTestResources/testJoin-expected-with-doc.avsc"));
   }
 
-
   /*
    * TODO : Discuss how to deal with expressions.
    */
   @Test
   public void testSelectWithLiteralsWithDoc() {
-    String viewSql = "CREATE VIEW v AS "
-        + "SELECT bc.Id AS Id_View_Col, 100 AS Additional_Int, 200, bc.Array_Col AS Array_View_Col "
-        + "FROM basecomplexwithdoc bc "
-        + "WHERE bc.Id > 0 AND bc.Struct_Col IS NOT NULL";
+    String viewSql =
+        "CREATE VIEW v AS " + "SELECT bc.Id AS Id_View_Col, 100 AS Additional_Int, 200, bc.Array_Col AS Array_View_Col "
+            + "FROM basecomplexwithdoc bc " + "WHERE bc.Id > 0 AND bc.Struct_Col IS NOT NULL";
 
     TestUtils.executeCreateViewQuery("default", "v", viewSql);
 
@@ -791,17 +787,16 @@ public class ViewToAvroSchemaConverterTests {
    */
   @Test
   public void testAggregateRenameWithDoc() {
-    String viewSql =
-        "CREATE VIEW v AS " + "SELECT bc.Id AS Id_View_Col, COUNT(*) AS Count_Col " + "FROM basecomplexwithdoc bc " + "WHERE bc.Id > 0 "
-            + "GROUP BY bc.Id";
+    String viewSql = "CREATE VIEW v AS " + "SELECT bc.Id AS Id_View_Col, COUNT(*) AS Count_Col "
+        + "FROM basecomplexwithdoc bc " + "WHERE bc.Id > 0 " + "GROUP BY bc.Id";
 
     TestUtils.executeCreateViewQuery("default", "v", viewSql);
 
     ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
     Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v");
 
-    Assert.assertEquals(actualSchema.toString(true), TestUtils.loadSchema(
-        "docTestResources/testAggregateRename-expected-with-doc.avsc"));
+    Assert.assertEquals(actualSchema.toString(true),
+        TestUtils.loadSchema("docTestResources/testAggregateRename-expected-with-doc.avsc"));
   }
 
   /*
@@ -809,9 +804,7 @@ public class ViewToAvroSchemaConverterTests {
    */
   @Test
   public void testRexCallAggregateWithDoc() {
-    String viewSql = "CREATE VIEW v AS "
-        + "SELECT 22*COUNT(bc.Id) AS Temp "
-        + "FROM basecomplexwithdoc bc";
+    String viewSql = "CREATE VIEW v AS " + "SELECT 22*COUNT(bc.Id) AS Temp " + "FROM basecomplexwithdoc bc";
 
     TestUtils.executeCreateViewQuery("default", "v", viewSql);
 
@@ -830,12 +823,10 @@ public class ViewToAvroSchemaConverterTests {
     String viewSql = "CREATE VIEW foo_dali_multiple_udfs "
         + "tblproperties('functions' = 'LessThanHundred:com.linkedin.coral.hive.hive2rel.CoralTestUDF1 GreaterThanHundred:com.linkedin.coral.hive.hive2rel.CoralTestUDF2 FuncSquare:com.linkedin.coral.hive.hive2rel.CoralTestUDF3', "
         + "              'dependencies' = 'ivy://com.linkedin:udf:1.0 ivy://com.linkedin:udf:1.0 ivy://com.linkedin:udf:1.0') "
-        + "AS "
-        + "SELECT Id AS Id_Viewc_Col, "
+        + "AS " + "SELECT Id AS Id_Viewc_Col, "
         + "default_foo_dali_multiple_udfs_LessThanHundred(Id) AS Id_View_LessThanHundred_Col,"
         + "default_foo_dali_multiple_udfs_GreaterThanHundred(Id) AS Id_View_GreaterThanHundred_Col, "
-        + "default_foo_dali_multiple_udfs_FuncSquare(Id) AS Id_View_FuncSquare_Col "
-        + "FROM basecomplexwithdoc";
+        + "default_foo_dali_multiple_udfs_FuncSquare(Id) AS Id_View_FuncSquare_Col " + "FROM basecomplexwithdoc";
 
     TestUtils.executeCreateViewQuery("default", "foo_dali_multiple_udfs", viewSql);
 

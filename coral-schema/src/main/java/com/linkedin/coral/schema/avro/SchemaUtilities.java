@@ -14,10 +14,10 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import com.google.common.annotations.VisibleForTesting;
 
-import javax.annotation.Nullable;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
 import org.apache.calcite.rel.type.RelDataType;
@@ -154,10 +154,8 @@ class SchemaUtilities {
 
     JsonNode defaultValue = field.defaultValue();
 
-    SchemaBuilder.GenericDefault genericDefault = fieldAssembler
-        .name(field.name())
-        .doc(field.doc())
-        .type(field.schema());
+    SchemaBuilder.GenericDefault genericDefault =
+        fieldAssembler.name(field.name()).doc(field.doc()).type(field.schema());
     if (defaultValue != null) {
       genericDefault.withDefault(defaultValue);
     } else {
