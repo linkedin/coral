@@ -1,0 +1,62 @@
+{
+  "type" : "record",
+  "name" : "v",
+  "namespace" : "default.v",
+  "fields" : [ {
+    "name" : "Id",
+    "type" : "int",
+    "doc" : "Sample id of the record."
+  }, {
+    "name" : "Struct_Col",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "Struct_col",
+      "namespace" : "default.v.v",
+      "fields" : [ {
+        "name" : "Bool_Field",
+        "type" : "boolean",
+        "doc" : "Sample boolean field."
+      }, {
+        "name" : "Int_Field",
+        "type" : [ "null", "int" ],
+        "doc" : "Sample int field.",
+        "default" : null
+      }, {
+        "name" : "Bigint_Field",
+        "type" : "long",
+        "doc" : "Sample long field."
+      }, {
+        "name" : "Float_Field",
+        "type" : [ "null", "float" ],
+        "doc" : "Sample float field.",
+        "default" : null
+      }, {
+        "name" : "Double_Field",
+        "type" : "double",
+        "doc" : "Sample double field."
+      }, {
+        "name" : "Date_String_Field",
+        "type" : [ "null", "string" ],
+        "doc" : "Sample string representing date field.",
+        "default" : null
+      }, {
+        "name" : "String_Field",
+        "type" : [ "null", "string" ],
+        "doc" : "Sample string field.",
+        "default" : null
+      } ]
+    } ],
+    "doc" : "Sample struct col.",
+    "default" : null
+  }, {
+    "name" : "Enum_Top_Col",
+    "type" : {
+      "type" : "enum",
+      "name" : "Enum_Top_col",
+      "namespace" : "default.v.v",
+      "doc" : "Enum top col",
+      "symbols" : [ "Spark", "Pig", "Hive", "MR" ]
+    },
+    "doc" : "Enum top col."
+  } ]
+}
