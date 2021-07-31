@@ -90,16 +90,19 @@ public class CalciteTrinoUDFMap {
     ImmutableMultimap<String, HiveFunction> registry = HIVE_REGISTRY.getRegistry();
     Converter<String, String> caseConverter = CaseFormat.UPPER_CAMEL.converterTo(CaseFormat.LOWER_UNDERSCORE);
     for (Map.Entry<String, HiveFunction> entry : registry.entries()) {
-      if (!entry.getKey().startsWith("com.linkedin")) {
+      // we cannot use entry.getKey() as function name directly, because keys are all lowercase, which will
+      // fail to be converted to lowercase with underscore correctly
+      final String hiveFunctionName = entry.getValue().getHiveFunctionName();
+      if (!hiveFunctionName.startsWith("com.linkedin")) {
         continue;
       }
-      String[] nameSplit = entry.getKey().split("\\.");
-      // filter above guarantees we've atleast 2 entries
+      String[] nameSplit = hiveFunctionName.split("\\.");
+      // filter above guarantees we've at least 2 entries
       String className = nameSplit[nameSplit.length - 1];
       String funcName = caseConverter.convert(className);
       SqlOperator op = entry.getValue().getSqlOperator();
       for (int i = op.getOperandCountRange().getMin(); i <= op.getOperandCountRange().getMax(); i++) {
-        if (!isDaliUDFAlreadyAdded(entry.getKey(), i)) {
+        if (!isDaliUDFAlreadyAdded(hiveFunctionName, i)) {
           createUDFMapEntry(UDF_MAP, op, i, funcName);
         }
       }
