@@ -161,16 +161,28 @@ public class MergeHiveSchemaWithAvroTests {
 
   @Test
   public void shouldReorderOptionalSchemaToMatchDefaultValue() {
-    String hive = "struct<fa:int,fb:struct<ga:int>>";
+    String hive = "struct<fa:int,fb:struct<ga:int>,fc:int>";
     Schema avro = struct("r1",
         field("fA", Schema.createUnion(Arrays.asList(Schema.create(Schema.Type.INT), Schema.create(Schema.Type.NULL))),
             null, 1, null),
         field("fB",
             Schema.createUnion(Arrays.asList(struct("r2", field("gA", Schema.create(Schema.Type.INT), null, 2, null)),
                 Schema.create(Schema.Type.NULL))),
-            null, new TextNode("{\"gA\": 3}"), null));
+            null, new TextNode("{\"gA\": 3}"), null),
+        field("fC", Schema.createUnion(Arrays.asList(Schema.create(Schema.Type.NULL), Schema.create(Schema.Type.INT))),
+            null, 1, null));
 
-    assertSchema(avro, merge(hive, avro));
+    Schema expectedAvro = struct("r1",
+        field("fA", Schema.createUnion(Arrays.asList(Schema.create(Schema.Type.INT), Schema.create(Schema.Type.NULL))),
+            null, 1, null),
+        field("fB",
+            Schema.createUnion(Arrays.asList(struct("r2", field("gA", Schema.create(Schema.Type.INT), null, 2, null)),
+                Schema.create(Schema.Type.NULL))),
+            null, new TextNode("{\"gA\": 3}"), null),
+        field("fC", Schema.createUnion(Arrays.asList(Schema.create(Schema.Type.INT), Schema.create(Schema.Type.NULL))),
+            null, 1, null));
+
+    assertSchema(expectedAvro, merge(hive, avro));
   }
 
   @Test

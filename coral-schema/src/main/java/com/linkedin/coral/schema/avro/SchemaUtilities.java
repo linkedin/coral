@@ -524,7 +524,8 @@ class SchemaUtilities {
   }
 
   static Schema discardNullFromUnionIfExist(Schema schema) {
-    Preconditions.checkArgument(schema.getType() == Schema.Type.UNION, "Expected union schema but was passed: %s", schema);
+    Preconditions.checkArgument(schema.getType() == Schema.Type.UNION, "Expected union schema but was passed: %s",
+        schema);
     List<Schema> result = new ArrayList<>();
     for (Schema nested : schema.getTypes()) {
       if (!(nested.getType() == Schema.Type.NULL)) {
@@ -535,7 +536,8 @@ class SchemaUtilities {
   }
 
   static boolean nullExistInUnion(Schema schema) {
-    Preconditions.checkArgument(schema.getType() == Schema.Type.UNION, "Expected union schema but was passed: %s", schema);
+    Preconditions.checkArgument(schema.getType() == Schema.Type.UNION, "Expected union schema but was passed: %s",
+        schema);
     for (Schema nested : schema.getTypes()) {
       if (nested.getType() == Schema.Type.NULL) {
         return true;
@@ -774,8 +776,8 @@ class SchemaUtilities {
     return sb.toString();
   }
 
-  private static class HasDuplicateLowercaseColumnNames extends AvroSchemaVisitor<Boolean> {
-    private static boolean visit(Schema schema) {
+  protected static class HasDuplicateLowercaseColumnNames extends AvroSchemaVisitor<Boolean> {
+    protected static boolean visit(Schema schema) {
       return AvroSchemaVisitor.visit(schema, new HasDuplicateLowercaseColumnNames());
     }
 

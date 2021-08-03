@@ -19,6 +19,7 @@ import org.apache.hadoop.hive.serde2.typeinfo.PrimitiveTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.StructTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.UnionTypeInfo;
+import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.JsonNodeFactory;
 
 import com.linkedin.coral.com.google.common.base.Preconditions;
@@ -49,13 +50,13 @@ class MergeHiveSchemaWithAvro extends HiveSchemaWithPartnerVisitor<Schema, Schem
   public Schema struct(StructTypeInfo struct, Schema partner, List<Schema.Field> fieldResults) {
     boolean shouldResultBeOptional = partner == null || isNullableType(partner);
     Schema result;
-    if (partner == null || extractIfOption(partner).getType() != Schema.Type.RECORD) {
+    if (partner == null || SchemaUtilities.extractIfOption(partner).getType() != Schema.Type.RECORD) {
       // if there was no matching Avro struct, return a struct with new record/namespace
       int recordNum = recordCounter.incrementAndGet();
       result = Schema.createRecord("record" + recordNum, null, "namespace" + recordNum, false);
       result.setFields(fieldResults);
     } else {
-      result = SchemaUtilities.copyRecord(extractIfOption(partner), fieldResults);
+      result = SchemaUtilities.copyRecord(SchemaUtilities.extractIfOption(partner), fieldResults);
     }
     return shouldResultBeOptional ? SchemaUtilities.makeNullable(result) : result;
   }
@@ -82,11 +83,10 @@ class MergeHiveSchemaWithAvro extends HiveSchemaWithPartnerVisitor<Schema, Schem
    * e.g. If the schema is (NULL, INT) and the default value is 1, the returned schema is (INT, NULL)
    * If the schema is not an option schema or if there is no default value, schema is returned as-is
    */
-  private Schema reorderOptionIfRequired(Schema schema, Object defaultValue) {
+  private Schema reorderOptionIfRequired(Schema schema, JsonNode defaultValue) {
     if (isNullableType(schema) && defaultValue != null) {
       boolean isNullFirstOption = schema.getTypes().get(0).getType() == Schema.Type.NULL;
-      // TODO: verify if null works
-      if (isNullFirstOption && defaultValue.equals(null)) {
+      if (isNullFirstOption && defaultValue.isNull()) {
         return schema;
       } else {
         return Schema.createUnion(Arrays.asList(schema.getTypes().get(1), schema.getTypes().get(0)));
@@ -106,7 +106,7 @@ class MergeHiveSchemaWithAvro extends HiveSchemaWithPartnerVisitor<Schema, Schem
 
   @Override
   public Schema map(MapTypeInfo map, Schema partner, Schema keyResult, Schema valueResult) {
-    Preconditions.checkArgument(extractIfOption(keyResult).getType() == Schema.Type.STRING,
+    Preconditions.checkArgument(SchemaUtilities.extractIfOption(keyResult).getType() == Schema.Type.STRING,
         "Map keys should always be non-nullable strings. Found: %s", keyResult);
     // if there was no matching Avro map, or if matching Avro map was an option, return an optional map
     boolean shouldResultBeOptional = partner == null || isNullableType(partner);
@@ -136,7 +136,7 @@ class MergeHiveSchemaWithAvro extends HiveSchemaWithPartnerVisitor<Schema, Schem
 
   private Schema checkCompatibilityAndPromote(Schema schema, Schema partner) {
     // TODO: Check if schema is compatible with partner
-    Schema extractedPartnerSchema = extractIfOption(partner);
+    Schema extractedPartnerSchema = SchemaUtilities.extractIfOption(partner);
     switch (schema.getType()) {
       case BYTES:
         if (extractedPartnerSchema.getType().equals(Schema.Type.FIXED)) {
@@ -164,7 +164,7 @@ class MergeHiveSchemaWithAvro extends HiveSchemaWithPartnerVisitor<Schema, Schem
 
     @Override
     public Schema.Field fieldPartner(Schema partner, String fieldName) {
-      Schema schema = extractIfOption(partner);
+      Schema schema = SchemaUtilities.extractIfOption(partner);
       return (schema.getType() == Schema.Type.RECORD) ? findCaseInsensitive(schema, fieldName) : null;
     }
 
@@ -175,19 +175,19 @@ class MergeHiveSchemaWithAvro extends HiveSchemaWithPartnerVisitor<Schema, Schem
 
     @Override
     public Schema mapKeyPartner(Schema partner) {
-      Schema schema = extractIfOption(partner);
+      Schema schema = SchemaUtilities.extractIfOption(partner);
       return (schema.getType() == Schema.Type.MAP) ? MAP_KEY : null;
     }
 
     @Override
     public Schema mapValuePartner(Schema partner) {
-      Schema schema = extractIfOption(partner);
+      Schema schema = SchemaUtilities.extractIfOption(partner);
       return (schema.getType() == Schema.Type.MAP) ? schema.getValueType() : null;
     }
 
     @Override
     public Schema listElementPartner(Schema partner) {
-      Schema schema = extractIfOption(partner);
+      Schema schema = SchemaUtilities.extractIfOption(partner);
       return (schema.getType() == Schema.Type.ARRAY) ? schema.getElementType() : null;
     }
 
@@ -210,14 +210,6 @@ class MergeHiveSchemaWithAvro extends HiveSchemaWithPartnerVisitor<Schema, Schem
         }
       }
       return null;
-    }
-  }
-
-  private static Schema extractIfOption(Schema schema) {
-    if (isNullableType(schema)) {
-      return getOtherTypeFromNullableType(schema);
-    } else {
-      return schema;
     }
   }
 
