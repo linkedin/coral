@@ -5,6 +5,7 @@
  */
 package com.linkedin.coral.schema.avro;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -17,6 +18,7 @@ import org.apache.hadoop.hive.serde2.typeinfo.MapTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.PrimitiveTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.StructTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
+import org.apache.hadoop.hive.serde2.typeinfo.UnionTypeInfo;
 import org.codehaus.jackson.node.JsonNodeFactory;
 
 import com.linkedin.coral.com.google.common.base.Preconditions;
@@ -121,6 +123,17 @@ class MergeHiveSchemaWithAvro extends HiveSchemaWithPartnerVisitor<Schema, Schem
     return shouldResultBeOptional ? SchemaUtilities.makeNullable(result) : result;
   }
 
+  @Override
+  public Schema union(UnionTypeInfo union, Schema partner, List<Schema> results) {
+    if (SchemaUtilities.nullExistInUnion(partner)) {
+      List<Schema> toAddNull = new ArrayList<>();
+      toAddNull.add(Schema.create(Schema.Type.NULL));
+      toAddNull.addAll(results);
+      return Schema.createUnion(toAddNull);
+    }
+    return Schema.createUnion(results);
+  }
+
   private Schema checkCompatibilityAndPromote(Schema schema, Schema partner) {
     // TODO: Check if schema is compatible with partner
     Schema extractedPartnerSchema = extractIfOption(partner);
@@ -176,6 +189,16 @@ class MergeHiveSchemaWithAvro extends HiveSchemaWithPartnerVisitor<Schema, Schem
     public Schema listElementPartner(Schema partner) {
       Schema schema = extractIfOption(partner);
       return (schema.getType() == Schema.Type.ARRAY) ? schema.getElementType() : null;
+    }
+
+    @Override
+    public Schema unionObjectPartner(Schema partner, int ordinal) {
+      if (partner.getType() != Schema.Type.UNION) {
+        return null;
+      }
+      Schema schema = SchemaUtilities.discardNullFromUnionIfExist(partner);
+
+      return schema.getTypes().get(ordinal);
     }
 
     private Schema.Field findCaseInsensitive(Schema struct, String fieldName) {

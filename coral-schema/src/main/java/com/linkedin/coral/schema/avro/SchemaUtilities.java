@@ -523,6 +523,27 @@ class SchemaUtilities {
     }
   }
 
+  static Schema discardNullFromUnionIfExist(Schema schema) {
+    Preconditions.checkArgument(schema.getType() == Schema.Type.UNION, "Expected union schema but was passed: %s", schema);
+    List<Schema> result = new ArrayList<>();
+    for (Schema nested : schema.getTypes()) {
+      if (!(nested.getType() == Schema.Type.NULL)) {
+        result.add(nested);
+      }
+    }
+    return Schema.createUnion(result);
+  }
+
+  static boolean nullExistInUnion(Schema schema) {
+    Preconditions.checkArgument(schema.getType() == Schema.Type.UNION, "Expected union schema but was passed: %s", schema);
+    for (Schema nested : schema.getTypes()) {
+      if (nested.getType() == Schema.Type.NULL) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   private static boolean isSameNamespace(@Nonnull Schema leftSchema, @Nonnull Schema rightSchema, boolean strictMode) {
     return !strictMode || Objects.equals(leftSchema.getNamespace(), rightSchema.getNamespace());
   }

@@ -7,6 +7,7 @@ package com.linkedin.coral.schema.avro;
 
 import java.util.Arrays;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.apache.avro.Schema;
 import org.apache.hadoop.hive.serde2.avro.AvroSerDe;
@@ -208,11 +209,30 @@ public class MergeHiveSchemaWithAvroTests {
     assertSchema(expected, merged);
   }
 
+  @Test
+  public void shouldHandleUnions() {
+    String hive = "struct<fa:uniontype<string,int>,fb:uniontype<string,int>,fc:uniontype<string,int>>";
+    Schema avro = struct("r1", required("fA", union(Schema.Type.NULL, Schema.Type.STRING, Schema.Type.INT)),
+        required("fB", union(Schema.Type.STRING, Schema.Type.INT)),
+        required("fC", union(Schema.Type.STRING, Schema.Type.INT, Schema.Type.NULL)));
+
+    Schema expected = struct("r1", required("fA", union(Schema.Type.NULL, Schema.Type.STRING, Schema.Type.INT)),
+        required("fB", union(Schema.Type.STRING, Schema.Type.INT)),
+        // our merge logic always put the NULL alternative in the front
+        required("fC", union(Schema.Type.NULL, Schema.Type.STRING, Schema.Type.INT)));
+
+    assertSchema(expected, merge(hive, avro));
+  }
+
   // TODO: tests to retain schema props
   // TODO: tests for explicit type compatibility check between hive and avro primitives, once we implement it
   // TODO: tests for error case => default value in Avro does not match with type from hive
 
   /** Test Helpers */
+
+  private Schema union(Schema.Type... types) {
+    return Schema.createUnion(Arrays.stream(types).map(Schema::create).collect(Collectors.toList()));
+  }
 
   private void assertSchema(Schema expected, Schema actual) {
     assertEquals(expected, actual);
