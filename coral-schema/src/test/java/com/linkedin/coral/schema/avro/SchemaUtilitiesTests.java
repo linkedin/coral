@@ -55,4 +55,20 @@ public class SchemaUtilitiesTests {
     SchemaUtilities.replicateSchemaProps(dummySchema2, schemaReplicate);
     Assert.assertEquals(schemaReplicate.getProp("schema_key"), "schema_value");
   }
+
+  @Test
+  public void testHasDuplicateLowercaseColumnNames() {
+    Schema schema = new Schema.Parser().parse(TestUtils.loadSchema("testHasDuplicateLowercaseColumnNames.avsc"));
+    boolean hasDuplicateLowercaseColumnNames = SchemaUtilities.HasDuplicateLowercaseColumnNames.visit(schema);
+
+    Assert.assertTrue(hasDuplicateLowercaseColumnNames);
+  }
+
+  @Test
+  public void testNotHasDuplicateLowercaseColumnNames() {
+    Schema schema = new Schema.Parser().parse(TestUtils.loadSchema("testNotHasDuplicateLowercaseColumnNames.avsc"));
+    boolean hasDuplicateLowercaseColumnNames = SchemaUtilities.HasDuplicateLowercaseColumnNames.visit(schema);
+
+    Assert.assertFalse(hasDuplicateLowercaseColumnNames);
+  }
 }
