@@ -12,7 +12,9 @@ def versions = [
   'hive': '1.2.2',
   'hadoop': '2.7.0',
   'pig': '0.15.0',
-  'ivy': '2.4.0'
+  'ivy': '2.4.0',
+  'spark': '2.4.0',
+  'spark3': '3.1.1'
 ]
 
 ext.deps = [
@@ -33,7 +35,6 @@ ext.deps = [
     'hive-metastore': "org.apache.hive:hive-metastore:${versions['hive']}",
     'hive-exec-core': "org.apache.hive:hive-exec:${versions['hive']}:core",
     'hive-common': "org.apache.hive:hive-common:${versions['hive']}"
-
   ],
   'hadoop': [
     'hadoop-common': "org.apache.hadoop:hadoop-common:${versions['hadoop']}",
@@ -43,5 +44,12 @@ ext.deps = [
   'pig': [
     'pig': "org.apache.pig:pig:${versions['pig']}:h2",
     'pigunit': "org.apache.pig:pigunit:${versions['pig']}"
+  ],
+  'spark': [
+    'sql': "org.apache.spark:spark-sql_2.11:${versions['spark']}",
+    'hive': "org.apache.spark:spark-hive_2.11:${versions['spark']}"
+  ],
+  'spark3': [
+    'hive': "org.apache.spark:spark-hive_2.12:${versions['spark3']}"
   ]
 ]
