@@ -65,11 +65,6 @@ public class CalciteTrinoUDFMap {
     createRuntimeUDFMapEntry(UDF_MAP, hiveToCalciteOp("decode"), 2,
         "[{\"regex\":\"(?i)('utf-8')\", \"input\":2, \"name\":\"from_utf8\"}]", "[{\"input\":1}]", null);
 
-    // FIXME: this is incorrect. Adding this to test correctness of the overall system
-    createUDFMapEntry(UDF_MAP, hiveToCalciteOp("concat_ws"), 3, "concat_ws");
-    createUDFMapEntry(UDF_MAP, hiveToCalciteOp("from_unixtime"), 1, "unixtime_to_str");
-    createUDFMapEntry(UDF_MAP, hiveToCalciteOp("from_unixtime"), 2, "unixtime_to_str");
-
     // DALI functions
     // Most "com.linkedin..." UDFs follow convention of having UDF names mapped from their class name by converting
     // the classname to LOWER_UNDERSCORE. For example: For class name IsGuestMemberId, the conventional udf name would
