@@ -161,7 +161,7 @@ public class UDFTransformerTest {
         "{\"op\":\"+\",\"operands\":[{\"input\":0},{\"input\":3}]}", null, "targetFunc(icol * dcol, scol) + dcol");
 
     testFailedTransformation(tableOneQuery, tableOneConfig, targetUDF,
-        "[{\"op\":\"%\",\"operands\":[{\"input\":2},{\"input\":3}]}, {\"input\":1}]", null, null,
+        "[{\"op\":\"@\",\"operands\":[{\"input\":2},{\"input\":3}]}, {\"input\":1}]", null, null,
         UnsupportedOperationException.class);
   }
 
