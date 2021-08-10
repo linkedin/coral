@@ -6,14 +6,17 @@
 package com.linkedin.coral.spark;
 
 import java.net.URI;
-import java.net.URISyntaxException;
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.apache.spark.sql.SparkSession;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.linkedin.coral.spark.containers.SparkUDFInfo;
+import com.linkedin.coral.spark.exceptions.UnsupportedUDFException;
 
 
 /**
@@ -28,88 +31,103 @@ class TransportableUDFMap {
   private TransportableUDFMap() {
   }
 
-  private static final Map<String, SparkUDFInfo> UDF_MAP = new HashMap();
-  public static final String STANDARD_UDFS_DALI_UDFS_URL =
-      "ivy://com.linkedin.standard-udfs-dali-udfs:standard-udfs-dali-udfs:1.0.4?classifier=spark";
+  private static final Logger LOG = LoggerFactory.getLogger(TransportableUDFMap.class);
+  private static final Map<String, Map<ScalaVersion, SparkUDFInfo>> UDF_MAP = new HashMap();
+  public static final String DALI_UDFS_IVY_URL_SPARK_2_11 =
+      "ivy://com.linkedin.standard-udfs-dali-udfs:standard-udfs-dali-udfs:2.0.0?classifier=spark_2.11";
+  public static final String DALI_UDFS_IVY_URL_SPARK_2_12 =
+      "ivy://com.linkedin.standard-udfs-dali-udfs:standard-udfs-dali-udfs:2.0.0?classifier=spark_2.12";
+
+  enum ScalaVersion {
+    SCALA_2_11,
+    SCALA_2_12
+  }
 
   static {
 
     // LIHADOOP-48502: The following UDFs are the legacy Hive UDF. Since they have been converted to
     // Transport UDF, we point their class files to the corresponding Spark jar.
     add("com.linkedin.dali.udf.date.hive.DateFormatToEpoch", "com.linkedin.stdudfs.daliudfs.spark.DateFormatToEpoch",
-        STANDARD_UDFS_DALI_UDFS_URL);
+        DALI_UDFS_IVY_URL_SPARK_2_11, DALI_UDFS_IVY_URL_SPARK_2_12);
 
     add("com.linkedin.dali.udf.date.hive.EpochToDateFormat", "com.linkedin.stdudfs.daliudfs.spark.EpochToDateFormat",
-        STANDARD_UDFS_DALI_UDFS_URL);
+        DALI_UDFS_IVY_URL_SPARK_2_11, DALI_UDFS_IVY_URL_SPARK_2_12);
 
     add("com.linkedin.dali.udf.date.hive.EpochToEpochMilliseconds",
-        "com.linkedin.stdudfs.daliudfs.spark.EpochToEpochMilliseconds", STANDARD_UDFS_DALI_UDFS_URL);
+        "com.linkedin.stdudfs.daliudfs.spark.EpochToEpochMilliseconds", DALI_UDFS_IVY_URL_SPARK_2_11,
+        DALI_UDFS_IVY_URL_SPARK_2_12);
 
     add("com.linkedin.dali.udf.isguestmemberid.hive.IsGuestMemberId",
-        "com.linkedin.stdudfs.daliudfs.spark.IsGuestMemberId", STANDARD_UDFS_DALI_UDFS_URL);
+        "com.linkedin.stdudfs.daliudfs.spark.IsGuestMemberId", DALI_UDFS_IVY_URL_SPARK_2_11,
+        DALI_UDFS_IVY_URL_SPARK_2_12);
 
     // LIHADOOP-49851 add the transportudf spark version for lookup UDF
     add("com.linkedin.dali.udf.istestmemberid.hive.IsTestMemberId",
-        "com.linkedin.stdudfs.daliudfs.spark.IsTestMemberId", STANDARD_UDFS_DALI_UDFS_URL);
+        "com.linkedin.stdudfs.daliudfs.spark.IsTestMemberId", DALI_UDFS_IVY_URL_SPARK_2_11,
+        DALI_UDFS_IVY_URL_SPARK_2_12);
 
     add("com.linkedin.dali.udf.maplookup.hive.MapLookup", "com.linkedin.stdudfs.daliudfs.spark.MapLookup",
-        STANDARD_UDFS_DALI_UDFS_URL);
+        DALI_UDFS_IVY_URL_SPARK_2_11, DALI_UDFS_IVY_URL_SPARK_2_12);
 
     add("com.linkedin.dali.udf.sanitize.hive.Sanitize", "com.linkedin.stdudfs.daliudfs.spark.Sanitize",
-        STANDARD_UDFS_DALI_UDFS_URL);
+        DALI_UDFS_IVY_URL_SPARK_2_11, DALI_UDFS_IVY_URL_SPARK_2_12);
 
     // LIHADOOP-49851 add the transportudf spark version for lookup UDF
     add("com.linkedin.dali.udf.watbotcrawlerlookup.hive.WATBotCrawlerLookup",
-        "com.linkedin.stdudfs.daliudfs.spark.WatBotCrawlerLookup", STANDARD_UDFS_DALI_UDFS_URL);
+        "com.linkedin.stdudfs.daliudfs.spark.WatBotCrawlerLookup", DALI_UDFS_IVY_URL_SPARK_2_11,
+        DALI_UDFS_IVY_URL_SPARK_2_12);
 
     // LIHADOOP-48502: The following UDFs are already defined using Transport UDF.
     // The class name is the corresponding Hive UDF.
     // We point their class files to the corresponding Spark jar file.
     add("com.linkedin.stdudfs.daliudfs.hive.DateFormatToEpoch", "com.linkedin.stdudfs.daliudfs.spark.DateFormatToEpoch",
-        STANDARD_UDFS_DALI_UDFS_URL);
+        DALI_UDFS_IVY_URL_SPARK_2_11, DALI_UDFS_IVY_URL_SPARK_2_12);
 
     add("com.linkedin.stdudfs.daliudfs.hive.EpochToDateFormat", "com.linkedin.stdudfs.daliudfs.spark.EpochToDateFormat",
-        STANDARD_UDFS_DALI_UDFS_URL);
+        DALI_UDFS_IVY_URL_SPARK_2_11, DALI_UDFS_IVY_URL_SPARK_2_12);
 
     add("com.linkedin.stdudfs.daliudfs.hive.EpochToEpochMilliseconds",
-        "com.linkedin.stdudfs.daliudfs.spark.EpochToEpochMilliseconds", STANDARD_UDFS_DALI_UDFS_URL);
+        "com.linkedin.stdudfs.daliudfs.spark.EpochToEpochMilliseconds", DALI_UDFS_IVY_URL_SPARK_2_11,
+        DALI_UDFS_IVY_URL_SPARK_2_12);
 
     add("com.linkedin.stdudfs.daliudfs.hive.GetProfileSections",
-        "com.linkedin.stdudfs.daliudfs.spark.GetProfileSections", STANDARD_UDFS_DALI_UDFS_URL);
+        "com.linkedin.stdudfs.daliudfs.spark.GetProfileSections", DALI_UDFS_IVY_URL_SPARK_2_11,
+        DALI_UDFS_IVY_URL_SPARK_2_12);
 
     add("com.linkedin.stdudfs.stringudfs.hive.InitCap", "com.linkedin.stdudfs.stringudfs.spark.InitCap",
-        "ivy://com.linkedin.standard-udfs-common-sql-udfs:standard-udfs-string-udfs:0.0.7?classifier=spark");
+        "ivy://com.linkedin.standard-udfs-common-sql-udfs:standard-udfs-string-udfs:0.0.7?classifier=spark", null);
 
     add("com.linkedin.stdudfs.daliudfs.hive.IsGuestMemberId", "com.linkedin.stdudfs.daliudfs.spark.IsGuestMemberId",
-        STANDARD_UDFS_DALI_UDFS_URL);
+        DALI_UDFS_IVY_URL_SPARK_2_11, DALI_UDFS_IVY_URL_SPARK_2_12);
 
     add("com.linkedin.stdudfs.daliudfs.hive.IsTestMemberId", "com.linkedin.stdudfs.daliudfs.spark.IsTestMemberId",
-        STANDARD_UDFS_DALI_UDFS_URL);
+        DALI_UDFS_IVY_URL_SPARK_2_11, DALI_UDFS_IVY_URL_SPARK_2_12);
 
     add("com.linkedin.stdudfs.daliudfs.hive.MapLookup", "com.linkedin.stdudfs.daliudfs.spark.MapLookup",
-        STANDARD_UDFS_DALI_UDFS_URL);
+        DALI_UDFS_IVY_URL_SPARK_2_11, DALI_UDFS_IVY_URL_SPARK_2_12);
 
     add("com.linkedin.stdudfs.daliudfs.hive.PortalLookup", "com.linkedin.stdudfs.daliudfs.spark.PortalLookup",
-        STANDARD_UDFS_DALI_UDFS_URL);
+        DALI_UDFS_IVY_URL_SPARK_2_11, DALI_UDFS_IVY_URL_SPARK_2_12);
 
     add("com.linkedin.stdudfs.daliudfs.hive.Sanitize", "com.linkedin.stdudfs.daliudfs.spark.Sanitize",
-        STANDARD_UDFS_DALI_UDFS_URL);
+        DALI_UDFS_IVY_URL_SPARK_2_11, DALI_UDFS_IVY_URL_SPARK_2_12);
 
     add("com.linkedin.stdudfs.userinterfacelookup.hive.UserInterfaceLookup",
         "com.linkedin.stdudfs.userinterfacelookup.spark.UserInterfaceLookup",
-        "ivy://com.linkedin.standard-udf-userinterfacelookup:userinterfacelookup-std-udf:0.0.9?classifier=spark");
+        "ivy://com.linkedin.standard-udf-userinterfacelookup:userinterfacelookup-std-udf:0.0.9?classifier=spark", null);
 
     add("com.linkedin.stdudfs.daliudfs.hive.WatBotCrawlerLookup",
-        "com.linkedin.stdudfs.daliudfs.spark.WatBotCrawlerLookup", STANDARD_UDFS_DALI_UDFS_URL);
+        "com.linkedin.stdudfs.daliudfs.spark.WatBotCrawlerLookup", DALI_UDFS_IVY_URL_SPARK_2_11,
+        DALI_UDFS_IVY_URL_SPARK_2_12);
 
     add("com.linkedin.jemslookup.udf.hive.JemsLookup", "com.linkedin.jemslookup.udf.spark.JemsLookup",
-        "ivy://com.linkedin.jobs-udf:jems-udfs:1.0.0?classifier=spark");
+        "ivy://com.linkedin.jobs-udf:jems-udfs:1.0.0?classifier=spark", null);
 
     add("com.linkedin.stdudfs.parsing.hive.UserAgentParser", "com.linkedin.stdudfs.parsing.spark.UserAgentParser",
-        "ivy://com.linkedin.standard-udfs-parsing:parsing-stdudfs:2.0.1?classifier=spark");
+        "ivy://com.linkedin.standard-udfs-parsing:parsing-stdudfs:2.0.1?classifier=spark", null);
 
     add("com.linkedin.stdudfs.parsing.hive.Ip2Str", "com.linkedin.stdudfs.parsing.spark.Ip2Str",
-        "ivy://com.linkedin.standard-udfs-parsing:parsing-stdudfs:2.0.1?classifier=spark");
+        "ivy://com.linkedin.standard-udfs-parsing:parsing-stdudfs:2.0.1?classifier=spark", null);
   }
 
   /**
@@ -119,20 +137,37 @@ class TransportableUDFMap {
    * @return Optional<SparkUDFInfo>
    */
   static Optional<SparkUDFInfo> lookup(String className) {
-    return Optional.ofNullable(UDF_MAP.get(className));
+    ScalaVersion scalaVersion = getScalaVersion();
+    return Optional.ofNullable(UDF_MAP.get(className)).map(scalaMap -> Optional.ofNullable(scalaMap.get(scalaVersion))
+        .orElseThrow(() -> new UnsupportedUDFException(String.format(
+            "Transport UDF for class '%s' is not supported for scala %s, please contact " + "the UDF owner for upgrade",
+            className, scalaVersion.toString()))));
   }
 
-  public static void add(String className, String sparkClassName, String artifcatoryUrl) {
-    try {
-      URI url = new URI(artifcatoryUrl);
-      List<URI> listOfUris = new LinkedList<>();
-      listOfUris.add(url);
+  public static void add(String className, String sparkClassName, String artifactoryUrlSpark211,
+      String artifactoryUrlSpark212) {
+    Map scalaToTransportUdfMap = new HashMap<ScalaVersion, SparkUDFInfo>() {
+      {
+        put(ScalaVersion.SCALA_2_11, artifactoryUrlSpark211 == null ? null : new SparkUDFInfo(sparkClassName, null,
+            Collections.singletonList(URI.create(artifactoryUrlSpark211)), SparkUDFInfo.UDFTYPE.TRANSPORTABLE_UDF));
+        put(ScalaVersion.SCALA_2_12, artifactoryUrlSpark212 == null ? null : new SparkUDFInfo(sparkClassName, null,
+            Collections.singletonList(URI.create(artifactoryUrlSpark212)), SparkUDFInfo.UDFTYPE.TRANSPORTABLE_UDF));
+      }
+    };
+    UDF_MAP.put(className, scalaToTransportUdfMap);
+  }
 
-      // Set the function name to null here because it is determined dynamically from the enclosing SqlOperand
-      UDF_MAP.put(className,
-          new SparkUDFInfo(sparkClassName, null, listOfUris, SparkUDFInfo.UDFTYPE.TRANSPORTABLE_UDF));
-    } catch (URISyntaxException e) {
-      throw new RuntimeException(String.format("Artifactory URL is malformed %s", artifcatoryUrl), e);
+  static ScalaVersion getScalaVersion() {
+    try {
+      String sparkVersion = SparkSession.active().version();
+      if (sparkVersion.matches("2\\.[\\d\\.]*"))
+        return ScalaVersion.SCALA_2_11;
+      if (sparkVersion.matches("3\\.[\\d\\.]*"))
+        return ScalaVersion.SCALA_2_12;
+      throw new IllegalStateException(String.format("Unsupported Spark Version %s", sparkVersion));
+    } catch (IllegalStateException | NoClassDefFoundError ex) {
+      LOG.warn("Couldn't determine Spark version, falling back to scala_2.11", ex);
+      return ScalaVersion.SCALA_2_11;
     }
   }
 

@@ -49,7 +49,7 @@ public class CoralSparkTest {
     UnsupportedHiveUDFsInSpark.add("com.linkedin.coral.hive.hive2rel.CoralTestUnsupportedUDF");
 
     TransportableUDFMap.add("com.linkedin.coral.hive.hive2rel.CoralTestUDF", "com.linkedin.coral.spark.CoralTestUDF",
-        "ivy://com.linkedin.coral.spark.CoralTestUDF");
+        "ivy://com.linkedin.coral.spark.CoralTestUDF", null);
   }
 
   @Test
