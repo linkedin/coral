@@ -1,0 +1,32 @@
+def itests = ['spark', 'spark3']
+
+for (String itest : itests) {
+  sourceSets {
+    create("${itest}test", {
+      java {
+        compileClasspath += main.output
+        runtimeClasspath += main.output
+      }
+    })
+  }
+
+  configurations {
+    getByName("${itest}testCompile").extendsFrom(testCompile)
+    getByName("${itest}testRuntime").extendsFrom(testRuntime)
+  }
+
+  tasks.register("${itest}Test", Test) {
+    description = "Run ${itest} integration tests"
+    testClassesDirs = project.sourceSets.getByName("${itest}test").output.classesDirs
+    classpath = project.sourceSets.getByName("${itest}test").runtimeClasspath
+    shouldRunAfter test
+    useTestNG()
+  }
+
+  check.dependsOn(tasks.getByName("${itest}Test"))
+}
+
+dependencies {
+  sparktestCompile(deps.'spark'.'hive')
+  spark3testCompile(deps.'spark3'.'hive')
+}

@@ -200,10 +200,11 @@ class IRRelToSparkRelTransformer {
 
       RexCall updatedCall = (RexCall) super.visitCall(call);
 
-      RexNode convertToNewNode = convertToZeroBasedArrayIndex(updatedCall).orElseGet(
-          () -> convertToNamedStruct(updatedCall).orElseGet(() -> convertFuzzyUnionGenericProject(updatedCall)
-              .orElseGet(() -> convertDaliUDF(updatedCall).orElseGet(() -> convertBuiltInUDF(updatedCall)
-                  .orElseGet(() -> fallbackToHiveUdf(updatedCall).orElse(updatedCall))))));
+      RexNode convertToNewNode =
+          convertToZeroBasedArrayIndex(updatedCall).orElseGet(() -> convertToNamedStruct(updatedCall)
+              .orElseGet(() -> convertFuzzyUnionGenericProject(updatedCall).orElseGet(() -> convertDaliUDF(updatedCall)
+                  .orElseGet(() -> convertBuiltInUDF(updatedCall).orElseGet(() -> fallbackToHiveUdf(updatedCall)
+                      .orElseGet(() -> removeExtractUnionFunction(updatedCall).orElse(updatedCall)))))));
 
       return convertToNewNode;
     }
@@ -318,6 +319,21 @@ class IRRelToSparkRelTransformer {
 
         return Optional
             .of(rexBuilder.makeCall(expectedRelDataType, new GenericProjectFunction(expectedRelDataType), newOperands));
+      }
+      return Optional.empty();
+    }
+
+    private Optional<RexNode> removeExtractUnionFunction(RexCall call) {
+      if (call.getOperator().getName().equalsIgnoreCase("extract_union")) {
+        // one arg case: extract_union(field_name)
+        if (call.getOperands().size() == 1) {
+          return Optional.of(call.getOperands().get(0));
+        }
+        // two arg case: extract_union(field_name, ordinal)
+        else if (call.getOperands().size() == 2) {
+          int ordinal = ((RexLiteral) call.getOperands().get(1)).getValueAs(Integer.class);
+          return Optional.of(rexBuilder.makeFieldAccess(call.getOperands().get(0), ordinal));
+        }
       }
       return Optional.empty();
     }

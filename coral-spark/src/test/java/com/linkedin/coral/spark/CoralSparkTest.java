@@ -49,7 +49,7 @@ public class CoralSparkTest {
     UnsupportedHiveUDFsInSpark.add("com.linkedin.coral.hive.hive2rel.CoralTestUnsupportedUDF");
 
     TransportableUDFMap.add("com.linkedin.coral.hive.hive2rel.CoralTestUDF", "com.linkedin.coral.spark.CoralTestUDF",
-        "ivy://com.linkedin.coral.spark.CoralTestUDF");
+        "ivy://com.linkedin.coral.spark.CoralTestUDF", null);
   }
 
   @Test
@@ -354,11 +354,11 @@ public class CoralSparkTest {
   @Test
   public void testUnionExtractUDF() {
     RelNode relNode = TestUtils.toRelNode("SELECT extract_union(foo) from union_table");
-    String targetSql = String.join("\n", "SELECT extract_union(foo)", "FROM default.union_table");
+    String targetSql = String.join("\n", "SELECT foo", "FROM default.union_table");
     assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
 
     RelNode relNode2 = TestUtils.toRelNode("SELECT extract_union(foo, 2) from union_table");
-    String targetSql2 = String.join("\n", "SELECT extract_union(foo, 2)", "FROM default.union_table");
+    String targetSql2 = String.join("\n", "SELECT foo.tag_2", "FROM default.union_table");
     assertEquals(CoralSpark.create(relNode2).getSparkSql(), targetSql2);
   }
 
