@@ -24,7 +24,7 @@ import org.codehaus.jackson.node.JsonNodeFactory;
 
 import com.linkedin.coral.com.google.common.base.Preconditions;
 
-import static org.apache.hadoop.hive.serde2.avro.AvroSerdeUtils.*;
+import static com.linkedin.coral.schema.avro.AvroSerdeUtils.*;
 
 
 /**

@@ -39,9 +39,8 @@ import com.linkedin.coral.com.google.common.base.Preconditions;
 import com.linkedin.coral.com.google.common.base.Strings;
 import com.linkedin.coral.schema.avro.exceptions.SchemaNotFoundException;
 
+import static com.linkedin.coral.schema.avro.AvroSerdeUtils.*;
 import static org.apache.avro.Schema.Type.NULL;
-import static org.apache.hadoop.hive.serde2.avro.AvroSerdeUtils.getOtherTypeFromNullableType;
-import static org.apache.hadoop.hive.serde2.avro.AvroSerdeUtils.isNullableType;
 
 
 class SchemaUtilities {
