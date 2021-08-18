@@ -127,7 +127,7 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     checkNotNull(hiveView);
     String stringViewExpandedText = null;
     if (hiveView.getTableType().equals("VIRTUAL_VIEW")) {
-      stringViewExpandedText = hiveView.getViewExpandedText();
+      stringViewExpandedText = trimParenthesis(hiveView.getViewExpandedText());
     } else {
       // It is a table, not a view.
       stringViewExpandedText = "SELECT * FROM " + hiveView.getDbName() + "." + hiveView.getTableName();
@@ -158,7 +158,7 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
    * @return Calcite SqlNode representing parse tree that calcite framework can understand
    */
   public SqlNode processSql(String sql) {
-    return process(sql, null);
+    return process(trimParenthesis(sql), null);
   }
 
   SqlNode process(String sql, @Nullable Table hiveView) {
@@ -840,6 +840,14 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     } else {
       return hiveMetastoreClient;
     }
+  }
+
+  private static String trimParenthesis(String value) {
+    String str = value.trim();
+    if (str.startsWith("(") && str.endsWith(")")) {
+      return trimParenthesis(str.substring(1, str.length() - 1));
+    }
+    return str;
   }
 
   public static class Config {
