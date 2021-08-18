@@ -263,6 +263,9 @@ public abstract class AbstractASTVisitor<R, C> {
       case HiveParser.TOK_TABALIAS:
         return visitTabAlias(node, ctx);
 
+      case HiveParser.TOK_CTE:
+        return visitCTE(node, ctx);
+
       default:
         // return visitChildren(node, ctx);
         throw new UnhandledASTTokenException(node);
@@ -527,6 +530,10 @@ public abstract class AbstractASTVisitor<R, C> {
   }
 
   protected R visitIsNotNull(ASTNode node, C ctx) {
+    return visitChildren(node, ctx).get(0);
+  }
+
+  protected R visitCTE(ASTNode node, C ctx) {
     return visitChildren(node, ctx).get(0);
   }
 
