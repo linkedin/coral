@@ -626,20 +626,6 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     List<SqlNode> sqlNodes = visitChildren(node, ctx);
     List<String> names =
         sqlNodes.stream().map(s -> ((SqlIdentifier) s).names).flatMap(List::stream).collect(Collectors.toList());
-    // TODO: these should be configured in or transformed through
-    // a set of rules
-    if (names.size() == 1) {
-      if (!config.defaultDBName.isEmpty()) {
-        names.add(0, config.defaultDBName);
-      }
-      if (!config.catalogName.isEmpty()) {
-        names.add(0, config.catalogName);
-      }
-    } else if (names.size() == 2) {
-      if (!config.catalogName.isEmpty()) {
-        names.add(0, config.catalogName);
-      }
-    }
 
     return new SqlIdentifier(names, ZERO);
   }
