@@ -139,7 +139,7 @@ class TransportableUDFMap {
   static Optional<SparkUDFInfo> lookup(String className) {
     ScalaVersion scalaVersion = getScalaVersion();
     return Optional.ofNullable(UDF_MAP.get(className)).map(scalaMap -> Optional.ofNullable(scalaMap.get(scalaVersion))
-        .orElseThrow(() -> new UnsupportedUDFException(String.format(
+        .<UnsupportedUDFException> orElseThrow(() -> new UnsupportedUDFException(String.format(
             "Transport UDF for class '%s' is not supported for scala %s, please contact " + "the UDF owner for upgrade",
             className, scalaVersion.toString()))));
   }
