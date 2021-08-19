@@ -32,6 +32,8 @@ import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.SqlSelect;
 import org.apache.calcite.sql.SqlSelectKeyword;
 import org.apache.calcite.sql.SqlTypeNameSpec;
+import org.apache.calcite.sql.SqlWith;
+import org.apache.calcite.sql.SqlWithItem;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.hadoop.hive.metastore.api.Table;
@@ -50,6 +52,7 @@ import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 import com.linkedin.coral.hive.hive2rel.functions.VersionedSqlUserDefinedFunction;
 import com.linkedin.coral.hive.hive2rel.parsetree.parser.ASTNode;
 import com.linkedin.coral.hive.hive2rel.parsetree.parser.CoralParseDriver;
+import com.linkedin.coral.hive.hive2rel.parsetree.parser.HiveParser;
 import com.linkedin.coral.hive.hive2rel.parsetree.parser.Node;
 import com.linkedin.coral.hive.hive2rel.parsetree.parser.ParseDriver;
 import com.linkedin.coral.hive.hive2rel.parsetree.parser.ParseException;
@@ -715,10 +718,28 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
   protected SqlNode visitQueryNode(ASTNode node, ParseContext ctx) {
     ArrayList<Node> children = node.getChildren();
     checkState(children != null && !children.isEmpty());
+    SqlNode cte = null;
     ParseContext qc = new ParseContext(ctx.getHiveTable().orElse(null));
-    List<SqlNode> sqlNodes = visitChildren(node, qc);
-    return new SqlSelect(ZERO, qc.keywords, qc.selects, qc.from, qc.where, qc.grpBy, qc.having, null, qc.orderBy, null,
-        qc.fetch);
+    for (Node child : node.getChildren()) {
+      ASTNode ast = (ASTNode) child;
+      if (ast.getType() == HiveParser.TOK_CTE) {
+        // Child of type TOK_CTE represents the "WITH" list
+        /** See {@link #visitCTE(ASTNode, ParseContext) visitCTE} for the return value */
+        cte = visit(ast, new ParseContext(null));
+      } else {
+        // The return values are ignored since all other children of SELECT query will be captures via ParseConext qc.
+        visit(ast, qc);
+      }
+    }
+    SqlSelect select = new SqlSelect(ZERO, qc.keywords, qc.selects, qc.from, qc.where, qc.grpBy, qc.having, null,
+        qc.orderBy, null, qc.fetch);
+    if (cte != null) {
+      // Calcite uses "SqlWith(SqlNodeList of SqlWithItem, SqlSelect)" to represent queries with WITH
+      /** See {@link #visitCTE(ASTNode, ParseContext) visitCTE} for details */
+      return new SqlWith(ZERO, (SqlNodeList) cte, select);
+    } else {
+      return select;
+    }
   }
 
   protected SqlNode visitNil(ASTNode node, ParseContext ctx) {
@@ -808,6 +829,51 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
   @Override
   protected SqlNode visitKeywordLiteral(ASTNode node, ParseContext ctx) {
     return SqlLiteral.createCharString(node.getText(), ZERO);
+  }
+
+  @Override
+  protected SqlNode visitCTE(ASTNode node, ParseContext ctx) {
+    // ASTNode tree from Hive Antlr
+    // TOK_QUERY
+    // - TOK_FROM
+    // - TOK_INSERT
+    // -- TOK_DESTINATION
+    // -- TOK_SELECT
+    // - TOK_CTE       <-- processed by this method visitCTE
+    // -- TOK_SUBQUERY
+    // --- TOK_QUERY
+    // --- LITERAL (alias of the subquery)
+    // -- TOK_SUBQUERY
+    // --- TOK_QUERY
+    // --- LITERAL (alias of the subquery)
+
+    // SqlNode tree expected by Calcite
+    // - SqlWith
+    // -- withList: SqlNodeList  <-- returned by this method visitCTE
+    // --- element: SqlWithItem
+    // ---- id: SimpleIdentifier
+    // ---- columnList: SqlNodeList (column aliases - not supported by Hive)
+    // ---- definition: SqlSelect
+    // -- node: SqlSelect
+
+    ArrayList<Node> children = node.getChildren();
+    checkState(children != null && !children.isEmpty());
+    // First, visit the children to capture all their translation result (in List<SqlNode>)
+    // All children are expected to be translated into SqlBasicCall(definition, alias) by visitSubquery
+    /** See {@link #visitSubquery(ASTNode, ParseContext) visitSubquery} for details */
+    List<SqlNode> sqlNodeList = visitChildren(node, ctx);
+    // Second, translate the list of SqlBasicCall to list of SqlWithItem
+    List<SqlWithItem> withItemList = new ArrayList<>();
+    for (SqlNode sqlNode : sqlNodeList) {
+      SqlBasicCall call = (SqlBasicCall) sqlNode;
+      SqlNode definition = call.getOperandList().get(0);
+      SqlNode alias = call.getOperandList().get(1);
+      SqlWithItem withItem = new SqlWithItem(ZERO, (SqlIdentifier) alias, null, definition);
+      withItemList.add(withItem);
+    }
+    // Return a SqlNodeList with the contents of the withItemList
+    SqlNodeList result = new SqlNodeList(withItemList, ZERO);
+    return result;
   }
 
   private SqlDataTypeSpec createBasicTypeSpec(SqlTypeName type) {

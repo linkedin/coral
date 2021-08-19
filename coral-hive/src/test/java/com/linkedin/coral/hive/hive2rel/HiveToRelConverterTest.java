@@ -50,15 +50,56 @@ public class HiveToRelConverterTest {
 
   }
 
-  @Test
-  public void testBasic() {
-    String sql = "SELECT * from foo";
+  public void testBasicWithSQL(String sql) {
     RelNode rel = converter.convertSql(sql);
     RelBuilder relBuilder = createRelBuilder();
     RelNode expected = relBuilder.scan(ImmutableList.of("hive", "default", "foo"))
         .project(ImmutableList.of(relBuilder.field("a"), relBuilder.field("b"), relBuilder.field("c")),
             ImmutableList.of(), true)
         .build();
+    verifyRel(rel, expected);
+  }
+
+  @Test
+  public void testBasic() {
+    testBasicWithSQL("SELECT * from foo");
+  }
+
+  @Test
+  public void testBasic2() {
+    testBasicWithSQL("SELECT * from default.foo");
+  }
+
+  @Test
+  public void testWith1() {
+    // Test if the code can handle the use of the first alias from the WithList
+    String sql = "WITH tmp AS (SELECT a, b from foo), tmp2 AS (SELECT b, c from foo) SELECT * FROM tmp";
+    RelNode rel = converter.convertSql(sql);
+    RelBuilder relBuilder = createRelBuilder();
+    RelNode expected = relBuilder.scan(ImmutableList.of("hive", "default", "foo"))
+        .project(ImmutableList.of(relBuilder.field("a"), relBuilder.field("b")), ImmutableList.of(), true).build();
+    verifyRel(rel, expected);
+  }
+
+  @Test
+  public void testWith2() {
+    // Test if the code can handle the use of the second alias from the WithList
+    String sql = "WITH tmp AS (SELECT a, b from foo), tmp2 AS (SELECT b, c from foo) SELECT * FROM tmp2";
+    RelNode rel = converter.convertSql(sql);
+    RelBuilder relBuilder = createRelBuilder();
+    RelNode expected = relBuilder.scan(ImmutableList.of("hive", "default", "foo"))
+        .project(ImmutableList.of(relBuilder.field("b"), relBuilder.field("c")), ImmutableList.of(), true).build();
+    verifyRel(rel, expected);
+  }
+
+  @Test
+  public void testWithNested() {
+    // Test if the code can handle the use of an alias "tmp" within the definitino of another alias "tmp2"
+    String sql = "WITH tmp AS (SELECT a, b from foo), tmp2 AS (SELECT b from tmp) SELECT * FROM tmp2";
+    RelNode rel = converter.convertSql(sql);
+    RelBuilder relBuilder = createRelBuilder();
+    RelNode expected = relBuilder.scan(ImmutableList.of("hive", "default", "foo"))
+        .project(ImmutableList.of(relBuilder.field("b")), ImmutableList.of(), true).build();
     verifyRel(rel, expected);
   }
 
