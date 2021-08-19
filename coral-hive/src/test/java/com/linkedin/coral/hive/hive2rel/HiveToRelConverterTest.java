@@ -104,6 +104,68 @@ public class HiveToRelConverterTest {
   }
 
   @Test
+  public void testWindowSpec() {
+    // Test if the code can handle the use of window functions
+    String sql = "SELECT ROW_NUMBER() OVER (PARTITION BY a ORDER BY b) AS rid FROM foo";
+    RelNode rel = converter.convertSql(sql);
+    RelBuilder relBuilder = createRelBuilder();
+    // TODO: Make expected more specific and verifyRel with the whole tree
+    RelNode expected = relBuilder.scan(ImmutableList.of("hive", "default", "foo"))
+        .project(ImmutableList.of(relBuilder.field("b")), ImmutableList.of(), true).build();
+    verifyRel(rel, expected);
+  }
+
+  @Test
+  public void testWindowWithRowsUnboundedPreceding() {
+    // Test if the code can handle the use of window functions with rows
+    String sql = "SELECT MIN(c) OVER (PARTITION BY a ORDER BY b ROWS UNBOUNDED PRECEDING) AS min_c FROM foo";
+    RelNode rel = converter.convertSql(sql);
+    RelBuilder relBuilder = createRelBuilder();
+    // TODO: Make expected more specific and verifyRel with the whole tree
+    RelNode expected = relBuilder.scan(ImmutableList.of("hive", "default", "foo"))
+        .project(ImmutableList.of(relBuilder.field("b")), ImmutableList.of(), true).build();
+    verifyRel(rel, expected);
+  }
+
+  @Test
+  public void testWindowWithRangeUnboundedPreceding() {
+    // Test if the code can handle the use of window functions with range
+    String sql = "SELECT MIN(c) OVER (PARTITION BY a ORDER BY b RANGE UNBOUNDED PRECEDING) AS min_c FROM foo";
+    RelNode rel = converter.convertSql(sql);
+    RelBuilder relBuilder = createRelBuilder();
+    // TODO: Make expected more specific and verifyRel with the whole tree
+    RelNode expected = relBuilder.scan(ImmutableList.of("hive", "default", "foo"))
+        .project(ImmutableList.of(relBuilder.field("b")), ImmutableList.of(), true).build();
+    verifyRel(rel, expected);
+  }
+
+  @Test
+  public void testWindowWithRowsPrecedingAndFollowing() {
+    // Test if the code can handle the use of window functions with "rows between" and "current row"
+    String sql =
+        "SELECT MIN(c) OVER (PARTITION BY a ORDER BY b ROWS BETWEEN 1 PRECEDING AND CURRENT ROW) AS min_c FROM foo";
+    RelNode rel = converter.convertSql(sql);
+    RelBuilder relBuilder = createRelBuilder();
+    // TODO: Make expected more specific and verifyRel with the whole tree
+    RelNode expected = relBuilder.scan(ImmutableList.of("hive", "default", "foo"))
+        .project(ImmutableList.of(relBuilder.field("b")), ImmutableList.of(), true).build();
+    verifyRel(rel, expected);
+  }
+
+  @Test
+  public void testWindowWithRowsPrecedingAndFollowingCurrentRow() {
+    // Test if the code can handle the use of window functions with "rows between" and "current row"
+    String sql =
+        "SELECT MIN(c) OVER (PARTITION BY a ORDER BY b ROWS BETWEEN CURRENT ROW AND 1 FOLLOWING) AS min_c FROM foo";
+    RelNode rel = converter.convertSql(sql);
+    RelBuilder relBuilder = createRelBuilder();
+    // TODO: Make expected more specific and verifyRel with the whole tree
+    RelNode expected = relBuilder.scan(ImmutableList.of("hive", "default", "foo"))
+        .project(ImmutableList.of(relBuilder.field("b")), ImmutableList.of(), true).build();
+    verifyRel(rel, expected);
+  }
+
+  @Test
   public void testSelectNull() {
     final String sql = "SELECT NULL as f";
     RelNode rel = toRel(sql);

@@ -107,12 +107,18 @@ public class ParseTreeBuilderTest {
         "(SELECT a,b from foo AS f where NOT EXISTS (select x from bar))",
 
         //NiladicParentheses
-        "SELECT current_timestamp", "SELECT current_date"
+        "SELECT current_timestamp", "SELECT current_date",
 
-    // window
-    // Not yet implemented
-    // "SELECT a, rank() over (partition by b order by c asc) from foo group by a",
-    );
+        // window
+        "SELECT a, rank() over (partition by b order by c asc) from foo group by a",
+        "SELECT ROW_NUMBER() OVER (PARTITION BY a ORDER BY b) AS rid FROM foo",
+        "SELECT DENSE_RANK() OVER (PARTITION BY a ORDER BY b DESC) AS rid FROM foo",
+        "SELECT CUME_DIST() OVER (PARTITION BY a ORDER BY b DESC) FROM foo",
+        "SELECT AVG(c) OVER (PARTITION BY a ORDER BY b ROWS UNBOUNDED PRECEDING) AS min_c FROM foo",
+        "SELECT FIRST_VALUE(c) OVER (PARTITION BY a ORDER BY b RANGE UNBOUNDED PRECEDING) AS min_c FROM foo",
+        "SELECT LAST_VALUE(c) OVER (PARTITION BY a ORDER BY b ROWS BETWEEN 1 PRECEDING AND CURRENT ROW) AS min_c FROM foo",
+        "SELECT STDDEV(c) OVER (PARTITION BY a ORDER BY b RANGE BETWEEN CURRENT ROW AND 1 FOLLOWING) AS min_c FROM foo",
+        "SELECT VARIANCE(c) OVER (PARTITION BY a ORDER BY b ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS min_c FROM foo");
     // We wrap the SQL to be tested here rather than wrap each SQL statement in the its own array in the constant
     return convertSql.stream().map(x -> new Object[] { x }).iterator();
   }

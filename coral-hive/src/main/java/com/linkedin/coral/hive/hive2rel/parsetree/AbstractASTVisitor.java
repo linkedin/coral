@@ -188,6 +188,7 @@ public abstract class AbstractASTVisitor<R, C> {
       case HiveParser.KW_ARRAY:
       case HiveParser.KW_MAP:
       case HiveParser.KW_STRUCT:
+      case HiveParser.KW_UNBOUNDED:
         return visitKeywordLiteral(node, ctx);
 
       case HiveParser.TOK_BOOLEAN:
@@ -266,6 +267,30 @@ public abstract class AbstractASTVisitor<R, C> {
       case HiveParser.TOK_CTE:
         return visitCTE(node, ctx);
 
+      case HiveParser.TOK_WINDOWSPEC:
+        return visitWindowSpec(node, ctx);
+
+      case HiveParser.TOK_PARTITIONINGSPEC:
+        return visitPartitioningSpec(node, ctx);
+
+      case HiveParser.TOK_DISTRIBUTEBY:
+        return visitDistributeBy(node, ctx);
+
+      case HiveParser.TOK_WINDOWRANGE:
+        return visitWindowRange(node, ctx);
+
+      case HiveParser.TOK_WINDOWVALUES:
+        return visitWindowValues(node, ctx);
+
+      case HiveParser.KW_PRECEDING:
+        return visitPreceding(node, ctx);
+
+      case HiveParser.KW_FOLLOWING:
+        return visitFollowing(node, ctx);
+
+      case HiveParser.KW_CURRENT:
+        return visitCurrentRow(node, ctx);
+
       default:
         // return visitChildren(node, ctx);
         throw new UnhandledASTTokenException(node);
@@ -287,6 +312,39 @@ public abstract class AbstractASTVisitor<R, C> {
 
   protected List<R> visitChildren(List<Node> nodes, C ctx) {
     return nodes.stream().map(n -> visit((ASTNode) n, ctx)).collect(Collectors.toList());
+  }
+
+  protected R visitTheOnlyChildByType(ASTNode node, C ctx, int nodeType) {
+    R result = visitOptionalChildByType(node, ctx, nodeType);
+    if (result == null) {
+      throw new UnexpectedASTChildCountException(node, 1, 0, nodeType);
+    }
+    return result;
+  }
+
+  protected R visitOptionalChildByType(ASTNode node, C ctx, int nodeType) {
+    List<R> results = visitChildrenByType(node, ctx, nodeType);
+    if (results == null || results.isEmpty()) {
+      return null;
+    }
+    if (results.size() > 1) {
+      throw new UnexpectedASTChildCountException(node, 1, results.size(), nodeType);
+    }
+    return results.get(0);
+  }
+
+  protected List<R> visitChildrenByType(ASTNode node, C ctx, int nodeType) {
+    Preconditions.checkNotNull(node, ctx);
+    Preconditions.checkNotNull(ctx);
+    if (node.getChildren() == null) {
+      return null;
+    }
+    return visitChildrenByType(node.getChildren(), ctx, nodeType);
+  }
+
+  protected List<R> visitChildrenByType(List<Node> nodes, C ctx, int nodeType) {
+    return nodes.stream().filter(node -> ((ASTNode) node).getType() == nodeType).map(n -> visit((ASTNode) n, ctx))
+        .collect(Collectors.toList());
   }
 
   protected R visitTabAlias(ASTNode node, C ctx) {
@@ -537,4 +595,35 @@ public abstract class AbstractASTVisitor<R, C> {
     return visitChildren(node, ctx).get(0);
   }
 
+  protected R visitWindowSpec(ASTNode node, C ctx) {
+    return visitChildren(node, ctx).get(0);
+  }
+
+  protected R visitPartitioningSpec(ASTNode node, C ctx) {
+    return visitChildren(node, ctx).get(0);
+  }
+
+  protected R visitDistributeBy(ASTNode node, C ctx) {
+    return visitChildren(node, ctx).get(0);
+  }
+
+  protected R visitWindowRange(ASTNode node, C ctx) {
+    return visitChildren(node, ctx).get(0);
+  }
+
+  protected R visitWindowValues(ASTNode node, C ctx) {
+    return visitChildren(node, ctx).get(0);
+  }
+
+  protected R visitPreceding(ASTNode node, C ctx) {
+    return visitChildren(node, ctx).get(0);
+  }
+
+  protected R visitFollowing(ASTNode node, C ctx) {
+    return visitChildren(node, ctx).get(0);
+  }
+
+  protected R visitCurrentRow(ASTNode node, C ctx) {
+    return visitChildren(node, ctx).get(0);
+  }
 }
