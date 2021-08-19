@@ -25,16 +25,19 @@ import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelTraitDef;
 import org.apache.calcite.plan.volcano.VolcanoPlanner;
 import org.apache.calcite.prepare.CalciteCatalogReader;
+import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.runtime.Hook;
 import org.apache.calcite.schema.Schema;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.util.ChainedSqlOperatorTable;
+import org.apache.calcite.sql.validate.SqlNameMatchers;
 import org.apache.calcite.sql2rel.SqlToRelConverter;
 import org.apache.calcite.tools.FrameworkConfig;
 import org.apache.calcite.tools.Frameworks;
 import org.apache.calcite.tools.Programs;
 import org.apache.calcite.tools.RelBuilder;
+import org.apache.calcite.util.Util;
 
 import com.linkedin.coral.hive.hive2rel.functions.HiveFunction;
 import com.linkedin.coral.hive.hive2rel.functions.HiveFunctionRegistry;
@@ -169,6 +172,19 @@ public class RelContextProvider {
   }
 
   /**
+   * This class allows CalciteCatalogReader to have multiple schemaPaths, for example:
+   * ["hive", "default"], ["hive"], and []
+   */
+  public static class MultiSchemaPathCalciteCatalogReader extends CalciteCatalogReader {
+
+    public MultiSchemaPathCalciteCatalogReader(CalciteSchema rootSchema, List<List<String>> schemaPathList,
+        RelDataTypeFactory typeFactory, CalciteConnectionConfig config) {
+      super(rootSchema, SqlNameMatchers.withCaseSensitive(config != null && config.caseSensitive()),
+          Util.immutableCopy(schemaPathList), typeFactory, config);
+    }
+  }
+
+  /**
    * Gets calcite catalog reader.
    *
    * @return the calcite catalog reader
@@ -183,8 +199,10 @@ public class RelContextProvider {
       connectionConfig = new CalciteConnectionConfigImpl(properties);
     }
     if (catalogReader == null) {
-      catalogReader = new CalciteCatalogReader(config.getDefaultSchema().unwrap(CalciteSchema.class),
-          ImmutableList.of(HiveSchema.ROOT_SCHEMA), getRelBuilder().getTypeFactory(), connectionConfig);
+      catalogReader = new MultiSchemaPathCalciteCatalogReader(config.getDefaultSchema().unwrap(CalciteSchema.class),
+          ImmutableList.of(ImmutableList.of(HiveSchema.ROOT_SCHEMA, HiveSchema.DEFAULT_DB),
+              ImmutableList.of(HiveSchema.ROOT_SCHEMA), ImmutableList.of()),
+          getRelBuilder().getTypeFactory(), connectionConfig);
     }
     return catalogReader;
   }
