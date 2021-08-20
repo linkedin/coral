@@ -101,6 +101,11 @@ public class ParseTreeBuilderTest {
         // order by
         "SELECT * from foo order by a",
 
+        // outer parenthesis
+        "( SELECT 1 AS c1 )", " ( SELECT 1 AS c1 ) ", "(( SELECT 1 AS c1 ))", "( ( SELECT 1 AS c1 ) )",
+        "(( SELECT 1 AS c1 ) )", "( ( SELECT 1 AS c1 ))",
+        "(SELECT a,b from foo AS f where NOT EXISTS (select x from bar))",
+
         //NiladicParentheses
         "SELECT current_timestamp", "SELECT current_date"
 
