@@ -16,7 +16,7 @@ import org.testng.annotations.Test;
 
 import static com.google.common.io.MoreFiles.deleteRecursively;
 import static com.google.common.io.RecursiveDeleteOption.ALLOW_INSECURE;
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.testng.Assert.assertEquals;
 
 
 public class HiveToTrinoConverterTest {
@@ -40,7 +40,7 @@ public class HiveToTrinoConverterTest {
     RelNode relNode = TestUtils.convertView(database, view);
     RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
     String expandedSql = relToTrinoConverter.convert(relNode);
-    assertThat(expandedSql).isEqualTo(expectedSql);
+    assertEquals(expandedSql, expectedSql);
   }
 
   @DataProvider(name = "viewTestCases")
