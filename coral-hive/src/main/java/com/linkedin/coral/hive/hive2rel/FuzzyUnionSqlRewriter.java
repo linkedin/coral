@@ -111,9 +111,7 @@ class FuzzyUnionSqlRewriter extends SqlShuttle {
       final RelDataType expectedDataType = getUnionDataType(call);
       call = addFuzzyUnionToUnionCall(call, expectedDataType);
     }
-    ArgHandler<SqlNode> argHandler = new CallCopyingArgHandler(call, false);
-    call.getOperator().acceptCall(this, call, false, argHandler);
-    return argHandler.result();
+    return super.visit(call);
   }
 
   /**
