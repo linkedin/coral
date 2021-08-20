@@ -291,6 +291,10 @@ public class TestUtils {
     run(driver, "CREATE VIEW IF NOT EXISTS test.get_json_object_view AS \n"
         + "SELECT get_json_object(b.b1, '$.name') FROM test.tableA");
 
+    run(driver, "CREATE VIEW IF NOT EXISTS test.map_array_view AS \n"
+        + "SELECT MAP('key1', 'value1', 'key2', 'value2') AS simple_map_col, "
+        + "MAP('key1', MAP('a', 'b', 'c', 'd'), 'key2', MAP('a', 'b', 'c', 'd')) AS nested_map_col FROM test.tableA");
+
     run(driver,
         "CREATE TABLE test.table_from_utc_timestamp (a_tinyint tinyint, a_smallint smallint, "
             + "a_integer int, a_bigint bigint, a_float float, a_double double, "

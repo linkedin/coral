@@ -120,7 +120,10 @@ public class HiveToTrinoConverterTest {
 
         { "test", "view_with_outer_explode_map", "SELECT \"$cor0\".\"a\" AS \"a\", \"t1\".\"KEY\" AS \"c\", \"t1\".\"VALUE\" AS \"d\"\n"
             + "FROM \"test\".\"table_with_map\" AS \"$cor0\"\n" + "CROSS JOIN LATERAL (SELECT \"KEY\", \"VALUE\"\n"
-            + "FROM UNNEST(\"if\"(\"$cor0\".\"b\" IS NOT NULL AND CARDINALITY(\"$cor0\".\"b\") > 0, \"$cor0\".\"b\", MAP[NULL, NULL])) AS \"t0\" (\"KEY\", \"VALUE\")) AS \"t1\"" },
+            + "FROM UNNEST(\"if\"(\"$cor0\".\"b\" IS NOT NULL AND CARDINALITY(\"$cor0\".\"b\") > 0, \"$cor0\".\"b\", MAP (ARRAY[NULL], ARRAY[NULL]))) AS \"t0\" (\"KEY\", \"VALUE\")) AS \"t1\"" },
+
+        { "test", "map_array_view", "SELECT MAP (ARRAY['key1', 'key2'], ARRAY['value1', 'value2']) AS \"simple_map_col\", "
+            + "MAP (ARRAY['key1', 'key2'], ARRAY[MAP (ARRAY['a', 'c'], ARRAY['b', 'd']), MAP (ARRAY['a', 'c'], ARRAY['b', 'd'])]) AS \"nested_map_col\"\nFROM \"test\".\"tablea\"" },
 
         { "test", "current_date_and_timestamp_view", "SELECT CURRENT_TIMESTAMP, TRIM(CAST(CURRENT_TIMESTAMP AS VARCHAR(65535))) AS \"ct\", CURRENT_DATE, CURRENT_DATE AS \"cd\", \"a\"\nFROM \"test\".\"tablea\"" },
 
