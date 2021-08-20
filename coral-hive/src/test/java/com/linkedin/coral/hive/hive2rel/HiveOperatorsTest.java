@@ -1,5 +1,5 @@
 /**
- * Copyright 2018-2020 LinkedIn Corporation. All rights reserved.
+ * Copyright 2018-2021 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -106,6 +106,16 @@ public class HiveOperatorsTest {
       final String sql = "SELECT cast(a as double) FROM foo";
       RelNode rel = toRel(sql);
       final String expectedSql = "SELECT CAST(\"a\" AS DOUBLE PRECISION)\n" + "FROM \"hive\".\"default\".\"foo\"";
+      assertEquals(relToSql(rel), expectedSql);
+    }
+  }
+
+  @Test
+  public void testDate() {
+    {
+      final String sql = "SELECT date('2021-01-02') as a FROM foo";
+      RelNode rel = toRel(sql);
+      final String expectedSql = "SELECT \"date\"('2021-01-02') AS \"a\"\n" + "FROM \"hive\".\"default\".\"foo\"";
       assertEquals(relToSql(rel), expectedSql);
     }
   }
