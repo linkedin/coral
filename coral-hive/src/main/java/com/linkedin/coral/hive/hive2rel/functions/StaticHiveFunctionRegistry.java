@@ -267,6 +267,7 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
     createAddUserDefinedFunction("unix_timestamp", BIGINT,
         family(ImmutableList.of(SqlTypeFamily.STRING, SqlTypeFamily.STRING), optionalOrd(ImmutableList.of(0, 1))));
     createAddUserDefinedFunction("to_date", HiveReturnTypes.STRING, or(STRING, DATETIME));
+    createAddUserDefinedFunction("date", HiveReturnTypes.STRING, or(STRING, DATETIME));
     createAddUserDefinedFunction("year", ReturnTypes.INTEGER, STRING);
     createAddUserDefinedFunction("quarter", ReturnTypes.INTEGER, STRING);
     createAddUserDefinedFunction("month", ReturnTypes.INTEGER, STRING);

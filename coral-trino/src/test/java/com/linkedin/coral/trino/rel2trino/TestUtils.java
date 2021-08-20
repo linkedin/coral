@@ -282,6 +282,8 @@ public class TestUtils {
 
     run(driver, "CREATE VIEW IF NOT EXISTS test.current_date_and_timestamp_view AS \n"
         + "SELECT CURRENT_TIMESTAMP, trim(cast(CURRENT_TIMESTAMP as string)) as ct, CURRENT_DATE, CURRENT_DATE as cd, a from test.tableA");
+    run(driver,
+        "CREATE VIEW IF NOT EXISTS test.date_function_view AS \n" + "SELECT date('2021-01-02') as a from test.tableA");
     run(driver, "CREATE VIEW IF NOT EXISTS test.lateral_view_json_tuple_view AS \n"
         + "SELECT a, d, e, f FROM test.tableA LATERAL VIEW json_tuple(b.b1, 'trino', 'always', 'rocks') jt AS d, e, f");
     run(driver, "CREATE VIEW IF NOT EXISTS test.lateral_view_json_tuple_view_qualified AS \n"

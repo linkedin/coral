@@ -362,6 +362,13 @@ public class CoralSparkTest {
     assertEquals(CoralSpark.create(relNode2).getSparkSql(), targetSql2);
   }
 
+  @Test
+  public void testDateFunction() {
+    RelNode relNode = TestUtils.toRelNode("SELECT date('2021-01-02') as a FROM foo");
+    String targetSql = "SELECT date('2021-01-02') a\n" + "FROM default.foo";
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+  }
+
   private List<String> convertToListOfUriStrings(List<URI> listOfUris) {
     List<String> listOfUriStrings = new LinkedList<>();
     for (URI uri : listOfUris) {
