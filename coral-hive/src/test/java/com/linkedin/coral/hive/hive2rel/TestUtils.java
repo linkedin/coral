@@ -92,6 +92,8 @@ public class TestUtils {
       driver.run("CREATE TABLE IF NOT EXISTS fuzzy_union.tableC(a int, b struct<b1:string>)");
       driver.run(
           "CREATE VIEW IF NOT EXISTS fuzzy_union.union_view_single_branch_evolved AS SELECT * from fuzzy_union.tableB union all SELECT * from fuzzy_union.tableC");
+      driver.run(
+          "CREATE VIEW IF NOT EXISTS fuzzy_union.union_view_in_from_clause AS SELECT a FROM (SELECT * FROM fuzzy_union.tableB UNION ALL SELECT * FROM fuzzy_union.tableC) t1 UNION ALL SELECT a FROM fuzzy_union.tableB t2");
       driver.run("ALTER TABLE fuzzy_union.tableC CHANGE COLUMN b b struct<b1:string, b2:int>");
 
       driver.run("CREATE TABLE IF NOT EXISTS fuzzy_union.tableD(a int, b struct<b1:string>)");

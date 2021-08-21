@@ -214,7 +214,8 @@ class FuzzyUnionSqlRewriter extends SqlShuttle {
     for (final SqlNode node : leafNodes) {
       RelDataType fromNodeDataType = relContextProvider.getHiveSqlValidator().getValidatedNodeTypeIfKnown(node);
       if (fromNodeDataType == null) {
-        relContextProvider.getHiveSqlValidator().validate(node);
+        relContextProvider.getHiveSqlValidator()
+            .validate(node.accept(new FuzzyUnionSqlRewriter(tableName, relContextProvider)));
         fromNodeDataType = relContextProvider.getHiveSqlValidator().getValidatedNodeType(node);
       }
       leafNodeDataTypes.add(fromNodeDataType);
