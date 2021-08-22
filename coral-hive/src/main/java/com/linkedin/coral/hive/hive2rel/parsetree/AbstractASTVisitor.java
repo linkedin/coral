@@ -317,7 +317,7 @@ public abstract class AbstractASTVisitor<R, C> {
   protected R visitTheOnlyChildByType(ASTNode node, C ctx, int nodeType) {
     R result = visitOptionalChildByType(node, ctx, nodeType);
     if (result == null) {
-      throw new UnexpectedASTChildCountException(node, 1, 0, nodeType);
+      throw new UnexpectedASTChildCountException(node, nodeType, 1, 0);
     }
     return result;
   }
@@ -328,7 +328,7 @@ public abstract class AbstractASTVisitor<R, C> {
       return null;
     }
     if (results.size() > 1) {
-      throw new UnexpectedASTChildCountException(node, 1, results.size(), nodeType);
+      throw new UnexpectedASTChildCountException(node, nodeType, 1, results.size());
     }
     return results.get(0);
   }
