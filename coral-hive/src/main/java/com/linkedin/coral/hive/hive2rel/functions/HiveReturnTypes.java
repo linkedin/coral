@@ -41,6 +41,8 @@ public class HiveReturnTypes {
   public static final SqlReturnTypeInference STRING = ReturnTypes.explicit(SqlTypeName.VARCHAR);
   public static final SqlReturnTypeInference BINARY = ReturnTypes.explicit(SqlTypeName.BINARY);
   public static final SqlReturnTypeInference BIGINT = ReturnTypes.explicit(SqlTypeName.BIGINT);
+  public static final SqlReturnTypeInference DATE = ReturnTypes.explicit(SqlTypeName.DATE);
+  public static final SqlReturnTypeInference TIMESTAMP = ReturnTypes.explicit(SqlTypeName.TIMESTAMP);
 
   public static final SqlReturnTypeInference ARRAY_OF_STR_STR_MAP = new SqlReturnTypeInference() {
     @Override

@@ -155,6 +155,17 @@ public class HiveToTrinoConverterTest {
             + "CAST(\"at_timezone\"(\"from_unixtime\"(\"to_unixtime\"(\"with_timezone\"(\"a_date\", 'UTC'))), \"$canonicalize_hive_timezone_id\"('America/Los_Angeles')) AS TIMESTAMP(3))\n"
             + "FROM \"test\".\"table_from_utc_timestamp\"" },
 
+        { "test", "date_calculation_view", "SELECT "
+            + "\"date\"(TIMESTAMP '2021-08-20'), \"date\"(TIMESTAMP '2021-08-20 00:00:00'), "
+            + "\"date_add\"('day', 1, \"date\"(TIMESTAMP '2021-08-20')), "
+            + "\"date_add\"('day', 1, \"date\"(TIMESTAMP '2021-08-20 00:00:00')), "
+            + "\"date_add\"('day', 1 * -1, \"date\"(TIMESTAMP '2021-08-20')), "
+            + "\"date_add\"('day', 1 * -1, \"date\"(TIMESTAMP '2021-08-20 00:00:00')), "
+            + "\"date_diff\"('day', \"date\"(TIMESTAMP '2021-08-21'), \"date\"(TIMESTAMP '2021-08-20')), "
+            + "\"date_diff\"('day', \"date\"(TIMESTAMP '2021-08-19'), \"date\"(TIMESTAMP '2021-08-20')), "
+            + "\"date_diff\"('day', \"date\"(TIMESTAMP '2021-08-19 23:59:59'), \"date\"(TIMESTAMP '2021-08-20 00:00:00'))\n"
+            + "FROM \"test\".\"tablea\"" },
+
         { "test", "pmod_view", "SELECT MOD(MOD(- 9, 4) + 4, 4)\nFROM \"test\".\"tablea\"" }, };
   }
 }

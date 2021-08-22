@@ -23,8 +23,10 @@ import com.google.gson.JsonPrimitive;
 
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlOperator;
+import org.apache.calcite.sql.SqlWriter;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.OperandTypes;
@@ -125,6 +127,16 @@ public class UDFTransformer {
     OP_MAP.put("/", SqlStdOperatorTable.DIVIDE);
     OP_MAP.put("^", SqlStdOperatorTable.POWER);
     OP_MAP.put("%", SqlStdOperatorTable.MOD);
+    OP_MAP.put("date", new SqlUserDefinedFunction(new SqlIdentifier("date", SqlParserPos.ZERO), HiveReturnTypes.DATE,
+        null, OperandTypes.STRING, null, null));
+    OP_MAP.put("timestamp", new SqlUserDefinedFunction(new SqlIdentifier("timestamp", SqlParserPos.ZERO),
+        HiveReturnTypes.TIMESTAMP, null, OperandTypes.STRING, null, null) {
+      @Override
+      public void unparse(SqlWriter writer, SqlCall call, int leftPrec, int rightPrec) {
+        writer.keyword(call.getOperator().getName());
+        call.getOperandList().get(0).unparse(writer, 0, 0); //Just one operand
+      }
+    });
     OP_MAP.put("hive_pattern_to_trino",
         new SqlUserDefinedFunction(new SqlIdentifier("hive_pattern_to_trino", SqlParserPos.ZERO),
             HiveReturnTypes.STRING, null, OperandTypes.STRING, null, null));

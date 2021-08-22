@@ -68,6 +68,19 @@ public class CalciteTrinoUDFMap {
     createRuntimeUDFMapEntry(UDF_MAP, hiveToCalciteOp("decode"), 2,
         "[{\"regex\":\"(?i)('utf-8')\", \"input\":2, \"name\":\"from_utf8\"}]", "[{\"input\":1}]", null);
 
+    createUDFMapEntry(UDF_MAP, hiveToCalciteOp("to_date"), 1, "date",
+        "[{\"op\": \"timestamp\", \"operands\":[{\"input\": 1}]}]", null);
+    createUDFMapEntry(UDF_MAP, hiveToCalciteOp("date_add"), 2, "date_add", "[{\"value\": 'day'}, {\"input\": 2},  "
+        + "{\"op\": \"date\", \"operands\":[{\"op\": \"timestamp\", \"operands\":[{\"input\": 1}]}]}]", null);
+    createUDFMapEntry(UDF_MAP, hiveToCalciteOp("date_sub"), 2, "date_add",
+        "[{\"value\": 'day'}, " + "{\"op\": \"*\", \"operands\":[{\"input\": 2}, {\"value\": -1}]}, "
+            + "{\"op\": \"date\", \"operands\":[{\"op\": \"timestamp\", \"operands\":[{\"input\": 1}]}]}]",
+        null);
+    createUDFMapEntry(UDF_MAP, hiveToCalciteOp("datediff"), 2, "date_diff",
+        "[{\"value\": 'day'}, {\"op\": \"date\", \"operands\":[{\"op\": \"timestamp\", \"operands\":[{\"input\": 2}]}]}, "
+            + "{\"op\": \"date\", \"operands\":[{\"op\": \"timestamp\", \"operands\":[{\"input\": 1}]}]}]",
+        null);
+
     // DALI functions
     // Most "com.linkedin..." UDFs follow convention of having UDF names mapped from their class name by converting
     // the classname to LOWER_UNDERSCORE. For example: For class name IsGuestMemberId, the conventional udf name would
