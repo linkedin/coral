@@ -110,8 +110,8 @@ public class ParseTreeBuilderTest {
         "SELECT current_timestamp", "SELECT current_date",
 
         // window
-        "SELECT a, rank() over (partition by b order by c asc) from foo group by a",
-        "SELECT ROW_NUMBER() OVER (PARTITION BY a ORDER BY b) AS rid FROM foo",
+        "SELECT a, RANK() OVER (PARTITION BY b ORDER BY c asc) FROM foo GROUP BY a",
+        "SELECT ROW_NUMBER() OVER (ORDER BY b) AS rid FROM foo", "SELECT a, MAX(b) OVER () AS max_b FROM foo",
         "SELECT DENSE_RANK() OVER (PARTITION BY a ORDER BY b DESC) AS rid FROM foo",
         "SELECT CUME_DIST() OVER (PARTITION BY a ORDER BY b DESC) FROM foo",
         "SELECT AVG(c) OVER (PARTITION BY a ORDER BY b ROWS UNBOUNDED PRECEDING) AS min_c FROM foo",

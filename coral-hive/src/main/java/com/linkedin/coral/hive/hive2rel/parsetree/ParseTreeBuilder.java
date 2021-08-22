@@ -927,8 +927,8 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     SqlWindow windowValues = (SqlWindow) visitOptionalChildByType(node, ctx, HiveParser.TOK_WINDOWVALUES);
     SqlWindow window = windowRange != null ? windowRange : windowValues;
 
-    return new SqlWindow(ZERO, null, null, partitionSpec == null ? null : partitionSpec.getPartitionList(),
-        partitionSpec == null ? null : partitionSpec.getOrderList(),
+    return new SqlWindow(ZERO, null, null, partitionSpec == null ? SqlNodeList.EMPTY : partitionSpec.getPartitionList(),
+        partitionSpec == null ? SqlNodeList.EMPTY : partitionSpec.getOrderList(),
         SqlLiteral.createBoolean(windowRange != null, ZERO), window == null ? null : window.getLowerBound(),
         window == null ? null : window.getUpperBound(), null);
   }
@@ -937,8 +937,8 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
   protected SqlNode visitPartitioningSpec(ASTNode node, ParseContext ctx) {
     SqlNode partitionList = visitOptionalChildByType(node, ctx, HiveParser.TOK_DISTRIBUTEBY);
     SqlNode orderList = visitOptionalChildByType(node, ctx, HiveParser.TOK_ORDERBY);
-    return new SqlWindow(ZERO, null, null, (SqlNodeList) partitionList, (SqlNodeList) orderList, null, null, null,
-        null);
+    return new SqlWindow(ZERO, null, null, partitionList != null ? (SqlNodeList) partitionList : SqlNodeList.EMPTY,
+        orderList != null ? (SqlNodeList) orderList : SqlNodeList.EMPTY, null, null, null, null);
   }
 
   @Override
