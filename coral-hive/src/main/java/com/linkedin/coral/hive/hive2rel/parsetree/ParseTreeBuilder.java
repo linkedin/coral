@@ -580,8 +580,13 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     // Special treatment for Window Function
     SqlNode lastSqlOperand = sqlOperands.get(sqlOperands.size() - 1);
     if (lastSqlOperand instanceof SqlWindow) {
-      // In Hive, "func() OVER (PARTITIONED BY ...)" will have the window spec as the last operand of the function "func".
-      // In Calcite, it's a SqlBasicCall("OVER", ["func", SqlWindow])
+      // For a SQL example of "func() OVER (PARTITIONED BY ...)":
+      // In Hive, TOK_WINDOWSPEC (the window spec) is the last operand of the function "func":
+      //    TOK_FUNCTION will have 1+N+1 children, where the first is the function name, the last is TOK_WINDOWSPEC
+      //    and everything in between are the operands of the function
+      // In Calcite, SqlWindow (the window spec) is a sibling of the function "func":
+      //    SqlBasicCall("OVER") will have 2 children: "func" and SqlWindow
+      /** See {@link #visitWindowSpec(ASTNode, ParseContext)} for SQL, AST Tree and SqlNode Tree examples */
       SqlNode func =
           hiveFunction.createCall(sqlOperands.get(0), sqlOperands.subList(1, sqlOperands.size() - 1), quantifier);
       SqlNode window = (SqlWindow) lastSqlOperand;
