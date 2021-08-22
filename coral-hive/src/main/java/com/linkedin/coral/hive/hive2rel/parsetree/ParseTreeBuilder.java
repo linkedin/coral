@@ -580,12 +580,12 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     // Special treatment for Window Function
     SqlNode lastSqlOperand = sqlOperands.get(sqlOperands.size() - 1);
     if (lastSqlOperand instanceof SqlWindow) {
-      // In Hive, "xxx() OVER (PARTITIONED BY ...)" will have the window as the last parameter of the function "xxx".
-      // In Calcite, it's a SqlBasicCall("OVER", ["xxx", SqlWindow])
-      SqlNode xxx =
+      // In Hive, "func() OVER (PARTITIONED BY ...)" will have the window spec as the last operand of the function "func".
+      // In Calcite, it's a SqlBasicCall("OVER", ["func", SqlWindow])
+      SqlNode func =
           hiveFunction.createCall(sqlOperands.get(0), sqlOperands.subList(1, sqlOperands.size() - 1), quantifier);
       SqlNode window = (SqlWindow) lastSqlOperand;
-      return new SqlBasicCall(SqlStdOperatorTable.OVER, new SqlNode[] { xxx, window }, ZERO);
+      return new SqlBasicCall(SqlStdOperatorTable.OVER, new SqlNode[] { func, window }, ZERO);
     }
 
     return hiveFunction.createCall(sqlOperands.get(0), sqlOperands.subList(1, sqlOperands.size()), quantifier);
@@ -894,10 +894,11 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     // See Apache Hive source code: https://github.com/apache/hive/blob/master/ql/src/java/org/apache/hadoop/hive/ql/parse/CalcitePlanner.java#L4339
     // "private RelNode genSelectForWindowing(QB qb, RelNode srcRel, HashSet<ColumnInfo> newColumns)"
 
+    // SQL:
+    //   ROW_NUMBER() OVER (PARTITION BY x ORDER BY y ROWS BETWEEN CURRENT ROW AND 1 FOLLOWING
     // Hive Antlr ASTNode Tree:
     //TOK_FUNCTION
-    //   MIN
-    //   TOK_TABLE_OR_COL
+    //   ROW_NUMBER
     //   TOK_WINDOWSPEC  <-- processed by this node
     //      TOK_PARTITIONINGSPEC
     //         TOK_DISTRIBUTEBY
