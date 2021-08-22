@@ -975,7 +975,7 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
   @Override
   protected SqlNode visitPreceding(ASTNode node, ParseContext ctx) {
     SqlNode sqlNode = visitChildren(node, ctx).get(0);
-    if (sqlNode.getKind() == SqlKind.LITERAL && sqlNode.toString().equals("'UNBOUNDED'")) {
+    if (sqlNode.getKind() == SqlKind.LITERAL && sqlNode.toString().equalsIgnoreCase("'UNBOUNDED'")) {
       return SqlWindow.createUnboundedPreceding(ZERO);
     } else {
       return SqlWindow.createPreceding(sqlNode, ZERO);
@@ -985,7 +985,7 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
   @Override
   protected SqlNode visitFollowing(ASTNode node, ParseContext ctx) {
     SqlNode sqlNode = visitChildren(node, ctx).get(0);
-    if (sqlNode.getKind() == SqlKind.LITERAL && sqlNode.toString().equals("'UNBOUNDED'")) {
+    if (sqlNode.getKind() == SqlKind.LITERAL && sqlNode.toString().equalsIgnoreCase("'UNBOUNDED'")) {
       return SqlWindow.createUnboundedFollowing(ZERO);
     } else {
       return SqlWindow.createFollowing(sqlNode, ZERO);
