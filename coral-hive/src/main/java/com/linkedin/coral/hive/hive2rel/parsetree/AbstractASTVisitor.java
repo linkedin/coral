@@ -314,14 +314,6 @@ public abstract class AbstractASTVisitor<R, C> {
     return nodes.stream().map(n -> visit((ASTNode) n, ctx)).collect(Collectors.toList());
   }
 
-  protected R visitTheOnlyChildByType(ASTNode node, C ctx, int nodeType) {
-    R result = visitOptionalChildByType(node, ctx, nodeType);
-    if (result == null) {
-      throw new UnexpectedASTChildCountException(node, nodeType, 1, 0);
-    }
-    return result;
-  }
-
   protected R visitOptionalChildByType(ASTNode node, C ctx, int nodeType) {
     List<R> results = visitChildrenByType(node, ctx, nodeType);
     if (results == null || results.isEmpty()) {

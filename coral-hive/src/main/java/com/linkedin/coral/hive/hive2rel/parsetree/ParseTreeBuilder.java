@@ -169,7 +169,6 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     ParseDriver pd = new CoralParseDriver();
     try {
       ASTNode root = pd.parse(sql);
-      System.out.println("AST DUMP: \n" + root.dump());
       return processAST(root, hiveView);
     } catch (ParseException e) {
       throw new RuntimeException(e);
