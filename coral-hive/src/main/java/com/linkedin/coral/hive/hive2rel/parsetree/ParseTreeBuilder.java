@@ -899,7 +899,7 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     // See Apache Hive source code: https://github.com/apache/hive/blob/master/ql/src/java/org/apache/hadoop/hive/ql/parse/CalcitePlanner.java#L4339
     // "private RelNode genSelectForWindowing(QB qb, RelNode srcRel, HashSet<ColumnInfo> newColumns)"
 
-    // SQL:
+    // Example SQL:
     //   ROW_NUMBER() OVER (PARTITION BY x ORDER BY y ROWS BETWEEN CURRENT ROW AND 1 FOLLOWING
     // Hive Antlr ASTNode Tree:
     //TOK_FUNCTION
