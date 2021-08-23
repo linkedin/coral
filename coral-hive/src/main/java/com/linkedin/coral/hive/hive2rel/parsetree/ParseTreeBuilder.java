@@ -264,9 +264,12 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
   private SqlNode visitLateralViewExplode(List<SqlNode> sqlNodes, List<SqlNode> aliasOperands,
       SqlCall tableFunctionCall, boolean isOuter) {
     final int operandCount = aliasOperands.size();
-    // array if operandCount == 3: LATERAL VIEW EXPLODE(op0) AS op1(op2)
-    // map if operandCount == 4: LATERAL VIEW EXPLODE(op0) AS op1(op2, op3)
-    checkState(operandCount == 3 || operandCount == 4,
+    // array if operandCount == 3: LATERAL VIEW EXPLODE(op0) op1 AS op2
+    // map if operandCount == 4: LATERAL VIEW EXPLODE(op0) op1 AS op2, op3
+    // if operandCount == 2: LATERAL VIEW EXPLODE(op0) op1
+    //   if op0 is a map, it implies "AS key, value" where key, value are auto-named by Hive
+    //   TODO: if op0 is an array, is implies "AS col" where col is auto-named by Hive
+    checkState(operandCount == 2 || operandCount == 3 || operandCount == 4,
         format("Unsupported LATERAL VIEW EXPLODE operand number: %d", operandCount));
     // TODO The code below assumes LATERAL VIEW is used with UNNEST EXPLODE only. It should be made more generic.
     SqlCall unnestCall = tableFunctionCall;
@@ -304,6 +307,12 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     List<SqlNode> aliasCallOperands = new ArrayList<>();
     aliasCallOperands.add(lateralCall);
     aliasCallOperands.addAll(aliasOperands.subList(1, operandCount));
+    if (operandCount == 2) {
+      // assume that op1 is map type, in which case we add 'key', 'value' columns automatically
+      // TODO: handle the case when op1 is array type, in which case we should add 'col' automatically
+      aliasCallOperands.add(new SqlIdentifier("key", ZERO));
+      aliasCallOperands.add(new SqlIdentifier("value", ZERO));
+    }
     SqlCall aliasCall = SqlStdOperatorTable.AS.createCall(ZERO, aliasCallOperands);
     return new SqlJoin(ZERO, sqlNodes.get(1), SqlLiteral.createBoolean(false, ZERO), JoinType.COMMA.symbol(ZERO),
         aliasCall/*lateralCall*/, JoinConditionType.NONE.symbol(ZERO), null);
