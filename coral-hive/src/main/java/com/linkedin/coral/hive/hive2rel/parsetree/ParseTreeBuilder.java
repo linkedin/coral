@@ -32,6 +32,7 @@ import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.SqlSelect;
 import org.apache.calcite.sql.SqlSelectKeyword;
 import org.apache.calcite.sql.SqlTypeNameSpec;
+import org.apache.calcite.sql.SqlWindow;
 import org.apache.calcite.sql.SqlWith;
 import org.apache.calcite.sql.SqlWithItem;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
@@ -575,6 +576,23 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     HiveFunction hiveFunction = functionResolver.tryResolve(functionName, ctx.hiveTable.orElse(null),
         // The first element of sqlOperands is the operator itself. The actual # of operands is sqlOperands.size() - 1
         sqlOperands.size() - 1);
+
+    // Special treatment for Window Function
+    SqlNode lastSqlOperand = sqlOperands.get(sqlOperands.size() - 1);
+    if (lastSqlOperand instanceof SqlWindow) {
+      // For a SQL example of "func() OVER (PARTITIONED BY ...)":
+      // In Hive, TOK_WINDOWSPEC (the window spec) is the last operand of the function "func":
+      //    TOK_FUNCTION will have 1+N+1 children, where the first is the function name, the last is TOK_WINDOWSPEC
+      //    and everything in between are the operands of the function
+      // In Calcite, SqlWindow (the window spec) is a sibling of the function "func":
+      //    SqlBasicCall("OVER") will have 2 children: "func" and SqlWindow
+      /** See {@link #visitWindowSpec(ASTNode, ParseContext)} for SQL, AST Tree and SqlNode Tree examples */
+      SqlNode func =
+          hiveFunction.createCall(sqlOperands.get(0), sqlOperands.subList(1, sqlOperands.size() - 1), quantifier);
+      SqlNode window = (SqlWindow) lastSqlOperand;
+      return new SqlBasicCall(SqlStdOperatorTable.OVER, new SqlNode[] { func, window }, ZERO);
+    }
+
     return hiveFunction.createCall(sqlOperands.get(0), sqlOperands.subList(1, sqlOperands.size()), quantifier);
   }
 
@@ -874,6 +892,114 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     // Return a SqlNodeList with the contents of the withItemList
     SqlNodeList result = new SqlNodeList(withItemList, ZERO);
     return result;
+  }
+
+  @Override
+  protected SqlNode visitWindowSpec(ASTNode node, ParseContext ctx) {
+    // See Apache Hive source code: https://github.com/apache/hive/blob/master/ql/src/java/org/apache/hadoop/hive/ql/parse/CalcitePlanner.java#L4339
+    // "private RelNode genSelectForWindowing(QB qb, RelNode srcRel, HashSet<ColumnInfo> newColumns)"
+
+    // Example SQL:
+    //   ROW_NUMBER() OVER (PARTITION BY x ORDER BY y ROWS BETWEEN CURRENT ROW AND 1 FOLLOWING
+    // Hive Antlr ASTNode Tree:
+    //TOK_FUNCTION
+    //   ROW_NUMBER
+    //   TOK_WINDOWSPEC  <-- processed by this node
+    //      TOK_PARTITIONINGSPEC
+    //         TOK_DISTRIBUTEBY
+    //         TOK_ORDERBY
+    //      TOK_WINDOWRANGE
+    //         CURRENT
+    //         FOLLOWING
+    //            1
+
+    // Calcite SqlNode Tree:
+    // SqlBasicCall(Over):
+    // - SqlBasicCall(ROW_NUMBER)
+    // - SqlWindow  <-- returned by this node
+    // -- partitionList
+    // -- orderList
+    // -- isRows
+    // -- lowerBound
+    // -- upperBound
+    // -- allowPartial
+
+    // Use a separate context to avoid inadvertently having the "ORDER BY" clause from the window added to the SELECT query.
+    ctx = new ParseContext(ctx.hiveTable.orElse(null));
+
+    SqlWindow partitionSpec = (SqlWindow) visitOptionalChildByType(node, ctx, HiveParser.TOK_PARTITIONINGSPEC);
+    SqlWindow windowRange = (SqlWindow) visitOptionalChildByType(node, ctx, HiveParser.TOK_WINDOWRANGE);
+    SqlWindow windowValues = (SqlWindow) visitOptionalChildByType(node, ctx, HiveParser.TOK_WINDOWVALUES);
+    SqlWindow window = windowRange != null ? windowRange : windowValues;
+
+    return new SqlWindow(ZERO, null, null, partitionSpec == null ? SqlNodeList.EMPTY : partitionSpec.getPartitionList(),
+        partitionSpec == null ? SqlNodeList.EMPTY : partitionSpec.getOrderList(),
+        SqlLiteral.createBoolean(windowRange != null, ZERO), window == null ? null : window.getLowerBound(),
+        window == null ? null : window.getUpperBound(), null);
+  }
+
+  @Override
+  protected SqlNode visitPartitioningSpec(ASTNode node, ParseContext ctx) {
+    SqlNode partitionList = visitOptionalChildByType(node, ctx, HiveParser.TOK_DISTRIBUTEBY);
+    SqlNode orderList = visitOptionalChildByType(node, ctx, HiveParser.TOK_ORDERBY);
+    return new SqlWindow(ZERO, null, null, partitionList != null ? (SqlNodeList) partitionList : SqlNodeList.EMPTY,
+        orderList != null ? (SqlNodeList) orderList : SqlNodeList.EMPTY, null, null, null, null);
+  }
+
+  @Override
+  protected SqlNode visitDistributeBy(ASTNode node, ParseContext ctx) {
+    return new SqlNodeList(visitChildren(node, ctx), ZERO);
+  }
+
+  @Override
+  protected SqlNode visitWindowRange(ASTNode node, ParseContext ctx) {
+    // Hive AST:
+    //      TOK_WINDOWRANGE  (ROWS ...)
+    //         CURRENT
+    //         FOLLOWING
+    //            1
+    List<SqlNode> sqlNodeList = visitChildren(node, ctx);
+    SqlNode preceding = sqlNodeList.get(0);
+    SqlNode following = (sqlNodeList.size() < 2 ? null : sqlNodeList.get(1));
+
+    return new SqlWindow(ZERO, null, null, SqlNodeList.EMPTY, SqlNodeList.EMPTY, null, preceding, following, null);
+  }
+
+  @Override
+  protected SqlNode visitWindowValues(ASTNode node, ParseContext ctx) {
+    // Hive AST:
+    //      TOK_WINDOWVALUES  (VALUES ...)
+    //         CURRENT
+    //         FOLLOWING
+    //            1
+
+    // Reuse the same code of visitWindowRange since the AST structure is exactly the same
+    return visitWindowRange(node, ctx);
+  }
+
+  @Override
+  protected SqlNode visitPreceding(ASTNode node, ParseContext ctx) {
+    SqlNode sqlNode = visitChildren(node, ctx).get(0);
+    if (sqlNode.getKind() == SqlKind.LITERAL && sqlNode.toString().equalsIgnoreCase("'UNBOUNDED'")) {
+      return SqlWindow.createUnboundedPreceding(ZERO);
+    } else {
+      return SqlWindow.createPreceding(sqlNode, ZERO);
+    }
+  }
+
+  @Override
+  protected SqlNode visitFollowing(ASTNode node, ParseContext ctx) {
+    SqlNode sqlNode = visitChildren(node, ctx).get(0);
+    if (sqlNode.getKind() == SqlKind.LITERAL && sqlNode.toString().equalsIgnoreCase("'UNBOUNDED'")) {
+      return SqlWindow.createUnboundedFollowing(ZERO);
+    } else {
+      return SqlWindow.createFollowing(sqlNode, ZERO);
+    }
+  }
+
+  @Override
+  protected SqlNode visitCurrentRow(ASTNode node, ParseContext ctx) {
+    return SqlWindow.createCurrentRow(ZERO);
   }
 
   private SqlDataTypeSpec createBasicTypeSpec(SqlTypeName type) {

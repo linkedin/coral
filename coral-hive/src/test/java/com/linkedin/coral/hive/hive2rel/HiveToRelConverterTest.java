@@ -104,6 +104,92 @@ public class HiveToRelConverterTest {
   }
 
   @Test
+  public void testWindowSpec() {
+    // Test if the code can handle the use of window functions
+    String sql = "SELECT ROW_NUMBER() OVER (PARTITION BY a ORDER BY b) AS rid FROM foo";
+    RelNode rel = converter.convertSql(sql);
+    String relString = relToStr(rel);
+    String expected =
+        "LogicalProject(rid=[ROW_NUMBER() OVER (PARTITION BY $0 ORDER BY $1 ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)])\n"
+            + "  LogicalTableScan(table=[[hive, default, foo]])\n";
+    assertEquals(relString, expected);
+  }
+
+  @Test
+  public void testWindowWithRowsUnboundedPreceding() {
+    // Test if the code can handle the use of window functions with rows
+    String sql = "SELECT MIN(c) OVER (PARTITION BY a ORDER BY b ROWS UNBOUNDED PRECEDING) AS min_c FROM foo";
+    RelNode rel = converter.convertSql(sql);
+    String relString = relToStr(rel);
+    String expected =
+        "LogicalProject(min_c=[MIN($2) OVER (PARTITION BY $0 ORDER BY $1 ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)])\n"
+            + "  LogicalTableScan(table=[[hive, default, foo]])\n";
+    assertEquals(relString, expected);
+  }
+
+  @Test
+  public void testWindowWithRangeUnboundedPreceding() {
+    // Test if the code can handle the use of window functions with range
+    String sql = "SELECT VARIANCE(c) OVER (PARTITION BY a ORDER BY b RANGE UNBOUNDED PRECEDING) AS var_c FROM foo";
+    RelNode rel = converter.convertSql(sql);
+    String relString = relToStr(rel);
+    String expected =
+        "LogicalProject(var_c=[/(-(CASE(>(COUNT(*($2, $2)) OVER (PARTITION BY $0 ORDER BY $1 RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW), 0), CAST($SUM0(*($2, $2)) OVER (PARTITION BY $0 ORDER BY $1 RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)):DOUBLE, null:DOUBLE), /(*(CASE(>(COUNT($2) OVER (PARTITION BY $0 ORDER BY $1 RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW), 0), CAST($SUM0($2) OVER (PARTITION BY $0 ORDER BY $1 RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)):DOUBLE, null:DOUBLE), CASE(>(COUNT($2) OVER (PARTITION BY $0 ORDER BY $1 RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW), 0), CAST($SUM0($2) OVER (PARTITION BY $0 ORDER BY $1 RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)):DOUBLE, null:DOUBLE)), CAST(COUNT($2) OVER (PARTITION BY $0 ORDER BY $1 RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)):DOUBLE NOT NULL)), CASE(=(COUNT($2) OVER (PARTITION BY $0 ORDER BY $1 RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW), 1), null:BIGINT, CAST(-(COUNT($2) OVER (PARTITION BY $0 ORDER BY $1 RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW), 1)):BIGINT))])\n"
+            + "  LogicalTableScan(table=[[hive, default, foo]])\n";
+    assertEquals(relString, expected);
+  }
+
+  @Test
+  public void testWindowWithRowsPrecedingAndFollowing() {
+    // Test if the code can handle the use of window functions with "rows between" and "current row"
+    String sql =
+        "SELECT FIRST_VALUE(c) OVER (PARTITION BY a ORDER BY b ROWS BETWEEN 1 PRECEDING AND CURRENT ROW) AS first_value_c FROM foo";
+    RelNode rel = converter.convertSql(sql);
+    String relString = relToStr(rel);
+    String expected =
+        "LogicalProject(first_value_c=[FIRST_VALUE($2) OVER (PARTITION BY $0 ORDER BY $1 ROWS BETWEEN 1 PRECEDING AND CURRENT ROW)])\n"
+            + "  LogicalTableScan(table=[[hive, default, foo]])\n";
+    assertEquals(relString, expected);
+  }
+
+  @Test
+  public void testWindowWithRowsPrecedingAndFollowingCurrentRow() {
+    // Test if the code can handle the use of window functions with "rows between" and "current row"
+    String sql =
+        "SELECT LAST_VALUE(c) OVER (PARTITION BY a ORDER BY b ROWS BETWEEN CURRENT ROW AND 1 FOLLOWING) FROM foo";
+    RelNode rel = converter.convertSql(sql);
+    String relString = relToStr(rel);
+    String expected =
+        "LogicalProject(EXPR$0=[LAST_VALUE($2) OVER (PARTITION BY $0 ORDER BY $1 ROWS BETWEEN CURRENT ROW AND 1 FOLLOWING)])\n"
+            + "  LogicalTableScan(table=[[hive, default, foo]])\n";
+    assertEquals(relString, expected);
+  }
+
+  @Test
+  public void testWindowWithNoPartition() {
+    // Test if the code can handle the use of window functions with no "partition by"
+    String sql = "SELECT RANK() OVER (ORDER BY b) AS rank FROM foo";
+    RelNode rel = converter.convertSql(sql);
+    String relString = relToStr(rel);
+    String expected =
+        "LogicalProject(rank=[RANK() OVER (ORDER BY $1 RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)])\n"
+            + "  LogicalTableScan(table=[[hive, default, foo]])\n";
+    assertEquals(relString, expected);
+  }
+
+  @Test
+  public void testWindowWithNoPartitionNoOrder() {
+    // Test if the code can handle the use of window functions with no "partition by" or "order by"
+    String sql = "SELECT a, MAX(c) OVER () AS max_c FROM foo";
+    RelNode rel = converter.convertSql(sql);
+    String relString = relToStr(rel);
+    String expected =
+        "LogicalProject(a=[$0], max_c=[MAX($2) OVER (RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)])\n"
+            + "  LogicalTableScan(table=[[hive, default, foo]])\n";
+    assertEquals(relString, expected);
+  }
+
+  @Test
   public void testSelectNull() {
     final String sql = "SELECT NULL as f";
     RelNode rel = toRel(sql);

@@ -8,12 +8,13 @@ package com.linkedin.coral.hive.hive2rel.parsetree;
 import com.linkedin.coral.hive.hive2rel.parsetree.parser.ASTNode;
 
 
-public class UnhandledASTTokenException extends RuntimeException {
+public class UnexpectedASTChildCountException extends RuntimeException {
 
   private final ASTNode node;
 
-  public UnhandledASTTokenException(ASTNode node) {
-    super(String.format("Unhandled Hive AST token %d %s, tree: %s", node.getType(), node.getText(), node.dump()));
+  public UnexpectedASTChildCountException(ASTNode node, int type, int expected, int actual) {
+    super(String.format("Expected %d but got %d children of type %d under Hive AST token %s, tree: %s", expected,
+        actual, type, node.getText(), node.dump()));
     this.node = node;
   }
 

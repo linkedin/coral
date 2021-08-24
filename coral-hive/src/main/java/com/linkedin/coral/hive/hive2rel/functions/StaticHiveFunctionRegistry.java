@@ -22,6 +22,7 @@ import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlOperandCountRange;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.SqlOperatorBinding;
+import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.ReturnTypes;
 import org.apache.calcite.sql.type.SameOperandTypeChecker;
@@ -73,6 +74,24 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
     addFunctionEntry("avg", AVG);
     addFunctionEntry("min", MIN);
     addFunctionEntry("max", MAX);
+
+    // window functions
+    addFunctionEntry("row_number", ROW_NUMBER);
+    addFunctionEntry("rank", SqlStdOperatorTable.RANK); // qualification required due to naming conflict
+    addFunctionEntry("dense_rank", DENSE_RANK);
+    addFunctionEntry("cume_dist", CUME_DIST);
+    addFunctionEntry("percent_rank", PERCENT_RANK);
+    addFunctionEntry("first_value", FIRST_VALUE);
+    addFunctionEntry("last_value", LAST_VALUE);
+    addFunctionEntry("nth_value", NTH_VALUE);
+    addFunctionEntry("lag", LAG);
+    addFunctionEntry("lead", LEAD);
+    addFunctionEntry("stddev", STDDEV);
+    addFunctionEntry("stddev_samp", STDDEV_SAMP);
+    addFunctionEntry("stddev_pop", STDDEV_POP);
+    addFunctionEntry("variance", VARIANCE);
+    addFunctionEntry("var_samp", VAR_SAMP);
+    addFunctionEntry("var_pop", VAR_POP);
 
     //addFunctionEntry("in", HiveInOperator.IN);
     FUNCTION_MAP.put("in", HiveFunction.IN);
