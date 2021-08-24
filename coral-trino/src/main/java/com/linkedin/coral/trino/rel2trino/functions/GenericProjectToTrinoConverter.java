@@ -13,7 +13,6 @@ import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rel.type.RelRecordType;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexCall;
-import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.type.ArraySqlType;
@@ -180,10 +179,9 @@ public class GenericProjectToTrinoConverter {
     //           [RexLiteral: 'col1, (k, v) -> transform(v , x -> cast(row(x.a) as row(a int)))']
     // The resolved SQL string will look like:
     //   'transform_values(col1, (k, v) -> transform(v , x -> cast(row(x.a) as row(a int))))'
-    RexInputRef transformColumn = (RexInputRef) call.getOperands().get(0);
     RexLiteral columnNameLiteral = (RexLiteral) call.getOperands().get(1);
     String transformColumnFieldName = RexLiteral.stringValue(columnNameLiteral);
-    RelDataType fromDataType = transformColumn.getType();
+    RelDataType fromDataType = call.getOperands().get(0).getType();
     RelDataType toDataType = call.getOperator().inferReturnType(null);
     switch (toDataType.getSqlTypeName()) {
       case ROW:

@@ -212,4 +212,20 @@ public class FuzzyUnionTest {
     String expandedSql = nodeToStr(node);
     assertEquals(expandedSql, expectedSql);
   }
+
+  @Test
+  public void testFuzzyUnionInFromClause() throws TException {
+    String database = "fuzzy_union";
+    String view = "union_view_in_from_clause";
+    SqlNode node = getFuzzyUnionView(database, view);
+
+    String expectedSql = "SELECT \"a\"\n" + "FROM (SELECT *\n" + "FROM \"hive\".\"fuzzy_union\".\"tableb\"\n"
+        + "UNION ALL\n" + "SELECT \"a\", \"generic_project\"(\"b\", 'b') AS \"b\"\n"
+        + "FROM \"hive\".\"fuzzy_union\".\"tablec\") AS \"t0\"\n" + "UNION ALL\n" + "SELECT \"a\"\n"
+        + "FROM \"hive\".\"fuzzy_union\".\"tableb\"";
+
+    getRelContextProvider().getHiveSqlValidator().validate(node);
+    String expandedSql = nodeToStr(node);
+    assertEquals(expandedSql, expectedSql);
+  }
 }
