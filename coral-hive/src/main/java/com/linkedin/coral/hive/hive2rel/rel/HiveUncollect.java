@@ -7,6 +7,7 @@ package com.linkedin.coral.hive.hive2rel.rel;
 
 import java.util.List;
 
+import com.linkedin.coral.hive.hive2rel.functions.HiveExplodeOperator;
 import org.apache.calcite.plan.Convention;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelTraitSet;
@@ -43,11 +44,23 @@ public class HiveUncollect extends Uncollect {
   @Override
   public RelNode copy(RelTraitSet traitSet, RelNode input) {
     assert traitSet.containsIfApplicable(Convention.NONE);
-    return new HiveUncollect(getCluster(), traitSet, input, withOrdinality);
+    HiveUncollect result = new HiveUncollect(getCluster(), traitSet, input, withOrdinality);
+    result.rowType = this.rowType;
+    return result;
+  }
+
+  public RelNode copy(RelDataType rowType) {
+    assert traitSet.containsIfApplicable(Convention.NONE);
+    HiveUncollect result = new HiveUncollect(getCluster(), traitSet, input, withOrdinality);
+    result.rowType = rowType;
+    return result;
   }
 
   @Override
   protected RelDataType deriveRowType() {
+    if (rowType != null) {
+      return rowType;
+    }
     RelDataType inputType = input.getRowType();
     assert inputType.isStruct() : inputType + " is not a struct";
     final List<RelDataTypeField> fields = inputType.getFieldList();
@@ -58,7 +71,9 @@ public class HiveUncollect extends Uncollect {
         builder.add(SqlUnnestOperator.MAP_VALUE_COLUMN_NAME, field.getType().getValueType());
       } else {
         RelDataType ret = field.getType().getComponentType();
+        System.out.println("fields[0]=" + field.getName());
         builder.add(field.getName(), ret);
+        // builder.add(fields.size() == 1 ? HiveExplodeOperator.ARRAY_ELEMENT_COLUMN_NAME : field.getName(), ret);
       }
     }
     if (withOrdinality) {

@@ -8,6 +8,7 @@ package com.linkedin.coral.hive.hive2rel;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.linkedin.coral.hive.hive2rel.functions.HiveExplodeOperator;
 import org.apache.calcite.linq4j.Ord;
 import org.apache.calcite.plan.Convention;
 import org.apache.calcite.plan.RelOptCluster;
@@ -27,6 +28,7 @@ import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlExplainFormat;
 import org.apache.calcite.sql.SqlExplainLevel;
+import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlUnnestOperator;
 import org.apache.calcite.sql.validate.SqlValidator;
@@ -98,7 +100,11 @@ class HiveSqlToRelConverter extends SqlToRelConverter {
     final List<String> fieldNames = new ArrayList<>();
     for (Ord<SqlNode> node : Ord.zip(nodes)) {
       exprs.add(bb.convertExpression(node.e));
-      fieldNames.add(validator.deriveAlias(node.e, node.i));
+      // In Hive, "LATERAL VIEW EXPLODE(arr) t" is equivalent to "LATERAL VIEW EXPLODE(arr) t AS col".
+      // Use the default column name "col" if not specified.
+      fieldNames.add(node.e.getKind() == SqlKind.AS
+              ? validator.deriveAlias(node.e, node.i)
+              : HiveExplodeOperator.ARRAY_ELEMENT_COLUMN_NAME);
     }
     final RelNode input = RelOptUtil.createProject((null != bb.root) ? bb.root : LogicalValues.createOneRow(cluster),
         exprs, fieldNames, true);

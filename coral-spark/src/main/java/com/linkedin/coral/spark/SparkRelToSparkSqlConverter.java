@@ -8,6 +8,7 @@ package com.linkedin.coral.spark;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Correlate;
 import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rel.core.TableScan;
@@ -23,10 +24,12 @@ import org.apache.calcite.sql.JoinType;
 import org.apache.calcite.sql.SqlBasicCall;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlIdentifier;
+import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.fun.SqlMultisetValueConstructor;
+import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParserPos;
 
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
@@ -98,8 +101,13 @@ public class SparkRelToSparkSqlConverter extends RelToSqlConverter {
     // Add context specifying correlationId has same context as its left child
     correlTableMap.put(e.getCorrelationId(), leftResult.qualifiedContext());
     final Result rightResult = visitChild(1, e.getRight());
+
+    // Unwrap the top-level SqlASOperator from the rightResult since we will create a SqlLateralViewAsOperator instead.
+    final SqlNode rightNode = rightResult.node.getKind() == SqlKind.AS ? ((SqlBasicCall)rightResult.node).getOperandList().get(0)
+            : rightResult.node;
     final List<SqlNode> asOperands =
-        createAsFullOperands(e.getRight().getRowType(), rightResult.node, rightResult.neededAlias);
+        createAsFullOperands(e.getRight().getRowType(), rightNode, rightResult.neededAlias);
+
 
     // Same as AS operator but instead of "AS TableRef(ColRef1, ColRef2)" produces "TableRef AS ColRef1, ColRef2"
     SqlNode rightLateral = SqlLateralViewAsOperator.instance.createCall(POS, asOperands);
@@ -139,7 +147,21 @@ public class SparkRelToSparkSqlConverter extends RelToSqlConverter {
     // Convert UNNEST to EXPLODE function
     final SqlNode unnestNode = HiveExplodeOperator.EXPLODE.createCall(POS, unnestOperands.toArray(new SqlNode[0]));
 
-    return result(unnestNode, ImmutableList.of(Clause.FROM), e, null);
+    // Build LATERAL VIEW EXPLODE(<unnestColumns>) <alias> AS (<columnList>)
+    // Without the AS node, in cases like the following valid Hive queries:
+    //   FROM t1 LATERAL VIEW EXPLODE(t1.c) AS t2
+    // this function would return  (SqlBasicCall with Operator HiveExplodeOperator), which will cause the
+    // parent function visit(Correlate)'s call of SqlImplementor.wrapSelect's assert to fail since
+    // SqlOperator with HiveExplodeOperator (or its parent SqlUnnestOperator) is not allowed (only
+    // SqlSetOperator, SqlStdOperatorTable.AS, and SqlStdOperatorTable.VALUES are allowed).
+    /** See {@link org.apache.calcite.rel.rel2sql.SqlImplementor#wrapSelect(SqlNode)}*/
+
+    final List<SqlNode> asOperands = createAsFullOperands(e.getRowType(), unnestNode, x.neededAlias);
+    final SqlNode asNode = SqlStdOperatorTable.AS.createCall(POS, asOperands);
+
+    return result(asNode, ImmutableList.of(Clause.FROM), e, null);
+
+    // return result(unnestNode, ImmutableList.of(Clause.FROM), e, null);
   }
 
   /**

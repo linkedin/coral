@@ -15,6 +15,7 @@ import org.apache.calcite.rel.RelNode;
 import com.linkedin.coral.spark.containers.SparkRelInfo;
 import com.linkedin.coral.spark.containers.SparkUDFInfo;
 import com.linkedin.coral.spark.dialect.SparkSqlDialect;
+import org.apache.calcite.rel.rel2sql.SqlImplementor;
 
 
 /**
@@ -84,7 +85,8 @@ public class CoralSpark {
    */
   private static String constructSparkSQL(RelNode sparkRelNode) {
     SparkRelToSparkSqlConverter rel2sql = new SparkRelToSparkSqlConverter();
-    return rel2sql.visitChild(0, sparkRelNode).asStatement().accept(new SparkSqlRewriter())
+    SqlImplementor.Result r = rel2sql.visitChild(0, sparkRelNode);
+    return r.asStatement().accept(new SparkSqlRewriter())
         .toSqlString(SparkSqlDialect.INSTANCE).getSql();
   }
 

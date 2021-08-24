@@ -60,8 +60,6 @@ public class RelContextProvider {
   private RelBuilder relBuilder;
   private CalciteCatalogReader catalogReader;
   private HiveSqlValidator sqlValidator;
-  private RelOptCluster cluster;
-  private SqlToRelConverter relConverter;
   private final HiveConvertletTable convertletTable = new HiveConvertletTable();
   private Driver driver;
   // maintain a mutable copy of Hive function registry in order to save some UDF information
@@ -228,10 +226,7 @@ public class RelContextProvider {
    * @return the rel opt cluster
    */
   RelOptCluster getRelOptCluster() {
-    if (cluster == null) {
-      cluster = RelOptCluster.create(new VolcanoPlanner(), getRelBuilder().getRexBuilder());
-    }
-    return cluster;
+    return RelOptCluster.create(new VolcanoPlanner(), getRelBuilder().getRexBuilder());
   }
 
   HiveViewExpander getViewExpander() {
@@ -240,15 +235,18 @@ public class RelContextProvider {
   }
 
   /**
-   * Gets sql to rel converter.
+   * Gets sql to rel converter.  Always create a new one since the final field SqlToRelConverter.cluster
+   * has a field nextCorrel that changes as a side effect of parsing a query.  Reusing the same HiveSqlToRelConverter
+   * would result in an ever-increasing nextCorrel, which makes the corrID from a query non-deterministic.
+   *
+   * see {@link org.apache.calcite.plan.RelOptCluster} private field: nextCorrel
    *
    * @return the sql to rel converter
    */
   SqlToRelConverter getSqlToRelConverter() {
-    if (relConverter == null) {
-      relConverter = new HiveSqlToRelConverter(getViewExpander(), getHiveSqlValidator(), getCalciteCatalogReader(),
-          getRelOptCluster(), convertletTable, SqlToRelConverter.configBuilder().build());
-    }
-    return relConverter;
+    return new HiveSqlToRelConverter(getViewExpander(), getHiveSqlValidator(), getCalciteCatalogReader(),
+        getRelOptCluster(), convertletTable, SqlToRelConverter.configBuilder().withRelBuilderFactory(
+            HiveRelBuilder.LOGICAL_BUILDER
+    ).build());
   }
 }
