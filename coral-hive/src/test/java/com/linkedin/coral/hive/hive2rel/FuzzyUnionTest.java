@@ -29,7 +29,11 @@ public class FuzzyUnionTest {
   private SqlNode getFuzzyUnionView(String databaseName, String viewName) throws TException {
     SqlNode node = viewToSqlNode(databaseName, viewName);
     Table view = relContextProvider.getHiveSchema().getSubSchema(databaseName).getTable(viewName);
-    node.accept(new FuzzyUnionSqlRewriter(viewName, getRelContextProvider()));
+
+    // sanity check, in party with com.linkedin.coral.hive.hive2rel.HiveToRelConverter.convertView
+    if (view != null) {
+      node.accept(new FuzzyUnionSqlRewriter(viewName, getRelContextProvider()));
+    }
     return node;
   }
 
