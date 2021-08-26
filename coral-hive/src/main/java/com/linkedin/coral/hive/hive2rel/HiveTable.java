@@ -165,7 +165,7 @@ public class HiveTable implements ScannableTable {
       } catch (Exception e) {
         // if there is an exception like failing to get the deserializer or failing to get columns using deserializer,
         // we use sd.getCols() to avoid throwing exception
-        LOG.warn("Failed to get columns using deserializer", e);
+        LOG.warn("Failed to get columns using deserializer: {}", e.getMessage());
         return sd.getCols();
       }
     }
