@@ -222,8 +222,8 @@ public class RelToTrinoConverter extends RelToSqlConverter {
     parseCorrelTable(e, leftResult);
     final Result rightResult = visitChild(1, e.getRight());
     SqlNode rightLateral = rightResult.node;
-    rightLateral = SqlStdOperatorTable.LATERAL.createCall(POS, rightLateral);
     if (rightLateral.getKind() != SqlKind.AS) {
+      rightLateral = SqlStdOperatorTable.LATERAL.createCall(POS, rightLateral);
       rightLateral =
           SqlStdOperatorTable.AS.createCall(POS, rightLateral, new SqlIdentifier(rightResult.neededAlias, POS));
     }
