@@ -11,11 +11,11 @@ import java.util.stream.Collectors;
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.rel2sql.SqlImplementor;
 
 import com.linkedin.coral.spark.containers.SparkRelInfo;
 import com.linkedin.coral.spark.containers.SparkUDFInfo;
 import com.linkedin.coral.spark.dialect.SparkSqlDialect;
-import org.apache.calcite.rel.rel2sql.SqlImplementor;
 
 
 /**
@@ -86,8 +86,7 @@ public class CoralSpark {
   private static String constructSparkSQL(RelNode sparkRelNode) {
     SparkRelToSparkSqlConverter rel2sql = new SparkRelToSparkSqlConverter();
     SqlImplementor.Result r = rel2sql.visitChild(0, sparkRelNode);
-    return r.asStatement().accept(new SparkSqlRewriter())
-        .toSqlString(SparkSqlDialect.INSTANCE).getSql();
+    return r.asStatement().accept(new SparkSqlRewriter()).toSqlString(SparkSqlDialect.INSTANCE).getSql();
   }
 
   /**

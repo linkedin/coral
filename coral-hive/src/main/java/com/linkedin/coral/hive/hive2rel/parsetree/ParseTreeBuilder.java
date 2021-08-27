@@ -301,19 +301,19 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     // if (operandCount == 3) { // unnest explode array
     //  unnestCall = HiveExplodeOperator.EXPLODE.createCall(ZERO,
     //      SqlStdOperatorTable.AS.createCall(ZERO, unnestOperand, aliasOperands.get(2)));
-      // This AS call is useless
+    // This AS call is useless
     //  unnestCall = SqlStdOperatorTable.AS.createCall(ZERO, unnestCall, aliasOperands.get(1), aliasOperands.get(2));
     //} else { // unnest explode map
-      unnestCall = HiveExplodeOperator.EXPLODE.createCall(ZERO, unnestOperand);
+    unnestCall = HiveExplodeOperator.EXPLODE.createCall(ZERO, unnestOperand);
 
-      List<SqlNode> operands = new ArrayList<>();
-      operands.add(unnestCall);
-      operands.addAll(aliasOperands.subList(1, aliasOperands.size()));
-      SqlNode as = SqlStdOperatorTable.AS.createCall(ZERO, operands);
+    List<SqlNode> operands = new ArrayList<>();
+    operands.add(unnestCall);
+    operands.addAll(aliasOperands.subList(1, aliasOperands.size()));
+    SqlNode as = SqlStdOperatorTable.AS.createCall(ZERO, operands);
 
     SqlNode lateralCall = SqlStdOperatorTable.LATERAL.createCall(ZERO, as);
     return new SqlJoin(ZERO, sqlNodes.get(1), SqlLiteral.createBoolean(false, ZERO), JoinType.COMMA.symbol(ZERO),
-            lateralCall, JoinConditionType.NONE.symbol(ZERO), null);
+        lateralCall, JoinConditionType.NONE.symbol(ZERO), null);
   }
 
   private SqlNode visitLateralViewJsonTuple(List<SqlNode> sqlNodes, List<SqlNode> aliasOperands, SqlCall sqlCall) {

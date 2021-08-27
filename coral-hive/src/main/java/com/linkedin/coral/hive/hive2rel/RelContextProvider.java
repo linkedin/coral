@@ -245,8 +245,7 @@ public class RelContextProvider {
    */
   SqlToRelConverter getSqlToRelConverter() {
     return new HiveSqlToRelConverter(getViewExpander(), getHiveSqlValidator(), getCalciteCatalogReader(),
-        getRelOptCluster(), convertletTable, SqlToRelConverter.configBuilder().withRelBuilderFactory(
-            HiveRelBuilder.LOGICAL_BUILDER
-    ).build());
+        getRelOptCluster(), convertletTable,
+        SqlToRelConverter.configBuilder().withRelBuilderFactory(HiveRelBuilder.LOGICAL_BUILDER).build());
   }
 }

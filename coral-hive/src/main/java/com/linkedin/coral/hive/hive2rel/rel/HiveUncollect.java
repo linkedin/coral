@@ -7,7 +7,6 @@ package com.linkedin.coral.hive.hive2rel.rel;
 
 import java.util.List;
 
-import com.linkedin.coral.hive.hive2rel.functions.HiveExplodeOperator;
 import org.apache.calcite.plan.Convention;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelTraitSet;

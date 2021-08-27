@@ -47,7 +47,6 @@ public class TestUtils {
   private static HiveMscAdapter hiveMetastoreClient;
   static HiveToRelConverter hiveToRelConverter;
 
-
   public static FrameworkConfig createFrameworkConfig(TestTable... tables) {
     SchemaPlus rootSchema = Frameworks.createRootSchema(true);
     Arrays.asList(tables).forEach(t -> rootSchema.add(t.getTableName(), t));

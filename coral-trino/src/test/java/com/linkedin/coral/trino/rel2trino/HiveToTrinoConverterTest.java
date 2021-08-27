@@ -181,14 +181,11 @@ public class HiveToTrinoConverterTest {
 
   @Test
   public void testLateralViewArray() {
-    RelNode relNode = hiveToRelConverter.convertSql(
-            "SELECT col FROM (SELECT ARRAY('a1', 'a2') as a) tmp LATERAL VIEW EXPLODE(a) a_alias AS col"
-    );
-    String targetSql = "SELECT \"t3\".\"col\" AS \"col\"\n" +
-            "FROM (SELECT ARRAY['a1', 'a2'] AS \"a\"\n" +
-            "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")) AS \"$cor0\"\n" +
-            "CROSS JOIN LATERAL (SELECT \"col\"\n" +
-            "FROM UNNEST(\"$cor0\".\"a\") AS \"t2\" (\"col\")) AS \"t3\"";
+    RelNode relNode = hiveToRelConverter
+        .convertSql("SELECT col FROM (SELECT ARRAY('a1', 'a2') as a) tmp LATERAL VIEW EXPLODE(a) a_alias AS col");
+    String targetSql = "SELECT \"t3\".\"col\" AS \"col\"\n" + "FROM (SELECT ARRAY['a1', 'a2'] AS \"a\"\n"
+        + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")) AS \"$cor0\"\n" + "CROSS JOIN LATERAL (SELECT \"col\"\n"
+        + "FROM UNNEST(\"$cor0\".\"a\") AS \"t2\" (\"col\")) AS \"t3\"";
 
     RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
     String expandedSql = relToTrinoConverter.convert(relNode);
@@ -197,14 +194,11 @@ public class HiveToTrinoConverterTest {
 
   @Test
   public void testLateralViewArrayWithoutColumns() {
-    RelNode relNode = hiveToRelConverter.convertSql(
-            "SELECT col FROM (SELECT ARRAY('a1', 'a2') as a) tmp LATERAL VIEW EXPLODE(a) a_alias"
-    );
-    String targetSql = "SELECT \"t3\".\"col\" AS \"col\"\n" +
-            "FROM (SELECT ARRAY['a1', 'a2'] AS \"a\"\n" +
-            "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")) AS \"$cor0\"\n" +
-            "CROSS JOIN LATERAL (SELECT \"a\" AS \"col\"\n" +
-            "FROM UNNEST(\"$cor0\".\"a\") AS \"t2\" (\"a\")) AS \"t3\"";
+    RelNode relNode = hiveToRelConverter
+        .convertSql("SELECT col FROM (SELECT ARRAY('a1', 'a2') as a) tmp LATERAL VIEW EXPLODE(a) a_alias");
+    String targetSql = "SELECT \"t3\".\"col\" AS \"col\"\n" + "FROM (SELECT ARRAY['a1', 'a2'] AS \"a\"\n"
+        + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")) AS \"$cor0\"\n" + "CROSS JOIN LATERAL (SELECT \"a\" AS \"col\"\n"
+        + "FROM UNNEST(\"$cor0\".\"a\") AS \"t2\" (\"a\")) AS \"t3\"";
 
     RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
     String expandedSql = relToTrinoConverter.convert(relNode);
@@ -214,13 +208,11 @@ public class HiveToTrinoConverterTest {
   @Test
   public void testLateralViewMap() {
     RelNode relNode = hiveToRelConverter.convertSql(
-            "SELECT key, value FROM (SELECT MAP('key1', 'value1') as m) tmp LATERAL VIEW EXPLODE(m) m_alias AS key, value"
-    );
-    String targetSql = "SELECT \"t3\".\"KEY\" AS \"key\", \"t3\".\"VALUE\" AS \"value\"\n" +
-            "FROM (SELECT MAP (ARRAY['key1'], ARRAY['value1']) AS \"m\"\n" +
-            "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")) AS \"$cor0\"\n" +
-            "CROSS JOIN LATERAL (SELECT \"KEY\", \"VALUE\"\n" +
-            "FROM UNNEST(\"$cor0\".\"m\") AS \"t2\" (\"KEY\", \"VALUE\")) AS \"t3\"";
+        "SELECT key, value FROM (SELECT MAP('key1', 'value1') as m) tmp LATERAL VIEW EXPLODE(m) m_alias AS key, value");
+    String targetSql = "SELECT \"t3\".\"KEY\" AS \"key\", \"t3\".\"VALUE\" AS \"value\"\n"
+        + "FROM (SELECT MAP (ARRAY['key1'], ARRAY['value1']) AS \"m\"\n"
+        + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")) AS \"$cor0\"\n" + "CROSS JOIN LATERAL (SELECT \"KEY\", \"VALUE\"\n"
+        + "FROM UNNEST(\"$cor0\".\"m\") AS \"t2\" (\"KEY\", \"VALUE\")) AS \"t3\"";
 
     RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
     String expandedSql = relToTrinoConverter.convert(relNode);
@@ -229,14 +221,12 @@ public class HiveToTrinoConverterTest {
 
   @Test
   public void testLateralViewMapWithoutAlias() {
-    RelNode relNode = hiveToRelConverter.convertSql(
-            "SELECT key, value FROM (SELECT MAP('key1', 'value1') as m) tmp LATERAL VIEW EXPLODE(m) m_alias"
-    );
-    String targetSql = "SELECT \"t3\".\"KEY\" AS \"key\", \"t3\".\"VALUE\" AS \"value\"\n" +
-            "FROM (SELECT MAP (ARRAY['key1'], ARRAY['value1']) AS \"m\"\n" +
-            "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")) AS \"$cor0\"\n" +
-            "CROSS JOIN LATERAL (SELECT \"KEY\", \"VALUE\"\n" +
-            "FROM UNNEST(\"$cor0\".\"m\") AS \"t2\" (\"KEY\", \"VALUE\")) AS \"t3\"";
+    RelNode relNode = hiveToRelConverter
+        .convertSql("SELECT key, value FROM (SELECT MAP('key1', 'value1') as m) tmp LATERAL VIEW EXPLODE(m) m_alias");
+    String targetSql = "SELECT \"t3\".\"KEY\" AS \"key\", \"t3\".\"VALUE\" AS \"value\"\n"
+        + "FROM (SELECT MAP (ARRAY['key1'], ARRAY['value1']) AS \"m\"\n"
+        + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")) AS \"$cor0\"\n" + "CROSS JOIN LATERAL (SELECT \"KEY\", \"VALUE\"\n"
+        + "FROM UNNEST(\"$cor0\".\"m\") AS \"t2\" (\"KEY\", \"VALUE\")) AS \"t3\"";
 
     RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
     String expandedSql = relToTrinoConverter.convert(relNode);

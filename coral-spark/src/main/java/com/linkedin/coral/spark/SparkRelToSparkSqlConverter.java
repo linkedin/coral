@@ -8,7 +8,6 @@ package com.linkedin.coral.spark;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Correlate;
 import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rel.core.TableScan;
@@ -103,11 +102,10 @@ public class SparkRelToSparkSqlConverter extends RelToSqlConverter {
     final Result rightResult = visitChild(1, e.getRight());
 
     // Unwrap the top-level SqlASOperator from the rightResult since we will create a SqlLateralViewAsOperator instead.
-    final SqlNode rightNode = rightResult.node.getKind() == SqlKind.AS ? ((SqlBasicCall)rightResult.node).getOperandList().get(0)
-            : rightResult.node;
+    final SqlNode rightNode = rightResult.node.getKind() == SqlKind.AS
+        ? ((SqlBasicCall) rightResult.node).getOperandList().get(0) : rightResult.node;
     final List<SqlNode> asOperands =
         createAsFullOperands(e.getRight().getRowType(), rightNode, rightResult.neededAlias);
-
 
     // Same as AS operator but instead of "AS TableRef(ColRef1, ColRef2)" produces "TableRef AS ColRef1, ColRef2"
     SqlNode rightLateral = SqlLateralViewAsOperator.instance.createCall(POS, asOperands);
