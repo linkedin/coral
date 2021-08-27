@@ -14,7 +14,6 @@ import org.apache.calcite.plan.Context;
 import org.apache.calcite.plan.Contexts;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptSchema;
-import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rel.core.Values;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeField;
@@ -42,6 +41,17 @@ import static org.apache.calcite.rel.core.RelFactories.DEFAULT_TABLE_SCAN_FACTOR
 import static org.apache.calcite.rel.core.RelFactories.DEFAULT_VALUES_FACTORY;
 
 
+/**
+ * HiveRelBuilder overrides {@link #rename} method.
+ * Instead of wrapping round HiveUncollect with a Project RelNode, it tries to rebuild
+ * HiveUncollect by calling {@link com.linkedin.coral.hive.hive2rel.rel.HiveUncollect#copy(org.apache.calcite.rel.type.RelDataType)}
+ * which sets the rowType.
+ *
+ * The benefit of eliminating the Project RelNode is that it avoids an extra and unnecessary
+ * (SELECT ... FROM ... AS ...) wrapper in the unparsed SQL queries.  For example, in Trino,
+ * this allows us to generate "FROM ... CROSS JOIN UNNEST(...)" instead of
+ * "FROM ... CROSS JOIN (SELECT ... FROM UNNEST(...))".
+ */
 public class HiveRelBuilder extends RelBuilder {
 
   private HiveRelBuilder(Context context, RelOptCluster cluster, RelOptSchema relOptSchema) {
@@ -68,14 +78,7 @@ public class HiveRelBuilder extends RelBuilder {
           DEFAULT_MATCH_FACTORY, DEFAULT_SET_OP_FACTORY, DEFAULT_VALUES_FACTORY, DEFAULT_TABLE_SCAN_FACTORY,
           DEFAULT_SNAPSHOT_FACTORY, DEFAULT_SPOOL_FACTORY, DEFAULT_REPEAT_UNION_FACTORY));
 
-  /** Ensures that the field names match those given.
-   *
-   * <p>If all fields have the same name, adds nothing;
-   * if any fields do not have the same name, adds a {@link Project}.
-   *
-   * <p>Note that the names can be short-lived. Other {@code RelBuilder}
-   * operations make no guarantees about the field names of the rows they
-   * produce.
+  /** Almost the same as {@link RelBuilder#rename(List<String>)} except the handling of HiveUncollect.
    *
    * @param fieldNames List of desired field names; may contain null values or
    * have fewer fields than the current row type

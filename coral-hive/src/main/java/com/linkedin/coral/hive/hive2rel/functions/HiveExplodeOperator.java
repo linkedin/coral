@@ -51,7 +51,6 @@ public class HiveExplodeOperator extends SqlUnnestOperator {
     RelDataType operandType = opBinding.getOperandType(0);
     final RelDataTypeFactory.Builder builder = opBinding.getTypeFactory().builder();
     if (operandType instanceof ArraySqlType) {
-      // builder.add(SqlUtil.deriveAliasFromOrdinal(0), operandType.getComponentType());
       // array type
       builder.add(ARRAY_ELEMENT_COLUMN_NAME, operandType.getComponentType());
     } else {

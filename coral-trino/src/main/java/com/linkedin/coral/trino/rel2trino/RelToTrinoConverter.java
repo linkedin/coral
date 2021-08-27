@@ -223,6 +223,9 @@ public class RelToTrinoConverter extends RelToSqlConverter {
     final Result rightResult = visitChild(1, e.getRight());
     SqlNode rightLateral = rightResult.node;
     if (rightLateral.getKind() != SqlKind.AS) {
+      // LATERAL is only needed in Trino if it's not an AS node.
+      // For example, "FROM t0 CROSS JOIN UNNEST(yyy) AS t1(col1, col2)" is valid Trino SQL
+      // without the need of LATERAL keywords.
       rightLateral = SqlStdOperatorTable.LATERAL.createCall(POS, rightLateral);
       rightLateral =
           SqlStdOperatorTable.AS.createCall(POS, rightLateral, new SqlIdentifier(rightResult.neededAlias, POS));

@@ -165,7 +165,7 @@ public class RelContextProvider {
       // 1. Our type system is not perfect replication of Hive so this can be incorrect
       // 2. Converted expression is harder to validate for correctness(because it appears different from input)
       Hook.REL_BUILDER_SIMPLIFY.add(Hook.propertyJ(false));
-      relBuilder = RelBuilder.create(config);
+      relBuilder = HiveRelBuilder.create(config);
     }
     return relBuilder;
   }
@@ -226,6 +226,9 @@ public class RelContextProvider {
    * @return the rel opt cluster
    */
   RelOptCluster getRelOptCluster() {
+    // Create a new one every time so that RelOptCluster.nextCorrel starts from 0 again.
+    // Need to ensure deterministic names for correlations for testing purposes.
+    /** see {@link org.apache.calcite.plan.RelOptCluster} private field: nextCorrel */
     return RelOptCluster.create(new VolcanoPlanner(), getRelBuilder().getRexBuilder());
   }
 
@@ -235,15 +238,14 @@ public class RelContextProvider {
   }
 
   /**
-   * Gets sql to rel converter.  Always create a new one since the final field SqlToRelConverter.cluster
-   * has a field nextCorrel that changes as a side effect of parsing a query.  Reusing the same HiveSqlToRelConverter
-   * would result in an ever-increasing nextCorrel, which makes the corrID from a query non-deterministic.
-   *
-   * see {@link org.apache.calcite.plan.RelOptCluster} private field: nextCorrel
+   * Gets sql to rel converter.
    *
    * @return the sql to rel converter
    */
   SqlToRelConverter getSqlToRelConverter() {
+    // Create a new one every time so that RelOptCluster.nextCorrel starts from 0 again.
+    // Need to ensure deterministic names for correlations for testing purposes.
+    /** see {@link org.apache.calcite.plan.RelOptCluster} private field: nextCorrel */
     return new HiveSqlToRelConverter(getViewExpander(), getHiveSqlValidator(), getCalciteCatalogReader(),
         getRelOptCluster(), convertletTable,
         SqlToRelConverter.configBuilder().withRelBuilderFactory(HiveRelBuilder.LOGICAL_BUILDER).build());

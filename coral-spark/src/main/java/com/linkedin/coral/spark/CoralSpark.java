@@ -85,6 +85,7 @@ public class CoralSpark {
    */
   private static String constructSparkSQL(RelNode sparkRelNode) {
     SparkRelToSparkSqlConverter rel2sql = new SparkRelToSparkSqlConverter();
+    // Create a temporary object r to make debugging easier
     SqlImplementor.Result r = rel2sql.visitChild(0, sparkRelNode);
     return r.asStatement().accept(new SparkSqlRewriter()).toSqlString(SparkSqlDialect.INSTANCE).getSql();
   }

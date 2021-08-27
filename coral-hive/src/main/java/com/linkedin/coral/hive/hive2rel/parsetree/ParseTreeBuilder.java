@@ -298,18 +298,12 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
       unnestOperand = hiveIfFunction.createCall(SqlLiteral.createCharString("if", ZERO),
           ImmutableList.of(ifCondition, unnestOperand, arrayOrMapOfNull), null);
     }
-    // if (operandCount == 3) { // unnest explode array
-    //  unnestCall = HiveExplodeOperator.EXPLODE.createCall(ZERO,
-    //      SqlStdOperatorTable.AS.createCall(ZERO, unnestOperand, aliasOperands.get(2)));
-    // This AS call is useless
-    //  unnestCall = SqlStdOperatorTable.AS.createCall(ZERO, unnestCall, aliasOperands.get(1), aliasOperands.get(2));
-    //} else { // unnest explode map
     unnestCall = HiveExplodeOperator.EXPLODE.createCall(ZERO, unnestOperand);
 
-    List<SqlNode> operands = new ArrayList<>();
-    operands.add(unnestCall);
-    operands.addAll(aliasOperands.subList(1, aliasOperands.size()));
-    SqlNode as = SqlStdOperatorTable.AS.createCall(ZERO, operands);
+    List<SqlNode> asOperands = new ArrayList<>();
+    asOperands.add(unnestCall);
+    asOperands.addAll(aliasOperands.subList(1, aliasOperands.size()));
+    SqlNode as = SqlStdOperatorTable.AS.createCall(ZERO, asOperands);
 
     SqlNode lateralCall = SqlStdOperatorTable.LATERAL.createCall(ZERO, as);
     return new SqlJoin(ZERO, sqlNodes.get(1), SqlLiteral.createBoolean(false, ZERO), JoinType.COMMA.symbol(ZERO),

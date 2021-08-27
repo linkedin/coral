@@ -44,13 +44,20 @@ public class HiveUncollect extends Uncollect {
   public RelNode copy(RelTraitSet traitSet, RelNode input) {
     assert traitSet.containsIfApplicable(Convention.NONE);
     HiveUncollect result = new HiveUncollect(getCluster(), traitSet, input, withOrdinality);
+    // copy the rowType as well
     result.rowType = this.rowType;
     return result;
   }
 
+  /**
+   * Create a copy of this HiveUncollect object with the specified rowType.
+   * @param rowType rowType of the newly created HiveUncollect object
+   * @return a new HiveUncollect object
+   */
   public RelNode copy(RelDataType rowType) {
     assert traitSet.containsIfApplicable(Convention.NONE);
     HiveUncollect result = new HiveUncollect(getCluster(), traitSet, input, withOrdinality);
+    // set the rowType of the new HiveUncollect object
     result.rowType = rowType;
     return result;
   }
@@ -70,9 +77,7 @@ public class HiveUncollect extends Uncollect {
         builder.add(SqlUnnestOperator.MAP_VALUE_COLUMN_NAME, field.getType().getValueType());
       } else {
         RelDataType ret = field.getType().getComponentType();
-        System.out.println("fields[0]=" + field.getName());
         builder.add(field.getName(), ret);
-        // builder.add(fields.size() == 1 ? HiveExplodeOperator.ARRAY_ELEMENT_COLUMN_NAME : field.getName(), ret);
       }
     }
     if (withOrdinality) {
