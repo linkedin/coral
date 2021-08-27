@@ -204,21 +204,33 @@ public class SparkRelToSparkSqlConverter extends RelToSqlConverter {
    *    - has ARRAY(NULL) as the else result
    */
   private boolean isCorrelateRightChildOuter(SqlNode rightChild) {
-    if (rightChild instanceof SqlBasicCall) {
-      List<SqlNode> operandList = ((SqlBasicCall) rightChild).getOperandList();
-      if (operandList.get(0) instanceof SqlBasicCall) {
-        SqlBasicCall ifNode = (SqlBasicCall) operandList.get(0);
-        if (ifNode.getOperator().getName().equals("if") && ifNode.operandCount() == 3) {
-          SqlBasicCall arrayNode = (SqlBasicCall) ifNode.getOperandList().get(2);
-          if (arrayNode.getOperator() instanceof SqlMultisetValueConstructor
-              && arrayNode.getOperandList().get(0) instanceof SqlLiteral) {
-            SqlLiteral sqlLiteral = (SqlLiteral) arrayNode.getOperandList().get(0);
-            return sqlLiteral.getTypeName().toString().equals("NULL");
+    if (rightChild instanceof SqlBasicCall && rightChild.getKind() == SqlKind.AS) {
+      SqlBasicCall rightCall = (SqlBasicCall) rightChild;
+      SqlNode unnestNode = getOrDefault(rightCall.getOperandList(), 0, null);
+      if (unnestNode instanceof SqlBasicCall && unnestNode.getKind() == SqlKind.UNNEST) {
+        SqlBasicCall unnestCall = (SqlBasicCall) unnestNode;
+        SqlNode ifNode = getOrDefault(unnestCall.getOperandList(), 0, null);
+        if (ifNode instanceof SqlBasicCall) {
+          SqlBasicCall ifCall = (SqlBasicCall) ifNode;
+          if (ifCall.getOperator().getName().equals("if") && ifCall.operandCount() == 3) {
+            SqlNode arrayOrMapNode = getOrDefault(ifCall.getOperandList(), 2, null);
+            if (arrayOrMapNode instanceof SqlBasicCall) {
+              SqlBasicCall arrayOrMapCall = (SqlBasicCall) arrayOrMapNode;
+              if (arrayOrMapCall.getOperator() instanceof SqlMultisetValueConstructor
+                      && arrayOrMapCall.getOperandList().get(0) instanceof SqlLiteral) {
+                SqlLiteral sqlLiteral = (SqlLiteral) arrayOrMapCall.getOperandList().get(0);
+                return sqlLiteral.getTypeName().toString().equals("NULL");
+              }
+            }
           }
         }
       }
     }
     return false;
+  }
+
+  private static <T> T getOrDefault(List<T> list, int index, T defaultValue) {
+    return list.size() > index ? list.get(index) : defaultValue;
   }
 
   private void checkQualifiedName(List<String> qualifiedName) {
