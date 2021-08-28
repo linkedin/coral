@@ -19,6 +19,7 @@ import org.apache.calcite.adapter.java.JavaTypeFactory;
 import org.apache.calcite.config.CalciteConnectionConfig;
 import org.apache.calcite.config.CalciteConnectionConfigImpl;
 import org.apache.calcite.config.CalciteConnectionProperty;
+import org.apache.calcite.config.NullCollation;
 import org.apache.calcite.jdbc.CalciteSchema;
 import org.apache.calcite.jdbc.Driver;
 import org.apache.calcite.plan.RelOptCluster;
@@ -216,6 +217,7 @@ public class RelContextProvider {
     if (sqlValidator == null) {
       sqlValidator = new HiveSqlValidator(config.getOperatorTable(), getCalciteCatalogReader(),
           ((JavaTypeFactory) relBuilder.getTypeFactory()), HIVE_SQL);
+      sqlValidator.setDefaultNullCollation(NullCollation.LOW);
     }
     return sqlValidator;
   }
