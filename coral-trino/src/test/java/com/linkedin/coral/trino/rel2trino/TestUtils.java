@@ -311,6 +311,12 @@ public class TestUtils {
             + "from_utc_timestamp(a_timestamp, 'America/Los_Angeles'), "
             + "from_utc_timestamp(a_date, 'America/Los_Angeles')" + "FROM test.table_from_utc_timestamp");
 
+    run(driver, "CREATE VIEW IF NOT EXISTS test.date_calculation_view AS \n" + "SELECT to_date('2021-08-20'), "
+        + "to_date('2021-08-20 00:00:00'), " + "date_add('2021-08-20', 1), " + "date_add('2021-08-20 00:00:00', 1), "
+        + "date_sub('2021-08-20', 1), " + "date_sub('2021-08-20 00:00:00', 1), "
+        + "datediff('2021-08-20', '2021-08-21'), " + "datediff('2021-08-20', '2021-08-19'), "
+        + "datediff('2021-08-20 00:00:00', '2021-08-19 23:59:59')" + "FROM test.tableA");
+
     run(driver, "CREATE VIEW IF NOT EXISTS test.pmod_view AS \n" + "SELECT pmod(-9, 4) FROM test.tableA");
   }
 
