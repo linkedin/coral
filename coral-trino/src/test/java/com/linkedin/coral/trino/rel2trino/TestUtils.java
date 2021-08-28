@@ -318,6 +318,10 @@ public class TestUtils {
         + "datediff('2021-08-20 00:00:00', '2021-08-19 23:59:59')" + "FROM test.tableA");
 
     run(driver, "CREATE VIEW IF NOT EXISTS test.pmod_view AS \n" + "SELECT pmod(-9, 4) FROM test.tableA");
+
+    run(driver, "CREATE TABLE IF NOT EXISTS test.tableR(a int, b string, c int)");
+    run(driver,
+        "CREATE VIEW IF NOT EXISTS test.nullscollationd_view AS \n" + "SELECT a,b,c FROM test.tableR ORDER  BY b DESC");
   }
 
   public static RelNode convertView(String db, String view) {
