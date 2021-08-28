@@ -130,11 +130,11 @@ public class ParseTreeBuilderTest {
         // test lateral view explode with a map
         ImmutableList.of(
             "SELECT key, value FROM (SELECT MAP('key1', 'value1') as m) tmp LATERAL VIEW EXPLODE(m) m_alias AS key, value",
-            "SELECT `key`, `value` FROM (SELECT MAP['key1', 'value1'] AS `m`) AS `tmp`, LATERAL (SELECT * from UNNEST(`m`)) AS `m_alias` (`key`, `value`)"),
+            "SELECT `key`, `value` FROM (SELECT MAP['key1', 'value1'] AS `m`) AS `tmp`, LATERAL UNNEST(`m`) AS `m_alias` (`key`, `value`)"),
         // hive automatically creates column aliases `key` and `value` when the type is a map
         ImmutableList.of(
             "SELECT key, value FROM (SELECT MAP('key1', 'value1') as m) tmp LATERAL VIEW EXPLODE(m) m_alias",
-            "SELECT `key`, `value` FROM (SELECT MAP['key1', 'value1'] AS `m`) AS `tmp`, LATERAL (SELECT * from UNNEST(`m`)) AS `m_alias` (`key`, `value`)"),
+            "SELECT `key`, `value` FROM (SELECT MAP['key1', 'value1'] AS `m`) AS `tmp`, LATERAL UNNEST(`m`) AS `m_alias`"),
         // hive doesn't support casting as varbinary
         ImmutableList.of("SELECT cast(a as binary) from foo", "SELECT cast(`a` as binary) from `foo`"),
         ImmutableList.of("SELECT cast(a as string) from foo", "SELECT cast(`a` as varchar) from `foo`"),
