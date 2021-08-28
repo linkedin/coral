@@ -52,7 +52,7 @@ public class HiveToRelConverterTest {
 
   public void testBasicWithSQL(String sql) {
     RelNode rel = converter.convertSql(sql);
-    RelBuilder relBuilder = createRelBuilderHiveRelBuilder();
+    RelBuilder relBuilder = createRelBuilder();
     RelNode expected = relBuilder.scan(ImmutableList.of("hive", "default", "foo"))
         .project(ImmutableList.of(relBuilder.field("a"), relBuilder.field("b"), relBuilder.field("c")),
             ImmutableList.of(), true)
