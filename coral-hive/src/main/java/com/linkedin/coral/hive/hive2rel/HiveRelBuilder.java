@@ -79,7 +79,7 @@ public class HiveRelBuilder extends RelBuilder {
           DEFAULT_SNAPSHOT_FACTORY, DEFAULT_SPOOL_FACTORY, DEFAULT_REPEAT_UNION_FACTORY));
 
   /** Almost the same as the parent method except the handling of HiveUncollect.
-   *  See also {@link org.apache.calcite.tools.RelBuilder#rename(List<String>)}
+   *  See also {@link org.apache.calcite.tools.RelBuilder#rename} for details.
    *
    * @param fieldNames List of desired field names; may contain null values or
    * have fewer fields than the current row type

@@ -198,8 +198,7 @@ public class HiveToRelConverterTest {
     String expected = "LogicalProject(col=[$1])\n"
         + "  LogicalCorrelate(correlation=[$cor0], joinType=[inner], requiredColumns=[{0}])\n"
         + "    LogicalProject(a=[ARRAY('a1', 'a2')])\n" + "      LogicalValues(tuples=[[{ 0 }]])\n"
-        + "    LogicalProject(col=[$0])\n" + "      HiveUncollect\n" + "        LogicalProject(col=[$cor0.a])\n"
-        + "          LogicalValues(tuples=[[{ 0 }]])\n";
+        + "    HiveUncollect\n" + "      LogicalProject(col=[$cor0.a])\n" + "        LogicalValues(tuples=[[{ 0 }]])\n";
     assertEquals(relString, expected);
   }
 
@@ -212,8 +211,7 @@ public class HiveToRelConverterTest {
     String expected = "LogicalProject(col=[$1])\n"
         + "  LogicalCorrelate(correlation=[$cor0], joinType=[inner], requiredColumns=[{0}])\n"
         + "    LogicalProject(a=[ARRAY('a1', 'a2')])\n" + "      LogicalValues(tuples=[[{ 0 }]])\n"
-        + "    LogicalProject(col=[$0])\n" + "      HiveUncollect\n" + "        LogicalProject(a=[$cor0.a])\n"
-        + "          LogicalValues(tuples=[[{ 0 }]])\n";
+        + "    HiveUncollect\n" + "      LogicalProject(col=[$cor0.a])\n" + "        LogicalValues(tuples=[[{ 0 }]])\n";
     assertEquals(relString, expected);
   }
 
@@ -227,8 +225,7 @@ public class HiveToRelConverterTest {
     String expected = "LogicalProject(key=[$1], value=[$2])\n"
         + "  LogicalCorrelate(correlation=[$cor0], joinType=[inner], requiredColumns=[{0}])\n"
         + "    LogicalProject(m=[MAP('key1', 'value1')])\n" + "      LogicalValues(tuples=[[{ 0 }]])\n"
-        + "    LogicalProject(KEY=[$0], VALUE=[$1])\n" + "      HiveUncollect\n"
-        + "        LogicalProject(m=[$cor0.m])\n" + "          LogicalValues(tuples=[[{ 0 }]])\n";
+        + "    HiveUncollect\n" + "      LogicalProject(col=[$cor0.m])\n" + "        LogicalValues(tuples=[[{ 0 }]])\n";
     assertEquals(relString, expected);
   }
 
@@ -241,8 +238,7 @@ public class HiveToRelConverterTest {
     String expected = "LogicalProject(key=[$1], value=[$2])\n"
         + "  LogicalCorrelate(correlation=[$cor0], joinType=[inner], requiredColumns=[{0}])\n"
         + "    LogicalProject(m=[MAP('key1', 'value1')])\n" + "      LogicalValues(tuples=[[{ 0 }]])\n"
-        + "    LogicalProject(KEY=[$0], VALUE=[$1])\n" + "      HiveUncollect\n"
-        + "        LogicalProject(m=[$cor0.m])\n" + "          LogicalValues(tuples=[[{ 0 }]])\n";
+        + "    HiveUncollect\n" + "      LogicalProject(col=[$cor0.m])\n" + "        LogicalValues(tuples=[[{ 0 }]])\n";
     assertEquals(relString, expected);
   }
 
