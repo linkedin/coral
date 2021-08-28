@@ -217,7 +217,7 @@ public class SparkRelToSparkSqlConverter extends RelToSqlConverter {
             if (arrayOrMapNode instanceof SqlBasicCall) {
               SqlBasicCall arrayOrMapCall = (SqlBasicCall) arrayOrMapNode;
               if (arrayOrMapCall.getOperator() instanceof SqlMultisetValueConstructor
-                      && arrayOrMapCall.getOperandList().get(0) instanceof SqlLiteral) {
+                  && arrayOrMapCall.getOperandList().get(0) instanceof SqlLiteral) {
                 SqlLiteral sqlLiteral = (SqlLiteral) arrayOrMapCall.getOperandList().get(0);
                 return sqlLiteral.getTypeName().toString().equals("NULL");
               }
