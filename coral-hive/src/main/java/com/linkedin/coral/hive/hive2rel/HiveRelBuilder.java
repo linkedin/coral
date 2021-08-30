@@ -67,11 +67,17 @@ public class HiveRelBuilder extends RelBuilder {
   }
 
   /** Creates a {@link RelBuilderFactory}, a partially-created RelBuilder.
-   * Just add a {@link RelOptCluster} and a {@link RelOptSchema} */
+   * Just add a {@link RelOptCluster} and a {@link RelOptSchema}
+   *
+   * Note that this function creates a HiveRelBuilder instead of a RelBuilder as in its parent.
+   * */
   public static RelBuilderFactory proto(final Context context) {
     return (cluster, schema) -> new HiveRelBuilder(context, cluster, schema);
   }
 
+  /**
+   * Note that this static variable is created with HiveRelBuilder.proto instead of RelBuilder.proto as in its parent.
+   */
   public static final RelBuilderFactory LOGICAL_BUILDER =
       HiveRelBuilder.proto(Contexts.of(DEFAULT_PROJECT_FACTORY, DEFAULT_FILTER_FACTORY, DEFAULT_JOIN_FACTORY,
           DEFAULT_SORT_FACTORY, DEFAULT_EXCHANGE_FACTORY, DEFAULT_SORT_EXCHANGE_FACTORY, DEFAULT_AGGREGATE_FACTORY,

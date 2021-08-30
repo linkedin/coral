@@ -293,9 +293,6 @@ public class CoralSparkTest {
     assertEquals(convertToSparkSql, targetSql);
   }
 
-  /**
-   * Following Queries are supported now
-   */
   @Test
   public void testLateralViewStar() {
     RelNode relNode = TestUtils

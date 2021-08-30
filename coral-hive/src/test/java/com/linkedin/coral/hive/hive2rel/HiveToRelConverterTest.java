@@ -191,7 +191,7 @@ public class HiveToRelConverterTest {
 
   @Test
   public void testLateralViewArray() {
-    // Test if the code can handle the use of window functions
+    // Test if the code can handle lateral view explode with an array
     String sql = "SELECT col FROM (SELECT ARRAY('a1', 'a2') as a) tmp LATERAL VIEW EXPLODE(a) a_alias AS col";
     RelNode rel = converter.convertSql(sql);
     String relString = relToStr(rel);
@@ -204,7 +204,7 @@ public class HiveToRelConverterTest {
 
   @Test
   public void testLateralViewArrayWithoutColumns() {
-    // Test if the code can handle the use of window functions
+    // Test if the code can handle lateral view explode with an array without column aliases
     String sql = "SELECT a_alias.col FROM (SELECT ARRAY('a1', 'a2') as a) tmp LATERAL VIEW EXPLODE(a) a_alias";
     RelNode rel = converter.convertSql(sql);
     String relString = relToStr(rel);
@@ -217,7 +217,7 @@ public class HiveToRelConverterTest {
 
   @Test
   public void testLateralViewMap() {
-    // Test if the code can handle the use of window functions
+    // Test if the code can handle lateral view explode with a map
     String sql =
         "SELECT key, value FROM (SELECT MAP('key1', 'value1') as m) tmp LATERAL VIEW EXPLODE(m) m_alias AS key, value";
     RelNode rel = converter.convertSql(sql);
@@ -231,7 +231,7 @@ public class HiveToRelConverterTest {
 
   @Test
   public void testLateralViewMapWithoutColumns() {
-    // Test if the code can handle the use of window functions
+    // Test if the code can handle lateral view explode with a map without column aliases
     String sql = "SELECT key, value FROM (SELECT MAP('key1', 'value1') as m) tmp LATERAL VIEW EXPLODE(m) m_alias";
     RelNode rel = converter.convertSql(sql);
     String relString = relToStr(rel);

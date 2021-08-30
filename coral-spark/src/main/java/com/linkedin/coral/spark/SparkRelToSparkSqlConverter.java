@@ -158,8 +158,6 @@ public class SparkRelToSparkSqlConverter extends RelToSqlConverter {
     final SqlNode asNode = SqlStdOperatorTable.AS.createCall(POS, asOperands);
 
     return result(asNode, ImmutableList.of(Clause.FROM), e, null);
-
-    // return result(unnestNode, ImmutableList.of(Clause.FROM), e, null);
   }
 
   /**

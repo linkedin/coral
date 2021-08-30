@@ -12,6 +12,7 @@ import java.util.List;
 import com.google.common.collect.ImmutableList;
 
 import org.apache.calcite.avatica.util.Casing;
+import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.parser.SqlParser;
@@ -127,6 +128,14 @@ public class ParseTreeBuilderTest {
   @DataProvider(name = "validateSql")
   public Iterator<Object[]> getValidateSql() {
     List<List<String>> convertAndValidateSql = ImmutableList.of(
+        // test lateral view explode with an array
+        ImmutableList.of(
+            "SELECT col FROM (SELECT ARRAY('v1', 'v2') as arr) tmp LATERAL VIEW EXPLODE(arr) arr_alias AS col",
+            "SELECT `col` FROM (SELECT ARRAY['v1', 'v2'] AS `arr`) AS `tmp`, LATERAL UNNEST(`arr`) AS `arr_alias` (`col`)"),
+        // hive automatically creates column aliases `col` when the type is an array
+        ImmutableList.of(
+            "SELECT col FROM (SELECT ARRAY('v1', 'v2') as arr) tmp LATERAL VIEW EXPLODE(arr) arr_alias",
+            "SELECT `col` FROM (SELECT ARRAY['v1', 'v2'] AS `arr`) AS `tmp`, LATERAL UNNEST(`arr`) AS `arr_alias`"),
         // test lateral view explode with a map
         ImmutableList.of(
             "SELECT key, value FROM (SELECT MAP('key1', 'value1') as m) tmp LATERAL VIEW EXPLODE(m) m_alias AS key, value",
@@ -172,5 +181,17 @@ public class ParseTreeBuilderTest {
   private static SqlNode convert(String sql) {
     ParseTreeBuilder builder = new ParseTreeBuilder(msc, new ParseTreeBuilder.Config());
     return builder.processSql(sql);
+  }
+
+  /**
+   * OUTER EXPLODE without column aliases are not supported yet.
+   * See details in {@link ParseTreeBuilder#visitLateralViewExplode(List, List, SqlCall, boolean)}
+   */
+  @Test(expectedExceptions = {java.lang.IllegalStateException.class})
+  public void testUnsupportedOuterExplodeWithoutColumns() {
+    String input = "SELECT col FROM (SELECT ARRAY('v1', 'v2') as arr) tmp LATERAL VIEW OUTER EXPLODE(arr) arr_alias";
+    String expected = "";
+    SqlNode sqlNode = convert(input);
+    assertEquals(sqlNode.toString().toLowerCase().replaceAll("\n", " "), expected.toLowerCase());
   }
 }

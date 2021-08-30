@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import com.linkedin.coral.hive.hive2rel.rel.HiveUncollect;
 import org.apache.calcite.sql.JoinConditionType;
 import org.apache.calcite.sql.JoinType;
 import org.apache.calcite.sql.SqlAsOperator;
@@ -273,7 +274,9 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     //   if op0 is a map, it implies "AS key, value" where key, value are auto-named by Hive
     //   if op0 is an array, is implies "AS col" where col is auto-named by Hive
     //   The logic above will be implemented as part of Calcite SqlNode validation
-    checkState(operandCount == 2 || operandCount == 3 || operandCount == 4,
+    //   Note that "operandCount == 2 && isOuter" is not supported yet due to the lack of type information needed
+    //   to derive the correct IF function parameters.
+    checkState((operandCount == 2 && !isOuter) || operandCount == 3 || operandCount == 4,
         format("Unsupported LATERAL VIEW EXPLODE operand number: %d", operandCount));
     // TODO The code below assumes LATERAL VIEW is used with UNNEST EXPLODE only. It should be made more generic.
     SqlCall unnestCall = tableFunctionCall;
@@ -300,6 +303,11 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     }
     unnestCall = HiveExplodeOperator.EXPLODE.createCall(ZERO, unnestOperand);
 
+    // The following code can work in both of the two cases:
+    // A. Table alias only, no column aliases.
+    // B. Both table and column aliases.  Note that in this case, the number of column aliases need to match the
+    //    actual number of columns generated from the EXPLODE function, which is calculated by HiveUncollect.deriveRowType
+    /** See also {@link HiveUncollect#deriveRowType()} */
     List<SqlNode> asOperands = new ArrayList<>();
     asOperands.add(unnestCall);
     asOperands.addAll(aliasOperands.subList(1, aliasOperands.size()));
