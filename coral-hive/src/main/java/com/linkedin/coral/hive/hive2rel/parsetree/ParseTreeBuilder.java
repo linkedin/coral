@@ -454,7 +454,7 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
   @Override
   protected SqlNode visitAllColRef(ASTNode node, ParseContext ctx) {
     List<SqlNode> children = visitChildren(node, ctx);
-    // This is to allow t.* and t.col.*
+    // This is to allow t.*
     // In Hive ASTNode Tree, "t.*" has the following shape
     // TOK_ALLCOLREF
     // - TOK_TABLE_OR_COL
