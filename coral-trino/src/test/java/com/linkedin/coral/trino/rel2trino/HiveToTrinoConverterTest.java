@@ -47,10 +47,9 @@ public class HiveToTrinoConverterTest {
   public Object[][] viewTestCasesProvider() {
     return new Object[][] {
 
-        { "test", "t_dot_star_view", "SELECT \"tablea\".\"a\" AS \"a\", \"tablea\".\"b\" AS \"b\", \"tablea0\".\"b\" AS \"tbb\"\n" +
-            "FROM \"test\".\"tablea\"\n" +
-            "INNER JOIN \"test\".\"tablea\" AS \"tablea0\" ON \"tablea\".\"a\" = \"tablea0\".\"a\""
-        },
+        { "test", "t_dot_star_view", "SELECT \"tablea\".\"a\" AS \"a\", \"tablea\".\"b\" AS \"b\", \"tablea0\".\"b\" AS \"tbb\"\n"
+            + "FROM \"test\".\"tablea\"\n"
+            + "INNER JOIN \"test\".\"tablea\" AS \"tablea0\" ON \"tablea\".\"a\" = \"tablea0\".\"a\"" },
 
         { "test", "fuzzy_union_view", "SELECT \"a\", \"b\"\nFROM ("
             + "SELECT \"a\", \"b\"\nFROM \"test\".\"tablea\"\nUNION ALL\n"
