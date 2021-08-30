@@ -276,6 +276,11 @@ public class TestUtils {
     run(driver,
         "CREATE VIEW test.view_with_outer_explode_struct_array AS SELECT a, c FROM test.table_with_struct_array LATERAL VIEW OUTER EXPLODE(b) t AS c");
 
+    run(driver,
+        "CREATE VIEW test.view_with_date_and_interval AS SELECT CAST('2021-08-30' AS DATE) + INTERVAL '3' DAY FROM test.tableA");
+    run(driver,
+        "CREATE VIEW test.view_with_timestamp_and_interval AS SELECT CAST('2021-08-30' AS TIMESTAMP) + INTERVAL '3' MONTH FROM test.tableA");
+
     run(driver, "CREATE TABLE test.table_with_map(a int, b map<string, string>)");
     run(driver,
         "CREATE VIEW test.view_with_explode_map AS SELECT a, c, d FROM test.table_with_map LATERAL VIEW EXPLODE(b) t AS c, d");

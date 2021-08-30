@@ -176,7 +176,13 @@ public class HiveToTrinoConverterTest {
 
         { "test", "pmod_view", "SELECT MOD(MOD(- 9, 4) + 4, 4)\nFROM \"test\".\"tablea\"" },
 
-        { "test", "nullscollationd_view", "SELECT \"a\", \"b\", \"c\"\nFROM \"test\".\"tabler\"\nORDER BY \"b\" DESC" }, };
+        { "test", "nullscollationd_view", "SELECT \"a\", \"b\", \"c\"\nFROM \"test\".\"tabler\"\nORDER BY \"b\" DESC" },
+
+        { "test", "view_with_date_and_interval", "SELECT (CAST('2021-08-30' AS DATE) + INTERVAL '3' DAY)\nFROM \"test\".\"tablea\"" },
+
+        { "test", "view_with_timestamp_and_interval", "SELECT (CAST('2021-08-30' AS TIMESTAMP) + INTERVAL '3' MONTH)\nFROM \"test\".\"tablea\"" },
+
+        { "test", "pmod_view", "SELECT MOD(MOD(- 9, 4) + 4, 4)\nFROM \"test\".\"tablea\"" }, };
   }
 
   @Test
