@@ -88,6 +88,7 @@ public class ParseTreeBuilderTest {
         "SELECT * from foo left outer join bar on foo.a = bar.b",
         "SELECT * from foo right outer join bar on foo.a = bar.b",
         "SELECT * from foo full outer join bar on foo.a = bar.b",
+        "SELECT foo.*, bar.b from foo join bar on foo.a = bar.b",
 
         // subqeury
         "SELECT * from foo where a in (select a from bar)",

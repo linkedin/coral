@@ -322,6 +322,10 @@ public class TestUtils {
     run(driver, "CREATE TABLE IF NOT EXISTS test.tableR(a int, b string, c int)");
     run(driver,
         "CREATE VIEW IF NOT EXISTS test.nullscollationd_view AS \n" + "SELECT a,b,c FROM test.tableR ORDER  BY b DESC");
+
+    run(driver, "CREATE VIEW IF NOT EXISTS test.t_dot_star_view AS \n"
+        + "SELECT ta.*, tb.b as tbb FROM test.tableA as ta JOIN test.tableA as tb ON ta.a = tb.a");
+
   }
 
   public static RelNode convertView(String db, String view) {
