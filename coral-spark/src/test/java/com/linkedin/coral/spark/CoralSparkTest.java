@@ -192,7 +192,7 @@ public class CoralSparkTest {
     RelNode relNode = TestUtils.toRelNode(
         String.join("\n", "", "SELECT a, t.ccol", "FROM complex", "LATERAL VIEW explode(complex.c) t as ccol"));
     String targetSql =
-        "SELECT complex.a, t00.ccol\n" + "FROM default.complex LATERAL VIEW EXPLODE(complex.c) t00 AS ccol";
+        "SELECT complex.a, t0.ccol\n" + "FROM default.complex LATERAL VIEW EXPLODE(complex.c) t0 AS ccol";
     assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
   }
 
@@ -204,8 +204,8 @@ public class CoralSparkTest {
     System.out.println(relNodePlan);
     String convertToSparkSql = CoralSpark.create(relNode).getSparkSql();
 
-    String targetSql = "SELECT complex.a, t00.ccol\n"
-        + "FROM default.complex LATERAL VIEW OUTER EXPLODE(if(complex.c IS NOT NULL AND size(complex.c) > 0, complex.c, ARRAY (NULL))) t00 AS ccol";
+    String targetSql = "SELECT complex.a, t0.ccol\n"
+        + "FROM default.complex LATERAL VIEW OUTER EXPLODE(if(complex.c IS NOT NULL AND size(complex.c) > 0, complex.c, ARRAY (NULL))) t0 AS ccol";
     assertEquals(convertToSparkSql, targetSql);
   }
 
@@ -213,8 +213,8 @@ public class CoralSparkTest {
   public void testMultipleLateralView() {
     RelNode relNode = TestUtils.toRelNode(String.join("\n", "", "SELECT a, t.ccol, t2.ccol2", "FROM complex ",
         "LATERAL VIEW explode(complex.c) t AS ccol ", "LATERAL VIEW explode(complex.c) t2 AS ccol2 "));
-    String targetSql = "SELECT complex.a, t00.ccol, t20.ccol2\n"
-        + "FROM default.complex LATERAL VIEW EXPLODE(complex.c) t00 AS ccol LATERAL VIEW EXPLODE(complex.c) t20 AS ccol2";
+    String targetSql = "SELECT complex.a, t0.ccol, t2.ccol2\n"
+        + "FROM default.complex LATERAL VIEW EXPLODE(complex.c) t0 AS ccol LATERAL VIEW EXPLODE(complex.c) t2 AS ccol2";
     assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
   }
 
@@ -222,8 +222,8 @@ public class CoralSparkTest {
   public void testLateralViewMap() {
     RelNode relNode = TestUtils.toRelNode(String.join("\n", "", "SELECT a, t.ccol1, t.ccol2", "FROM complex",
         "LATERAL VIEW explode(complex.m) t as ccol1, ccol2"));
-    String targetSql = "SELECT complex.a, t00.ccol1, t00.ccol2\n"
-        + "FROM default.complex LATERAL VIEW EXPLODE(complex.m) t00 AS ccol1, ccol2";
+    String targetSql = "SELECT complex.a, t0.ccol1, t0.ccol2\n"
+        + "FROM default.complex LATERAL VIEW EXPLODE(complex.m) t0 AS ccol1, ccol2";
     assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
   }
 
@@ -231,8 +231,8 @@ public class CoralSparkTest {
   public void testLateralViewMapOuter() {
     RelNode relNode = TestUtils.toRelNode(String.join("\n", "", "SELECT a, t.ccol1, t.ccol2", "FROM complex",
         "LATERAL VIEW OUTER explode(complex.m) t as ccol1, ccol2"));
-    String targetSql = String.join("\n", "SELECT complex.a, t00.ccol1, t00.ccol2",
-        "FROM default.complex LATERAL VIEW OUTER EXPLODE(if(complex.m IS NOT NULL AND size(complex.m) > 0, complex.m, MAP (NULL, NULL))) t00 AS ccol1, ccol2");
+    String targetSql = String.join("\n", "SELECT complex.a, t0.ccol1, t0.ccol2",
+        "FROM default.complex LATERAL VIEW OUTER EXPLODE(if(complex.m IS NOT NULL AND size(complex.m) > 0, complex.m, MAP (NULL, NULL))) t0 AS ccol1, ccol2");
     assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
   }
 
@@ -297,8 +297,7 @@ public class CoralSparkTest {
   public void testLateralViewStar() {
     RelNode relNode = TestUtils
         .toRelNode(String.join("\n", "", "SELECT a, t.*", "FROM complex", "LATERAL VIEW explode(complex.c) t"));
-    String targetSql =
-        "SELECT complex.a, t00.col\n" + "FROM default.complex LATERAL VIEW EXPLODE(complex.c) t00 AS col";
+    String targetSql = "SELECT complex.a, t0.col\n" + "FROM default.complex LATERAL VIEW EXPLODE(complex.c) t0 AS col";
     assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
   }
 
@@ -306,8 +305,8 @@ public class CoralSparkTest {
   public void testLateralViewGroupBy() {
     RelNode relNode = TestUtils.toRelNode(String.join("\n", "", "SELECT adid, count(1)", "FROM complex",
         "LATERAL VIEW explode(c) t as adid", "GROUP BY adid"));
-    String targetSql = "SELECT t00.adid, COUNT(*)\n"
-        + "FROM default.complex LATERAL VIEW EXPLODE(complex.c) t00 AS adid\n" + "GROUP BY t00.adid";
+    String targetSql = "SELECT t0.adid, COUNT(*)\n"
+        + "FROM default.complex LATERAL VIEW EXPLODE(complex.c) t0 AS adid\n" + "GROUP BY t0.adid";
     assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
   }
 
@@ -380,8 +379,17 @@ public class CoralSparkTest {
     RelNode relNode = TestUtils
         .toRelNode("SELECT col FROM (SELECT ARRAY('a1', 'a2') as a) tmp LATERAL VIEW EXPLODE(a) a_alias AS col");
 
-    String targetSql = "SELECT t20.col\n" + "FROM (SELECT ARRAY ('a1', 'a2') a\n"
-        + "FROM (VALUES  (0)) t (ZERO)) t0 LATERAL VIEW EXPLODE(t0.a) t20 AS col";
+    String targetSql = "SELECT t2.col\n" + "FROM (SELECT ARRAY ('a1', 'a2') a\n"
+        + "FROM (VALUES  (0)) t (ZERO)) t0 LATERAL VIEW EXPLODE(t0.a) t2 AS col";
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+  }
+
+  @Test
+  public void testLateralViewArray2() {
+    RelNode relNode =
+        TestUtils.toRelNode("SELECT arr.alias FROM foo tmp LATERAL VIEW EXPLODE(ARRAY('a', 'b')) arr as alias");
+
+    String targetSql = "SELECT t0.alias\n" + "FROM default.foo,\n" + "EXPLODE(ARRAY ('a', 'b')) t0 AS alias";
     assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
   }
 
@@ -390,8 +398,8 @@ public class CoralSparkTest {
     RelNode relNode =
         TestUtils.toRelNode("SELECT col FROM (SELECT ARRAY('a1', 'a2') as a) tmp LATERAL VIEW EXPLODE(a) a_alias");
 
-    String targetSql = "SELECT t20.col\n" + "FROM (SELECT ARRAY ('a1', 'a2') a\n"
-        + "FROM (VALUES  (0)) t (ZERO)) t0 LATERAL VIEW EXPLODE(t0.a) t20 AS col";
+    String targetSql = "SELECT t2.col\n" + "FROM (SELECT ARRAY ('a1', 'a2') a\n"
+        + "FROM (VALUES  (0)) t (ZERO)) t0 LATERAL VIEW EXPLODE(t0.a) t2 AS col";
     assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
   }
 
@@ -400,8 +408,8 @@ public class CoralSparkTest {
     RelNode relNode = TestUtils.toRelNode(
         "SELECT key, value FROM (SELECT MAP('key1', 'value1') as m) tmp LATERAL VIEW EXPLODE(m) m_alias AS key, value");
 
-    String targetSql = "SELECT t20.key, t20.value\n" + "FROM (SELECT MAP ('key1', 'value1') m\n"
-        + "FROM (VALUES  (0)) t (ZERO)) t0 LATERAL VIEW EXPLODE(t0.m) t20 AS key, value";
+    String targetSql = "SELECT t2.key, t2.value\n" + "FROM (SELECT MAP ('key1', 'value1') m\n"
+        + "FROM (VALUES  (0)) t (ZERO)) t0 LATERAL VIEW EXPLODE(t0.m) t2 AS key, value";
     assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
   }
 
@@ -410,8 +418,8 @@ public class CoralSparkTest {
     RelNode relNode = TestUtils.toRelNode(
         "SELECT k1, v1 FROM (SELECT MAP('key1', 'value1') as m) tmp LATERAL VIEW EXPLODE(m) m_alias AS k1, v1");
 
-    String targetSql = "SELECT t20.k1, t20.v1\n" + "FROM (SELECT MAP ('key1', 'value1') m\n"
-        + "FROM (VALUES  (0)) t (ZERO)) t0 LATERAL VIEW EXPLODE(t0.m) t20 AS k1, v1";
+    String targetSql = "SELECT t2.k1, t2.v1\n" + "FROM (SELECT MAP ('key1', 'value1') m\n"
+        + "FROM (VALUES  (0)) t (ZERO)) t0 LATERAL VIEW EXPLODE(t0.m) t2 AS k1, v1";
     assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
   }
 
@@ -420,8 +428,8 @@ public class CoralSparkTest {
     RelNode relNode = TestUtils
         .toRelNode("SELECT key, value FROM (SELECT MAP('key1', 'value1') as m) tmp LATERAL VIEW EXPLODE(m) m_alias");
 
-    String targetSql = "SELECT t20.KEY key, t20.VALUE value\n" + "FROM (SELECT MAP ('key1', 'value1') m\n"
-        + "FROM (VALUES  (0)) t (ZERO)) t0 LATERAL VIEW EXPLODE(t0.m) t20 AS KEY, VALUE";
+    String targetSql = "SELECT t2.KEY key, t2.VALUE value\n" + "FROM (SELECT MAP ('key1', 'value1') m\n"
+        + "FROM (VALUES  (0)) t (ZERO)) t0 LATERAL VIEW EXPLODE(t0.m) t2 AS KEY, VALUE";
     assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
   }
 

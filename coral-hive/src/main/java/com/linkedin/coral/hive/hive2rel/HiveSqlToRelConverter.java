@@ -90,7 +90,6 @@ class HiveSqlToRelConverter extends SqlToRelConverter {
 
   private void convertUnnestFrom(Blackboard bb, SqlNode from) {
     final SqlCall call;
-    final SqlNode[] operands;
     call = (SqlCall) from;
     final List<SqlNode> nodes = call.getOperandList();
     final SqlUnnestOperator operator = (SqlUnnestOperator) call.getOperator();

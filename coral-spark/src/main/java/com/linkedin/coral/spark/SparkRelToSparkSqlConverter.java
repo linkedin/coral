@@ -8,6 +8,8 @@ package com.linkedin.coral.spark;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.common.collect.ImmutableMap;
+
 import org.apache.calcite.rel.core.Correlate;
 import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rel.core.TableScan;
@@ -28,7 +30,6 @@ import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.fun.SqlMultisetValueConstructor;
-import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParserPos;
 
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
@@ -101,11 +102,11 @@ public class SparkRelToSparkSqlConverter extends RelToSqlConverter {
     correlTableMap.put(e.getCorrelationId(), leftResult.qualifiedContext());
     final Result rightResult = visitChild(1, e.getRight());
 
-    // Unwrap the top-level SqlASOperator from the rightResult since we will create a SqlLateralViewAsOperator instead.
-    final SqlNode rightNode = rightResult.node.getKind() == SqlKind.AS
-        ? ((SqlBasicCall) rightResult.node).getOperandList().get(0) : rightResult.node;
+    // If rightResult is SqlASOperator, let's replace it with a SqlLateralViewAsOperator;
+    // otherwise let's create a new SqlLateralViewAsOperator on top of rightResult
     final List<SqlNode> asOperands =
-        createAsFullOperands(e.getRight().getRowType(), rightNode, rightResult.neededAlias);
+        (rightResult.node.getKind() == SqlKind.AS) ? ((SqlBasicCall) rightResult.node).getOperandList()
+            : createAsFullOperands(e.getRight().getRowType(), rightResult.node, rightResult.neededAlias);
 
     // Same as AS operator but instead of "AS TableRef(ColRef1, ColRef2)" produces "TableRef AS ColRef1, ColRef2"
     SqlNode rightLateral = SqlLateralViewAsOperator.instance.createCall(POS, asOperands);
@@ -155,9 +156,13 @@ public class SparkRelToSparkSqlConverter extends RelToSqlConverter {
     /** See {@link org.apache.calcite.rel.rel2sql.SqlImplementor#wrapSelect(SqlNode)}*/
 
     final List<SqlNode> asOperands = createAsFullOperands(e.getRowType(), unnestNode, x.neededAlias);
-    final SqlNode asNode = SqlStdOperatorTable.AS.createCall(POS, asOperands);
+    final SqlNode asNode = SqlLateralViewAsOperator.instance.createCall(POS, asOperands);
 
-    return result(asNode, ImmutableList.of(Clause.FROM), e, null);
+    // Reuse the same x.neededAlias since that's already unique by directly calling "new Result(...)"
+    // instead of calling super.result(...), which will generate a new table alias and cause an extra
+    // "AS" to be added to the generated SQL statement and make it invalid.
+    return new Result(asNode, ImmutableList.of(Clause.FROM), null, e.getRowType(),
+        ImmutableMap.of(x.neededAlias, e.getRowType()));
   }
 
   /**

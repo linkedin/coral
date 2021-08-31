@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import com.google.common.collect.ImmutableMap;
+
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.*;
 import org.apache.calcite.rel.rel2sql.RelToSqlConverter;
@@ -169,7 +171,11 @@ public class RelToTrinoConverter extends RelToSqlConverter {
     final List<SqlNode> asOperands = createAsFullOperands(e.getRowType(), unnestNode, x.neededAlias);
     final SqlNode asNode = SqlStdOperatorTable.AS.createCall(POS, asOperands);
 
-    return result(asNode, ImmutableList.of(Clause.FROM), e, null);
+    // Reuse the same x.neededAlias since that's already unique by directly calling "new Result(...)"
+    // instead of calling super.result(...), which will generate a new table alias and cause an extra
+    // "AS" to be added to the generated SQL statement and make it invalid.
+    return new Result(asNode, ImmutableList.of(Clause.FROM), null, e.getRowType(),
+        ImmutableMap.of(x.neededAlias, e.getRowType()));
   }
 
   /**

@@ -192,6 +192,21 @@ public class HiveToTrinoConverterTest {
     assertEquals(expandedSql, targetSql);
   }
 
+  /**
+   * Test the generation of COMMA JOIN in Presto from Lateral views that are uncorrelated.
+   */
+  @Test
+  public void testLateralViewArray2() {
+    RelNode relNode = hiveToRelConverter
+        .convertSql("SELECT arr.alias FROM test.tableA tmp LATERAL VIEW EXPLODE(ARRAY('a', 'b')) arr as alias");
+
+    String targetSql = "SELECT \"t0\".\"alias\" AS \"alias\"\n" + "FROM \"test\".\"tablea\",\n"
+        + "UNNEST(ARRAY['a', 'b']) AS \"t0\" (\"alias\")";
+    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+    String expandedSql = relToTrinoConverter.convert(relNode);
+    assertEquals(expandedSql, targetSql);
+  }
+
   @Test
   public void testLateralViewArrayWithoutColumns() {
     RelNode relNode = hiveToRelConverter
