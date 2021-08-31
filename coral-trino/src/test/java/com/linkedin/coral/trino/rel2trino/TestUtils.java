@@ -318,6 +318,10 @@ public class TestUtils {
         + "datediff('2021-08-20 00:00:00', '2021-08-19 23:59:59')" + "FROM test.tableA");
 
     run(driver, "CREATE VIEW IF NOT EXISTS test.pmod_view AS \n" + "SELECT pmod(-9, 4) FROM test.tableA");
+
+    run(driver, "CREATE VIEW IF NOT EXISTS test.t_dot_star_view AS \n"
+        + "SELECT ta.*, tb.b as tbb FROM test.tableA as ta JOIN test.tableA as tb ON ta.a = tb.a");
+
   }
 
   public static RelNode convertView(String db, String view) {
