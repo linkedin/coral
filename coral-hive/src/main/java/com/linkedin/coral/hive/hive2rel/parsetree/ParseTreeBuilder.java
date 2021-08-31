@@ -6,6 +6,7 @@
 package com.linkedin.coral.hive.hive2rel.parsetree;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -36,6 +37,7 @@ import org.apache.calcite.sql.SqlWindow;
 import org.apache.calcite.sql.SqlWith;
 import org.apache.calcite.sql.SqlWithItem;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
+import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.hadoop.hive.metastore.api.Table;
 
@@ -451,7 +453,22 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
 
   @Override
   protected SqlNode visitAllColRef(ASTNode node, ParseContext ctx) {
-    return SqlIdentifier.star(ZERO);
+    List<SqlNode> children = visitChildren(node, ctx);
+    // This is to allow t.*
+    // In Hive ASTNode Tree, "t.*" has the following shape
+    // TOK_ALLCOLREF
+    // - TOK_TABLE_OR_COL
+    //   - "t"
+    List<String> names = new ArrayList<>();
+    if (children != null) {
+      for (SqlNode child : children) {
+        names.addAll(((SqlIdentifier) child).names);
+      }
+    }
+    names.add("*");
+    List<SqlParserPos> sqlParserPos = Collections.nCopies(names.size(), ZERO);
+    SqlNode star = SqlIdentifier.star(names, ZERO, sqlParserPos);
+    return star;
   }
 
   @Override
