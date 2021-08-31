@@ -275,13 +275,15 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     //   The logic above will be implemented as part of Calcite SqlNode validation
     //   Note that "operandCount == 2 && isOuter" is not supported yet due to the lack of type information needed
     //   to derive the correct IF function parameters.
-    checkState((operandCount == 2 && !isOuter) || operandCount == 3 || operandCount == 4,
+    checkState(operandCount == 2 || operandCount == 3 || operandCount == 4,
         format("Unsupported LATERAL VIEW EXPLODE operand number: %d", operandCount));
     // TODO The code below assumes LATERAL VIEW is used with UNNEST EXPLODE only. It should be made more generic.
     SqlCall unnestCall = tableFunctionCall;
     SqlNode unnestOperand = unnestCall.operand(0);
 
     if (isOuter) {
+      checkState(operandCount > 2, format(
+          "LATERAL VIEW OUTER EXPLODE without column aliases is not supported. Add 'AS col' or 'AS key, value' to fix it"));
       // transforms unnest(b) to unnest( if(b is null or cardinality(b) = 0, ARRAY(null)/MAP(null, null), b))
       SqlNode operandIsNull = SqlStdOperatorTable.IS_NOT_NULL.createCall(ZERO, unnestOperand);
       SqlNode emptyArray = SqlStdOperatorTable.GREATER_THAN.createCall(ZERO,
