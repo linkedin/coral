@@ -182,7 +182,7 @@ public class HiveToTrinoConverterTest {
 
         { "test", "view_with_timestamp_and_interval", "SELECT (CAST('2021-08-30' AS TIMESTAMP) + INTERVAL '3' MONTH)\nFROM \"test\".\"tablea\"" },
 
-        { "test", "pmod_view", "SELECT MOD(MOD(- 9, 4) + 4, 4)\nFROM \"test\".\"tablea\"" }, };
+    };
   }
 
   @Test
