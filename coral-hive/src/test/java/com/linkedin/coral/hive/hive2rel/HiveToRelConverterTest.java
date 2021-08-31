@@ -110,7 +110,7 @@ public class HiveToRelConverterTest {
     RelNode rel = converter.convertSql(sql);
     String relString = relToStr(rel);
     String expected =
-        "LogicalProject(rid=[ROW_NUMBER() OVER (PARTITION BY $0 ORDER BY $1 ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)])\n"
+        "LogicalProject(rid=[ROW_NUMBER() OVER (PARTITION BY $0 ORDER BY $1 NULLS FIRST ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)])\n"
             + "  LogicalTableScan(table=[[hive, default, foo]])\n";
     assertEquals(relString, expected);
   }
@@ -122,7 +122,7 @@ public class HiveToRelConverterTest {
     RelNode rel = converter.convertSql(sql);
     String relString = relToStr(rel);
     String expected =
-        "LogicalProject(min_c=[MIN($2) OVER (PARTITION BY $0 ORDER BY $1 ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)])\n"
+        "LogicalProject(min_c=[MIN($2) OVER (PARTITION BY $0 ORDER BY $1 NULLS FIRST ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)])\n"
             + "  LogicalTableScan(table=[[hive, default, foo]])\n";
     assertEquals(relString, expected);
   }
@@ -134,7 +134,7 @@ public class HiveToRelConverterTest {
     RelNode rel = converter.convertSql(sql);
     String relString = relToStr(rel);
     String expected =
-        "LogicalProject(var_c=[/(-(CASE(>(COUNT(*($2, $2)) OVER (PARTITION BY $0 ORDER BY $1 RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW), 0), CAST($SUM0(*($2, $2)) OVER (PARTITION BY $0 ORDER BY $1 RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)):DOUBLE, null:DOUBLE), /(*(CASE(>(COUNT($2) OVER (PARTITION BY $0 ORDER BY $1 RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW), 0), CAST($SUM0($2) OVER (PARTITION BY $0 ORDER BY $1 RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)):DOUBLE, null:DOUBLE), CASE(>(COUNT($2) OVER (PARTITION BY $0 ORDER BY $1 RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW), 0), CAST($SUM0($2) OVER (PARTITION BY $0 ORDER BY $1 RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)):DOUBLE, null:DOUBLE)), CAST(COUNT($2) OVER (PARTITION BY $0 ORDER BY $1 RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)):DOUBLE NOT NULL)), CASE(=(COUNT($2) OVER (PARTITION BY $0 ORDER BY $1 RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW), 1), null:BIGINT, CAST(-(COUNT($2) OVER (PARTITION BY $0 ORDER BY $1 RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW), 1)):BIGINT))])\n"
+        "LogicalProject(var_c=[/(-(CASE(>(COUNT(*($2, $2)) OVER (PARTITION BY $0 ORDER BY $1 NULLS FIRST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW), 0), CAST($SUM0(*($2, $2)) OVER (PARTITION BY $0 ORDER BY $1 NULLS FIRST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)):DOUBLE, null:DOUBLE), /(*(CASE(>(COUNT($2) OVER (PARTITION BY $0 ORDER BY $1 NULLS FIRST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW), 0), CAST($SUM0($2) OVER (PARTITION BY $0 ORDER BY $1 NULLS FIRST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)):DOUBLE, null:DOUBLE), CASE(>(COUNT($2) OVER (PARTITION BY $0 ORDER BY $1 NULLS FIRST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW), 0), CAST($SUM0($2) OVER (PARTITION BY $0 ORDER BY $1 NULLS FIRST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)):DOUBLE, null:DOUBLE)), CAST(COUNT($2) OVER (PARTITION BY $0 ORDER BY $1 NULLS FIRST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)):DOUBLE NOT NULL)), CASE(=(COUNT($2) OVER (PARTITION BY $0 ORDER BY $1 NULLS FIRST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW), 1), null:BIGINT, CAST(-(COUNT($2) OVER (PARTITION BY $0 ORDER BY $1 NULLS FIRST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW), 1)):BIGINT))])\n"
             + "  LogicalTableScan(table=[[hive, default, foo]])\n";
     assertEquals(relString, expected);
   }
@@ -147,7 +147,7 @@ public class HiveToRelConverterTest {
     RelNode rel = converter.convertSql(sql);
     String relString = relToStr(rel);
     String expected =
-        "LogicalProject(first_value_c=[FIRST_VALUE($2) OVER (PARTITION BY $0 ORDER BY $1 ROWS BETWEEN 1 PRECEDING AND CURRENT ROW)])\n"
+        "LogicalProject(first_value_c=[FIRST_VALUE($2) OVER (PARTITION BY $0 ORDER BY $1 NULLS FIRST ROWS BETWEEN 1 PRECEDING AND CURRENT ROW)])\n"
             + "  LogicalTableScan(table=[[hive, default, foo]])\n";
     assertEquals(relString, expected);
   }
@@ -160,7 +160,7 @@ public class HiveToRelConverterTest {
     RelNode rel = converter.convertSql(sql);
     String relString = relToStr(rel);
     String expected =
-        "LogicalProject(EXPR$0=[LAST_VALUE($2) OVER (PARTITION BY $0 ORDER BY $1 ROWS BETWEEN CURRENT ROW AND 1 FOLLOWING)])\n"
+        "LogicalProject(EXPR$0=[LAST_VALUE($2) OVER (PARTITION BY $0 ORDER BY $1 NULLS FIRST ROWS BETWEEN CURRENT ROW AND 1 FOLLOWING)])\n"
             + "  LogicalTableScan(table=[[hive, default, foo]])\n";
     assertEquals(relString, expected);
   }
@@ -172,7 +172,7 @@ public class HiveToRelConverterTest {
     RelNode rel = converter.convertSql(sql);
     String relString = relToStr(rel);
     String expected =
-        "LogicalProject(rank=[RANK() OVER (ORDER BY $1 RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)])\n"
+        "LogicalProject(rank=[RANK() OVER (ORDER BY $1 NULLS FIRST RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)])\n"
             + "  LogicalTableScan(table=[[hive, default, foo]])\n";
     assertEquals(relString, expected);
   }

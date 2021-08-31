@@ -173,6 +173,8 @@ public class HiveToTrinoConverterTest {
             + "\"date_diff\"('day', \"date\"(TIMESTAMP '2021-08-19 23:59:59'), \"date\"(TIMESTAMP '2021-08-20 00:00:00'))\n"
             + "FROM \"test\".\"tablea\"" },
 
-        { "test", "pmod_view", "SELECT MOD(MOD(- 9, 4) + 4, 4)\nFROM \"test\".\"tablea\"" }, };
+        { "test", "pmod_view", "SELECT MOD(MOD(- 9, 4) + 4, 4)\nFROM \"test\".\"tablea\"" },
+
+        { "test", "nullscollationd_view", "SELECT \"a\", \"b\", \"c\"\nFROM \"test\".\"tabler\"\nORDER BY \"b\" DESC" }, };
   }
 }
