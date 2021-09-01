@@ -105,19 +105,21 @@ public class SparkRelToSparkSqlConverter extends RelToSqlConverter {
     correlTableMap.put(e.getCorrelationId(), leftResult.qualifiedContext());
     final Result rightResult = visitChild(1, e.getRight());
 
-    // If rightResult is SqlASOperator, let's replace it with a SqlLateralViewAsOperator;
-    // otherwise let's create a new SqlLateralViewAsOperator on top of rightResult
-    final List<SqlNode> asOperands =
-        (rightResult.node.getKind() == SqlKind.AS) ? ((SqlBasicCall) rightResult.node).getOperandList()
-            : createAsFullOperands(e.getRight().getRowType(), rightResult.node, rightResult.neededAlias);
+    SqlNode rightNode = rightResult.node;
 
-    // Same as AS operator but instead of "AS TableRef(ColRef1, ColRef2)" produces "TableRef AS ColRef1, ColRef2"
-    SqlNode rightLateral = SqlLateralViewAsOperator.instance.createCall(POS, asOperands);
+    // If rightResult is not SqlASOperator, let's create a SqlLateralViewAsOperator to wrap it around
+    // This is necessary to ensure that the alias is applied.
+    if (rightNode.getKind() != SqlKind.AS) {
+      final List<SqlNode> asOperands =
+          createAsFullOperands(e.getRight().getRowType(), rightResult.node, rightResult.neededAlias);
+      // Same as AS operator but instead of "AS TableRef(ColRef1, ColRef2)" produces "TableRef AS ColRef1, ColRef2"
+      rightNode = SqlLateralViewAsOperator.instance.createCall(POS, asOperands);
+    }
 
     // A new type of join is used, because the unparsing of this join is different from already existing join
     SqlLateralJoin join =
         new SqlLateralJoin(POS, leftResult.asFrom(), SqlLiteral.createBoolean(false, POS), JoinType.COMMA.symbol(POS),
-            rightLateral, JoinConditionType.NONE.symbol(POS), null, isCorrelateRightChildOuter(rightResult.node));
+            rightNode, JoinConditionType.NONE.symbol(POS), null, isCorrelateRightChildOuter(rightResult.node));
     return result(join, leftResult, rightResult);
   }
 
