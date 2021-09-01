@@ -1038,7 +1038,7 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     return visitChildren(node, ctx).get(0);
   }
 
-  private SqlIntervalQualifier fromASTIntervalTypeToSqlIntervalQUalifier(ASTNode node) {
+  private SqlIntervalQualifier fromASTIntervalTypeToSqlIntervalQualifier(ASTNode node) {
     switch (node.getType()) {
       case HiveParser.TOK_INTERVAL_DAY_LITERAL:
         return new SqlIntervalQualifier(TimeUnit.DAY, null, ZERO);
@@ -1067,7 +1067,7 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     // Calcite SqlNode Tree looks like the following:
     //   SqlIntervalLiteral(1 /* sign */, "28" /* unquotedText */, SqlIntervalQualifier, SqlParserPos)
 
-    SqlIntervalQualifier intervalQualifier = fromASTIntervalTypeToSqlIntervalQUalifier(node);
+    SqlIntervalQualifier intervalQualifier = fromASTIntervalTypeToSqlIntervalQualifier(node);
 
     String text = node.getToken().getText();
     String unquotedText = text.replaceAll("[\'\"]", "");
