@@ -389,7 +389,7 @@ public class CoralSparkTest {
     RelNode relNode =
         TestUtils.toRelNode("SELECT arr.alias FROM foo tmp LATERAL VIEW EXPLODE(ARRAY('a', 'b')) arr as alias");
 
-    String targetSql = "SELECT t0.alias\n" + "FROM default.foo,\n" + "EXPLODE(ARRAY ('a', 'b')) t0 AS alias";
+    String targetSql = "SELECT t0.alias\n" + "FROM default.foo LATERAL VIEW EXPLODE(ARRAY ('a', 'b')) t0 AS alias";
     assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
   }
 

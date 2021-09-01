@@ -10,7 +10,9 @@ import java.util.List;
 
 import com.google.common.collect.ImmutableMap;
 
+import org.apache.calcite.linq4j.tree.Expressions;
 import org.apache.calcite.rel.core.Correlate;
+import org.apache.calcite.rel.core.Join;
 import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rel.core.Uncollect;
@@ -25,6 +27,7 @@ import org.apache.calcite.sql.JoinType;
 import org.apache.calcite.sql.SqlBasicCall;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlIdentifier;
+import org.apache.calcite.sql.SqlJoin;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlNode;
@@ -116,6 +119,25 @@ public class SparkRelToSparkSqlConverter extends RelToSqlConverter {
         new SqlLateralJoin(POS, leftResult.asFrom(), SqlLiteral.createBoolean(false, POS), JoinType.COMMA.symbol(POS),
             rightLateral, JoinConditionType.NONE.symbol(POS), null, isCorrelateRightChildOuter(rightResult.node));
     return result(join, leftResult, rightResult);
+  }
+
+  @Override
+  public Result visit(Join e) {
+    Result result = super.visit(e);
+
+    SqlJoin joinNode = (SqlJoin) (result.node);
+    SqlNode rightNode = joinNode.getRight();
+
+    // Is this JOIN actually a "LATERAL VIEW EXPLODE(xxx)"?
+    // If so, let's replace the JOIN node with SqlLateralJoin node, which unparses as "LATERAL VIEW".
+    if (rightNode instanceof SqlBasicCall
+        && ((SqlBasicCall) rightNode).getOperator() instanceof SqlLateralViewAsOperator) {
+      SqlLateralJoin join = new SqlLateralJoin(POS, joinNode.getLeft(), SqlLiteral.createBoolean(false, POS),
+          JoinType.COMMA.symbol(POS), joinNode.getRight(), JoinConditionType.NONE.symbol(POS), joinNode.getCondition(),
+          isCorrelateRightChildOuter(joinNode.getRight()));
+      result = new Result(join, Expressions.list(Clause.FROM), null, null, result.aliases);
+    }
+    return result;
   }
 
   /**
