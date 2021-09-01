@@ -282,7 +282,7 @@ public abstract class AbstractASTVisitor<R, C> {
       case HiveParser.TOK_WINDOWVALUES:
         return visitWindowValues(node, ctx);
 
-      // See IdentifierParser.g:
+      // See IdentifiersParser.g:
       case HiveParser.TOK_INTERVAL_DAY_LITERAL:
       case HiveParser.TOK_INTERVAL_DAY_TIME_LITERAL:
       case HiveParser.TOK_INTERVAL_HOUR_LITERAL:

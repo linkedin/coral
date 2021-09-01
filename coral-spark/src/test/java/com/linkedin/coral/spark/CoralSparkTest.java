@@ -342,6 +342,13 @@ public class CoralSparkTest {
   }
 
   @Test
+  public void testInterval() {
+    RelNode relNode = TestUtils.toRelNode("SELECT CAST('2021-08-31' AS DATE) + INTERVAL '7' DAY FROM default.complex");
+    String targetSql = "SELECT (CAST('2021-08-31' AS DATE) + INTERVAL '7' DAY)\n" + "FROM default.complex";
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+  }
+
+  @Test
   public void testSchemaPromotionView() {
     RelNode relNode = TestUtils.toRelNode(String.join("\n", "", "SELECT * ", "FROM view_schema_promotion_wrapper"));
     String targetSql = String.join("\n", "SELECT a, CAST(b AS ARRAY<INTEGER>) b", "FROM default.schema_promotion");
