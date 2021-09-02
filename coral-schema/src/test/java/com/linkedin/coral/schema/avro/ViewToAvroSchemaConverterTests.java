@@ -871,5 +871,16 @@ public class ViewToAvroSchemaConverterTests {
     Assert.assertEquals(actualSchema.toString(true),
         TestUtils.loadSchema("docTestResources/testMultipleLateralViewDifferentArrayType-expected-with-doc.avsc"));
   }
+
+  @Test
+  public void testDecimalType() {
+    String viewSql = "CREATE VIEW v AS SELECT * FROM basedecimal";
+    TestUtils.executeCreateViewQuery("default", "v", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v");
+
+    Assert.assertEquals(actualSchema.toString(true), TestUtils.loadSchema("testDecimalType-expected.avsc"));
+  }
   // TODO: add more unit tests
 }

@@ -21,6 +21,8 @@ import org.apache.calcite.sql.type.BasicSqlType;
 import org.apache.calcite.sql.type.MapSqlType;
 import org.apache.calcite.sql.type.MultisetSqlType;
 import org.apache.calcite.sql.type.SqlTypeName;
+import org.apache.hadoop.hive.serde2.avro.AvroSerDe;
+import org.codehaus.jackson.node.JsonNodeFactory;
 
 import com.linkedin.coral.com.google.common.base.Preconditions;
 
@@ -106,6 +108,13 @@ class RelDataTypeToAvroType {
         Schema schema = Schema.create(Schema.Type.LONG);
         schema.addProp("logicalType", "timestamp");
         return schema;
+      case DECIMAL:
+        JsonNodeFactory factory = JsonNodeFactory.instance;
+        Schema decimalSchema = Schema.create(Schema.Type.BYTES);
+        decimalSchema.addProp(AvroSerDe.AVRO_PROP_LOGICAL_TYPE, AvroSerDe.DECIMAL_TYPE_NAME);
+        decimalSchema.addProp(AvroSerDe.AVRO_PROP_PRECISION, factory.numberNode(relDataType.getPrecision()));
+        decimalSchema.addProp(AvroSerDe.AVRO_PROP_SCALE, factory.numberNode(relDataType.getScale()));
+        return decimalSchema;
       default:
         throw new UnsupportedOperationException(relDataType.getSqlTypeName() + " is not supported.");
     }

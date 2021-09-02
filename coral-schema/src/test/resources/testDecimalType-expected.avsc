@@ -1,0 +1,15 @@
+{
+  "type" : "record",
+  "name" : "v",
+  "namespace" : "default.v",
+  "fields" : [ {
+    "name" : "decimal_col",
+    "type" : [ "null", {
+      "type" : "bytes",
+      "logicalType" : "decimal",
+      "precision" : 2,
+      "scale" : 1
+    } ],
+    "default" : null
+  } ]
+}
