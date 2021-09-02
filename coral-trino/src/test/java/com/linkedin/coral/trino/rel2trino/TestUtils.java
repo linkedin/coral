@@ -279,7 +279,9 @@ public class TestUtils {
     run(driver,
         "CREATE VIEW test.view_with_date_and_interval AS SELECT CAST('2021-08-30' AS DATE) + INTERVAL '3' DAY FROM test.tableA");
     run(driver,
-        "CREATE VIEW test.view_with_timestamp_and_interval AS SELECT CAST('2021-08-30' AS TIMESTAMP) + INTERVAL '3' MONTH FROM test.tableA");
+        "CREATE VIEW test.view_with_timestamp_and_interval AS SELECT CAST('2021-08-30' AS TIMESTAMP) + INTERVAL '-3 01:02:03' DAY TO SECOND FROM test.tableA");
+    run(driver,
+        "CREATE VIEW test.view_with_timestamp_and_interval_2 AS SELECT CAST('2021-08-30' AS TIMESTAMP) + INTERVAL '-1-6' YEAR TO MONTH FROM test.tableA");
 
     run(driver, "CREATE TABLE test.table_with_map(a int, b map<string, string>)");
     run(driver,

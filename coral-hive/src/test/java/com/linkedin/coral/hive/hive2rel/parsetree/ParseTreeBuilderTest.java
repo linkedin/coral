@@ -58,6 +58,10 @@ public class ParseTreeBuilderTest {
         // date and timestamp
         "SELECT CAST('2021-08-30' AS DATE) + INTERVAL '3' DAY FROM test.tableOne",
         "SELECT CAST('2021-08-30' AS TIMESTAMP) + INTERVAL '3' DAY FROM test.tableOne",
+        "SELECT CAST('2021-08-31' AS TIMESTAMP) + INTERVAL '7 01:02:03' DAY TO SECOND FROM test.tableOne",
+        "SELECT CAST('2021-08-31' AS TIMESTAMP) + INTERVAL '-7 01:02:03' DAY TO SECOND FROM test.tableOne",
+        "SELECT CAST('2021-08-31' AS TIMESTAMP) + INTERVAL '1-6' YEAR TO MONTH FROM test.tableOne",
+        "SELECT CAST('2021-08-31' AS TIMESTAMP) + INTERVAL '-1-6' YEAR TO MONTH FROM test.tableOne",
 
         // empty string literal
         "SELECT * from test.tableOne where b = ''", "SELECT * from test.tableTwo order by x desc, y asc",

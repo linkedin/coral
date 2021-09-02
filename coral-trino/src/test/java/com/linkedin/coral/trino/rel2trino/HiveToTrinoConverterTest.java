@@ -180,9 +180,9 @@ public class HiveToTrinoConverterTest {
 
         { "test", "view_with_date_and_interval", "SELECT (CAST('2021-08-30' AS DATE) + INTERVAL '3' DAY)\nFROM \"test\".\"tablea\"" },
 
-        { "test", "view_with_timestamp_and_interval", "SELECT (CAST('2021-08-30' AS TIMESTAMP) + INTERVAL '3' MONTH)\nFROM \"test\".\"tablea\"" },
+        { "test", "view_with_timestamp_and_interval", "SELECT (CAST('2021-08-30' AS TIMESTAMP) + INTERVAL -'3 01:02:03' DAY TO SECOND)\nFROM \"test\".\"tablea\"" },
 
-    };
+        { "test", "view_with_timestamp_and_interval_2", "SELECT (CAST('2021-08-30' AS TIMESTAMP) + INTERVAL -'1-6' YEAR TO MONTH)\nFROM \"test\".\"tablea\"" }, };
   }
 
   @Test
