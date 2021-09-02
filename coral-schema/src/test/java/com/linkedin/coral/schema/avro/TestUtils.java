@@ -117,7 +117,7 @@ public class TestUtils {
         + "array_col_3: array<struct<struct_col_6:struct<int_field_5:int>>>>)");
 
     executeQuery("DROP TABLE IF EXISTS basedecimal");
-    executeQuery("CREATE TABLE IF NOT EXISTS basedecimal(decimal_col decimal(2,2))");
+    executeQuery("CREATE TABLE IF NOT EXISTS basedecimal(decimal_col decimal(2,1))");
   }
 
   private static void initializeUdfs() {
