@@ -12,6 +12,7 @@ import java.util.List;
 import com.google.common.collect.ImmutableList;
 
 import org.apache.calcite.avatica.util.Casing;
+import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.parser.SqlParser;
@@ -125,10 +126,37 @@ public class ParseTreeBuilderTest {
   }
 
   @DataProvider(name = "validateSql")
-  public Object[][] getValidateSql() {
-    return new Object[][] {
+  public Iterator<Object[]> getValidateSql() {
+    List<List<String>> convertAndValidateSql = ImmutableList.of(
+        // test lateral view explode with an array
+        ImmutableList.of(
+            "SELECT col FROM (SELECT ARRAY('v1', 'v2') as arr) tmp LATERAL VIEW EXPLODE(arr) arr_alias AS col",
+            "SELECT `col` FROM (SELECT ARRAY['v1', 'v2'] AS `arr`) AS `tmp`, LATERAL UNNEST(`arr`) AS `arr_alias` (`col`)"),
+        // hive automatically creates column aliases `col` when the type is an array
+        ImmutableList.of("SELECT col FROM (SELECT ARRAY('v1', 'v2') as arr) tmp LATERAL VIEW EXPLODE(arr) arr_alias",
+            "SELECT `col` FROM (SELECT ARRAY['v1', 'v2'] AS `arr`) AS `tmp`, LATERAL UNNEST(`arr`) AS `arr_alias`"),
+        // test lateral view explode with a map
+        ImmutableList.of(
+            "SELECT key, value FROM (SELECT MAP('key1', 'value1') as m) tmp LATERAL VIEW EXPLODE(m) m_alias AS key, value",
+            "SELECT `key`, `value` FROM (SELECT MAP['key1', 'value1'] AS `m`) AS `tmp`, LATERAL UNNEST(`m`) AS `m_alias` (`key`, `value`)"),
+        // hive automatically creates column aliases `key` and `value` when the type is a map
+        ImmutableList.of(
+            "SELECT key, value FROM (SELECT MAP('key1', 'value1') as m) tmp LATERAL VIEW EXPLODE(m) m_alias",
+            "SELECT `key`, `value` FROM (SELECT MAP['key1', 'value1'] AS `m`) AS `tmp`, LATERAL UNNEST(`m`) AS `m_alias`"),
         // hive doesn't support casting as varbinary
-        { "SELECT cast(a as binary) from foo", "SELECT cast(`a` as binary) from `foo`" }, { "SELECT cast(a as string) from foo", "SELECT cast(`a` as varchar) from `foo`" }, { "SELECT a, c from foo union all select x, y from bar", "SELECT * FROM (SELECT `a`, `c` from `foo` union all SELECT `x`, `y` from `bar`) as `_u1`" }, { "SELECT case (a + 10) when 20 then 5 when 30 then 10 else 1 END from foo", "SELECT CASE WHEN `a` + 10 = 20 THEN 5 WHEN `a` + 10 = 30 THEN 10 ELSE 1 END from `foo`" }, { "SELECT CASE WHEN a THEN 10 WHEN b THEN 20 ELSE 30 END from foo", "SELECT CASE WHEN `a` THEN 10 WHEN `b` THEN 20 ELSE 30 END from `foo`" }, { "SELECT named_struct('abc', 123, 'def', 234.23) FROM foo", "SELECT `named_struct`('abc', 123, 'def', 234.23) FROM `foo`" }, { "SELECT 0L from foo", "SELECT 0 from `foo`" } };
+        ImmutableList.of("SELECT cast(a as binary) from foo", "SELECT cast(`a` as binary) from `foo`"),
+        ImmutableList.of("SELECT cast(a as string) from foo", "SELECT cast(`a` as varchar) from `foo`"),
+        ImmutableList.of("SELECT a, c from foo union all select x, y from bar",
+            "SELECT * FROM (SELECT `a`, `c` from `foo` union all SELECT `x`, `y` from `bar`) as `_u1`"),
+        ImmutableList.of("SELECT case (a + 10) when 20 then 5 when 30 then 10 else 1 END from foo",
+            "SELECT CASE WHEN `a` + 10 = 20 THEN 5 WHEN `a` + 10 = 30 THEN 10 ELSE 1 END from `foo`"),
+        ImmutableList.of("SELECT CASE WHEN a THEN 10 WHEN b THEN 20 ELSE 30 END from foo",
+            "SELECT CASE WHEN `a` THEN 10 WHEN `b` THEN 20 ELSE 30 END from `foo`"),
+        ImmutableList.of("SELECT named_struct('abc', 123, 'def', 234.23) FROM foo",
+            "SELECT `named_struct`('abc', 123, 'def', 234.23) FROM `foo`"),
+        ImmutableList.of("SELECT 0L from foo", "SELECT 0 from `foo`"));
+
+    return convertAndValidateSql.stream().map(x -> new Object[] { x.get(0), x.get(1) }).iterator();
   }
 
   @Test(dataProvider = "convertSQL")
@@ -152,5 +180,17 @@ public class ParseTreeBuilderTest {
   private static SqlNode convert(String sql) {
     ParseTreeBuilder builder = new ParseTreeBuilder(msc, new ParseTreeBuilder.Config());
     return builder.processSql(sql);
+  }
+
+  /**
+   * OUTER EXPLODE without column aliases are not supported yet.
+   * See details in {@link ParseTreeBuilder#visitLateralViewExplode(List, List, SqlCall, boolean)}
+   */
+  @Test(expectedExceptions = { java.lang.IllegalStateException.class })
+  public void testUnsupportedOuterExplodeWithoutColumns() {
+    String input = "SELECT col FROM (SELECT ARRAY('v1', 'v2') as arr) tmp LATERAL VIEW OUTER EXPLODE(arr) arr_alias";
+    String expected = "";
+    SqlNode sqlNode = convert(input);
+    assertEquals(sqlNode.toString().toLowerCase().replaceAll("\n", " "), expected.toLowerCase());
   }
 }

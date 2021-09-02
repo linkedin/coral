@@ -1,5 +1,5 @@
 /**
- * Copyright 2018-2020 LinkedIn Corporation. All rights reserved.
+ * Copyright 2018-2021 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -65,7 +65,7 @@ class ToRelConverter {
   }
 
   static RelBuilder createRelBuilder() {
-    return RelBuilder.create(relContextProvider.getConfig());
+    return HiveRelBuilder.create(relContextProvider.getConfig());
   }
 
   static void verifyRel(RelNode input, RelNode expected) {

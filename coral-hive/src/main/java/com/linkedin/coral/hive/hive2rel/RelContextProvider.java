@@ -60,8 +60,6 @@ public class RelContextProvider {
   private RelBuilder relBuilder;
   private CalciteCatalogReader catalogReader;
   private HiveSqlValidator sqlValidator;
-  private RelOptCluster cluster;
-  private SqlToRelConverter relConverter;
   private final HiveConvertletTable convertletTable = new HiveConvertletTable();
   private Driver driver;
   // maintain a mutable copy of Hive function registry in order to save some UDF information
@@ -167,7 +165,7 @@ public class RelContextProvider {
       // 1. Our type system is not perfect replication of Hive so this can be incorrect
       // 2. Converted expression is harder to validate for correctness(because it appears different from input)
       Hook.REL_BUILDER_SIMPLIFY.add(Hook.propertyJ(false));
-      relBuilder = RelBuilder.create(config);
+      relBuilder = HiveRelBuilder.create(config);
     }
     return relBuilder;
   }
@@ -228,10 +226,10 @@ public class RelContextProvider {
    * @return the rel opt cluster
    */
   RelOptCluster getRelOptCluster() {
-    if (cluster == null) {
-      cluster = RelOptCluster.create(new VolcanoPlanner(), getRelBuilder().getRexBuilder());
-    }
-    return cluster;
+    // Create a new one every time so that RelOptCluster.nextCorrel starts from 0 again.
+    // Need to ensure deterministic names for correlations for testing purposes.
+    /** see {@link org.apache.calcite.plan.RelOptCluster} private field: nextCorrel */
+    return RelOptCluster.create(new VolcanoPlanner(), getRelBuilder().getRexBuilder());
   }
 
   HiveViewExpander getViewExpander() {
@@ -245,10 +243,11 @@ public class RelContextProvider {
    * @return the sql to rel converter
    */
   SqlToRelConverter getSqlToRelConverter() {
-    if (relConverter == null) {
-      relConverter = new HiveSqlToRelConverter(getViewExpander(), getHiveSqlValidator(), getCalciteCatalogReader(),
-          getRelOptCluster(), convertletTable, SqlToRelConverter.configBuilder().build());
-    }
-    return relConverter;
+    // Create a new one every time so that RelOptCluster.nextCorrel starts from 0 again.
+    // Need to ensure deterministic names for correlations for testing purposes.
+    /** see {@link org.apache.calcite.plan.RelOptCluster} private field: nextCorrel */
+    return new HiveSqlToRelConverter(getViewExpander(), getHiveSqlValidator(), getCalciteCatalogReader(),
+        getRelOptCluster(), convertletTable,
+        SqlToRelConverter.configBuilder().withRelBuilderFactory(HiveRelBuilder.LOGICAL_BUILDER).build());
   }
 }

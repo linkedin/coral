@@ -423,8 +423,8 @@ public class ViewToAvroSchemaConverterTests {
 
   @Test
   public void testLateralViewMap() {
-    String viewSql = "CREATE VIEW v AS " + "SELECT bl.Id AS Id_View_Col, t.Col1, t.Col2 " + "FROM baselateralview bl "
-        + "LATERAL VIEW explode(bl.Map_Col_String) t as Col1, Col2";
+    String viewSql = "CREATE VIEW v AS " + "SELECT bl.Id AS Id_View_Col, t.col1, t.col2 " + "FROM baselateralview bl "
+        + "LATERAL VIEW explode(bl.Map_Col_String) t as col1, col2";
 
     TestUtils.executeCreateViewQuery("default", "v", viewSql);
 

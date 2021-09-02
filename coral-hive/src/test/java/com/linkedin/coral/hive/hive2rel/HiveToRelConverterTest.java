@@ -190,6 +190,59 @@ public class HiveToRelConverterTest {
   }
 
   @Test
+  public void testLateralViewArray() {
+    // Test if the code can handle lateral view explode with an array
+    String sql = "SELECT col FROM (SELECT ARRAY('a1', 'a2') as a) tmp LATERAL VIEW EXPLODE(a) a_alias AS col";
+    RelNode rel = converter.convertSql(sql);
+    String relString = relToStr(rel);
+    String expected = "LogicalProject(col=[$1])\n"
+        + "  LogicalCorrelate(correlation=[$cor0], joinType=[inner], requiredColumns=[{0}])\n"
+        + "    LogicalProject(a=[ARRAY('a1', 'a2')])\n" + "      LogicalValues(tuples=[[{ 0 }]])\n"
+        + "    HiveUncollect\n" + "      LogicalProject(col=[$cor0.a])\n" + "        LogicalValues(tuples=[[{ 0 }]])\n";
+    assertEquals(relString, expected);
+  }
+
+  @Test
+  public void testLateralViewArrayWithoutColumns() {
+    // Test if the code can handle lateral view explode with an array without column aliases
+    String sql = "SELECT a_alias.col FROM (SELECT ARRAY('a1', 'a2') as a) tmp LATERAL VIEW EXPLODE(a) a_alias";
+    RelNode rel = converter.convertSql(sql);
+    String relString = relToStr(rel);
+    String expected = "LogicalProject(col=[$1])\n"
+        + "  LogicalCorrelate(correlation=[$cor0], joinType=[inner], requiredColumns=[{0}])\n"
+        + "    LogicalProject(a=[ARRAY('a1', 'a2')])\n" + "      LogicalValues(tuples=[[{ 0 }]])\n"
+        + "    HiveUncollect\n" + "      LogicalProject(col=[$cor0.a])\n" + "        LogicalValues(tuples=[[{ 0 }]])\n";
+    assertEquals(relString, expected);
+  }
+
+  @Test
+  public void testLateralViewMap() {
+    // Test if the code can handle lateral view explode with a map
+    String sql =
+        "SELECT key, value FROM (SELECT MAP('key1', 'value1') as m) tmp LATERAL VIEW EXPLODE(m) m_alias AS key, value";
+    RelNode rel = converter.convertSql(sql);
+    String relString = relToStr(rel);
+    String expected = "LogicalProject(key=[$1], value=[$2])\n"
+        + "  LogicalCorrelate(correlation=[$cor0], joinType=[inner], requiredColumns=[{0}])\n"
+        + "    LogicalProject(m=[MAP('key1', 'value1')])\n" + "      LogicalValues(tuples=[[{ 0 }]])\n"
+        + "    HiveUncollect\n" + "      LogicalProject(col=[$cor0.m])\n" + "        LogicalValues(tuples=[[{ 0 }]])\n";
+    assertEquals(relString, expected);
+  }
+
+  @Test
+  public void testLateralViewMapWithoutColumns() {
+    // Test if the code can handle lateral view explode with a map without column aliases
+    String sql = "SELECT key, value FROM (SELECT MAP('key1', 'value1') as m) tmp LATERAL VIEW EXPLODE(m) m_alias";
+    RelNode rel = converter.convertSql(sql);
+    String relString = relToStr(rel);
+    String expected = "LogicalProject(key=[$1], value=[$2])\n"
+        + "  LogicalCorrelate(correlation=[$cor0], joinType=[inner], requiredColumns=[{0}])\n"
+        + "    LogicalProject(m=[MAP('key1', 'value1')])\n" + "      LogicalValues(tuples=[[{ 0 }]])\n"
+        + "    HiveUncollect\n" + "      LogicalProject(col=[$cor0.m])\n" + "        LogicalValues(tuples=[[{ 0 }]])\n";
+    assertEquals(relString, expected);
+  }
+
+  @Test
   public void testSelectNull() {
     final String sql = "SELECT NULL as f";
     RelNode rel = toRel(sql);

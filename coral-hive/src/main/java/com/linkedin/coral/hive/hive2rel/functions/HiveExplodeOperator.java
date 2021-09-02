@@ -11,7 +11,6 @@ import org.apache.calcite.sql.SqlCallBinding;
 import org.apache.calcite.sql.SqlOperandCountRange;
 import org.apache.calcite.sql.SqlOperatorBinding;
 import org.apache.calcite.sql.SqlUnnestOperator;
-import org.apache.calcite.sql.SqlUtil;
 import org.apache.calcite.sql.type.ArraySqlType;
 import org.apache.calcite.sql.type.MapSqlType;
 import org.apache.calcite.sql.type.SqlOperandCountRanges;
@@ -27,6 +26,8 @@ import org.apache.calcite.sql.type.SqlOperandCountRanges;
 public class HiveExplodeOperator extends SqlUnnestOperator {
 
   public static final HiveExplodeOperator EXPLODE = new HiveExplodeOperator();
+
+  public static final String ARRAY_ELEMENT_COLUMN_NAME = "col";
 
   public HiveExplodeOperator() {
     // keep same same as base class 'UNNEST' operator
@@ -50,7 +51,8 @@ public class HiveExplodeOperator extends SqlUnnestOperator {
     RelDataType operandType = opBinding.getOperandType(0);
     final RelDataTypeFactory.Builder builder = opBinding.getTypeFactory().builder();
     if (operandType instanceof ArraySqlType) {
-      builder.add(SqlUtil.deriveAliasFromOrdinal(0), operandType.getComponentType());
+      // array type
+      builder.add(ARRAY_ELEMENT_COLUMN_NAME, operandType.getComponentType());
     } else {
       // map type
       builder.add(MAP_KEY_COLUMN_NAME, operandType.getKeyType());

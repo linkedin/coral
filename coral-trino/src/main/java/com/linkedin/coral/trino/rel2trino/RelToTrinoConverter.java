@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import com.google.common.collect.ImmutableMap;
+
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.*;
 import org.apache.calcite.rel.rel2sql.RelToSqlConverter;
@@ -169,7 +171,11 @@ public class RelToTrinoConverter extends RelToSqlConverter {
     final List<SqlNode> asOperands = createAsFullOperands(e.getRowType(), unnestNode, x.neededAlias);
     final SqlNode asNode = SqlStdOperatorTable.AS.createCall(POS, asOperands);
 
-    return result(asNode, ImmutableList.of(Clause.FROM), e, null);
+    // Reuse the same x.neededAlias since that's already unique by directly calling "new Result(...)"
+    // instead of calling super.result(...), which will generate a new table alias and cause an extra
+    // "AS" to be added to the generated SQL statement and make it invalid.
+    return new Result(asNode, ImmutableList.of(Clause.FROM), null, e.getRowType(),
+        ImmutableMap.of(x.neededAlias, e.getRowType()));
   }
 
   /**
@@ -222,8 +228,11 @@ public class RelToTrinoConverter extends RelToSqlConverter {
     parseCorrelTable(e, leftResult);
     final Result rightResult = visitChild(1, e.getRight());
     SqlNode rightLateral = rightResult.node;
-    rightLateral = SqlStdOperatorTable.LATERAL.createCall(POS, rightLateral);
     if (rightLateral.getKind() != SqlKind.AS) {
+      // LATERAL is only needed in Trino if it's not an AS node.
+      // For example, "FROM t0 CROSS JOIN UNNEST(yyy) AS t1(col1, col2)" is valid Trino SQL
+      // without the need of LATERAL keywords.
+      rightLateral = SqlStdOperatorTable.LATERAL.createCall(POS, rightLateral);
       rightLateral =
           SqlStdOperatorTable.AS.createCall(POS, rightLateral, new SqlIdentifier(rightResult.neededAlias, POS));
     }

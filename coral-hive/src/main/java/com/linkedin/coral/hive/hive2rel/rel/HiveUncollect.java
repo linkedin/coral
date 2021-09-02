@@ -43,11 +43,30 @@ public class HiveUncollect extends Uncollect {
   @Override
   public RelNode copy(RelTraitSet traitSet, RelNode input) {
     assert traitSet.containsIfApplicable(Convention.NONE);
-    return new HiveUncollect(getCluster(), traitSet, input, withOrdinality);
+    HiveUncollect result = new HiveUncollect(getCluster(), traitSet, input, withOrdinality);
+    // copy the rowType as well
+    result.rowType = this.rowType;
+    return result;
+  }
+
+  /**
+   * Create a copy of this HiveUncollect object with the specified rowType.
+   * @param rowType rowType of the newly created HiveUncollect object
+   * @return a new HiveUncollect object
+   */
+  public RelNode copy(RelDataType rowType) {
+    assert traitSet.containsIfApplicable(Convention.NONE);
+    HiveUncollect result = new HiveUncollect(getCluster(), traitSet, input, withOrdinality);
+    // set the rowType of the new HiveUncollect object
+    result.rowType = rowType;
+    return result;
   }
 
   @Override
   protected RelDataType deriveRowType() {
+    if (rowType != null) {
+      return rowType;
+    }
     RelDataType inputType = input.getRowType();
     assert inputType.isStruct() : inputType + " is not a struct";
     final List<RelDataTypeField> fields = inputType.getFieldList();

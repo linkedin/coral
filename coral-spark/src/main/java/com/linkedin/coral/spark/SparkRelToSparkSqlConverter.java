@@ -8,7 +8,11 @@ package com.linkedin.coral.spark;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.common.collect.ImmutableMap;
+
+import org.apache.calcite.linq4j.tree.Expressions;
 import org.apache.calcite.rel.core.Correlate;
+import org.apache.calcite.rel.core.Join;
 import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rel.core.Uncollect;
@@ -23,6 +27,8 @@ import org.apache.calcite.sql.JoinType;
 import org.apache.calcite.sql.SqlBasicCall;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlIdentifier;
+import org.apache.calcite.sql.SqlJoin;
+import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlOperator;
@@ -98,17 +104,42 @@ public class SparkRelToSparkSqlConverter extends RelToSqlConverter {
     // Add context specifying correlationId has same context as its left child
     correlTableMap.put(e.getCorrelationId(), leftResult.qualifiedContext());
     final Result rightResult = visitChild(1, e.getRight());
-    final List<SqlNode> asOperands =
-        createAsFullOperands(e.getRight().getRowType(), rightResult.node, rightResult.neededAlias);
 
-    // Same as AS operator but instead of "AS TableRef(ColRef1, ColRef2)" produces "TableRef AS ColRef1, ColRef2"
-    SqlNode rightLateral = SqlLateralViewAsOperator.instance.createCall(POS, asOperands);
+    SqlNode rightNode = rightResult.node;
+
+    // If rightResult is not SqlASOperator, let's create a SqlLateralViewAsOperator to wrap it around
+    // This is necessary to ensure that the alias is applied.
+    if (rightNode.getKind() != SqlKind.AS) {
+      final List<SqlNode> asOperands =
+          createAsFullOperands(e.getRight().getRowType(), rightResult.node, rightResult.neededAlias);
+      // Same as AS operator but instead of "AS TableRef(ColRef1, ColRef2)" produces "TableRef AS ColRef1, ColRef2"
+      rightNode = SqlLateralViewAsOperator.instance.createCall(POS, asOperands);
+    }
 
     // A new type of join is used, because the unparsing of this join is different from already existing join
     SqlLateralJoin join =
         new SqlLateralJoin(POS, leftResult.asFrom(), SqlLiteral.createBoolean(false, POS), JoinType.COMMA.symbol(POS),
-            rightLateral, JoinConditionType.NONE.symbol(POS), null, isCorrelateRightChildOuter(rightResult.node));
+            rightNode, JoinConditionType.NONE.symbol(POS), null, isCorrelateRightChildOuter(rightResult.node));
     return result(join, leftResult, rightResult);
+  }
+
+  @Override
+  public Result visit(Join e) {
+    Result result = super.visit(e);
+
+    SqlJoin joinNode = (SqlJoin) (result.node);
+    SqlNode rightNode = joinNode.getRight();
+
+    // Is this JOIN actually a "LATERAL VIEW EXPLODE(xxx)"?
+    // If so, let's replace the JOIN node with SqlLateralJoin node, which unparses as "LATERAL VIEW".
+    if (rightNode instanceof SqlBasicCall
+        && ((SqlBasicCall) rightNode).getOperator() instanceof SqlLateralViewAsOperator) {
+      SqlLateralJoin join = new SqlLateralJoin(POS, joinNode.getLeft(), SqlLiteral.createBoolean(false, POS),
+          JoinType.COMMA.symbol(POS), joinNode.getRight(), JoinConditionType.NONE.symbol(POS), joinNode.getCondition(),
+          isCorrelateRightChildOuter(joinNode.getRight()));
+      result = new Result(join, Expressions.list(Clause.FROM), null, null, result.aliases);
+    }
+    return result;
   }
 
   /**
@@ -139,7 +170,23 @@ public class SparkRelToSparkSqlConverter extends RelToSqlConverter {
     // Convert UNNEST to EXPLODE function
     final SqlNode unnestNode = HiveExplodeOperator.EXPLODE.createCall(POS, unnestOperands.toArray(new SqlNode[0]));
 
-    return result(unnestNode, ImmutableList.of(Clause.FROM), e, null);
+    // Build LATERAL VIEW EXPLODE(<unnestColumns>) <alias> AS (<columnList>)
+    // Without the AS node, in cases like the following valid Hive queries:
+    //   FROM t1 LATERAL VIEW EXPLODE(t1.c) AS t2
+    // this function would return  (SqlBasicCall with Operator HiveExplodeOperator), which will cause the
+    // parent function visit(Correlate)'s call of SqlImplementor.wrapSelect's assert to fail since
+    // SqlOperator with HiveExplodeOperator (or its parent SqlUnnestOperator) is not allowed (only
+    // SqlSetOperator, SqlStdOperatorTable.AS, and SqlStdOperatorTable.VALUES are allowed).
+    /** See {@link org.apache.calcite.rel.rel2sql.SqlImplementor#wrapSelect(SqlNode)}*/
+
+    final List<SqlNode> asOperands = createAsFullOperands(e.getRowType(), unnestNode, x.neededAlias);
+    final SqlNode asNode = SqlLateralViewAsOperator.instance.createCall(POS, asOperands);
+
+    // Reuse the same x.neededAlias since that's already unique by directly calling "new Result(...)"
+    // instead of calling super.result(...), which will generate a new table alias and cause an extra
+    // "AS" to be added to the generated SQL statement and make it invalid.
+    return new Result(asNode, ImmutableList.of(Clause.FROM), null, e.getRowType(),
+        ImmutableMap.of(x.neededAlias, e.getRowType()));
   }
 
   /**
@@ -184,21 +231,33 @@ public class SparkRelToSparkSqlConverter extends RelToSqlConverter {
    *    - has ARRAY(NULL) as the else result
    */
   private boolean isCorrelateRightChildOuter(SqlNode rightChild) {
-    if (rightChild instanceof SqlBasicCall) {
-      List<SqlNode> operandList = ((SqlBasicCall) rightChild).getOperandList();
-      if (operandList.get(0) instanceof SqlBasicCall) {
-        SqlBasicCall ifNode = (SqlBasicCall) operandList.get(0);
-        if (ifNode.getOperator().getName().equals("if") && ifNode.operandCount() == 3) {
-          SqlBasicCall arrayNode = (SqlBasicCall) ifNode.getOperandList().get(2);
-          if (arrayNode.getOperator() instanceof SqlMultisetValueConstructor
-              && arrayNode.getOperandList().get(0) instanceof SqlLiteral) {
-            SqlLiteral sqlLiteral = (SqlLiteral) arrayNode.getOperandList().get(0);
-            return sqlLiteral.getTypeName().toString().equals("NULL");
+    if (rightChild instanceof SqlBasicCall && rightChild.getKind() == SqlKind.AS) {
+      SqlBasicCall rightCall = (SqlBasicCall) rightChild;
+      SqlNode unnestNode = getOrDefault(rightCall.getOperandList(), 0, null);
+      if (unnestNode instanceof SqlBasicCall && unnestNode.getKind() == SqlKind.UNNEST) {
+        SqlBasicCall unnestCall = (SqlBasicCall) unnestNode;
+        SqlNode ifNode = getOrDefault(unnestCall.getOperandList(), 0, null);
+        if (ifNode instanceof SqlBasicCall) {
+          SqlBasicCall ifCall = (SqlBasicCall) ifNode;
+          if (ifCall.getOperator().getName().equals("if") && ifCall.operandCount() == 3) {
+            SqlNode arrayOrMapNode = getOrDefault(ifCall.getOperandList(), 2, null);
+            if (arrayOrMapNode instanceof SqlBasicCall) {
+              SqlBasicCall arrayOrMapCall = (SqlBasicCall) arrayOrMapNode;
+              if (arrayOrMapCall.getOperator() instanceof SqlMultisetValueConstructor
+                  && arrayOrMapCall.getOperandList().get(0) instanceof SqlLiteral) {
+                SqlLiteral sqlLiteral = (SqlLiteral) arrayOrMapCall.getOperandList().get(0);
+                return sqlLiteral.getTypeName().toString().equals("NULL");
+              }
+            }
           }
         }
       }
     }
     return false;
+  }
+
+  private static <T> T getOrDefault(List<T> list, int index, T defaultValue) {
+    return list.size() > index ? list.get(index) : defaultValue;
   }
 
   private void checkQualifiedName(List<String> qualifiedName) {
