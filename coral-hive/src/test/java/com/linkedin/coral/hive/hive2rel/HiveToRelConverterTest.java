@@ -559,6 +559,29 @@ public class HiveToRelConverterTest {
     assertEquals(relToHql(rel), expectedSql);
   }
 
+  @Test
+  public void testComment() {
+    final String expected =
+        "LogicalProject(a=[$0], b=[$1], c=[$2])\n" + "  LogicalTableScan(table=[[hive, default, foo]])\n";
+
+    // single-line comments
+    final String sql1 = "--comment0 select\nselect * -- comment1\nfrom foo";
+    String generated1 = relToString(sql1);
+    assertEquals(generated1, expected);
+
+    // bracketed comments
+    final String sql2 =
+        "/* comment0 */\n/*comment1*//* comment 2*/ /**/ select /*comm\nent3*/* from default./*comment4*/foo /* comment5 */";
+    String generated2 = relToString(sql2);
+    assertEquals(generated2, expected);
+
+    // mixed-style comments
+    final String sql3 =
+        "-- comment 0\n/*comment1*/-- comment 2\nselect /*comm\nent3*/* from/**/default./*comment4*/foo /* comment5 */--";
+    String generated3 = relToString(sql3);
+    assertEquals(generated3, expected);
+  }
+
   private String relToString(String sql) {
     return RelOptUtil.toString(converter.convertSql(sql));
   }
