@@ -50,6 +50,19 @@ public class ParseTreeBuilderTest {
         "SELECT a, b from foo where 33 < 35", "SELECT a from foo where a between 10 and 30",
         "SELECT a from foo where b NOT BETWEEN 20 and 40",
 
+        // interval
+        "SELECT a + INTERVAL '7' DAY FROM test.tableOne", "SELECT a + INTERVAL '24' HOUR FROM test.tableOne",
+        "SELECT a + INTERVAL '60' MINUTE FROM test.tableOne", "SELECT a + INTERVAL '20' SECOND FROM test.tableOne",
+        "SELECT a + INTERVAL '12' MONTH FROM test.tableOne", "SELECT a + INTERVAL '7' YEAR FROM test.tableOne",
+
+        // date and timestamp
+        "SELECT CAST('2021-08-30' AS DATE) + INTERVAL '3' DAY FROM test.tableOne",
+        "SELECT CAST('2021-08-30' AS TIMESTAMP) + INTERVAL '3' DAY FROM test.tableOne",
+        "SELECT CAST('2021-08-31' AS TIMESTAMP) + INTERVAL '7 01:02:03' DAY TO SECOND FROM test.tableOne",
+        "SELECT CAST('2021-08-31' AS TIMESTAMP) + INTERVAL '-7 01:02:03' DAY TO SECOND FROM test.tableOne",
+        "SELECT CAST('2021-08-31' AS TIMESTAMP) + INTERVAL '1-6' YEAR TO MONTH FROM test.tableOne",
+        "SELECT CAST('2021-08-31' AS TIMESTAMP) + INTERVAL '-1-6' YEAR TO MONTH FROM test.tableOne",
+
         // empty string literal
         "SELECT * from test.tableOne where b = ''", "SELECT * from test.tableTwo order by x desc, y asc",
         // Group by, aggregate and having with lowercase 'and' operator

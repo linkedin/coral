@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import org.apache.calcite.avatica.util.TimeUnit;
 import org.apache.calcite.sql.JoinConditionType;
 import org.apache.calcite.sql.JoinType;
 import org.apache.calcite.sql.SqlAsOperator;
@@ -23,6 +24,7 @@ import org.apache.calcite.sql.SqlBasicTypeNameSpec;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlDataTypeSpec;
 import org.apache.calcite.sql.SqlIdentifier;
+import org.apache.calcite.sql.SqlIntervalQualifier;
 import org.apache.calcite.sql.SqlJoin;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlLateralOperator;
@@ -1034,6 +1036,43 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
   @Override
   protected SqlNode visitTableTokOrCol(ASTNode node, ParseContext ctx) {
     return visitChildren(node, ctx).get(0);
+  }
+
+  private SqlIntervalQualifier fromASTIntervalTypeToSqlIntervalQualifier(ASTNode node) {
+    switch (node.getType()) {
+      case HiveParser.TOK_INTERVAL_DAY_LITERAL:
+        return new SqlIntervalQualifier(TimeUnit.DAY, null, ZERO);
+      case HiveParser.TOK_INTERVAL_DAY_TIME_LITERAL:
+        return new SqlIntervalQualifier(TimeUnit.DAY, TimeUnit.SECOND, ZERO);
+      case HiveParser.TOK_INTERVAL_HOUR_LITERAL:
+        return new SqlIntervalQualifier(TimeUnit.HOUR, null, ZERO);
+      case HiveParser.TOK_INTERVAL_MINUTE_LITERAL:
+        return new SqlIntervalQualifier(TimeUnit.MINUTE, null, ZERO);
+      case HiveParser.TOK_INTERVAL_MONTH_LITERAL:
+        return new SqlIntervalQualifier(TimeUnit.MONTH, null, ZERO);
+      case HiveParser.TOK_INTERVAL_SECOND_LITERAL:
+        return new SqlIntervalQualifier(TimeUnit.SECOND, null, ZERO);
+      case HiveParser.TOK_INTERVAL_YEAR_LITERAL:
+        return new SqlIntervalQualifier(TimeUnit.YEAR, null, ZERO);
+      case HiveParser.TOK_INTERVAL_YEAR_MONTH_LITERAL:
+        return new SqlIntervalQualifier(TimeUnit.YEAR, TimeUnit.MONTH, ZERO);
+    }
+    throw new UnhandledASTTokenException(node);
+  }
+
+  @Override
+  protected SqlNode visitIntervalLiteral(ASTNode node, ParseContext ctx) {
+    // Hive Antlr Tree looks like the following:
+    //   ASTNode(token.type = TOK_INTERVAL_DAY_LITERAL, token.text="'28'")
+    // Calcite SqlNode Tree looks like the following:
+    //   SqlIntervalLiteral(1 /* sign */, "28" /* unquotedText */, SqlIntervalQualifier, SqlParserPos)
+
+    SqlIntervalQualifier intervalQualifier = fromASTIntervalTypeToSqlIntervalQualifier(node);
+
+    String text = node.getToken().getText();
+    String unquotedText = text.replaceAll("[\'\"]", "");
+
+    return SqlLiteral.createInterval(1, unquotedText, intervalQualifier, ZERO);
   }
 
   private HiveMetastoreClient getMscOrThrow() {

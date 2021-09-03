@@ -282,6 +282,17 @@ public abstract class AbstractASTVisitor<R, C> {
       case HiveParser.TOK_WINDOWVALUES:
         return visitWindowValues(node, ctx);
 
+      // See IdentifiersParser.g:
+      case HiveParser.TOK_INTERVAL_DAY_LITERAL:
+      case HiveParser.TOK_INTERVAL_DAY_TIME_LITERAL:
+      case HiveParser.TOK_INTERVAL_HOUR_LITERAL:
+      case HiveParser.TOK_INTERVAL_MINUTE_LITERAL:
+      case HiveParser.TOK_INTERVAL_MONTH_LITERAL:
+      case HiveParser.TOK_INTERVAL_SECOND_LITERAL:
+      case HiveParser.TOK_INTERVAL_YEAR_LITERAL:
+      case HiveParser.TOK_INTERVAL_YEAR_MONTH_LITERAL:
+        return visitIntervalLiteral(node, ctx);
+
       case HiveParser.KW_PRECEDING:
         return visitPreceding(node, ctx);
 
@@ -616,6 +627,10 @@ public abstract class AbstractASTVisitor<R, C> {
   }
 
   protected R visitCurrentRow(ASTNode node, C ctx) {
+    return visitChildren(node, ctx).get(0);
+  }
+
+  protected R visitIntervalLiteral(ASTNode node, C ctx) {
     return visitChildren(node, ctx).get(0);
   }
 }

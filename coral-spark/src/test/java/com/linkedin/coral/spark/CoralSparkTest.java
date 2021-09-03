@@ -342,6 +342,37 @@ public class CoralSparkTest {
   }
 
   @Test
+  public void testInterval() {
+    RelNode relNode = TestUtils.toRelNode("SELECT CAST('2021-08-31' AS DATE) + INTERVAL '7' DAY FROM default.complex");
+    String targetSql = "SELECT (CAST('2021-08-31' AS DATE) + INTERVAL '7' DAY)\n" + "FROM default.complex";
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+  }
+
+  @Test
+  public void testIntervalNegative() {
+    RelNode relNode = TestUtils.toRelNode("SELECT CAST('2021-08-31' AS DATE) + INTERVAL '-7' DAY FROM default.complex");
+    String targetSql = "SELECT (CAST('2021-08-31' AS DATE) + INTERVAL '-7' DAY)\n" + "FROM default.complex";
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+  }
+
+  @Test
+  public void testIntervalDayToSecond() {
+    RelNode relNode = TestUtils
+        .toRelNode("SELECT CAST('2021-08-31' AS DATE) + INTERVAL '7 01:02:03' DAY TO SECOND FROM default.complex");
+    String targetSql =
+        "SELECT (CAST('2021-08-31' AS DATE) + INTERVAL '7 01:02:03' DAY TO SECOND)\n" + "FROM default.complex";
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+  }
+
+  @Test
+  public void testIntervalYearToMonth() {
+    RelNode relNode =
+        TestUtils.toRelNode("SELECT CAST('2021-08-31' AS DATE) + INTERVAL '1-6' YEAR TO MONTH FROM default.complex");
+    String targetSql = "SELECT (CAST('2021-08-31' AS DATE) + INTERVAL '1-6' YEAR TO MONTH)\n" + "FROM default.complex";
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+  }
+
+  @Test
   public void testSchemaPromotionView() {
     RelNode relNode = TestUtils.toRelNode(String.join("\n", "", "SELECT * ", "FROM view_schema_promotion_wrapper"));
     String targetSql = String.join("\n", "SELECT a, CAST(b AS ARRAY<INTEGER>) b", "FROM default.schema_promotion");
