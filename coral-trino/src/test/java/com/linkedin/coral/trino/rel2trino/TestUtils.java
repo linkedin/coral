@@ -272,7 +272,7 @@ public class TestUtils {
 
     run(driver, "CREATE TABLE test.table_with_struct_array(a int, b array<struct<sa: int, sb: string>>)");
     run(driver,
-        "CREATE VIEW test.view_with_explode_struct_array AS SELECT a, c FROM test.table_with_struct_array LATERAL VIEW EXPLODE(b) t AS c");
+        "CREATE VIEW test.view_with_explode_struct_array AS SELECT a, c.sa FROM test.table_with_struct_array LATERAL VIEW EXPLODE(b) t AS c");
     run(driver,
         "CREATE VIEW test.view_with_outer_explode_struct_array AS SELECT a, c FROM test.table_with_struct_array LATERAL VIEW OUTER EXPLODE(b) t AS c");
 

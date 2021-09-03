@@ -18,20 +18,15 @@ import org.apache.calcite.rel.core.*;
 import org.apache.calcite.rel.rel2sql.RelToSqlConverter;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
-import org.apache.calcite.rel.type.RelDataTypeFieldImpl;
-import org.apache.calcite.rel.type.RelRecordType;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.*;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParserPos;
-import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.sql.validate.SqlValidatorUtil;
 import org.apache.calcite.util.Util;
 
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
-import com.linkedin.coral.hive.hive2rel.rel.HiveUncollect;
-import com.linkedin.coral.trino.rel2trino.functions.TrinoArrayTransformFunction;
 
 import static com.linkedin.coral.trino.rel2trino.Calcite2TrinoUDFConverter.convertRel;
 
@@ -124,44 +119,7 @@ public class RelToTrinoConverter extends RelToSqlConverter {
     // Build <unnestColumns>
     final List<SqlNode> unnestOperands = new ArrayList<>();
     for (RexNode unnestCol : ((Project) e.getInput()).getChildExps()) {
-      if (e instanceof HiveUncollect && unnestCol.getType().getSqlTypeName().equals(SqlTypeName.ARRAY)
-          && unnestCol.getType().getComponentType().getSqlTypeName().equals(SqlTypeName.ROW)) {
-
-        // wrapper Record type with single column.
-        // It is needed as Trino follows SQL standard when unnesting
-        // ARRAY of ROWs, exposing each field in a ROW as separate column. This is not in-line with what
-        // Hive's LATERAL VIEW EXPLODE does, exposing whole ROW (struct) as a single column.
-        // Adding extra artificial wrapping ROW with single field simulates Hive semantics in Trino.
-        //
-        // Example transformation:
-        //
-        // Given table with an array of structs column:
-        //   CREATE TABLE example_table(id INTEGER, arr array<struct<sa: int, sb: string>>)
-        // We rewrite view defined as:
-        //  SELECT id, arr_exp FROM example_table LATERAL VIEW EXPLODE(arr) t AS arr_exp
-        // To:
-        //  SELECT "$cor0".id AS id, t1.arr_exp AS arr_exp
-        //    FROM example_table AS "$cor0"
-        //    CROSS JOIN LATERAL (SELECT arr_exp
-        //    FROM UNNEST(TRANSFORM("$cor0".arr, x -> ROW(x))) AS t0 (arr_exp)) AS t1
-        //
-        // The crucial part in above transformation is call to TRANSFORM with lambda which adds extra layer of
-        // ROW wrapping.
-
-        RelRecordType transformDataType = new RelRecordType(
-            ImmutableList.of(new RelDataTypeFieldImpl("wrapper_field", 0, unnestCol.getType().getComponentType())));
-
-        // wrap unnested field to type defined above using transform(field, x -> ROW(x))
-        TrinoArrayTransformFunction tranformFunction = new TrinoArrayTransformFunction(transformDataType);
-        SqlNode fieldRef = x.qualifiedContext().toSql(null, unnestCol);
-        String fieldRefString = fieldRef.toSqlString(TrinoSqlDialect.INSTANCE).getSql();
-        SqlCharStringLiteral transformArgsLiteral =
-            SqlLiteral.createCharString(String.format("%s, x -> ROW(x)", fieldRefString), POS);
-
-        unnestOperands.add(tranformFunction.createCall(POS, transformArgsLiteral));
-      } else {
-        unnestOperands.add(x.qualifiedContext().toSql(null, unnestCol));
-      }
+      unnestOperands.add(x.qualifiedContext().toSql(null, unnestCol));
     }
 
     // Build UNNEST(<unnestColumns>)
