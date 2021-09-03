@@ -22,6 +22,7 @@ import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
 
 import org.apache.calcite.rex.RexBuilder;
+import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlIdentifier;
@@ -286,6 +287,9 @@ public class UDFTransformer {
       final SqlOperator op = OP_MAP.get(operatorName);
       if (op == null) {
         throw new UnsupportedOperationException("Operator " + operatorName + " is not supported in transformation");
+      }
+      if (op.getName().equalsIgnoreCase("timestamp") && !(inputOperands.get(0) instanceof RexLiteral)) {
+        return inputOperands.get(0);
       }
       return rexBuilder.makeCall(op, inputOperands);
     }
