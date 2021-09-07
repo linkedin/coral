@@ -472,4 +472,6 @@ WS  :  (' '|'\r'|'\t'|'\n') {$channel=HIDDEN;}
 COMMENT
   : '--' (~('\n'|'\r'))*
     { $channel=HIDDEN; }
+  | '/*' (options { greedy=false; } : .)* '*/'
+    { $channel=HIDDEN; }
   ;
