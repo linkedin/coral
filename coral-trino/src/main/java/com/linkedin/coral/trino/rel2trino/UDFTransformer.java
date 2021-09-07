@@ -22,7 +22,6 @@ import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
 
 import org.apache.calcite.rex.RexBuilder;
-import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlIdentifier;
@@ -33,7 +32,10 @@ import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.OperandTypes;
 import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
 
+import com.linkedin.coral.com.google.common.base.Preconditions;
 import com.linkedin.coral.hive.hive2rel.functions.HiveReturnTypes;
+
+import static org.apache.calcite.sql.type.SqlTypeName.*;
 
 
 /**
@@ -134,8 +136,13 @@ public class UDFTransformer {
         HiveReturnTypes.TIMESTAMP, null, OperandTypes.STRING, null, null) {
       @Override
       public void unparse(SqlWriter writer, SqlCall call, int leftPrec, int rightPrec) {
-        writer.keyword(call.getOperator().getName());
-        call.getOperandList().get(0).unparse(writer, 0, 0); //Just one operand
+        // for timestamp operator, we need to construct `CAST(x AS TIMESTAMP)`
+        Preconditions.checkState(call.operandCount() == 1);
+        final SqlWriter.Frame frame = writer.startFunCall("CAST");
+        call.operand(0).unparse(writer, 0, 0);
+        writer.sep("AS");
+        writer.literal("TIMESTAMP");
+        writer.endFunCall(frame);
       }
     });
     OP_MAP.put("hive_pattern_to_trino",
@@ -287,11 +294,6 @@ public class UDFTransformer {
       final SqlOperator op = OP_MAP.get(operatorName);
       if (op == null) {
         throw new UnsupportedOperationException("Operator " + operatorName + " is not supported in transformation");
-      }
-      if (op.getName().equalsIgnoreCase("timestamp") && !(inputOperands.get(0) instanceof RexLiteral)) {
-        // `timestamp` operator only supports pure date string, if the operand is a function returning string like `substr`
-        // Trino will throw an exception. Therefore, we avoid applying `timestamp` on the non-literal operand.
-        return inputOperands.get(0);
       }
       return rexBuilder.makeCall(op, inputOperands);
     }
