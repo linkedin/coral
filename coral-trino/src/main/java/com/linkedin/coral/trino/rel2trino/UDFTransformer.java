@@ -289,6 +289,8 @@ public class UDFTransformer {
         throw new UnsupportedOperationException("Operator " + operatorName + " is not supported in transformation");
       }
       if (op.getName().equalsIgnoreCase("timestamp") && !(inputOperands.get(0) instanceof RexLiteral)) {
+        // `timestamp` operator only supports pure date string, if the operand is a function returning string like `substr`
+        // Trino will throw an exception. Therefore, we avoid applying `timestamp` on the non-literal operand.
         return inputOperands.get(0);
       }
       return rexBuilder.makeCall(op, inputOperands);
