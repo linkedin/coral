@@ -32,7 +32,10 @@ import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.OperandTypes;
 import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
 
+import com.linkedin.coral.com.google.common.base.Preconditions;
 import com.linkedin.coral.hive.hive2rel.functions.HiveReturnTypes;
+
+import static org.apache.calcite.sql.type.SqlTypeName.*;
 
 
 /**
@@ -133,8 +136,13 @@ public class UDFTransformer {
         HiveReturnTypes.TIMESTAMP, null, OperandTypes.STRING, null, null) {
       @Override
       public void unparse(SqlWriter writer, SqlCall call, int leftPrec, int rightPrec) {
-        writer.keyword(call.getOperator().getName());
-        call.getOperandList().get(0).unparse(writer, 0, 0); //Just one operand
+        // for timestamp operator, we need to construct `CAST(x AS TIMESTAMP)`
+        Preconditions.checkState(call.operandCount() == 1);
+        final SqlWriter.Frame frame = writer.startFunCall("CAST");
+        call.operand(0).unparse(writer, 0, 0);
+        writer.sep("AS");
+        writer.literal("TIMESTAMP");
+        writer.endFunCall(frame);
       }
     });
     OP_MAP.put("hive_pattern_to_trino",
