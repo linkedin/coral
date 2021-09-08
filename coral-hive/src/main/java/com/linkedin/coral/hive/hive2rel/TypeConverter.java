@@ -17,6 +17,7 @@ import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.sql.type.SqlTypeName;
+import org.apache.hadoop.hive.common.type.HiveChar;
 import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.hive.serde2.typeinfo.BaseCharTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.DecimalTypeInfo;
@@ -225,7 +226,11 @@ public class TypeConverter {
           return TypeInfoFactory.getVarcharTypeInfo(rType.getPrecision());
         }
       case CHAR:
-        return TypeInfoFactory.getCharTypeInfo(rType.getPrecision());
+        if (rType.getPrecision() > HiveChar.MAX_CHAR_LENGTH) {
+          return TypeInfoFactory.getVarcharTypeInfo(rType.getPrecision());
+        } else {
+          return TypeInfoFactory.getCharTypeInfo(rType.getPrecision());
+        }
       case OTHER:
       default:
         return TypeInfoFactory.voidTypeInfo;
