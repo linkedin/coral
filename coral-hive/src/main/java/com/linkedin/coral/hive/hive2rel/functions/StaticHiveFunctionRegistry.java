@@ -476,6 +476,14 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
         or(family(SqlTypeFamily.STRING, SqlTypeFamily.NUMERIC, SqlTypeFamily.NUMERIC), family(SqlTypeFamily.STRING)));
     createAddUserDefinedFunction("com.linkedin.stdudfs.daliudfs.hive.IsTestMemberId", ReturnTypes.BOOLEAN,
         family(SqlTypeFamily.NUMERIC, SqlTypeFamily.STRING));
+    createAddUserDefinedFunction("com.linkedin.udfs.standard.hive.ObfuscateMemberIdNumeric", BIGINT,
+        family(SqlTypeFamily.ANY, SqlTypeFamily.STRING));
+    createAddUserDefinedFunction("com.linkedin.udfs.standard.hive.ObfuscateAll", ARG0,
+        family(SqlTypeFamily.ANY, SqlTypeFamily.STRING));
+    createAddUserDefinedFunction("com.linkedin.udfs.standard.hive.ObfuscateStruct", ARG0,
+        family(SqlTypeFamily.ANY, SqlTypeFamily.STRING));
+    createAddUserDefinedFunction("com.linkedin.udfs.standard.hive.ObfuscateMap", ARG0,
+        family(SqlTypeFamily.MAP, SqlTypeFamily.STRING));
 
     // This is a Hive Custom UDF which is a simplified version of 'date-converter' package.
     // This UDF is not converted to a transport UDF.
