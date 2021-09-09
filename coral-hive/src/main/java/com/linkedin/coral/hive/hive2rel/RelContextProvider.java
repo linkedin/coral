@@ -7,13 +7,13 @@ package com.linkedin.coral.hive.hive2rel;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.Nonnull;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
+import com.linkned.coral.common.Function;
+import com.linkned.coral.common.FunctionRegistry;
+import com.linkned.coral.common.HiveMetastoreClient;
 
 import org.apache.calcite.adapter.java.JavaTypeFactory;
 import org.apache.calcite.config.CalciteConnectionConfig;
@@ -23,27 +23,16 @@ import org.apache.calcite.config.NullCollation;
 import org.apache.calcite.jdbc.CalciteSchema;
 import org.apache.calcite.jdbc.Driver;
 import org.apache.calcite.plan.RelOptCluster;
-import org.apache.calcite.plan.RelTraitDef;
 import org.apache.calcite.plan.volcano.VolcanoPlanner;
-import org.apache.calcite.prepare.CalciteCatalogReader;
-import org.apache.calcite.rel.type.RelDataTypeFactory;
-import org.apache.calcite.runtime.Hook;
-import org.apache.calcite.schema.Schema;
-import org.apache.calcite.schema.SchemaPlus;
+import org.apache.calcite.rel.type.RelDataTypeSystemImpl;
+import org.apache.calcite.sql.SqlOperatorTable;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.util.ChainedSqlOperatorTable;
-import org.apache.calcite.sql.validate.SqlNameMatchers;
+import org.apache.calcite.sql.validate.SqlValidator;
+import org.apache.calcite.sql2rel.SqlRexConvertletTable;
 import org.apache.calcite.sql2rel.SqlToRelConverter;
-import org.apache.calcite.tools.FrameworkConfig;
-import org.apache.calcite.tools.Frameworks;
-import org.apache.calcite.tools.Programs;
-import org.apache.calcite.tools.RelBuilder;
-import org.apache.calcite.util.Util;
 
-import com.linkedin.coral.hive.hive2rel.functions.HiveFunction;
-import com.linkedin.coral.hive.hive2rel.functions.HiveFunctionRegistry;
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
-import com.linkedin.coral.hive.hive2rel.parsetree.ParseTreeBuilder;
 
 import static com.linkedin.coral.hive.hive2rel.HiveSqlConformance.HIVE_SQL;
 
@@ -75,82 +64,16 @@ public class RelContextProvider {
    * @param hiveMetastoreClient Hive metastore client to construct Calcite schema
    */
   public RelContextProvider(@Nonnull HiveMetastoreClient hiveMetastoreClient) {
-    Preconditions.checkNotNull(hiveMetastoreClient);
-    this.hiveMetastoreClient = hiveMetastoreClient;
-    this.schema = new HiveSchema(hiveMetastoreClient);
-    SchemaPlus schemaPlus = Frameworks.createRootSchema(false);
-    schemaPlus.add(HiveSchema.ROOT_SCHEMA, schema);
-    this.registry = new StaticHiveFunctionRegistry();
-    this.dynamicRegistry = new ConcurrentHashMap<>();
-    // this is to ensure that jdbc:calcite driver is correctly registered
-    // before initializing framework (which needs it)
-    // We don't want each engine to register the driver. It may not also load correctly
-    // if the service uses its own service loader (see Trino)
-    driver = new Driver();
-    config = Frameworks.newConfigBuilder().convertletTable(convertletTable).defaultSchema(schemaPlus)
-        .typeSystem(new HiveTypeSystem()).traitDefs((List<RelTraitDef>) null)
-        .operatorTable(ChainedSqlOperatorTable.of(SqlStdOperatorTable.instance(),
-            new DaliOperatorTable(this.registry, this.dynamicRegistry)))
-        .programs(Programs.ofRules(Programs.RULE_SET)).build();
+    super(hiveMetastoreClient);
   }
 
-  /**
-   * Instantiates a new Rel context provider.
-   *
-   * @param localMetaStore in-memory version of Hive metastore client used to  construct Calcite schema
-   */
   public RelContextProvider(Map<String, Map<String, List<String>>> localMetaStore) {
-    this.hiveMetastoreClient = null;
-    this.localMetastoreSchema = new LocalMetastoreHiveSchema(localMetaStore);
-    SchemaPlus schemaPlus = Frameworks.createRootSchema(false);
-    schemaPlus.add(HiveSchema.ROOT_SCHEMA, localMetastoreSchema);
-    this.registry = new StaticHiveFunctionRegistry();
-    this.dynamicRegistry = new ConcurrentHashMap<>();
-    // this is to ensure that jdbc:calcite driver is correctly registered
-    // before initializing framework (which needs it)
-    // We don't want each engine to register the driver. It may not also load correctly
-    // if the service uses its own service loader (see Trino)
-    driver = new Driver();
-    config = Frameworks.newConfigBuilder().convertletTable(convertletTable).defaultSchema(schemaPlus)
-        .typeSystem(new HiveTypeSystem()).traitDefs((List<RelTraitDef>) null)
-        .operatorTable(ChainedSqlOperatorTable.of(SqlStdOperatorTable.instance(),
-            new DaliOperatorTable(this.registry, this.dynamicRegistry)))
-        .programs(Programs.ofRules(Programs.RULE_SET)).build();
+    super(localMetaStore);
   }
 
-  /**
-   * Gets the local copy of HiveFunctionRegistry for current query.
-   *
-   * @return HiveFunctionRegistry map
-   */
-  public HiveFunctionRegistry getHiveFunctionRegistry() {
-    return this.registry;
-  }
-
-  public ConcurrentHashMap<String, HiveFunction> getDynamicHiveFunctionRegistry() {
-    return this.dynamicRegistry;
-  }
-
-  /**
-   * Gets {@link FrameworkConfig} for creation of various objects
-   * from Calcite object model
-   *
-   * @return FrameworkConfig object
-   */
-  public FrameworkConfig getConfig() {
-    return config;
-  }
-
-  ParseTreeBuilder.Config getParseTreeBuilderConfig() {
-    return new ParseTreeBuilder.Config().setCatalogName(HiveSchema.ROOT_SCHEMA).setDefaultDB(HiveDbSchema.DEFAULT_DB);
-  }
-
-  HiveMetastoreClient getHiveMetastoreClient() {
-    return hiveMetastoreClient;
-  }
-
-  Schema getHiveSchema() {
-    return (schema != null) ? this.schema : this.localMetastoreSchema;
+  @Override
+  public FunctionRegistry getFunctionRegistry() {
+    return new StaticHiveFunctionRegistry();
   }
 
   /**
@@ -170,40 +93,14 @@ public class RelContextProvider {
     return relBuilder;
   }
 
-  /**
-   * This class allows CalciteCatalogReader to have multiple schemaPaths, for example:
-   * ["hive", "default"], ["hive"], and []
-   */
-  public static class MultiSchemaPathCalciteCatalogReader extends CalciteCatalogReader {
-
-    public MultiSchemaPathCalciteCatalogReader(CalciteSchema rootSchema, List<List<String>> schemaPathList,
-        RelDataTypeFactory typeFactory, CalciteConnectionConfig config) {
-      super(rootSchema, SqlNameMatchers.withCaseSensitive(config != null && config.caseSensitive()),
-          Util.immutableCopy(schemaPathList), typeFactory, config);
-    }
+  @Override
+  public RelDataTypeSystemImpl getTypeSystem() {
+    return new HiveTypeSystem();
   }
 
-  /**
-   * Gets calcite catalog reader.
-   *
-   * @return the calcite catalog reader
-   */
-  CalciteCatalogReader getCalciteCatalogReader() {
-    CalciteConnectionConfig connectionConfig;
-    if (config.getContext() != null) {
-      connectionConfig = config.getContext().unwrap(CalciteConnectionConfig.class);
-    } else {
-      Properties properties = new Properties();
-      properties.setProperty(CalciteConnectionProperty.CASE_SENSITIVE.camelName(), String.valueOf(false));
-      connectionConfig = new CalciteConnectionConfigImpl(properties);
-    }
-    if (catalogReader == null) {
-      catalogReader = new MultiSchemaPathCalciteCatalogReader(config.getDefaultSchema().unwrap(CalciteSchema.class),
-          ImmutableList.of(ImmutableList.of(HiveSchema.ROOT_SCHEMA, HiveSchema.DEFAULT_DB),
-              ImmutableList.of(HiveSchema.ROOT_SCHEMA), ImmutableList.of()),
-          getRelBuilder().getTypeFactory(), connectionConfig);
-    }
-    return catalogReader;
+  @Override
+  protected SqlRexConvertletTable getConvertletTable() {
+    return new HiveConvertletTable();
   }
 
   /**

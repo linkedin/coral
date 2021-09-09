@@ -3,7 +3,7 @@
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
-package com.linkedin.coral.hive.hive2rel;
+package com.linkned.coral.common;
 
 import java.util.Collection;
 import java.util.List;
@@ -16,14 +16,11 @@ import com.google.common.collect.ImmutableSet;
 
 import org.apache.calcite.linq4j.tree.Expression;
 import org.apache.calcite.rel.type.RelProtoDataType;
+import org.apache.calcite.schema.*;
 import org.apache.calcite.schema.Function;
-import org.apache.calcite.schema.Schema;
-import org.apache.calcite.schema.SchemaPlus;
-import org.apache.calcite.schema.SchemaVersion;
-import org.apache.calcite.schema.Table;
 import org.apache.hadoop.hive.metastore.api.Database;
 
-import static com.google.common.base.Preconditions.*;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 
 /**

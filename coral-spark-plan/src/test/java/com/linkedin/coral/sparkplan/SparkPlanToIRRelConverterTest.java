@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 LinkedIn Corporation. All rights reserved.
+ * Copyright 2020-2021 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -7,13 +7,14 @@ package com.linkedin.coral.sparkplan;
 
 import java.io.IOException;
 
+import com.linkned.coral.common.HiveMscAdapter;
+
 import org.apache.hadoop.hive.metastore.IMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import com.linkedin.coral.hive.hive2rel.HiveMscAdapter;
 import com.linkedin.coral.hive.hive2rel.RelContextProvider;
 
 import static org.testng.Assert.*;

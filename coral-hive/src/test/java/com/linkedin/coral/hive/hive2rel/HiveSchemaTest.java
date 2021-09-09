@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2020 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2021 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -9,6 +9,7 @@ import java.io.IOException;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.linkned.coral.common.HiveSchema;
 
 import org.apache.calcite.schema.Schema;
 import org.apache.hadoop.hive.ql.metadata.HiveException;

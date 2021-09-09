@@ -7,6 +7,8 @@ package com.linkedin.coral.hive.hive2rel;
 
 import java.io.IOException;
 
+import com.linkned.coral.common.HiveMscAdapter;
+
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.rel2sql.RelToSqlConverter;
@@ -56,7 +58,7 @@ class ToRelConverter {
   }
 
   static SqlNode viewToSqlNode(String database, String table) {
-    return converter.getTreeBuilder().processView(database, table);
+    return converter.processView(database, table);
   }
 
   static String nodeToStr(SqlNode sqlNode) {

@@ -7,6 +7,8 @@ package com.linkedin.coral.hive.hive2rel;
 
 import java.io.IOException;
 
+import com.linkned.coral.common.HiveMscAdapter;
+
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.sql.type.SqlTypeFamily;

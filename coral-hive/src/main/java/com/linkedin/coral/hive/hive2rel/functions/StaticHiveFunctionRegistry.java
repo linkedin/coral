@@ -14,6 +14,9 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
+import com.linkned.coral.common.Function;
+import com.linkned.coral.common.FunctionRegistry;
+import com.linkned.coral.common.GenericProjectFunction;
 
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
@@ -54,12 +57,12 @@ import static org.apache.calcite.sql.type.ReturnTypes.*;
  * Note that Coral maintains a copy of StaticHiveFunctionRegistry for read only at run time.
  * For individual query, we create a copy of function registry in a RelConTextProvider object.
  */
-public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
+public class StaticHiveFunctionRegistry implements FunctionRegistry {
 
   public static final String IS_TEST_MEMBER_ID_CLASS = "com.linkedin.dali.udf.istestmemberid.hive.IsTestMemberId";
 
   // TODO: Make this immutable using builder
-  static final Multimap<String, HiveFunction> FUNCTION_MAP = HashMultimap.create();
+  static final Multimap<String, Function> FUNCTION_MAP = HashMultimap.create();
 
   // Used for registering UDTFs, the key is the function name and the value is a list of field names returned by the UDTF
   // We need it because we need to know the return field names of UDTF to do the conversion in ParseTreeBuilder.visitLateralViewUDTF
@@ -528,14 +531,14 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
    * @return list of matching HiveFunctions or empty collection.
    */
   @Override
-  public Collection<HiveFunction> lookup(String functionName) {
+  public Collection<Function> lookup(String functionName) {
     return FUNCTION_MAP.get(functionName.toLowerCase());
   }
 
   /**
    * @return immutable copy of internal function registry
    */
-  public ImmutableMultimap<String, HiveFunction> getRegistry() {
+  public ImmutableMultimap<String, Function> getRegistry() {
     return ImmutableMultimap.copyOf(FUNCTION_MAP);
   }
 
@@ -543,7 +546,7 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
    * Adds the function to registry, the key is lowercase functionName to make lookup case-insensitive.
    */
   private static void addFunctionEntry(String functionName, SqlOperator operator) {
-    FUNCTION_MAP.put(functionName.toLowerCase(), new HiveFunction(functionName, operator));
+    FUNCTION_MAP.put(functionName.toLowerCase(), new Function(functionName, operator));
   }
 
   public static void createAddUserDefinedFunction(String functionName, SqlReturnTypeInference returnTypeInference,

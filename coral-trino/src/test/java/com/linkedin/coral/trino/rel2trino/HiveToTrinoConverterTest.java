@@ -14,6 +14,8 @@ import org.testng.annotations.BeforeTest;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import com.linkedin.coral.trino.trino2rel.TrinoToRelConverter;
+
 import static com.google.common.io.MoreFiles.deleteRecursively;
 import static com.google.common.io.RecursiveDeleteOption.ALLOW_INSECURE;
 import static com.linkedin.coral.trino.rel2trino.TestUtils.hiveToRelConverter;

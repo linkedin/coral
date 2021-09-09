@@ -4,6 +4,7 @@ dependencies {
   compile deps.'gson'
   compile deps.'javax-annotation'
   compile project(path: ':coral-hive')
+  compile deps.'trino-parser'
 
   testCompile deps.'assertj'
   testCompile deps.'trino-parser'

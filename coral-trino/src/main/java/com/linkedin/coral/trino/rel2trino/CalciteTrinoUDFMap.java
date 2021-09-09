@@ -9,13 +9,14 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.linkned.coral.common.Function;
+
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 
 import com.linkedin.coral.com.google.common.base.CaseFormat;
 import com.linkedin.coral.com.google.common.base.Converter;
 import com.linkedin.coral.com.google.common.collect.ImmutableMultimap;
-import com.linkedin.coral.hive.hive2rel.functions.HiveFunction;
 import com.linkedin.coral.hive.hive2rel.functions.HiveRLikeOperator;
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 import com.linkedin.coral.trino.rel2trino.functions.TrinoElementAtFunction;
@@ -98,12 +99,12 @@ public class CalciteTrinoUDFMap {
   }
 
   private static void addDaliUDFs() {
-    ImmutableMultimap<String, HiveFunction> registry = HIVE_REGISTRY.getRegistry();
+    ImmutableMultimap<String, Function> registry = HIVE_REGISTRY.getRegistry();
     Converter<String, String> caseConverter = CaseFormat.UPPER_CAMEL.converterTo(CaseFormat.LOWER_UNDERSCORE);
-    for (Map.Entry<String, HiveFunction> entry : registry.entries()) {
+    for (Map.Entry<String, Function> entry : registry.entries()) {
       // we cannot use entry.getKey() as function name directly, because keys are all lowercase, which will
       // fail to be converted to lowercase with underscore correctly
-      final String hiveFunctionName = entry.getValue().getHiveFunctionName();
+      final String hiveFunctionName = entry.getValue().getFunctionName();
       if (!hiveFunctionName.startsWith("com.linkedin")) {
         continue;
       }
@@ -139,7 +140,7 @@ public class CalciteTrinoUDFMap {
    * Looks up Hive functions using functionName case-insensitively.
    */
   private static SqlOperator hiveToCalciteOp(String functionName) {
-    Collection<HiveFunction> lookup = HIVE_REGISTRY.lookup(functionName);
+    Collection<Function> lookup = HIVE_REGISTRY.lookup(functionName);
     // TODO: provide overloaded function resolution
     return lookup.iterator().next().getSqlOperator();
   }

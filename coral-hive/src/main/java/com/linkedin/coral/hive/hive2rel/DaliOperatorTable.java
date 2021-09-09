@@ -11,6 +11,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.ImmutableList;
+import com.linkned.coral.common.Function;
+import com.linkned.coral.common.FunctionRegistry;
 
 import org.apache.calcite.sql.SqlFunctionCategory;
 import org.apache.calcite.sql.SqlIdentifier;
@@ -20,8 +22,6 @@ import org.apache.calcite.sql.SqlSyntax;
 import org.apache.calcite.sql.validate.SqlNameMatcher;
 import org.apache.calcite.util.Util;
 
-import com.linkedin.coral.hive.hive2rel.functions.HiveFunction;
-import com.linkedin.coral.hive.hive2rel.functions.HiveFunctionRegistry;
 import com.linkedin.coral.hive.hive2rel.functions.HiveFunctionResolver;
 
 
@@ -34,7 +34,7 @@ public class DaliOperatorTable implements SqlOperatorTable {
   // For now, we create another instance since the function registry is simple.
   private HiveFunctionResolver funcResolver;
 
-  public DaliOperatorTable(HiveFunctionRegistry registry, ConcurrentHashMap<String, HiveFunction> dynamicRegistry) {
+  public DaliOperatorTable(FunctionRegistry registry, ConcurrentHashMap<String, Function> dynamicRegistry) {
     this.funcResolver = new HiveFunctionResolver(registry, dynamicRegistry);
   }
 
@@ -50,8 +50,8 @@ public class DaliOperatorTable implements SqlOperatorTable {
   public void lookupOperatorOverloads(SqlIdentifier sqlIdentifier, SqlFunctionCategory sqlFunctionCategory,
       SqlSyntax sqlSyntax, List<SqlOperator> list, SqlNameMatcher sqlNameMatcher) {
     String functionName = Util.last(sqlIdentifier.names);
-    Collection<HiveFunction> functions = funcResolver.resolve(functionName);
-    functions.stream().map(HiveFunction::getSqlOperator).collect(Collectors.toCollection(() -> list));
+    Collection<Function> functions = funcResolver.resolve(functionName);
+    functions.stream().map(Function::getSqlOperator).collect(Collectors.toCollection(() -> list));
   }
 
   @Override

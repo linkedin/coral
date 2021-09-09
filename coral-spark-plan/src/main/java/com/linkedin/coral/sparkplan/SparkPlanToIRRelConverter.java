@@ -25,13 +25,13 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import com.google.gson.Gson;
+import com.linkned.coral.common.HiveMetastoreClient;
 
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexNode;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
-import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
 import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
 import com.linkedin.coral.hive.hive2rel.RelContextProvider;
 import com.linkedin.coral.sparkplan.containers.SparkPlanNode;

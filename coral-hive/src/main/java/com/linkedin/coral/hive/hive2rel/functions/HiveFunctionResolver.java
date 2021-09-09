@@ -15,6 +15,10 @@ import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import com.linkned.coral.common.Function;
+import com.linkned.coral.common.FunctionRegistry;
+import com.linkned.coral.common.HiveTable;
+
 import org.apache.calcite.sql.SqlBinaryOperator;
 import org.apache.calcite.sql.SqlFunctionCategory;
 import org.apache.calcite.sql.SqlIdentifier;
@@ -30,7 +34,6 @@ import org.apache.hadoop.hive.metastore.api.Table;
 
 import com.linkedin.coral.com.google.common.base.Preconditions;
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
-import com.linkedin.coral.hive.hive2rel.HiveTable;
 
 import static com.google.common.base.Preconditions.*;
 import static org.apache.calcite.sql.parser.SqlParserPos.*;
@@ -38,15 +41,15 @@ import static org.apache.calcite.sql.type.OperandTypes.*;
 
 
 /**
- * Class to resolve hive function names in SQL to HiveFunction.
+ * Class to resolve hive function names in SQL to Function.
  */
 public class HiveFunctionResolver {
 
-  public final HiveFunctionRegistry registry;
-  private final ConcurrentHashMap<String, HiveFunction> dynamicFunctionRegistry;
+  public final FunctionRegistry registry;
+  private final ConcurrentHashMap<String, Function> dynamicFunctionRegistry;
   private final List<SqlOperator> operators;
 
-  public HiveFunctionResolver(HiveFunctionRegistry registry, ConcurrentHashMap<String, HiveFunction> dynamicRegistry) {
+  public HiveFunctionResolver(FunctionRegistry registry, ConcurrentHashMap<String, Function> dynamicRegistry) {
     this.registry = registry;
     this.dynamicFunctionRegistry = dynamicRegistry;
     this.operators = new ArrayList<>(SqlStdOperatorTable.instance().getOperatorList());
@@ -80,7 +83,7 @@ public class HiveFunctionResolver {
     List<SqlOperator> matches = operators.stream().filter(o -> o.getName().toLowerCase().equals(lowerCaseOperator)
         && (o instanceof SqlBinaryOperator || o instanceof SqlSpecialOperator)).collect(Collectors.toList());
     if (matches.size() == 0) {
-      HiveFunction f = tryResolve(lowerCaseOperator, null, 2);
+      Function f = tryResolve(lowerCaseOperator, null, 2);
       if (f != null) {
         matches.add(f.getSqlOperator());
       }
@@ -101,7 +104,7 @@ public class HiveFunctionResolver {
   }
 
   /**
-   * Resolves hive function name to specific HiveFunction. This method
+   * Resolves hive function name to specific Function. This method
    * first attempts to resolve function by its name case-insensitively. If there is no match,
    * this attempts to match dali-style function names (DB_TABLE_VERSION_FUNCTION).
    * Right now, this method does not validate parameters leaving it to
@@ -114,9 +117,9 @@ public class HiveFunctionResolver {
    * @return resolved hive functions
    * @throws UnknownSqlFunctionException if the function name can not be resolved.
    */
-  public HiveFunction tryResolve(@Nonnull String functionName, @Nullable Table hiveTable, int numOfOperands) {
+  public Function tryResolve(@Nonnull String functionName, @Nullable Table hiveTable, int numOfOperands) {
     checkNotNull(functionName);
-    Collection<HiveFunction> functions = registry.lookup(functionName);
+    Collection<Function> functions = registry.lookup(functionName);
     if (functions.isEmpty() && hiveTable != null) {
       functions = tryResolveAsDaliFunction(functionName, hiveTable, numOfOperands);
     }
@@ -135,17 +138,17 @@ public class HiveFunctionResolver {
   /**
    * Resolves function to concrete operator case-insensitively.
    * @param functionName function name to resolve
-   * @return list of matching HiveFunctions or empty list if there is no match
+   * @return list of matching Functions or empty list if there is no match
    */
-  public Collection<HiveFunction> resolve(String functionName) {
-    Collection<HiveFunction> staticLookup = registry.lookup(functionName);
+  public Collection<Function> resolve(String functionName) {
+    Collection<Function> staticLookup = registry.lookup(functionName);
     if (!staticLookup.isEmpty()) {
       return staticLookup;
     } else {
-      Collection<HiveFunction> dynamicLookup = ImmutableList.of();
-      HiveFunction hiveFunction = dynamicFunctionRegistry.get(functionName);
-      if (hiveFunction != null) {
-        dynamicLookup = ImmutableList.of(hiveFunction);
+      Collection<Function> dynamicLookup = ImmutableList.of();
+      Function Function = dynamicFunctionRegistry.get(functionName);
+      if (Function != null) {
+        dynamicLookup = ImmutableList.of(Function);
       }
 
       return dynamicLookup;
@@ -159,12 +162,11 @@ public class HiveFunctionResolver {
    * @param table Hive metastore table handle
    * @param numOfOperands number of operands this function takes. This is needed to
    *                      create SqlOperandTypeChecker to resolve Dali function dynamically
-   * @return list of matching HiveFunctions or empty list if the function name is not in the
+   * @return list of matching Functions or empty list if the function name is not in the
    *   dali function name format of db_tableName_functionName
    * @throws UnknownSqlFunctionException if the function name is in Dali function name format but there is no mapping
    */
-  public Collection<HiveFunction> tryResolveAsDaliFunction(String functionName, @Nonnull Table table,
-      int numOfOperands) {
+  public Collection<Function> tryResolveAsDaliFunction(String functionName, @Nonnull Table table, int numOfOperands) {
     Preconditions.checkNotNull(table);
     String functionPrefix = String.format("%s_%s_", table.getDbName(), table.getTableName());
     if (!functionName.toLowerCase().startsWith(functionPrefix.toLowerCase())) {
@@ -179,41 +181,41 @@ public class HiveFunctionResolver {
     if (funcClassName == null) {
       return ImmutableList.of();
     }
-    final Collection<HiveFunction> hiveFunctions = registry.lookup(funcClassName);
-    if (hiveFunctions.size() == 0) {
-      Collection<HiveFunction> dynamicResolvedHiveFunctions =
+    final Collection<Function> Functions = registry.lookup(funcClassName);
+    if (Functions.size() == 0) {
+      Collection<Function> dynamicResolvedFunctions =
           resolveDaliFunctionDynamically(functionName, funcClassName, hiveTable, numOfOperands);
 
-      if (dynamicResolvedHiveFunctions.size() == 0) {
+      if (dynamicResolvedFunctions.size() == 0) {
         // we want to see class name in the exception message for coverage testing
         // so throw exception here
         throw new UnknownSqlFunctionException(funcClassName);
       }
 
-      return dynamicResolvedHiveFunctions;
+      return dynamicResolvedFunctions;
     }
 
-    return hiveFunctions.stream()
-        .map(f -> new HiveFunction(f.getHiveFunctionName(), new VersionedSqlUserDefinedFunction(
+    return Functions.stream()
+        .map(f -> new Function(f.getFunctionName(), new VersionedSqlUserDefinedFunction(
             (SqlUserDefinedFunction) f.getSqlOperator(), hiveTable.getDaliUdfDependencies(), functionName)))
         .collect(Collectors.toList());
   }
 
-  private @Nonnull Collection<HiveFunction> resolveDaliFunctionDynamically(String functionName, String funcClassName,
+  private @Nonnull Collection<Function> resolveDaliFunctionDynamically(String functionName, String funcClassName,
       HiveTable hiveTable, int numOfOperands) {
-    HiveFunction hiveFunction = new HiveFunction(funcClassName,
+    Function Function = new Function(funcClassName,
         new VersionedSqlUserDefinedFunction(
             new SqlUserDefinedFunction(new SqlIdentifier(funcClassName, ZERO),
                 new HiveGenericUDFReturnTypeInference(funcClassName, hiveTable.getDaliUdfDependencies()), null,
                 createSqlOperandTypeChecker(numOfOperands), null, null),
             hiveTable.getDaliUdfDependencies(), functionName));
-    dynamicFunctionRegistry.put(funcClassName, hiveFunction);
-    return ImmutableList.of(hiveFunction);
+    dynamicFunctionRegistry.put(funcClassName, Function);
+    return ImmutableList.of(Function);
   }
 
-  private @Nonnull HiveFunction unresolvedFunction(String functionName, Table table) {
+  private @Nonnull Function unresolvedFunction(String functionName, Table table) {
     SqlIdentifier funcIdentifier = createFunctionIdentifier(functionName, table);
-    return new HiveFunction(functionName,
+    return new Function(functionName,
         new SqlUnresolvedFunction(funcIdentifier, null, null, null, null, SqlFunctionCategory.USER_DEFINED_FUNCTION));
   }
 

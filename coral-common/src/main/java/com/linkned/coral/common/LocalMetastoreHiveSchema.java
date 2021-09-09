@@ -3,64 +3,56 @@
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
-package com.linkedin.coral.hive.hive2rel;
+package com.linkned.coral.common;
 
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
-
-import javax.annotation.Nonnull;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 import org.apache.calcite.linq4j.tree.Expression;
 import org.apache.calcite.rel.type.RelProtoDataType;
+import org.apache.calcite.schema.*;
 import org.apache.calcite.schema.Function;
-import org.apache.calcite.schema.Schema;
-import org.apache.calcite.schema.SchemaPlus;
-import org.apache.calcite.schema.SchemaVersion;
-import org.apache.calcite.schema.Table;
 
-import static com.google.common.base.Preconditions.*;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 
 /**
+ * This class is a replacement for {@link HiveSchema} to work with localMetastore in coral-spark-plan module
+ *
  * Adaptor from Hive catalog providing database and table names
- * to Calcite {@link Schema}
+ * to Calcite {@link Schema}. This class represents the "root" schema
+ * that holds all hive databases as subschema and no tables.
  */
-public class HiveDbSchema implements Schema {
+public class LocalMetastoreHiveSchema implements Schema {
 
-  public static final String DEFAULT_DB = "default";
+  private final Map<String, Map<String, List<String>>> localMetastore;
 
-  private final HiveMetastoreClient msc;
-  private final String dbName;
-
-  HiveDbSchema(@Nonnull HiveMetastoreClient msc, @Nonnull String dbName) {
-    checkNotNull(msc);
-    checkNotNull(dbName);
-    this.msc = msc;
-    this.dbName = dbName;
+  /**
+   * Create HiveSchema using input metastore client to read hive catalog
+   * @param localMetastore map like a Hive metastore client
+   */
+  public LocalMetastoreHiveSchema(Map<String, Map<String, List<String>>> localMetastore) {
+    this.localMetastore = checkNotNull(localMetastore);
   }
 
+  /**
+   * This always returns null as root hive schema does not have tables.
+   * @param name name of the table
+   * @return get calcite table representation
+   */
   @Override
   public Table getTable(String name) {
-    org.apache.hadoop.hive.metastore.api.Table table = msc.getTable(dbName, name);
-    if (table == null) {
-      return null;
-    }
-    org.apache.hadoop.hive.metastore.TableType tableType =
-        Enum.valueOf(org.apache.hadoop.hive.metastore.TableType.class, table.getTableType());
-    switch (tableType) {
-      case VIRTUAL_VIEW:
-        return new HiveViewTable(table, ImmutableList.of(HiveSchema.ROOT_SCHEMA, dbName));
-      default:
-        return new HiveTable(table);
-    }
+    return null;
   }
 
   @Override
   public Set<String> getTableNames() {
-    return ImmutableSet.copyOf(msc.getAllTables(dbName));
+    return ImmutableSet.of();
   }
 
   @Override
@@ -83,19 +75,17 @@ public class HiveDbSchema implements Schema {
     return ImmutableSet.of();
   }
 
-  /**
-   * A Hive DB does not have subschema
-   * @param name Subschema name
-   * @return Calcite schema
-   */
   @Override
   public Schema getSubSchema(String name) {
+    if (localMetastore.containsKey(name)) {
+      return new LocalMetastoreHiveDbSchema(localMetastore, name);
+    }
     return null;
   }
 
   @Override
   public Set<String> getSubSchemaNames() {
-    return ImmutableSet.of();
+    return ImmutableSet.copyOf(localMetastore.keySet());
   }
 
   @Override
@@ -112,5 +102,12 @@ public class HiveDbSchema implements Schema {
   @Override
   public Schema snapshot(SchemaVersion schemaVersion) {
     return this;
+  }
+
+  /**
+   * @return Hive metastore client, because we don't have MSC in this class, return null for now
+   */
+  public HiveMetastoreClient getHiveMetastoreClient() {
+    return null;
   }
 }

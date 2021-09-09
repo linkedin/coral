@@ -10,6 +10,7 @@ import java.util.List;
 import javax.annotation.Nonnull;
 
 import com.google.common.base.Preconditions;
+import com.linkned.coral.common.HiveMetastoreClient;
 
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.rel.RelRoot;
@@ -17,8 +18,6 @@ import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.util.Util;
 import org.apache.hadoop.hive.metastore.api.Table;
-
-import com.linkedin.coral.hive.hive2rel.parsetree.ParseTreeBuilder;
 
 
 /**
@@ -51,10 +50,9 @@ public class HiveViewExpander implements RelOptTable.ViewExpander {
     if (table == null) {
       throw new RuntimeException(String.format("Table %s.%s not found", dbName, tableName));
     }
-    ParseTreeBuilder treeBuilder = new ParseTreeBuilder(msc, relContextProvider.getParseTreeBuilderConfig(),
-        relContextProvider.getHiveFunctionRegistry(), relContextProvider.getDynamicHiveFunctionRegistry());
+    HiveToRelConverter hiveToRelConverter = HiveToRelConverter.create(msc);
     SqlNode viewNode =
-        treeBuilder.processViewOrTable(table).accept(new FuzzyUnionSqlRewriter(tableName, relContextProvider));
+        hiveToRelConverter.processViewOrTable(table).accept(new FuzzyUnionSqlRewriter(tableName, relContextProvider));
     return relContextProvider.getSqlToRelConverter().convertQuery(viewNode, true, true);
   }
 }

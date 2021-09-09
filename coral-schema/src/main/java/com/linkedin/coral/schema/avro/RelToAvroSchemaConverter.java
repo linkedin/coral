@@ -14,6 +14,8 @@ import java.util.Queue;
 
 import javax.annotation.Nonnull;
 
+import com.linkned.coral.common.HiveMetastoreClient;
+
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
 import org.apache.calcite.rel.RelNode;
@@ -58,7 +60,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.linkedin.coral.com.google.common.base.Preconditions;
-import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
 import com.linkedin.coral.hive.hive2rel.rel.HiveUncollect;
 
 

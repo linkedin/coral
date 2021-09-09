@@ -14,6 +14,7 @@ import java.util.regex.Pattern;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.linkned.coral.common.HiveMscAdapter;
 
 import org.apache.calcite.plan.RelTraitDef;
 import org.apache.calcite.rel.RelNode;
@@ -36,7 +37,6 @@ import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.processors.CommandProcessorResponse;
 import org.apache.hadoop.hive.ql.session.SessionState;
 
-import com.linkedin.coral.hive.hive2rel.HiveMscAdapter;
 import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
 
 import static com.linkedin.coral.trino.rel2trino.TestTable.*;
@@ -45,7 +45,6 @@ import static java.lang.String.format;
 
 public class TestUtils {
   private static HiveMscAdapter hiveMetastoreClient;
-  static HiveToRelConverter hiveToRelConverter;
 
   public static FrameworkConfig createFrameworkConfig(TestTable... tables) {
     SchemaPlus rootSchema = Frameworks.createRootSchema(true);

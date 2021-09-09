@@ -3,8 +3,7 @@ apply plugin: 'antlr'
 
 dependencies {
   antlr deps.'antlr'
-  compile project(path: ':coral-common')
-  compile('com.linkedin.calcite:calcite-core:1.21.0.151') {
+  compile('com.linkedin.calcite:calcite-core:1.21.0.150') {
     artifact {
       name = 'calcite-core'
       extension = 'jar'

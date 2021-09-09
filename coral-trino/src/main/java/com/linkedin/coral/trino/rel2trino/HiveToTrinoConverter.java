@@ -5,9 +5,10 @@
  */
 package com.linkedin.coral.trino.rel2trino;
 
+import com.linkned.coral.common.HiveMetastoreClient;
+
 import org.apache.calcite.rel.RelNode;
 
-import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
 import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
 
 import static com.google.common.base.Preconditions.*;
