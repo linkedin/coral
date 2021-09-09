@@ -342,6 +342,14 @@ public class CoralSparkTest {
   }
 
   @Test
+  public void testCastByTypeName() {
+    RelNode relNode = TestUtils.toRelNode("SELECT DOUBLE(1), INT(1.5), STRING(2.3), TIMESTAMP(1631142817), BOOLEAN('')  FROM default.complex");
+    String targetSql = "SELECT 1, 1.5, CAST(2.3 AS STRING), CAST(1631142817 AS TIMESTAMP), CAST('' AS BOOLEAN)\n" +
+        "FROM default.complex";
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+  }
+
+  @Test
   public void testInterval() {
     RelNode relNode = TestUtils.toRelNode("SELECT CAST('2021-08-31' AS DATE) + INTERVAL '7' DAY FROM default.complex");
     String targetSql = "SELECT (CAST('2021-08-31' AS DATE) + INTERVAL '7' DAY)\n" + "FROM default.complex";
