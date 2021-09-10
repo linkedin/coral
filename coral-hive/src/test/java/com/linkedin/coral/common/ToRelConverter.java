@@ -3,11 +3,9 @@
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
-package com.linkedin.coral.hive.hive2rel;
+package com.linkedin.coral.common;
 
 import java.io.IOException;
-
-import com.linkned.coral.common.HiveMscAdapter;
 
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
@@ -19,58 +17,55 @@ import org.apache.hadoop.hive.metastore.IMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 
+import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
+import com.linkedin.coral.hive.hive2rel.TestUtils;
+
 import static org.testng.Assert.*;
 
 
-class ToRelConverter {
+public class ToRelConverter {
 
   private static TestUtils.TestHive hive;
   private static IMetaStoreClient msc;
-  static HiveToRelConverter converter;
-  static RelContextProvider relContextProvider;
+  public static HiveToRelConverter converter;
 
-  static void setup() throws IOException, HiveException, MetaException {
+  public static void setup() throws IOException, HiveException, MetaException {
     hive = TestUtils.setupDefaultHive();
     msc = hive.getMetastoreClient();
     HiveMscAdapter mscAdapter = new HiveMscAdapter(msc);
-    converter = HiveToRelConverter.create(mscAdapter);
-    relContextProvider = new RelContextProvider(mscAdapter);
+    converter = new HiveToRelConverter(mscAdapter);
   }
 
   public static IMetaStoreClient getMsc() {
     return msc;
   }
 
-  public static RelContextProvider getRelContextProvider() {
-    return relContextProvider;
-  }
-
-  static RelNode toRel(String sql) {
+  public static RelNode toRel(String sql) {
     return converter.convertSql(sql);
   }
 
-  static String relToStr(RelNode rel) {
+  public static String relToStr(RelNode rel) {
     return RelOptUtil.toString(rel);
   }
 
-  static String sqlToRelStr(String sql) {
+  public static String sqlToRelStr(String sql) {
     return relToStr(toRel(sql));
   }
 
-  static SqlNode viewToSqlNode(String database, String table) {
+  public static SqlNode viewToSqlNode(String database, String table) {
     return converter.processView(database, table);
   }
 
-  static String nodeToStr(SqlNode sqlNode) {
+  public static String nodeToStr(SqlNode sqlNode) {
     RelNode relNode = converter.toRel(sqlNode);
     return relToSql(relNode);
   }
 
-  static RelBuilder createRelBuilder() {
-    return HiveRelBuilder.create(relContextProvider.getConfig());
+  public static RelBuilder createRelBuilder() {
+    return converter.getRelBuilder();
   }
 
-  static void verifyRel(RelNode input, RelNode expected) {
+  public static void verifyRel(RelNode input, RelNode expected) {
     assertEquals(input.getInputs().size(), expected.getInputs().size());
     for (int i = 0; i < input.getInputs().size(); i++) {
       verifyRel(input.getInput(i), expected.getInput(i));
@@ -78,13 +73,13 @@ class ToRelConverter {
     RelOptUtil.areRowTypesEqual(input.getRowType(), expected.getRowType(), true);
   }
 
-  static String relToSql(RelNode rel) {
+  public static String relToSql(RelNode rel) {
     RelToSqlConverter rel2sql = new RelToSqlConverter(SqlDialect.DatabaseProduct.POSTGRESQL.getDialect());
     return rel2sql.visitChild(0, rel).asStatement().toSqlString(SqlDialect.DatabaseProduct.POSTGRESQL.getDialect())
         .getSql();
   }
 
-  static String relToHql(RelNode rel) {
+  public static String relToHql(RelNode rel) {
     RelToSqlConverter rel2sql = new RelToSqlConverter(SqlDialect.DatabaseProduct.HIVE.getDialect());
     return rel2sql.visitChild(0, rel).asStatement().toSqlString(SqlDialect.DatabaseProduct.HIVE.getDialect()).getSql();
   }

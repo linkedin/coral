@@ -13,7 +13,9 @@ import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import static com.linkedin.coral.hive.hive2rel.ToRelConverter.*;
+import com.linkedin.coral.common.ToRelConverter;
+
+import static com.linkedin.coral.common.ToRelConverter.*;
 import static org.testng.Assert.*;
 
 

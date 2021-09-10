@@ -5,10 +5,9 @@
  */
 package com.linkedin.coral.trino.rel2trino;
 
-import com.linkned.coral.common.HiveMetastoreClient;
-
 import org.apache.calcite.rel.RelNode;
 
+import com.linkedin.coral.common.HiveMetastoreClient;
 import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
 
 import static com.google.common.base.Preconditions.*;
@@ -21,7 +20,7 @@ public class HiveToTrinoConverter {
 
   public static HiveToTrinoConverter create(HiveMetastoreClient mscClient) {
     checkNotNull(mscClient);
-    HiveToRelConverter hiveToRelConverter = HiveToRelConverter.create(mscClient);
+    HiveToRelConverter hiveToRelConverter = new HiveToRelConverter(mscClient);
     RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
     return new HiveToTrinoConverter(hiveToRelConverter, relToTrinoConverter);
   }

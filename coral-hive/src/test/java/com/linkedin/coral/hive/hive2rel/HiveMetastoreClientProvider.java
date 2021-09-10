@@ -10,7 +10,6 @@ import java.util.List;
 import javax.annotation.Nonnull;
 
 import com.google.common.collect.ImmutableList;
-import com.linkned.coral.common.HiveMetastoreClient;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -24,6 +23,8 @@ import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.thrift.TException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.linkedin.coral.common.HiveMetastoreClient;
 
 import static com.google.common.base.Preconditions.*;
 

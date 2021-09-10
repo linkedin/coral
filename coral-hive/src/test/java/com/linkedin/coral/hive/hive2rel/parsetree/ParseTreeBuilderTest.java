@@ -6,29 +6,24 @@
 package com.linkedin.coral.hive.hive2rel.parsetree;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
 import com.google.common.collect.ImmutableList;
-import com.linkned.coral.common.HiveMetastoreClient;
-import com.linkned.coral.common.HiveMscAdapter;
 
 import org.apache.calcite.avatica.util.Casing;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.parser.SqlParser;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import com.linkedin.coral.common.HiveMetastoreClient;
+import com.linkedin.coral.common.HiveMscAdapter;
 import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
 
 import static com.linkedin.coral.hive.hive2rel.TestUtils.*;
@@ -197,44 +192,8 @@ public class ParseTreeBuilderTest {
   }
 
   private static SqlNode convert(String sql) {
-    HiveToRelConverter hiveToRelConverter = HiveToRelConverter.create(msc);
+    HiveToRelConverter hiveToRelConverter = new HiveToRelConverter(msc);
     return hiveToRelConverter.toSqlNode(sql);
-  }
-
-  private static final List LEAVES = Arrays.asList(Boolean.class, Character.class, Byte.class, Short.class,
-      Integer.class, Long.class, Float.class, Double.class, Void.class, String.class);
-
-  public static String dumpSqlNode(Object o, int indent) throws Exception {
-
-    if (o == null)
-      return "null";
-
-    if (LEAVES.contains(o.getClass()))
-      return o.toString();
-
-    if (o.getClass().equals(ArrayList.class)) {
-      StringBuilder sb1 = new StringBuilder();
-      for (Object e : (ArrayList) o) {
-        sb1.append(dumpSqlNode(e, indent + 1) + "\n");
-      }
-      return sb1.toString();
-    }
-
-    StringBuilder sb = new StringBuilder();
-    sb.append(o.getClass().getSimpleName()).append(":\n");
-    for (Field f : o.getClass().getDeclaredFields()) {
-      if (Modifier.isStatic(f.getModifiers()))
-        continue;
-      f.setAccessible(true);
-      sb.append(StringUtils.repeat(' ', indent + 1) + f.getName()).append(": ");
-      sb.append(dumpSqlNode(f.get(o), indent + 1) + "\n");
-    }
-    return sb.toString();
-  }
-
-  @Test
-  void testDump() throws Exception {
-    System.out.print(dumpSqlNode(convert("SELECT 2"), 0));
   }
 
   /**

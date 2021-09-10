@@ -7,8 +7,6 @@ package com.linkedin.coral.hive.hive2rel;
 
 import java.io.IOException;
 
-import com.linkned.coral.common.HiveMscAdapter;
-
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.sql.type.SqlTypeFamily;
@@ -19,9 +17,11 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
+import com.linkedin.coral.common.HiveMscAdapter;
+import com.linkedin.coral.common.ToRelConverter;
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 
-import static com.linkedin.coral.hive.hive2rel.ToRelConverter.*;
+import static com.linkedin.coral.common.ToRelConverter.*;
 import static org.apache.calcite.sql.type.OperandTypes.*;
 import static org.testng.Assert.*;
 
@@ -136,6 +136,6 @@ public class LateralViewTest {
   }
 
   private HiveToRelConverter getConverter() {
-    return HiveToRelConverter.create(new HiveMscAdapter(ToRelConverter.getMsc()));
+    return new HiveToRelConverter(new HiveMscAdapter(ToRelConverter.getMsc()));
   }
 }

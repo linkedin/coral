@@ -10,14 +10,12 @@ import java.util.List;
 import javax.annotation.Nonnull;
 
 import com.google.common.base.Preconditions;
-import com.linkned.coral.common.HiveMetastoreClient;
 
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.rel.RelRoot;
 import org.apache.calcite.rel.type.RelDataType;
-import org.apache.calcite.sql.SqlNode;
+import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.util.Util;
-import org.apache.hadoop.hive.metastore.api.Table;
 
 
 /**
@@ -26,16 +24,14 @@ import org.apache.hadoop.hive.metastore.api.Table;
  */
 public class HiveViewExpander implements RelOptTable.ViewExpander {
 
-  private final RelContextProvider relContextProvider;
-
+  private final HiveToRelConverter hiveToRelConverter;
   /**
    * Instantiates a new Hive view expander.
    *
-   * @param relContextProvider Rel context provider instance
+   * @param hiveToRelConverter Hive to Rel converter
    */
-  public HiveViewExpander(@Nonnull RelContextProvider relContextProvider) {
-    Preconditions.checkNotNull(relContextProvider);
-    this.relContextProvider = relContextProvider;
+  public HiveViewExpander(@Nonnull HiveToRelConverter hiveToRelConverter) {
+    this.hiveToRelConverter = hiveToRelConverter;
   }
 
   @Override
@@ -43,16 +39,9 @@ public class HiveViewExpander implements RelOptTable.ViewExpander {
     Preconditions.checkNotNull(viewPath);
     Preconditions.checkState(!viewPath.isEmpty());
 
-    HiveMetastoreClient msc = relContextProvider.getHiveMetastoreClient();
     String dbName = Util.last(schemaPath);
     String tableName = viewPath.get(0);
-    Table table = msc.getTable(dbName, tableName);
-    if (table == null) {
-      throw new RuntimeException(String.format("Table %s.%s not found", dbName, tableName));
-    }
-    HiveToRelConverter hiveToRelConverter = HiveToRelConverter.create(msc);
-    SqlNode viewNode =
-        hiveToRelConverter.processViewOrTable(table).accept(new FuzzyUnionSqlRewriter(tableName, relContextProvider));
-    return relContextProvider.getSqlToRelConverter().convertQuery(viewNode, true, true);
+
+    return RelRoot.of(hiveToRelConverter.convertView(dbName, tableName), SqlKind.SELECT);
   }
 }

@@ -3,12 +3,12 @@
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
-package com.linkned.coral.common;
+package com.linkedin.coral.common;
 
 import java.util.Collection;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
+
+import javax.annotation.Nonnull;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -22,34 +22,42 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 
 /**
- * This class is a replacement for {@link HiveDbSchema} to work with localMetastore in coral-spark-plan module
- *
  * Adaptor from Hive catalog providing database and table names
  * to Calcite {@link Schema}
  */
-public class LocalMetastoreHiveDbSchema implements Schema {
+public class HiveDbSchema implements Schema {
 
-  private final Map<String, Map<String, List<String>>> localMetastore;
+  public static final String DEFAULT_DB = "default";
+
+  private final HiveMetastoreClient msc;
   private final String dbName;
 
-  public LocalMetastoreHiveDbSchema(Map<String, Map<String, List<String>>> localMetastore, String dbName) {
-    checkNotNull(localMetastore);
+  HiveDbSchema(@Nonnull HiveMetastoreClient msc, @Nonnull String dbName) {
+    checkNotNull(msc);
     checkNotNull(dbName);
-    this.localMetastore = localMetastore;
+    this.msc = msc;
     this.dbName = dbName;
   }
 
   @Override
-  public Table getTable(String tableName) {
-    if (localMetastore.containsKey(dbName) && localMetastore.get(dbName).containsKey(tableName)) {
-      return new LocalMetastoreHiveTable(tableName, localMetastore.get(dbName).get(tableName));
+  public Table getTable(String name) {
+    org.apache.hadoop.hive.metastore.api.Table table = msc.getTable(dbName, name);
+    if (table == null) {
+      return null;
     }
-    return null;
+    org.apache.hadoop.hive.metastore.TableType tableType =
+        Enum.valueOf(org.apache.hadoop.hive.metastore.TableType.class, table.getTableType());
+    switch (tableType) {
+      case VIRTUAL_VIEW:
+        return new HiveViewTable(table, ImmutableList.of(HiveSchema.ROOT_SCHEMA, dbName));
+      default:
+        return new HiveTable(table);
+    }
   }
 
   @Override
   public Set<String> getTableNames() {
-    return ImmutableSet.copyOf(localMetastore.get(dbName).keySet());
+    return ImmutableSet.copyOf(msc.getAllTables(dbName));
   }
 
   @Override
@@ -74,7 +82,7 @@ public class LocalMetastoreHiveDbSchema implements Schema {
 
   /**
    * A Hive DB does not have subschema
-   * @param name name of the schema
+   * @param name Subschema name
    * @return Calcite schema
    */
   @Override

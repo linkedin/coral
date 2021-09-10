@@ -3,12 +3,11 @@
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
-package com.linkned.coral.common;
+package com.linkedin.coral.common;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.Nonnull;
 
@@ -23,7 +22,6 @@ import org.apache.calcite.jdbc.Driver;
 import org.apache.calcite.plan.RelTraitDef;
 import org.apache.calcite.prepare.CalciteCatalogReader;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
-import org.apache.calcite.rel.type.RelDataTypeSystemImpl;
 import org.apache.calcite.runtime.Hook;
 import org.apache.calcite.schema.Schema;
 import org.apache.calcite.schema.SchemaPlus;
@@ -72,7 +70,7 @@ public abstract class RelContextProvider {
     // if the service uses its own service loader (see Trino)
     driver = new Driver();
     config = Frameworks.newConfigBuilder().convertletTable(convertletTable).defaultSchema(schemaPlus)
-        .typeSystem(getTypeSystem()).traitDefs((List<RelTraitDef>) null).operatorTable(getOperatorTable())
+        .typeSystem(new HiveTypeSystem()).traitDefs((List<RelTraitDef>) null).operatorTable(getOperatorTable())
         .programs(Programs.ofRules(Programs.RULE_SET)).build();
   }
 
@@ -92,7 +90,7 @@ public abstract class RelContextProvider {
     // if the service uses its own service loader (see Trino)
     driver = new Driver();
     config = Frameworks.newConfigBuilder().convertletTable(convertletTable).defaultSchema(schemaPlus)
-        .typeSystem(getTypeSystem()).traitDefs((List<RelTraitDef>) null).operatorTable(getOperatorTable())
+        .typeSystem(new HiveTypeSystem()).traitDefs((List<RelTraitDef>) null).operatorTable(getOperatorTable())
         .programs(Programs.ofRules(Programs.RULE_SET)).build();
   }
 
@@ -101,12 +99,6 @@ public abstract class RelContextProvider {
    *
    * @return HiveFunctionRegistry map
    */
-  public abstract FunctionRegistry getFunctionRegistry();
-
-  public abstract ConcurrentHashMap<String, Function> getDynamicFunctionRegistry();
-
-  public abstract RelDataTypeSystemImpl getTypeSystem();
-
   protected abstract SqlRexConvertletTable getConvertletTable();
 
   protected abstract SqlValidator getSqlValidator();

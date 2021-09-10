@@ -26,6 +26,7 @@ dependencies {
   // required for hiveSQL parser code
   compile deps.'antlr-runtime'
 
+  testCompile project(path: ':coral-common')
   testCompile(deps.'hive'.'hive-exec-core') {
     exclude group: 'org.apache.avro', module: 'avro-tools'
     // These exclusions are required to prevent duplicate classes since we include

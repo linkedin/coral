@@ -7,15 +7,13 @@ package com.linkedin.coral.sparkplan;
 
 import java.io.IOException;
 
-import com.linkned.coral.common.HiveMscAdapter;
-
 import org.apache.hadoop.hive.metastore.IMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import com.linkedin.coral.hive.hive2rel.RelContextProvider;
+import com.linkedin.coral.common.HiveMscAdapter;
 
 import static org.testng.Assert.*;
 
@@ -23,7 +21,6 @@ import static org.testng.Assert.*;
 public class SparkPlanToIRRelConverterTest {
 
   private static SparkPlanToIRRelConverter converter;
-  private static RelContextProvider relContextProvider;
 
   @BeforeClass
   public static void beforeClass() throws IOException, HiveException, MetaException {
@@ -31,7 +28,6 @@ public class SparkPlanToIRRelConverterTest {
     final IMetaStoreClient msc = testHive.getMetastoreClient();
     HiveMscAdapter hiveMscAdapter = new HiveMscAdapter(msc);
     converter = SparkPlanToIRRelConverter.create(hiveMscAdapter);
-    relContextProvider = new RelContextProvider(hiveMscAdapter);
   }
 
   @Test

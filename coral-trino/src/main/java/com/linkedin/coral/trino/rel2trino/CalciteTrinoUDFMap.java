@@ -9,14 +9,13 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.linkned.coral.common.Function;
-
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 
 import com.linkedin.coral.com.google.common.base.CaseFormat;
 import com.linkedin.coral.com.google.common.base.Converter;
 import com.linkedin.coral.com.google.common.collect.ImmutableMultimap;
+import com.linkedin.coral.common.Function;
 import com.linkedin.coral.hive.hive2rel.functions.HiveRLikeOperator;
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 import com.linkedin.coral.trino.rel2trino.functions.TrinoElementAtFunction;

@@ -13,8 +13,6 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.List;
 
-import com.linkned.coral.common.TypeConverter;
-
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.sql.SqlOperatorBinding;
@@ -22,6 +20,8 @@ import org.apache.calcite.sql.type.SqlReturnTypeInference;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
+
+import com.linkedin.coral.common.TypeConverter;
 
 
 public class HiveGenericUDFReturnTypeInference implements SqlReturnTypeInference {

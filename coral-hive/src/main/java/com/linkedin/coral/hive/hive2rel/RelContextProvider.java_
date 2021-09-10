@@ -3,60 +3,49 @@
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
+
 package com.linkedin.coral.hive.hive2rel;
 
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import javax.annotation.Nonnull;
+
+import HiveMetastoreClient;
+
 import org.apache.calcite.adapter.java.JavaTypeFactory;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.volcano.VolcanoPlanner;
-import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlOperatorTable;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.util.ChainedSqlOperatorTable;
 import org.apache.calcite.sql.validate.SqlValidator;
 import org.apache.calcite.sql2rel.SqlRexConvertletTable;
 import org.apache.calcite.sql2rel.SqlToRelConverter;
-import org.apache.hadoop.hive.metastore.api.Table;
 
-import com.linkedin.coral.common.HiveMetastoreClient;
-import com.linkedin.coral.common.ToRelConverter2;
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
-import com.linkedin.coral.hive.hive2rel.parsetree.ParseTreeBuilder;
 
 import static com.linkedin.coral.hive.hive2rel.HiveSqlConformance.HIVE_SQL;
 
 
 /**
- * Public class to convert Hive SQL to Calcite relational algebra.
- * This class should serve as the main entry point for clients to convert
- * Hive queries.
+ * Calcite needs different objects that are not trivial to create. This class
+ * simplifies creation of objects, required by Calcite, easy. These objects
+ * are created only once and shared across each call to corresponding getter.
  */
-/*
- * We provide this class as a public interface by providing a thin wrapper
- * around HiveSqlToRelConverter. Directly using HiveSqlToRelConverter will
- * expose public methods from SqlToRelConverter. Use of SqlToRelConverter
- * is likely to change in the future if we want more control over the
- * conversion process. This class abstracts that out.
- */
-public class HiveToRelConverter extends ToRelConverter2 {
-  private final ParseTreeBuilder parseTreeBuilder;
+// TODO: Replace this with Google injection framework
+public class RelContextProvider extends RelContextProvider {
   // The validator must be reused
   // TODO set default null collation to low
   SqlValidator sqlValidator = new HiveSqlValidator(getOperatorTable(), getCalciteCatalogReader(),
       ((JavaTypeFactory) getRelBuilder().getTypeFactory()), HIVE_SQL);
-
-  public HiveToRelConverter(HiveMetastoreClient hiveMetastoreClient) {
+  public RelContextProvider(@Nonnull HiveMetastoreClient hiveMetastoreClient) {
     super(hiveMetastoreClient);
-    this.parseTreeBuilder = new ParseTreeBuilder();
   }
 
-  public HiveToRelConverter(Map<String, Map<String, List<String>>> localMetaStore) {
+  public RelContextProvider(Map<String, Map<String, List<String>>> localMetaStore) {
     super(localMetaStore);
-    this.parseTreeBuilder = new ParseTreeBuilder();
   }
 
   @Override
@@ -81,28 +70,4 @@ public class HiveToRelConverter extends ToRelConverter2 {
         RelOptCluster.create(new VolcanoPlanner(), getRelBuilder().getRexBuilder()), getConvertletTable(),
         SqlToRelConverter.configBuilder().build());
   }
-
-  @Override
-  public SqlNode toSqlNode(String sql) {
-    return parseTreeBuilder.processSql(trimParenthesis(sql));
-  }
-
-  @Override
-  protected SqlNode toSqlNode(String sql, Table hiveView) {
-    return parseTreeBuilder.process(trimParenthesis(sql), hiveView);
-  }
-
-  @Override
-  protected RelNode standardizeRel(RelNode relNode) {
-    return new HiveRelConverter().convert(relNode);
-  }
-
-  private static String trimParenthesis(String value) {
-    String str = value.trim();
-    if (str.startsWith("(") && str.endsWith(")")) {
-      return trimParenthesis(str.substring(1, str.length() - 1));
-    }
-    return str;
-  }
-
 }

@@ -5,14 +5,14 @@
  */
 package com.linkedin.coral.schema.avro;
 
-import com.linkned.coral.common.HiveMetastoreClient;
-
 import org.apache.avro.Schema;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+
+import com.linkedin.coral.common.HiveMetastoreClient;
 
 
 public class ViewToAvroSchemaConverterTests {

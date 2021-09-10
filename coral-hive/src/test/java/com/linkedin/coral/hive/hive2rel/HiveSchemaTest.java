@@ -9,13 +9,13 @@ import java.io.IOException;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.linkned.coral.common.HiveSchema;
 
 import org.apache.calcite.schema.Schema;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import com.linkedin.coral.common.HiveSchema;
 import com.linkedin.coral.hive.hive2rel.TestUtils.TestHive;
 
 import static org.testng.Assert.*;

@@ -3,7 +3,7 @@
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
-package com.linkned.coral.common;
+package com.linkedin.coral.common;
 
 import java.util.Optional;
 

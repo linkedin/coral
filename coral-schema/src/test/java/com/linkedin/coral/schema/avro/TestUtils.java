@@ -12,9 +12,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.linkned.coral.common.HiveMetastoreClient;
-import com.linkned.coral.common.HiveMscAdapter;
-
 import org.apache.calcite.sql.type.ReturnTypes;
 import org.apache.calcite.sql.type.SqlTypeFamily;
 import org.apache.calcite.sql.type.SqlTypeName;
@@ -27,6 +24,8 @@ import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.session.SessionState;
 
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
+import com.linkedin.coral.common.HiveMetastoreClient;
+import com.linkedin.coral.common.HiveMscAdapter;
 import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 
@@ -51,7 +50,7 @@ public class TestUtils {
 
   public static HiveToRelConverter setupRelDataTypeToAvroTypeTests() throws HiveException, MetaException {
     HiveMetastoreClient metastoreClient = setup();
-    HiveToRelConverter hiveToRelConverter = HiveToRelConverter.create(metastoreClient);
+    HiveToRelConverter hiveToRelConverter = new HiveToRelConverter(metastoreClient);
 
     return hiveToRelConverter;
   }

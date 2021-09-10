@@ -7,9 +7,6 @@ package com.linkedin.coral.pig.rel2pig;
 
 import java.io.InputStream;
 
-import com.linkned.coral.common.HiveMetastoreClient;
-import com.linkned.coral.common.HiveMscAdapter;
-
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.runtime.Hook;
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -20,6 +17,8 @@ import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.session.SessionState;
 
+import com.linkedin.coral.common.HiveMetastoreClient;
+import com.linkedin.coral.common.HiveMscAdapter;
 import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
 
 
@@ -44,7 +43,7 @@ public class TestUtils {
     SessionState.start(conf);
     Driver driver = new Driver(conf);
     HiveMetastoreClient hiveMetastoreClient = new HiveMscAdapter(Hive.get(conf).getMSC());
-    hiveToRelConverter = HiveToRelConverter.create(hiveMetastoreClient);
+    hiveToRelConverter = new HiveToRelConverter(hiveMetastoreClient);
 
     // Views and tables used in unit tests
     run(driver, String.join("\n", "", "CREATE DATABASE IF NOT EXISTS pig"));

@@ -10,8 +10,6 @@ import java.util.Map;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.linkned.coral.common.HiveSchema;
-import com.linkned.coral.common.HiveTable;
 
 import org.apache.calcite.jdbc.JavaTypeFactoryImpl;
 import org.apache.calcite.rel.type.RelDataType;
@@ -25,6 +23,9 @@ import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.thrift.TException;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+
+import com.linkedin.coral.common.HiveSchema;
+import com.linkedin.coral.common.HiveTable;
 
 import static org.testng.Assert.*;
 

@@ -3,9 +3,10 @@
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
-package com.linkned.coral.common;
+package com.linkedin.coral.common;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 import javax.annotation.Nonnull;
@@ -17,47 +18,44 @@ import org.apache.calcite.linq4j.tree.Expression;
 import org.apache.calcite.rel.type.RelProtoDataType;
 import org.apache.calcite.schema.*;
 import org.apache.calcite.schema.Function;
+import org.apache.hadoop.hive.metastore.api.Database;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 
 /**
  * Adaptor from Hive catalog providing database and table names
- * to Calcite {@link Schema}
+ * to Calcite {@link Schema}. This class represents the "root" schema
+ * that holds all hive databases as subschema and no tables.
  */
-public class HiveDbSchema implements Schema {
+public class HiveSchema implements Schema {
 
+  public static final String ROOT_SCHEMA = "hive";
   public static final String DEFAULT_DB = "default";
 
   private final HiveMetastoreClient msc;
-  private final String dbName;
 
-  HiveDbSchema(@Nonnull HiveMetastoreClient msc, @Nonnull String dbName) {
-    checkNotNull(msc);
-    checkNotNull(dbName);
-    this.msc = msc;
-    this.dbName = dbName;
+  /**
+   * Create HiveSchema using input metastore client to read hive catalog
+   * @param msc Hive metastore client
+   */
+  public HiveSchema(@Nonnull HiveMetastoreClient msc) {
+    this.msc = checkNotNull(msc);
   }
 
+  /**
+   * This always returns null as root hive schema does not have tables.
+   * @param name Table name
+   * @return get calcite table representation
+   */
   @Override
   public Table getTable(String name) {
-    org.apache.hadoop.hive.metastore.api.Table table = msc.getTable(dbName, name);
-    if (table == null) {
-      return null;
-    }
-    org.apache.hadoop.hive.metastore.TableType tableType =
-        Enum.valueOf(org.apache.hadoop.hive.metastore.TableType.class, table.getTableType());
-    switch (tableType) {
-      case VIRTUAL_VIEW:
-        return new HiveViewTable(table, ImmutableList.of(HiveSchema.ROOT_SCHEMA, dbName));
-      default:
-        return new HiveTable(table);
-    }
+    return null;
   }
 
   @Override
   public Set<String> getTableNames() {
-    return ImmutableSet.copyOf(msc.getAllTables(dbName));
+    return ImmutableSet.of();
   }
 
   @Override
@@ -80,19 +78,16 @@ public class HiveDbSchema implements Schema {
     return ImmutableSet.of();
   }
 
-  /**
-   * A Hive DB does not have subschema
-   * @param name Subschema name
-   * @return Calcite schema
-   */
   @Override
   public Schema getSubSchema(String name) {
-    return null;
+    Database database = msc.getDatabase(name);
+    return (database == null) ? null : new HiveDbSchema(msc, database.getName());
   }
 
   @Override
   public Set<String> getSubSchemaNames() {
-    return ImmutableSet.of();
+    List<String> dbNames = msc.getAllDatabases();
+    return ImmutableSet.copyOf(dbNames);
   }
 
   @Override

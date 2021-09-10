@@ -25,10 +25,11 @@ import org.apache.thrift.TException;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import com.linkedin.coral.common.ToRelConverter;
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 import com.linkedin.coral.hive.hive2rel.functions.UnknownSqlFunctionException;
 
-import static com.linkedin.coral.hive.hive2rel.ToRelConverter.*;
+import static com.linkedin.coral.common.ToRelConverter.*;
 import static org.apache.calcite.sql.type.OperandTypes.*;
 import static org.testng.Assert.*;
 import static org.testng.Assert.assertEquals;
@@ -520,7 +521,7 @@ public class HiveToRelConverterTest {
   public void testConversionWithLocalMetastore() {
     Map<String, Map<String, List<String>>> localMetaStore = ImmutableMap.of("default",
         ImmutableMap.of("table_localstore", ImmutableList.of("name|string", "company|string", "group_name|string")));
-    HiveToRelConverter hiveToRelConverter = HiveToRelConverter.create(localMetaStore);
+    HiveToRelConverter hiveToRelConverter = new HiveToRelConverter(localMetaStore);
     RelNode rel = hiveToRelConverter.convertSql("SELECT * FROM default.table_localstore");
 
     final String expectedSql = "SELECT *\n" + "FROM hive.default.table_localstore";
