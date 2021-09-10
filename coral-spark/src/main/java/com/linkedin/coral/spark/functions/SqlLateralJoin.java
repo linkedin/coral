@@ -5,6 +5,9 @@
  */
 package com.linkedin.coral.spark.functions;
 
+import java.util.List;
+
+import org.apache.calcite.sql.JoinType;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlJoin;
 import org.apache.calcite.sql.SqlKind;
@@ -56,12 +59,17 @@ public class SqlLateralJoin extends SqlJoin {
 
     @Override
     public void unparse(SqlWriter writer, SqlCall call, int leftPrec, int rightPrec) {
-      final SqlLateralJoin join = (SqlLateralJoin) call;
+      final List<SqlNode> operandList = call.getOperandList();
+      // SqlJoin.getOperandList returns ImmutableNullableList.of(left, natural, joinType, right, conditionType, condition);
+      // Therefore, we can get the `left`, `right` and `joinType` using index 0, 3 and 2
+      final SqlNode left = operandList.get(0);
+      final SqlNode right = operandList.get(3);
+      JoinType joinType = (JoinType) ((SqlLiteral) operandList.get(2)).getValue();
 
       final SqlWriter.Frame joinFrame = writer.startList(SqlWriter.FrameTypeEnum.JOIN);
-      join.left.unparse(writer, leftPrec, getLeftPrec());
+      left.unparse(writer, leftPrec, getLeftPrec());
 
-      switch (join.getJoinType()) {
+      switch (joinType) {
         case COMMA:
           writer.literal("LATERAL VIEW");
           writer.setNeedWhitespace(true);
@@ -70,9 +78,9 @@ public class SqlLateralJoin extends SqlJoin {
           }
           break;
         default:
-          throw Util.unexpected(join.getJoinType());
+          throw Util.unexpected(joinType);
       }
-      join.right.unparse(writer, getRightPrec(), rightPrec);
+      right.unparse(writer, getRightPrec(), rightPrec);
       writer.endList(joinFrame);
     }
   }
