@@ -23,7 +23,7 @@ import com.linkedin.coral.hive.hive2rel.TestUtils;
 import static org.testng.Assert.*;
 
 
-public class ToRelConverter {
+public class ToRelConverterTestUtils {
 
   private static TestUtils.TestHive hive;
   private static IMetaStoreClient msc;

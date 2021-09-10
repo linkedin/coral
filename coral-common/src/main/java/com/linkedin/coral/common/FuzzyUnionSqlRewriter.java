@@ -79,9 +79,9 @@ import org.apache.calcite.sql.util.SqlShuttle;
 public class FuzzyUnionSqlRewriter extends SqlShuttle {
 
   private final String tableName;
-  private final ToRelConverter2 toRelConverter;
+  private final ToRelConverter toRelConverter;
 
-  public FuzzyUnionSqlRewriter(@Nonnull String tableName, @Nonnull ToRelConverter2 toRelConverter) {
+  public FuzzyUnionSqlRewriter(@Nonnull String tableName, @Nonnull ToRelConverter toRelConverter) {
     this.toRelConverter = toRelConverter;
     this.tableName = tableName;
   }

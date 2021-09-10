@@ -18,10 +18,10 @@ import org.testng.annotations.Test;
 
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import com.linkedin.coral.common.HiveMscAdapter;
-import com.linkedin.coral.common.ToRelConverter;
+import com.linkedin.coral.common.ToRelConverterTestUtils;
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 
-import static com.linkedin.coral.common.ToRelConverter.*;
+import static com.linkedin.coral.common.ToRelConverterTestUtils.*;
 import static org.apache.calcite.sql.type.OperandTypes.*;
 import static org.testng.Assert.*;
 
@@ -29,7 +29,7 @@ import static org.testng.Assert.*;
 public class LateralViewTest {
   @BeforeClass
   public static void beforeClass() throws HiveException, MetaException, IOException {
-    ToRelConverter.setup();
+    ToRelConverterTestUtils.setup();
     StaticHiveFunctionRegistry.createAddUserDefinedTableFunction("com.linkedin.coral.hive.hive2rel.CoralTestUDTF",
         ImmutableList.of("col1"), ImmutableList.of(SqlTypeName.INTEGER), family(SqlTypeFamily.INTEGER));
   }
@@ -136,6 +136,6 @@ public class LateralViewTest {
   }
 
   private HiveToRelConverter getConverter() {
-    return new HiveToRelConverter(new HiveMscAdapter(ToRelConverter.getMsc()));
+    return new HiveToRelConverter(new HiveMscAdapter(ToRelConverterTestUtils.getMsc()));
   }
 }

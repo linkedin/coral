@@ -54,7 +54,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * is likely to change in the future if we want more control over the
  * conversion process. This class abstracts that out.
  */
-public abstract class ToRelConverter2 {
+public abstract class ToRelConverter {
 
   private final HiveMetastoreClient hiveMetastoreClient;
   private final FrameworkConfig config;
@@ -73,9 +73,6 @@ public abstract class ToRelConverter2 {
 
   protected abstract SqlNode toSqlNode(String sql, org.apache.hadoop.hive.metastore.api.Table hiveView);
 
-  // TODO change back to protected once the relevant tests move to the common package
-  public abstract SqlNode toSqlNode(String sql);
-
   /**
    * Apply series of transforms to convert Hive relnode to
    * standardized intermediate representation.
@@ -84,7 +81,7 @@ public abstract class ToRelConverter2 {
    */
   protected abstract RelNode standardizeRel(RelNode relNode);
 
-  protected ToRelConverter2(@Nonnull HiveMetastoreClient hiveMetastoreClient) {
+  protected ToRelConverter(@Nonnull HiveMetastoreClient hiveMetastoreClient) {
     checkNotNull(hiveMetastoreClient);
     this.hiveMetastoreClient = hiveMetastoreClient;
     SchemaPlus schemaPlus = Frameworks.createRootSchema(false);
@@ -100,7 +97,7 @@ public abstract class ToRelConverter2 {
 
   }
 
-  protected ToRelConverter2(Map<String, Map<String, List<String>>> localMetaStore) {
+  protected ToRelConverter(Map<String, Map<String, List<String>>> localMetaStore) {
     this.hiveMetastoreClient = null;
     SchemaPlus schemaPlus = Frameworks.createRootSchema(false);
     schemaPlus.add(HiveSchema.ROOT_SCHEMA, new LocalMetastoreHiveSchema(localMetaStore));
@@ -144,6 +141,12 @@ public abstract class ToRelConverter2 {
     return toRel(sqlNode);
   }
 
+  // TODO change back to protected once the relevant tests move to the common package
+  @VisibleForTesting
+  public SqlNode toSqlNode(String sql) {
+    return toSqlNode(sql, null);
+  }
+
   /**
    * Creates a parse tree for a hive table/view.
    * @param dbName database name
@@ -173,19 +176,6 @@ public abstract class ToRelConverter2 {
   }
 
   /**
-   * This class allows CalciteCatalogReader to have multiple schemaPaths, for example:
-   * ["hive", "default"], ["hive"], and []
-   */
-  public static class MultiSchemaPathCalciteCatalogReader extends CalciteCatalogReader {
-
-    public MultiSchemaPathCalciteCatalogReader(CalciteSchema rootSchema, List<List<String>> schemaPathList,
-        RelDataTypeFactory typeFactory, CalciteConnectionConfig config) {
-      super(rootSchema, SqlNameMatchers.withCaseSensitive(config != null && config.caseSensitive()),
-          Util.immutableCopy(schemaPathList), typeFactory, config);
-    }
-  }
-
-  /**
    * Gets {@link RelBuilder} object for generating relational algebra.
    *
    * @return the rel builder
@@ -198,6 +188,19 @@ public abstract class ToRelConverter2 {
     Hook.REL_BUILDER_SIMPLIFY.add(Hook.propertyJ(false));
     relBuilder = RelBuilder.create(config);
     return relBuilder;
+  }
+
+  /**
+   * This class allows CalciteCatalogReader to have multiple schemaPaths, for example:
+   * ["hive", "default"], ["hive"], and []
+   */
+  static class MultiSchemaPathCalciteCatalogReader extends CalciteCatalogReader {
+
+    public MultiSchemaPathCalciteCatalogReader(CalciteSchema rootSchema, List<List<String>> schemaPathList,
+        RelDataTypeFactory typeFactory, CalciteConnectionConfig config) {
+      super(rootSchema, SqlNameMatchers.withCaseSensitive(config != null && config.caseSensitive()),
+          Util.immutableCopy(schemaPathList), typeFactory, config);
+    }
   }
 
   /**
@@ -215,8 +218,7 @@ public abstract class ToRelConverter2 {
       connectionConfig = new CalciteConnectionConfigImpl(properties);
     }
     if (catalogReader == null) {
-      catalogReader = new RelContextProvider.MultiSchemaPathCalciteCatalogReader(
-          config.getDefaultSchema().unwrap(CalciteSchema.class),
+      catalogReader = new MultiSchemaPathCalciteCatalogReader(config.getDefaultSchema().unwrap(CalciteSchema.class),
           ImmutableList.of(ImmutableList.of(HiveSchema.ROOT_SCHEMA, HiveSchema.DEFAULT_DB),
               ImmutableList.of(HiveSchema.ROOT_SCHEMA), ImmutableList.of()),
           getRelBuilder().getTypeFactory(), connectionConfig);

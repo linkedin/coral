@@ -13,9 +13,9 @@ import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import com.linkedin.coral.common.ToRelConverter;
+import com.linkedin.coral.common.ToRelConverterTestUtils;
 
-import static com.linkedin.coral.common.ToRelConverter.*;
+import static com.linkedin.coral.common.ToRelConverterTestUtils.*;
 import static org.testng.Assert.*;
 
 
@@ -23,7 +23,7 @@ public class HiveOperatorsTest {
 
   @BeforeClass
   public void beforeClass() throws HiveException, IOException, MetaException {
-    ToRelConverter.setup();
+    ToRelConverterTestUtils.setup();
   }
 
   @Test

@@ -23,7 +23,7 @@ import org.apache.calcite.sql2rel.SqlToRelConverter;
 import org.apache.hadoop.hive.metastore.api.Table;
 
 import com.linkedin.coral.common.HiveMetastoreClient;
-import com.linkedin.coral.common.ToRelConverter2;
+import com.linkedin.coral.common.ToRelConverter;
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 import com.linkedin.coral.hive.hive2rel.parsetree.ParseTreeBuilder;
 
@@ -42,7 +42,7 @@ import static com.linkedin.coral.hive.hive2rel.HiveSqlConformance.HIVE_SQL;
  * is likely to change in the future if we want more control over the
  * conversion process. This class abstracts that out.
  */
-public class HiveToRelConverter extends ToRelConverter2 {
+public class HiveToRelConverter extends ToRelConverter {
   private final ParseTreeBuilder parseTreeBuilder;
   // The validator must be reused
   // TODO set default null collation to low
@@ -80,11 +80,6 @@ public class HiveToRelConverter extends ToRelConverter2 {
     return new HiveSqlToRelConverter(new HiveViewExpander(this), getSqlValidator(), getCalciteCatalogReader(),
         RelOptCluster.create(new VolcanoPlanner(), getRelBuilder().getRexBuilder()), getConvertletTable(),
         SqlToRelConverter.configBuilder().build());
-  }
-
-  @Override
-  public SqlNode toSqlNode(String sql) {
-    return parseTreeBuilder.processSql(trimParenthesis(sql));
   }
 
   @Override
