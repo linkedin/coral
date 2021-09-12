@@ -183,8 +183,8 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
     createAddUserDefinedFunction("shiftleft", ARG0_NULLABLE, EXACT_NUMERIC_EXACT_NUMERIC);
     createAddUserDefinedFunction("shiftright", ARG0_NULLABLE, EXACT_NUMERIC_EXACT_NUMERIC);
     createAddUserDefinedFunction("shiftrightunsigned", ARG0_NULLABLE, EXACT_NUMERIC_EXACT_NUMERIC);
-    createAddUserDefinedFunction("greatest", ARG0_NULLABLE, ANY);
-    createAddUserDefinedFunction("least", ARG0_NULLABLE, ANY);
+    createAddUserDefinedFunction("greatest", ARG0_NULLABLE, SAME_VARIADIC);
+    createAddUserDefinedFunction("least", ARG0_NULLABLE, SAME_VARIADIC);
     createAddUserDefinedFunction("width_bucket", INTEGER_NULLABLE,
         family(SqlTypeFamily.NUMERIC, SqlTypeFamily.NUMERIC, SqlTypeFamily.NUMERIC, SqlTypeFamily.INTEGER));
 
