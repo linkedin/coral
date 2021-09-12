@@ -174,7 +174,13 @@ public class HiveToTrinoConverterTest {
 
         { "test", "view_with_timestamp_and_interval", "SELECT (CAST('2021-08-30' AS TIMESTAMP) + INTERVAL -'3 01:02:03' DAY TO SECOND)\nFROM \"test\".\"tablea\"" },
 
-        { "test", "view_with_timestamp_and_interval_2", "SELECT (CAST('2021-08-30' AS TIMESTAMP) + INTERVAL -'1-6' YEAR TO MONTH)\nFROM \"test\".\"tablea\"" }, };
+        { "test", "view_with_timestamp_and_interval_2", "SELECT (CAST('2021-08-30' AS TIMESTAMP) + INTERVAL -'1-6' YEAR TO MONTH)\nFROM \"test\".\"tablea\"" },
+
+        { "test", "greatest_view", "SELECT \"greatest\"(\"a\", \"b\") AS \"g_int\", \"greatest\"(\"c\", \"d\") AS \"g_string\"\n"
+            + "FROM \"test\".\"table_ints_strings\"" },
+
+        { "test", "least_view", "SELECT \"least\"(\"a\", \"b\") AS \"g_int\", \"least\"(\"c\", \"d\") AS \"g_string\"\n"
+            + "FROM \"test\".\"table_ints_strings\"" }, };
   }
 
   @Test

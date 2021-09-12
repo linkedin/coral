@@ -336,6 +336,14 @@ public class TestUtils {
     run(driver, "CREATE VIEW IF NOT EXISTS test.t_dot_star_view AS \n"
         + "SELECT ta.*, tb.b as tbb FROM test.tableA as ta JOIN test.tableA as tb ON ta.a = tb.a");
 
+    run(driver, "CREATE TABLE IF NOT EXISTS test.table_ints_strings( a int, b int, c string, d string)");
+
+    run(driver, "CREATE VIEW IF NOT EXISTS test.greatest_view AS \n"
+        + "SELECT greatest(t.a, t.b) as g_int, greatest(t.c, t.d) as g_string FROM test.table_ints_strings t");
+
+    run(driver, "CREATE VIEW IF NOT EXISTS test.least_view AS \n"
+        + "SELECT least(t.a, t.b) as g_int, least(t.c, t.d) as g_string FROM test.table_ints_strings t");
+
   }
 
   public static RelNode convertView(String db, String view) {
