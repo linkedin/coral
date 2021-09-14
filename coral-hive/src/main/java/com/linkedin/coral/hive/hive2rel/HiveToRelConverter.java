@@ -79,7 +79,7 @@ public class HiveToRelConverter extends ToRelConverter {
   protected SqlToRelConverter getSqlToRelConverter() {
     return new HiveSqlToRelConverter(new HiveViewExpander(this), getSqlValidator(), getCalciteCatalogReader(),
         RelOptCluster.create(new VolcanoPlanner(), getRelBuilder().getRexBuilder()), getConvertletTable(),
-        SqlToRelConverter.configBuilder().build());
+        SqlToRelConverter.configBuilder().withRelBuilderFactory(HiveRelBuilder.LOGICAL_BUILDER).build());
   }
 
   @Override

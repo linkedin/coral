@@ -45,6 +45,7 @@ import static java.lang.String.format;
 
 public class TestUtils {
   private static HiveMscAdapter hiveMetastoreClient;
+  static HiveToRelConverter hiveToRelConverter;
 
   public static FrameworkConfig createFrameworkConfig(TestTable... tables) {
     SchemaPlus rootSchema = Frameworks.createRootSchema(true);
@@ -189,7 +190,7 @@ public class TestUtils {
     SessionState.start(conf);
     Driver driver = new Driver(conf);
     hiveMetastoreClient = new HiveMscAdapter(Hive.get(conf).getMSC());
-    hiveToRelConverter = HiveToRelConverter.create(hiveMetastoreClient);
+    hiveToRelConverter = new HiveToRelConverter(hiveMetastoreClient);
 
     // Views and tables used in HiveToTrinoConverterTest
     run(driver, "CREATE DATABASE IF NOT EXISTS test");

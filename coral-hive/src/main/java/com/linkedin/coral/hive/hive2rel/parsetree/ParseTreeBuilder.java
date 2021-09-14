@@ -1008,37 +1008,6 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     return SqlLiteral.createInterval(1, unquotedText, intervalQualifier, ZERO);
   }
 
-  private HiveMetastoreClient getMscOrThrow() {
-    if (hiveMetastoreClient == null) {
-      throw new RuntimeException("Hive metastore client is required to access table");
-    } else {
-      return hiveMetastoreClient;
-    }
-  }
-
-  private static String trimParenthesis(String value) {
-    String str = value.trim();
-    if (str.startsWith("(") && str.endsWith(")")) {
-      return trimParenthesis(str.substring(1, str.length() - 1));
-    }
-    return str;
-  }
-
-  public static class Config {
-    private String catalogName = "";
-    private String defaultDBName = "";
-
-    public Config setCatalogName(String catalogName) {
-      this.catalogName = catalogName;
-      return this;
-    }
-
-    public Config setDefaultDB(String defaultDBName) {
-      this.defaultDBName = defaultDBName;
-      return this;
-    }
-  }
-
   class ParseContext {
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
     private final Optional<Table> hiveTable;
