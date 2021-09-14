@@ -45,7 +45,6 @@ import static com.linkedin.coral.hive.hive2rel.HiveSqlConformance.HIVE_SQL;
 public class HiveToRelConverter extends ToRelConverter {
   private final ParseTreeBuilder parseTreeBuilder;
   // The validator must be reused
-  // TODO set default null collation to low
   SqlValidator sqlValidator = new HiveSqlValidator(getOperatorTable(), getCalciteCatalogReader(),
       ((JavaTypeFactory) getRelBuilder().getTypeFactory()), HIVE_SQL);
 
