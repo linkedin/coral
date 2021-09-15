@@ -166,7 +166,7 @@ class TransportableUDFMap {
         return ScalaVersion.SCALA_2_12;
       throw new IllegalStateException(String.format("Unsupported Spark Version %s", sparkVersion));
     } catch (IllegalStateException | NoClassDefFoundError ex) {
-      LOG.warn("Couldn't determine Spark version, falling back to scala_2.11", ex);
+      LOG.warn("Couldn't determine Spark version, falling back to scala_2.11: {}", ex.getMessage());
       return ScalaVersion.SCALA_2_11;
     }
   }
