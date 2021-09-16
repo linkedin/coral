@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
@@ -89,8 +88,8 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
   /**
    * Constructs a parse tree builder
    */
-  public ParseTreeBuilder() {
-    this.functionResolver = new HiveFunctionResolver(new StaticHiveFunctionRegistry(), new ConcurrentHashMap<>());
+  public ParseTreeBuilder(HiveFunctionResolver functionResolver) {
+    this.functionResolver = functionResolver;
   }
 
   /**

@@ -22,8 +22,10 @@ import org.apache.calcite.sql2rel.SqlRexConvertletTable;
 import org.apache.calcite.sql2rel.SqlToRelConverter;
 import org.apache.hadoop.hive.metastore.api.Table;
 
+import com.linkedin.coral.common.Function;
 import com.linkedin.coral.common.HiveMetastoreClient;
 import com.linkedin.coral.common.ToRelConverter;
+import com.linkedin.coral.hive.hive2rel.functions.HiveFunctionResolver;
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 import com.linkedin.coral.hive.hive2rel.parsetree.ParseTreeBuilder;
 
@@ -44,18 +46,22 @@ import static com.linkedin.coral.hive.hive2rel.HiveSqlConformance.HIVE_SQL;
  */
 public class HiveToRelConverter extends ToRelConverter {
   private final ParseTreeBuilder parseTreeBuilder;
+  private final ConcurrentHashMap<String, Function> dynamicRegistry = new ConcurrentHashMap<>();
+  private final HiveFunctionResolver functionResolver =
+      new HiveFunctionResolver(new StaticHiveFunctionRegistry(), new ConcurrentHashMap<>());
+  private final
   // The validator must be reused
   SqlValidator sqlValidator = new HiveSqlValidator(getOperatorTable(), getCalciteCatalogReader(),
       ((JavaTypeFactory) getRelBuilder().getTypeFactory()), HIVE_SQL);
 
   public HiveToRelConverter(HiveMetastoreClient hiveMetastoreClient) {
     super(hiveMetastoreClient);
-    this.parseTreeBuilder = new ParseTreeBuilder();
+    this.parseTreeBuilder = new ParseTreeBuilder(functionResolver);
   }
 
   public HiveToRelConverter(Map<String, Map<String, List<String>>> localMetaStore) {
     super(localMetaStore);
-    this.parseTreeBuilder = new ParseTreeBuilder();
+    this.parseTreeBuilder = new ParseTreeBuilder(functionResolver);
   }
 
   @Override
@@ -70,8 +76,7 @@ public class HiveToRelConverter extends ToRelConverter {
 
   @Override
   protected SqlOperatorTable getOperatorTable() {
-    return ChainedSqlOperatorTable.of(SqlStdOperatorTable.instance(),
-        new DaliOperatorTable(new StaticHiveFunctionRegistry(), new ConcurrentHashMap<>()));
+    return ChainedSqlOperatorTable.of(SqlStdOperatorTable.instance(), new DaliOperatorTable(functionResolver));
   }
 
   @Override
