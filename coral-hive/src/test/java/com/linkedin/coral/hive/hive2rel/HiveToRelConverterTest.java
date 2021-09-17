@@ -582,6 +582,14 @@ public class HiveToRelConverterTest {
     assertEquals(generated3, expected);
   }
 
+  @Test
+  public void testConcat() {
+    final String expected = "LogicalProject(EXPR$0=[concat('a', 'b')])\n" + "  LogicalValues(tuples=[[{ 0 }]])\n";
+    final String sql = "SELECT 'a' || 'b'";
+    String generated = relToString(sql);
+    assertEquals(generated, expected);
+  }
+
   private String relToString(String sql) {
     return RelOptUtil.toString(converter.convertSql(sql));
   }

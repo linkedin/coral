@@ -396,6 +396,21 @@ precedencePlusExpression
     precedenceStarExpression (precedencePlusOperator^ precedenceStarExpression)*
     ;
 
+precedenceConcatenateOperator
+    :
+    CONCATENATE
+    ;
+
+precedenceConcatenateExpression
+    :
+    (precedencePlusExpression -> precedencePlusExpression)
+        (
+        precedenceConcatenateOperator plus=precedencePlusExpression
+        -> ^(TOK_FUNCTION {adaptor.create(Identifier, "concat")} {$precedenceConcatenateExpression.tree} $plus)
+        )*
+    -> {$precedenceConcatenateExpression.tree}
+    ;
+
 
 precedenceAmpersandOperator
     :
@@ -404,7 +419,7 @@ precedenceAmpersandOperator
 
 precedenceAmpersandExpression
     :
-    precedencePlusExpression (precedenceAmpersandOperator^ precedencePlusExpression)*
+    precedenceConcatenateExpression (precedenceAmpersandOperator^ precedenceConcatenateExpression)*
     ;
 
 

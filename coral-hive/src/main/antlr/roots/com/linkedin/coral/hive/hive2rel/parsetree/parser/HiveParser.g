@@ -535,6 +535,7 @@ import org.slf4j.LoggerFactory;
     xlateMap.put("AMPERSAND", "&");
     xlateMap.put("TILDE", "~");
     xlateMap.put("BITWISEOR", "|");
+    xlateMap.put("CONCATENATE", "||");
     xlateMap.put("BITWISEXOR", "^");
     xlateMap.put("CharSetLiteral", "\\'");
   }
