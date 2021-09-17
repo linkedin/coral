@@ -5,6 +5,8 @@
  */
 package com.linkedin.coral.trino.rel2trino;
 
+import java.util.Map;
+
 import org.apache.calcite.rel.RelNode;
 
 import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
@@ -22,6 +24,13 @@ public class HiveToTrinoConverter {
     checkNotNull(mscClient);
     HiveToRelConverter hiveToRelConverter = HiveToRelConverter.create(mscClient);
     RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+    return new HiveToTrinoConverter(hiveToRelConverter, relToTrinoConverter);
+  }
+
+  public static HiveToTrinoConverter create(HiveMetastoreClient mscClient, Map<String, Boolean> configs) {
+    checkNotNull(mscClient);
+    HiveToRelConverter hiveToRelConverter = HiveToRelConverter.create(mscClient);
+    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter(configs);
     return new HiveToTrinoConverter(hiveToRelConverter, relToTrinoConverter);
   }
 

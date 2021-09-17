@@ -8,6 +8,8 @@ package com.linkedin.coral.trino.rel2trino;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import com.google.common.collect.ImmutableMap;
+
 import org.apache.calcite.rel.RelNode;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeTest;
@@ -16,6 +18,7 @@ import org.testng.annotations.Test;
 
 import static com.google.common.io.MoreFiles.deleteRecursively;
 import static com.google.common.io.RecursiveDeleteOption.ALLOW_INSECURE;
+import static com.linkedin.coral.trino.rel2trino.CoralTrinoConfigKeys.*;
 import static com.linkedin.coral.trino.rel2trino.TestUtils.hiveToRelConverter;
 import static org.testng.Assert.assertEquals;
 
@@ -252,4 +255,42 @@ public class HiveToTrinoConverterTest {
     assertEquals(expandedSql, targetSql);
   }
 
+  @Test
+  public void testLegacyUnnestArrayOfStruct() {
+    RelNode relNode = hiveToRelConverter.convertView("test", "view_with_explode_struct_array");
+    String targetSql = "SELECT \"$cor0\".\"a\" AS \"a\", \"t0\".\"c\" AS \"c\"\n"
+        + "FROM \"test\".\"table_with_struct_array\" AS \"$cor0\"\n"
+        + "CROSS JOIN UNNEST(\"$cor0\".\"b\") AS \"t0\" (\"c\")";
+
+    RelToTrinoConverter relToTrinoConverter =
+        new RelToTrinoConverter(ImmutableMap.of(SUPPORT_LEGACY_UNNEST_ARRAY_OF_STRUCT, true));
+    String expandedSql = relToTrinoConverter.convert(relNode);
+    assertEquals(expandedSql, targetSql);
+  }
+
+  @Test
+  public void testLegacyOuterUnnestArrayOfStruct() {
+    RelNode relNode = hiveToRelConverter.convertView("test", "view_with_outer_explode_struct_array");
+    String targetSql = "SELECT \"$cor0\".\"a\" AS \"a\", \"t0\".\"c\" AS \"c\"\n"
+        + "FROM \"test\".\"table_with_struct_array\" AS \"$cor0\"\n"
+        + "CROSS JOIN UNNEST(\"if\"(\"$cor0\".\"b\" IS NOT NULL AND CARDINALITY(\"$cor0\".\"b\") > 0, \"$cor0\".\"b\", ARRAY[NULL])) AS \"t0\" (\"c\")";
+
+    RelToTrinoConverter relToTrinoConverter =
+        new RelToTrinoConverter(ImmutableMap.of(SUPPORT_LEGACY_UNNEST_ARRAY_OF_STRUCT, true));
+    String expandedSql = relToTrinoConverter.convert(relNode);
+    assertEquals(expandedSql, targetSql);
+  }
+
+  @Test
+  public void testAvoidTransformToDate() {
+    RelNode relNode = hiveToRelConverter
+        .convertSql("SELECT to_date(substr('2021-08-20', 1, 10)), to_date('2021-08-20')" + "FROM test.tableA");
+    String targetSql =
+        "SELECT \"to_date\"(\"SUBSTR\"('2021-08-20', 1, 10)), \"to_date\"('2021-08-20')\n" + "FROM \"test\".\"tablea\"";
+
+    RelToTrinoConverter relToTrinoConverter =
+        new RelToTrinoConverter(ImmutableMap.of(AVOID_TRANSFORM_TO_DATE_UDF, true));
+    String expandedSql = relToTrinoConverter.convert(relNode);
+    assertEquals(expandedSql, targetSql);
+  }
 }
