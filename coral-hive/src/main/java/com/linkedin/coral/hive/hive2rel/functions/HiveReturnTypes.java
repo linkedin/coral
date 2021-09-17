@@ -53,6 +53,20 @@ public class HiveReturnTypes {
     }
   };
 
+  public static final SqlReturnTypeInference EXTRACT_UNION_FUNCTION_RETURN_STRATEGY = opBinding -> {
+    int numArgs = opBinding.getOperandCount();
+    Preconditions.checkState(numArgs == 1 || numArgs == 2);
+    // 1-arg case
+    if (numArgs == 1) {
+      return opBinding.getOperandType(0);
+    }
+    // 2-arg case
+    else {
+      int ordinal = opBinding.getOperandLiteralValue(1, Integer.class);
+      return opBinding.getOperandType(0).getFieldList().get(ordinal).getType();
+    }
+  };
+
   public static SqlReturnTypeInference arrayOfType(final SqlTypeName typeName) {
     return new SqlReturnTypeInference() {
       @Override
