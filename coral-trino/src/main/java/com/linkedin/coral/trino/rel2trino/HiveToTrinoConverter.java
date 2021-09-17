@@ -29,6 +29,7 @@ public class HiveToTrinoConverter {
 
   public static HiveToTrinoConverter create(HiveMetastoreClient mscClient, Map<String, Boolean> configs) {
     checkNotNull(mscClient);
+    checkNotNull(configs);
     HiveToRelConverter hiveToRelConverter = HiveToRelConverter.create(mscClient);
     RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter(configs);
     return new HiveToTrinoConverter(hiveToRelConverter, relToTrinoConverter);

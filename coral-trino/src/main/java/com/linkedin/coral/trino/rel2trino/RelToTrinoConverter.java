@@ -35,6 +35,7 @@ import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import com.linkedin.coral.hive.hive2rel.rel.HiveUncollect;
 import com.linkedin.coral.trino.rel2trino.functions.TrinoArrayTransformFunction;
 
+import static com.google.common.base.Preconditions.*;
 import static com.linkedin.coral.trino.rel2trino.Calcite2TrinoUDFConverter.convertRel;
 import static com.linkedin.coral.trino.rel2trino.CoralTrinoConfigKeys.*;
 
@@ -62,6 +63,7 @@ public class RelToTrinoConverter extends RelToSqlConverter {
 
   public RelToTrinoConverter(Map<String, Boolean> configs) {
     super(TrinoSqlDialect.INSTANCE);
+    checkNotNull(configs);
     this.configs = configs;
   }
 
