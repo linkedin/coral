@@ -9,35 +9,33 @@ import java.util.List;
 
 import org.apache.calcite.sql.*;
 
-import static com.google.common.base.Preconditions.*;
 import static org.apache.calcite.sql.parser.SqlParserPos.ZERO;
 
 
 /**
- * Class to represent builtin or user-defined Hive function. This provides
+ * Class to represent builtin or user-defined function. This provides
  * information required to analyze the function call in SQL statement and to
- * convert the Hive function to intermediate representation in Calcite. This does
+ * convert the function to intermediate representation in Calcite. This does
  * not provide function definition to actually evaluate the function. Right now,
  * this also does not provide implementation to dynamically figure out return type
  * based on input parameters.
  *
- * NOTE: HiveFunction is designed to be "re-usable" class.
  *
  */
 public class Function {
 
   // Function class name specified in TBLPROPERTIES clause.  It contains path leading to the class file.
   // Example: "com.linkedin.dali.udf.date.hive.DateFormatToEpoch"
-  private final String hiveName;
+  private final String functionName;
   private final SqlOperator sqlOperator;
 
   public Function(String functionName, SqlOperator sqlOperator) {
-    this.hiveName = functionName;
+    this.functionName = functionName;
     this.sqlOperator = sqlOperator;
   }
 
   public String getFunctionName() {
-    return hiveName;
+    return functionName;
   }
 
   public SqlOperator getSqlOperator() {

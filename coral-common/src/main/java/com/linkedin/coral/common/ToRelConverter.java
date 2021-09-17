@@ -43,16 +43,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 
 /**
- * Public class to convert Hive SQL to Calcite relational algebra.
+ * Public class to convert SQL dialects to Calcite relational algebra.
  * This class should serve as the main entry point for clients to convert
- * Hive queries.
- */
-/*
- * We provide this class as a public interface by providing a thin wrapper
- * around HiveSqlToRelConverter. Directly using HiveSqlToRelConverter will
- * expose public methods from SqlToRelConverter. Use of SqlToRelConverter
- * is likely to change in the future if we want more control over the
- * conversion process. This class abstracts that out.
+ * SQL queries.
  */
 public abstract class ToRelConverter {
 
@@ -61,7 +54,6 @@ public abstract class ToRelConverter {
   private final SqlRexConvertletTable convertletTable = getConvertletTable();
   private CalciteCatalogReader catalogReader;
   private RelBuilder relBuilder;
-  private Driver driver;
 
   protected abstract SqlRexConvertletTable getConvertletTable();
 
@@ -90,7 +82,7 @@ public abstract class ToRelConverter {
     // before initializing framework (which needs it)
     // We don't want each engine to register the driver. It may not also load correctly
     // if the service uses its own service loader (see Trino)
-    driver = new Driver();
+    new Driver();
     config = Frameworks.newConfigBuilder().convertletTable(convertletTable).defaultSchema(schemaPlus)
         .typeSystem(new HiveTypeSystem()).traitDefs((List<RelTraitDef>) null).operatorTable(getOperatorTable())
         .programs(Programs.ofRules(Programs.RULE_SET)).build();
@@ -105,7 +97,7 @@ public abstract class ToRelConverter {
     // before initializing framework (which needs it)
     // We don't want each engine to register the driver. It may not also load correctly
     // if the service uses its own service loader (see Trino)
-    driver = new Driver();
+    new Driver();
     config = Frameworks.newConfigBuilder().convertletTable(convertletTable).defaultSchema(schemaPlus)
         .typeSystem(new HiveTypeSystem()).traitDefs((List<RelTraitDef>) null).operatorTable(getOperatorTable())
         .programs(Programs.ofRules(Programs.RULE_SET)).build();
