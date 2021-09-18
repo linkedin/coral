@@ -464,4 +464,16 @@ public class CoralSparkTest {
     assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
   }
 
+  @Test
+  public void testConcat() {
+    RelNode relNode = TestUtils.toRelNode("SELECT 'a' || 'b'");
+
+    String targetSql = "SELECT concat('a', 'b')\nFROM (VALUES  (0)) t (ZERO)";
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+    RelNode relNode2 = TestUtils.toRelNode("SELECT 'a' || 'b' || 'c'");
+
+    String targetSql2 = "SELECT concat(concat('a', 'b'), 'c')\nFROM (VALUES  (0)) t (ZERO)";
+    assertEquals(CoralSpark.create(relNode2).getSparkSql(), targetSql2);
+  }
+
 }
