@@ -4,23 +4,6 @@ apply plugin: 'antlr'
 dependencies {
   antlr deps.'antlr'
   compile project(path: ':coral-common')
-  compile('com.linkedin.calcite:calcite-core:1.21.0.151') {
-    artifact {
-      name = 'calcite-core'
-      extension = 'jar'
-      type = 'jar'
-      classifier = 'shaded'
-    }
-  }
-
-  compile(deps.'hive'.'hive-metastore') {
-    exclude group: 'com.linkedin.metastore-autometrics', module: 'autometrics-reporter'
-    exclude group: 'com.linkedin.metastore-audit', module: 'metastore-audit-logging'
-    // avro-tools brings in whole bunch of hadoop classes causing duplicates and conflicts
-    exclude group: 'org.apache.avro', module: 'avro-tools'
-  }
-
-  compile deps.'hadoop'.'hadoop-common'
   compile deps.'ivy'
 
   // required for hiveSQL parser code
