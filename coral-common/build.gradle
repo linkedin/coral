@@ -1,7 +1,7 @@
 apply from: "$rootDir/gradle/java-publication.gradle"
 
 dependencies {
-  compile('com.linkedin.calcite:calcite-core:1.21.0.150') {
+  compile('com.linkedin.calcite:calcite-core:1.21.0.151') {
     artifact {
       name = 'calcite-core'
       extension = 'jar'
