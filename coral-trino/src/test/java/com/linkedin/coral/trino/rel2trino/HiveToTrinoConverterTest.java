@@ -254,8 +254,6 @@ public class HiveToTrinoConverterTest {
     String expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
   }
-  
-  
 
   @Test
   public void testLegacyUnnestArrayOfStruct() {
@@ -295,7 +293,7 @@ public class HiveToTrinoConverterTest {
     String expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
   }
-  
+
   @Test
   public void testFromUnixTimeOneParameter() {
     RelNode relNode = hiveToRelConverter.convertSql("SELECT from_unixtime(10000)");
@@ -318,4 +316,3 @@ public class HiveToTrinoConverterTest {
     assertEquals(expandedSql, targetSql);
   }
 }
-

@@ -193,7 +193,7 @@ public class Calcite2TrinoUDFConverter {
           return modifiedCall.get();
         }
       }
-      
+
       if (operatorName.equalsIgnoreCase("from_unixtime")) {
         Optional<RexNode> modifiedCall = visitFromUnixtime(call);
         if (modifiedCall.isPresent()) {
