@@ -44,6 +44,7 @@ import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import com.linkedin.coral.com.google.common.collect.ImmutableMultimap;
 import com.linkedin.coral.com.google.common.collect.Multimap;
 import com.linkedin.coral.hive.hive2rel.functions.GenericProjectFunction;
+import com.linkedin.coral.hive.hive2rel.functions.HiveReturnTypes;
 import com.linkedin.coral.trino.rel2trino.functions.GenericProjectToTrinoConverter;
 
 import static com.linkedin.coral.trino.rel2trino.CoralTrinoConfigKeys.*;
@@ -186,8 +187,15 @@ public class Calcite2TrinoUDFConverter {
 
       final String operatorName = call.getOperator().getName();
 
-      if (operatorName.equals("from_utc_timestamp")) {
+      if (operatorName.equalsIgnoreCase("from_utc_timestamp")) {
         Optional<RexNode> modifiedCall = visitFromUtcTimestampCall(call);
+        if (modifiedCall.isPresent()) {
+          return modifiedCall.get();
+        }
+      }
+      
+      if (operatorName.equalsIgnoreCase("from_unixtime")) {
+        Optional<RexNode> modifiedCall = visitFromUnixtime(call);
         if (modifiedCall.isPresent()) {
           return modifiedCall.get();
         }
@@ -199,6 +207,21 @@ public class Calcite2TrinoUDFConverter {
       }
       RexCall modifiedCall = adjustInconsistentTypesToEqualityOperator(call);
       return super.visitCall(modifiedCall);
+    }
+
+    private Optional<RexNode> visitFromUnixtime(RexCall call) {
+      List<RexNode> convertedOperands = visitList(call.getOperands(), (boolean[]) null);
+      SqlOperator formatDatetime = createUDF("format_datetime", HiveReturnTypes.STRING);
+      SqlOperator fromUnixtime = createUDF("from_unixtime", explicit(TIMESTAMP));
+      if (convertedOperands.size() == 1) {
+        return Optional
+            .of(rexBuilder.makeCall(formatDatetime, rexBuilder.makeCall(fromUnixtime, call.getOperands().get(0)),
+                rexBuilder.makeLiteral("yyyy-MM-dd HH:mm:ss")));
+      } else if (convertedOperands.size() == 2) {
+        return Optional.of(rexBuilder.makeCall(formatDatetime,
+            rexBuilder.makeCall(fromUnixtime, call.getOperands().get(0)), call.getOperands().get(1)));
+      }
+      return Optional.empty();
     }
 
     private Optional<RexNode> visitFromUtcTimestampCall(RexCall call) {

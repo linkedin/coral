@@ -254,6 +254,8 @@ public class HiveToTrinoConverterTest {
     String expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
   }
+  
+  
 
   @Test
   public void testLegacyUnnestArrayOfStruct() {
@@ -293,4 +295,27 @@ public class HiveToTrinoConverterTest {
     String expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
   }
+  
+  @Test
+  public void testFromUnixTimeOneParameter() {
+    RelNode relNode = hiveToRelConverter.convertSql("SELECT from_unixtime(10000)");
+    String targetSql = "SELECT \"format_datetime\"(\"from_unixtime\"(10000), 'yyyy-MM-dd HH:mm:ss')\n"
+        + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
+
+    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+    String expandedSql = relToTrinoConverter.convert(relNode);
+    assertEquals(expandedSql, targetSql);
+  }
+
+  @Test
+  public void testFromUnixTimeTwoParameters() {
+    RelNode relNode = hiveToRelConverter.convertSql("SELECT from_unixtime(10000, 'yyyy-MM-dd')");
+    String targetSql = "SELECT \"format_datetime\"(\"from_unixtime\"(10000), 'yyyy-MM-dd')\n"
+        + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
+
+    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+    String expandedSql = relToTrinoConverter.convert(relNode);
+    assertEquals(expandedSql, targetSql);
+  }
 }
+
