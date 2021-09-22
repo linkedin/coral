@@ -7,6 +7,7 @@ package com.linkedin.coral.trino.rel2trino;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -20,6 +21,7 @@ import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rel.type.RelDataTypeFieldImpl;
 import org.apache.calcite.rel.type.RelRecordType;
+import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.*;
@@ -33,10 +35,24 @@ import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import com.linkedin.coral.hive.hive2rel.rel.HiveUncollect;
 import com.linkedin.coral.trino.rel2trino.functions.TrinoArrayTransformFunction;
 
+import static com.google.common.base.Preconditions.*;
 import static com.linkedin.coral.trino.rel2trino.Calcite2TrinoUDFConverter.convertRel;
+import static com.linkedin.coral.trino.rel2trino.CoralTrinoConfigKeys.*;
 
 
 public class RelToTrinoConverter extends RelToSqlConverter {
+
+  /**
+   * We introduce this configuration for LinkedIn's internal use since our Trino is extending the following legacy/internal supports:
+   * (1) Unnest array of struct, refer to https://github.com/linkedin/coral/pull/93#issuecomment-912698600 for more information.
+   *     If the value of key {@link CoralTrinoConfigKeys#SUPPORT_LEGACY_UNNEST_ARRAY_OF_STRUCT} is set to true, we don't add extra ROW
+   *     wrapping in {@link RelToTrinoConverter#visit(Uncollect)}
+   * (2) Some internally registered UDFs which should not be converted, like `to_date`.
+   *     If the value of key {@link CoralTrinoConfigKeys#AVOID_TRANSFORM_TO_DATE_UDF} is set to true, we don't transform `to_date` UDF
+   *     in {@link com.linkedin.coral.trino.rel2trino.Calcite2TrinoUDFConverter.TrinoRexConverter#visitCall(RexCall)}
+   * For uses outside LinkedIn, just ignore this configuration.
+   */
+  private Map<String, Boolean> configs = new HashMap<>();
 
   /**
    * Creates a RelToTrinoConverter.
@@ -45,13 +61,19 @@ public class RelToTrinoConverter extends RelToSqlConverter {
     super(TrinoSqlDialect.INSTANCE);
   }
 
+  public RelToTrinoConverter(Map<String, Boolean> configs) {
+    super(TrinoSqlDialect.INSTANCE);
+    checkNotNull(configs);
+    this.configs = configs;
+  }
+
   /**
    * Convert relational algebra to Trino's SQL
    * @param relNode calcite relational algebra representation of SQL
    * @return SQL string
    */
   public String convert(RelNode relNode) {
-    RelNode rel = convertRel(relNode);
+    RelNode rel = convertRel(relNode, configs);
     return convertToSqlNode(rel).accept(new TrinoSqlRewriter()).toSqlString(TrinoSqlDialect.INSTANCE).toString();
   }
 
@@ -124,7 +146,8 @@ public class RelToTrinoConverter extends RelToSqlConverter {
     // Build <unnestColumns>
     final List<SqlNode> unnestOperands = new ArrayList<>();
     for (RexNode unnestCol : ((Project) e.getInput()).getChildExps()) {
-      if (e instanceof HiveUncollect && unnestCol.getType().getSqlTypeName().equals(SqlTypeName.ARRAY)
+      if (!configs.getOrDefault(SUPPORT_LEGACY_UNNEST_ARRAY_OF_STRUCT, false) && e instanceof HiveUncollect
+          && unnestCol.getType().getSqlTypeName().equals(SqlTypeName.ARRAY)
           && unnestCol.getType().getComponentType().getSqlTypeName().equals(SqlTypeName.ROW)) {
 
         // wrapper Record type with single column.

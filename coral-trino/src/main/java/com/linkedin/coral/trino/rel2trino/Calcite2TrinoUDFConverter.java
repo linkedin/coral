@@ -8,6 +8,7 @@ package com.linkedin.coral.trino.rel2trino;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.apache.calcite.rel.RelNode;
@@ -43,8 +44,10 @@ import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import com.linkedin.coral.com.google.common.collect.ImmutableMultimap;
 import com.linkedin.coral.com.google.common.collect.Multimap;
 import com.linkedin.coral.hive.hive2rel.functions.GenericProjectFunction;
+import com.linkedin.coral.hive.hive2rel.functions.HiveReturnTypes;
 import com.linkedin.coral.trino.rel2trino.functions.GenericProjectToTrinoConverter;
 
+import static com.linkedin.coral.trino.rel2trino.CoralTrinoConfigKeys.*;
 import static com.linkedin.coral.trino.rel2trino.UDFMapUtils.createUDF;
 import static org.apache.calcite.sql.fun.SqlStdOperatorTable.MULTIPLY;
 import static org.apache.calcite.sql.type.ReturnTypes.explicit;
@@ -61,7 +64,7 @@ public class Calcite2TrinoUDFConverter {
    * @param calciteNode Original Calcite plan
    * @return Trino-compatible Calcite plan
    */
-  public static RelNode convertRel(RelNode calciteNode) {
+  public static RelNode convertRel(RelNode calciteNode, Map<String, Boolean> configs) {
     RelShuttle converter = new RelShuttleImpl() {
       @Override
       public RelNode visit(LogicalProject project) {
@@ -139,7 +142,7 @@ public class Calcite2TrinoUDFConverter {
       }
 
       private TrinoRexConverter getTrinoRexConverter(RelNode node) {
-        return new TrinoRexConverter(node.getCluster().getRexBuilder(), node.getCluster().getTypeFactory());
+        return new TrinoRexConverter(node.getCluster().getRexBuilder(), node.getCluster().getTypeFactory(), configs);
       }
     };
     return calciteNode.accept(converter);
@@ -151,6 +154,7 @@ public class Calcite2TrinoUDFConverter {
   public static class TrinoRexConverter extends RexShuttle {
     private final RexBuilder rexBuilder;
     private final RelDataTypeFactory typeFactory;
+    private Map<String, Boolean> configs;
 
     // SUPPORTED_TYPE_CAST_MAP is a static mapping that maps a SqlTypeFamily key to its set of
     // type-castable SqlTypeFamilies.
@@ -160,9 +164,10 @@ public class Calcite2TrinoUDFConverter {
           .putAll(SqlTypeFamily.CHARACTER, SqlTypeFamily.NUMERIC, SqlTypeFamily.BOOLEAN).build();
     }
 
-    public TrinoRexConverter(RexBuilder rexBuilder, RelDataTypeFactory typeFactory) {
+    public TrinoRexConverter(RexBuilder rexBuilder, RelDataTypeFactory typeFactory, Map<String, Boolean> configs) {
       this.rexBuilder = rexBuilder;
       this.typeFactory = typeFactory;
+      this.configs = configs;
     }
 
     @Override
@@ -180,20 +185,43 @@ public class Calcite2TrinoUDFConverter {
         return this.convertMapValueConstructor(rexBuilder, call);
       }
 
-      if (call.getOperator().getName().equals("from_utc_timestamp")) {
+      final String operatorName = call.getOperator().getName();
+
+      if (operatorName.equalsIgnoreCase("from_utc_timestamp")) {
         Optional<RexNode> modifiedCall = visitFromUtcTimestampCall(call);
         if (modifiedCall.isPresent()) {
           return modifiedCall.get();
         }
       }
 
-      final UDFTransformer transformer =
-          CalciteTrinoUDFMap.getUDFTransformer(call.getOperator().getName(), call.operands.size());
-      if (transformer != null) {
+      if (operatorName.equalsIgnoreCase("from_unixtime")) {
+        Optional<RexNode> modifiedCall = visitFromUnixtime(call);
+        if (modifiedCall.isPresent()) {
+          return modifiedCall.get();
+        }
+      }
+
+      final UDFTransformer transformer = CalciteTrinoUDFMap.getUDFTransformer(operatorName, call.operands.size());
+      if (transformer != null && shouldTransformOperator(operatorName)) {
         return super.visitCall((RexCall) transformer.transformCall(rexBuilder, call.getOperands()));
       }
       RexCall modifiedCall = adjustInconsistentTypesToEqualityOperator(call);
       return super.visitCall(modifiedCall);
+    }
+
+    private Optional<RexNode> visitFromUnixtime(RexCall call) {
+      List<RexNode> convertedOperands = visitList(call.getOperands(), (boolean[]) null);
+      SqlOperator formatDatetime = createUDF("format_datetime", HiveReturnTypes.STRING);
+      SqlOperator fromUnixtime = createUDF("from_unixtime", explicit(TIMESTAMP));
+      if (convertedOperands.size() == 1) {
+        return Optional
+            .of(rexBuilder.makeCall(formatDatetime, rexBuilder.makeCall(fromUnixtime, call.getOperands().get(0)),
+                rexBuilder.makeLiteral("yyyy-MM-dd HH:mm:ss")));
+      } else if (convertedOperands.size() == 2) {
+        return Optional.of(rexBuilder.makeCall(formatDatetime,
+            rexBuilder.makeCall(fromUnixtime, call.getOperands().get(0)), call.getOperands().get(1)));
+      }
+      return Optional.empty();
     }
 
     private Optional<RexNode> visitFromUtcTimestampCall(RexCall call) {
@@ -293,6 +321,10 @@ public class Calcite2TrinoUDFConverter {
       }
       results.add(rexBuilder.makeCall(SqlStdOperatorTable.ARRAY_VALUE_CONSTRUCTOR, values));
       return rexBuilder.makeCall(call.getOperator(), results);
+    }
+
+    private boolean shouldTransformOperator(String operatorName) {
+      return !("to_date".equalsIgnoreCase(operatorName) && configs.getOrDefault(AVOID_TRANSFORM_TO_DATE_UDF, false));
     }
   }
 }
