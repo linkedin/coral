@@ -218,11 +218,13 @@ public class Calcite2TrinoUDFConverter {
 
     private Optional<RexNode> cancelExtractUnion(RexCall call) {
       if (!(call.getOperands().get(0) instanceof RexCall)) {
-        throw new IllegalStateException("reverse_extract_union_placeholder should always be called with an internal extract_union function");
+        throw new IllegalStateException(
+            "reverse_extract_union_placeholder should always be called with an internal extract_union function");
       }
       RexCall internalCall = (RexCall) call.getOperands().get(0);
       if (!internalCall.getOperator().getName().equalsIgnoreCase("extract_union")) {
-        throw new IllegalStateException("reverse_extract_union_placeholder should always be called with an internal extract_union function");
+        throw new IllegalStateException(
+            "reverse_extract_union_placeholder should always be called with an internal extract_union function");
       }
       if (internalCall.getOperands().size() != 1) {
         throw new IllegalStateException("The internal extract_union should always have 1 argument");
