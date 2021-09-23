@@ -201,12 +201,33 @@ public class Calcite2TrinoUDFConverter {
         }
       }
 
+      if (operatorName.equalsIgnoreCase("reverse_extract_union_placeholder")) {
+        Optional<RexNode> modifiedCall = cancelExtractUnion(call);
+        if (modifiedCall.isPresent()) {
+          return modifiedCall.get();
+        }
+      }
+
       final UDFTransformer transformer = CalciteTrinoUDFMap.getUDFTransformer(operatorName, call.operands.size());
       if (transformer != null && shouldTransformOperator(operatorName)) {
         return super.visitCall((RexCall) transformer.transformCall(rexBuilder, call.getOperands()));
       }
       RexCall modifiedCall = adjustInconsistentTypesToEqualityOperator(call);
       return super.visitCall(modifiedCall);
+    }
+
+    private Optional<RexNode> cancelExtractUnion(RexCall call) {
+      if (!(call.getOperands().get(0) instanceof RexCall)) {
+        throw new IllegalStateException("reverse_extract_union_placeholder should always be called with an internal extract_union function");
+      }
+      RexCall internalCall = (RexCall) call.getOperands().get(0);
+      if (!internalCall.getOperator().getName().equalsIgnoreCase("extract_union")) {
+        throw new IllegalStateException("reverse_extract_union_placeholder should always be called with an internal extract_union function");
+      }
+      if (internalCall.getOperands().size() != 1) {
+        throw new IllegalStateException("The internal extract_union should always have 1 argument");
+      }
+      return Optional.of(internalCall.getOperands().get(0));
     }
 
     private Optional<RexNode> visitFromUnixtime(RexCall call) {

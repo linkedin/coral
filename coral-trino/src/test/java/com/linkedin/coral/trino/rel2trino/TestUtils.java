@@ -344,6 +344,7 @@ public class TestUtils {
     run(driver, "CREATE VIEW IF NOT EXISTS test.least_view AS \n"
         + "SELECT least(t.a, t.b) as g_int, least(t.c, t.d) as g_string FROM test.table_ints_strings t");
 
+    run(driver, "CREATE TABLE IF NOT EXISTS test.table_with_union_type(a UNIONTYPE<int, string>)");
   }
 
   public static RelNode convertView(String db, String view) {

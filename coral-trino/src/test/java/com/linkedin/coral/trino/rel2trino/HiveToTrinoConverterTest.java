@@ -316,6 +316,18 @@ public class HiveToTrinoConverterTest {
     assertEquals(expandedSql, targetSql);
   }
 
+  // to be enabled when we implement reverse_extract_union_placeholder
+  @Test(enabled = false)
+  public void testCancelExtractUnion() {
+    RelNode relNode = hiveToRelConverter
+            .convertSql("SELECT obf(reverse_extract_union_placeholder(extract_union(a))) from test.table_with_union_type");
+    String targetSql = "SELECT \"obf\"(\"a\")\n"
+            + "FROM \"test\".\"table_with_union_type\"";
+    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+    String expandedSql = relToTrinoConverter.convert(relNode);
+    assertEquals(expandedSql, targetSql);
+  }
+
   @Test
   public void testConcat() {
     RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
