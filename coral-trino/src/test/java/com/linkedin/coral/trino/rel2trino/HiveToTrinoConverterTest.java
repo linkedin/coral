@@ -315,4 +315,19 @@ public class HiveToTrinoConverterTest {
     String expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
   }
+
+  @Test
+  public void testConcat() {
+    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+
+    RelNode relNode = hiveToRelConverter.convertSql("SELECT 'a' || 'b'");
+    String targetSql = "SELECT \"concat\"('a', 'b')\nFROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
+    String expandedSql = relToTrinoConverter.convert(relNode);
+    assertEquals(expandedSql, targetSql);
+
+    RelNode relNode2 = hiveToRelConverter.convertSql("SELECT 'a' || 'b' || 'c'");
+    String targetSql2 = "SELECT \"concat\"(\"concat\"('a', 'b'), 'c')\nFROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
+    String expandedSql2 = relToTrinoConverter.convert(relNode2);
+    assertEquals(expandedSql2, targetSql2);
+  }
 }
