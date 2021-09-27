@@ -105,7 +105,7 @@ public class HiveGenericUDFReturnTypeInference implements SqlReturnTypeInference
       if (error.getMessage().contains("GenericUDF")) {
         // If GenericUDF class could not be found, add `hive-exec:core` in `_udfDependencies` to download the missing class
         _udfClassLoader = null; // set it to null to re-download
-        _udfDependencies.add("com.linkedin.hive:hive-exec:1.1.0.+:core");
+        _udfDependencies.add("org.apache.hive:hive-exec:1.1.0");
         return Class.forName(_udfClassName, true, getUdfClassLoader());
       }
       throw error;
