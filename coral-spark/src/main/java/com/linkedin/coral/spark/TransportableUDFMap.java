@@ -95,7 +95,8 @@ class TransportableUDFMap {
         DALI_UDFS_IVY_URL_SPARK_2_12);
 
     add("com.linkedin.stdudfs.stringudfs.hive.InitCap", "com.linkedin.stdudfs.stringudfs.spark.InitCap",
-        "ivy://com.linkedin.standard-udfs-common-sql-udfs:standard-udfs-string-udfs:0.0.7?classifier=spark", null);
+        "ivy://com.linkedin.standard-udfs-common-sql-udfs:standard-udfs-string-udfs:1.0.1?classifier=spark_2.11",
+        "ivy://com.linkedin.standard-udfs-common-sql-udfs:standard-udfs-string-udfs:1.0.1?classifier=spark_2.12");
 
     add("com.linkedin.stdudfs.daliudfs.hive.IsGuestMemberId", "com.linkedin.stdudfs.daliudfs.spark.IsGuestMemberId",
         DALI_UDFS_IVY_URL_SPARK_2_11, DALI_UDFS_IVY_URL_SPARK_2_12);
@@ -114,20 +115,24 @@ class TransportableUDFMap {
 
     add("com.linkedin.stdudfs.userinterfacelookup.hive.UserInterfaceLookup",
         "com.linkedin.stdudfs.userinterfacelookup.spark.UserInterfaceLookup",
-        "ivy://com.linkedin.standard-udf-userinterfacelookup:userinterfacelookup-std-udf:0.0.9?classifier=spark", null);
+        "ivy://com.linkedin.standard-udf-userinterfacelookup:userinterfacelookup-std-udf:0.0.22?classifier=spark_2.11",
+        "ivy://com.linkedin.standard-udf-userinterfacelookup:userinterfacelookup-std-udf:0.0.22?classifier=spark_2.12");
 
     add("com.linkedin.stdudfs.daliudfs.hive.WatBotCrawlerLookup",
         "com.linkedin.stdudfs.daliudfs.spark.WatBotCrawlerLookup", DALI_UDFS_IVY_URL_SPARK_2_11,
         DALI_UDFS_IVY_URL_SPARK_2_12);
 
     add("com.linkedin.jemslookup.udf.hive.JemsLookup", "com.linkedin.jemslookup.udf.spark.JemsLookup",
-        "ivy://com.linkedin.jobs-udf:jems-udfs:1.0.0?classifier=spark", null);
+        "ivy://com.linkedin.jobs-udf:jems-udfs:2.0.1?classifier=spark_2.11",
+        "ivy://com.linkedin.jobs-udf:jems-udfs:2.0.1?classifier=spark_2.12");
 
     add("com.linkedin.stdudfs.parsing.hive.UserAgentParser", "com.linkedin.stdudfs.parsing.spark.UserAgentParser",
-        "ivy://com.linkedin.standard-udfs-parsing:parsing-stdudfs:2.0.1?classifier=spark", null);
+        "ivy://com.linkedin.standard-udfs-parsing:parsing-stdudfs:3.0.1?classifier=spark_2.11",
+        "ivy://com.linkedin.standard-udfs-parsing:parsing-stdudfs:3.0.1?classifier=spark_2.12");
 
     add("com.linkedin.stdudfs.parsing.hive.Ip2Str", "com.linkedin.stdudfs.parsing.spark.Ip2Str",
-        "ivy://com.linkedin.standard-udfs-parsing:parsing-stdudfs:2.0.1?classifier=spark", null);
+        "ivy://com.linkedin.standard-udfs-parsing:parsing-stdudfs:3.0.1?classifier=spark_2.11",
+        "ivy://com.linkedin.standard-udfs-parsing:parsing-stdudfs:3.0.1?classifier=spark_2.12");
   }
 
   /**
