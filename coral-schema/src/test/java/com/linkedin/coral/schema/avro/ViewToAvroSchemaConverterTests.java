@@ -882,5 +882,17 @@ public class ViewToAvroSchemaConverterTests {
 
     Assert.assertEquals(actualSchema.toString(true), TestUtils.loadSchema("testDecimalType-expected.avsc"));
   }
+
+  @Test
+  public void testComplexUnionType() {
+    String viewSql = "CREATE VIEW v AS SELECT * FROM basecomplexuniontype";
+    TestUtils.executeCreateViewQuery("default", "v", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v");
+
+    Assert.assertEquals(actualSchema.toString(true), TestUtils.loadSchema("testComplexUnionType-expected.avsc"));
+  }
+
   // TODO: add more unit tests
 }
