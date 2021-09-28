@@ -673,20 +673,22 @@ class SchemaUtilities {
         Schema recordSchema = setupNestedNamespaceForRecord(schema, namespace);
         return recordSchema;
       case UNION:
+        List<Schema> types = new ArrayList<>();
         if (isNullableType(schema)) {
           Schema otherType = getOtherTypeFromNullableType(schema);
           Schema otherTypeWithNestedNamespace = setupNestedNamespace(otherType, namespace);
           Schema nullSchema = Schema.create(Schema.Type.NULL);
-          List<Schema> types = new ArrayList<>();
           types.add(nullSchema);
           types.add(otherTypeWithNestedNamespace);
-          Schema unionSchema = Schema.createUnion(types);
-
-          return unionSchema;
         } else {
-          throw new IllegalArgumentException(
-              schema.toString(true) + " is unsupported UNION type. " + "Only nullable UNION is supported");
+          for (Schema type : schema.getTypes()) {
+            Schema typeWithNestNamespace = setupNestedNamespace(type, namespace);
+            types.add(typeWithNestNamespace);
+          }
         }
+        Schema unionSchema = Schema.createUnion(types);
+
+        return unionSchema;
       default:
         throw new IllegalArgumentException("Unsupported Schema type: " + schema.getType().toString());
     }

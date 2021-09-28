@@ -1,0 +1,9 @@
+{
+  "type" : "record",
+  "name" : "basecomplexuniontype",
+  "namespace" : "coral.schema.avro.base.complex.union.type",
+  "fields" : [ {
+    "name" : "unionCol",
+    "type" : [ "int", "string" ]
+  } ]
+}
