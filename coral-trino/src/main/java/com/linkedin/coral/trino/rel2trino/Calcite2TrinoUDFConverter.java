@@ -39,6 +39,7 @@ import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.fun.SqlMapValueConstructor;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.type.SqlTypeFamily;
+import org.apache.calcite.sql.type.SqlTypeName;
 
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import com.linkedin.coral.com.google.common.collect.ImmutableMultimap;
@@ -201,6 +202,13 @@ public class Calcite2TrinoUDFConverter {
         }
       }
 
+      if (operatorName.equalsIgnoreCase("cast")) {
+        Optional<RexNode> modifiedCall = visitCast(call);
+        if (modifiedCall.isPresent()) {
+          return modifiedCall.get();
+        }
+      }
+
       final UDFTransformer transformer = CalciteTrinoUDFMap.getUDFTransformer(operatorName, call.operands.size());
       if (transformer != null && shouldTransformOperator(operatorName)) {
         return super.visitCall((RexCall) transformer.transformCall(rexBuilder, call.getOperands()));
@@ -274,6 +282,23 @@ public class Calcite2TrinoUDFConverter {
                     rexBuilder.makeCall(trinoToUnixTime,
                         rexBuilder.makeCall(trinoWithTimeZone, sourceValue, rexBuilder.makeLiteral("UTC")))),
                 rexBuilder.makeCall(trinoCanonicalizeHiveTimezoneId, timezone))));
+      }
+
+      return Optional.empty();
+    }
+
+    private Optional<RexNode> visitCast(RexCall call) {
+      final SqlOperator op = call.getOperator();
+      if (op.getKind() != SqlKind.CAST) {
+        return Optional.empty();
+      }
+
+      RexNode leftOperand = call.getOperands().get(0);
+
+      if (call.getType().getSqlTypeName().equals(SqlTypeName.DECIMAL)
+          && leftOperand.getType().getSqlTypeName().equals(SqlTypeName.TIMESTAMP)) {
+        SqlOperator trinoToUnixTime = createUDF("to_unixtime", explicit(DOUBLE));
+        return Optional.of(rexBuilder.makeCast(call.getType(), rexBuilder.makeCall(trinoToUnixTime, leftOperand)));
       }
 
       return Optional.empty();

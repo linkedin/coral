@@ -330,4 +330,28 @@ public class HiveToTrinoConverterTest {
     String expandedSql2 = relToTrinoConverter.convert(relNode2);
     assertEquals(expandedSql2, targetSql2);
   }
+
+  @Test
+  public void testCastTimestampToDecimal() {
+    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+
+    RelNode relNode = hiveToRelConverter
+        .convertSql("SELECT CAST(a_timestamp AS DECIMAL(10, 0)) AS d\nFROM test.table_from_utc_timestamp");
+    String targetSql =
+        "SELECT CAST(\"to_unixtime\"(\"a_timestamp\") AS DECIMAL(10, 0)) AS \"d\"\nFROM \"test\".\"table_from_utc_timestamp\"";
+    String expandedSql = relToTrinoConverter.convert(relNode);
+    assertEquals(expandedSql, targetSql);
+  }
+
+  @Test
+  public void testCastNestedTimestampToDecimal() {
+    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+
+    RelNode relNode = hiveToRelConverter.convertSql(
+        "SELECT CAST(CAST(a_date AS TIMESTAMP) AS DECIMAL(10, 0)) AS d\nFROM test.table_from_utc_timestamp");
+    String targetSql =
+        "SELECT CAST(\"to_unixtime\"(CAST(\"a_date\" AS TIMESTAMP)) AS DECIMAL(10, 0)) AS \"d\"\nFROM \"test\".\"table_from_utc_timestamp\"";
+    String expandedSql = relToTrinoConverter.convert(relNode);
+    assertEquals(expandedSql, targetSql);
+  }
 }
