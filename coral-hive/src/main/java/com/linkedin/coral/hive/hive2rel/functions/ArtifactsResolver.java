@@ -154,10 +154,9 @@ public class ArtifactsResolver {
     }
     String ivyCacheDir = System.getenv(IVY_CACHE_DIR);
     if (ivyCacheDir != null) {
-      setupCacheDir(new File(ivyCacheDir));
-    } else {
-      setupCacheDir(settings.getDefaultCache());
+      settings.setDefaultCache(new File(ivyCacheDir));
     }
+    setupCacheDir(settings.getDefaultCache());
     settings.setVariable("ivy.default.configuration.m2compatible", "true");
     return settings;
   }
