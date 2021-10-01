@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
 public class ArtifactsResolver {
   private static final Logger LOG = LoggerFactory.getLogger(ArtifactsResolver.class);
   private static final String IVY_SETTINGS_LOCATION = "IVY_SETTINGS_LOCATION";
+  private static final String IVY_CACHE_DIR = "IVY_CACHE_DIR";
   private static final String IVY_SETTINGS_FILE_NAME = "ivy.settings.xml";
   private static final String IVY_LOG_LEVEL = "IVY_LOG_LEVEL";
   private final Ivy _ivyInstance;
@@ -150,6 +151,10 @@ public class ArtifactsResolver {
       throw new RuntimeException("Unable to configure Ivy", e);
     } catch (IOException e) {
       throw new RuntimeException("Unable to configure Ivy", e);
+    }
+    String ivyCacheDir = System.getenv(IVY_CACHE_DIR);
+    if (ivyCacheDir != null) {
+      settings.setDefaultCache(new File(ivyCacheDir));
     }
     setupCacheDir(settings.getDefaultCache());
     settings.setVariable("ivy.default.configuration.m2compatible", "true");
