@@ -39,7 +39,6 @@ import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.fun.SqlMapValueConstructor;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.type.SqlTypeFamily;
-import org.apache.calcite.sql.type.SqlTypeName;
 
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import com.linkedin.coral.com.google.common.collect.ImmutableMultimap;
@@ -287,16 +286,20 @@ public class Calcite2TrinoUDFConverter {
       return Optional.empty();
     }
 
+    // Hive allows for casting of TIMESTAMP to DECIMAL, which converts it to unix time if the decimal format is valid
+    // Example: "SELECT cast(current_timestamp() AS decimal(10,0));" -> 1633112585
+    // Trino does not allow for such conversion, but we can achieve the same behavior by first calling "to_unixtime"
+    // on the TIMESTAMP and then casting it to DECIMAL after.
     private Optional<RexNode> visitCast(RexCall call) {
       final SqlOperator op = call.getOperator();
       if (op.getKind() != SqlKind.CAST) {
         return Optional.empty();
       }
 
-      RexNode leftOperand = call.getOperands().get(0);
+      List<RexNode> convertedOperands = visitList(call.getOperands(), (boolean[]) null);
+      RexNode leftOperand = convertedOperands.get(0);
 
-      if (call.getType().getSqlTypeName().equals(SqlTypeName.DECIMAL)
-          && leftOperand.getType().getSqlTypeName().equals(SqlTypeName.TIMESTAMP)) {
+      if (call.getType().getSqlTypeName() == DECIMAL && leftOperand.getType().getSqlTypeName() == TIMESTAMP) {
         SqlOperator trinoToUnixTime = createUDF("to_unixtime", explicit(DOUBLE));
         return Optional.of(rexBuilder.makeCast(call.getType(), rexBuilder.makeCall(trinoToUnixTime, leftOperand)));
       }
