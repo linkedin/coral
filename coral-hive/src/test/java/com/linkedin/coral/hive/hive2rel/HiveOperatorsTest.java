@@ -120,6 +120,41 @@ public class HiveOperatorsTest {
     }
   }
 
+  @Test
+  public void testMd5() {
+    {
+      final String sql = "SELECT md5('ABC') as a FROM foo";
+      RelNode rel = toRel(sql);
+      final String expectedSql = "SELECT \"md5\"('ABC') AS \"a\"\n" + "FROM \"hive\".\"default\".\"foo\"";
+      assertEquals(relToSql(rel), expectedSql);
+    }
+  }
+
+  @Test
+  public void testSha() {
+    {
+      final String sql = "SELECT sha1('ABC') as a FROM foo";
+      RelNode rel = toRel(sql);
+      final String expectedSql = "SELECT \"sha1\"('ABC') AS \"a\"\n" + "FROM \"hive\".\"default\".\"foo\"";
+      assertEquals(relToSql(rel), expectedSql);
+
+      final String sql2 = "SELECT sha1('ABC') as a FROM foo";
+      RelNode rel2 = toRel(sql2);
+      final String expectedSql2 = "SELECT \"sha1\"('ABC') AS \"a\"\n" + "FROM \"hive\".\"default\".\"foo\"";
+      assertEquals(relToSql(rel2), expectedSql2);
+    }
+  }
+
+  @Test
+  public void testCrc32() {
+    {
+      final String sql = "SELECT crc32('ABC') as a FROM foo";
+      RelNode rel = toRel(sql);
+      final String expectedSql = "SELECT \"crc32\"('ABC') AS \"a\"\n" + "FROM \"hive\".\"default\".\"foo\"";
+      assertEquals(relToSql(rel), expectedSql);
+    }
+  }
+
   private void testLikeFamilyOperators(String operator) {
     final String sql = "SELECT a, b FROM foo WHERE b " + operator + " 'abc%'";
     String expectedRel = "LogicalProject(a=[$0], b=[$1])\n" + "  LogicalFilter(condition=[" + operator.toUpperCase()
