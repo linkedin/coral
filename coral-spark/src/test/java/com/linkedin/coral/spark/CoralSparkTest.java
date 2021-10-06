@@ -501,4 +501,10 @@ public class CoralSparkTest {
     assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
   }
 
+  @Test
+  public void testTranslateFunction() {
+    RelNode relNode = TestUtils.toRelNode("SELECT translate('aaa', 'a', 'b') FROM default.foo");
+    String targetSql = "SELECT TRANSLATE('aaa', 'a', 'b')\n" + "FROM default.foo";
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+  }
 }
