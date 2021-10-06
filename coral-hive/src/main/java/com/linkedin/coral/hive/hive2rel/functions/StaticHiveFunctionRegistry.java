@@ -280,6 +280,14 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
     addFunctionEntry("upper", UPPER);
     addFunctionEntry("ucase", UPPER);
     addFunctionEntry("initcap", INITCAP);
+    createAddUserDefinedFunction("md5", HiveReturnTypes.STRING,
+        or(family(SqlTypeFamily.STRING), family(SqlTypeFamily.BINARY)));
+    createAddUserDefinedFunction("sha1", HiveReturnTypes.STRING,
+        or(family(SqlTypeFamily.STRING), family(SqlTypeFamily.BINARY)));
+    createAddUserDefinedFunction("sha", HiveReturnTypes.STRING,
+        or(family(SqlTypeFamily.STRING), family(SqlTypeFamily.BINARY)));
+    createAddUserDefinedFunction("crc32", HiveReturnTypes.BIGINT,
+        or(family(SqlTypeFamily.STRING), family(SqlTypeFamily.BINARY)));
 
     // Date Functions
     createAddUserDefinedFunction("from_unixtime", HiveReturnTypes.STRING,

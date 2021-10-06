@@ -476,4 +476,29 @@ public class CoralSparkTest {
     assertEquals(CoralSpark.create(relNode2).getSparkSql(), targetSql2);
   }
 
+  @Test
+  public void testMd5Function() {
+    RelNode relNode = TestUtils.toRelNode("SELECT md5('ABC') as a FROM foo");
+    String targetSql = "SELECT md5('ABC') a\n" + "FROM default.foo";
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+  }
+
+  @Test
+  public void testShaFunction() {
+    RelNode relNode = TestUtils.toRelNode("SELECT sha1('ABC') as a FROM foo");
+    String targetSql = "SELECT sha1('ABC') a\n" + "FROM default.foo";
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+
+    RelNode relNode2 = TestUtils.toRelNode("SELECT sha('ABC') as a FROM foo");
+    String targetSql2 = "SELECT sha('ABC') a\n" + "FROM default.foo";
+    assertEquals(CoralSpark.create(relNode2).getSparkSql(), targetSql2);
+  }
+
+  @Test
+  public void testCrc32Function() {
+    RelNode relNode = TestUtils.toRelNode("SELECT crc32('ABC') as a FROM foo");
+    String targetSql = "SELECT crc32('ABC') a\n" + "FROM default.foo";
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+  }
+
 }
