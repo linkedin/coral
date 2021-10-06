@@ -39,6 +39,7 @@ import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import com.linkedin.coral.com.google.common.collect.ImmutableMultimap;
 import com.linkedin.coral.com.google.common.collect.Multimap;
 
+import static org.apache.calcite.sql.fun.SqlLibraryOperators.*;
 import static org.apache.calcite.sql.fun.SqlStdOperatorTable.*;
 import static org.apache.calcite.sql.type.OperandTypes.*;
 import static org.apache.calcite.sql.type.ReturnTypes.*;
@@ -247,6 +248,8 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
         family(ImmutableList.of(SqlTypeFamily.STRING, SqlTypeFamily.STRING, SqlTypeFamily.INTEGER), optionalOrd(2)));
     addFunctionEntry("lower", LOWER);
     addFunctionEntry("lcase", LOWER);
+    addFunctionEntry("translate", TRANSLATE3);
+    addFunctionEntry("translate3", TRANSLATE3);
     createAddUserDefinedFunction("lpad", HiveReturnTypes.STRING,
         family(SqlTypeFamily.STRING, SqlTypeFamily.INTEGER, SqlTypeFamily.STRING));
     createAddUserDefinedFunction("ltrim", HiveReturnTypes.STRING, STRING);
@@ -274,7 +277,6 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
     addFunctionEntry("substr", SUBSTRING);
     addFunctionEntry("substring", SUBSTRING);
     createAddUserDefinedFunction("substring_index", HiveReturnTypes.STRING, STRING_STRING_INTEGER);
-    createAddUserDefinedFunction("translate", HiveReturnTypes.STRING, STRING_STRING_STRING);
     createAddUserDefinedFunction("trim", HiveReturnTypes.STRING, STRING);
     createAddUserDefinedFunction("unbase64", explicit(SqlTypeName.VARBINARY), or(STRING, NULLABLE_LITERAL));
     addFunctionEntry("upper", UPPER);
