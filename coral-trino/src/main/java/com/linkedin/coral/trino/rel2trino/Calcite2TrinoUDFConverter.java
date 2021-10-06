@@ -201,6 +201,13 @@ public class Calcite2TrinoUDFConverter {
         }
       }
 
+      if (operatorName.equalsIgnoreCase("cast")) {
+        Optional<RexNode> modifiedCall = visitCast(call);
+        if (modifiedCall.isPresent()) {
+          return modifiedCall.get();
+        }
+      }
+
       final UDFTransformer transformer = CalciteTrinoUDFMap.getUDFTransformer(operatorName, call.operands.size());
       if (transformer != null && shouldTransformOperator(operatorName)) {
         return super.visitCall((RexCall) transformer.transformCall(rexBuilder, call.getOperands()));
@@ -274,6 +281,27 @@ public class Calcite2TrinoUDFConverter {
                     rexBuilder.makeCall(trinoToUnixTime,
                         rexBuilder.makeCall(trinoWithTimeZone, sourceValue, rexBuilder.makeLiteral("UTC")))),
                 rexBuilder.makeCall(trinoCanonicalizeHiveTimezoneId, timezone))));
+      }
+
+      return Optional.empty();
+    }
+
+    // Hive allows for casting of TIMESTAMP to DECIMAL, which converts it to unix time if the decimal format is valid
+    // Example: "SELECT cast(current_timestamp() AS decimal(10,0));" -> 1633112585
+    // Trino does not allow for such conversion, but we can achieve the same behavior by first calling "to_unixtime"
+    // on the TIMESTAMP and then casting it to DECIMAL after.
+    private Optional<RexNode> visitCast(RexCall call) {
+      final SqlOperator op = call.getOperator();
+      if (op.getKind() != SqlKind.CAST) {
+        return Optional.empty();
+      }
+
+      List<RexNode> convertedOperands = visitList(call.getOperands(), (boolean[]) null);
+      RexNode leftOperand = convertedOperands.get(0);
+
+      if (call.getType().getSqlTypeName() == DECIMAL && leftOperand.getType().getSqlTypeName() == TIMESTAMP) {
+        SqlOperator trinoToUnixTime = createUDF("to_unixtime", explicit(DOUBLE));
+        return Optional.of(rexBuilder.makeCast(call.getType(), rexBuilder.makeCall(trinoToUnixTime, leftOperand)));
       }
 
       return Optional.empty();
