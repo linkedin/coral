@@ -405,7 +405,7 @@ public class RelToAvroSchemaConverter {
     public RexNode visitLiteral(RexLiteral rexLiteral) {
       RexNode rexNode = super.visitLiteral(rexLiteral);
       RelDataType fieldType = rexLiteral.getType();
-      appendField(fieldType, true, null);
+      appendField(fieldType, true, SchemaUtilities.generateDocumentationForLiteral(rexLiteral));
 
       return rexNode;
     }

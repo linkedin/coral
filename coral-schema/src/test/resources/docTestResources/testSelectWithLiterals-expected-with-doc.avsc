@@ -8,10 +8,12 @@
     "doc" : "Sample id of the record."
   }, {
     "name" : "Additional_Int",
-    "type" : [ "null", "int" ]
+    "type" : [ "null", "int" ],
+    "doc" : "Field created from view literal with value: 100"
   }, {
     "name" : "EXPR_2",
-    "type" : [ "null", "int" ]
+    "type" : [ "null", "int" ],
+    "doc" : "Field created from view literal with value: 200"
   }, {
     "name" : "Array_View_Col",
     "type" : [ "null", {

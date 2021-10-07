@@ -5,6 +5,8 @@
  */
 package com.linkedin.coral.schema.avro;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -23,6 +25,7 @@ import org.apache.avro.SchemaBuilder;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexInputRef;
+import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
@@ -267,6 +270,16 @@ class SchemaUtilities {
     }
 
     return newName;
+  }
+
+  static String generateDocumentationForLiteral(RexLiteral rexLiteral) {
+    StringWriter documentationWriter = new StringWriter();
+    PrintWriter printWriter = new PrintWriter(documentationWriter);
+
+    rexLiteral.printAsJava(printWriter);
+    printWriter.flush();
+
+    return "Field created from view literal with value: " + documentationWriter;
   }
 
   static String toAvroQualifiedName(@Nonnull String name) {
