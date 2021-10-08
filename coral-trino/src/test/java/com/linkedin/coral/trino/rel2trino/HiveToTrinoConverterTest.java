@@ -371,4 +371,17 @@ public class HiveToTrinoConverterTest {
     String expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
   }
+
+  @Test
+  public void testCastByTypeName() {
+    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+
+    RelNode relNode = hiveToRelConverter.convertSql(
+        "SELECT CAST(1 AS DOUBLE), CAST(1.5 AS INT), CAST(2.3 AS STRING), CAST(1631142817 AS TIMESTAMP), CAST('' AS BOOLEAN)");
+    String targetSql =
+        "SELECT CAST(1 AS DOUBLE), CAST(1.5 AS INTEGER), CAST(2.3 AS VARCHAR(65535)), CAST(1631142817 AS TIMESTAMP), CAST('' AS BOOLEAN)\n"
+            + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
+    String expandedSql = relToTrinoConverter.convert(relNode);
+    assertEquals(expandedSql, targetSql);
+  }
 }

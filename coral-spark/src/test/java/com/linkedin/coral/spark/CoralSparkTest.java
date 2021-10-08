@@ -64,8 +64,8 @@ public class CoralSparkTest {
   @Test
   public void testLiteralColumnsFromView() {
     // [LIHADOOP-47172] use date literal in view definition
-    String targetSql =
-        String.join("\n", "SELECT '2013-01-01', '2017-08-22 01:02:03', 123, 123", "FROM default.foo", "LIMIT 1");
+    String targetSql = "SELECT '2013-01-01', '2017-08-22 01:02:03', CAST(123 AS SMALLINT), CAST(123 AS TINYINT)\n"
+        + "FROM default.foo\n" + "LIMIT 1";
     RelNode relNode = TestUtils.toRelNode("default", "foo_v1");
     CoralSpark coralSpark = CoralSpark.create(relNode);
     String expandedSql = coralSpark.getSparkSql();
@@ -505,6 +505,16 @@ public class CoralSparkTest {
   public void testTranslateFunction() {
     RelNode relNode = TestUtils.toRelNode("SELECT translate('aaa', 'a', 'b') FROM default.foo");
     String targetSql = "SELECT TRANSLATE('aaa', 'a', 'b')\n" + "FROM default.foo";
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+  }
+
+  @Test
+  public void testCastByTypeName() {
+    RelNode relNode = TestUtils.toRelNode(
+        "SELECT CAST(1 AS DOUBLE), CAST(1.5 AS INT), CAST(2.3 AS STRING), CAST(1631142817 AS TIMESTAMP), CAST('' AS BOOLEAN) FROM default.complex");
+    String targetSql =
+        "SELECT CAST(1 AS DOUBLE), CAST(1.5 AS INTEGER), CAST(2.3 AS STRING), CAST(1631142817 AS TIMESTAMP), CAST('' AS BOOLEAN)\n"
+            + "FROM default.complex";
     assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
   }
 }
