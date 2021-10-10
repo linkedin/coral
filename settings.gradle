@@ -5,7 +5,8 @@ def modules = [
   'coral-spark',
   'coral-schema',
   'coral-spark-plan',
-  'coral-trino'
+  'coral-trino',
+  'coral-presto'
 ]
 
 modules.each { module ->

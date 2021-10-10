@@ -14,7 +14,8 @@ def versions = [
   'pig': '0.15.0',
   'ivy': '2.4.0',
   'spark': '2.4.0',
-  'spark3': '3.1.1'
+  'spark3': '3.1.1',
+  'presto-parser': '0.262'
 ]
 
 ext.deps = [
@@ -30,6 +31,7 @@ ext.deps = [
   'kryo': "com.esotericsoftware.kryo:kryo:${versions['kryo']}",
   'testing': "org.testng:testng:${versions['testing']}",
   'ivy': "org.apache.ivy:ivy:${versions['ivy']}",
+  'presto-parser': "com.facebook.presto:presto-parser:${versions['presto-parser']}",
 
   'hive':[
     'hive-metastore': "org.apache.hive:hive-metastore:${versions['hive']}",
