@@ -20,7 +20,6 @@ import com.google.common.collect.ImmutableMap;
 
 import org.apache.calcite.avatica.util.TimeUnit;
 import org.apache.calcite.rel.type.RelDataType;
-import org.apache.calcite.rel.type.RelDataTypeSystem;
 import org.apache.calcite.sql.*;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.parser.SqlParserPos;
@@ -30,6 +29,7 @@ import org.apache.calcite.sql.type.SqlTypeUtil;
 import org.apache.calcite.util.TimeString;
 import org.apache.calcite.util.TimestampString;
 
+import com.linkedin.coral.hive.hive2rel.HiveTypeSystem;
 import com.linkedin.coral.hive.hive2rel.functions.HiveFunctionResolver;
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 
@@ -83,7 +83,7 @@ public class ParseTreeBuilder extends AstVisitor<SqlNode, ParserVisitorContext> 
           .put(ComparisonExpression.Operator.GREATER_THAN, SOME_GT)
           .put(ComparisonExpression.Operator.GREATER_THAN_OR_EQUAL, SOME_GE).build();
 
-  private final SqlTypeFactoryImpl sqlTypeFactory = new SqlTypeFactoryImpl(RelDataTypeSystem.DEFAULT);
+  private final SqlTypeFactoryImpl sqlTypeFactory = new SqlTypeFactoryImpl(new HiveTypeSystem());
   private final HiveFunctionResolver functionResolver =
       new HiveFunctionResolver(new StaticHiveFunctionRegistry(), new ConcurrentHashMap<>());
 
@@ -525,11 +525,12 @@ public class ParseTreeBuilder extends AstVisitor<SqlNode, ParserVisitorContext> 
   protected SqlNode visitQuery(Query node, ParserVisitorContext context) {
     SqlParserPos pos = getParserPos(node);
     SqlNode query = node.getQueryBody().accept(this, context);
-    SqlNodeList orderBy = node.getOrderBy().isPresent() ? visitOrderBy(node.getOrderBy().get(), context) : null;
+    SqlNodeList orderBy = node.getOrderBy().isPresent() ? visitOrderBy(node.getOrderBy().get(), context)
+        : createSqlNodeList(Collections.emptyList());
     SqlOrderBy calciteOrderBy = null;
-    if (orderBy != null) {
-      SqlNode fetch = node.getLimit().isPresent() ? getNumericalLiteral(node.getLimit().get()) : null;
-      SqlNode offset = node.getOffset().isPresent() ? visitOffset(node.getOffset().get(), context) : null;
+    SqlNode fetch = node.getLimit().isPresent() ? getNumericalLiteral(node.getLimit().get()) : null;
+    SqlNode offset = node.getOffset().isPresent() ? visitOffset(node.getOffset().get(), context) : null;
+    if (!orderBy.getList().isEmpty() || fetch != null || offset != null) {
       calciteOrderBy = new SqlOrderBy(pos, query, orderBy, offset, fetch);
     }
 
@@ -537,7 +538,13 @@ public class ParseTreeBuilder extends AstVisitor<SqlNode, ParserVisitorContext> 
 
     if (node.getWith().isPresent()) {
       SqlNodeList withItems = visitWith(node.getWith().get(), context);
-      return new SqlWith(pos, withItems, finalQuery);
+      if (!finalQuery.getKind().equals(SqlKind.ORDER_BY)) {
+        return new SqlWith(pos, withItems, finalQuery);
+      } else {
+        SqlOrderBy finalOrderBy = (SqlOrderBy) finalQuery;
+        return new SqlOrderBy(pos, new SqlWith(pos, withItems, finalOrderBy.query), finalOrderBy.orderList,
+            finalOrderBy.offset, finalOrderBy.fetch);
+      }
     } else {
       return finalQuery;
     }
@@ -545,7 +552,7 @@ public class ParseTreeBuilder extends AstVisitor<SqlNode, ParserVisitorContext> 
 
   @Override
   protected SqlNode visitGenericLiteral(GenericLiteral node, ParserVisitorContext context) {
-    return parseExpression(node.getValue());
+    return parseExpression(node.toString());
   }
 
   private String updateTime(String time) {
@@ -616,19 +623,28 @@ public class ParseTreeBuilder extends AstVisitor<SqlNode, ParserVisitorContext> 
     SqlNode where = node.getWhere().isPresent() ? visitNode(node.getWhere().get(), context) : null;
     SqlNodeList groupBy = node.getGroupBy().isPresent() ? visitGroupBy(node.getGroupBy().get(), context) : null;
     SqlNode having = node.getHaving().isPresent() ? visitNode(node.getHaving().get(), context) : null;
-    SqlNodeList orderBy = node.getOrderBy().isPresent() ? visitOrderBy(node.getOrderBy().get(), context) : null;
+    SqlNodeList orderBy = node.getOrderBy().isPresent() ? visitOrderBy(node.getOrderBy().get(), context)
+        : createSqlNodeList(Collections.emptyList());
     SqlNumericLiteral limit = null;
     if (node.getLimit().isPresent() && !node.getLimit().get().toUpperCase().equals("ALL")) {
       limit = getNumericalLiteral(node.getLimit().get());
     }
     SqlNode offset = node.getOffset().isPresent() ? visitOffset(node.getOffset().get(), context) : null;
-    return new SqlSelect(getParserPos(node), keywords, selectList, from, where, groupBy, having, null, orderBy, offset,
-        limit);
+    SqlSelect select =
+        new SqlSelect(getParserPos(node), keywords, selectList, from, where, groupBy, having, null, null, null, null);
+    if (!orderBy.getList().isEmpty() || offset != null || limit != null) {
+      return new SqlOrderBy(getParserPos(node), select, orderBy, offset, limit);
+    }
+    return select;
   }
 
   @Override
   protected SqlNode visitUnion(Union node, ParserVisitorContext context) {
-    return UNION.createCall(getChildSqlNodeList(node, context));
+    if (!node.isDistinct().isPresent() || node.isDistinct().get()) {
+      return UNION.createCall(getChildSqlNodeList(node, context));
+    } else {
+      return UNION_ALL.createCall(getChildSqlNodeList(node, context));
+    }
   }
 
   @Override
@@ -774,13 +790,13 @@ public class ParseTreeBuilder extends AstVisitor<SqlNode, ParserVisitorContext> 
   @Override
   protected SqlNode visitArithmeticUnary(ArithmeticUnaryExpression node, ParserVisitorContext context) {
     SqlNode operand = visitNode(node.getValue(), context);
-    if (node.getSign().equals(ArithmeticUnaryExpression.Sign.PLUS)) {
-      return UNARY_PLUS.createCall(getParserPos(node), operand);
-    } else {
-      Preconditions.checkArgument(node.getSign().equals(node.getSign()),
-          format("The sign %s is not recognized.", node.getSign()));
+    if (node.getSign().equals(ArithmeticUnaryExpression.Sign.MINUS)) {
+      if (operand instanceof SqlNumericLiteral) {
+        return SqlLiteral.createNegative((SqlNumericLiteral) operand, getParserPos(node));
+      }
       return UNARY_MINUS.createCall(getParserPos(node), operand);
     }
+    return operand;
   }
 
   @Override
@@ -1345,7 +1361,7 @@ public class ParseTreeBuilder extends AstVisitor<SqlNode, ParserVisitorContext> 
 
   @Override
   protected SqlNode visitGroupingOperation(GroupingOperation node, ParserVisitorContext context) {
-    return GROUPING.createCall(getParserPos(node), getChildSqlNodeList(node, context).getList());
+    return GROUPING.createCall(getParserPos(node), getListSqlNode(node.getGroupingColumns(), context));
   }
 
   @Override

@@ -191,7 +191,7 @@ public class ParseTreeBuilderTest {
   }
 
   private void convertCheck(String prestoSql) {
-    SqlNode node = PrestoParserDriver.parse(prestoSql).accept(builder, context);
+    SqlNode node = PrestoParserDriver.parse(prestoSql.toUpperCase()).accept(builder, context);
     System.out.println(CalciteSqlFormatter.FORMATTER.format(node.toSqlString(TrinoSqlDialect.INSTANCE).getSql()));
   }
 
