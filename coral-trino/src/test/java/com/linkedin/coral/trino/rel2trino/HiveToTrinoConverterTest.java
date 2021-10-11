@@ -338,7 +338,8 @@ public class HiveToTrinoConverterTest {
     RelNode relNode = hiveToRelConverter
         .convertSql("SELECT CAST(a_timestamp AS DECIMAL(10, 0)) AS d\nFROM test.table_from_utc_timestamp");
     String targetSql =
-        "SELECT CAST(\"to_unixtime\"(\"a_timestamp\") AS DECIMAL(10, 0)) AS \"d\"\nFROM \"test\".\"table_from_utc_timestamp\"";
+        "SELECT CAST(\"to_unixtime\"(\"with_timezone\"(\"a_timestamp\", 'UTC')) AS DECIMAL(10, 0)) AS \"d\"\n"
+            + "FROM \"test\".\"table_from_utc_timestamp\"";
     String expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
   }
@@ -350,14 +351,16 @@ public class HiveToTrinoConverterTest {
     RelNode relNode = hiveToRelConverter.convertSql(
         "SELECT CAST(CAST(a_date AS TIMESTAMP) AS DECIMAL(10, 0)) AS d\nFROM test.table_from_utc_timestamp");
     String targetSql =
-        "SELECT CAST(\"to_unixtime\"(CAST(\"a_date\" AS TIMESTAMP)) AS DECIMAL(10, 0)) AS \"d\"\nFROM \"test\".\"table_from_utc_timestamp\"";
+        "SELECT CAST(\"to_unixtime\"(\"with_timezone\"(CAST(\"a_date\" AS TIMESTAMP), 'UTC')) AS DECIMAL(10, 0)) AS \"d\"\n"
+            + "FROM \"test\".\"table_from_utc_timestamp\"";
     String expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
 
     relNode = hiveToRelConverter.convertSql(
         "SELECT CAST(from_utc_timestamp(a_date, 'America/Los_Angeles') AS DECIMAL(10, 0)) AS d\nFROM test.table_from_utc_timestamp");
     targetSql =
-        "SELECT CAST(\"to_unixtime\"(CAST(\"at_timezone\"(\"from_unixtime\"(\"to_unixtime\"(\"with_timezone\"(\"a_date\", 'UTC'))), \"$canonicalize_hive_timezone_id\"('America/Los_Angeles')) AS TIMESTAMP(3))) AS DECIMAL(10, 0)) AS \"d\"\nFROM \"test\".\"table_from_utc_timestamp\"";
+        "SELECT CAST(\"to_unixtime\"(\"with_timezone\"(CAST(\"at_timezone\"(\"from_unixtime\"(\"to_unixtime\"(\"with_timezone\"(\"a_date\", 'UTC'))), \"$canonicalize_hive_timezone_id\"('America/Los_Angeles')) AS TIMESTAMP(3)), 'UTC')) AS DECIMAL(10, 0)) AS \"d\"\n"
+            + "FROM \"test\".\"table_from_utc_timestamp\"";
     expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
   }
