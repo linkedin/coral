@@ -340,7 +340,7 @@ public class CalciteUtil {
   }
 
   public static SqlIdentifier createSqlIdentifier(SqlParserPos pos, String... path) {
-    return new SqlIdentifier(Arrays.asList(path), ZERO);
+    return new SqlIdentifier(Arrays.asList(path), pos);
   }
 
   public static SqlIdentifier createStarIdentifier(SqlParserPos pos) {

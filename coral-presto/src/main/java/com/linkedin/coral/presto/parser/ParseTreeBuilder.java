@@ -18,6 +18,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
+import com.google.common.collect.ImmutableSet;
 import org.apache.calcite.avatica.util.TimeUnit;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.sql.*;
@@ -82,6 +83,7 @@ public class ParseTreeBuilder extends AstVisitor<SqlNode, ParserVisitorContext> 
           .put(ComparisonExpression.Operator.LESS_THAN_OR_EQUAL, SOME_LE)
           .put(ComparisonExpression.Operator.GREATER_THAN, SOME_GT)
           .put(ComparisonExpression.Operator.GREATER_THAN_OR_EQUAL, SOME_GE).build();
+  private static final ImmutableSet<SqlKind> NULL_CARED_OPERATOR = ImmutableSet.of(SqlKind.FIRST_VALUE, SqlKind.LAST_VALUE, SqlKind.LEAD, SqlKind.LAG);
 
   private final SqlTypeFactoryImpl sqlTypeFactory = new SqlTypeFactoryImpl(new HiveTypeSystem());
   private final HiveFunctionResolver functionResolver =
@@ -130,8 +132,8 @@ public class ParseTreeBuilder extends AstVisitor<SqlNode, ParserVisitorContext> 
     }
   }
 
-  private SqlIdentifier convertQualifiedName(QualifiedName name) {
-    return createSqlIdentifier(ZERO, name.getOriginalParts().toArray(new String[0]));
+  private SqlIdentifier convertQualifiedName(QualifiedName name, SqlParserPos pos) {
+    return createSqlIdentifier(pos, name.getOriginalParts().toArray(new String[0]));
   }
 
   /**
@@ -482,7 +484,6 @@ public class ParseTreeBuilder extends AstVisitor<SqlNode, ParserVisitorContext> 
 
   @Override
   protected SqlNode visitExtract(Extract node, ParserVisitorContext context) {
-    SqlParserPos pos = getParserPos(node);
     TimeUnit unit = TIME_UNIT_MAP.get(node.getField());
     if (unit == null) {
       throw getUnsupportedException(node);
@@ -589,11 +590,7 @@ public class ParseTreeBuilder extends AstVisitor<SqlNode, ParserVisitorContext> 
       columns = createSqlNodeList(
           node.getColumnNames().get().stream().map(n -> visitNode(n, context)).collect(Collectors.toList()), pos);
     }
-    if (columns == null) {
-      return new SqlWithItem(pos, alias, null, query);
-    } else {
       return new SqlWithItem(pos, alias, columns, query);
-    }
   }
 
   /**
@@ -694,11 +691,18 @@ public class ParseTreeBuilder extends AstVisitor<SqlNode, ParserVisitorContext> 
     SqlParserPos pos = getParserPos(node);
     List<SqlNode> operands =
         node.getArguments().stream().map(arg -> visitNode(arg, context)).collect(Collectors.toList());
-    SqlIdentifier functionName = createSqlIdentifier(pos, node.getName().getOriginalParts().toArray(new String[0]));
+    SqlIdentifier functionName = convertQualifiedName(node.getName(), getParserPos(node));
     SqlUnresolvedFunction unresolvedFunction =
         new SqlUnresolvedFunction(functionName, null, null, null, null, SqlFunctionCategory.USER_DEFINED_FUNCTION);
     SqlLiteral functionQualifier = node.isDistinct() ? SqlLiteral.createSymbol(SqlSelectKeyword.DISTINCT, ZERO) : null;
     SqlCall call = createCall(unresolvedFunction, operands, functionQualifier);
+    if (NULL_CARED_OPERATOR.contains(call.getKind())) {
+        if (node.isIgnoreNulls()) {
+            call = IGNORE_NULLS.createCall(pos, call);
+        } else {
+            call = RESPECT_NULLS.createCall(pos, call);
+        }
+    }
     if (node.getWindow().isPresent()) {
       return OVER.createCall(pos, call, visitWindow(node.getWindow().get(), context));
     }
@@ -912,13 +916,13 @@ public class ParseTreeBuilder extends AstVisitor<SqlNode, ParserVisitorContext> 
 
   @Override
   protected SqlNode visitTable(Table node, ParserVisitorContext context) {
-    return createSqlIdentifier(getParserPos(node), node.getName().getOriginalParts().toArray(new String[0]));
+    return convertQualifiedName(node.getName(), getParserPos(node));
   }
 
   @Override
   protected SqlNode visitUnnest(Unnest node, ParserVisitorContext context) {
     if (node.isWithOrdinality()) {
-      UNNEST_WITH_ORDINALITY.createCall(getParserPos(node), getChildSqlNodeList(node, context).getList());
+      return UNNEST_WITH_ORDINALITY.createCall(getParserPos(node), getChildSqlNodeList(node, context).getList());
     }
     return UNNEST.createCall(getParserPos(node), getChildSqlNodeList(node, context).getList());
   }

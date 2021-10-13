@@ -10,10 +10,11 @@ import com.facebook.presto.sql.parser.SqlParser;
 import com.facebook.presto.sql.tree.Statement;
 
 import static com.facebook.presto.sql.parser.ParsingOptions.DecimalLiteralTreatment.AS_DOUBLE;
+import static com.facebook.presto.sql.parser.ParsingOptions.DecimalLiteralTreatment.AS_DECIMAL;
 
 
 public class PrestoParserDriver {
-  private final static ParsingOptions parsingOptions = new ParsingOptions(AS_DOUBLE /* anything */);
+  private final static ParsingOptions parsingOptions = new ParsingOptions(AS_DECIMAL /* anything */);
   /**
    * Use the Presto SqlParser to parse the command and return the presto statement.
    *
