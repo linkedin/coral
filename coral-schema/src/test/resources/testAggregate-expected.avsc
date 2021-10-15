@@ -13,7 +13,8 @@
     "type" : [ "null", "int" ]
   }, {
     "name" : "Additional_Int",
-    "type" : [ "null", "int" ]
+    "type" : [ "null", "int" ],
+    "doc" : "Field created from view literal with value: 100"
   }, {
     "name" : "Struct_View_Col",
     "type" : [ "null", {

@@ -697,7 +697,8 @@ public class ViewToAvroSchemaConverterTests {
     ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
     Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v", false);
 
-    Assert.assertEquals(actualSchema.toString(true), TestUtils.loadSchema("testNullUnionNonNullField-expected.avsc"));
+    Assert.assertEquals(actualSchema.toString(true),
+        TestUtils.loadSchema("testNullUnionNotNullableField-expected.avsc"));
   }
 
   @Test
@@ -709,7 +710,8 @@ public class ViewToAvroSchemaConverterTests {
     ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
     Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v", false);
 
-    Assert.assertEquals(actualSchema.toString(true), TestUtils.loadSchema("testNullUnionNonNullField-expected.avsc"));
+    Assert.assertEquals(actualSchema.toString(true),
+        TestUtils.loadSchema("testNotNullableFieldUnionNull-expected.avsc"));
   }
 
   @Test
@@ -722,7 +724,7 @@ public class ViewToAvroSchemaConverterTests {
     ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
     Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v", false);
 
-    Assert.assertEquals(actualSchema.toString(true), TestUtils.loadSchema("testNullUnionNonNullField-expected.avsc"));
+    Assert.assertEquals(actualSchema.toString(true), TestUtils.loadSchema("testNullUnionNullableField-expected.avsc"));
   }
 
   @Test
@@ -735,7 +737,7 @@ public class ViewToAvroSchemaConverterTests {
     ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
     Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v", false);
 
-    Assert.assertEquals(actualSchema.toString(true), TestUtils.loadSchema("testNullUnionNonNullField-expected.avsc"));
+    Assert.assertEquals(actualSchema.toString(true), TestUtils.loadSchema("testNullableFieldUnionNull-expected.avsc"));
   }
 
   @Test
@@ -748,7 +750,8 @@ public class ViewToAvroSchemaConverterTests {
     ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
     Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v", false);
 
-    Assert.assertEquals(actualSchema.toString(true), TestUtils.loadSchema("testNullUnionNonNullField-expected.avsc"));
+    Assert.assertEquals(actualSchema.toString(true),
+        TestUtils.loadSchema("testNotNullableFieldUnionNullableField-expected.avsc"));
   }
 
   @Test
@@ -761,7 +764,8 @@ public class ViewToAvroSchemaConverterTests {
     ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
     Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v", false);
 
-    Assert.assertEquals(actualSchema.toString(true), TestUtils.loadSchema("testNullUnionNonNullField-expected.avsc"));
+    Assert.assertEquals(actualSchema.toString(true),
+        TestUtils.loadSchema("testNullableFieldUnionNotNullableField-expected.avsc"));
   }
 
   @Test
