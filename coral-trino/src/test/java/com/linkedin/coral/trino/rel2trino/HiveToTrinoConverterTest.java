@@ -388,8 +388,10 @@ public class HiveToTrinoConverterTest {
     assertEquals(expandedSql, targetSql);
   }
 
+  // Currently this workaround doesnt work with SUBSTRING, since the conversion to Calcite also overrides the UDF
+  // SUBSTRING and replaces it with the SqlSubStringFunction
   @Test
-  public void testSubstringWithTimestamp() {
+  public void testSubstrWithTimestamp() {
     RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
 
     RelNode relNode =

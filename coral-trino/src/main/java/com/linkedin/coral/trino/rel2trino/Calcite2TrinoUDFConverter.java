@@ -208,7 +208,7 @@ public class Calcite2TrinoUDFConverter {
         }
       }
 
-      if (operatorName.equalsIgnoreCase("substr") || operatorName.equalsIgnoreCase("substring")) {
+      if (operatorName.equalsIgnoreCase("substr")) {
         Optional<RexNode> modifiedCall = visitSubstring(call);
         if (modifiedCall.isPresent()) {
           return modifiedCall.get();
