@@ -211,6 +211,13 @@ public class Calcite2TrinoUDFConverter {
         }
       }
 
+      if (operatorName.equalsIgnoreCase("substr") || operatorName.equalsIgnoreCase("substring")) {
+        Optional<RexNode> modifiedCall = visitSubstring(call);
+        if (modifiedCall.isPresent()) {
+          return modifiedCall.get();
+        }
+      }
+
       final UDFTransformer transformer = CalciteTrinoUDFMap.getUDFTransformer(operatorName, call.operands.size());
       if (transformer != null && shouldTransformOperator(operatorName)) {
         return super.visitCall((RexCall) transformer.transformCall(rexBuilder, call.getOperands()));
@@ -284,6 +291,21 @@ public class Calcite2TrinoUDFConverter {
                     rexBuilder.makeCall(trinoToUnixTime,
                         rexBuilder.makeCall(trinoWithTimeZone, sourceValue, rexBuilder.makeLiteral("UTC")))),
                 rexBuilder.makeCall(trinoCanonicalizeHiveTimezoneId, timezone))));
+      }
+
+      return Optional.empty();
+    }
+
+    private Optional<RexNode> visitSubstring(RexCall call) {
+      final SqlOperator op = call.getOperator();
+      List<RexNode> convertedOperands = visitList(call.getOperands(), (boolean[]) null);
+      RexNode inputOperand = convertedOperands.get(0);
+
+      if (inputOperand.getType().getSqlTypeName() != VARCHAR && inputOperand.getType().getSqlTypeName() != CHAR) {
+        List<RexNode> operands = new ImmutableList.Builder<RexNode>()
+            .add(rexBuilder.makeCast(typeFactory.createSqlType(VARCHAR), inputOperand))
+            .addAll(convertedOperands.subList(1, convertedOperands.size())).build();
+        return Optional.of(rexBuilder.makeCall(op, operands));
       }
 
       return Optional.empty();
