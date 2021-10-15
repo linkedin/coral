@@ -344,6 +344,13 @@ public class TestUtils {
     run(driver, "CREATE VIEW IF NOT EXISTS test.least_view AS \n"
         + "SELECT least(t.a, t.b) as g_int, least(t.c, t.d) as g_string FROM test.table_ints_strings t");
 
+    run(driver, "CREATE TABLE IF NOT EXISTS test.tableS (structCol struct<a:int>)");
+    run(driver, "CREATE TABLE IF NOT EXISTS test.tableT (structCol struct<a:int>)");
+    run(driver, "CREATE VIEW IF NOT EXISTS test.viewA AS SELECT structCol as struct_col FROM test.tableS");
+    run(driver, "CREATE VIEW IF NOT EXISTS test.viewB AS SELECT structCol as struct_col FROM test.tableT");
+    run(driver,
+        "CREATE VIEW IF NOT EXISTS test.view_with_transform_column_name_reset AS SELECT struct_col AS structCol FROM (SELECT * FROM test.viewA UNION ALL SELECT * FROM test.viewB) X");
+    run(driver, "ALTER TABLE test.tableT CHANGE COLUMN structCol structCol struct<a:int, b:string>");
   }
 
   public static RelNode convertView(String db, String view) {
