@@ -454,5 +454,12 @@ public class HiveToTrinoConverterTest {
         "SELECT \"substr\"(CAST(\"a_timestamp\" AS VARCHAR(65535)), 12, 8) AS \"d\"\nFROM \"test\".\"table_from_utc_timestamp\"";
     String expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
+
+    relNode =
+            hiveToRelConverter.convertSql("SELECT SUBSTRING(a_timestamp, 12, 8) AS d\nFROM test.table_from_utc_timestamp");
+    targetSql =
+            "SELECT \"substring\"(CAST(\"a_timestamp\" AS VARCHAR(65535)), 12, 8) AS \"d\"\nFROM \"test\".\"table_from_utc_timestamp\"";
+    expandedSql = relToTrinoConverter.convert(relNode);
+    assertEquals(expandedSql, targetSql);
   }
 }
