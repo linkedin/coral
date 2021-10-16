@@ -517,6 +517,7 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
 
     // UDTFs
     addFunctionEntry("explode", HiveExplodeOperator.EXPLODE);
+    addFunctionEntry("posexplode", HivePosExplodeOperator.POS_EXPLODE);
     addFunctionEntry("json_tuple", HiveJsonTupleOperator.JSON_TUPLE);
 
     // Generic UDTFs

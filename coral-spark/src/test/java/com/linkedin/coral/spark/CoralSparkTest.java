@@ -465,6 +465,35 @@ public class CoralSparkTest {
   }
 
   @Test
+  public void testLateralViewPosExplodeWithColumns() {
+    RelNode relNode =
+        TestUtils.toRelNode("SELECT arr.alias FROM foo tmp LATERAL VIEW POSEXPLODE(ARRAY('a', 'b')) arr AS pos, alias");
+
+    String targetSql =
+        "SELECT t0.alias\n" + "FROM default.foo LATERAL VIEW POSEXPLODE(ARRAY ('a', 'b')) t0 AS pos, alias";
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+  }
+
+  @Test
+  public void testLateralViewOuterPosExplodeWithColumns() {
+    RelNode relNode = TestUtils
+        .toRelNode("SELECT arr.alias FROM foo tmp LATERAL VIEW OUTER POSEXPLODE(ARRAY('a', 'b')) arr AS pos, alias");
+
+    String targetSql = "SELECT t0.alias\n"
+        + "FROM default.foo LATERAL VIEW OUTER POSEXPLODE(if(ARRAY ('a', 'b') IS NOT NULL AND size(ARRAY ('a', 'b')) > 0, ARRAY ('a', 'b'), ARRAY (NULL))) t0 AS pos, alias";
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+  }
+
+  @Test
+  public void testLateralViewPosExplodeWithoutColumns() {
+    RelNode relNode = TestUtils.toRelNode("SELECT arr.val FROM foo tmp LATERAL VIEW POSEXPLODE(ARRAY('a', 'b')) arr");
+
+    String targetSql =
+        "SELECT t0.col val\n" + "FROM default.foo LATERAL VIEW POSEXPLODE(ARRAY ('a', 'b')) t0 AS ORDINALITY, col";
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+  }
+
+  @Test
   public void testConcat() {
     RelNode relNode = TestUtils.toRelNode("SELECT 'a' || 'b'");
 
