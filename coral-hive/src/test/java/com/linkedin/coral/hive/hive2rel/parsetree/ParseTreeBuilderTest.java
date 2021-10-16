@@ -145,17 +145,30 @@ public class ParseTreeBuilderTest {
         ImmutableList.of(
             "SELECT col FROM (SELECT ARRAY('v1', 'v2') as arr) tmp LATERAL VIEW EXPLODE(arr) arr_alias AS col",
             "SELECT `col` FROM (SELECT ARRAY['v1', 'v2'] AS `arr`) AS `tmp`, LATERAL UNNEST(`arr`) AS `arr_alias` (`col`)"),
+
         // hive automatically creates column aliases `col` when the type is an array
         ImmutableList.of("SELECT col FROM (SELECT ARRAY('v1', 'v2') as arr) tmp LATERAL VIEW EXPLODE(arr) arr_alias",
             "SELECT `col` FROM (SELECT ARRAY['v1', 'v2'] AS `arr`) AS `tmp`, LATERAL UNNEST(`arr`) AS `arr_alias`"),
+
+        // test lateral view posexplode with an array
+        ImmutableList.of(
+            "SELECT col FROM (SELECT ARRAY('v1', 'v2') as arr) tmp LATERAL VIEW POSEXPLODE(arr) arr_alias AS col, val",
+            "select `col` from (select array['v1', 'v2'] as `arr`) as `tmp`, lateral unnest(`arr`) with ordinality as `arr_alias` (`val`, `col`)"),
+
+        // hive automatically creates column aliases `col` when the type is an array
+        ImmutableList.of("SELECT col FROM (SELECT ARRAY('v1', 'v2') as arr) tmp LATERAL VIEW POSEXPLODE(arr) arr_alias",
+            "select `col` from (select array['v1', 'v2'] as `arr`) as `tmp`, lateral unnest(`arr`) with ordinality as `arr_alias`"),
+
         // test lateral view explode with a map
         ImmutableList.of(
             "SELECT key, value FROM (SELECT MAP('key1', 'value1') as m) tmp LATERAL VIEW EXPLODE(m) m_alias AS key, value",
             "SELECT `key`, `value` FROM (SELECT MAP['key1', 'value1'] AS `m`) AS `tmp`, LATERAL UNNEST(`m`) AS `m_alias` (`key`, `value`)"),
+
         // hive automatically creates column aliases `key` and `value` when the type is a map
         ImmutableList.of(
             "SELECT key, value FROM (SELECT MAP('key1', 'value1') as m) tmp LATERAL VIEW EXPLODE(m) m_alias",
             "SELECT `key`, `value` FROM (SELECT MAP['key1', 'value1'] AS `m`) AS `tmp`, LATERAL UNNEST(`m`) AS `m_alias`"),
+
         // hive doesn't support casting as varbinary
         ImmutableList.of("SELECT cast(a as binary) from foo", "SELECT cast(`a` as binary) from `foo`"),
         ImmutableList.of("SELECT cast(a as string) from foo", "SELECT cast(`a` as varchar) from `foo`"),
