@@ -26,7 +26,7 @@ public class HivePosExplodeOperator extends SqlUnnestOperator {
   public static final HivePosExplodeOperator POS_EXPLODE = new HivePosExplodeOperator();
 
   public static final String ARRAY_ELEMENT_POS_NAME = "pos";
-  public static final String ARRAY_ELEMENT_VAL_NAME = "val";
+  public static final String ARRAY_ELEMENT_VAL_NAME = "col";
 
   public HivePosExplodeOperator() {
     // keep same same as base class 'UNNEST' operator

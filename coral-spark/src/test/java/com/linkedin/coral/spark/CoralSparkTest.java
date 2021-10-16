@@ -486,10 +486,10 @@ public class CoralSparkTest {
 
   @Test
   public void testLateralViewPosExplodeWithoutColumns() {
-    RelNode relNode = TestUtils.toRelNode("SELECT arr.val FROM foo tmp LATERAL VIEW POSEXPLODE(ARRAY('a', 'b')) arr");
+    RelNode relNode = TestUtils.toRelNode("SELECT arr.col FROM foo tmp LATERAL VIEW POSEXPLODE(ARRAY('a', 'b')) arr");
 
     String targetSql =
-        "SELECT t0.col val\n" + "FROM default.foo LATERAL VIEW POSEXPLODE(ARRAY ('a', 'b')) t0 AS ORDINALITY, col";
+        "SELECT t0.col\n" + "FROM default.foo LATERAL VIEW POSEXPLODE(ARRAY ('a', 'b')) t0 AS ORDINALITY, col";
     assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
   }
 
