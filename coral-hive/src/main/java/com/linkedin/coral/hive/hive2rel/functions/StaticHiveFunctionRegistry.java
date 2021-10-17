@@ -519,6 +519,10 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
     addFunctionEntry("explode", HiveExplodeOperator.EXPLODE);
     addFunctionEntry("json_tuple", HiveJsonTupleOperator.JSON_TUPLE);
 
+    // reflect functions
+    addFunctionEntry("reflect", HiveReflectOperator.REFLECT);
+    addFunctionEntry("java_method", HiveReflectOperator.REFLECT);
+
     // Generic UDTFs
     createAddUserDefinedTableFunction("com.linkedin.tsar.hive.udf.ToJymbiiScores",
         ImmutableList.of("job_urn", "rank", "glmix_score", "global_model_score", "sentinel_score", "job_effect_score",
