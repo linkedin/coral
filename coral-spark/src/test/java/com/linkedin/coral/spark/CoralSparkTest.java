@@ -520,14 +520,14 @@ public class CoralSparkTest {
 
   @Test
   public void testReflectFunction() {
-    RelNode relNode = TestUtils.toRelNode("select reflect('java.lang.String', 'valueOf', 1) FROM default.complex");
+    RelNode relNode = TestUtils.toRelNode("SELECT reflect('java.lang.String', 'valueOf', 1) FROM default.complex");
     String targetSql = "SELECT reflect('java.lang.String', 'valueOf', 1)\n" + "FROM default.complex";
     assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
   }
 
   @Test
   public void testJavaMethodFunction() {
-    RelNode relNode = TestUtils.toRelNode("select java_method('java.lang.String', 'valueOf', 1) FROM default.complex");
+    RelNode relNode = TestUtils.toRelNode("SELECT java_method('java.lang.String', 'valueOf', 1) FROM default.complex");
     String targetSql = "SELECT reflect('java.lang.String', 'valueOf', 1)\n" + "FROM default.complex";
     assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
   }
