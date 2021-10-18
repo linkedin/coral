@@ -517,4 +517,18 @@ public class CoralSparkTest {
             + "FROM default.complex";
     assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
   }
+
+  @Test
+  public void testCollectListFunction() {
+    RelNode relNode = TestUtils.toRelNode("SELECT collect_list(a) FROM default.foo");
+    String targetSql = "SELECT collect_list(a)\n" + "FROM default.foo";
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+  }
+
+  @Test
+  public void testCollectSetFunction() {
+    RelNode relNode = TestUtils.toRelNode("SELECT collect_set(a) FROM default.foo");
+    String targetSql = "SELECT collect_set(a)\n" + "FROM default.foo";
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+  }
 }
