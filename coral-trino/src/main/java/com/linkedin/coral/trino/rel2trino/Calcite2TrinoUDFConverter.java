@@ -293,6 +293,9 @@ public class Calcite2TrinoUDFConverter {
       return Optional.empty();
     }
 
+    // Hive allows passing in a byte array or String to substr/substring, so we can make an effort to emulate the
+    // behavior by casting non-String input to String
+    // https://cwiki.apache.org/confluence/display/hive/languagemanual+udf
     private Optional<RexNode> visitSubstring(RexCall call) {
       final SqlOperator op = call.getOperator();
       List<RexNode> convertedOperands = visitList(call.getOperands(), (boolean[]) null);
