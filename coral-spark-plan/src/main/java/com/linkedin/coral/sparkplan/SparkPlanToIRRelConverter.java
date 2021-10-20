@@ -31,9 +31,8 @@ import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexNode;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
-import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
+import com.linkedin.coral.common.HiveMetastoreClient;
 import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
-import com.linkedin.coral.hive.hive2rel.RelContextProvider;
 import com.linkedin.coral.sparkplan.containers.SparkPlanNode;
 
 import static com.google.common.base.Preconditions.*;
@@ -45,37 +44,47 @@ import static com.linkedin.coral.sparkplan.containers.SparkPlanNode.PLANTYPE.*;
  */
 public class SparkPlanToIRRelConverter {
 
-  private static RelContextProvider relContextProvider;
   private static HiveToRelConverter hiveToRelConverter;
+  private HiveMetastoreClient hiveMetastoreClient;
+  private Map<String, Map<String, List<String>>> localMetastore;
 
   // this set contains all the simple predicate operators
   private static final Set<String> SIMPLE_PREDICATE_OPERATORS = new HashSet<>(
       Arrays.asList("=", ">", ">=", "<", "<=", "in", "is null", "is not null", "and", "or", "not", "like"));
 
   /**
-   * Initializes converter and provider with hive configuration at provided localMetastorePath
+   * Constructor for converter given Hive metastore data at provided localMetastorePath
    *
-   * @param mscClient HiveMetaStoreClient. Hive metastore client provides small subset
+   * @param hiveMetastoreClient HiveMetaStoreClient. Hive metastore client provides small subset
    *                  of methods provided by Hive's metastore client interface.
    * @return {@link SparkPlanToIRRelConverter}
    */
-  public static SparkPlanToIRRelConverter create(HiveMetastoreClient mscClient) {
-    checkNotNull(mscClient);
-    RelContextProvider relContextProvider = new RelContextProvider(mscClient);
-    SparkPlanToIRRelConverter.hiveToRelConverter = HiveToRelConverter.create(mscClient);
-    return new SparkPlanToIRRelConverter(relContextProvider);
+  private SparkPlanToIRRelConverter(HiveMetastoreClient hiveMetastoreClient) {
+    checkNotNull(hiveMetastoreClient);
+    SparkPlanToIRRelConverter.hiveToRelConverter = new HiveToRelConverter(hiveMetastoreClient);
+    this.hiveMetastoreClient = hiveMetastoreClient;
   }
 
   /**
-   * Initializes converter and provider with localMetastore, which is a map
+   * Constructor for converter given Hive metastore data in localMetastorePath
    *
-   * @param localMetastore map containing all the the required metadata (database name, table name, column name and type)
+   * @param localMetastore In-memory Hive metastore represented in a map.
    * @return {@link SparkPlanToIRRelConverter}
    */
-  public static SparkPlanToIRRelConverter create(Map<String, Map<String, List<String>>> localMetastore) {
+  private SparkPlanToIRRelConverter(Map<String, Map<String, List<String>>> localMetastore) {
     checkNotNull(localMetastore);
-    initializeForLocalMetastore(localMetastore);
-    return new SparkPlanToIRRelConverter(relContextProvider);
+    SparkPlanToIRRelConverter.hiveToRelConverter = new HiveToRelConverter(localMetastore);
+    this.localMetastore = localMetastore;
+  }
+
+  /**
+   * Initializes converter using HiveMetastoreClient
+   * @param hiveMetastoreClient
+   * @return {@link SparkPlanToIRRelConverter}
+   */
+  public static SparkPlanToIRRelConverter create(HiveMetastoreClient hiveMetastoreClient) {
+    checkNotNull(hiveMetastoreClient);
+    return new SparkPlanToIRRelConverter(hiveMetastoreClient);
   }
 
   /**
@@ -90,19 +99,8 @@ public class SparkPlanToIRRelConverter {
     Gson gson = new Gson();
     Reader reader = Files.newBufferedReader(Paths.get(localMetastorePath));
     Map<String, Map<String, List<String>>> localMetastore = gson.fromJson(reader, Map.class);
-    initializeForLocalMetastore(localMetastore);
     reader.close();
-    return new SparkPlanToIRRelConverter(relContextProvider);
-  }
-
-  private static void initializeForLocalMetastore(Map<String, Map<String, List<String>>> localMetastore) {
-    relContextProvider = new RelContextProvider(localMetastore);
-    SparkPlanToIRRelConverter.hiveToRelConverter = HiveToRelConverter.create(localMetastore);
-  }
-
-  private SparkPlanToIRRelConverter(RelContextProvider relContextProvider) {
-    checkNotNull(relContextProvider);
-    SparkPlanToIRRelConverter.relContextProvider = relContextProvider;
+    return new SparkPlanToIRRelConverter(localMetastore);
   }
 
   /**

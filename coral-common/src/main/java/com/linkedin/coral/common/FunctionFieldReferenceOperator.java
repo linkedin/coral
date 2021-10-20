@@ -3,7 +3,7 @@
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
-package com.linkedin.coral.hive.hive2rel.functions;
+package com.linkedin.coral.common;
 
 import com.google.common.base.Preconditions;
 
@@ -85,7 +85,7 @@ public class FunctionFieldReferenceOperator extends SqlBinaryOperator {
   }
 
   public static String fieldNameStripQuotes(SqlNode node) {
-    return Utils.stripQuotes(fieldName(node));
+    return stripQuotes(fieldName(node));
   }
 
   public static String fieldName(SqlNode node) {
@@ -99,4 +99,12 @@ public class FunctionFieldReferenceOperator extends SqlBinaryOperator {
             String.format("Unknown operand type %s to reference a field, operand: %s", node.getKind(), node));
     }
   }
+
+  private static String stripQuotes(String id) {
+    if ((id.startsWith("'") && id.endsWith("'")) || (id.startsWith("\"") && id.endsWith("\""))) {
+      return id.substring(1, id.length() - 1);
+    }
+    return id;
+  }
+
 }

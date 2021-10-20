@@ -14,56 +14,24 @@ import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlNodeList;
-import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.SqlSelect;
 import org.apache.calcite.sql.fun.SqlCase;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.util.Util;
 
+import com.linkedin.coral.common.Function;
+
 import static com.google.common.base.Preconditions.*;
 import static org.apache.calcite.sql.parser.SqlParserPos.*;
 
 
-/**
- * Class to represent builtin or user-defined Hive function. This provides
- * information required to analyze the function call in SQL statement and to
- * convert the Hive function to intermediate representation in Calcite. This does
- * not provide function definition to actually evaluate the function. Right now,
- * this also does not provide implementation to dynamically figure out return type
- * based on input parameters.
- *
- * NOTE: HiveFunction is designed to be "re-usable" class.
- *
- */
 public class HiveFunction {
-
-  // Function class name specified in TBLPROPERTIES clause.  It contains path leading to the class file.
-  // Example: "com.linkedin.dali.udf.date.hive.DateFormatToEpoch"
-  private final String hiveName;
-  private final SqlOperator sqlOperator;
-
-  public HiveFunction(String functionName, SqlOperator sqlOperator) {
-    this.hiveName = functionName;
-    this.sqlOperator = sqlOperator;
-  }
-
-  public String getHiveFunctionName() {
-    return hiveName;
-  }
-
-  public SqlOperator getSqlOperator() {
-    return sqlOperator;
-  }
-
-  public SqlCall createCall(SqlNode function, List<SqlNode> operands, SqlLiteral qualifier) {
-    return sqlOperator.createCall(qualifier, ZERO, operands.toArray(new SqlNode[operands.size()]));
-  }
 
   // Specific instances of HiveFunction to override default behavior
   /**
    * Instance of cast() function
    */
-  public static final HiveFunction CAST = new HiveFunction("cast", SqlStdOperatorTable.CAST) {
+  public static final Function CAST = new Function("cast", SqlStdOperatorTable.CAST) {
     @Override
     public SqlCall createCall(SqlNode function, List<SqlNode> operands, SqlLiteral qualifier) {
       checkNotNull(operands);
@@ -75,7 +43,7 @@ public class HiveFunction {
   /**
    * Hive {@code CASE} operator
    */
-  public static final HiveFunction CASE = new HiveFunction("case", SqlStdOperatorTable.CASE) {
+  public static final Function CASE = new Function("case", SqlStdOperatorTable.CASE) {
     @Override
     public SqlCall createCall(SqlNode function, List<SqlNode> operands, SqlLiteral qualifier) {
       checkNotNull(operands);
@@ -92,7 +60,7 @@ public class HiveFunction {
     }
   };
 
-  public static final HiveFunction WHEN = new HiveFunction("when", SqlStdOperatorTable.CASE) {
+  public static final Function WHEN = new Function("when", SqlStdOperatorTable.CASE) {
     @Override
     public SqlCall createCall(SqlNode function, List<SqlNode> operands, SqlLiteral qualifier) {
       checkNotNull(operands);
@@ -109,7 +77,7 @@ public class HiveFunction {
   };
 
   // this handles both between and not_between...it's odd because hive parse tree for between operator is odd!
-  public static final HiveFunction BETWEEN = new HiveFunction("between", SqlStdOperatorTable.BETWEEN) {
+  public static final Function BETWEEN = new Function("between", SqlStdOperatorTable.BETWEEN) {
     @Override
     public SqlCall createCall(SqlNode function, List<SqlNode> operands, SqlLiteral qualifier) {
       checkNotNull(operands);
@@ -124,7 +92,7 @@ public class HiveFunction {
     }
   };
 
-  public static final HiveFunction IN = new HiveFunction("in", HiveInOperator.IN) {
+  public static final Function IN = new Function("in", HiveInOperator.IN) {
     @Override
     public SqlCall createCall(SqlNode function, List<SqlNode> operands, SqlLiteral qualifier) {
       checkState(operands.size() >= 2);

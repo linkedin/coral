@@ -22,8 +22,9 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
-import com.linkedin.coral.hive.hive2rel.HiveMscAdapter;
+import com.linkedin.coral.common.HiveMetastoreClient;
+import com.linkedin.coral.common.HiveMscAdapter;
+import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
 
 import static com.linkedin.coral.hive.hive2rel.TestUtils.*;
 import static org.testng.Assert.*;
@@ -191,8 +192,8 @@ public class ParseTreeBuilderTest {
   }
 
   private static SqlNode convert(String sql) {
-    ParseTreeBuilder builder = new ParseTreeBuilder(msc, new ParseTreeBuilder.Config());
-    return builder.processSql(sql);
+    HiveToRelConverter hiveToRelConverter = new HiveToRelConverter(msc);
+    return hiveToRelConverter.toSqlNode(sql);
   }
 
   /**

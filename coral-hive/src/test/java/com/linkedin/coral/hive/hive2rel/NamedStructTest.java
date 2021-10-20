@@ -1,5 +1,5 @@
 /**
- * Copyright 2018-2020 LinkedIn Corporation. All rights reserved.
+ * Copyright 2018-2021 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -14,7 +14,9 @@ import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import static com.linkedin.coral.hive.hive2rel.ToRelConverter.*;
+import com.linkedin.coral.common.ToRelConverterTestUtils;
+
+import static com.linkedin.coral.common.ToRelConverterTestUtils.*;
 import static org.testng.Assert.*;
 
 
@@ -22,7 +24,7 @@ public class NamedStructTest {
 
   @BeforeClass
   public static void beforeClass() throws HiveException, MetaException, IOException {
-    ToRelConverter.setup();
+    ToRelConverterTestUtils.setup();
   }
 
   @Test
