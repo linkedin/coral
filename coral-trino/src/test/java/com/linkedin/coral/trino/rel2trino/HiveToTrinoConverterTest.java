@@ -183,7 +183,7 @@ public class HiveToTrinoConverterTest {
             + "FROM \"test\".\"table_ints_strings\"" },
 
         { "test", "least_view", "SELECT \"least\"(\"a\", \"b\") AS \"g_int\", \"least\"(\"c\", \"d\") AS \"g_string\"\n"
-            + "FROM \"test\".\"table_ints_strings\"" }, };
+            + "FROM \"test\".\"table_ints_strings\"" } };
   }
 
   @Test
@@ -384,6 +384,28 @@ public class HiveToTrinoConverterTest {
     String targetSql =
         "SELECT CAST(1 AS DOUBLE), CAST(1.5 AS INTEGER), CAST(2.3 AS VARCHAR(65535)), CAST(1631142817 AS TIMESTAMP), CAST('' AS BOOLEAN)\n"
             + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
+    String expandedSql = relToTrinoConverter.convert(relNode);
+    assertEquals(expandedSql, targetSql);
+  }
+
+  @Test
+  public void testResetTransformColumnFieldNameForGenericProject() {
+    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+    RelNode relNode = hiveToRelConverter.convertView("test", "view_with_transform_column_name_reset");
+    // Without resetting `transformColumnFieldName` in `GenericProjectToTrinoConverter.convertGenericProject`, the translated SQL is
+    //
+    // SELECT "struct_col" AS "structCol"
+    // FROM (SELECT "structcol" AS "struct_col"
+    // FROM "test"."tables"
+    // UNION ALL
+    // SELECT CAST(row(struct_col.a) as row(a integer)) AS "struct_col"
+    // FROM "test"."tablet") AS "t1"
+    //
+    // However, `struct_col` column doesn't exist in test.tableT
+
+    String targetSql = "SELECT \"struct_col\" AS \"structCol\"\n" + "FROM (SELECT \"structcol\" AS \"struct_col\"\n"
+        + "FROM \"test\".\"tables\"\n" + "UNION ALL\n"
+        + "SELECT CAST(row(structcol.a) as row(a integer)) AS \"struct_col\"\n" + "FROM \"test\".\"tablet\") AS \"t1\"";
     String expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
   }

@@ -142,7 +142,7 @@ public class Calcite2TrinoUDFConverter {
       }
 
       private TrinoRexConverter getTrinoRexConverter(RelNode node) {
-        return new TrinoRexConverter(node.getCluster().getRexBuilder(), node.getCluster().getTypeFactory(), configs);
+        return new TrinoRexConverter(node, configs);
       }
     };
     return calciteNode.accept(converter);
@@ -154,20 +154,23 @@ public class Calcite2TrinoUDFConverter {
   public static class TrinoRexConverter extends RexShuttle {
     private final RexBuilder rexBuilder;
     private final RelDataTypeFactory typeFactory;
+    private final RelNode node;
     private Map<String, Boolean> configs;
 
     // SUPPORTED_TYPE_CAST_MAP is a static mapping that maps a SqlTypeFamily key to its set of
     // type-castable SqlTypeFamilies.
     private static final Multimap<SqlTypeFamily, SqlTypeFamily> SUPPORTED_TYPE_CAST_MAP;
+
+    public TrinoRexConverter(RelNode node, Map<String, Boolean> configs) {
+      this.rexBuilder = node.getCluster().getRexBuilder();
+      this.typeFactory = node.getCluster().getTypeFactory();
+      this.configs = configs;
+      this.node = node;
+    }
+
     static {
       SUPPORTED_TYPE_CAST_MAP = ImmutableMultimap.<SqlTypeFamily, SqlTypeFamily> builder()
           .putAll(SqlTypeFamily.CHARACTER, SqlTypeFamily.NUMERIC, SqlTypeFamily.BOOLEAN).build();
-    }
-
-    public TrinoRexConverter(RexBuilder rexBuilder, RelDataTypeFactory typeFactory, Map<String, Boolean> configs) {
-      this.rexBuilder = rexBuilder;
-      this.typeFactory = typeFactory;
-      this.configs = configs;
     }
 
     @Override
@@ -178,7 +181,7 @@ public class Calcite2TrinoUDFConverter {
       //     - syntax is difficult for Calcite to parse
       //   - the return type varies based on a desired schema to be projected
       if (call.getOperator() instanceof GenericProjectFunction) {
-        return GenericProjectToTrinoConverter.convertGenericProject(rexBuilder, call);
+        return GenericProjectToTrinoConverter.convertGenericProject(rexBuilder, call, node);
       }
       // MAP(k1, v1, k2, v2) should be MAP(ARRAY(k1, k2), ARRAY(v1, v2))
       if (call.getOperator() instanceof SqlMapValueConstructor) {
