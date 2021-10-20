@@ -556,7 +556,7 @@ public class CoralSparkTest {
     targetSql = "SELECT concat(reflect('java.lang.String', 'valueOf', 1), 'a')\n" + "FROM default.complex";
     assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
   }
-  
+
   @Test
   public void testCollectListFunction() {
     RelNode relNode = TestUtils.toRelNode("SELECT collect_list(a) FROM default.foo");
