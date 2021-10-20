@@ -6,6 +6,7 @@
 package com.linkedin.coral.hive.hive2rel;
 
 import org.apache.calcite.adapter.java.JavaTypeFactory;
+import org.apache.calcite.config.NullCollation;
 import org.apache.calcite.prepare.CalciteCatalogReader;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.sql.SqlBasicCall;
@@ -18,7 +19,7 @@ import org.apache.calcite.sql.validate.SqlConformance;
 import org.apache.calcite.sql.validate.SqlValidatorImpl;
 import org.apache.calcite.sql.validate.SqlValidatorScope;
 
-import com.linkedin.coral.hive.hive2rel.functions.FunctionFieldReferenceOperator;
+import com.linkedin.coral.common.FunctionFieldReferenceOperator;
 
 
 class HiveSqlValidator extends SqlValidatorImpl {
@@ -26,6 +27,7 @@ class HiveSqlValidator extends SqlValidatorImpl {
   public HiveSqlValidator(SqlOperatorTable opTab, CalciteCatalogReader catalogReader, JavaTypeFactory typeFactory,
       SqlConformance conformance) {
     super(opTab, catalogReader, typeFactory, conformance);
+    setDefaultNullCollation(NullCollation.LOW);
   }
 
   @Override

@@ -21,7 +21,7 @@ import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
 
-import com.linkedin.coral.hive.hive2rel.TypeConverter;
+import com.linkedin.coral.common.TypeConverter;
 
 
 public class HiveGenericUDFReturnTypeInference implements SqlReturnTypeInference {

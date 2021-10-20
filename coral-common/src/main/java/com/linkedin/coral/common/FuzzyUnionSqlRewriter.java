@@ -3,7 +3,7 @@
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
-package com.linkedin.coral.hive.hive2rel;
+package com.linkedin.coral.common;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,20 +18,10 @@ import com.google.common.collect.Sets;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeField;
-import org.apache.calcite.sql.SqlAsOperator;
-import org.apache.calcite.sql.SqlBasicCall;
-import org.apache.calcite.sql.SqlCall;
-import org.apache.calcite.sql.SqlIdentifier;
-import org.apache.calcite.sql.SqlKind;
-import org.apache.calcite.sql.SqlLiteral;
-import org.apache.calcite.sql.SqlNode;
-import org.apache.calcite.sql.SqlNodeList;
-import org.apache.calcite.sql.SqlSelect;
+import org.apache.calcite.sql.*;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.sql.util.SqlShuttle;
-
-import com.linkedin.coral.hive.hive2rel.functions.GenericProjectFunction;
 
 
 /**
@@ -86,13 +76,13 @@ import com.linkedin.coral.hive.hive2rel.functions.GenericProjectFunction;
  *
  * It is up to the coral modules for a specific engine (spark/trino) to resolve the schema of b.f1.
  */
-class FuzzyUnionSqlRewriter extends SqlShuttle {
+public class FuzzyUnionSqlRewriter extends SqlShuttle {
 
   private final String tableName;
-  private final RelContextProvider relContextProvider;
+  private final ToRelConverter toRelConverter;
 
-  public FuzzyUnionSqlRewriter(@Nonnull String tableName, @Nonnull RelContextProvider relContextProvider) {
-    this.relContextProvider = relContextProvider;
+  public FuzzyUnionSqlRewriter(@Nonnull String tableName, @Nonnull ToRelConverter toRelConverter) {
+    this.toRelConverter = toRelConverter;
     this.tableName = tableName;
   }
 
@@ -168,8 +158,8 @@ class FuzzyUnionSqlRewriter extends SqlShuttle {
   private SqlNode addFuzzyUnionToUnionBranch(SqlNode unionBranch, RelDataType expectedDataType) {
     // Get the base tables' (rather than intermediate base views') RelDataType of unionBranch, so that it can pass the type
     // validation of calcite because calcite uses base tables' RelDataType to do the type validation for union.
-    RelDataType fromNodeDataType = relContextProvider.getSqlToRelConverter()
-        .convertQuery(unionBranch.accept(new FuzzyUnionSqlRewriter(tableName, relContextProvider)), true, true).rel
+    RelDataType fromNodeDataType = toRelConverter.getSqlToRelConverter()
+        .convertQuery(unionBranch.accept(new FuzzyUnionSqlRewriter(tableName, toRelConverter)), true, true).rel
             .getRowType();
 
     // Create a SqlNode that has a string equivalent to the following query:
@@ -210,11 +200,10 @@ class FuzzyUnionSqlRewriter extends SqlShuttle {
     final List<SqlNode> leafNodes = getUnionLeafNodes(unionCall);
     final List<RelDataType> leafNodeDataTypes = new ArrayList<>();
     for (final SqlNode node : leafNodes) {
-      RelDataType fromNodeDataType = relContextProvider.getHiveSqlValidator().getValidatedNodeTypeIfKnown(node);
+      RelDataType fromNodeDataType = toRelConverter.getSqlValidator().getValidatedNodeTypeIfKnown(node);
       if (fromNodeDataType == null) {
-        relContextProvider.getHiveSqlValidator()
-            .validate(node.accept(new FuzzyUnionSqlRewriter(tableName, relContextProvider)));
-        fromNodeDataType = relContextProvider.getHiveSqlValidator().getValidatedNodeType(node);
+        toRelConverter.getSqlValidator().validate(node.accept(new FuzzyUnionSqlRewriter(tableName, toRelConverter)));
+        fromNodeDataType = toRelConverter.getSqlValidator().getValidatedNodeType(node);
       }
       leafNodeDataTypes.add(fromNodeDataType);
     }
@@ -233,7 +222,7 @@ class FuzzyUnionSqlRewriter extends SqlShuttle {
 
     if (!(baseDataType.isStruct()) && !(baseDataType.getSqlTypeName() == SqlTypeName.ARRAY)
         && !(baseDataType.getSqlTypeName() == SqlTypeName.MAP)) {
-      return relContextProvider.getRelBuilder().getTypeFactory().createTypeWithNullability(baseDataType, true);
+      return toRelConverter.getRelBuilder().getTypeFactory().createTypeWithNullability(baseDataType, true);
     }
 
     RelDataType expectedCommonType = null;
@@ -241,7 +230,7 @@ class FuzzyUnionSqlRewriter extends SqlShuttle {
     if (baseDataType.isStruct()) {
       // Build the common UNION type using the first branch that appears in the query
       final RelDataTypeFactory.Builder builder =
-          new RelDataTypeFactory.Builder(relContextProvider.getRelBuilder().getTypeFactory());
+          new RelDataTypeFactory.Builder(toRelConverter.getRelBuilder().getTypeFactory());
 
       // Build a set of common fields by name in the given dataTypes
       Set<String> commonFieldNames =
@@ -265,11 +254,11 @@ class FuzzyUnionSqlRewriter extends SqlShuttle {
         final RelDataType columnType = getUnionDataType(fieldTypes);
 
         builder.add(field.getName(),
-            relContextProvider.getRelBuilder().getTypeFactory().createTypeWithNullability(columnType, true));
+            toRelConverter.getRelBuilder().getTypeFactory().createTypeWithNullability(columnType, true));
       }
 
       expectedCommonType =
-          relContextProvider.getRelBuilder().getTypeFactory().createTypeWithNullability(builder.build(), true);
+          toRelConverter.getRelBuilder().getTypeFactory().createTypeWithNullability(builder.build(), true);
     }
 
     if (baseDataType.getSqlTypeName() == SqlTypeName.ARRAY) {
@@ -277,7 +266,7 @@ class FuzzyUnionSqlRewriter extends SqlShuttle {
       final List<RelDataType> nestedArrayTypes =
           dataTypes.stream().map(RelDataType::getComponentType).collect(Collectors.toList());
       final RelDataType expectedArrayType = getUnionDataType(nestedArrayTypes);
-      expectedCommonType = relContextProvider.getRelBuilder().getTypeFactory().createArrayType(expectedArrayType, -1);
+      expectedCommonType = toRelConverter.getRelBuilder().getTypeFactory().createArrayType(expectedArrayType, -1);
     }
 
     if (baseDataType.getSqlTypeName() == SqlTypeName.MAP) {
@@ -285,10 +274,10 @@ class FuzzyUnionSqlRewriter extends SqlShuttle {
       final List<RelDataType> nestedValueTypes =
           dataTypes.stream().map(RelDataType::getValueType).collect(Collectors.toList());
       final RelDataType expectedValueType = getUnionDataType(nestedValueTypes);
-      final RelDataType expectedKeyType = relContextProvider.getRelBuilder().getTypeFactory()
-          .createTypeWithNullability(baseDataType.getKeyType(), true);
+      final RelDataType expectedKeyType =
+          toRelConverter.getRelBuilder().getTypeFactory().createTypeWithNullability(baseDataType.getKeyType(), true);
       expectedCommonType =
-          relContextProvider.getRelBuilder().getTypeFactory().createMapType(expectedKeyType, expectedValueType);
+          toRelConverter.getRelBuilder().getTypeFactory().createMapType(expectedKeyType, expectedValueType);
     }
 
     return expectedCommonType;

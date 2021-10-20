@@ -24,8 +24,8 @@ import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.session.SessionState;
 
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
-import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
-import com.linkedin.coral.hive.hive2rel.HiveMscAdapter;
+import com.linkedin.coral.common.HiveMetastoreClient;
+import com.linkedin.coral.common.HiveMscAdapter;
 import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 
@@ -50,7 +50,7 @@ public class TestUtils {
 
   public static HiveToRelConverter setupRelDataTypeToAvroTypeTests() throws HiveException, MetaException {
     HiveMetastoreClient metastoreClient = setup();
-    HiveToRelConverter hiveToRelConverter = HiveToRelConverter.create(metastoreClient);
+    HiveToRelConverter hiveToRelConverter = new HiveToRelConverter(metastoreClient);
 
     return hiveToRelConverter;
   }

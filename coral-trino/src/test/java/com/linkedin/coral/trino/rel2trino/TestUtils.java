@@ -36,7 +36,7 @@ import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.processors.CommandProcessorResponse;
 import org.apache.hadoop.hive.ql.session.SessionState;
 
-import com.linkedin.coral.hive.hive2rel.HiveMscAdapter;
+import com.linkedin.coral.common.HiveMscAdapter;
 import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
 
 import static com.linkedin.coral.trino.rel2trino.TestTable.*;
@@ -190,7 +190,7 @@ public class TestUtils {
     SessionState.start(conf);
     Driver driver = new Driver(conf);
     hiveMetastoreClient = new HiveMscAdapter(Hive.get(conf).getMSC());
-    hiveToRelConverter = HiveToRelConverter.create(hiveMetastoreClient);
+    hiveToRelConverter = new HiveToRelConverter(hiveMetastoreClient);
 
     // Views and tables used in HiveToTrinoConverterTest
     run(driver, "CREATE DATABASE IF NOT EXISTS test");
@@ -347,7 +347,7 @@ public class TestUtils {
   }
 
   public static RelNode convertView(String db, String view) {
-    return HiveToRelConverter.create(hiveMetastoreClient).convertView(db, view);
+    return new HiveToRelConverter(hiveMetastoreClient).convertView(db, view);
   }
 
   private static HiveConf loadResourceHiveConf() {

@@ -43,7 +43,7 @@ import org.apache.calcite.sql.type.SqlTypeFamily;
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import com.linkedin.coral.com.google.common.collect.ImmutableMultimap;
 import com.linkedin.coral.com.google.common.collect.Multimap;
-import com.linkedin.coral.hive.hive2rel.functions.GenericProjectFunction;
+import com.linkedin.coral.common.GenericProjectFunction;
 import com.linkedin.coral.hive.hive2rel.functions.HiveReturnTypes;
 import com.linkedin.coral.trino.rel2trino.functions.GenericProjectToTrinoConverter;
 

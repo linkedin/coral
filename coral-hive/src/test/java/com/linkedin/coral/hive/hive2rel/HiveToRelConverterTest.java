@@ -25,10 +25,11 @@ import org.apache.thrift.TException;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import com.linkedin.coral.common.ToRelConverterTestUtils;
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 import com.linkedin.coral.hive.hive2rel.functions.UnknownSqlFunctionException;
 
-import static com.linkedin.coral.hive.hive2rel.ToRelConverter.*;
+import static com.linkedin.coral.common.ToRelConverterTestUtils.*;
 import static org.apache.calcite.sql.type.OperandTypes.*;
 import static org.testng.Assert.*;
 import static org.testng.Assert.assertEquals;
@@ -38,7 +39,7 @@ public class HiveToRelConverterTest {
 
   @BeforeClass
   public static void beforeClass() throws IOException, HiveException, MetaException {
-    ToRelConverter.setup();
+    ToRelConverterTestUtils.setup();
 
     // add the following 3 test UDF to StaticHiveFunctionRegistry for testing purpose.
     StaticHiveFunctionRegistry.createAddUserDefinedFunction("com.linkedin.coral.hive.hive2rel.CoralTestUDF",
@@ -520,7 +521,7 @@ public class HiveToRelConverterTest {
   public void testConversionWithLocalMetastore() {
     Map<String, Map<String, List<String>>> localMetaStore = ImmutableMap.of("default",
         ImmutableMap.of("table_localstore", ImmutableList.of("name|string", "company|string", "group_name|string")));
-    HiveToRelConverter hiveToRelConverter = HiveToRelConverter.create(localMetaStore);
+    HiveToRelConverter hiveToRelConverter = new HiveToRelConverter(localMetaStore);
     RelNode rel = hiveToRelConverter.convertSql("SELECT * FROM default.table_localstore");
 
     final String expectedSql = "SELECT *\n" + "FROM hive.default.table_localstore";
