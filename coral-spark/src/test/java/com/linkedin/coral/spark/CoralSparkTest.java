@@ -517,4 +517,43 @@ public class CoralSparkTest {
             + "FROM default.complex";
     assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
   }
+
+  @Test
+  public void testReflectFunction() {
+    RelNode relNode = TestUtils.toRelNode("SELECT reflect('java.lang.String', 'valueOf', 1) FROM default.complex");
+    String targetSql = "SELECT reflect('java.lang.String', 'valueOf', 1)\n" + "FROM default.complex";
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+  }
+
+  @Test
+  public void testReflectFunctionReturnType() {
+    RelNode relNode = TestUtils.toRelNode("SELECT reflect('java.lang.String', 'valueOf', 1) + 1 FROM default.complex");
+    String targetSql =
+        "SELECT CAST(reflect('java.lang.String', 'valueOf', 1) AS INTEGER) + 1\n" + "FROM default.complex";
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+
+    relNode = TestUtils.toRelNode("SELECT reflect('java.lang.String', 'valueOf', 1) || 'a' FROM default.complex");
+    targetSql = "SELECT concat(reflect('java.lang.String', 'valueOf', 1), 'a')\n" + "FROM default.complex";
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+  }
+
+  @Test
+  public void testJavaMethodFunction() {
+    RelNode relNode = TestUtils.toRelNode("SELECT java_method('java.lang.String', 'valueOf', 1) FROM default.complex");
+    String targetSql = "SELECT reflect('java.lang.String', 'valueOf', 1)\n" + "FROM default.complex";
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+  }
+
+  @Test
+  public void testJavaMethodFunctionReturnType() {
+    RelNode relNode =
+        TestUtils.toRelNode("SELECT java_method('java.lang.String', 'valueOf', 1) + 1 FROM default.complex");
+    String targetSql =
+        "SELECT CAST(reflect('java.lang.String', 'valueOf', 1) AS INTEGER) + 1\n" + "FROM default.complex";
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+
+    relNode = TestUtils.toRelNode("SELECT java_method('java.lang.String', 'valueOf', 1) || 'a' FROM default.complex");
+    targetSql = "SELECT concat(reflect('java.lang.String', 'valueOf', 1), 'a')\n" + "FROM default.complex";
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+  }
 }
