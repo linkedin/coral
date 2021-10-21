@@ -124,6 +124,7 @@ public class ArtifactsResolver {
     final ResolveOptions resolveOptions = new ResolveOptions().setConfs(new String[] { "default" })
         .setOutputReport(true).setValidate(true).setTransitive(dependencySpec.transitive);
     resolveOptions.setLog(LogOptions.LOG_QUIET);
+    resolveOptions.setOutputReport(false);
     try {
       final ResolveReport report = _ivyInstance.resolve(md, resolveOptions);
       if (report.hasError()) {
