@@ -51,7 +51,7 @@ public class CalciteTrinoUDFMap {
     createUDFMapEntry(UDF_MAP, HiveRLikeOperator.REGEXP, 2, "REGEXP_LIKE");
 
     // JSON Functions
-    createUDFMapEntry(UDF_MAP, hiveToCalciteOp("get_json_object"), 2, "json_extract");
+    createUDFMapEntry(UDF_MAP, hiveToCalciteOp("get_json_object"), 2, "json_extract_scalar");
 
     // map various hive functions
     createUDFMapEntry(UDF_MAP, hiveToCalciteOp("pmod"), 2, "mod",
