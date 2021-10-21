@@ -294,6 +294,17 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
     createAddUserDefinedFunction("crc32", HiveReturnTypes.BIGINT,
         or(family(SqlTypeFamily.STRING), family(SqlTypeFamily.BINARY)));
 
+    // xpath functions
+    createAddUserDefinedFunction("xpath", HiveReturnTypes.arrayOfType(SqlTypeName.VARCHAR), STRING_STRING);
+    createAddUserDefinedFunction("xpath_string", HiveReturnTypes.STRING, STRING_STRING);
+    createAddUserDefinedFunction("xpath_boolean", ReturnTypes.BOOLEAN, STRING_STRING);
+    createAddUserDefinedFunction("xpath_short", ReturnTypes.INTEGER, STRING_STRING);
+    createAddUserDefinedFunction("xpath_int", ReturnTypes.INTEGER, STRING_STRING);
+    createAddUserDefinedFunction("xpath_long", ReturnTypes.INTEGER, STRING_STRING);
+    createAddUserDefinedFunction("xpath_float", DOUBLE_NULLABLE, STRING_STRING);
+    createAddUserDefinedFunction("xpath_double", DOUBLE_NULLABLE, STRING_STRING);
+    createAddUserDefinedFunction("xpath_number", DOUBLE_NULLABLE, STRING_STRING);
+
     // Date Functions
     createAddUserDefinedFunction("from_unixtime", HiveReturnTypes.STRING,
         family(ImmutableList.of(SqlTypeFamily.NUMERIC, SqlTypeFamily.STRING), optionalOrd(1)));
