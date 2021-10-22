@@ -145,7 +145,7 @@ public class ParseTreeBuilder extends AstVisitor<SqlNode, ParserVisitorContext> 
     if (node == null) {
       return null;
     }
-    String[] path = node.getClass().getName().split("\\.");
+    String[] path = splitIdentifierString(node.getClass().getName());
     String classBaseName = path[path.length - 1];
     switch (classBaseName) {
       case "CurrentTime":
