@@ -53,9 +53,10 @@ public class SameOperandTypeExceptFirstOperandChecker extends SameOperandTypeChe
     if (!types[0].getSqlTypeName().equals(firstOperandTypeName)) {
       return handleError(callBinding, throwOnFailure);
     }
-    // skip 0th operand from this check
+    // skip 0th operand from this check, it's fine if the type is NULL
     for (int i = 2; i < operandList.size(); i++) {
-      if (!SqlTypeUtil.isComparable(types[i], types[i - 1])) {
+      if (!SqlTypeUtil.isComparable(types[i], types[i - 1]) && types[i].getSqlTypeName() != SqlTypeName.NULL
+          && types[i - 1].getSqlTypeName() != SqlTypeName.NULL) {
         handleError(callBinding, throwOnFailure);
       }
     }
