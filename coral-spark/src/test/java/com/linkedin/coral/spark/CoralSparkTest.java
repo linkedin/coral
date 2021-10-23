@@ -477,6 +477,22 @@ public class CoralSparkTest {
   }
 
   @Test
+  public void testIfWithNullAsSecondParameter() {
+    RelNode relNode = TestUtils.toRelNode("SELECT if(FALSE, NULL, named_struct('a', ''))");
+
+    String targetSql = "SELECT if(FALSE, NULL, named_struct('a', ''))\n" + "FROM (VALUES  (0)) t (ZERO)";
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+  }
+
+  @Test
+  public void testIfWithNullAsThirdParameter() {
+    RelNode relNode = TestUtils.toRelNode("SELECT if(FALSE, named_struct('a', ''), NULL)");
+
+    String targetSql = "SELECT if(FALSE, named_struct('a', ''), NULL)\n" + "FROM (VALUES  (0)) t (ZERO)";
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+  }
+
+  @Test
   public void testMd5Function() {
     RelNode relNode = TestUtils.toRelNode("SELECT md5('ABC') as a FROM foo");
     String targetSql = "SELECT md5('ABC') a\n" + "FROM default.foo";
