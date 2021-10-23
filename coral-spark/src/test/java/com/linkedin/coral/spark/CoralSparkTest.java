@@ -477,6 +477,13 @@ public class CoralSparkTest {
   }
 
   @Test
+  public void testExclamationOperator() {
+    RelNode relNode = TestUtils.toRelNode("SELECT !FALSE as a FROM foo");
+    String targetSql = "SELECT NOT FALSE a\n" + "FROM default.foo";
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+  }
+
+  @Test
   public void testMd5Function() {
     RelNode relNode = TestUtils.toRelNode("SELECT md5('ABC') as a FROM foo");
     String targetSql = "SELECT md5('ABC') a\n" + "FROM default.foo";

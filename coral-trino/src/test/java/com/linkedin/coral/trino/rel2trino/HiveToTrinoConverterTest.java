@@ -376,6 +376,16 @@ public class HiveToTrinoConverterTest {
   }
 
   @Test
+  public void testExclamationOperator() {
+    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+
+    RelNode relNode = hiveToRelConverter.convertSql("SELECT !FALSE");
+    String targetSql = "SELECT NOT FALSE\n" + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
+    String expandedSql = relToTrinoConverter.convert(relNode);
+    assertEquals(expandedSql, targetSql);
+  }
+
+  @Test
   public void testCastByTypeName() {
     RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
 
