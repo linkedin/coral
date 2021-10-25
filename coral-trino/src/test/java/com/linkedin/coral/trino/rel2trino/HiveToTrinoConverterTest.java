@@ -376,16 +376,6 @@ public class HiveToTrinoConverterTest {
   }
 
   @Test
-  public void testExclamationOperator() {
-    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
-
-    RelNode relNode = hiveToRelConverter.convertSql("SELECT !FALSE");
-    String targetSql = "SELECT NOT FALSE\n" + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
-    String expandedSql = relToTrinoConverter.convert(relNode);
-    assertEquals(expandedSql, targetSql);
-  }
-
-  @Test
   public void testCastByTypeName() {
     RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
 
@@ -416,6 +406,16 @@ public class HiveToTrinoConverterTest {
     String targetSql = "SELECT \"struct_col\" AS \"structCol\"\n" + "FROM (SELECT \"structcol\" AS \"struct_col\"\n"
         + "FROM \"test\".\"tables\"\n" + "UNION ALL\n"
         + "SELECT CAST(row(structcol.a) as row(a integer)) AS \"struct_col\"\n" + "FROM \"test\".\"tablet\") AS \"t1\"";
+    String expandedSql = relToTrinoConverter.convert(relNode);
+    assertEquals(expandedSql, targetSql);
+  }
+
+  @Test
+  public void testNegationOperator() {
+    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+
+    RelNode relNode = hiveToRelConverter.convertSql("SELECT !FALSE");
+    String targetSql = "SELECT NOT FALSE\n" + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
     String expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
   }

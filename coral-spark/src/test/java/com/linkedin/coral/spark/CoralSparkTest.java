@@ -477,13 +477,6 @@ public class CoralSparkTest {
   }
 
   @Test
-  public void testExclamationOperator() {
-    RelNode relNode = TestUtils.toRelNode("SELECT !FALSE as a FROM foo");
-    String targetSql = "SELECT NOT FALSE a\n" + "FROM default.foo";
-    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
-  }
-
-  @Test
   public void testMd5Function() {
     RelNode relNode = TestUtils.toRelNode("SELECT md5('ABC') as a FROM foo");
     String targetSql = "SELECT md5('ABC') a\n" + "FROM default.foo";
@@ -561,6 +554,13 @@ public class CoralSparkTest {
 
     relNode = TestUtils.toRelNode("SELECT java_method('java.lang.String', 'valueOf', 1) || 'a' FROM default.complex");
     targetSql = "SELECT concat(reflect('java.lang.String', 'valueOf', 1), 'a')\n" + "FROM default.complex";
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+  }
+
+  @Test
+  public void testNegationOperator() {
+    RelNode relNode = TestUtils.toRelNode("SELECT !FALSE as a FROM foo");
+    String targetSql = "SELECT NOT FALSE a\n" + "FROM default.foo";
     assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
   }
 }
