@@ -572,4 +572,11 @@ public class CoralSparkTest {
     targetSql = "SELECT concat(reflect('java.lang.String', 'valueOf', 1), 'a')\n" + "FROM default.complex";
     assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
   }
+
+  @Test
+  public void testNegationOperator() {
+    RelNode relNode = TestUtils.toRelNode("SELECT !FALSE as a FROM foo");
+    String targetSql = "SELECT NOT FALSE a\n" + "FROM default.foo";
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+  }
 }

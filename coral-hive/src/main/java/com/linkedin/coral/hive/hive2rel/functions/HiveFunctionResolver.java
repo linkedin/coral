@@ -63,11 +63,13 @@ public class HiveFunctionResolver {
    * @throws IllegalStateException if there is zero or more than one matching operator
    */
   public SqlOperator resolveUnaryOperator(String name) {
-    final String lowerCaseOperator = name.toLowerCase();
+    // We convert `!` to `not` directly
+    if ("!".equals(name)) {
+      return SqlStdOperatorTable.NOT;
+    }
     List<SqlOperator> matches = operators.stream()
-        .filter(o -> o.getName().toLowerCase().equals(lowerCaseOperator) && o instanceof SqlPrefixOperator)
-        .collect(Collectors.toList());
-    checkState(matches.size() == 1, "%s operator %s", operators.isEmpty() ? "Unknown" : "Ambiguous", name);
+        .filter(o -> o.getName().equalsIgnoreCase(name) && o instanceof SqlPrefixOperator).collect(Collectors.toList());
+    checkState(matches.size() == 1, "%s operator %s", matches.isEmpty() ? "Unknown" : "Ambiguous", name);
     return matches.get(0);
   }
 
