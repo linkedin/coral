@@ -295,6 +295,28 @@ public class HiveToTrinoConverterTest {
   }
 
   @Test
+  public void testFromUnixTimeOneParameter() {
+    RelNode relNode = hiveToRelConverter.convertSql("SELECT from_unixtime(10000)");
+    String targetSql = "SELECT \"format_datetime\"(\"from_unixtime\"(10000), 'yyyy-MM-dd HH:mm:ss')\n"
+        + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
+
+    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+    String expandedSql = relToTrinoConverter.convert(relNode);
+    assertEquals(expandedSql, targetSql);
+  }
+
+  @Test
+  public void testFromUnixTimeTwoParameters() {
+    RelNode relNode = hiveToRelConverter.convertSql("SELECT from_unixtime(10000, 'yyyy-MM-dd')");
+    String targetSql = "SELECT \"format_datetime\"(\"from_unixtime\"(10000), 'yyyy-MM-dd')\n"
+        + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
+
+    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+    String expandedSql = relToTrinoConverter.convert(relNode);
+    assertEquals(expandedSql, targetSql);
+  }
+
+  @Test
   public void testXpathFunctions() {
     RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
 
@@ -335,28 +357,6 @@ public class HiveToTrinoConverterTest {
     relNode = hiveToRelConverter.convertSql("SELECT xpath_number('<a>b</a>', 'a = 10')");
     targetSql = "SELECT \"xpath_number\"('<a>b</a>', 'a = 10')\n" + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
     assertEquals(relToTrinoConverter.convert(relNode), targetSql);
-  }
-
-  @Test
-  public void testFromUnixTimeOneParameter() {
-    RelNode relNode = hiveToRelConverter.convertSql("SELECT from_unixtime(10000)");
-    String targetSql = "SELECT \"format_datetime\"(\"from_unixtime\"(10000), 'yyyy-MM-dd HH:mm:ss')\n"
-        + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
-
-    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
-    String expandedSql = relToTrinoConverter.convert(relNode);
-    assertEquals(expandedSql, targetSql);
-  }
-
-  @Test
-  public void testFromUnixTimeTwoParameters() {
-    RelNode relNode = hiveToRelConverter.convertSql("SELECT from_unixtime(10000, 'yyyy-MM-dd')");
-    String targetSql = "SELECT \"format_datetime\"(\"from_unixtime\"(10000), 'yyyy-MM-dd')\n"
-        + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
-
-    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
-    String expandedSql = relToTrinoConverter.convert(relNode);
-    assertEquals(expandedSql, targetSql);
   }
 
   @Test
