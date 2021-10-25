@@ -301,9 +301,9 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
     createAddUserDefinedFunction("xpath_short", HiveReturnTypes.SMALLINT, STRING_STRING);
     createAddUserDefinedFunction("xpath_int", ReturnTypes.INTEGER, STRING_STRING);
     createAddUserDefinedFunction("xpath_long", HiveReturnTypes.BIGINT, STRING_STRING);
-    createAddUserDefinedFunction("xpath_float", DOUBLE_NULLABLE, STRING_STRING);
-    createAddUserDefinedFunction("xpath_double", DOUBLE_NULLABLE, STRING_STRING);
-    createAddUserDefinedFunction("xpath_number", DOUBLE_NULLABLE, STRING_STRING);
+    createAddUserDefinedFunction("xpath_float", DOUBLE, STRING_STRING);
+    createAddUserDefinedFunction("xpath_double", DOUBLE, STRING_STRING);
+    createAddUserDefinedFunction("xpath_number", DOUBLE, STRING_STRING);
 
     // Date Functions
     createAddUserDefinedFunction("from_unixtime", HiveReturnTypes.STRING,
