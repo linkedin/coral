@@ -3,7 +3,7 @@
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
-package parser;
+package com.linkedin.coral.trino.trino2rel;
 
 import java.io.File;
 import java.io.IOException;
@@ -15,10 +15,6 @@ import org.apache.calcite.sql.SqlNode;
 import org.apache.commons.io.IOUtils;
 import org.testng.annotations.Test;
 
-import com.linkedin.coral.presto.parser.CalciteSqlFormatter;
-import com.linkedin.coral.presto.parser.ParseTreeBuilder;
-import com.linkedin.coral.presto.parser.ParserVisitorContext;
-import com.linkedin.coral.presto.parser.PrestoParserDriver;
 import com.linkedin.coral.trino.rel2trino.TrinoSqlDialect;
 
 import static java.lang.String.format;
@@ -102,7 +98,7 @@ public class ParseTreeBuilderTest {
     for (String sql : sqls) {
       try {
         convertCheck(sql);
-      } catch (UnsupportedOperationException e) {
+      } catch (UnhandledASTNodeException e) {
         unsupportedExceptionCount++;
       }
     }

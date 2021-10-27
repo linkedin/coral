@@ -3,7 +3,7 @@
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
-package com.linkedin.coral.presto.parser;
+package com.linkedin.coral.trino.trino2rel;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -13,10 +13,11 @@ import com.github.vertical_blank.sqlformatter.core.AbstractFormatter;
 import com.github.vertical_blank.sqlformatter.core.DialectConfig;
 import com.github.vertical_blank.sqlformatter.core.FormatConfig;
 import com.github.vertical_blank.sqlformatter.core.Tokenizer;
+import com.github.vertical_blank.sqlformatter.languages.StandardSqlFormatter;
 
 
 /**
- * This is a reimplementation of vertical_blank's StandardSqlFormatter.
+ * This is a reimplementation of vertical_blank's {@link StandardSqlFormatter}.
  *
  * <p>We need to add "FULL JOIN" to the list of reservedNewlineWords for Calcite.
  */
