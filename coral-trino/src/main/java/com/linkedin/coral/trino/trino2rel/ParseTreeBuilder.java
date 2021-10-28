@@ -31,6 +31,7 @@ import org.apache.calcite.util.TimestampString;
 import com.linkedin.coral.common.HiveTypeSystem;
 import com.linkedin.coral.hive.hive2rel.functions.HiveFunctionResolver;
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
+import org.apache.commons.lang3.ObjectUtils;
 
 import static com.linkedin.coral.common.calcite.CalciteUtil.*;
 import static java.lang.String.format;
@@ -96,7 +97,7 @@ public class ParseTreeBuilder extends AstVisitor<SqlNode, ParserVisitorContext> 
         return ZERO;
     }
 
-    private SqlNode visitOptional(Optional<Node> node, ParserVisitorContext context) {
+    private SqlNode processOptional(Optional<? extends Node> node, ParserVisitorContext context) {
         return node.map(value -> process(value, context)).orElse(null);
     }
 
@@ -218,10 +219,9 @@ public class ParseTreeBuilder extends AstVisitor<SqlNode, ParserVisitorContext> 
     protected SqlNode visitQuery(Query node, ParserVisitorContext context) {
         SqlParserPos pos = getPos(node);
         SqlNode query = node.getQueryBody().accept(this, context);
-        SqlNodeList orderByList = node.getOrderBy().isPresent() ? visitOrderBy(node.getOrderBy().get(), context)
-                : CalciteUtil.createSqlNodeList(Collections.emptyList());
-        SqlNode fetch = getLimit(node.getLimit(), context);
-        SqlNode offset = node.getOffset().isPresent() ? visitOffset(node.getOffset().get(), context) : null;
+        SqlNodeList orderByList = ObjectUtils.defaultIfNull((SqlNodeList) processOptional(node.getOrderBy(), context), createSqlNodeList(Collections.emptyList(), ZERO));
+        SqlNode fetch = processOptional(node.getLimit(), context);
+        SqlNode offset = processOptional(node.getOffset(), context);
         if (node.getWith().isPresent()) {
             SqlNodeList withItems = visitWith(node.getWith().get(), context);
             return getFinalQuery(pos, new SqlWith(pos, withItems, query), orderByList, fetch, offset);
@@ -289,23 +289,18 @@ public class ParseTreeBuilder extends AstVisitor<SqlNode, ParserVisitorContext> 
         return process(node.getRowCount(), context);
     }
 
-    private SqlNode getLimit(Optional<Node> node, ParserVisitorContext context) {
-        return node.map(value -> process(value, context)).orElse(null);
-    }
-
     @Override
     protected SqlNode visitQuerySpecification(QuerySpecification node, ParserVisitorContext context) {
         SqlNodeList selectList = visitSelect(node.getSelect(), context);
         SqlNodeList keywords = node.getSelect().isDistinct()
                 ? new SqlNodeList(ImmutableList.of(SqlSelectKeyword.DISTINCT.symbol(ZERO)), ZERO) : null;
-        SqlNode from = node.getFrom().isPresent() ? node.getFrom().get().accept(this, context) : null;
-        SqlNode where = node.getWhere().isPresent() ? process(node.getWhere().get(), context) : null;
-        SqlNodeList groupBy = node.getGroupBy().isPresent() ? visitGroupBy(node.getGroupBy().get(), context) : null;
-        SqlNode having = node.getHaving().isPresent() ? process(node.getHaving().get(), context) : null;
-        SqlNodeList orderBy = node.getOrderBy().isPresent() ? visitOrderBy(node.getOrderBy().get(), context)
-                : CalciteUtil.createSqlNodeList(Collections.emptyList());
-        SqlNode limit = getLimit(node.getLimit(), context);
-        SqlNode offset = node.getOffset().isPresent() ? visitOffset(node.getOffset().get(), context) : null;
+        SqlNode from = processOptional(node.getFrom(), context);
+        SqlNode where = processOptional(node.getWhere(), context);
+        SqlNodeList groupBy = (SqlNodeList) processOptional(node.getGroupBy(), context);
+        SqlNode having = processOptional(node.getHaving(), context);
+        SqlNodeList orderBy = ObjectUtils.defaultIfNull((SqlNodeList) processOptional(node.getOrderBy(), context), createSqlNodeList(Collections.emptyList(), ZERO));
+        SqlNode limit = processOptional(node.getLimit(), context);
+        SqlNode offset = processOptional(node.getOffset(), context);
         SqlSelect select =
                 new SqlSelect(getPos(node), keywords, selectList, from, where, groupBy, having, null, null, null, null);
         if (!orderBy.getList().isEmpty() || offset != null || limit != null) {
@@ -756,8 +751,7 @@ public class ParseTreeBuilder extends AstVisitor<SqlNode, ParserVisitorContext> 
     protected SqlNode visitWindowSpecification(WindowSpecification node, ParserVisitorContext context) {
         SqlParserPos pos = getPos(node);
         SqlNodeList partitionList = toSqlNodeList(node.getPartitionBy(), context, pos);
-        SqlNodeList orderList = toSqlNodeList(
-                node.getOrderBy().isPresent() ? node.getOrderBy().get().getSortItems() : Collections.emptyList(), context, pos);
+        SqlNodeList orderList = ObjectUtils.defaultIfNull((SqlNodeList) processOptional(node.getOrderBy(), context), createSqlNodeList(Collections.emptyList(), ZERO));
         ParserVisitorContext frameContext = new ParserVisitorContext();
         if (node.getFrame().isPresent()) {
             process(node.getFrame().get(), frameContext);
