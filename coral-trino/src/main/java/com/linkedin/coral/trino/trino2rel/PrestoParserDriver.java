@@ -5,12 +5,12 @@
  */
 package com.linkedin.coral.trino.trino2rel;
 
-
 import io.trino.sql.parser.ParsingOptions;
 import io.trino.sql.parser.SqlParser;
 import io.trino.sql.tree.Statement;
 
 import static io.trino.sql.parser.ParsingOptions.DecimalLiteralTreatment.AS_DECIMAL;
+
 
 public class PrestoParserDriver {
   private final static ParsingOptions parsingOptions = new ParsingOptions(AS_DECIMAL /* anything */);
