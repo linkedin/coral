@@ -295,7 +295,8 @@ public class RelToAvroSchemaConverter {
       for (Pair<AggregateCall, String> aggCall : logicalAggregate.getNamedAggCalls()) {
         String fieldName = SchemaUtilities.toAvroQualifiedName(aggCall.right);
         RelDataType fieldType = aggCall.left.getType();
-        SchemaUtilities.appendField(fieldName, fieldType, null, logicalAggregateFieldAssembler, true);
+        SchemaUtilities.appendField(fieldName, fieldType,
+            SchemaUtilities.generateDocumentationForAggregate(aggCall.left), logicalAggregateFieldAssembler, true);
       }
 
       schemaMap.put(logicalAggregate, logicalAggregateFieldAssembler.endRecord());
