@@ -1,0 +1,1 @@
+select count(10), max(50), min(90.0)

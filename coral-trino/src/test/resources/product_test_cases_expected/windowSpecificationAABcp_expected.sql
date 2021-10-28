@@ -1,0 +1,3 @@
+select `suppkey`, `orderkey`, `partkey`, round(sum(`quantity`) over (partition by `suppkey` order by `orderkey` rows between unbounded_preceding and current_row), 3) as `sum_quantity_a`, round(sum(`discount`) over (partition by `suppkey` order by `orderkey` rows between unbounded_preceding and current_row), 3) as `sum_discount_a`, ntile(4) over (partition by `partkey` order by `orderkey` rows between unbounded_preceding and current_row) as `ntile_quantity_b`
+from `tpch`.`tiny`.`lineitem`
+where (`partkey` = 272 or `partkey` = 273) and `suppkey` > 50

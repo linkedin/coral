@@ -1,0 +1,1 @@
+select cast(10 as varchar(65535) character set `iso-8859-1`), cast('ala' as bigint)

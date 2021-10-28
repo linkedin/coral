@@ -1,0 +1,1 @@
+select `map`(array['ala', 'kot'], array[3, 4])['kot']
