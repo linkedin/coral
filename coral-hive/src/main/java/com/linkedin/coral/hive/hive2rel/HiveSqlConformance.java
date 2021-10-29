@@ -22,4 +22,9 @@ public class HiveSqlConformance extends SqlDelegatingConformance {
   public boolean allowNiladicParentheses() {
     return true;
   }
+
+  @Override
+  public boolean isSortByAlias() {
+    return true;
+  }
 }
