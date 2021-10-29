@@ -27,4 +27,9 @@ public class HiveSqlConformance extends SqlDelegatingConformance {
   public boolean isSortByAlias() {
     return true;
   }
+
+  @Override
+  public boolean isHavingAlias() {
+    return true;
+  }
 }
