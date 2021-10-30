@@ -442,8 +442,6 @@ public class HiveToTrinoConverterTest {
     assertEquals(expandedSql, targetSql);
   }
 
-  // Currently this workaround doesnt work with SUBSTRING, since the conversion to Calcite also overrides the UDF
-  // SUBSTRING and replaces it with the SqlSubStringFunction
   @Test
   public void testSubstrWithTimestamp() {
     RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
@@ -456,9 +454,9 @@ public class HiveToTrinoConverterTest {
     assertEquals(expandedSql, targetSql);
 
     relNode =
-            hiveToRelConverter.convertSql("SELECT SUBSTRING(a_timestamp, 12, 8) AS d\nFROM test.table_from_utc_timestamp");
+        hiveToRelConverter.convertSql("SELECT SUBSTRING(a_timestamp, 12, 8) AS d\nFROM test.table_from_utc_timestamp");
     targetSql =
-            "SELECT \"substring\"(CAST(\"a_timestamp\" AS VARCHAR(65535)), 12, 8) AS \"d\"\nFROM \"test\".\"table_from_utc_timestamp\"";
+        "SELECT \"substr\"(CAST(\"a_timestamp\" AS VARCHAR(65535)), 12, 8) AS \"d\"\nFROM \"test\".\"table_from_utc_timestamp\"";
     expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
   }

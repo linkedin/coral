@@ -279,7 +279,8 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
         family(Collections.nCopies(3, SqlTypeFamily.STRING), optionalOrd(ImmutableList.of(1, 2))));
     createAddUserDefinedFunction("substr", HiveReturnTypes.STRING,
         family(ImmutableList.of(SqlTypeFamily.STRING, SqlTypeFamily.INTEGER, SqlTypeFamily.INTEGER), optionalOrd(2)));
-    addFunctionEntry("substring", SUBSTRING);
+    createAddUserDefinedFunction("substring", HiveReturnTypes.STRING,
+        family(ImmutableList.of(SqlTypeFamily.STRING, SqlTypeFamily.INTEGER, SqlTypeFamily.INTEGER), optionalOrd(2)));
 
     createAddUserDefinedFunction("substring_index", HiveReturnTypes.STRING, STRING_STRING_INTEGER);
     createAddUserDefinedFunction("trim", HiveReturnTypes.STRING, STRING);
