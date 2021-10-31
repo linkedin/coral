@@ -53,9 +53,16 @@ public final class TrinoKeywordsConverter {
    */
   public static String quoteReservedKeyword(String value) {
     if (RESERVED_KEYWORDS.containsKey(value.toUpperCase())) {
-      return "\"" + value + "\"";
+      return quoteWordIfNotQuoted(value);
     } else {
       return value;
     }
+  }
+
+  /**
+   * Add quote if the value is not quoted
+   */
+  public static String quoteWordIfNotQuoted(String value) {
+    return value.startsWith("\"") && value.endsWith("\"") ? value : ("\"" + value + "\"");
   }
 }

@@ -101,7 +101,7 @@ public class HiveToTrinoConverterTest {
             + "FROM \"test\".\"tablek\") AS \"t1\"" },
 
         { "test", "fuzzy_union_view_deeply_nested_struct_evolved", "SELECT \"a\", \"b\"\n"
-            + "FROM (SELECT \"a\", CAST(row(\"b\".\"b1\", cast(row(\"\"b\".\"b2\"\".\"b3\", cast(row(\"\"\"b\".\"b2\"\".\"b4\"\".\"b5\") as row(\"b5\" varchar))) as row(\"b3\" varchar, \"b4\" row(\"b5\" varchar)))) as row(\"b1\" varchar, \"b2\" row(\"b3\" varchar, \"b4\" row(\"b5\" varchar)))) AS \"b\"\n"
+            + "FROM (SELECT \"a\", CAST(row(\"b\".\"b1\", cast(row(\"b\".\"b2\".\"b3\", cast(row(\"b\".\"b2\".\"b4\".\"b5\") as row(\"b5\" varchar))) as row(\"b3\" varchar, \"b4\" row(\"b5\" varchar)))) as row(\"b1\" varchar, \"b2\" row(\"b3\" varchar, \"b4\" row(\"b5\" varchar)))) AS \"b\"\n"
             + "FROM \"test\".\"tablel\"\n" + "UNION ALL\n" + "SELECT \"a\", \"b\"\n"
             + "FROM \"test\".\"tablem\") AS \"t1\"" },
 

@@ -134,8 +134,9 @@ class RelDataTypeToTrinoTypeStringConverter {
   private static String buildStructDataTypeString(RelRecordType relRecordType) {
     List<String> structFieldStrings = new ArrayList<>();
     for (RelDataTypeField relDataTypeField : relRecordType.getFieldList()) {
-      structFieldStrings.add(
-          String.format("\"%s\" %s", relDataTypeField.getName(), buildTrinoTypeString(relDataTypeField.getType())));
+      structFieldStrings
+          .add(String.format("%s %s", TrinoKeywordsConverter.quoteWordIfNotQuoted(relDataTypeField.getName()),
+              buildTrinoTypeString(relDataTypeField.getType())));
     }
     String subFieldsString = String.join(", ", structFieldStrings);
     return String.format("row(%s)", subFieldsString);

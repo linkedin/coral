@@ -379,7 +379,9 @@ public class GenericProjectToTrinoConverter {
         throw new RuntimeException(
             String.format("Field %s was not found in column %s.", toDataTypeField.getName(), fieldNameReference));
       }
-      String fromDataTypeFieldName = String.format("\"%s\".\"%s\"", fieldNameReference, fromDataTypeField.getName());
+      String fromDataTypeFieldName =
+          String.format("%s.%s", TrinoKeywordsConverter.quoteWordIfNotQuoted(fieldNameReference),
+              TrinoKeywordsConverter.quoteWordIfNotQuoted(fromDataTypeField.getName()));
       structSelectedFieldStrings.add(
           relDataTypeFieldAccessString(fromDataTypeField.getType(), toDataTypeField.getType(), fromDataTypeFieldName));
     }
