@@ -46,9 +46,10 @@ public final class TrinoKeywordsConverter {
 
   /**
    * Quote the value iif it is a reserved Trino keyword
+   * Note: This method is not used in Coral anymore, but we don't remove it since our internal Trino is using it
    *
    * @param value input value
-   * @return if the value is a reserved keyword, a double quote will be added as a return value.
+   * @return if the value is a reserved keyword, a double quote will be added as a return value
    */
   public static String quoteReservedKeyword(String value) {
     if (RESERVED_KEYWORDS.containsKey(value.toUpperCase())) {

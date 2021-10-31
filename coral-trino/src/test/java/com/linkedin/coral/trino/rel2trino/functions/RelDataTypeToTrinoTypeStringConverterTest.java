@@ -62,7 +62,7 @@ public class RelDataTypeToTrinoTypeStringConverterTest {
 
   @Test
   public void testStructRelDataType() {
-    String expectedTrinoTypeCastString = "row(str varchar, int integer)";
+    String expectedTrinoTypeCastString = "row(\"str\" varchar, \"int\" integer)";
 
     List<RelDataTypeField> fields = new ArrayList();
     fields.add(new RelDataTypeFieldImpl("str", 0, new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.VARCHAR)));
@@ -97,7 +97,7 @@ public class RelDataTypeToTrinoTypeStringConverterTest {
 
   @Test
   public void testNestedStructRelDataType() {
-    String expectedTrinoTypeCastString = "row(str varchar, struct row(\"values\" varchar, int integer))";
+    String expectedTrinoTypeCastString = "row(\"str\" varchar, \"struct\" row(\"values\" varchar, \"int\" integer))";
 
     List<RelDataTypeField> nestedFields = new ArrayList();
     nestedFields
@@ -118,7 +118,7 @@ public class RelDataTypeToTrinoTypeStringConverterTest {
 
   @Test
   public void testMapWithStructValueRelDataType() {
-    String expectedTrinoTypeCastString = "map(integer, row(\"values\" varchar, int integer))";
+    String expectedTrinoTypeCastString = "map(integer, row(\"values\" varchar, \"int\" integer))";
 
     List<RelDataTypeField> fields = new ArrayList();
     fields.add(new RelDataTypeFieldImpl("values", 0, new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.VARCHAR)));
@@ -135,7 +135,7 @@ public class RelDataTypeToTrinoTypeStringConverterTest {
 
   @Test
   public void testArrayWithStructEleRelDataType() {
-    String expectedTrinoTypeCastString = "array(row(\"values\" varchar, int integer))";
+    String expectedTrinoTypeCastString = "array(row(\"values\" varchar, \"int\" integer))";
 
     List<RelDataTypeField> fields = new ArrayList();
     fields.add(new RelDataTypeFieldImpl("values", 0, new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.VARCHAR)));
@@ -152,7 +152,7 @@ public class RelDataTypeToTrinoTypeStringConverterTest {
   @Test
   public void testComplexRelDataType() {
     String expectedTrinoTypeCastString =
-        "map(integer, array(row(str varchar, struct row(\"values\" varchar, int integer))))";
+        "map(integer, array(row(\"str\" varchar, \"struct\" row(\"values\" varchar, \"int\" integer))))";
 
     List<RelDataTypeField> nestedFields = new ArrayList();
     nestedFields
@@ -179,9 +179,8 @@ public class RelDataTypeToTrinoTypeStringConverterTest {
 
   @Test
   public void testDifferentTypeStructRelDataType() {
-    String expectedTrinoTypeCastString = "row(" + "int integer, " + "small smallint, " + "tiny tinyint, "
-        + "big bigint, " + "rea real, " + "flo real, " + "bool boolean, " + "ch char, " + "vch varchar, " + "dat date, "
-        + "tstamp timestamp, " + "tim time, " + "bin varbinary, " + "vbin varbinary)";
+    String expectedTrinoTypeCastString =
+        "row(\"int\" integer, \"small\" smallint, \"tiny\" tinyint, \"big\" bigint, \"rea\" real, \"flo\" real, \"bool\" boolean, \"ch\" char, \"vch\" varchar, \"dat\" date, \"tstamp\" timestamp, \"tim\" time, \"bin\" varbinary, \"vbin\" varbinary)";
 
     List<RelDataTypeField> fields = new ArrayList();
     fields.add(new RelDataTypeFieldImpl("int", 0, new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.INTEGER)));
