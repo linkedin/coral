@@ -115,6 +115,19 @@ public class ViewToAvroSchemaConverterTests {
   }
 
   @Test
+  public void testMultipleAggregates() {
+    String viewSql = "CREATE VIEW v AS SELECT MAX(bc.Id) AS Max_Id_Col, MIN(bc.Id) AS Min_Id_Col, "
+        + "AVG(bc.Id) AS Avg_Id_Col, SUM(bc.Id) AS Sum_Id_Col FROM basecomplex bc GROUP BY bc.Array_Col";
+
+    TestUtils.executeCreateViewQuery("default", "v", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v");
+
+    Assert.assertEquals(actualSchema.toString(true), TestUtils.loadSchema("testMultipleAggregates-expected.avsc"));
+  }
+
+  @Test
   public void testRexCallAggregate() {
     String viewSql = "CREATE VIEW v AS " + "SELECT 22*COUNT(bc.Id) AS Temp " + "FROM basecomplex bc";
 
