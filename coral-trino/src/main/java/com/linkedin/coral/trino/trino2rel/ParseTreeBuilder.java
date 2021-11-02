@@ -15,7 +15,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import org.apache.calcite.avatica.util.TimeUnit;
-import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.sql.*;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.parser.SqlParserPos;
@@ -710,35 +709,6 @@ public class ParseTreeBuilder extends AstVisitor<SqlNode, ParserVisitorContext> 
   @Override
   protected SqlNode visitExists(ExistsPredicate node, ParserVisitorContext context) {
     return EXISTS.createCall(getPos(node), process(node.getSubquery(), context));
-  }
-
-  private RelDataType getDecimalType(String type) {
-    String value = type.substring(8, type.length() - 1);
-    String[] nums = value.split(",");
-    int precision = Integer.parseInt(nums[0]);
-    int scale = nums.length > 1 ? Integer.parseInt(nums[1]) : 0;
-    return sqlTypeFactory.createSqlType(SqlTypeName.DECIMAL, precision, scale);
-  }
-
-  private RelDataType getVarcharType(String type) {
-    String precision = type.substring(8, type.length() - 1);
-    return sqlTypeFactory.createSqlType(SqlTypeName.VARCHAR, Integer.parseInt(precision));
-  }
-
-  private RelDataType getCharType(String type) {
-    String precision = type.substring(5, type.length() - 1);
-    return sqlTypeFactory.createSqlType(SqlTypeName.CHAR, Integer.parseInt(precision));
-  }
-
-  private RelDataType convertType(String type) {
-    if (type.toUpperCase().startsWith("DECIMAL(")) {
-      return getDecimalType(type);
-    } else if (type.toUpperCase().startsWith("VARCHAR(")) {
-      return getVarcharType(type);
-    } else if (type.toUpperCase().startsWith("CHAR(")) {
-      return getCharType(type);
-    }
-    return sqlTypeFactory.createSqlType(SqlTypeName.valueOf(type.toUpperCase()));
   }
 
   @Override
