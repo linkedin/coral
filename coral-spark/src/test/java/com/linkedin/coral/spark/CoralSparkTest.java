@@ -328,7 +328,7 @@ public class CoralSparkTest {
   public void testSelectSubstring() {
     RelNode relNode = TestUtils.toRelNode(String.join("\n", "", "SELECT substring(b,1,2)", "FROM complex"));
     // Default operator SqlSubstringFunction would generate SUBSTRING(b FROM 1 for 2)
-    String targetSql = String.join("\n", "SELECT SUBSTRING(b, 1, 2)", "FROM default.complex");
+    String targetSql = String.join("\n", "SELECT substr(b, 1, 2)", "FROM default.complex");
     assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
   }
 
