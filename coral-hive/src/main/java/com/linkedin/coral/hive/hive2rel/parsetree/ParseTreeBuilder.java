@@ -779,7 +779,7 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
 
   @Override
   protected SqlNode visitDecimal(ASTNode node, ParseContext ctx) {
-    if (node.getChildren().size() == 2) {
+    if (node.getChildCount() == 2) {
       try {
         final SqlTypeNameSpec typeNameSpec = new SqlBasicTypeNameSpec(SqlTypeName.DECIMAL,
             Integer.parseInt(((ASTNode) node.getChildren().get(0)).getText()),

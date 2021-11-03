@@ -480,4 +480,16 @@ public class HiveToTrinoConverterTest {
     String expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
   }
+
+  @Test
+  public void testCastDecimalDefault() {
+    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+
+    RelNode relNode =
+        hiveToRelConverter.convertSql("SELECT CAST(t.a as DECIMAL) as casted_decimal FROM test.table_ints_strings t");
+    String targetSql =
+        "SELECT CAST(\"a\" AS DECIMAL(10, 0)) AS \"casted_decimal\"\n" + "FROM \"test\".\"table_ints_strings\"";
+    String expandedSql = relToTrinoConverter.convert(relNode);
+    assertEquals(expandedSql, targetSql);
+  }
 }

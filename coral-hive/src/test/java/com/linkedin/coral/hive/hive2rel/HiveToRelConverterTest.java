@@ -600,6 +600,15 @@ public class HiveToRelConverterTest {
     assertEquals(generated, expected);
   }
 
+  @Test
+  public void testCastToDecimalDefault() {
+    final String expected =
+        "LogicalProject(EXPR$0=[CAST($0):DECIMAL(10, 0)])\n" + "  LogicalTableScan(table=[[hive, default, foo]])\n";
+    final String sql = "SELECT CAST(a AS DECIMAL) FROM foo";
+    String generated = relToString(sql);
+    assertEquals(generated, expected);
+  }
+
   private String relToString(String sql) {
     return RelOptUtil.toString(converter.convertSql(sql));
   }
