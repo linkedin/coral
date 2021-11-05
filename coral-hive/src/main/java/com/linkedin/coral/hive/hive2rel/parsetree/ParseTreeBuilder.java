@@ -551,6 +551,15 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
       return new SqlBasicCall(SqlStdOperatorTable.OVER, new SqlNode[] { func, window }, ZERO);
     }
 
+    if (functionName.equalsIgnoreCase("SUBSTRING")) {
+      // Calcite overrides instance of SUBSTRING with its default SUBSTRING function as defined in SqlStdOperatorTable,
+      // so we rewrite instances of SUBSTRING as SUBSTR
+      SqlNode originalNode = sqlOperands.get(0);
+      SqlNode substrNode = new SqlIdentifier(ImmutableList.of("SUBSTR"), null, originalNode.getParserPosition(), null);
+      hiveFunction = functionResolver.tryResolve("SUBSTR", ctx.hiveTable.orElse(null), sqlOperands.size() - 1);
+      return hiveFunction.createCall(substrNode, sqlOperands.subList(1, sqlOperands.size()), quantifier);
+    }
+
     return hiveFunction.createCall(sqlOperands.get(0), sqlOperands.subList(1, sqlOperands.size()), quantifier);
   }
 
