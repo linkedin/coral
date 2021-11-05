@@ -183,6 +183,9 @@ public class HiveToTrinoConverterTest {
             + "FROM \"test\".\"table_ints_strings\"" },
 
         { "test", "least_view", "SELECT \"least\"(\"a\", \"b\") AS \"g_int\", \"least\"(\"c\", \"d\") AS \"g_string\"\n"
+            + "FROM \"test\".\"table_ints_strings\"" },
+
+        { "test", "cast_decimal_view", "SELECT CAST(\"a\" AS DECIMAL(6, 2)) AS \"casted_decimal\"\n"
             + "FROM \"test\".\"table_ints_strings\"" } };
   }
 
@@ -462,6 +465,30 @@ public class HiveToTrinoConverterTest {
         "SELECT a, SUBSTR(b, 1, 1) AS aliased_column FROM test.tabler GROUP BY a, b HAVING aliased_column in ('dummy_value')");
     String targetSql =
         "SELECT \"a\", \"SUBSTR\"(\"b\", 1, 1) AS \"aliased_column\"\nFROM \"test\".\"tabler\"\nGROUP BY \"a\", \"b\"\nHAVING \"SUBSTR\"(\"b\", 1, 1)\nIN ('dummy_value')";
+    String expandedSql = relToTrinoConverter.convert(relNode);
+    assertEquals(expandedSql, targetSql);
+  }
+
+  @Test
+  public void testCastDecimal() {
+    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+
+    RelNode relNode = hiveToRelConverter
+        .convertSql("SELECT CAST(t.a as DECIMAL(6, 2)) as casted_decimal FROM test.table_ints_strings t");
+    String targetSql =
+        "SELECT CAST(\"a\" AS DECIMAL(6, 2)) AS \"casted_decimal\"\n" + "FROM \"test\".\"table_ints_strings\"";
+    String expandedSql = relToTrinoConverter.convert(relNode);
+    assertEquals(expandedSql, targetSql);
+  }
+
+  @Test
+  public void testCastDecimalDefault() {
+    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+
+    RelNode relNode =
+        hiveToRelConverter.convertSql("SELECT CAST(t.a as DECIMAL) as casted_decimal FROM test.table_ints_strings t");
+    String targetSql =
+        "SELECT CAST(\"a\" AS DECIMAL(10, 0)) AS \"casted_decimal\"\n" + "FROM \"test\".\"table_ints_strings\"";
     String expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
   }

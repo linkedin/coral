@@ -597,4 +597,18 @@ public class CoralSparkTest {
         + "HAVING SUBSTRING(b, 1, 1)\n" + "IN ('dummy_value')";
     assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
   }
+
+  @Test
+  public void testCastDecimal() {
+    RelNode relNode = TestUtils.toRelNode("SELECT CAST(a as DECIMAL(6, 2)) as casted_decimal FROM default.foo");
+    String targetSql = "SELECT CAST(a AS DECIMAL(6, 2)) casted_decimal\n" + "FROM default.foo";
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+  }
+
+  @Test
+  public void testCastDecimalDefault() {
+    RelNode relNode = TestUtils.toRelNode("SELECT CAST(a as DECIMAL) as casted_decimal FROM default.foo");
+    String targetSql = "SELECT CAST(a AS DECIMAL(10, 0)) casted_decimal\n" + "FROM default.foo";
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+  }
 }
