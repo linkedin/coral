@@ -460,4 +460,27 @@ public class HiveToTrinoConverterTest {
     expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
   }
+
+  public void testAliasOrderBy() {
+    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+
+    RelNode relNode = hiveToRelConverter
+        .convertSql("SELECT a, SUBSTR(b, 1, 1) AS aliased_column, c FROM test.tabler ORDER BY aliased_column DESC");
+    String targetSql =
+        "SELECT \"a\", \"SUBSTR\"(\"b\", 1, 1) AS \"aliased_column\", \"c\"\nFROM \"test\".\"tabler\"\nORDER BY \"SUBSTR\"(\"b\", 1, 1) DESC";
+    String expandedSql = relToTrinoConverter.convert(relNode);
+    assertEquals(expandedSql, targetSql);
+  }
+
+  @Test
+  public void testAliasHaving() {
+    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+
+    RelNode relNode = hiveToRelConverter.convertSql(
+        "SELECT a, SUBSTR(b, 1, 1) AS aliased_column FROM test.tabler GROUP BY a, b HAVING aliased_column in ('dummy_value')");
+    String targetSql =
+        "SELECT \"a\", \"SUBSTR\"(\"b\", 1, 1) AS \"aliased_column\"\nFROM \"test\".\"tabler\"\nGROUP BY \"a\", \"b\"\nHAVING \"SUBSTR\"(\"b\", 1, 1)\nIN ('dummy_value')";
+    String expandedSql = relToTrinoConverter.convert(relNode);
+    assertEquals(expandedSql, targetSql);
+  }
 }

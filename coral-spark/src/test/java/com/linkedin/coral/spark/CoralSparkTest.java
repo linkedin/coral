@@ -579,4 +579,22 @@ public class CoralSparkTest {
     String targetSql = "SELECT NOT FALSE a\n" + "FROM default.foo";
     assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
   }
+
+  @Test
+  public void testAliasOrderBy() {
+    RelNode relNode =
+        TestUtils.toRelNode("SELECT a, SUBSTR(b, 1, 1) AS aliased_column, c FROM foo ORDER BY aliased_column DESC");
+    String targetSql = "SELECT a, SUBSTRING(b, 1, 1) aliased_column, c\n" + "FROM default.foo\n"
+        + "ORDER BY SUBSTRING(b, 1, 1) DESC NULLS LAST";
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+  }
+
+  @Test
+  public void testAliasHaving() {
+    RelNode relNode = TestUtils.toRelNode(
+        "SELECT a, SUBSTR(b, 1, 1) AS aliased_column FROM foo GROUP BY a, b HAVING aliased_column in ('dummy_value')");
+    String targetSql = "SELECT a, SUBSTRING(b, 1, 1) aliased_column\n" + "FROM default.foo\n" + "GROUP BY a, b\n"
+        + "HAVING SUBSTRING(b, 1, 1)\n" + "IN ('dummy_value')";
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+  }
 }
