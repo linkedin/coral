@@ -50,6 +50,9 @@ public class RelToTrinoConverter extends RelToSqlConverter {
    * (2) Some internally registered UDFs which should not be converted, like `to_date`.
    *     If the value of key {@link CoralTrinoConfigKeys#AVOID_TRANSFORM_TO_DATE_UDF} is set to true, we don't transform `to_date` UDF
    *     in {@link com.linkedin.coral.trino.rel2trino.Calcite2TrinoUDFConverter.TrinoRexConverter#visitCall(RexCall)}
+   * (3) We need to adjust the return type for some functions using cast, since the converted Trino function's return type is not
+   *     aligned with the Hive function's return type. For example, if the value of key {@link CoralTrinoConfigKeys#CAST_DATEADD_TO_STRING}
+   *     is set to true, we would cast the converted RexCall to `varchar` type (date_add(xxx) -> cast(date_add(xxx) as varchar))
    * For uses outside LinkedIn, just ignore this configuration.
    */
   private Map<String, Boolean> configs = new HashMap<>();

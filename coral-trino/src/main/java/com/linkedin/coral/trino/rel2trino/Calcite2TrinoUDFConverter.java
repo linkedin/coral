@@ -8,8 +8,11 @@ package com.linkedin.coral.trino.rel2trino;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+
+import com.google.common.collect.ImmutableMap;
 
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelShuttle;
@@ -220,10 +223,11 @@ public class Calcite2TrinoUDFConverter {
 
       final UDFTransformer transformer = CalciteTrinoUDFMap.getUDFTransformer(operatorName, call.operands.size());
       if (transformer != null && shouldTransformOperator(operatorName)) {
-        return super.visitCall((RexCall) transformer.transformCall(rexBuilder, call.getOperands()));
+        return adjustReturnTypeWithCast(rexBuilder,
+            super.visitCall((RexCall) transformer.transformCall(rexBuilder, call.getOperands())));
       }
       RexCall modifiedCall = adjustInconsistentTypesToEqualityOperator(call);
-      return super.visitCall(modifiedCall);
+      return adjustReturnTypeWithCast(rexBuilder, super.visitCall(modifiedCall));
     }
 
     private Optional<RexNode> visitFromUnixtime(RexCall call) {
@@ -383,6 +387,27 @@ public class Calcite2TrinoUDFConverter {
 
     private boolean shouldTransformOperator(String operatorName) {
       return !("to_date".equalsIgnoreCase(operatorName) && configs.getOrDefault(AVOID_TRANSFORM_TO_DATE_UDF, false));
+    }
+
+    /**
+     * This method is to cast the converted call to the same return type in Hive with certain version.
+     * e.g. `datediff` in Hive returns int type, but the corresponding function `date_diff` in Trino returns bigint type
+     * the type discrepancy would cause the issue while querying the view on Trino, so we need to add the CAST for them
+     */
+    private RexNode adjustReturnTypeWithCast(RexBuilder rexBuilder, RexNode call) {
+      if (!(call instanceof RexCall)) {
+        return call;
+      }
+      final String lowercaseOperatorName = ((RexCall) call).getOperator().getName().toLowerCase(Locale.ROOT);
+      final ImmutableMap<String, RelDataType> operatorsToAdjust = ImmutableMap.of("date_diff",
+          typeFactory.createSqlType(INTEGER), "cardinality", typeFactory.createSqlType(INTEGER));
+      if (operatorsToAdjust.containsKey(lowercaseOperatorName)) {
+        return rexBuilder.makeCast(operatorsToAdjust.get(lowercaseOperatorName), call);
+      }
+      if (configs.getOrDefault(CAST_DATEADD_TO_STRING, false) && lowercaseOperatorName.equals("date_add")) {
+        return rexBuilder.makeCast(typeFactory.createSqlType(VARCHAR), call);
+      }
+      return call;
     }
   }
 }
