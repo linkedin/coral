@@ -63,6 +63,31 @@ public class HiveTableTest {
     RelDataTypeField colC = rowType.getField("c", false, false);
     assertEquals(colC.getType().getSqlTypeName(), SqlTypeName.ARRAY);
     assertEquals(colC.getType().getComponentType().getSqlTypeName(), SqlTypeName.DOUBLE);
+
+    // test handling of union
+    Table unionTable = getTable("default", "union_table");
+    // union_table:(foo uniontype<int, double, array<string>, struct<a:int,b:string>>)
+    // expected outcome schema: struct<tag:int, field0:int, field1:double, field2:array<string>, field3:struct<a:int,b:string>>
+    rowType = unionTable.getRowType(typeFactory);
+    assertNotNull(rowType);
+    assertTrue(rowType.isStruct());
+    // top-level: it is just a struct
+    assertEquals(rowType.getFieldCount(), 1);
+    // with five components
+    RelDataType explodedStruct = rowType.getFieldList().get(0).getType();
+    assertEquals(explodedStruct.getFieldCount(), 5);
+    assertEquals(explodedStruct.getFieldList().get(0).getType().getSqlTypeName(), SqlTypeName.INTEGER);
+    assertEquals(explodedStruct.getFieldList().get(0).getName(), "tag");
+    assertEquals(explodedStruct.getFieldList().get(1).getType().getSqlTypeName(), SqlTypeName.INTEGER);
+    assertEquals(explodedStruct.getFieldList().get(2).getType().getSqlTypeName(), SqlTypeName.DOUBLE);
+    assertEquals(explodedStruct.getFieldList().get(3).getType().getSqlTypeName(), SqlTypeName.ARRAY);
+    assertEquals(explodedStruct.getFieldList().get(3).getType().getComponentType().getSqlTypeName(), SqlTypeName.VARCHAR);
+    assertTrue(explodedStruct.getFieldList().get(4).getType().isStruct());
+    assertEquals(explodedStruct.getFieldList().get(4).getType().getFieldCount(), 2);
+    assertEquals(explodedStruct.getFieldList().get(4).getType().getFieldList().get(0).getName(), "a");
+    assertEquals(explodedStruct.getFieldList().get(4).getType().getFieldList().get(0).getType().getSqlTypeName(), SqlTypeName.INTEGER);
+    assertEquals(explodedStruct.getFieldList().get(4).getType().getFieldList().get(1).getName(), "b");
+    assertEquals(explodedStruct.getFieldList().get(4).getType().getFieldList().get(1).getType().getSqlTypeName(), SqlTypeName.VARCHAR);
   }
 
   @Test

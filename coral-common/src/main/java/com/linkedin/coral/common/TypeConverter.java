@@ -141,11 +141,14 @@ public class TypeConverter {
   }
 
   // Mimic the StructTypeInfo conversion to convert a UnionTypeInfo to the corresponding RelDataType
+  // The schema of output Struct conforms to https://github.com/trinodb/trino/pull/3483
   public static RelDataType convert(UnionTypeInfo unionType, RelDataTypeFactory dtFactory) {
     List<RelDataType> fTypes = unionType.getAllUnionObjectTypeInfos().stream()
         .map(typeInfo -> convert(typeInfo, dtFactory)).collect(Collectors.toList());
-    List<String> fNames = IntStream.range(0, unionType.getAllUnionObjectTypeInfos().size()).mapToObj(i -> "tag_" + i)
+    fTypes.add(0, dtFactory.createSqlType(SqlTypeName.INTEGER));
+    List<String> fNames = IntStream.range(0, unionType.getAllUnionObjectTypeInfos().size()).mapToObj(i -> "field" + i)
         .collect(Collectors.toList());
+    fNames.add(0, "tag");
 
     RelDataType rowType = dtFactory.createStructType(fTypes, fNames);
     return dtFactory.createTypeWithNullability(rowType, true);

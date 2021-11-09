@@ -360,6 +360,10 @@ public class TestUtils {
     return new HiveToRelConverter(hiveMetastoreClient).convertView(db, view);
   }
 
+  public static RelNode convertView(String sql) {
+    return new HiveToRelConverter(hiveMetastoreClient).convertSql(sql);
+  }
+
   private static HiveConf loadResourceHiveConf() {
     InputStream hiveConfStream = TestUtils.class.getClassLoader().getResourceAsStream("hive.xml");
     HiveConf hiveConf = new HiveConf();
