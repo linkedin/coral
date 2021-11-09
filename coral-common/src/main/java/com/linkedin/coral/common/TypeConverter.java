@@ -145,10 +145,12 @@ public class TypeConverter {
   public static RelDataType convert(UnionTypeInfo unionType, RelDataTypeFactory dtFactory) {
     List<RelDataType> fTypes = unionType.getAllUnionObjectTypeInfos().stream()
         .map(typeInfo -> convert(typeInfo, dtFactory)).collect(Collectors.toList());
-    fTypes.add(0, dtFactory.createSqlType(SqlTypeName.INTEGER));
     List<String> fNames = IntStream.range(0, unionType.getAllUnionObjectTypeInfos().size()).mapToObj(i -> "field" + i)
         .collect(Collectors.toList());
-    fNames.add(0, "tag");
+    if (fNames.size() > 0) {
+      fTypes.add(0, dtFactory.createSqlType(SqlTypeName.INTEGER));
+      fNames.add(0, "tag");
+    }
 
     RelDataType rowType = dtFactory.createStructType(fTypes, fNames);
     return dtFactory.createTypeWithNullability(rowType, true);
