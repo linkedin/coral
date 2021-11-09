@@ -81,13 +81,16 @@ public class HiveTableTest {
     assertEquals(explodedStruct.getFieldList().get(1).getType().getSqlTypeName(), SqlTypeName.INTEGER);
     assertEquals(explodedStruct.getFieldList().get(2).getType().getSqlTypeName(), SqlTypeName.DOUBLE);
     assertEquals(explodedStruct.getFieldList().get(3).getType().getSqlTypeName(), SqlTypeName.ARRAY);
-    assertEquals(explodedStruct.getFieldList().get(3).getType().getComponentType().getSqlTypeName(), SqlTypeName.VARCHAR);
+    assertEquals(explodedStruct.getFieldList().get(3).getType().getComponentType().getSqlTypeName(),
+        SqlTypeName.VARCHAR);
     assertTrue(explodedStruct.getFieldList().get(4).getType().isStruct());
     assertEquals(explodedStruct.getFieldList().get(4).getType().getFieldCount(), 2);
     assertEquals(explodedStruct.getFieldList().get(4).getType().getFieldList().get(0).getName(), "a");
-    assertEquals(explodedStruct.getFieldList().get(4).getType().getFieldList().get(0).getType().getSqlTypeName(), SqlTypeName.INTEGER);
+    assertEquals(explodedStruct.getFieldList().get(4).getType().getFieldList().get(0).getType().getSqlTypeName(),
+        SqlTypeName.INTEGER);
     assertEquals(explodedStruct.getFieldList().get(4).getType().getFieldList().get(1).getName(), "b");
-    assertEquals(explodedStruct.getFieldList().get(4).getType().getFieldList().get(1).getType().getSqlTypeName(), SqlTypeName.VARCHAR);
+    assertEquals(explodedStruct.getFieldList().get(4).getType().getFieldList().get(1).getType().getSqlTypeName(),
+        SqlTypeName.VARCHAR);
   }
 
   @Test
