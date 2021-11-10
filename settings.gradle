@@ -1,4 +1,5 @@
 def modules = [
+  'coral-common',
   'coral-hive',
   'coral-pig',
   'coral-spark',

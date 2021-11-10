@@ -7,6 +7,7 @@ package com.linkedin.coral.hive.hive2rel.functions;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
@@ -21,7 +22,7 @@ import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
 
-import com.linkedin.coral.hive.hive2rel.TypeConverter;
+import com.linkedin.coral.common.TypeConverter;
 
 
 public class HiveGenericUDFReturnTypeInference implements SqlReturnTypeInference {
@@ -40,17 +41,20 @@ public class HiveGenericUDFReturnTypeInference implements SqlReturnTypeInference
   public RelDataType inferReturnType(SqlOperatorBinding sqlOperatorBinding) {
     int operandCount = sqlOperatorBinding.getOperandCount();
     ObjectInspector[] inputObjectInspectors = new ObjectInspector[operandCount];
-    for (int i = 0; i < sqlOperatorBinding.getOperandCount(); i++) {
+    for (int i = 0; i < operandCount; i++) {
       inputObjectInspectors[i] = getObjectInspector(sqlOperatorBinding.getOperandType(i));
     }
+    return inferReturnType(inputObjectInspectors, sqlOperatorBinding.getTypeFactory());
+  }
+
+  public RelDataType inferReturnType(ObjectInspector[] inputObjectInspectors, RelDataTypeFactory relDataTypeFactory) {
     try {
       Class dynamicallyLoadedUdfClass = getDynamicallyLoadedUdfClass();
-      return getRelDataType(
-          getContextObjectInspector(
-              dynamicallyLoadedUdfClass.getMethod("initialize", getDynamicallyLoadedObjectInspectorArrayClass()).invoke(
-                  dynamicallyLoadedUdfClass.newInstance(),
-                  new Object[] { getDynamicallyLoadedObjectInspectors(inputObjectInspectors) })),
-          sqlOperatorBinding.getTypeFactory());
+      final Method initializeMethod =
+          dynamicallyLoadedUdfClass.getMethod("initialize", getDynamicallyLoadedObjectInspectorArrayClass());
+      final Object oi = initializeMethod.invoke(dynamicallyLoadedUdfClass.newInstance(),
+          getDynamicallyLoadedObjectInspectors(inputObjectInspectors));
+      return getRelDataType(getContextObjectInspector(oi), relDataTypeFactory);
     } catch (NoSuchMethodException e) {
       throw new RuntimeException(
           "Unable to find org.apache.hadoop.hive.ql.udf.generic.GenericUDF.initialize() on: " + _udfClassName, e);

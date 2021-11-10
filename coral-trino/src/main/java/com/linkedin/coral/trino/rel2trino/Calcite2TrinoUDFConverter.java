@@ -43,7 +43,7 @@ import org.apache.calcite.sql.type.SqlTypeFamily;
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import com.linkedin.coral.com.google.common.collect.ImmutableMultimap;
 import com.linkedin.coral.com.google.common.collect.Multimap;
-import com.linkedin.coral.hive.hive2rel.functions.GenericProjectFunction;
+import com.linkedin.coral.common.GenericProjectFunction;
 import com.linkedin.coral.hive.hive2rel.functions.HiveReturnTypes;
 import com.linkedin.coral.trino.rel2trino.functions.GenericProjectToTrinoConverter;
 
@@ -142,7 +142,7 @@ public class Calcite2TrinoUDFConverter {
       }
 
       private TrinoRexConverter getTrinoRexConverter(RelNode node) {
-        return new TrinoRexConverter(node.getCluster().getRexBuilder(), node.getCluster().getTypeFactory(), configs);
+        return new TrinoRexConverter(node, configs);
       }
     };
     return calciteNode.accept(converter);
@@ -154,20 +154,23 @@ public class Calcite2TrinoUDFConverter {
   public static class TrinoRexConverter extends RexShuttle {
     private final RexBuilder rexBuilder;
     private final RelDataTypeFactory typeFactory;
+    private final RelNode node;
     private Map<String, Boolean> configs;
 
     // SUPPORTED_TYPE_CAST_MAP is a static mapping that maps a SqlTypeFamily key to its set of
     // type-castable SqlTypeFamilies.
     private static final Multimap<SqlTypeFamily, SqlTypeFamily> SUPPORTED_TYPE_CAST_MAP;
+
+    public TrinoRexConverter(RelNode node, Map<String, Boolean> configs) {
+      this.rexBuilder = node.getCluster().getRexBuilder();
+      this.typeFactory = node.getCluster().getTypeFactory();
+      this.configs = configs;
+      this.node = node;
+    }
+
     static {
       SUPPORTED_TYPE_CAST_MAP = ImmutableMultimap.<SqlTypeFamily, SqlTypeFamily> builder()
           .putAll(SqlTypeFamily.CHARACTER, SqlTypeFamily.NUMERIC, SqlTypeFamily.BOOLEAN).build();
-    }
-
-    public TrinoRexConverter(RexBuilder rexBuilder, RelDataTypeFactory typeFactory, Map<String, Boolean> configs) {
-      this.rexBuilder = rexBuilder;
-      this.typeFactory = typeFactory;
-      this.configs = configs;
     }
 
     @Override
@@ -178,7 +181,7 @@ public class Calcite2TrinoUDFConverter {
       //     - syntax is difficult for Calcite to parse
       //   - the return type varies based on a desired schema to be projected
       if (call.getOperator() instanceof GenericProjectFunction) {
-        return GenericProjectToTrinoConverter.convertGenericProject(rexBuilder, call);
+        return GenericProjectToTrinoConverter.convertGenericProject(rexBuilder, call, node);
       }
       // MAP(k1, v1, k2, v2) should be MAP(ARRAY(k1, k2), ARRAY(v1, v2))
       if (call.getOperator() instanceof SqlMapValueConstructor) {
@@ -203,6 +206,13 @@ public class Calcite2TrinoUDFConverter {
 
       if (operatorName.equalsIgnoreCase("cast")) {
         Optional<RexNode> modifiedCall = visitCast(call);
+        if (modifiedCall.isPresent()) {
+          return modifiedCall.get();
+        }
+      }
+
+      if (operatorName.equalsIgnoreCase("substr")) {
+        Optional<RexNode> modifiedCall = visitSubstring(call);
         if (modifiedCall.isPresent()) {
           return modifiedCall.get();
         }
@@ -281,6 +291,24 @@ public class Calcite2TrinoUDFConverter {
                     rexBuilder.makeCall(trinoToUnixTime,
                         rexBuilder.makeCall(trinoWithTimeZone, sourceValue, rexBuilder.makeLiteral("UTC")))),
                 rexBuilder.makeCall(trinoCanonicalizeHiveTimezoneId, timezone))));
+      }
+
+      return Optional.empty();
+    }
+
+    // Hive allows passing in a byte array or String to substr/substring, so we can make an effort to emulate the
+    // behavior by casting non-String input to String
+    // https://cwiki.apache.org/confluence/display/hive/languagemanual+udf
+    private Optional<RexNode> visitSubstring(RexCall call) {
+      final SqlOperator op = call.getOperator();
+      List<RexNode> convertedOperands = visitList(call.getOperands(), (boolean[]) null);
+      RexNode inputOperand = convertedOperands.get(0);
+
+      if (inputOperand.getType().getSqlTypeName() != VARCHAR && inputOperand.getType().getSqlTypeName() != CHAR) {
+        List<RexNode> operands = new ImmutableList.Builder<RexNode>()
+            .add(rexBuilder.makeCast(typeFactory.createSqlType(VARCHAR), inputOperand))
+            .addAll(convertedOperands.subList(1, convertedOperands.size())).build();
+        return Optional.of(rexBuilder.makeCall(op, operands));
       }
 
       return Optional.empty();

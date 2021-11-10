@@ -7,16 +7,29 @@ package com.linkedin.coral.hive.hive2rel;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.calcite.adapter.java.JavaTypeFactory;
+import org.apache.calcite.plan.RelOptCluster;
+import org.apache.calcite.plan.volcano.VolcanoPlanner;
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rel.RelRoot;
-import org.apache.calcite.schema.Table;
 import org.apache.calcite.sql.SqlNode;
+import org.apache.calcite.sql.SqlOperatorTable;
+import org.apache.calcite.sql.fun.SqlStdOperatorTable;
+import org.apache.calcite.sql.util.ChainedSqlOperatorTable;
+import org.apache.calcite.sql.validate.SqlValidator;
+import org.apache.calcite.sql2rel.SqlRexConvertletTable;
+import org.apache.calcite.sql2rel.SqlToRelConverter;
+import org.apache.hadoop.hive.metastore.api.Table;
 
-import com.linkedin.coral.com.google.common.annotations.VisibleForTesting;
+import com.linkedin.coral.common.Function;
+import com.linkedin.coral.common.HiveMetastoreClient;
+import com.linkedin.coral.common.ToRelConverter;
+import com.linkedin.coral.hive.hive2rel.functions.HiveFunctionResolver;
+import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 import com.linkedin.coral.hive.hive2rel.parsetree.ParseTreeBuilder;
 
-import static com.google.common.base.Preconditions.*;
+import static com.linkedin.coral.hive.hive2rel.HiveSqlConformance.HIVE_SQL;
 
 
 /**
@@ -31,99 +44,64 @@ import static com.google.common.base.Preconditions.*;
  * is likely to change in the future if we want more control over the
  * conversion process. This class abstracts that out.
  */
-public class HiveToRelConverter {
+public class HiveToRelConverter extends ToRelConverter {
+  private final ParseTreeBuilder parseTreeBuilder;
+  private final ConcurrentHashMap<String, Function> dynamicRegistry = new ConcurrentHashMap<>();
+  private final HiveFunctionResolver functionResolver =
+      new HiveFunctionResolver(new StaticHiveFunctionRegistry(), new ConcurrentHashMap<>());
+  private final
+  // The validator must be reused
+  SqlValidator sqlValidator = new HiveSqlValidator(getOperatorTable(), getCalciteCatalogReader(),
+      ((JavaTypeFactory) getRelBuilder().getTypeFactory()), HIVE_SQL);
 
-  private final RelContextProvider relContextProvider;
-
-  /**
-   * Initializes converter with hive configuration at provided path
-   * @param mscClient HiveMetaStoreClient. Hive metastore client provides small subset
-   *                  of methods provided by Hive's metastore client interface.
-   * @return {@link HiveToRelConverter} object
-   */
-  public static HiveToRelConverter create(HiveMetastoreClient mscClient) {
-    checkNotNull(mscClient);
-    RelContextProvider relContextProvider = new RelContextProvider(mscClient);
-    return new HiveToRelConverter(relContextProvider);
+  public HiveToRelConverter(HiveMetastoreClient hiveMetastoreClient) {
+    super(hiveMetastoreClient);
+    this.parseTreeBuilder = new ParseTreeBuilder(functionResolver);
   }
 
-  /**
-   * Initializes converter with local metastore instead of retrieving metadata using HiveMetastoreClient,
-   * this initializer is for SparkPlanToIRRelConverter in coral-spark-plan module
-   * @param localMetaStore Map containing the required metadata (database name, table name, column name and type)
-   *                       needed by SparkPlanToIRRelConverter in coral-spark-plan module
-   * @return {@link HiveToRelConverter}
-   */
-  public static HiveToRelConverter create(Map<String, Map<String, List<String>>> localMetaStore) {
-    checkNotNull(localMetaStore);
-    RelContextProvider relContextProvider = new RelContextProvider(localMetaStore);
-    return new HiveToRelConverter(relContextProvider);
+  public HiveToRelConverter(Map<String, Map<String, List<String>>> localMetaStore) {
+    super(localMetaStore);
+    this.parseTreeBuilder = new ParseTreeBuilder(functionResolver);
   }
 
-  private HiveToRelConverter(RelContextProvider relContextProvider) {
-    checkNotNull(relContextProvider);
-    this.relContextProvider = relContextProvider;
+  @Override
+  protected SqlRexConvertletTable getConvertletTable() {
+    return new HiveConvertletTable();
   }
 
-  /**
-   * Converts input Hive SQL query to Calcite {@link RelNode}.
-   *
-   * This method resolves all the database, table and field names using the catalog
-   * information provided by hive configuration during initialization. The input
-   * sql parameter should not refer to dali functions since those can not be resolved.
-   * The sql can, however, refer to dali views whose definitions include dali functions.
-   *
-   * @param sql Hive sql string to convert to Calcite RelNode
-   * @return Calcite RelNode representation of input hive sql
-   */
-  public RelNode convertSql(String sql) {
-    SqlNode sqlNode = getTreeBuilder().processSql(sql);
-    return toRel(sqlNode);
+  @Override
+  protected SqlValidator getSqlValidator() {
+    return sqlValidator;
   }
 
-  /**
-   * Apply series of transforms to convert Hive relnode to
-   * standardized intermediate representation. What is "standard"
-   * is vague right now but we try to be closer to ANSI standard.
-   * TODO: define standard intermediate representation
-   * @param relNode calcite relnode representing hive query
-   * @return standard representation of input query as relnode
-   */
-  private RelNode standardizeRel(RelNode relNode) {
+  @Override
+  protected SqlOperatorTable getOperatorTable() {
+    return ChainedSqlOperatorTable.of(SqlStdOperatorTable.instance(), new DaliOperatorTable(functionResolver));
+  }
+
+  @Override
+  protected SqlToRelConverter getSqlToRelConverter() {
+    return new HiveSqlToRelConverter(new HiveViewExpander(this), getSqlValidator(), getCalciteCatalogReader(),
+        RelOptCluster.create(new VolcanoPlanner(), getRelBuilder().getRexBuilder()), getConvertletTable(),
+        SqlToRelConverter.configBuilder().withRelBuilderFactory(HiveRelBuilder.LOGICAL_BUILDER).build());
+  }
+
+  @Override
+  protected SqlNode toSqlNode(String sql, Table hiveView) {
+    return parseTreeBuilder.process(trimParenthesis(sql), hiveView);
+  }
+
+  @Override
+  protected RelNode standardizeRel(RelNode relNode) {
     return new HiveRelConverter().convert(relNode);
   }
 
-  /**
-   * Similar to {@link #convertSql(String)} but converts hive view definition stored
-   * in the hive metastore to corresponding {@link RelNode} implementation.
-   * This sets up the initial context for resolving Dali function names using table parameters.
-   * @param hiveDbName hive database name
-   * @param hiveViewName hive view name whose definition to convert.  Table name is allowed.
-   * @return Calcite {@link RelNode} representation of hive view definition
-   */
-  public RelNode convertView(String hiveDbName, String hiveViewName) {
-    SqlNode sqlNode = getTreeBuilder().processView(hiveDbName, hiveViewName);
-    Table view = relContextProvider.getHiveSchema().getSubSchema(hiveDbName).getTable(hiveViewName);
-    if (view != null) {
-      sqlNode.accept(new FuzzyUnionSqlRewriter(hiveViewName, relContextProvider));
+  private static String trimParenthesis(String value) {
+    String str = value.trim();
+    if (str.startsWith("(") && str.endsWith(")")) {
+      return trimParenthesis(str.substring(1, str.length() - 1));
     }
-    return toRel(sqlNode);
+    return str;
   }
 
-  @VisibleForTesting
-  ParseTreeBuilder getTreeBuilder() {
-    if (relContextProvider.getHiveSchema() == null) {
-      return new ParseTreeBuilder(null, relContextProvider.getParseTreeBuilderConfig(),
-          relContextProvider.getHiveFunctionRegistry(), relContextProvider.getDynamicHiveFunctionRegistry());
-    }
-    return new ParseTreeBuilder(relContextProvider.getHiveMetastoreClient(),
-        relContextProvider.getParseTreeBuilderConfig(), relContextProvider.getHiveFunctionRegistry(),
-        relContextProvider.getDynamicHiveFunctionRegistry());
-  }
-
-  @VisibleForTesting
-  RelNode toRel(SqlNode sqlNode) {
-    RelRoot root = relContextProvider.getSqlToRelConverter().convertQuery(sqlNode, true, true);
-    return standardizeRel(root.rel);
-  }
 }

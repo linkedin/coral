@@ -22,8 +22,9 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
-import com.linkedin.coral.hive.hive2rel.HiveMscAdapter;
+import com.linkedin.coral.common.HiveMetastoreClient;
+import com.linkedin.coral.common.HiveMscAdapter;
+import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
 
 import static com.linkedin.coral.hive.hive2rel.TestUtils.*;
 import static org.testng.Assert.*;
@@ -153,11 +154,11 @@ public class ParseTreeBuilderTest {
         // test lateral view posexplode with an array
         ImmutableList.of(
             "SELECT col FROM (SELECT ARRAY('v1', 'v2') as arr) tmp LATERAL VIEW POSEXPLODE(arr) arr_alias AS col, val",
-            "select `col` from (select array['v1', 'v2'] as `arr`) as `tmp`, lateral unnest(`arr`) with ordinality as `arr_alias` (`val`, `col`)"),
+            "SELECT `col` FROM (SELECT ARRAY['v1', 'v2'] as `arr`) as `tmp`, lateral unnest(`arr`) with ordinality as `arr_alias` (`val`, `col`)"),
 
         // hive automatically creates column aliases `col` when the type is an array
         ImmutableList.of("SELECT col FROM (SELECT ARRAY('v1', 'v2') as arr) tmp LATERAL VIEW POSEXPLODE(arr) arr_alias",
-            "select `col` from (select array['v1', 'v2'] as `arr`) as `tmp`, lateral unnest(`arr`) with ordinality as `arr_alias`"),
+            "SELECT `col` FROM (SELECT array['v1', 'v2'] as `arr`) as `tmp`, lateral unnest(`arr`) with ordinality as `arr_alias`"),
 
         // test lateral view explode with a map
         ImmutableList.of(
@@ -170,17 +171,17 @@ public class ParseTreeBuilderTest {
             "SELECT `key`, `value` FROM (SELECT MAP['key1', 'value1'] AS `m`) AS `tmp`, LATERAL UNNEST(`m`) AS `m_alias`"),
 
         // hive doesn't support casting as varbinary
-        ImmutableList.of("SELECT cast(a as binary) from foo", "SELECT cast(`a` as binary) from `foo`"),
-        ImmutableList.of("SELECT cast(a as string) from foo", "SELECT cast(`a` as varchar) from `foo`"),
-        ImmutableList.of("SELECT a, c from foo union all select x, y from bar",
-            "SELECT * FROM (SELECT `a`, `c` from `foo` union all SELECT `x`, `y` from `bar`) as `_u1`"),
-        ImmutableList.of("SELECT case (a + 10) when 20 then 5 when 30 then 10 else 1 END from foo",
-            "SELECT CASE WHEN `a` + 10 = 20 THEN 5 WHEN `a` + 10 = 30 THEN 10 ELSE 1 END from `foo`"),
-        ImmutableList.of("SELECT CASE WHEN a THEN 10 WHEN b THEN 20 ELSE 30 END from foo",
-            "SELECT CASE WHEN `a` THEN 10 WHEN `b` THEN 20 ELSE 30 END from `foo`"),
+        ImmutableList.of("SELECT cast(a as binary) FROM foo", "SELECT cast(`a` as binary) FROM `foo`"),
+        ImmutableList.of("SELECT cast(a as string) FROM foo", "SELECT cast(`a` as varchar) FROM `foo`"),
+        ImmutableList.of("SELECT a, c FROM foo union all SELECT x, y FROM bar",
+            "SELECT * FROM (SELECT `a`, `c` FROM `foo` union all SELECT `x`, `y` FROM `bar`) as `_u1`"),
+        ImmutableList.of("SELECT case (a + 10) when 20 then 5 when 30 then 10 else 1 END FROM foo",
+            "SELECT CASE WHEN `a` + 10 = 20 THEN 5 WHEN `a` + 10 = 30 THEN 10 ELSE 1 END FROM `foo`"),
+        ImmutableList.of("SELECT CASE WHEN a THEN 10 WHEN b THEN 20 ELSE 30 END FROM foo",
+            "SELECT CASE WHEN `a` THEN 10 WHEN `b` THEN 20 ELSE 30 END FROM `foo`"),
         ImmutableList.of("SELECT named_struct('abc', 123, 'def', 234.23) FROM foo",
             "SELECT `named_struct`('abc', 123, 'def', 234.23) FROM `foo`"),
-        ImmutableList.of("SELECT 0L from foo", "SELECT 0 from `foo`"));
+        ImmutableList.of("SELECT 0L FROM foo", "SELECT 0 FROM `foo`"));
 
     return convertAndValidateSql.stream().map(x -> new Object[] { x.get(0), x.get(1) }).iterator();
   }
@@ -204,8 +205,8 @@ public class ParseTreeBuilderTest {
   }
 
   private static SqlNode convert(String sql) {
-    ParseTreeBuilder builder = new ParseTreeBuilder(msc, new ParseTreeBuilder.Config());
-    return builder.processSql(sql);
+    HiveToRelConverter hiveToRelConverter = new HiveToRelConverter(msc);
+    return hiveToRelConverter.toSqlNode(sql);
   }
 
   /**

@@ -1,0 +1,22 @@
+{
+  "type" : "record",
+  "name" : "v",
+  "namespace" : "default.v",
+  "fields" : [ {
+    "name" : "Max_Id_Col",
+    "type" : [ "null", "int" ],
+    "doc" : "Field created in view by applying aggregate function of type: MAX"
+  }, {
+    "name" : "Min_Id_Col",
+    "type" : [ "null", "int" ],
+    "doc" : "Field created in view by applying aggregate function of type: MIN"
+  }, {
+    "name" : "Avg_Id_Col",
+    "type" : [ "null", "int" ],
+    "doc" : "Field created in view by applying aggregate function of type: AVG"
+  }, {
+    "name" : "Sum_Id_Col",
+    "type" : [ "null", "long" ],
+    "doc" : "Field created in view by applying aggregate function of type: SUM"
+  } ]
+}

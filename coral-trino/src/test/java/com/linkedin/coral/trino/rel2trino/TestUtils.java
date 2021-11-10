@@ -36,7 +36,7 @@ import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.processors.CommandProcessorResponse;
 import org.apache.hadoop.hive.ql.session.SessionState;
 
-import com.linkedin.coral.hive.hive2rel.HiveMscAdapter;
+import com.linkedin.coral.common.HiveMscAdapter;
 import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
 
 import static com.linkedin.coral.trino.rel2trino.TestTable.*;
@@ -190,7 +190,7 @@ public class TestUtils {
     SessionState.start(conf);
     Driver driver = new Driver(conf);
     hiveMetastoreClient = new HiveMscAdapter(Hive.get(conf).getMSC());
-    hiveToRelConverter = HiveToRelConverter.create(hiveMetastoreClient);
+    hiveToRelConverter = new HiveToRelConverter(hiveMetastoreClient);
 
     // Views and tables used in HiveToTrinoConverterTest
     run(driver, "CREATE DATABASE IF NOT EXISTS test");
@@ -344,10 +344,20 @@ public class TestUtils {
     run(driver, "CREATE VIEW IF NOT EXISTS test.least_view AS \n"
         + "SELECT least(t.a, t.b) as g_int, least(t.c, t.d) as g_string FROM test.table_ints_strings t");
 
+    run(driver, "CREATE VIEW IF NOT EXISTS test.cast_decimal_view AS \n"
+        + "SELECT CAST(t.a as DECIMAL(6,2)) as casted_decimal FROM test.table_ints_strings t");
+
+    run(driver, "CREATE TABLE IF NOT EXISTS test.tableS (structCol struct<a:int>)");
+    run(driver, "CREATE TABLE IF NOT EXISTS test.tableT (structCol struct<a:int>)");
+    run(driver, "CREATE VIEW IF NOT EXISTS test.viewA AS SELECT structCol as struct_col FROM test.tableS");
+    run(driver, "CREATE VIEW IF NOT EXISTS test.viewB AS SELECT structCol as struct_col FROM test.tableT");
+    run(driver,
+        "CREATE VIEW IF NOT EXISTS test.view_with_transform_column_name_reset AS SELECT struct_col AS structCol FROM (SELECT * FROM test.viewA UNION ALL SELECT * FROM test.viewB) X");
+    run(driver, "ALTER TABLE test.tableT CHANGE COLUMN structCol structCol struct<a:int, b:string>");
   }
 
   public static RelNode convertView(String db, String view) {
-    return HiveToRelConverter.create(hiveMetastoreClient).convertView(db, view);
+    return new HiveToRelConverter(hiveMetastoreClient).convertView(db, view);
   }
 
   private static HiveConf loadResourceHiveConf() {

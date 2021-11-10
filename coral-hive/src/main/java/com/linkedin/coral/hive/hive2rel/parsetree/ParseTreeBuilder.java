@@ -9,10 +9,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import org.apache.calcite.avatica.util.TimeUnit;
@@ -45,11 +43,9 @@ import org.apache.hadoop.hive.metastore.api.Table;
 
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import com.linkedin.coral.com.google.common.collect.Iterables;
-import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
-import com.linkedin.coral.hive.hive2rel.functions.FunctionFieldReferenceOperator;
+import com.linkedin.coral.common.Function;
+import com.linkedin.coral.common.FunctionFieldReferenceOperator;
 import com.linkedin.coral.hive.hive2rel.functions.HiveExplodeOperator;
-import com.linkedin.coral.hive.hive2rel.functions.HiveFunction;
-import com.linkedin.coral.hive.hive2rel.functions.HiveFunctionRegistry;
 import com.linkedin.coral.hive.hive2rel.functions.HiveFunctionResolver;
 import com.linkedin.coral.hive.hive2rel.functions.HiveJsonTupleOperator;
 import com.linkedin.coral.hive.hive2rel.functions.HivePosExplodeOperator;
@@ -63,7 +59,6 @@ import com.linkedin.coral.hive.hive2rel.parsetree.parser.Node;
 import com.linkedin.coral.hive.hive2rel.parsetree.parser.ParseDriver;
 import com.linkedin.coral.hive.hive2rel.parsetree.parser.ParseException;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static java.lang.String.format;
 import static org.apache.calcite.sql.parser.SqlParserPos.ZERO;
@@ -89,75 +84,13 @@ import static org.apache.calcite.sql.parser.SqlParserPos.ZERO;
  */
 public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuilder.ParseContext> {
   @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-  private final HiveMetastoreClient hiveMetastoreClient;
-  private final Config config;
   private final HiveFunctionResolver functionResolver;
-  private HiveFunctionRegistry registry;
 
   /**
    * Constructs a parse tree builder
-   * @param hiveMetastoreClient optional HiveMetastore client. This is required to decode view definitions
-   * @param config parse configuration to use
-   * @param registry Static Hive function registry
-   * @param dynamicRegistry Dynamic Hive function registry (inferred at runtime)
    */
-  public ParseTreeBuilder(HiveMetastoreClient hiveMetastoreClient, Config config, HiveFunctionRegistry registry,
-      ConcurrentHashMap<String, HiveFunction> dynamicRegistry) {
-    checkNotNull(config);
-    checkState(config.catalogName.isEmpty() || !config.defaultDBName.isEmpty(),
-        "Default DB is required if catalog name is not empty");
-    this.hiveMetastoreClient = hiveMetastoreClient;
-    this.config = config;
-    this.functionResolver = new HiveFunctionResolver(registry, dynamicRegistry);
-  }
-
-  /**
-   * This constructor is used for unit testing purpose
-   * Constructs a parse tree builder to use hive metatstore and user provided configuration
-   * @param hiveMetastoreClient optional HiveMetastore client. This is required to decode view definitions
-   * @param config parse configuration to use
-   */
-  public ParseTreeBuilder(@Nullable HiveMetastoreClient hiveMetastoreClient, Config config) {
-    this.hiveMetastoreClient = hiveMetastoreClient;
-    checkNotNull(config);
-    checkState(config.catalogName.isEmpty() || !config.defaultDBName.isEmpty(),
-        "Default DB is required if catalog name is not empty");
-    this.config = config;
-    this.functionResolver = new HiveFunctionResolver(new StaticHiveFunctionRegistry(), new ConcurrentHashMap<>());
-  }
-
-  /**
-   * Creates a parse tree for a hive view using the expanded view text from hive metastore.
-   * This table name is required for handling dali function name resolution.
-   * @param hiveView hive table handle to read expanded text from.  Table name is also allowed.
-   * @return Calcite SqlNode representing parse tree that calcite framework can understand
-   */
-  public SqlNode processViewOrTable(@Nonnull Table hiveView) {
-    checkNotNull(hiveView);
-    String stringViewExpandedText = null;
-    if (hiveView.getTableType().equals("VIRTUAL_VIEW")) {
-      stringViewExpandedText = trimParenthesis(hiveView.getViewExpandedText());
-    } else {
-      // It is a table, not a view.
-      stringViewExpandedText = "SELECT * FROM " + hiveView.getDbName() + "." + hiveView.getTableName();
-    }
-
-    return process(stringViewExpandedText, hiveView);
-  }
-
-  /**
-   * Gets the hive table handle for db and table and calls {@link #processViewOrTable(Table)}
-   *
-   * @param dbName database name
-   * @param tableName table name
-   * @return {@link SqlNode} object
-   */
-  public SqlNode processView(String dbName, String tableName) {
-    Table table = getMscOrThrow().getTable(dbName, tableName);
-    if (table == null) {
-      throw new RuntimeException(String.format("Unknown table %s.%s", dbName, tableName));
-    }
-    return processViewOrTable(table);
+  public ParseTreeBuilder(HiveFunctionResolver functionResolver) {
+    this.functionResolver = functionResolver;
   }
 
   /**
@@ -167,10 +100,10 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
    * @return Calcite SqlNode representing parse tree that calcite framework can understand
    */
   public SqlNode processSql(String sql) {
-    return process(trimParenthesis(sql), null);
+    return process(sql, null);
   }
 
-  SqlNode process(String sql, @Nullable Table hiveView) {
+  public SqlNode process(String sql, @Nullable Table hiveView) {
     ParseDriver pd = new CoralParseDriver();
     try {
       ASTNode root = pd.parse(sql);
@@ -304,7 +237,7 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
         arrayOrMapOfNull = SqlStdOperatorTable.MAP_VALUE_CONSTRUCTOR.createCall(ZERO, SqlLiteral.createNull(ZERO),
             SqlLiteral.createNull(ZERO));
       }
-      HiveFunction hiveIfFunction = functionResolver.tryResolve("if", null, 1);
+      Function hiveIfFunction = functionResolver.tryResolve("if", null, 1);
       unnestOperand = hiveIfFunction.createCall(SqlLiteral.createCharString("if", ZERO),
           ImmutableList.of(ifCondition, unnestOperand, arrayOrMapOfNull), null);
     }
@@ -346,8 +279,8 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
      TODO the relation alias `jt` is being lost by downstream transformations
      */
 
-    HiveFunction getJsonObjectFunction = functionResolver.tryResolve("get_json_object", null, 2);
-    HiveFunction ifFunction = functionResolver.tryResolve("if", null, 3);
+    Function getJsonObjectFunction = functionResolver.tryResolve("get_json_object", null, 2);
+    Function ifFunction = functionResolver.tryResolve("if", null, 3);
 
     List<SqlNode> jsonTupleOperands = sqlCall.getOperandList();
     SqlNode jsonInput = jsonTupleOperands.get(0);
@@ -362,9 +295,9 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
           SqlStdOperatorTable.CONCAT.createCall(ZERO, SqlLiteral.createCharString("$[\"", ZERO), jsonKey),
           SqlLiteral.createCharString("\"]", ZERO));
 
-      SqlCall getJsonObjectCall = getJsonObjectFunction.createCall(
-          SqlLiteral.createCharString(getJsonObjectFunction.getHiveFunctionName(), ZERO),
-          ImmutableList.of(jsonInput, jsonPath), null);
+      SqlCall getJsonObjectCall =
+          getJsonObjectFunction.createCall(SqlLiteral.createCharString(getJsonObjectFunction.getFunctionName(), ZERO),
+              ImmutableList.of(jsonInput, jsonPath), null);
       // TODO Hive get_json_object returns a string, but currently is mapped in Trino to json_extract which returns a json. Once fixed, remove the CAST
       SqlCall castToString = SqlStdOperatorTable.CAST.createCall(ZERO, getJsonObjectCall,
           // TODO This results in CAST to VARCHAR(65535), which may be too short, but there seems to be no way to avoid that.
@@ -373,9 +306,8 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
       // TODO support jsonKey containing a quotation mark (") or backslash (\)
       SqlCall ifCondition =
           HiveRLikeOperator.RLIKE.createCall(ZERO, jsonKey, SqlLiteral.createCharString("^[^\\\"]*$", ZERO));
-      SqlCall ifFunctionCall =
-          ifFunction.createCall(SqlLiteral.createCharString(ifFunction.getHiveFunctionName(), ZERO),
-              ImmutableList.of(ifCondition, castToString, SqlLiteral.createNull(ZERO)), null);
+      SqlCall ifFunctionCall = ifFunction.createCall(SqlLiteral.createCharString(ifFunction.getFunctionName(), ZERO),
+          ImmutableList.of(ifCondition, castToString, SqlLiteral.createNull(ZERO)), null);
       SqlNode projection = ifFunctionCall;
       // Currently only explicit aliasing is supported. Implicit alias would be c0, c1, etc.
       projections.add(SqlStdOperatorTable.AS.createCall(ZERO, projection, keyAlias));
@@ -611,7 +543,7 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     ASTNode functionNode = (ASTNode) children.get(0);
     String functionName = functionNode.getText();
     List<SqlNode> sqlOperands = visitChildren(children, ctx);
-    HiveFunction hiveFunction = functionResolver.tryResolve(functionName, ctx.hiveTable.orElse(null),
+    Function hiveFunction = functionResolver.tryResolve(functionName, ctx.hiveTable.orElse(null),
         // The first element of sqlOperands is the operator itself. The actual # of operands is sqlOperands.size() - 1
         sqlOperands.size() - 1);
 
@@ -629,6 +561,15 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
           hiveFunction.createCall(sqlOperands.get(0), sqlOperands.subList(1, sqlOperands.size() - 1), quantifier);
       SqlNode window = (SqlWindow) lastSqlOperand;
       return new SqlBasicCall(SqlStdOperatorTable.OVER, new SqlNode[] { func, window }, ZERO);
+    }
+
+    if (functionName.equalsIgnoreCase("SUBSTRING")) {
+      // Calcite overrides instance of SUBSTRING with its default SUBSTRING function as defined in SqlStdOperatorTable,
+      // so we rewrite instances of SUBSTRING as SUBSTR
+      SqlNode originalNode = sqlOperands.get(0);
+      SqlNode substrNode = new SqlIdentifier(ImmutableList.of("SUBSTR"), null, originalNode.getParserPosition(), null);
+      hiveFunction = functionResolver.tryResolve("SUBSTR", ctx.hiveTable.orElse(null), sqlOperands.size() - 1);
+      return hiveFunction.createCall(substrNode, sqlOperands.subList(1, sqlOperands.size()), quantifier);
     }
 
     return hiveFunction.createCall(sqlOperands.get(0), sqlOperands.subList(1, sqlOperands.size()), quantifier);
@@ -859,6 +800,16 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
 
   @Override
   protected SqlNode visitDecimal(ASTNode node, ParseContext ctx) {
+    if (node.getChildCount() == 2) {
+      try {
+        final SqlTypeNameSpec typeNameSpec = new SqlBasicTypeNameSpec(SqlTypeName.DECIMAL,
+            Integer.parseInt(((ASTNode) node.getChildren().get(0)).getText()),
+            Integer.parseInt(((ASTNode) node.getChildren().get(1)).getText()), ZERO);
+        return new SqlDataTypeSpec(typeNameSpec, ZERO);
+      } catch (NumberFormatException e) {
+        return createBasicTypeSpec(SqlTypeName.DECIMAL);
+      }
+    }
     return createBasicTypeSpec(SqlTypeName.DECIMAL);
   }
 
@@ -1085,37 +1036,6 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     String unquotedText = text.replaceAll("[\'\"]", "");
 
     return SqlLiteral.createInterval(1, unquotedText, intervalQualifier, ZERO);
-  }
-
-  private HiveMetastoreClient getMscOrThrow() {
-    if (hiveMetastoreClient == null) {
-      throw new RuntimeException("Hive metastore client is required to access table");
-    } else {
-      return hiveMetastoreClient;
-    }
-  }
-
-  private static String trimParenthesis(String value) {
-    String str = value.trim();
-    if (str.startsWith("(") && str.endsWith(")")) {
-      return trimParenthesis(str.substring(1, str.length() - 1));
-    }
-    return str;
-  }
-
-  public static class Config {
-    private String catalogName = "";
-    private String defaultDBName = "";
-
-    public Config setCatalogName(String catalogName) {
-      this.catalogName = catalogName;
-      return this;
-    }
-
-    public Config setDefaultDB(String defaultDBName) {
-      this.defaultDBName = defaultDBName;
-      return this;
-    }
   }
 
   class ParseContext {

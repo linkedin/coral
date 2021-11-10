@@ -38,6 +38,9 @@ import com.linkedin.coral.com.google.common.collect.HashMultimap;
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import com.linkedin.coral.com.google.common.collect.ImmutableMultimap;
 import com.linkedin.coral.com.google.common.collect.Multimap;
+import com.linkedin.coral.common.Function;
+import com.linkedin.coral.common.FunctionRegistry;
+import com.linkedin.coral.common.GenericProjectFunction;
 
 import static org.apache.calcite.sql.fun.SqlLibraryOperators.*;
 import static org.apache.calcite.sql.fun.SqlStdOperatorTable.*;
@@ -55,12 +58,12 @@ import static org.apache.calcite.sql.type.ReturnTypes.*;
  * Note that Coral maintains a copy of StaticHiveFunctionRegistry for read only at run time.
  * For individual query, we create a copy of function registry in a RelConTextProvider object.
  */
-public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
+public class StaticHiveFunctionRegistry implements FunctionRegistry {
 
   public static final String IS_TEST_MEMBER_ID_CLASS = "com.linkedin.dali.udf.istestmemberid.hive.IsTestMemberId";
 
   // TODO: Make this immutable using builder
-  static final Multimap<String, HiveFunction> FUNCTION_MAP = HashMultimap.create();
+  static final Multimap<String, Function> FUNCTION_MAP = HashMultimap.create();
 
   // Used for registering UDTFs, the key is the function name and the value is a list of field names returned by the UDTF
   // We need it because we need to know the return field names of UDTF to do the conversion in ParseTreeBuilder.visitLateralViewUDTF
@@ -274,8 +277,11 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
     createAddUserDefinedFunction("split", HiveReturnTypes.arrayOfType(SqlTypeName.VARCHAR), STRING_STRING);
     createAddUserDefinedFunction("str_to_map", HiveReturnTypes.mapOfType(SqlTypeName.VARCHAR, SqlTypeName.VARCHAR),
         family(Collections.nCopies(3, SqlTypeFamily.STRING), optionalOrd(ImmutableList.of(1, 2))));
-    addFunctionEntry("substr", SUBSTRING);
-    addFunctionEntry("substring", SUBSTRING);
+    createAddUserDefinedFunction("substr", HiveReturnTypes.STRING,
+        family(ImmutableList.of(SqlTypeFamily.STRING, SqlTypeFamily.INTEGER, SqlTypeFamily.INTEGER), optionalOrd(2)));
+    createAddUserDefinedFunction("substring", HiveReturnTypes.STRING,
+        family(ImmutableList.of(SqlTypeFamily.STRING, SqlTypeFamily.INTEGER, SqlTypeFamily.INTEGER), optionalOrd(2)));
+
     createAddUserDefinedFunction("substring_index", HiveReturnTypes.STRING, STRING_STRING_INTEGER);
     createAddUserDefinedFunction("trim", HiveReturnTypes.STRING, STRING);
     createAddUserDefinedFunction("unbase64", explicit(SqlTypeName.VARBINARY), or(STRING, NULLABLE_LITERAL));
@@ -290,6 +296,17 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
         or(family(SqlTypeFamily.STRING), family(SqlTypeFamily.BINARY)));
     createAddUserDefinedFunction("crc32", HiveReturnTypes.BIGINT,
         or(family(SqlTypeFamily.STRING), family(SqlTypeFamily.BINARY)));
+
+    // xpath functions
+    createAddUserDefinedFunction("xpath", HiveReturnTypes.arrayOfType(SqlTypeName.VARCHAR), STRING_STRING);
+    createAddUserDefinedFunction("xpath_string", HiveReturnTypes.STRING, STRING_STRING);
+    createAddUserDefinedFunction("xpath_boolean", ReturnTypes.BOOLEAN, STRING_STRING);
+    createAddUserDefinedFunction("xpath_short", HiveReturnTypes.SMALLINT, STRING_STRING);
+    createAddUserDefinedFunction("xpath_int", ReturnTypes.INTEGER, STRING_STRING);
+    createAddUserDefinedFunction("xpath_long", HiveReturnTypes.BIGINT, STRING_STRING);
+    createAddUserDefinedFunction("xpath_float", DOUBLE, STRING_STRING);
+    createAddUserDefinedFunction("xpath_double", DOUBLE, STRING_STRING);
+    createAddUserDefinedFunction("xpath_number", DOUBLE, STRING_STRING);
 
     // Date Functions
     createAddUserDefinedFunction("from_unixtime", HiveReturnTypes.STRING,
@@ -473,7 +490,7 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
                 "listingtype", "sublistingtype", "istestjob"),
             ImmutableList.of(HiveReturnTypes.BIGINT, HiveReturnTypes.STRING,
                 HiveReturnTypes.arrayOfType(SqlTypeName.BIGINT), HiveReturnTypes.arrayOfType(SqlTypeName.VARCHAR),
-                HiveReturnTypes.STRING, HiveReturnTypes.STRING, HiveReturnTypes.STRING)),
+                HiveReturnTypes.STRING, HiveReturnTypes.STRING, ReturnTypes.BOOLEAN)),
         family(
             ImmutableList.of(SqlTypeFamily.NUMERIC, SqlTypeFamily.STRING, SqlTypeFamily.STRING, SqlTypeFamily.STRING)));
     createAddUserDefinedFunction("com.linkedin.stdudfs.userinterfacelookup.hive.UserInterfaceLookup",
@@ -520,6 +537,10 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
     addFunctionEntry("posexplode", HivePosExplodeOperator.POS_EXPLODE);
     addFunctionEntry("json_tuple", HiveJsonTupleOperator.JSON_TUPLE);
 
+    // reflect functions
+    addFunctionEntry("reflect", HiveReflectOperator.REFLECT);
+    addFunctionEntry("java_method", HiveReflectOperator.REFLECT);
+
     // Generic UDTFs
     createAddUserDefinedTableFunction("com.linkedin.tsar.hive.udf.ToJymbiiScores",
         ImmutableList.of("job_urn", "rank", "glmix_score", "global_model_score", "sentinel_score", "job_effect_score",
@@ -539,14 +560,14 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
    * @return list of matching HiveFunctions or empty collection.
    */
   @Override
-  public Collection<HiveFunction> lookup(String functionName) {
+  public Collection<Function> lookup(String functionName) {
     return FUNCTION_MAP.get(functionName.toLowerCase());
   }
 
   /**
    * @return immutable copy of internal function registry
    */
-  public ImmutableMultimap<String, HiveFunction> getRegistry() {
+  public ImmutableMultimap<String, Function> getRegistry() {
     return ImmutableMultimap.copyOf(FUNCTION_MAP);
   }
 
@@ -554,7 +575,7 @@ public class StaticHiveFunctionRegistry implements HiveFunctionRegistry {
    * Adds the function to registry, the key is lowercase functionName to make lookup case-insensitive.
    */
   private static void addFunctionEntry(String functionName, SqlOperator operator) {
-    FUNCTION_MAP.put(functionName.toLowerCase(), new HiveFunction(functionName, operator));
+    FUNCTION_MAP.put(functionName.toLowerCase(), new Function(functionName, operator));
   }
 
   public static void createAddUserDefinedFunction(String functionName, SqlReturnTypeInference returnTypeInference,

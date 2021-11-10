@@ -24,7 +24,7 @@ import org.apache.calcite.sql2rel.SqlRexConvertlet;
 import org.apache.calcite.sql2rel.StandardConvertletTable;
 
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
-import com.linkedin.coral.hive.hive2rel.functions.FunctionFieldReferenceOperator;
+import com.linkedin.coral.common.FunctionFieldReferenceOperator;
 import com.linkedin.coral.hive.hive2rel.functions.HiveInOperator;
 import com.linkedin.coral.hive.hive2rel.functions.HiveNamedStructFunction;
 

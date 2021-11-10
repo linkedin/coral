@@ -12,7 +12,7 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import com.linkedin.coral.hive.hive2rel.HiveMetastoreClient;
+import com.linkedin.coral.common.HiveMetastoreClient;
 
 
 public class ViewToAvroSchemaConverterTests {
@@ -112,6 +112,19 @@ public class ViewToAvroSchemaConverterTests {
     Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v");
 
     Assert.assertEquals(actualSchema.toString(true), TestUtils.loadSchema("testAggregateRename-expected.avsc"));
+  }
+
+  @Test
+  public void testMultipleAggregates() {
+    String viewSql = "CREATE VIEW v AS SELECT MAX(bc.Id) AS Max_Id_Col, MIN(bc.Id) AS Min_Id_Col, "
+        + "AVG(bc.Id) AS Avg_Id_Col, SUM(bc.Id) AS Sum_Id_Col FROM basecomplex bc GROUP BY bc.Array_Col";
+
+    TestUtils.executeCreateViewQuery("default", "v", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v");
+
+    Assert.assertEquals(actualSchema.toString(true), TestUtils.loadSchema("testMultipleAggregates-expected.avsc"));
   }
 
   @Test
