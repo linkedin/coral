@@ -12,6 +12,7 @@ import com.google.common.base.Preconditions;
 
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
+import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.sql.type.ReturnTypes;
 import org.apache.calcite.sql.type.SqlReturnTypeInference;
 import org.apache.calcite.sql.type.SqlTypeName;
@@ -50,12 +51,51 @@ public final class FunctionReturnTypes {
     return typeFactory.createArrayType(typeFactory.createMapType(strType, strType), -1);
   };
 
+  /**
+   * The semantics for the extract_union is now pass-through: Assuming the engine's reader could deal with
+   * union type and explode it into a struct, this extract_union UDF's return type will simply follow exploded struct's
+   * schema based on how many arguments passed by users.
+   */
   public static final SqlReturnTypeInference EXTRACT_UNION_FUNCTION_RETURN_STRATEGY = opBinding -> {
     int numArgs = opBinding.getOperandCount();
     Preconditions.checkState(numArgs == 1 || numArgs == 2);
     // 1-arg case
     if (numArgs == 1) {
       return opBinding.getOperandType(0);
+    }
+    // 2-arg case
+    else {
+      int ordinal = opBinding.getOperandLiteralValue(1, Integer.class);
+      return opBinding.getOperandType(0).getFieldList().get(ordinal).getType();
+    }
+  };
+
+  /**
+   * Represents the return type for the coalesce_struct UDF that is built for bridging the schema difference
+   * between previous Coral's interpretation of union field in Coral IR (i.e. consistent to the output schema of
+   * extract_union Hive UDF, let's call it struct_old) and Trino's schema when deserializing union field from its reader.
+   * (Let's call it struct_new, See https://github.com/trinodb/trino/pull/3483 for details).
+   *
+   * struct_new looks like:
+   * struct&lt;tag:int, field0:type0, field1:type1, ... fieldN:typeN&gt;
+   *
+   * struct_old looks like:
+   * struct&lt;tag_0:type0, tag_1:type1, ... tag_N:typeN&gt;
+   *
+   * This new UDF could be stated as the following signature:
+   * def coalesce_struct(struct:struct_new, [ordinal: int]) : struct_old = {}
+   *
+   */
+  public static final SqlReturnTypeInference COALESCE_STRUCT_FUNCTION_RETURN_STRATEGY = opBinding -> {
+    int numArgs = opBinding.getOperandCount();
+    RelDataTypeFactory typeFactory = opBinding.getTypeFactory();
+    Preconditions.checkState(numArgs == 1 || numArgs == 2);
+    // 1-arg case
+    if (numArgs == 1) {
+      List<RelDataTypeField> oldStructFieldList = opBinding.getOperandType(0).getFieldList();
+      List<RelDataType> types = oldStructFieldList.stream().map(RelDataTypeField::getType).collect(Collectors.toList());
+      List<String> names = oldStructFieldList.stream().map(RelDataTypeField::getName).collect(Collectors.toList());
+      return typeFactory.createStructType(types.subList(1, types.size()), names.subList(1, names.size()));
     }
     // 2-arg case
     else {
