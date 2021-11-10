@@ -53,9 +53,9 @@ public class SameOperandTypeExceptFirstOperandChecker extends SameOperandTypeChe
     if (!types[0].getSqlTypeName().equals(firstOperandTypeName)) {
       return handleError(callBinding, throwOnFailure);
     }
-    // skip 0th operand from this check
+    // skip 0th operand from this check, NULL types are also comparable
     for (int i = 2; i < operandList.size(); i++) {
-      if (!SqlTypeUtil.isComparable(types[i], types[i - 1])) {
+      if (!isComparableWithNullable(types[i - 1], types[i])) {
         handleError(callBinding, throwOnFailure);
       }
     }
@@ -79,5 +79,10 @@ public class SameOperandTypeExceptFirstOperandChecker extends SameOperandTypeChe
       throw callBinding.newValidationSignatureError();
     }
     return false;
+  }
+
+  private boolean isComparableWithNullable(RelDataType type1, RelDataType type2) {
+    return type1.getSqlTypeName() == SqlTypeName.NULL || type2.getSqlTypeName() == SqlTypeName.NULL
+        || SqlTypeUtil.isComparable(type1, type2);
   }
 }

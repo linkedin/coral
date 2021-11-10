@@ -22,6 +22,7 @@ import com.google.common.annotations.VisibleForTesting;
 
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
+import org.apache.calcite.rel.core.AggregateCall;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexInputRef;
@@ -280,6 +281,10 @@ class SchemaUtilities {
     printWriter.flush();
 
     return "Field created from view literal with value: " + documentationWriter;
+  }
+
+  static String generateDocumentationForAggregate(AggregateCall aggregateCall) {
+    return "Field created in view by applying aggregate function of type: " + aggregateCall.getAggregation().getKind();
   }
 
   static String toAvroQualifiedName(@Nonnull String name) {
