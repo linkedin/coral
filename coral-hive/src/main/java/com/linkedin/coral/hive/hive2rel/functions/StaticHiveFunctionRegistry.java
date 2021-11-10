@@ -78,6 +78,8 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
     addFunctionEntry("avg", AVG);
     addFunctionEntry("min", MIN);
     addFunctionEntry("max", MAX);
+    createAddUserDefinedFunction("collect_list", HiveReturnTypes.ARRAY_OF_ARG0_TYPE, ANY);
+    createAddUserDefinedFunction("collect_set", HiveReturnTypes.ARRAY_OF_ARG0_TYPE, ANY);
 
     // window functions
     addFunctionEntry("row_number", ROW_NUMBER);

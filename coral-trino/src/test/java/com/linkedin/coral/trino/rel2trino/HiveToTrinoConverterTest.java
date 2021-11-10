@@ -592,4 +592,24 @@ public class HiveToTrinoConverterTest {
     String expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
   }
+
+  @Test
+  public void testCollectListFunction() {
+    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+
+    RelNode relNode = hiveToRelConverter.convertSql("SELECT collect_list(a) from test.tableA");
+    String targetSql = "SELECT \"array_agg\"(\"a\")\n" + "FROM \"test\".\"tablea\"";
+    String expandedSql = relToTrinoConverter.convert(relNode);
+    assertEquals(expandedSql, targetSql);
+  }
+
+  @Test
+  public void testCollectSetFunction() {
+    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+
+    RelNode relNode = hiveToRelConverter.convertSql("SELECT collect_set(a) from test.tableA");
+    String targetSql = "SELECT \"array_distinct\"(\"array_agg\"(\"a\"))\n" + "FROM \"test\".\"tablea\"";
+    String expandedSql = relToTrinoConverter.convert(relNode);
+    assertEquals(expandedSql, targetSql);
+  }
 }

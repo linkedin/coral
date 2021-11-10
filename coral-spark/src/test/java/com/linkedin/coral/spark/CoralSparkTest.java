@@ -679,4 +679,18 @@ public class CoralSparkTest {
     String targetSql = "SELECT CAST(a AS DECIMAL(10, 0)) casted_decimal\n" + "FROM default.foo";
     assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
   }
+
+  @Test
+  public void testCollectListFunction() {
+    RelNode relNode = TestUtils.toRelNode("SELECT collect_list(a) FROM default.foo");
+    String targetSql = "SELECT collect_list(a)\n" + "FROM default.foo";
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+  }
+
+  @Test
+  public void testCollectSetFunction() {
+    RelNode relNode = TestUtils.toRelNode("SELECT collect_set(a) FROM default.foo");
+    String targetSql = "SELECT collect_set(a)\n" + "FROM default.foo";
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+  }
 }
