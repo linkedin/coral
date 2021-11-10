@@ -259,6 +259,45 @@ public class HiveToTrinoConverterTest {
   }
 
   @Test
+  public void testLateralViewPosExplodeWithAlias() {
+    RelNode relNode = hiveToRelConverter.convertSql(
+        "SELECT col FROM (SELECT ARRAY('a1', 'a2') as a) tmp LATERAL VIEW POSEXPLODE(a) a_alias AS pos, col");
+    String targetSql = "SELECT \"t2\".\"col\" AS \"col\"\n" + "FROM (SELECT ARRAY['a1', 'a2'] AS \"a\"\n"
+        + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")) AS \"$cor0\"\n"
+        + "CROSS JOIN UNNEST(\"$cor0\".\"a\") WITH ORDINALITY AS \"t2\" (\"col\", \"pos\")";
+
+    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+    String expandedSql = relToTrinoConverter.convert(relNode);
+    assertEquals(expandedSql, targetSql);
+  }
+
+  @Test
+  public void testLateralViewPosExplodeWithoutAlias() {
+    RelNode relNode = hiveToRelConverter
+        .convertSql("SELECT col FROM (SELECT ARRAY('a1', 'a2') as a) tmp LATERAL VIEW POSEXPLODE(a) a_alias");
+    String targetSql = "SELECT \"t2\".\"col\" AS \"col\"\n" + "FROM (SELECT ARRAY['a1', 'a2'] AS \"a\"\n"
+        + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")) AS \"$cor0\"\n"
+        + "CROSS JOIN UNNEST(\"$cor0\".\"a\") WITH ORDINALITY AS \"t2\" (\"col\", \"ORDINALITY\")";
+
+    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+    String expandedSql = relToTrinoConverter.convert(relNode);
+    assertEquals(expandedSql, targetSql);
+  }
+
+  @Test
+  public void testLateralViewOuterPosExplodeWithAlias() {
+    RelNode relNode = hiveToRelConverter.convertSql(
+        "SELECT col FROM (SELECT ARRAY('a1', 'a2') as a) tmp LATERAL VIEW OUTER POSEXPLODE(a) a_alias AS pos, col");
+    String targetSql = "SELECT \"t2\".\"col\" AS \"col\"\n" + "FROM (SELECT ARRAY['a1', 'a2'] AS \"a\"\n"
+        + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")) AS \"$cor0\"\n"
+        + "CROSS JOIN UNNEST(\"if\"(\"$cor0\".\"a\" IS NOT NULL AND CARDINALITY(\"$cor0\".\"a\") > 0, \"$cor0\".\"a\", ARRAY[NULL])) WITH ORDINALITY AS \"t2\" (\"col\", \"pos\")";
+
+    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+    String expandedSql = relToTrinoConverter.convert(relNode);
+    assertEquals(expandedSql, targetSql);
+  }
+
+  @Test
   public void testLegacyUnnestArrayOfStruct() {
     RelNode relNode = hiveToRelConverter.convertView("test", "view_with_explode_struct_array");
     String targetSql = "SELECT \"$cor0\".\"a\" AS \"a\", \"t0\".\"c\" AS \"c\"\n"

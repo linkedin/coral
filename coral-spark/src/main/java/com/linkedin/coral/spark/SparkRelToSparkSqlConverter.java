@@ -37,6 +37,7 @@ import org.apache.calcite.sql.parser.SqlParserPos;
 
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import com.linkedin.coral.hive.hive2rel.functions.HiveExplodeOperator;
+import com.linkedin.coral.hive.hive2rel.functions.HivePosExplodeOperator;
 import com.linkedin.coral.spark.dialect.SparkSqlDialect;
 import com.linkedin.coral.spark.functions.SqlLateralJoin;
 import com.linkedin.coral.spark.functions.SqlLateralViewAsOperator;
@@ -167,8 +168,9 @@ public class SparkRelToSparkSqlConverter extends RelToSqlConverter {
       unnestOperands.add(x.qualifiedContext().toSql(null, unnestCol));
     }
 
-    // Convert UNNEST to EXPLODE function
-    final SqlNode unnestNode = HiveExplodeOperator.EXPLODE.createCall(POS, unnestOperands.toArray(new SqlNode[0]));
+    // Convert UNNEST to EXPLODE or POSEXPLODE function
+    final SqlNode unnestNode = (e.withOrdinality ? HivePosExplodeOperator.POS_EXPLODE : HiveExplodeOperator.EXPLODE)
+        .createCall(POS, unnestOperands.toArray(new SqlNode[0]));
 
     // Build LATERAL VIEW EXPLODE(<unnestColumns>) <alias> AS (<columnList>)
     // Without the AS node, in cases like the following valid Hive queries:
@@ -179,7 +181,19 @@ public class SparkRelToSparkSqlConverter extends RelToSqlConverter {
     // SqlSetOperator, SqlStdOperatorTable.AS, and SqlStdOperatorTable.VALUES are allowed).
     /** See {@link org.apache.calcite.rel.rel2sql.SqlImplementor#wrapSelect(SqlNode)}*/
 
-    final List<SqlNode> asOperands = createAsFullOperands(e.getRowType(), unnestNode, x.neededAlias);
+    List<SqlNode> asOperands = createAsFullOperands(e.getRowType(), unnestNode, x.neededAlias);
+
+    int asOperandsSize = asOperands.size();
+
+    // For POSEXPLODE function, we need to change the order of 2 alias back to be aligned with Spark syntax since
+    // we have changed the order before in ParseTreeBuilder#visitLateralViewExplode for calcite validation
+    // Otherwise, `LATERAL VIEW POSEXPLODE(ARRAY('a', 'b')) arr AS pos, alias` will be translated to
+    // `LATERAL VIEW POSEXPLODE(ARRAY('a', 'b')) arr AS alias, pos`
+    if (e.withOrdinality) {
+      asOperands = ImmutableList.<SqlNode> builder().addAll(asOperands.subList(0, asOperandsSize - 2))
+          .add(asOperands.get(asOperandsSize - 1)).add(asOperands.get(asOperandsSize - 2)).build();
+    }
+
     final SqlNode asNode = SqlLateralViewAsOperator.instance.createCall(POS, asOperands);
 
     // Reuse the same x.neededAlias since that's already unique by directly calling "new Result(...)"
