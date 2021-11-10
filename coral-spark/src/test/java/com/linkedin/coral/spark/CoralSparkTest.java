@@ -465,6 +465,45 @@ public class CoralSparkTest {
   }
 
   @Test
+  public void testXpathFunctions() {
+    RelNode relNode = TestUtils.toRelNode("select xpath('<a><b>b1</b><b>b2</b></a>','a/*') FROM foo");
+    String targetSql = "SELECT xpath('<a><b>b1</b><b>b2</b></a>', 'a/*')\n" + "FROM default.foo";
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+
+    relNode = TestUtils.toRelNode("SELECT xpath_string('<a><b>bb</b><c>cc</c></a>', 'a/b') FROM foo");
+    targetSql = "SELECT xpath_string('<a><b>bb</b><c>cc</c></a>', 'a/b')\n" + "FROM default.foo";
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+
+    relNode = TestUtils.toRelNode("SELECT xpath_boolean('<a><b>b</b></a>', 'a/b') FROM foo");
+    targetSql = "SELECT xpath_boolean('<a><b>b</b></a>', 'a/b')\n" + "FROM default.foo";
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+
+    relNode = TestUtils.toRelNode("SELECT xpath_int('<a>b</a>', 'a = 10') FROM foo");
+    targetSql = "SELECT xpath_int('<a>b</a>', 'a = 10')\n" + "FROM default.foo";
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+
+    relNode = TestUtils.toRelNode("SELECT xpath_short('<a>b</a>', 'a = 10') FROM foo");
+    targetSql = "SELECT xpath_short('<a>b</a>', 'a = 10')\n" + "FROM default.foo";
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+
+    relNode = TestUtils.toRelNode("SELECT xpath_long('<a>b</a>', 'a = 10') FROM foo");
+    targetSql = "SELECT xpath_long('<a>b</a>', 'a = 10')\n" + "FROM default.foo";
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+
+    relNode = TestUtils.toRelNode("SELECT xpath_float('<a>b</a>', 'a = 10') FROM foo");
+    targetSql = "SELECT xpath_float('<a>b</a>', 'a = 10')\n" + "FROM default.foo";
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+
+    relNode = TestUtils.toRelNode("SELECT xpath_double('<a>b</a>', 'a = 10') FROM foo");
+    targetSql = "SELECT xpath_double('<a>b</a>', 'a = 10')\n" + "FROM default.foo";
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+
+    relNode = TestUtils.toRelNode("SELECT xpath_number('<a>b</a>', 'a = 10') FROM foo");
+    targetSql = "SELECT xpath_number('<a>b</a>', 'a = 10')\n" + "FROM default.foo";
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+  }
+
+  @Test
   public void testConcat() {
     RelNode relNode = TestUtils.toRelNode("SELECT 'a' || 'b'");
 

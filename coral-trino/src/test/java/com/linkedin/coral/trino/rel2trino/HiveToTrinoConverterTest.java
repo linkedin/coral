@@ -342,6 +342,49 @@ public class HiveToTrinoConverterTest {
   }
 
   @Test
+  public void testXpathFunctions() {
+    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+
+    RelNode relNode = hiveToRelConverter.convertSql("select xpath('<a><b>b1</b><b>b2</b></a>','a/*')");
+    String targetSql =
+        "SELECT \"xpath\"('<a><b>b1</b><b>b2</b></a>', 'a/*')\n" + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
+    assertEquals(relToTrinoConverter.convert(relNode), targetSql);
+
+    relNode = hiveToRelConverter.convertSql("SELECT xpath_string('<a><b>bb</b><c>cc</c></a>', 'a/b')");
+    targetSql =
+        "SELECT \"xpath_string\"('<a><b>bb</b><c>cc</c></a>', 'a/b')\n" + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
+    assertEquals(relToTrinoConverter.convert(relNode), targetSql);
+
+    relNode = hiveToRelConverter.convertSql("SELECT xpath_boolean('<a><b>b</b></a>', 'a/b')");
+    targetSql = "SELECT \"xpath_boolean\"('<a><b>b</b></a>', 'a/b')\n" + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
+    assertEquals(relToTrinoConverter.convert(relNode), targetSql);
+
+    relNode = hiveToRelConverter.convertSql("SELECT xpath_int('<a>b</a>', 'a = 10')");
+    targetSql = "SELECT \"xpath_int\"('<a>b</a>', 'a = 10')\n" + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
+    assertEquals(relToTrinoConverter.convert(relNode), targetSql);
+
+    relNode = hiveToRelConverter.convertSql("SELECT xpath_short('<a>b</a>', 'a = 10')");
+    targetSql = "SELECT \"xpath_short\"('<a>b</a>', 'a = 10')\n" + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
+    assertEquals(relToTrinoConverter.convert(relNode), targetSql);
+
+    relNode = hiveToRelConverter.convertSql("SELECT xpath_long('<a>b</a>', 'a = 10')");
+    targetSql = "SELECT \"xpath_long\"('<a>b</a>', 'a = 10')\n" + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
+    assertEquals(relToTrinoConverter.convert(relNode), targetSql);
+
+    relNode = hiveToRelConverter.convertSql("SELECT xpath_float('<a>b</a>', 'a = 10')");
+    targetSql = "SELECT \"xpath_float\"('<a>b</a>', 'a = 10')\n" + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
+    assertEquals(relToTrinoConverter.convert(relNode), targetSql);
+
+    relNode = hiveToRelConverter.convertSql("SELECT xpath_double('<a>b</a>', 'a = 10')");
+    targetSql = "SELECT \"xpath_double\"('<a>b</a>', 'a = 10')\n" + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
+    assertEquals(relToTrinoConverter.convert(relNode), targetSql);
+
+    relNode = hiveToRelConverter.convertSql("SELECT xpath_number('<a>b</a>', 'a = 10')");
+    targetSql = "SELECT \"xpath_number\"('<a>b</a>', 'a = 10')\n" + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
+    assertEquals(relToTrinoConverter.convert(relNode), targetSql);
+  }
+
+  @Test
   public void testConcat() {
     RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
 
