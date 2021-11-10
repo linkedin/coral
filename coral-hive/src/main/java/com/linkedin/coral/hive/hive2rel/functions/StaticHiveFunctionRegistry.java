@@ -479,7 +479,7 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
                 "listingtype", "sublistingtype", "istestjob"),
             ImmutableList.of(HiveReturnTypes.BIGINT, HiveReturnTypes.STRING,
                 HiveReturnTypes.arrayOfType(SqlTypeName.BIGINT), HiveReturnTypes.arrayOfType(SqlTypeName.VARCHAR),
-                HiveReturnTypes.STRING, HiveReturnTypes.STRING, HiveReturnTypes.STRING)),
+                HiveReturnTypes.STRING, HiveReturnTypes.STRING, ReturnTypes.BOOLEAN)),
         family(
             ImmutableList.of(SqlTypeFamily.NUMERIC, SqlTypeFamily.STRING, SqlTypeFamily.STRING, SqlTypeFamily.STRING)));
     createAddUserDefinedFunction("com.linkedin.stdudfs.userinterfacelookup.hive.UserInterfaceLookup",
