@@ -323,7 +323,6 @@ class IRRelToSparkRelTransformer {
       return Optional.empty();
     }
 
-    // TODO:This removal is no longer needed
     private Optional<RexNode> removeExtractUnionFunction(RexCall call) {
       if (call.getOperator().getName().equalsIgnoreCase("extract_union")) {
         // one arg case: extract_union(field_name)

@@ -379,7 +379,7 @@ public class CoralSparkTest {
     assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
   }
 
-  @Test
+  @Test(enabled = false)
   public void testUnionExtractUDF() {
     RelNode relNode = TestUtils.toRelNode("SELECT extract_union(foo) from union_table");
     String targetSql = String.join("\n", "SELECT foo", "FROM default.union_table");
