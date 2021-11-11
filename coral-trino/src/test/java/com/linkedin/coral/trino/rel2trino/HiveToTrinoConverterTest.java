@@ -290,7 +290,7 @@ public class HiveToTrinoConverterTest {
         "SELECT col FROM (SELECT ARRAY('a1', 'a2') as a) tmp LATERAL VIEW OUTER POSEXPLODE(a) a_alias AS pos, col");
     String targetSql = "SELECT \"t2\".\"col\" AS \"col\"\n" + "FROM (SELECT ARRAY['a1', 'a2'] AS \"a\"\n"
         + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")) AS \"$cor0\"\n"
-        + "CROSS JOIN UNNEST(\"if\"(\"$cor0\".\"a\" IS NOT NULL AND CARDINALITY(\"$cor0\".\"a\") > 0, \"$cor0\".\"a\", ARRAY[NULL])) WITH ORDINALITY AS \"t2\" (\"col\", \"pos\")";
+        + "CROSS JOIN UNNEST(\"if\"(\"$cor0\".\"a\" IS NOT NULL AND CAST(CARDINALITY(\"$cor0\".\"a\") AS INTEGER) > 0, \"$cor0\".\"a\", ARRAY[NULL])) WITH ORDINALITY AS \"t2\" (\"col\", \"pos\")";
 
     RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
     String expandedSql = relToTrinoConverter.convert(relNode);
