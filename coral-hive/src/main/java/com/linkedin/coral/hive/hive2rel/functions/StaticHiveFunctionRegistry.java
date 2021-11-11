@@ -78,6 +78,8 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
     addFunctionEntry("avg", AVG);
     addFunctionEntry("min", MIN);
     addFunctionEntry("max", MAX);
+    createAddUserDefinedFunction("collect_list", HiveReturnTypes.ARRAY_OF_ARG0_TYPE, ANY);
+    createAddUserDefinedFunction("collect_set", HiveReturnTypes.ARRAY_OF_ARG0_TYPE, ANY);
 
     // window functions
     addFunctionEntry("row_number", ROW_NUMBER);
@@ -297,6 +299,17 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
     createAddUserDefinedFunction("crc32", HiveReturnTypes.BIGINT,
         or(family(SqlTypeFamily.STRING), family(SqlTypeFamily.BINARY)));
 
+    // xpath functions
+    createAddUserDefinedFunction("xpath", HiveReturnTypes.arrayOfType(SqlTypeName.VARCHAR), STRING_STRING);
+    createAddUserDefinedFunction("xpath_string", HiveReturnTypes.STRING, STRING_STRING);
+    createAddUserDefinedFunction("xpath_boolean", ReturnTypes.BOOLEAN, STRING_STRING);
+    createAddUserDefinedFunction("xpath_short", HiveReturnTypes.SMALLINT, STRING_STRING);
+    createAddUserDefinedFunction("xpath_int", ReturnTypes.INTEGER, STRING_STRING);
+    createAddUserDefinedFunction("xpath_long", HiveReturnTypes.BIGINT, STRING_STRING);
+    createAddUserDefinedFunction("xpath_float", DOUBLE, STRING_STRING);
+    createAddUserDefinedFunction("xpath_double", DOUBLE, STRING_STRING);
+    createAddUserDefinedFunction("xpath_number", DOUBLE, STRING_STRING);
+
     // Date Functions
     createAddUserDefinedFunction("from_unixtime", HiveReturnTypes.STRING,
         family(ImmutableList.of(SqlTypeFamily.NUMERIC, SqlTypeFamily.STRING), optionalOrd(1)));
@@ -479,7 +492,7 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
                 "listingtype", "sublistingtype", "istestjob"),
             ImmutableList.of(HiveReturnTypes.BIGINT, HiveReturnTypes.STRING,
                 HiveReturnTypes.arrayOfType(SqlTypeName.BIGINT), HiveReturnTypes.arrayOfType(SqlTypeName.VARCHAR),
-                HiveReturnTypes.STRING, HiveReturnTypes.STRING, HiveReturnTypes.STRING)),
+                HiveReturnTypes.STRING, HiveReturnTypes.STRING, ReturnTypes.BOOLEAN)),
         family(
             ImmutableList.of(SqlTypeFamily.NUMERIC, SqlTypeFamily.STRING, SqlTypeFamily.STRING, SqlTypeFamily.STRING)));
     createAddUserDefinedFunction("com.linkedin.stdudfs.userinterfacelookup.hive.UserInterfaceLookup",
@@ -523,6 +536,7 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
 
     // UDTFs
     addFunctionEntry("explode", HiveExplodeOperator.EXPLODE);
+    addFunctionEntry("posexplode", HivePosExplodeOperator.POS_EXPLODE);
     addFunctionEntry("json_tuple", HiveJsonTupleOperator.JSON_TUPLE);
 
     // reflect functions

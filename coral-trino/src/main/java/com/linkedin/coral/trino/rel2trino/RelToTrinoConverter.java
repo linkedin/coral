@@ -190,10 +190,12 @@ public class RelToTrinoConverter extends RelToSqlConverter {
       }
     }
 
-    // Build UNNEST(<unnestColumns>)
-    final SqlNode unnestNode = SqlStdOperatorTable.UNNEST.createCall(POS, unnestOperands);
+    // Build UNNEST(<unnestColumns>) or UNNEST(<unnestColumns>) WITH ORDINALITY
+    final SqlNode unnestNode =
+        (e.withOrdinality ? SqlStdOperatorTable.UNNEST_WITH_ORDINALITY : SqlStdOperatorTable.UNNEST).createCall(POS,
+            unnestOperands);
 
-    // Build UNNEST(<unnestColumns>) AS <alias>(<columnList>)
+    // Build UNNEST(<unnestColumns>) (WITH ORDINALITY) AS <alias>(<columnList>)
     final List<SqlNode> asOperands = createAsFullOperands(e.getRowType(), unnestNode, x.neededAlias);
     final SqlNode asNode = SqlStdOperatorTable.AS.createCall(POS, asOperands);
 

@@ -41,6 +41,7 @@ import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.fun.SqlMapValueConstructor;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
+import org.apache.calcite.sql.type.ReturnTypes;
 import org.apache.calcite.sql.type.SqlTypeFamily;
 
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
@@ -214,6 +215,13 @@ public class Calcite2TrinoUDFConverter {
         }
       }
 
+      if (operatorName.equalsIgnoreCase("collect_list") || operatorName.equalsIgnoreCase("collect_set")) {
+        Optional<RexNode> modifiedCall = visitCollectListOrSetFunction(call);
+        if (modifiedCall.isPresent()) {
+          return modifiedCall.get();
+        }
+      }
+
       if (operatorName.equalsIgnoreCase("substr")) {
         Optional<RexNode> modifiedCall = visitSubstring(call);
         if (modifiedCall.isPresent()) {
@@ -228,6 +236,18 @@ public class Calcite2TrinoUDFConverter {
       }
       RexCall modifiedCall = adjustInconsistentTypesToEqualityOperator(call);
       return adjustReturnTypeWithCast(rexBuilder, super.visitCall(modifiedCall));
+    }
+
+    private Optional<RexNode> visitCollectListOrSetFunction(RexCall call) {
+      List<RexNode> convertedOperands = visitList(call.getOperands(), (boolean[]) null);
+      final SqlOperator arrayAgg = createUDF("array_agg", HiveReturnTypes.ARRAY_OF_ARG0_TYPE);
+      final SqlOperator arrayDistinct = createUDF("array_distinct", ReturnTypes.ARG0_NULLABLE);
+      final String operatorName = call.getOperator().getName();
+      if (operatorName.equalsIgnoreCase("collect_list")) {
+        return Optional.of(rexBuilder.makeCall(arrayAgg, convertedOperands));
+      } else {
+        return Optional.of(rexBuilder.makeCall(arrayDistinct, rexBuilder.makeCall(arrayAgg, convertedOperands)));
+      }
     }
 
     private Optional<RexNode> visitFromUnixtime(RexCall call) {

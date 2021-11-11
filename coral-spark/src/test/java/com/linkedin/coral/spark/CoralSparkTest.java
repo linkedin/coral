@@ -465,6 +465,74 @@ public class CoralSparkTest {
   }
 
   @Test
+  public void testXpathFunctions() {
+    RelNode relNode = TestUtils.toRelNode("select xpath('<a><b>b1</b><b>b2</b></a>','a/*') FROM foo");
+    String targetSql = "SELECT xpath('<a><b>b1</b><b>b2</b></a>', 'a/*')\n" + "FROM default.foo";
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+
+    relNode = TestUtils.toRelNode("SELECT xpath_string('<a><b>bb</b><c>cc</c></a>', 'a/b') FROM foo");
+    targetSql = "SELECT xpath_string('<a><b>bb</b><c>cc</c></a>', 'a/b')\n" + "FROM default.foo";
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+
+    relNode = TestUtils.toRelNode("SELECT xpath_boolean('<a><b>b</b></a>', 'a/b') FROM foo");
+    targetSql = "SELECT xpath_boolean('<a><b>b</b></a>', 'a/b')\n" + "FROM default.foo";
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+
+    relNode = TestUtils.toRelNode("SELECT xpath_int('<a>b</a>', 'a = 10') FROM foo");
+    targetSql = "SELECT xpath_int('<a>b</a>', 'a = 10')\n" + "FROM default.foo";
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+
+    relNode = TestUtils.toRelNode("SELECT xpath_short('<a>b</a>', 'a = 10') FROM foo");
+    targetSql = "SELECT xpath_short('<a>b</a>', 'a = 10')\n" + "FROM default.foo";
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+
+    relNode = TestUtils.toRelNode("SELECT xpath_long('<a>b</a>', 'a = 10') FROM foo");
+    targetSql = "SELECT xpath_long('<a>b</a>', 'a = 10')\n" + "FROM default.foo";
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+
+    relNode = TestUtils.toRelNode("SELECT xpath_float('<a>b</a>', 'a = 10') FROM foo");
+    targetSql = "SELECT xpath_float('<a>b</a>', 'a = 10')\n" + "FROM default.foo";
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+
+    relNode = TestUtils.toRelNode("SELECT xpath_double('<a>b</a>', 'a = 10') FROM foo");
+    targetSql = "SELECT xpath_double('<a>b</a>', 'a = 10')\n" + "FROM default.foo";
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+
+    relNode = TestUtils.toRelNode("SELECT xpath_number('<a>b</a>', 'a = 10') FROM foo");
+    targetSql = "SELECT xpath_number('<a>b</a>', 'a = 10')\n" + "FROM default.foo";
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+  }
+
+  @Test
+  public void testLateralViewPosExplodeWithColumns() {
+    RelNode relNode =
+        TestUtils.toRelNode("SELECT arr.alias FROM foo tmp LATERAL VIEW POSEXPLODE(ARRAY('a', 'b')) arr AS pos, alias");
+
+    String targetSql =
+        "SELECT t0.alias\n" + "FROM default.foo LATERAL VIEW POSEXPLODE(ARRAY ('a', 'b')) t0 AS pos, alias";
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+  }
+
+  @Test
+  public void testLateralViewOuterPosExplodeWithColumns() {
+    RelNode relNode = TestUtils
+        .toRelNode("SELECT arr.alias FROM foo tmp LATERAL VIEW OUTER POSEXPLODE(ARRAY('a', 'b')) arr AS pos, alias");
+
+    String targetSql = "SELECT t0.alias\n"
+        + "FROM default.foo LATERAL VIEW OUTER POSEXPLODE(if(ARRAY ('a', 'b') IS NOT NULL AND size(ARRAY ('a', 'b')) > 0, ARRAY ('a', 'b'), ARRAY (NULL))) t0 AS pos, alias";
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+  }
+
+  @Test
+  public void testLateralViewPosExplodeWithoutColumns() {
+    RelNode relNode = TestUtils.toRelNode("SELECT arr.col FROM foo tmp LATERAL VIEW POSEXPLODE(ARRAY('a', 'b')) arr");
+
+    String targetSql =
+        "SELECT t0.col\n" + "FROM default.foo LATERAL VIEW POSEXPLODE(ARRAY ('a', 'b')) t0 AS ORDINALITY, col";
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+  }
+
+  @Test
   public void testConcat() {
     RelNode relNode = TestUtils.toRelNode("SELECT 'a' || 'b'");
 
@@ -609,6 +677,20 @@ public class CoralSparkTest {
   public void testCastDecimalDefault() {
     RelNode relNode = TestUtils.toRelNode("SELECT CAST(a as DECIMAL) as casted_decimal FROM default.foo");
     String targetSql = "SELECT CAST(a AS DECIMAL(10, 0)) casted_decimal\n" + "FROM default.foo";
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+  }
+
+  @Test
+  public void testCollectListFunction() {
+    RelNode relNode = TestUtils.toRelNode("SELECT collect_list(a) FROM default.foo");
+    String targetSql = "SELECT collect_list(a)\n" + "FROM default.foo";
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+  }
+
+  @Test
+  public void testCollectSetFunction() {
+    RelNode relNode = TestUtils.toRelNode("SELECT collect_set(a) FROM default.foo");
+    String targetSql = "SELECT collect_set(a)\n" + "FROM default.foo";
     assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
   }
 }
