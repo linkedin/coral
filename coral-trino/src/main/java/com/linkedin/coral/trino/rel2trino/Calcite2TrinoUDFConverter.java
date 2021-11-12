@@ -38,6 +38,7 @@ import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.fun.SqlMapValueConstructor;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
+import org.apache.calcite.sql.type.ReturnTypes;
 import org.apache.calcite.sql.type.SqlTypeFamily;
 
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
@@ -211,12 +212,38 @@ public class Calcite2TrinoUDFConverter {
         }
       }
 
+      if (operatorName.equalsIgnoreCase("collect_list") || operatorName.equalsIgnoreCase("collect_set")) {
+        Optional<RexNode> modifiedCall = visitCollectListOrSetFunction(call);
+        if (modifiedCall.isPresent()) {
+          return modifiedCall.get();
+        }
+      }
+
+      if (operatorName.equalsIgnoreCase("substr")) {
+        Optional<RexNode> modifiedCall = visitSubstring(call);
+        if (modifiedCall.isPresent()) {
+          return modifiedCall.get();
+        }
+      }
+
       final UDFTransformer transformer = CalciteTrinoUDFMap.getUDFTransformer(operatorName, call.operands.size());
       if (transformer != null && shouldTransformOperator(operatorName)) {
         return super.visitCall((RexCall) transformer.transformCall(rexBuilder, call.getOperands()));
       }
       RexCall modifiedCall = adjustInconsistentTypesToEqualityOperator(call);
       return super.visitCall(modifiedCall);
+    }
+
+    private Optional<RexNode> visitCollectListOrSetFunction(RexCall call) {
+      List<RexNode> convertedOperands = visitList(call.getOperands(), (boolean[]) null);
+      final SqlOperator arrayAgg = createUDF("array_agg", HiveReturnTypes.ARRAY_OF_ARG0_TYPE);
+      final SqlOperator arrayDistinct = createUDF("array_distinct", ReturnTypes.ARG0_NULLABLE);
+      final String operatorName = call.getOperator().getName();
+      if (operatorName.equalsIgnoreCase("collect_list")) {
+        return Optional.of(rexBuilder.makeCall(arrayAgg, convertedOperands));
+      } else {
+        return Optional.of(rexBuilder.makeCall(arrayDistinct, rexBuilder.makeCall(arrayAgg, convertedOperands)));
+      }
     }
 
     private Optional<RexNode> visitFromUnixtime(RexCall call) {
@@ -284,6 +311,24 @@ public class Calcite2TrinoUDFConverter {
                     rexBuilder.makeCall(trinoToUnixTime,
                         rexBuilder.makeCall(trinoWithTimeZone, sourceValue, rexBuilder.makeLiteral("UTC")))),
                 rexBuilder.makeCall(trinoCanonicalizeHiveTimezoneId, timezone))));
+      }
+
+      return Optional.empty();
+    }
+
+    // Hive allows passing in a byte array or String to substr/substring, so we can make an effort to emulate the
+    // behavior by casting non-String input to String
+    // https://cwiki.apache.org/confluence/display/hive/languagemanual+udf
+    private Optional<RexNode> visitSubstring(RexCall call) {
+      final SqlOperator op = call.getOperator();
+      List<RexNode> convertedOperands = visitList(call.getOperands(), (boolean[]) null);
+      RexNode inputOperand = convertedOperands.get(0);
+
+      if (inputOperand.getType().getSqlTypeName() != VARCHAR && inputOperand.getType().getSqlTypeName() != CHAR) {
+        List<RexNode> operands = new ImmutableList.Builder<RexNode>()
+            .add(rexBuilder.makeCast(typeFactory.createSqlType(VARCHAR), inputOperand))
+            .addAll(convertedOperands.subList(1, convertedOperands.size())).build();
+        return Optional.of(rexBuilder.makeCall(op, operands));
       }
 
       return Optional.empty();

@@ -12,33 +12,31 @@ import org.apache.calcite.sql.SqlOperandCountRange;
 import org.apache.calcite.sql.SqlOperatorBinding;
 import org.apache.calcite.sql.SqlUnnestOperator;
 import org.apache.calcite.sql.type.ArraySqlType;
-import org.apache.calcite.sql.type.MapSqlType;
 import org.apache.calcite.sql.type.SqlOperandCountRanges;
+import org.apache.calcite.sql.type.SqlTypeName;
 
 
 /**
- * Calcite operator representation for Hive explode function.
- * {@code explode} supports single array or map as argument and
- * returns a row set of single column for array operand, or
- * a row set with two columns corresponding to (key, value) for
- * map operand type.
+ * Calcite operator representation for Hive posexplode function.
+ * {@code posexplode} supports single array as argument and
+ * behaves like explode for arrays, but includes the position of items in the original array
  */
-public class HiveExplodeOperator extends SqlUnnestOperator {
+public class HivePosExplodeOperator extends SqlUnnestOperator {
 
-  public static final HiveExplodeOperator EXPLODE = new HiveExplodeOperator();
+  public static final HivePosExplodeOperator POS_EXPLODE = new HivePosExplodeOperator();
 
-  public static final String ARRAY_ELEMENT_COLUMN_NAME = "col";
+  public static final String ARRAY_ELEMENT_POS_NAME = "pos";
+  public static final String ARRAY_ELEMENT_VAL_NAME = "col";
 
-  public HiveExplodeOperator() {
+  public HivePosExplodeOperator() {
     // keep the same as base class 'UNNEST' operator
-    // Hive has a separate 'posexplode' function for ordinality
-    super(false);
+    super(true);
   }
 
   @Override
   public boolean checkOperandTypes(SqlCallBinding callBinding, boolean throwOnFailure) {
     RelDataType operandType = callBinding.getOperandType(0);
-    return operandType instanceof ArraySqlType || operandType instanceof MapSqlType;
+    return operandType instanceof ArraySqlType;
   }
 
   @Override
@@ -50,14 +48,8 @@ public class HiveExplodeOperator extends SqlUnnestOperator {
   public RelDataType inferReturnType(SqlOperatorBinding opBinding) {
     RelDataType operandType = opBinding.getOperandType(0);
     final RelDataTypeFactory.Builder builder = opBinding.getTypeFactory().builder();
-    if (operandType instanceof ArraySqlType) {
-      // array type
-      builder.add(ARRAY_ELEMENT_COLUMN_NAME, operandType.getComponentType());
-    } else {
-      // map type
-      builder.add(MAP_KEY_COLUMN_NAME, operandType.getKeyType());
-      builder.add(MAP_VALUE_COLUMN_NAME, operandType.getValueType());
-    }
+    builder.add(ARRAY_ELEMENT_VAL_NAME, operandType.getComponentType());
+    builder.add(ARRAY_ELEMENT_POS_NAME, SqlTypeName.INTEGER);
     return builder.build();
   }
 }
