@@ -46,13 +46,6 @@ public class VersionedSqlUserDefinedFunction extends SqlUserDefinedFunction {
     this.viewDependentFunctionName = viewDependentFunctionName;
   }
 
-  public VersionedSqlUserDefinedFunction(String name, SqlReturnTypeInference returnTypeInference,
-      SqlOperandTypeChecker operandTypeChecker, List<RelDataType> paramTypes, Function function,
-      List<String> ivyDependencies, String viewDependentFunctionName) {
-    this(new SqlIdentifier(ImmutableList.of(name), SqlParserPos.ZERO), returnTypeInference, null, operandTypeChecker,
-        paramTypes, function, ivyDependencies, viewDependentFunctionName);
-  }
-
   public VersionedSqlUserDefinedFunction(SqlUserDefinedFunction sqlUdf, List<String> ivyDependencies,
       String viewDependentFunctionName) {
     this(new SqlIdentifier(ImmutableList.of(sqlUdf.getName()), SqlParserPos.ZERO), sqlUdf.getReturnTypeInference(),

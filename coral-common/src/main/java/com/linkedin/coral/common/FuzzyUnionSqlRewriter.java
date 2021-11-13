@@ -23,6 +23,8 @@ import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.sql.util.SqlShuttle;
 
+import com.linkedin.coral.common.functions.GenericProjectFunction;
+
 
 /**
  * Fuzzy union occur when there is a mismatch in the schemas of the branches of a union. This can occur in a Dali view

@@ -33,9 +33,7 @@ import org.apache.calcite.sql.type.OperandTypes;
 import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
 
 import com.linkedin.coral.com.google.common.base.Preconditions;
-import com.linkedin.coral.hive.hive2rel.functions.HiveReturnTypes;
-
-import static org.apache.calcite.sql.type.SqlTypeName.*;
+import com.linkedin.coral.common.functions.FunctionReturnTypes;
 
 
 /**
@@ -130,10 +128,10 @@ public class UDFTransformer {
     OP_MAP.put("/", SqlStdOperatorTable.DIVIDE);
     OP_MAP.put("^", SqlStdOperatorTable.POWER);
     OP_MAP.put("%", SqlStdOperatorTable.MOD);
-    OP_MAP.put("date", new SqlUserDefinedFunction(new SqlIdentifier("date", SqlParserPos.ZERO), HiveReturnTypes.DATE,
-        null, OperandTypes.STRING, null, null));
+    OP_MAP.put("date", new SqlUserDefinedFunction(new SqlIdentifier("date", SqlParserPos.ZERO),
+        FunctionReturnTypes.DATE, null, OperandTypes.STRING, null, null));
     OP_MAP.put("timestamp", new SqlUserDefinedFunction(new SqlIdentifier("timestamp", SqlParserPos.ZERO),
-        HiveReturnTypes.TIMESTAMP, null, OperandTypes.STRING, null, null) {
+        FunctionReturnTypes.TIMESTAMP, null, OperandTypes.STRING, null, null) {
       @Override
       public void unparse(SqlWriter writer, SqlCall call, int leftPrec, int rightPrec) {
         // for timestamp operator, we need to construct `CAST(x AS TIMESTAMP)`
@@ -147,7 +145,7 @@ public class UDFTransformer {
     });
     OP_MAP.put("hive_pattern_to_trino",
         new SqlUserDefinedFunction(new SqlIdentifier("hive_pattern_to_trino", SqlParserPos.ZERO),
-            HiveReturnTypes.STRING, null, OperandTypes.STRING, null, null));
+            FunctionReturnTypes.STRING, null, OperandTypes.STRING, null, null));
   }
 
   public static final String OPERATOR = "op";

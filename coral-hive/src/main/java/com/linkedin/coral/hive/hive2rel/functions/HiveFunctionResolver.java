@@ -30,9 +30,10 @@ import org.apache.hadoop.hive.metastore.api.Table;
 
 import com.linkedin.coral.com.google.common.base.Preconditions;
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
-import com.linkedin.coral.common.Function;
-import com.linkedin.coral.common.FunctionRegistry;
 import com.linkedin.coral.common.HiveTable;
+import com.linkedin.coral.common.functions.Function;
+import com.linkedin.coral.common.functions.FunctionRegistry;
+import com.linkedin.coral.common.functions.UnknownSqlFunctionException;
 
 import static com.google.common.base.Preconditions.*;
 import static org.apache.calcite.sql.parser.SqlParserPos.*;
@@ -133,7 +134,7 @@ public class HiveFunctionResolver {
     // we've overloaded function names. Calcite will resolve overload later during semantic analysis.
     // For now, create a placeholder SqlNode for the function. We want to use Dali class name as function
     // name if this is overloaded function name.
-    return unresolvedFunction(functions.iterator().next().getSqlOperator().getName(), hiveTable);
+    return unresolvedFunction(functions.iterator().next().getSqlOperator().getName());
   }
 
   /**
@@ -214,18 +215,10 @@ public class HiveFunctionResolver {
     return ImmutableList.of(Function);
   }
 
-  private @Nonnull Function unresolvedFunction(String functionName, Table table) {
-    SqlIdentifier funcIdentifier = createFunctionIdentifier(functionName, table);
+  private @Nonnull Function unresolvedFunction(String functionName) {
+    SqlIdentifier funcIdentifier = new SqlIdentifier(ImmutableList.of(functionName), ZERO);
     return new Function(functionName,
         new SqlUnresolvedFunction(funcIdentifier, null, null, null, null, SqlFunctionCategory.USER_DEFINED_FUNCTION));
-  }
-
-  private @Nonnull SqlIdentifier createFunctionIdentifier(String functionName, @Nullable Table table) {
-    if (table == null) {
-      return new SqlIdentifier(ImmutableList.of(functionName), ZERO);
-    } else {
-      return new SqlFunctionIdentifier(functionName, ImmutableList.of(table.getDbName(), table.getTableName()));
-    }
   }
 
   private @Nonnull SqlOperandTypeChecker createSqlOperandTypeChecker(int numOfOperands) {
