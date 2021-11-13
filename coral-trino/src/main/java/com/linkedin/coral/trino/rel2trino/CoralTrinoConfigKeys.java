@@ -26,4 +26,9 @@ public class CoralTrinoConfigKeys {
    * Therefore, we add this config for LinkedIn's internal use, if the value is set to true, we don't convert `to_date(xxx)` to `date(cast(xxx as timestamp))`.
    */
   public static final String AVOID_TRANSFORM_TO_DATE_UDF = "AVOID_TRANSFORM_TO_DATE_UDF";
+
+  /**
+   * Similar to {@link CoralTrinoConfigKeys#AVOID_TRANSFORM_TO_DATE_UDF}, `date_add` should return `string` type at LinkedIn, so we need to add the `cast` for it
+   */
+  public static final String CAST_DATEADD_TO_STRING = "CAST_DATE_ADD_TO_STRING";
 }
