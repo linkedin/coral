@@ -14,8 +14,6 @@ import org.apache.calcite.rel.type.RelRecordType;
 import org.apache.calcite.sql.type.ArraySqlType;
 import org.apache.calcite.sql.type.MapSqlType;
 
-import static com.linkedin.coral.trino.rel2trino.functions.TrinoKeywordsConverter.quoteReservedKeyword;
-
 
 /**
  * Transforms a RelDataType to a Trino type string such that it is parseable and semantically correct.
@@ -136,8 +134,9 @@ class RelDataTypeToTrinoTypeStringConverter {
   private static String buildStructDataTypeString(RelRecordType relRecordType) {
     List<String> structFieldStrings = new ArrayList<>();
     for (RelDataTypeField relDataTypeField : relRecordType.getFieldList()) {
-      structFieldStrings.add(String.format("%s %s", quoteReservedKeyword(relDataTypeField.getName()),
-          buildTrinoTypeString(relDataTypeField.getType())));
+      structFieldStrings
+          .add(String.format("%s %s", TrinoKeywordsConverter.quoteWordIfNotQuoted(relDataTypeField.getName()),
+              buildTrinoTypeString(relDataTypeField.getType())));
     }
     String subFieldsString = String.join(", ", structFieldStrings);
     return String.format("row(%s)", subFieldsString);

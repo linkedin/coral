@@ -68,42 +68,51 @@ public class HiveToTrinoConverterTest {
             + "SELECT \"a\", \"b\"\nFROM \"test\".\"tablea\"\nUNION ALL\n"
             + "SELECT \"a\", \"b\"\nFROM \"test\".\"tablea\") AS \"t1\"" },
 
-        { "test", "fuzzy_union_view_single_branch_evolved", "SELECT \"a\", \"b\"\nFROM ("
-            + "SELECT \"a\", \"b\"\nFROM \"test\".\"tableb\"\nUNION ALL\n"
-            + "SELECT \"a\", CAST(row(b.b1) as row(b1 varchar)) AS \"b\"\nFROM \"test\".\"tablec\") AS \"t1\"" },
+        { "test", "fuzzy_union_view_single_branch_evolved", "SELECT \"a\", \"b\"\n" + "FROM (SELECT \"a\", \"b\"\n"
+            + "FROM \"test\".\"tableb\"\n" + "UNION ALL\n"
+            + "SELECT \"a\", CAST(row(\"b\".\"b1\") as row(\"b1\" varchar)) AS \"b\"\n"
+            + "FROM \"test\".\"tablec\") AS \"t1\"" },
 
         { "test", "fuzzy_union_view_double_branch_evolved_same", "SELECT \"a\", \"b\"\n" + "FROM (SELECT \"a\", \"b\"\n"
             + "FROM \"test\".\"tabled\"\n" + "UNION ALL\n" + "SELECT \"a\", \"b\"\n"
             + "FROM \"test\".\"tablee\") AS \"t1\"" },
 
-        { "test", "fuzzy_union_view_double_branch_evolved_different", "SELECT \"a\", \"b\"\nFROM ("
-            + "SELECT \"a\", CAST(row(b.b1) as row(b1 varchar)) AS \"b\"\nFROM \"test\".\"tablef\"\nUNION ALL\n"
-            + "SELECT \"a\", CAST(row(b.b1) as row(b1 varchar)) AS \"b\"\nFROM \"test\".\"tableg\") AS \"t1\"" },
+        { "test", "fuzzy_union_view_double_branch_evolved_different", "SELECT \"a\", \"b\"\n"
+            + "FROM (SELECT \"a\", CAST(row(\"b\".\"b1\") as row(\"b1\" varchar)) AS \"b\"\n"
+            + "FROM \"test\".\"tablef\"\n" + "UNION ALL\n"
+            + "SELECT \"a\", CAST(row(\"b\".\"b1\") as row(\"b1\" varchar)) AS \"b\"\n"
+            + "FROM \"test\".\"tableg\") AS \"t1\"" },
 
-        { "test", "fuzzy_union_view_more_than_two_branches_evolved", "SELECT \"a\", \"b\"\nFROM (SELECT *\nFROM ("
-            + "SELECT \"a\", CAST(row(b.b1) as row(b1 varchar)) AS \"b\"\nFROM \"test\".\"tablef\"\nUNION ALL\n"
-            + "SELECT \"a\", CAST(row(b.b1) as row(b1 varchar)) AS \"b\"\nFROM \"test\".\"tableg\")\nUNION ALL\n"
-            + "SELECT \"a\", CAST(row(b.b1) as row(b1 varchar)) AS \"b\"\nFROM \"test\".\"tablef\") AS \"t3\"" },
+        { "test", "fuzzy_union_view_more_than_two_branches_evolved", "SELECT \"a\", \"b\"\n" + "FROM (SELECT *\n"
+            + "FROM (SELECT \"a\", CAST(row(\"b\".\"b1\") as row(\"b1\" varchar)) AS \"b\"\n"
+            + "FROM \"test\".\"tablef\"\n" + "UNION ALL\n"
+            + "SELECT \"a\", CAST(row(\"b\".\"b1\") as row(\"b1\" varchar)) AS \"b\"\n" + "FROM \"test\".\"tableg\")\n"
+            + "UNION ALL\n" + "SELECT \"a\", CAST(row(\"b\".\"b1\") as row(\"b1\" varchar)) AS \"b\"\n"
+            + "FROM \"test\".\"tablef\") AS \"t3\"" },
 
-        { "test", "fuzzy_union_view_map_with_struct_value_evolved", "SELECT \"a\", \"b\"\nFROM ("
-            + "SELECT \"a\", TRANSFORM_VALUES(b, (k, v) -> cast(row(v.b1) as row(b1 varchar))) AS \"b\"\nFROM \"test\".\"tableh\"\nUNION ALL\n"
-            + "SELECT \"a\", \"b\"\nFROM \"test\".\"tablei\") AS \"t1\"" },
+        { "test", "fuzzy_union_view_map_with_struct_value_evolved", "SELECT \"a\", \"b\"\n"
+            + "FROM (SELECT \"a\", TRANSFORM_VALUES(b, (k, v) -> cast(row(\"v\".\"b1\") as row(\"b1\" varchar))) AS \"b\"\n"
+            + "FROM \"test\".\"tableh\"\n" + "UNION ALL\n" + "SELECT \"a\", \"b\"\n"
+            + "FROM \"test\".\"tablei\") AS \"t1\"" },
 
-        { "test", "fuzzy_union_view_array_with_struct_value_evolved", "SELECT \"a\", \"b\"\nFROM ("
-            + "SELECT \"a\", TRANSFORM(b, x -> cast(row(x.b1) as row(b1 varchar))) AS \"b\"\nFROM \"test\".\"tablej\"\nUNION ALL\n"
-            + "SELECT \"a\", \"b\"\nFROM \"test\".\"tablek\") AS \"t1\"" },
+        { "test", "fuzzy_union_view_array_with_struct_value_evolved", "SELECT \"a\", \"b\"\n"
+            + "FROM (SELECT \"a\", TRANSFORM(b, x -> cast(row(\"x\".\"b1\") as row(\"b1\" varchar))) AS \"b\"\n"
+            + "FROM \"test\".\"tablej\"\n" + "UNION ALL\n" + "SELECT \"a\", \"b\"\n"
+            + "FROM \"test\".\"tablek\") AS \"t1\"" },
 
-        { "test", "fuzzy_union_view_deeply_nested_struct_evolved", "" + "SELECT \"a\", \"b\"\nFROM ("
-            + "SELECT \"a\", CAST(row(b.b1, cast(row(b.b2.b3, cast(row(b.b2.b4.b5) as row(b5 varchar))) as row(b3 varchar, b4 row(b5 varchar)))) as row(b1 varchar, b2 row(b3 varchar, b4 row(b5 varchar)))) AS \"b\"\nFROM \"test\".\"tablel\"\nUNION ALL\n"
-            + "SELECT \"a\", \"b\"\n" + "FROM \"test\".\"tablem\") AS \"t1\"" },
+        { "test", "fuzzy_union_view_deeply_nested_struct_evolved", "SELECT \"a\", \"b\"\n"
+            + "FROM (SELECT \"a\", CAST(row(\"b\".\"b1\", cast(row(\"b\".\"b2\".\"b3\", cast(row(\"b\".\"b2\".\"b4\".\"b5\") as row(\"b5\" varchar))) as row(\"b3\" varchar, \"b4\" row(\"b5\" varchar)))) as row(\"b1\" varchar, \"b2\" row(\"b3\" varchar, \"b4\" row(\"b5\" varchar)))) AS \"b\"\n"
+            + "FROM \"test\".\"tablel\"\n" + "UNION ALL\n" + "SELECT \"a\", \"b\"\n"
+            + "FROM \"test\".\"tablem\") AS \"t1\"" },
 
-        { "test", "fuzzy_union_view_deeply_nested_complex_struct_evolved", "" + "SELECT \"a\", \"b\"\nFROM ("
-            + "SELECT \"a\", CAST(row(b.b1, transform_values(b.m1, (k, v) -> cast(row(v.b1, transform(v.a1, x -> cast(row(x.b1) as row(b1 varchar)))) as row(b1 varchar, a1 array(row(b1 varchar)))))) as row(b1 varchar, m1 map(varchar, row(b1 varchar, a1 array(row(b1 varchar)))))) AS \"b\"\nFROM \"test\".\"tablen\"\nUNION ALL\n"
-            + "SELECT \"a\", \"b\"\n" + "FROM \"test\".\"tableo\") AS \"t1\"" },
+        { "test", "fuzzy_union_view_deeply_nested_complex_struct_evolved", "SELECT \"a\", \"b\"\n"
+            + "FROM (SELECT \"a\", CAST(row(\"b\".\"b1\", transform_values(\"b\".\"m1\", (k, v) -> cast(row(\"v\".\"b1\", transform(\"v\".\"a1\", x -> cast(row(\"x\".\"b1\") as row(\"b1\" varchar)))) as row(\"b1\" varchar, \"a1\" array(row(\"b1\" varchar)))))) as row(\"b1\" varchar, \"m1\" map(varchar, row(\"b1\" varchar, \"a1\" array(row(\"b1\" varchar)))))) AS \"b\"\n"
+            + "FROM \"test\".\"tablen\"\n" + "UNION ALL\n" + "SELECT \"a\", \"b\"\n"
+            + "FROM \"test\".\"tableo\") AS \"t1\"" },
 
-        { "test", "union_view_same_schema_evolution_with_different_ordering", "" + "SELECT \"a\", \"b\"\n"
+        { "test", "union_view_same_schema_evolution_with_different_ordering", "SELECT \"a\", \"b\"\n"
             + "FROM (SELECT \"a\", \"b\"\n" + "FROM \"test\".\"tablep\"\n" + "UNION ALL\n"
-            + "SELECT \"a\", CAST(row(b.b2, b.b1, b.b0) as row(b2 double, b1 varchar, b0 integer)) AS \"b\"\n"
+            + "SELECT \"a\", CAST(row(\"b\".\"b2\", \"b\".\"b1\", \"b\".\"b0\") as row(\"b2\" double, \"b1\" varchar, \"b0\" integer)) AS \"b\"\n"
             + "FROM \"test\".\"tableq\") AS \"t1\"" },
 
         { "test", "view_with_explode_string_array", "SELECT \"$cor0\".\"a\" AS \"a\", \"t0\".\"c\" AS \"c\"\n"
@@ -512,7 +521,8 @@ public class HiveToTrinoConverterTest {
 
     String targetSql = "SELECT \"struct_col\" AS \"structCol\"\n" + "FROM (SELECT \"structcol\" AS \"struct_col\"\n"
         + "FROM \"test\".\"tables\"\n" + "UNION ALL\n"
-        + "SELECT CAST(row(structcol.a) as row(a integer)) AS \"struct_col\"\n" + "FROM \"test\".\"tablet\") AS \"t1\"";
+        + "SELECT CAST(row(\"structcol\".\"a\") as row(\"a\" integer)) AS \"struct_col\"\n"
+        + "FROM \"test\".\"tablet\") AS \"t1\"";
     String expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
   }
