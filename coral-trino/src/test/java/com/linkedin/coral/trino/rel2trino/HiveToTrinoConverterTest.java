@@ -574,6 +574,16 @@ public class HiveToTrinoConverterTest {
   }
 
   @Test
+  public void testTypeCastForFloorFunction() {
+    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+
+    RelNode relNode = hiveToRelConverter.convertSql("SELECT floor(1.5)");
+    String targetSql = "SELECT CAST(FLOOR(1.5) AS BIGINT)\n" + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
+    String expandedSql = relToTrinoConverter.convert(relNode);
+    assertEquals(expandedSql, targetSql);
+  }
+
+  @Test
   public void testTypeCastForCardinalityFunction() {
     RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
 
