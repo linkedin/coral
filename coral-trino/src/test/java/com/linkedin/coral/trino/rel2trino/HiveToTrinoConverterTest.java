@@ -528,7 +528,7 @@ public class HiveToTrinoConverterTest {
   }
 
   @Test
-  public void testTypeCastForDateDiff() {
+  public void testTypeCastForDateDiffFunction() {
     RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
 
     RelNode relNode = hiveToRelConverter.convertSql(
@@ -541,7 +541,7 @@ public class HiveToTrinoConverterTest {
   }
 
   @Test
-  public void testTypeCastForDataAdd() {
+  public void testTypeCastForDataAddFunction() {
     RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter(ImmutableMap.of(CAST_DATEADD_TO_STRING, true));
 
     RelNode relNode = hiveToRelConverter.convertSql(
@@ -554,7 +554,27 @@ public class HiveToTrinoConverterTest {
   }
 
   @Test
-  public void testTypeCastForCardinality() {
+  public void testTypeCastForCeilFunction() {
+    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+
+    RelNode relNode = hiveToRelConverter.convertSql("SELECT ceil(1.5)");
+    String targetSql = "SELECT CAST(CEIL(1.5) AS BIGINT)\n" + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
+    String expandedSql = relToTrinoConverter.convert(relNode);
+    assertEquals(expandedSql, targetSql);
+  }
+
+  @Test
+  public void testTypeCastForCeilingFunction() {
+    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+
+    RelNode relNode = hiveToRelConverter.convertSql("SELECT ceiling(1.5)");
+    String targetSql = "SELECT CAST(\"ceiling\"(1.5) AS BIGINT)\n" + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
+    String expandedSql = relToTrinoConverter.convert(relNode);
+    assertEquals(expandedSql, targetSql);
+  }
+
+  @Test
+  public void testTypeCastForCardinalityFunction() {
     RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
 
     RelNode relNode = hiveToRelConverter.convertSql("SELECT size(ARRAY (1, 2))");

@@ -420,7 +420,8 @@ public class Calcite2TrinoUDFConverter {
       }
       final String lowercaseOperatorName = ((RexCall) call).getOperator().getName().toLowerCase(Locale.ROOT);
       final ImmutableMap<String, RelDataType> operatorsToAdjust = ImmutableMap.of("date_diff",
-          typeFactory.createSqlType(INTEGER), "cardinality", typeFactory.createSqlType(INTEGER));
+          typeFactory.createSqlType(INTEGER), "cardinality", typeFactory.createSqlType(INTEGER), "ceil",
+          typeFactory.createSqlType(BIGINT), "ceiling", typeFactory.createSqlType(BIGINT));
       if (operatorsToAdjust.containsKey(lowercaseOperatorName)) {
         return rexBuilder.makeCast(operatorsToAdjust.get(lowercaseOperatorName), call);
       }
