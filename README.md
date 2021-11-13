@@ -16,6 +16,10 @@ to enable translating and executing user-defined functions (UDFs) across Hive, T
 active development. Currently, we are looking into expanding the set of input view language APIs beyond HiveQL,
 and implementing query rewrite algorithms for data governance and query optimization.
 
+## <img src="https://user-images.githubusercontent.com/10084105/141652009-eeacfab4-0e7b-4320-9379-6c3f8641fcf1.png" width="30" title="Slack Logo"> Slack
+
+- Join the discussion with the community on Slack [here](https://join.slack.com/t/coral-sql/shared_invite/zt-s8te92up-qU5PSG~spK33ovPPL5v96A)!
+
 ## Modules
 
 **Coral** consists of following modules:
@@ -45,10 +49,6 @@ Build:
 
 The project is under active development and we welcome contributions of different forms.
 Please see the [Contribution Agreement](CONTRIBUTING.md).
-
-## Community
-
-- Join the chat on [Slack](https://join.slack.com/t/coral-sql/shared_invite/zt-s8te92up-qU5PSG~spK33ovPPL5v96A)!
 
 ## Resources
 
