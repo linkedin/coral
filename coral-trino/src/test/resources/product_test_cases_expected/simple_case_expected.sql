@@ -1,0 +1,1 @@
+select case when true then 33 else null end

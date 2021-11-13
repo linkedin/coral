@@ -3,10 +3,12 @@ apply from: "$rootDir/gradle/java-publication.gradle"
 dependencies {
   compile deps.'gson'
   compile deps.'javax-annotation'
+  compile deps.'trino-parser'
   compile project(path: ':coral-hive')
+  implementation 'com.github.vertical-blank:sql-formatter:2.0.2'
 
   testCompile deps.'assertj'
-  testCompile deps.'trino-parser'
+
 
   testCompile(deps.'hive'.'hive-exec-core') {
     exclude group: 'org.apache.avro', module: 'avro-tools'

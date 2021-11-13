@@ -1,0 +1,3 @@
+select `orderkey`, `suppkey`, `quantity`, round(sum(`quantity`) over (partition by `suppkey` order by `orderkey` rows between `preceding`(3) and `following`(1)), 5) as `total_quantity`, `extendedprice`, round(sum(`extendedprice`) over (partition by `suppkey` order by `orderkey` rows between `preceding`(1) and `following`(2)), 5) as `total_extendedprice`, `discount`, round(avg(`discount`) over (partition by `suppkey` order by `orderkey` rows between current_row and unbounded_following), 5) as `avg_discount`
+from `tpch`.`tiny`.`lineitem`
+where `partkey` = 272
