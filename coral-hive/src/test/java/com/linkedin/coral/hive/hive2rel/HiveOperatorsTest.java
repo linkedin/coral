@@ -5,8 +5,6 @@
  */
 package com.linkedin.coral.hive.hive2rel;
 
-import java.io.IOException;
-
 import org.apache.calcite.rel.RelNode;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
@@ -22,7 +20,7 @@ import static org.testng.Assert.*;
 public class HiveOperatorsTest {
 
   @BeforeClass
-  public void beforeClass() throws HiveException, IOException, MetaException {
+  public void beforeClass() throws HiveException, MetaException {
     ToRelConverterTestUtils.setup();
   }
 

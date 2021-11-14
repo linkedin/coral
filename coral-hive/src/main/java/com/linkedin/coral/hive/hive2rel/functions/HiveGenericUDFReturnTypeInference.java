@@ -102,7 +102,7 @@ public class HiveGenericUDFReturnTypeInference implements SqlReturnTypeInference
     return _udfClassLoader;
   }
 
-  private final Class getDynamicallyLoadedUdfClass() throws ClassNotFoundException {
+  private Class getDynamicallyLoadedUdfClass() throws ClassNotFoundException {
     try {
       return Class.forName(_udfClassName, true, getUdfClassLoader());
     } catch (NoClassDefFoundError error) {
@@ -116,11 +116,11 @@ public class HiveGenericUDFReturnTypeInference implements SqlReturnTypeInference
     }
   }
 
-  private final Class getDynamicallyLoadedObjectInspectorArrayClass() throws ClassNotFoundException {
+  private Class getDynamicallyLoadedObjectInspectorArrayClass() throws ClassNotFoundException {
     return Class.forName("[Lorg.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;", true, getUdfClassLoader());
   }
 
-  private final Object getDynamicallyLoadedObjectInspectors(ObjectInspector[] ois) {
+  private Object getDynamicallyLoadedObjectInspectors(ObjectInspector[] ois) {
     try {
       Class objectInspectorClass =
           Class.forName("org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector", true, getUdfClassLoader());
@@ -135,7 +135,7 @@ public class HiveGenericUDFReturnTypeInference implements SqlReturnTypeInference
     }
   }
 
-  private final Object getDynamicallyLoadedObjectInspector(String typeName) {
+  private Object getDynamicallyLoadedObjectInspector(String typeName) {
     try {
       Class typeInfoUtilsClass =
           Class.forName("org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils", true, getUdfClassLoader());
@@ -148,7 +148,7 @@ public class HiveGenericUDFReturnTypeInference implements SqlReturnTypeInference
     }
   }
 
-  private final ObjectInspector getContextObjectInspector(Object oi) {
+  private ObjectInspector getContextObjectInspector(Object oi) {
     try {
       Class objectInspectorClass =
           Class.forName("org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector", true, getUdfClassLoader());

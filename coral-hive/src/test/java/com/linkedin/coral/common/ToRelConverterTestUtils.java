@@ -5,8 +5,6 @@
  */
 package com.linkedin.coral.common;
 
-import java.io.IOException;
-
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.rel2sql.RelToSqlConverter;
@@ -25,12 +23,11 @@ import static org.testng.Assert.*;
 
 public class ToRelConverterTestUtils {
 
-  private static TestUtils.TestHive hive;
   private static IMetaStoreClient msc;
   public static HiveToRelConverter converter;
 
-  public static void setup() throws IOException, HiveException, MetaException {
-    hive = TestUtils.setupDefaultHive();
+  public static void setup() throws HiveException, MetaException {
+    TestUtils.TestHive hive = TestUtils.setupDefaultHive();
     msc = hive.getMetastoreClient();
     HiveMscAdapter mscAdapter = new HiveMscAdapter(msc);
     converter = new HiveToRelConverter(mscAdapter);

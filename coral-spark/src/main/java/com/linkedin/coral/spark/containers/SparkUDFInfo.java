@@ -23,10 +23,10 @@ public class SparkUDFInfo {
     TRANSPORTABLE_UDF
   }
 
-  private String className;
-  private String functionName;
-  private List<URI> artifactoryUrls;
-  private UDFTYPE udfType;
+  private final String className;
+  private final String functionName;
+  private final List<URI> artifactoryUrls;
+  private final UDFTYPE udfType;
 
   /**
    * @param className Class name of a Spark UDF

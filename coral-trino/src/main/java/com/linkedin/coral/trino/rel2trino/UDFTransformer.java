@@ -242,7 +242,7 @@ public class UDFTransformer {
   public RexNode transformCall(RexBuilder rexBuilder, List<RexNode> sourceOperands) {
     final SqlOperator newTargetOperator = transformTargetOperator(targetOperator, sourceOperands);
     if (newTargetOperator == null || newTargetOperator.getName().isEmpty()) {
-      String operands = sourceOperands.stream().map(i -> i.toString()).collect(Collectors.joining(","));
+      String operands = sourceOperands.stream().map(RexNode::toString).collect(Collectors.joining(","));
       throw new IllegalArgumentException(String.format(
           "An equivalent Trino operator was not found for the function call: %s(%s)", calciteOperatorName, operands));
     }

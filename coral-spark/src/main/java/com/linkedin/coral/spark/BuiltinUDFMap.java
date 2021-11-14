@@ -23,7 +23,7 @@ class BuiltinUDFMap {
   private BuiltinUDFMap() {
   }
 
-  private static final Map<String, String> UDF_MAP = new HashMap();
+  private static final Map<String, String> UDF_MAP = new HashMap<>();
 
   /**
    * Add new built in function mappings here.

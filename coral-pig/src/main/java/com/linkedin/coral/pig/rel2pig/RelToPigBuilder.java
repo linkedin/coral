@@ -19,8 +19,8 @@ class RelToPigBuilder {
 
   private static final String INTERMEDIATE_ALIAS_PREFIX = "CORAL_PIG_ALIAS_";
   private int intermediateAliasCount = 0;
-  private List<String> statements = new ArrayList<>();
-  private Set<String> functionDefinitions = new HashSet<>();
+  private final List<String> statements = new ArrayList<>();
+  private final Set<String> functionDefinitions = new HashSet<>();
 
   public RelToPigBuilder() {
 

@@ -5,7 +5,6 @@
  */
 package com.linkedin.coral.hive.hive2rel.parsetree;
 
-import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 
@@ -36,7 +35,7 @@ public class ParseTreeBuilderTest {
   private static HiveMetastoreClient msc;
 
   @BeforeClass
-  public static void beforeClass() throws HiveException, IOException, MetaException {
+  public static void beforeClass() throws HiveException, MetaException {
     TestHive hive = setupDefaultHive();
     msc = new HiveMscAdapter(hive.getMetastoreClient());
     parserConfig = SqlParser.configBuilder().setCaseSensitive(true).setUnquotedCasing(Casing.UNCHANGED)

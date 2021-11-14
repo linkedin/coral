@@ -59,7 +59,7 @@ public class ArtifactsResolver {
    * "group:name:version"
    */
   public List<File> resolve(String dependencySpecString) {
-    List<File> uris = new ArrayList<File>();
+    List<File> uris = new ArrayList<>();
     try {
       _ivyInstance.pushContext();
       final ResolveReport report = getDependencies(createDependencySpec(dependencySpecString));
@@ -84,9 +84,9 @@ public class ArtifactsResolver {
     if (withParameters.length == 2) {
       for (String parameter : withParameters[1].split("&")) {
         String[] parameterKeyValue = parameter.trim().split("=");
-        if (parameterKeyValue[0].toLowerCase().equals("classifier")) {
+        if (parameterKeyValue[0].equalsIgnoreCase("classifier")) {
           dependencySpec.classifier = parameterKeyValue[1];
-        } else if (parameterKeyValue[0].toLowerCase().equals("transitive")) {
+        } else if (parameterKeyValue[0].equalsIgnoreCase("transitive")) {
           dependencySpec.transitive = Boolean.parseBoolean(parameterKeyValue[1]);
         }
       }
@@ -148,9 +148,7 @@ public class ArtifactsResolver {
         LOG.info("Reading Ivy settings from: " + settingsUrl);
         settings.load(settingsUrl);
       }
-    } catch (ParseException e) {
-      throw new RuntimeException("Unable to configure Ivy", e);
-    } catch (IOException e) {
+    } catch (ParseException | IOException e) {
       throw new RuntimeException("Unable to configure Ivy", e);
     }
     String ivyCacheDir = System.getenv(IVY_CACHE_DIR);

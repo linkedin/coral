@@ -5,8 +5,6 @@
  */
 package com.linkedin.coral.sparkplan;
 
-import java.io.IOException;
-
 import org.apache.hadoop.hive.metastore.IMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
@@ -23,7 +21,7 @@ public class SparkPlanToIRRelConverterTest {
   private static SparkPlanToIRRelConverter converter;
 
   @BeforeClass
-  public static void beforeClass() throws IOException, HiveException, MetaException {
+  public static void beforeClass() throws HiveException, MetaException {
     TestUtils.TestHive testHive = TestUtils.setupDefaultHive();
     final IMetaStoreClient msc = testHive.getMetastoreClient();
     HiveMscAdapter hiveMscAdapter = new HiveMscAdapter(msc);

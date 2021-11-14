@@ -159,7 +159,7 @@ public class Calcite2TrinoUDFConverter {
     private final RexBuilder rexBuilder;
     private final RelDataTypeFactory typeFactory;
     private final RelNode node;
-    private Map<String, Boolean> configs;
+    private final Map<String, Boolean> configs;
 
     // SUPPORTED_TYPE_CAST_MAP is a static mapping that maps a SqlTypeFamily key to its set of
     // type-castable SqlTypeFamilies.

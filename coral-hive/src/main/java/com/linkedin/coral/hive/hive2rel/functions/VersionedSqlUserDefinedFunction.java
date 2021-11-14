@@ -31,11 +31,11 @@ public class VersionedSqlUserDefinedFunction extends SqlUserDefinedFunction {
 
   // The list of dependencies specified found in the view's "dependencies" property.
   // Example: "ivy://com.linkedin.udf-group:udf-artifact:0.1.8"
-  private List<String> ivyDependencies;
+  private final List<String> ivyDependencies;
 
   // The view-dependent function name in the format of "dbName_viewName_functionName",
   // where functionName is defined in the "functions" property of the view.
-  private String viewDependentFunctionName;
+  private final String viewDependentFunctionName;
 
   private VersionedSqlUserDefinedFunction(SqlIdentifier opName, SqlReturnTypeInference returnTypeInference,
       SqlOperandTypeInference operandTypeInference, SqlOperandTypeChecker operandTypeChecker,

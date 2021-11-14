@@ -41,7 +41,7 @@ public class ParseDriver {
   //and is purely used for matching lexical rules. This also means that the grammar will only
   //accept capitalized tokens in case it is run from other tools like antlrworks which
   //do not have the ANTLRNoCaseStringStream implementation.
-  public class ANTLRNoCaseStringStream extends ANTLRStringStream {
+  public static class ANTLRNoCaseStringStream extends ANTLRStringStream {
 
     public ANTLRNoCaseStringStream(String input) {
       super(input);
@@ -65,18 +65,18 @@ public class ParseDriver {
    * HiveLexerX.
    *
    */
-  public class HiveLexerX extends HiveLexer {
+  public static class HiveLexerX extends HiveLexer {
 
     private final ArrayList<ParseError> errors;
 
     public HiveLexerX() {
       super();
-      errors = new ArrayList<ParseError>();
+      errors = new ArrayList<>();
     }
 
     public HiveLexerX(CharStream input) {
       super(input);
-      errors = new ArrayList<ParseError>();
+      errors = new ArrayList<>();
     }
 
     @Override
@@ -134,14 +134,10 @@ public class ParseDriver {
       return create(((CommonTree) t).token);
     }
 
-    ;
-
     @Override
     public Object errorNode(TokenStream input, Token start, Token stop, RecognitionException e) {
       return new ASTErrorNode(input, start, stop, e);
     }
-
-    ;
   };
 
   /**

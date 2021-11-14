@@ -10,9 +10,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import com.google.common.base.Function;
-import com.google.common.collect.Lists;
-
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeField;
@@ -127,7 +124,7 @@ public class TypeConverter {
   }
 
   public static RelDataType convert(StructTypeInfo structType, final RelDataTypeFactory dtFactory) {
-    List<RelDataType> fTypes = new ArrayList<RelDataType>(structType.getAllStructFieldTypeInfos().size());
+    List<RelDataType> fTypes = new ArrayList<>(structType.getAllStructFieldTypeInfos().size());
     for (TypeInfo ti : structType.getAllStructFieldTypeInfos()) {
       fTypes.add(convert(ti, dtFactory));
     }
@@ -164,18 +161,8 @@ public class TypeConverter {
   }
 
   public static TypeInfo convertStructType(RelDataType rType) {
-    List<TypeInfo> fTypes = Lists.transform(rType.getFieldList(), new Function<RelDataTypeField, TypeInfo>() {
-      @Override
-      public TypeInfo apply(RelDataTypeField f) {
-        return convert(f.getType());
-      }
-    });
-    List<String> fNames = Lists.transform(rType.getFieldList(), new Function<RelDataTypeField, String>() {
-      @Override
-      public String apply(RelDataTypeField f) {
-        return f.getName();
-      }
-    });
+    List<TypeInfo> fTypes = rType.getFieldList().stream().map(f -> convert(f.getType())).collect(Collectors.toList());
+    List<String> fNames = rType.getFieldList().stream().map(RelDataTypeField::getName).collect(Collectors.toList());
     return TypeInfoFactory.getStructTypeInfo(fNames, fTypes);
   }
 

@@ -5,7 +5,6 @@
  */
 package com.linkedin.coral.hive.hive2rel;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
@@ -46,8 +45,8 @@ public class TestUtils {
         this.name = name;
         this.tables = ImmutableList.copyOf(tables);
       }
-      String name;
-      List<String> tables;
+      final String name;
+      final List<String> tables;
     }
 
     public List<String> getDbNames() {
@@ -55,7 +54,7 @@ public class TestUtils {
     }
 
     public List<String> getTables(String db) {
-      return databases.stream().filter(d -> d.name == db).findFirst()
+      return databases.stream().filter(d -> d.name.equals(db)).findFirst()
           .orElseThrow(() -> new RuntimeException("DB " + db + " not found")).tables;
     }
 
@@ -64,7 +63,7 @@ public class TestUtils {
     }
   }
 
-  public static TestHive setupDefaultHive() throws IOException {
+  public static TestHive setupDefaultHive() {
     if (hive != null) {
       return hive;
     }
@@ -226,7 +225,7 @@ public class TestUtils {
   static void setOrUpdateDaliFunction(Table table, String functionName, String functionClass) {
     table.setOwner("daliview");
     Map<String, String> parameters = table.getParameters();
-    String[] split = table.getParameters().getOrDefault("functions", new String()).split(" |:");
+    String[] split = table.getParameters().getOrDefault("functions", "").split(" |:");
     Map<String, String> functionMap = new HashMap<>();
     for (int i = 0; i < split.length - 1; i += 2) {
       functionMap.put(split[i], split[i + 1]);

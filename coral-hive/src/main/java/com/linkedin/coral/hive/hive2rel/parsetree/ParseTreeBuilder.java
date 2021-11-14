@@ -221,8 +221,8 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     final SqlOperator operator = unnestCall.getOperator();
 
     if (isOuter) {
-      checkState(operandCount > 2, format(
-          "LATERAL VIEW OUTER EXPLODE without column aliases is not supported. Add 'AS col' or 'AS key, value' to fix it"));
+      checkState(operandCount > 2,
+          "LATERAL VIEW OUTER EXPLODE without column aliases is not supported. Add 'AS col' or 'AS key, value' to fix it");
       // transforms unnest(b) to unnest( if(b is null or cardinality(b) = 0, ARRAY(null)/MAP(null, null), b))
       SqlNode operandIsNull = SqlStdOperatorTable.IS_NOT_NULL.createCall(ZERO, unnestOperand);
       SqlNode emptyArray = SqlStdOperatorTable.GREATER_THAN.createCall(ZERO,
@@ -559,7 +559,7 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
       /** See {@link #visitWindowSpec(ASTNode, ParseContext)} for SQL, AST Tree and SqlNode Tree examples */
       SqlNode func =
           hiveFunction.createCall(sqlOperands.get(0), sqlOperands.subList(1, sqlOperands.size() - 1), quantifier);
-      SqlNode window = (SqlWindow) lastSqlOperand;
+      SqlNode window = lastSqlOperand;
       return new SqlBasicCall(SqlStdOperatorTable.OVER, new SqlNode[] { func, window }, ZERO);
     }
 
@@ -1033,12 +1033,12 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     SqlIntervalQualifier intervalQualifier = fromASTIntervalTypeToSqlIntervalQualifier(node);
 
     String text = node.getToken().getText();
-    String unquotedText = text.replaceAll("[\'\"]", "");
+    String unquotedText = text.replaceAll("['\"]", "");
 
     return SqlLiteral.createInterval(1, unquotedText, intervalQualifier, ZERO);
   }
 
-  class ParseContext {
+  static class ParseContext {
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
     private final Optional<Table> hiveTable;
     SqlNodeList keywords;

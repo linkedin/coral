@@ -5,7 +5,6 @@
  */
 package com.linkedin.coral.hive.hive2rel;
 
-import java.io.IOException;
 import java.util.Map;
 
 import com.google.common.base.Preconditions;
@@ -35,13 +34,13 @@ public class HiveTableTest {
   private static HiveSchema schema;
 
   @BeforeClass
-  public static void beforeClass() throws IOException {
+  public static void beforeClass() {
     hive = TestUtils.setupDefaultHive();
     schema = getHiveSchema();
   }
 
   @Test
-  public void testTable() throws Exception {
+  public void testTable() {
     Table fooTable = getTable("default", "foo");
     assertEquals(fooTable.getJdbcTableType(), Schema.TableType.TABLE);
     RelDataTypeFactory typeFactory = new JavaTypeFactoryImpl();

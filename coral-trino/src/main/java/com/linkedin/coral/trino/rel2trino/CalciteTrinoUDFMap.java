@@ -27,7 +27,7 @@ public class CalciteTrinoUDFMap {
   private CalciteTrinoUDFMap() {
   }
 
-  private static final Map<String, UDFTransformer> UDF_MAP = new HashMap();
+  private static final Map<String, UDFTransformer> UDF_MAP = new HashMap<>();
   private static final StaticHiveFunctionRegistry HIVE_REGISTRY = new StaticHiveFunctionRegistry();
   static {
     // conditional functions

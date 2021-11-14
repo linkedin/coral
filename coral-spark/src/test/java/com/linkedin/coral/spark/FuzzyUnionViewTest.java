@@ -8,7 +8,6 @@ package com.linkedin.coral.spark;
 import org.apache.calcite.rel.RelNode;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
-import org.apache.thrift.TException;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -23,7 +22,7 @@ public class FuzzyUnionViewTest {
   }
 
   @Test
-  public void testNoSchemaEvolution() throws TException {
+  public void testNoSchemaEvolution() {
     String database = "fuzzy_union";
     String view = "union_view";
     RelNode relNode = TestUtils.toRelNode(database, view);
@@ -37,7 +36,7 @@ public class FuzzyUnionViewTest {
   }
 
   @Test
-  public void testNoSchemaEvolutionWithMultipleTables() throws TException {
+  public void testNoSchemaEvolutionWithMultipleTables() {
     String database = "fuzzy_union";
     String view = "union_view_with_more_than_two_tables";
     RelNode relNode = TestUtils.toRelNode(database, view);
@@ -51,7 +50,7 @@ public class FuzzyUnionViewTest {
   }
 
   @Test
-  public void testNoSchemaEvolutionWithAlias() throws TException {
+  public void testNoSchemaEvolutionWithAlias() {
     String database = "fuzzy_union";
     String view = "union_view_with_alias";
     RelNode relNode = TestUtils.toRelNode(database, view);
@@ -65,7 +64,7 @@ public class FuzzyUnionViewTest {
   }
 
   @Test
-  public void testSingleBranchSchemaEvolution() throws TException {
+  public void testSingleBranchSchemaEvolution() {
     String database = "fuzzy_union";
     String view = "union_view_single_branch_evolved";
     RelNode relNode = TestUtils.toRelNode(database, view);
@@ -80,7 +79,7 @@ public class FuzzyUnionViewTest {
   }
 
   @Test
-  public void testDoubleBranchSameSchemaEvolution() throws TException {
+  public void testDoubleBranchSameSchemaEvolution() {
     String database = "fuzzy_union";
     String view = "union_view_double_branch_evolved_same";
     RelNode relNode = TestUtils.toRelNode(database, view);
@@ -100,7 +99,7 @@ public class FuzzyUnionViewTest {
   }
 
   @Test
-  public void testDoubleBranchDifferentSchemaEvolution() throws TException {
+  public void testDoubleBranchDifferentSchemaEvolution() {
     String database = "fuzzy_union";
     String view = "union_view_double_branch_evolved_different";
     RelNode relNode = TestUtils.toRelNode(database, view);
@@ -117,7 +116,7 @@ public class FuzzyUnionViewTest {
   }
 
   @Test
-  public void testMoreThanTwoBranchesSchemaEvolution() throws TException {
+  public void testMoreThanTwoBranchesSchemaEvolution() {
     String database = "fuzzy_union";
     String view = "union_view_more_than_two_branches_evolved";
     RelNode relNode = TestUtils.toRelNode(database, view);
@@ -136,7 +135,7 @@ public class FuzzyUnionViewTest {
   }
 
   @Test
-  public void testMapWithStructValueSchemaEvolution() throws TException {
+  public void testMapWithStructValueSchemaEvolution() {
     String database = "fuzzy_union";
     String view = "union_view_map_with_struct_value_evolved";
     RelNode relNode = TestUtils.toRelNode(database, view);
@@ -151,7 +150,7 @@ public class FuzzyUnionViewTest {
   }
 
   @Test
-  public void testArrayWithStructValueSchemaEvolution() throws TException {
+  public void testArrayWithStructValueSchemaEvolution() {
     String database = "fuzzy_union";
     String view = "union_view_array_with_struct_value_evolved";
     RelNode relNode = TestUtils.toRelNode(database, view);
@@ -166,7 +165,7 @@ public class FuzzyUnionViewTest {
   }
 
   @Test
-  public void testDeeplyNestedStructSchemaEvolution() throws TException {
+  public void testDeeplyNestedStructSchemaEvolution() {
     String database = "fuzzy_union";
     String view = "union_view_deeply_nested_struct_evolved";
     RelNode relNode = TestUtils.toRelNode(database, view);
@@ -181,7 +180,7 @@ public class FuzzyUnionViewTest {
   }
 
   @Test
-  public void testSameSchemaEvolutionWithDifferentOrdering() throws TException {
+  public void testSameSchemaEvolutionWithDifferentOrdering() {
     String database = "fuzzy_union";
     String view = "union_view_same_schema_evolution_with_different_ordering";
     RelNode relNode = TestUtils.toRelNode(database, view);

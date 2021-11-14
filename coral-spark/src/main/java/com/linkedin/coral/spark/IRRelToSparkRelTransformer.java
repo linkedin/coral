@@ -175,7 +175,7 @@ class IRRelToSparkRelTransformer {
    */
   private static class SparkRexConverter extends RexShuttle {
     private final RexBuilder rexBuilder;
-    private List<SparkUDFInfo> sparkUDFInfos;
+    private final List<SparkUDFInfo> sparkUDFInfos;
     private static final Logger LOG = LoggerFactory.getLogger(SparkRexConverter.class);
 
     SparkRexConverter(RexBuilder rexBuilder, List<SparkUDFInfo> sparkUDFInfos) {

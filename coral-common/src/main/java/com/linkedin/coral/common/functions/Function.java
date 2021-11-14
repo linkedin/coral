@@ -43,6 +43,6 @@ public class Function {
   }
 
   public SqlCall createCall(SqlNode function, List<SqlNode> operands, SqlLiteral qualifier) {
-    return sqlOperator.createCall(qualifier, ZERO, operands.toArray(new SqlNode[operands.size()]));
+    return sqlOperator.createCall(qualifier, ZERO, operands.toArray(new SqlNode[0]));
   }
 }

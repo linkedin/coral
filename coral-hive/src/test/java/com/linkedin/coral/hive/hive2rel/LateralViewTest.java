@@ -5,8 +5,6 @@
  */
 package com.linkedin.coral.hive.hive2rel;
 
-import java.io.IOException;
-
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.sql.type.SqlTypeFamily;
@@ -28,7 +26,7 @@ import static org.testng.Assert.*;
 
 public class LateralViewTest {
   @BeforeClass
-  public static void beforeClass() throws HiveException, MetaException, IOException {
+  public static void beforeClass() throws HiveException, MetaException {
     ToRelConverterTestUtils.setup();
     StaticHiveFunctionRegistry.createAddUserDefinedTableFunction("com.linkedin.coral.hive.hive2rel.CoralTestUDTF",
         ImmutableList.of("col1"), ImmutableList.of(SqlTypeName.INTEGER), family(SqlTypeFamily.INTEGER));

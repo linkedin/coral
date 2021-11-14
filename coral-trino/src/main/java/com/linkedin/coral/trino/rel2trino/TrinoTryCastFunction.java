@@ -5,16 +5,13 @@
  */
 package com.linkedin.coral.trino.rel2trino;
 
-import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlFunction;
 import org.apache.calcite.sql.SqlFunctionCategory;
 import org.apache.calcite.sql.SqlIntervalQualifier;
 import org.apache.calcite.sql.SqlKind;
-import org.apache.calcite.sql.SqlOperatorBinding;
 import org.apache.calcite.sql.SqlWriter;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
-import org.apache.calcite.sql.type.SqlReturnTypeInference;
 
 import com.linkedin.coral.com.google.common.base.Preconditions;
 
@@ -23,12 +20,8 @@ public class TrinoTryCastFunction extends SqlFunction {
   public static final TrinoTryCastFunction INSTANCE = new TrinoTryCastFunction();
 
   public TrinoTryCastFunction() {
-    super("try_cast", SqlKind.CAST, new SqlReturnTypeInference() {
-      @Override
-      public RelDataType inferReturnType(SqlOperatorBinding opBinding) {
-        return SqlStdOperatorTable.CAST.inferReturnType(opBinding);
-      }
-    }, null, null, SqlFunctionCategory.USER_DEFINED_FUNCTION);
+    super("try_cast", SqlKind.CAST, SqlStdOperatorTable.CAST::inferReturnType, null, null,
+        SqlFunctionCategory.USER_DEFINED_FUNCTION);
   }
 
   @Override

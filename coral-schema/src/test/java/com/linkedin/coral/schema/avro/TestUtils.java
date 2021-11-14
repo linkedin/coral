@@ -9,6 +9,7 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -138,7 +139,7 @@ public class TestUtils {
     executeCreateFunctionQuery("default", viewsToCreateFuncSquare, "FuncSquare",
         "com.linkedin.coral.hive.hive2rel.CoralTestUDF3");
 
-    executeCreateFunctionQuery("default", Arrays.asList("foo_lateral_udtf"), "CountOfRow",
+    executeCreateFunctionQuery("default", Collections.singletonList("foo_lateral_udtf"), "CountOfRow",
         "com.linkedin.coral.hive.hive2rel.CoralTestUDTF");
   }
 

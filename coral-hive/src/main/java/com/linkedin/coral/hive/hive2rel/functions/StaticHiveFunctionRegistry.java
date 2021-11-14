@@ -21,7 +21,6 @@ import org.apache.calcite.sql.SqlCallBinding;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlOperandCountRange;
 import org.apache.calcite.sql.SqlOperator;
-import org.apache.calcite.sql.SqlOperatorBinding;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.ReturnTypes;
@@ -360,22 +359,16 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
     // Collection functions
     addFunctionEntry("size", CARDINALITY);
     createAddUserDefinedFunction("array_contains", ReturnTypes.BOOLEAN, family(SqlTypeFamily.ARRAY, SqlTypeFamily.ANY));
-    createAddUserDefinedFunction("map_keys", new SqlReturnTypeInference() {
-      @Override
-      public RelDataType inferReturnType(SqlOperatorBinding opBinding) {
-        RelDataType operandType = opBinding.getOperandType(0);
-        RelDataTypeFactory typeFactory = opBinding.getTypeFactory();
-        return typeFactory.createArrayType(operandType.getKeyType(), -1);
-      }
+    createAddUserDefinedFunction("map_keys", opBinding -> {
+      RelDataType operandType = opBinding.getOperandType(0);
+      RelDataTypeFactory typeFactory = opBinding.getTypeFactory();
+      return typeFactory.createArrayType(operandType.getKeyType(), -1);
     }, family(SqlTypeFamily.MAP));
 
-    createAddUserDefinedFunction("map_values", new SqlReturnTypeInference() {
-      @Override
-      public RelDataType inferReturnType(SqlOperatorBinding opBinding) {
-        RelDataType operandType = opBinding.getOperandType(0);
-        RelDataTypeFactory typeFactory = opBinding.getTypeFactory();
-        return typeFactory.createArrayType(operandType.getValueType(), -1);
-      }
+    createAddUserDefinedFunction("map_values", opBinding -> {
+      RelDataType operandType = opBinding.getOperandType(0);
+      RelDataTypeFactory typeFactory = opBinding.getTypeFactory();
+      return typeFactory.createArrayType(operandType.getValueType(), -1);
     }, family(SqlTypeFamily.MAP));
 
     createAddUserDefinedFunction("array_contains", ReturnTypes.BOOLEAN, family(SqlTypeFamily.ARRAY, SqlTypeFamily.ANY));
