@@ -616,10 +616,10 @@ class SchemaUtilities {
         case MAP:
         case UNION:
         case ARRAY:
-          Schema newMapFieldSchema = setupNestedNamespace(field.schema(), nestedNamespace);
-          Schema.Field newMapField =
-              new Schema.Field(field.name(), newMapFieldSchema, field.doc(), field.defaultValue(), field.order());
-          appendField(newMapField, fieldAssembler);
+          Schema newFieldSchema = setupNestedNamespace(field.schema(), nestedNamespace);
+          Schema.Field newField =
+              new Schema.Field(field.name(), newFieldSchema, field.doc(), field.defaultValue(), field.order());
+          appendField(newField, fieldAssembler);
           break;
         case ENUM:
           appendFieldWithNewNamespace(field, nestedNamespace, fieldAssembler);
