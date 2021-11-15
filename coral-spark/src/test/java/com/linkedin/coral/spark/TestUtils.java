@@ -201,6 +201,9 @@ public class TestUtils {
 
     run(driver,
         "CREATE TABLE IF NOT EXISTS union_table(foo uniontype<int, double, array<string>, struct<a:int,b:string>>)");
+
+    // Recursive union case
+    run(driver, "CREATE TABLE IF NOT EXISTS recursive_union(a uniontype<int, uniontype<int, double>>)");
   }
 
   public static RelNode toRelNode(String db, String view) {
