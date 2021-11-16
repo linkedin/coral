@@ -8,6 +8,9 @@ package com.linkedin.coral.hive.hive2rel;
 import java.io.IOException;
 import java.util.Map;
 
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+
 import org.apache.calcite.jdbc.JavaTypeFactoryImpl;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
@@ -22,8 +25,6 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.linkedin.coral.common.HiveSchema;
 import com.linkedin.coral.common.HiveTable;
 
