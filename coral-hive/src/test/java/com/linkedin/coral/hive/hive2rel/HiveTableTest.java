@@ -8,9 +8,6 @@ package com.linkedin.coral.hive.hive2rel;
 import java.io.IOException;
 import java.util.Map;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
-
 import org.apache.calcite.jdbc.JavaTypeFactoryImpl;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
@@ -21,13 +18,18 @@ import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.hadoop.hive.metastore.IMetaStoreClient;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.thrift.TException;
+import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.linkedin.coral.common.HiveSchema;
 import com.linkedin.coral.common.HiveTable;
 
-import static org.testng.Assert.*;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
 
 
 public class HiveTableTest {
@@ -63,34 +65,24 @@ public class HiveTableTest {
     RelDataTypeField colC = rowType.getField("c", false, false);
     assertEquals(colC.getType().getSqlTypeName(), SqlTypeName.ARRAY);
     assertEquals(colC.getType().getComponentType().getSqlTypeName(), SqlTypeName.DOUBLE);
+  }
+
+  @Test
+  public void testTableWithUnion() throws Exception {
+    final RelDataTypeFactory typeFactory = new JavaTypeFactoryImpl();
 
     // test handling of union
     Table unionTable = getTable("default", "union_table");
     // union_table:(foo uniontype<int, double, array<string>, struct<a:int,b:string>>)
     // expected outcome schema: struct<tag:int, field0:int, field1:double, field2:array<string>, field3:struct<a:int,b:string>>
-    rowType = unionTable.getRowType(typeFactory);
+    RelDataType rowType = unionTable.getRowType(typeFactory);
     assertNotNull(rowType);
-    assertTrue(rowType.isStruct());
-    // top-level: it is just a struct
-    assertEquals(rowType.getFieldCount(), 1);
-    // with five components
-    RelDataType explodedStruct = rowType.getFieldList().get(0).getType();
-    assertEquals(explodedStruct.getFieldCount(), 5);
-    assertEquals(explodedStruct.getFieldList().get(0).getType().getSqlTypeName(), SqlTypeName.INTEGER);
-    assertEquals(explodedStruct.getFieldList().get(0).getName(), "tag");
-    assertEquals(explodedStruct.getFieldList().get(1).getType().getSqlTypeName(), SqlTypeName.INTEGER);
-    assertEquals(explodedStruct.getFieldList().get(2).getType().getSqlTypeName(), SqlTypeName.DOUBLE);
-    assertEquals(explodedStruct.getFieldList().get(3).getType().getSqlTypeName(), SqlTypeName.ARRAY);
-    assertEquals(explodedStruct.getFieldList().get(3).getType().getComponentType().getSqlTypeName(),
-        SqlTypeName.VARCHAR);
-    assertTrue(explodedStruct.getFieldList().get(4).getType().isStruct());
-    assertEquals(explodedStruct.getFieldList().get(4).getType().getFieldCount(), 2);
-    assertEquals(explodedStruct.getFieldList().get(4).getType().getFieldList().get(0).getName(), "a");
-    assertEquals(explodedStruct.getFieldList().get(4).getType().getFieldList().get(0).getType().getSqlTypeName(),
-        SqlTypeName.INTEGER);
-    assertEquals(explodedStruct.getFieldList().get(4).getType().getFieldList().get(1).getName(), "b");
-    assertEquals(explodedStruct.getFieldList().get(4).getType().getFieldList().get(1).getType().getSqlTypeName(),
-        SqlTypeName.VARCHAR);
+
+    // loading equivalent exploded table
+    Table explodedUnionTable = getTable("default", "exploded_union");
+    RelDataType rowType1 = explodedUnionTable.getRowType(typeFactory);
+    assertNotNull(rowType1);
+    Assert.assertEquals(rowType, rowType1);
   }
 
   @Test
