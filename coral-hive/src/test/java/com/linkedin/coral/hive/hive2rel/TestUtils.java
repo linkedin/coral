@@ -185,7 +185,7 @@ public class TestUtils {
 
       driver.run(
           "CREATE TABLE IF NOT EXISTS union_table(foo uniontype<int, double, array<string>, struct<a:int,b:string>>)");
-      driver.run("CREATE TABLE IF NOT EXISTS exploded_union(foo struct<tag:int, field0:int, field1:double, "
+      driver.run("CREATE TABLE IF NOT EXISTS exploded_union(foo struct<tag:tinyint, field0:int, field1:double, "
           + "field2:array<string>, field3:struct<a:int,b:string>>)");
 
       testHive.databases =

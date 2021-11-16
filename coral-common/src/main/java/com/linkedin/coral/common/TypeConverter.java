@@ -148,7 +148,7 @@ public class TypeConverter {
     List<String> fNames = IntStream.range(0, unionType.getAllUnionObjectTypeInfos().size()).mapToObj(i -> "field" + i)
         .collect(Collectors.toList());
     if (fNames.size() > 0) {
-      fTypes.add(0, dtFactory.createSqlType(SqlTypeName.INTEGER));
+      fTypes.add(0, dtFactory.createSqlType(SqlTypeName.TINYINT));
       fNames.add(0, "tag");
     }
 

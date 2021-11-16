@@ -75,7 +75,7 @@ public class HiveTableTest {
     // test handling of union
     Table unionTable = getTable("default", "union_table");
     // union_table:(foo uniontype<int, double, array<string>, struct<a:int,b:string>>)
-    // expected outcome schema: struct<tag:int, field0:int, field1:double, field2:array<string>, field3:struct<a:int,b:string>>
+    // expected outcome schema: struct<tag:tinyint, field0:int, field1:double, field2:array<string>, field3:struct<a:int,b:string>>
     RelDataType rowType = unionTable.getRowType(typeFactory);
     assertNotNull(rowType);
 
