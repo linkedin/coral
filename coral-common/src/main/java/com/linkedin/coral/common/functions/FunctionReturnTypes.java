@@ -5,19 +5,17 @@
  */
 package com.linkedin.coral.common.functions;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.google.common.base.Preconditions;
+
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
-import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.sql.type.ReturnTypes;
 import org.apache.calcite.sql.type.SqlReturnTypeInference;
 import org.apache.calcite.sql.type.SqlTypeName;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
 
 import static com.linkedin.coral.hive.hive2rel.functions.CoalesceStructUtility.coalesce;
@@ -119,8 +117,8 @@ public final class FunctionReturnTypes {
       opBinding -> opBinding.getTypeFactory().createArrayType(opBinding.getOperandType(0), -1);
 
   public static SqlReturnTypeInference arrayOfType(final SqlTypeName typeName) {
-    return opBinding -> opBinding.getTypeFactory()
-        .createArrayType(opBinding.getTypeFactory().createSqlType(typeName), -1);
+    return opBinding -> opBinding.getTypeFactory().createArrayType(opBinding.getTypeFactory().createSqlType(typeName),
+        -1);
   }
 
   public static SqlReturnTypeInference mapOfType(final SqlTypeName keyType, final SqlTypeName valueType) {

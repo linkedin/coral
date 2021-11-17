@@ -3,18 +3,17 @@
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
-
 package com.linkedin.coral.hive.hive2rel.functions;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeField;
-
-import com.google.common.annotations.VisibleForTesting;
 
 
 /**
@@ -30,7 +29,6 @@ public class CoalesceStructUtility {
   private CoalesceStructUtility() {
     // Utility class, does nothing in constructor
   }
-
 
   /**
    * Converting a {@link RelDataType} that could potentially contains a Trino-format exploded-union(i.e. a struct
