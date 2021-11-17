@@ -404,7 +404,7 @@ public class CoralSparkTest {
     assertEquals(CoralSpark.create(relNode1).getSparkSql(), targetSql1);
 
     // Recursion case
-    RelNode relNode2 =  TestUtils.toRelNode("SELECT extract_union(a) from recursive_union");
+    RelNode relNode2 = TestUtils.toRelNode("SELECT extract_union(a) from recursive_union");
     String targetSql2 = String.join("\n", "SELECT coalesce_struct(a)", "FROM default.recursive_union");
     assertEquals(CoralSpark.create(relNode2).getSparkSql(), targetSql2);
   }

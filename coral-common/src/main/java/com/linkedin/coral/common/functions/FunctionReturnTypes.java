@@ -5,10 +5,9 @@
  */
 package com.linkedin.coral.common.functions;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-
-import com.google.common.base.Preconditions;
 
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
@@ -17,7 +16,11 @@ import org.apache.calcite.sql.type.ReturnTypes;
 import org.apache.calcite.sql.type.SqlReturnTypeInference;
 import org.apache.calcite.sql.type.SqlTypeName;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
+
+import static com.linkedin.coral.hive.hive2rel.functions.CoalesceStructUtility.coalesce;
 
 
 /**
@@ -72,35 +75,43 @@ public final class FunctionReturnTypes {
 
   /**
    * Represents the return type for the coalesce_struct UDF that is built for bridging the schema difference
-   * between previous Coral's interpretation of union field in Coral IR (i.e. consistent to the output schema of
-   * extract_union Hive UDF, let's call it struct_old) and Trino's schema when deserializing union field from its reader.
-   * (Let's call it struct_new, See https://github.com/trinodb/trino/pull/3483 for details).
+   * between extract_union UDF's processed schema of union field in Coral IR (let's call it struct_ex) and
+   * Trino's schema when deserializing union field from its reader.
+   * (Let's call it struct_tr, See https://github.com/trinodb/trino/pull/3483 for details).
    *
-   * struct_new looks like:
+   * The main reason we need this briding capability is due to the fact that we have existing users relying on the
+   * schema of struct_ex. While the underlying reader(e.g. the trino one referenced above) starts to interpret the union
+   * in its own format, Coral tries to maintain backward compatibility on top of that. Notably we also have
+   * Iceberg reader does the same, see Linkedin's (temporary) fork on Iceberg:
+   * https://github.com/linkedin/iceberg/pull/84 (Avro)
+   * https://github.com/linkedin/iceberg/pull/85 (ORC)
+   *
+   *
+   * Further details:
+   * struct_tr looks like:
    * struct&lt;tag:int, field0:type0, field1:type1, ... fieldN:typeN&gt;
    *
-   * struct_old looks like:
+   * struct_ex looks like:
    * struct&lt;tag_0:type0, tag_1:type1, ... tag_N:typeN&gt;
    *
-   * This new UDF could be stated as the following signature:
-   * def coalesce_struct(struct:struct_new, [ordinal: int]) : struct_old = {}
+   * This new UDF could be stated as the following signatures:
+   * def coalesce_struct(struct:struct_tr) : struct_ex = {...}
+   * def coalesce_struct(struct:struct_tr, ordinal: int): field_at_ordinal = {...}
    *
    */
   public static final SqlReturnTypeInference COALESCE_STRUCT_FUNCTION_RETURN_STRATEGY = opBinding -> {
     int numArgs = opBinding.getOperandCount();
     RelDataTypeFactory typeFactory = opBinding.getTypeFactory();
     Preconditions.checkState(numArgs == 1 || numArgs == 2);
+    RelDataType coalescedDataType = coalesce(opBinding.getOperandType(0), typeFactory);
     // 1-arg case
     if (numArgs == 1) {
-      List<RelDataTypeField> oldStructFieldList = opBinding.getOperandType(0).getFieldList();
-      List<RelDataType> types = oldStructFieldList.stream().map(RelDataTypeField::getType).collect(Collectors.toList());
-      List<String> names = oldStructFieldList.stream().map(RelDataTypeField::getName).collect(Collectors.toList());
-      return typeFactory.createStructType(types.subList(1, types.size()), names.subList(1, names.size()));
+      return coalescedDataType;
     }
     // 2-arg case
     else {
       int ordinal = opBinding.getOperandLiteralValue(1, Integer.class);
-      return opBinding.getOperandType(0).getFieldList().get(ordinal).getType();
+      return coalescedDataType.getFieldList().get(ordinal).getType();
     }
   };
 
@@ -108,8 +119,8 @@ public final class FunctionReturnTypes {
       opBinding -> opBinding.getTypeFactory().createArrayType(opBinding.getOperandType(0), -1);
 
   public static SqlReturnTypeInference arrayOfType(final SqlTypeName typeName) {
-    return opBinding -> opBinding.getTypeFactory().createArrayType(opBinding.getTypeFactory().createSqlType(typeName),
-        -1);
+    return opBinding -> opBinding.getTypeFactory()
+        .createArrayType(opBinding.getTypeFactory().createSqlType(typeName), -1);
   }
 
   public static SqlReturnTypeInference mapOfType(final SqlTypeName keyType, final SqlTypeName valueType) {

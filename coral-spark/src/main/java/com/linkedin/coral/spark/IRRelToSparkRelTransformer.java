@@ -326,9 +326,9 @@ class IRRelToSparkRelTransformer {
 
     /**
      * Instead of leaving extract_union visible to (Hive)Spark, since we adopted the new exploded struct schema(
-     * a.k.a struct_new) that is different from extract_union's output (a.k.a struct_old) to interpret union in Coral IR,
+     * a.k.a struct_tr) that is different from extract_union's output (a.k.a struct_ex) to interpret union in Coral IR,
      * we need to swap the reference of "extract_union" to a new UDF that is coalescing the difference between
-     * struct_new and struct_old.
+     * struct_tr and struct_ex.
      *
      * See com.linkedin.coral.hive.hive2rel.functions.HiveReturnTypes#COALESCE_STRUCT_FUNCTION_RETURN_STRATEGY
      * and its comments for more details.
