@@ -16,7 +16,6 @@ import org.apache.calcite.sql.type.SqlOperandTypeInference;
 import org.apache.calcite.sql.type.SqlTypeName;
 
 
-// TODO: move this to calcite code
 public class OperandTypeInference {
 
   private OperandTypeInference() {

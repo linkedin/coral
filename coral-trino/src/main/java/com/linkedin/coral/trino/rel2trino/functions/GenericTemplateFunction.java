@@ -12,6 +12,7 @@ import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlOperatorBinding;
 import org.apache.calcite.sql.SqlWriter;
 import org.apache.calcite.sql.parser.SqlParserPos;
+import org.apache.calcite.sql.type.SqlOperandTypeChecker;
 import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
 import org.apache.calcite.sql.validate.SqlValidator;
 import org.apache.calcite.sql.validate.SqlValidatorScope;
@@ -55,6 +56,10 @@ abstract class GenericTemplateFunction extends SqlUserDefinedFunction {
   @Override
   public boolean checkOperandTypes(SqlCallBinding callBinding, boolean throwOnFailure) {
     return true;
+  }
+
+  @Override
+  protected void checkOperandCount(SqlValidator validator, SqlOperandTypeChecker argTypeChecker, SqlCall call) {
   }
 
   @Override

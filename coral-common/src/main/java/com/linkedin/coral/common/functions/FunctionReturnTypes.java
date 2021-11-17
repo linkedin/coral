@@ -22,7 +22,11 @@ import com.linkedin.coral.com.google.common.collect.ImmutableList;
 /**
  * This class provides function return types that are not in {@link ReturnTypes}
  */
-public class FunctionReturnTypes {
+public final class FunctionReturnTypes {
+
+  private FunctionReturnTypes() {
+
+  }
 
   public static final SqlReturnTypeInference ARG1_OR_ARG2 = opBinding -> {
     Preconditions.checkState(opBinding.getOperandCount() == 3);

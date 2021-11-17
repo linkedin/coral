@@ -12,7 +12,6 @@ import java.util.stream.IntStream;
 
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
-import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.hadoop.hive.common.type.HiveChar;
 import org.apache.hadoop.hive.serde.serdeConstants;
@@ -162,7 +161,7 @@ public class TypeConverter {
 
   public static TypeInfo convertStructType(RelDataType rType) {
     List<TypeInfo> fTypes = rType.getFieldList().stream().map(f -> convert(f.getType())).collect(Collectors.toList());
-    List<String> fNames = rType.getFieldList().stream().map(RelDataTypeField::getName).collect(Collectors.toList());
+    List<String> fNames = rType.getFieldNames();
     return TypeInfoFactory.getStructTypeInfo(fNames, fTypes);
   }
 
