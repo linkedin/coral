@@ -21,7 +21,6 @@ import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.hadoop.hive.metastore.IMetaStoreClient;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.thrift.TException;
-import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -79,11 +78,10 @@ public class HiveTableTest {
     RelDataType rowType = unionTable.getRowType(typeFactory);
     assertNotNull(rowType);
 
-    // loading equivalent exploded table
-    Table explodedUnionTable = getTable("default", "exploded_union");
-    RelDataType rowType1 = explodedUnionTable.getRowType(typeFactory);
-    assertNotNull(rowType1);
-    Assert.assertEquals(rowType, rowType1);
+    String expectedTypeString =
+        "RecordType(" + "RecordType(" + "TINYINT tag, INTEGER field0, DOUBLE field1, VARCHAR(65536) ARRAY field2, "
+            + "RecordType(INTEGER a, VARCHAR(65536) b) field3" + ") " + "foo)";
+    assertEquals(rowType.toString(), expectedTypeString);
   }
 
   @Test
