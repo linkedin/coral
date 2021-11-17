@@ -8,12 +8,15 @@
     "doc" : "Sample id of the record."
   }, {
     "name" : "Id_View_LessThanHundred_Col",
-    "type" : "boolean"
+    "type" : "boolean",
+    "doc" : "Field created in view by applying UDF 'com.linkedin.coral.hive.hive2rel.CoralTestUDF1' with argument(s): coral.schema.avro.base.complex.basecomplex.Id"
   }, {
     "name" : "Id_View_GreaterThanHundred_Col",
-    "type" : "boolean"
+    "type" : "boolean",
+    "doc" : "Field created in view by applying UDF 'com.linkedin.coral.hive.hive2rel.CoralTestUDF2' with argument(s): coral.schema.avro.base.complex.basecomplex.Id"
   }, {
     "name" : "Id_View_FuncSquare_Col",
-    "type" : "int"
+    "type" : "int",
+    "doc" : "Field created in view by applying UDF 'com.linkedin.coral.hive.hive2rel.CoralTestUDF3' with argument(s): coral.schema.avro.base.complex.basecomplex.Id"
   } ]
 }

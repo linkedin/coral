@@ -4,33 +4,43 @@
   "namespace" : "default.v",
   "fields" : [ {
     "name" : "EXPR_0",
-    "type" : [ "null", "int" ]
+    "type" : [ "null", "int" ],
+    "doc" : "Field created in view by applying operator '+' with argument(s): coral.schema.avro.base.nullability.basenullability.Id, coral.schema.avro.base.nullability.basenullability.Int_Field_1"
   }, {
     "name" : "EXPR_1",
-    "type" : "int"
+    "type" : "int",
+    "doc" : "Field created in view by applying operator '+' with argument(s): coral.schema.avro.base.nullability.basenullability.Id, coral.schema.avro.base.nullability.basenullability.Int_Field_2"
   }, {
     "name" : "EXPR_2",
-    "type" : [ "null", "int" ]
+    "type" : [ "null", "int" ],
+    "doc" : "Field created in view by applying operator '+' with argument(s): coral.schema.avro.base.nullability.basenullability.Int_Field_1, coral.schema.avro.base.nullability.basenullability.Int_Field_1"
   }, {
     "name" : "EXPR_3",
-    "type" : [ "null", "int" ]
+    "type" : [ "null", "int" ],
+    "doc" : "Field created in view by applying operator '+' with argument(s): coral.schema.avro.base.nullability.basenullability.Int_Field_1, 1"
   }, {
     "name" : "EXPR_4",
-    "type" : [ "null", "int" ]
+    "type" : [ "null", "int" ],
+    "doc" : "Field created in view by applying operator '+' with argument(s): coral.schema.avro.base.nullability.basenullability.Int_Field_2, 1"
   }, {
     "name" : "EXPR_5",
-    "type" : [ "null", "double" ]
+    "type" : [ "null", "double" ],
+    "doc" : "Field created in view by applying operator '+' with argument(s): coral.schema.avro.base.nullability.basenullability.Double_Field_1, coral.schema.avro.base.nullability.basenullability.Double_Field_1"
   }, {
     "name" : "EXPR_6",
-    "type" : "double"
+    "type" : "double",
+    "doc" : "Field created in view by applying operator '+' with argument(s): coral.schema.avro.base.nullability.basenullability.Double_Field_2, coral.schema.avro.base.nullability.basenullability.Double_Field_2"
   }, {
     "name" : "EXPR_7",
-    "type" : [ "null", "double" ]
+    "type" : [ "null", "double" ],
+    "doc" : "Field created in view by applying operator '+' with argument(s): coral.schema.avro.base.nullability.basenullability.Double_Field_1, coral.schema.avro.base.nullability.basenullability.Double_Field_2"
   }, {
     "name" : "EXPR_8",
-    "type" : [ "null", "boolean" ]
+    "type" : [ "null", "boolean" ],
+    "doc" : "Field created in view by applying operator 'NOT' with argument(s): coral.schema.avro.base.nullability.basenullability.Bool_Field_1"
   }, {
     "name" : "EXPR_9",
-    "type" : "boolean"
+    "type" : "boolean",
+    "doc" : "Field created in view by applying operator 'NOT' with argument(s): coral.schema.avro.base.nullability.basenullability.Bool_Field_2"
   } ]
 }
