@@ -7,6 +7,7 @@
     "type" : "int"
   }, {
     "name" : "Id_View_FuncSquare_Col",
-    "type" : "int"
+    "type" : "int",
+    "doc" : "Field created in view by applying UDF 'com.linkedin.coral.hive.hive2rel.CoralTestUDF3' with argument(s): coral.schema.avro.base.complex.basecomplex.Id"
   } ]
 }

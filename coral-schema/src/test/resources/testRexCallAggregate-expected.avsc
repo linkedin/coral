@@ -4,6 +4,7 @@
   "namespace" : "default.v",
   "fields" : [ {
     "name" : "Temp",
-    "type" : [ "null", "int" ]
+    "type" : [ "null", "int" ],
+    "doc" : "Field created in view by applying operator '*' with argument(s): 22, value with type BIGINT"
   } ]
 }

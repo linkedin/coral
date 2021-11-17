@@ -12,6 +12,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.StringJoiner;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -22,12 +23,16 @@ import com.google.common.annotations.VisibleForTesting;
 
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
+import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.AggregateCall;
+import org.apache.calcite.rel.logical.LogicalAggregate;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.sql.SqlKind;
+import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Table;
@@ -270,18 +275,61 @@ class SchemaUtilities {
     return newName;
   }
 
-  static String generateDocumentationForLiteral(RexLiteral rexLiteral) {
+  private static String getLiteralValueAsString(@Nonnull RexLiteral rexLiteral) {
     StringWriter documentationWriter = new StringWriter();
     PrintWriter printWriter = new PrintWriter(documentationWriter);
 
     rexLiteral.printAsJava(printWriter);
     printWriter.flush();
 
-    return "Field created from view literal with value: " + documentationWriter;
+    return documentationWriter.toString();
   }
 
-  static String generateDocumentationForAggregate(AggregateCall aggregateCall) {
+  /**
+   * Given an input {@link RelNode} and the index of a field in the {@link RelNode}'s corresponding Avro schema,
+   * determine if the field with the specified index is a column from a table.
+   * @param fieldIndex the index of a field in the <code>inputRelNode</code>'s corresponding Avro schema
+   * @param inputRelNode the input {@link RelNode}
+   * @return true if the field at <code>fieldIndex</code> is a column from a table
+   */
+  private static boolean isColumn(int fieldIndex, @Nonnull RelNode inputRelNode) {
+    return !(inputRelNode instanceof LogicalAggregate)
+        || fieldIndex < ((LogicalAggregate) inputRelNode).getGroupSet().cardinality();
+  }
+
+  static String generateDocumentationForLiteral(@Nonnull RexLiteral rexLiteral) {
+    return "Field created from view literal with value: " + getLiteralValueAsString(rexLiteral);
+  }
+
+  static String generateDocumentationForAggregate(@Nonnull AggregateCall aggregateCall) {
     return "Field created in view by applying aggregate function of type: " + aggregateCall.getAggregation().getKind();
+  }
+
+  static String generateDocumentationForFunctionCall(@Nonnull RexCall rexCall, @Nonnull Schema inputSchema,
+      @Nonnull RelNode inputRelNode) {
+    StringJoiner args = new StringJoiner(", ");
+
+    for (RexNode rexNode : rexCall.getOperands()) {
+      SqlKind nodeKind = rexNode.getKind();
+      switch (nodeKind) {
+        case LITERAL:
+          args.add(getLiteralValueAsString((RexLiteral) rexNode));
+          break;
+        case INPUT_REF:
+          int fieldIndex = ((RexInputRef) rexNode).getIndex();
+          if (isColumn(fieldIndex, inputRelNode)) {
+            args.add(inputSchema.getFullName() + "." + inputSchema.getFields().get(fieldIndex).name());
+            break;
+          }
+        default:
+          args.add("value with type " + rexNode.getType().toString());
+          break;
+      }
+    }
+
+    String functionType = rexCall.getOperator() instanceof SqlUserDefinedFunction ? "UDF" : "operator";
+    return "Field created in view by applying " + functionType + " '" + rexCall.getOperator().getName() + "'"
+        + (args.length() > 0 ? " with argument(s): " + args : "");
   }
 
   static String toAvroQualifiedName(@Nonnull String name) {

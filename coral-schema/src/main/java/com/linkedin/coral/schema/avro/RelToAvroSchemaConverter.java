@@ -205,7 +205,8 @@ public class RelToAvroSchemaConverter {
 
       SchemaBuilder.FieldAssembler<Schema> logicalProjectFieldAssembler =
           SchemaBuilder.record(inputSchema.getName()).namespace(inputSchema.getNamespace()).fields();
-      logicalProject.accept(new SchemaRexShuttle(inputSchema, suggestedFieldNames, logicalProjectFieldAssembler));
+      logicalProject.accept(new SchemaRexShuttle(inputSchema, logicalProject.getInput(), suggestedFieldNames,
+          logicalProjectFieldAssembler));
 
       schemaMap.put(logicalProject, logicalProjectFieldAssembler.endRecord());
 
@@ -369,12 +370,19 @@ public class RelToAvroSchemaConverter {
     private final Schema inputSchema;
     private final Queue<String> suggestedFieldNames;
     private final SchemaBuilder.FieldAssembler<Schema> fieldAssembler;
+    private RelNode inputNode;
 
     public SchemaRexShuttle(Schema inputSchema, Queue<String> suggestedFieldNames,
         SchemaBuilder.FieldAssembler<Schema> fieldAssembler) {
       this.inputSchema = inputSchema;
       this.suggestedFieldNames = suggestedFieldNames;
       this.fieldAssembler = fieldAssembler;
+    }
+
+    public SchemaRexShuttle(Schema inputSchema, RelNode inputNode, Queue<String> suggestedFieldNames,
+        SchemaBuilder.FieldAssembler<Schema> fieldAssembler) {
+      this(inputSchema, suggestedFieldNames, fieldAssembler);
+      this.inputNode = inputNode;
     }
 
     @Override
@@ -414,12 +422,12 @@ public class RelToAvroSchemaConverter {
       /**
        * For SqlUserDefinedFunction and SqlOperator RexCall, no need to handle it recursively
        * and only return type of udf or sql operator is relevant
-       * TODO: Populate doc for queries with rex call.
        */
       RelDataType fieldType = rexCall.getType();
       boolean isNullable = SchemaUtilities.isFieldNullable(rexCall, inputSchema);
 
-      appendField(fieldType, isNullable, null);
+      appendField(fieldType, isNullable,
+          SchemaUtilities.generateDocumentationForFunctionCall(rexCall, inputSchema, inputNode));
 
       return rexCall;
     }
