@@ -27,7 +27,9 @@ import org.testng.annotations.Test;
 import com.linkedin.coral.common.HiveSchema;
 import com.linkedin.coral.common.HiveTable;
 
-import static org.testng.Assert.*;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
 
 
 public class HiveTableTest {
@@ -63,6 +65,23 @@ public class HiveTableTest {
     RelDataTypeField colC = rowType.getField("c", false, false);
     assertEquals(colC.getType().getSqlTypeName(), SqlTypeName.ARRAY);
     assertEquals(colC.getType().getComponentType().getSqlTypeName(), SqlTypeName.DOUBLE);
+  }
+
+  @Test
+  public void testTableWithUnion() throws Exception {
+    final RelDataTypeFactory typeFactory = new JavaTypeFactoryImpl();
+
+    // test handling of union
+    Table unionTable = getTable("default", "union_table");
+    // union_table:(foo uniontype<int, double, array<string>, struct<a:int,b:string>>)
+    // expected outcome schema: struct<tag:tinyint, field0:int, field1:double, field2:array<string>, field3:struct<a:int,b:string>>
+    RelDataType rowType = unionTable.getRowType(typeFactory);
+    assertNotNull(rowType);
+
+    String expectedTypeString =
+        "RecordType(" + "RecordType(" + "TINYINT tag, INTEGER field0, DOUBLE field1, VARCHAR(65536) ARRAY field2, "
+            + "RecordType(INTEGER a, VARCHAR(65536) b) field3" + ") " + "foo)";
+    assertEquals(rowType.toString(), expectedTypeString);
   }
 
   @Test
