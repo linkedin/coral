@@ -6,10 +6,6 @@
 
 -->
 <configuration>
-<!--  <property>-->
-<!--    <name>coral.pig.test.dir</name>-->
-<!--    <value>${java.io.tmpdir}/coral/pig</value>-->
-<!--  </property>-->
   <property>
     <name>hive.exec.scratchdir</name>
     <value>${coral.pig.test.dir}/hive-scratch-dir</value>
