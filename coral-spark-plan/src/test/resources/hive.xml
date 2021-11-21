@@ -8,7 +8,7 @@
 <configuration>
   <property>
     <name>hive.exec.scratchdir</name>
-    <value>${java.io.tmpdir}/coral/sparkplan/hive-scratch-dir</value>
+    <value>${coral.sparkplan.test.dir}/hive-scratch-dir</value>
   </property>
   <property>
     <name>hive.metastore.warehouse.dir</name>
