@@ -5,6 +5,7 @@
  */
 package com.linkedin.coral.hive.hive2rel.parsetree;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
@@ -16,8 +17,11 @@ import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.parser.SqlParser;
+import org.apache.commons.io.FileUtils;
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
+import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -25,6 +29,7 @@ import org.testng.annotations.Test;
 import com.linkedin.coral.common.HiveMetastoreClient;
 import com.linkedin.coral.common.HiveMscAdapter;
 import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
+import com.linkedin.coral.hive.hive2rel.TestUtils;
 
 import static com.linkedin.coral.hive.hive2rel.TestUtils.*;
 import static org.testng.Assert.*;
@@ -34,13 +39,20 @@ public class ParseTreeBuilderTest {
 
   private static SqlParser.Config parserConfig;
   private static HiveMetastoreClient msc;
+  private static HiveConf conf;
 
   @BeforeClass
   public static void beforeClass() throws HiveException, IOException, MetaException {
-    TestHive hive = setupDefaultHive();
+    conf = TestUtils.loadResourceHiveConf();
+    TestHive hive = setupDefaultHive(conf);
     msc = new HiveMscAdapter(hive.getMetastoreClient());
     parserConfig = SqlParser.configBuilder().setCaseSensitive(true).setUnquotedCasing(Casing.UNCHANGED)
         .setQuotedCasing(Casing.UNCHANGED).build();
+  }
+
+  @AfterTest
+  public void afterClass() throws IOException {
+    FileUtils.deleteDirectory(new File(conf.get(TestUtils.CORAL_HIVE_TEST_DIR)));
   }
 
   @DataProvider(name = "convertSQL")
@@ -204,7 +216,7 @@ public class ParseTreeBuilderTest {
     assertEquals(sqlNode.toString(), parsedNode.toString(), String.format("Failed to validate sql: %s", sql));
   }
 
-  private static SqlNode convert(String sql) {
+  private SqlNode convert(String sql) {
     HiveToRelConverter hiveToRelConverter = new HiveToRelConverter(msc);
     return hiveToRelConverter.toSqlNode(sql);
   }

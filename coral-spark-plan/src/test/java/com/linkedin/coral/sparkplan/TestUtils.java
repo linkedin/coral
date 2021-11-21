@@ -1,17 +1,20 @@
 /**
- * Copyright 2020 LinkedIn Corporation. All rights reserved.
+ * Copyright 2020-2021 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
 package com.linkedin.coral.sparkplan;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.ImmutableList;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.IMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.MetaException;
@@ -22,6 +25,8 @@ import org.apache.hadoop.hive.ql.session.SessionState;
 
 
 public class TestUtils {
+
+  public static final String CORAL_SPARKPLAN_TEST_DIR = "coral.sparkplan.test.dir";
 
   static TestHive hive;
 
@@ -60,12 +65,11 @@ public class TestUtils {
     }
   }
 
-  public static TestHive setupDefaultHive() throws IOException {
+  public static TestHive setupDefaultHive(HiveConf conf) throws IOException {
     if (hive != null) {
       return hive;
     }
-    System.out.println(System.getProperty("java.io.tmpdir"));
-    HiveConf conf = loadResourceHiveConf();
+    FileUtils.deleteDirectory(new File(conf.get(CORAL_SPARKPLAN_TEST_DIR)));
     TestHive testHive = new TestHive(conf);
     SessionState.start(conf);
     Driver driver = new Driver(conf);
@@ -85,6 +89,8 @@ public class TestUtils {
   public static HiveConf loadResourceHiveConf() {
     InputStream hiveConfStream = TestUtils.class.getClassLoader().getResourceAsStream("hive.xml");
     HiveConf hiveConf = new HiveConf();
+    hiveConf.set(CORAL_SPARKPLAN_TEST_DIR,
+        System.getProperty("java.io.tmpdir") + "/coral/sparkplan/" + UUID.randomUUID().toString());
     hiveConf.addResource(hiveConfStream);
     hiveConf.set("mapreduce.framework.name", "local");
     hiveConf.set("_hive.hdfs.session.path", "/tmp/coral");

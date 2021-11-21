@@ -13,6 +13,7 @@ import org.apache.calcite.rel.rel2sql.RelToSqlConverter;
 import org.apache.calcite.sql.SqlDialect;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.tools.RelBuilder;
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.IMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
@@ -29,8 +30,8 @@ public class ToRelConverterTestUtils {
   private static IMetaStoreClient msc;
   public static HiveToRelConverter converter;
 
-  public static void setup() throws IOException, HiveException, MetaException {
-    hive = TestUtils.setupDefaultHive();
+  public static void setup(HiveConf conf) throws IOException, HiveException, MetaException {
+    hive = TestUtils.setupDefaultHive(conf);
     msc = hive.getMetastoreClient();
     HiveMscAdapter mscAdapter = new HiveMscAdapter(msc);
     converter = new HiveToRelConverter(mscAdapter);

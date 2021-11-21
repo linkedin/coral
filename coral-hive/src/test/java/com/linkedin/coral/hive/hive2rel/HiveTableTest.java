@@ -5,6 +5,7 @@
  */
 package com.linkedin.coral.hive.hive2rel;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 
@@ -18,9 +19,12 @@ import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.schema.Schema;
 import org.apache.calcite.schema.Table;
 import org.apache.calcite.sql.type.SqlTypeName;
+import org.apache.commons.io.FileUtils;
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.IMetaStoreClient;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.thrift.TException;
+import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -35,11 +39,18 @@ import static org.testng.Assert.assertTrue;
 public class HiveTableTest {
   private static TestUtils.TestHive hive;
   private static HiveSchema schema;
+  private static HiveConf conf;
 
   @BeforeClass
   public static void beforeClass() throws IOException {
-    hive = TestUtils.setupDefaultHive();
+    conf = TestUtils.loadResourceHiveConf();
+    hive = TestUtils.setupDefaultHive(conf);
     schema = getHiveSchema();
+  }
+
+  @AfterTest
+  public void afterClass() throws IOException {
+    FileUtils.deleteDirectory(new File(conf.get(TestUtils.CORAL_HIVE_TEST_DIR)));
   }
 
   @Test

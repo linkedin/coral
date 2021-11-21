@@ -5,10 +5,12 @@
  */
 package com.linkedin.coral.trino.rel2trino;
 
+import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -27,6 +29,7 @@ import org.apache.calcite.tools.FrameworkConfig;
 import org.apache.calcite.tools.Frameworks;
 import org.apache.calcite.tools.Planner;
 import org.apache.calcite.tools.Programs;
+import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.ql.CommandNeedRetryException;
@@ -40,10 +43,11 @@ import com.linkedin.coral.common.HiveMscAdapter;
 import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
 
 import static com.linkedin.coral.trino.rel2trino.TestTable.*;
-import static java.lang.String.format;
 
 
 public class TestUtils {
+  public static final String CORAL_TRINO_TEST_DIR = "coral.trino.test.dir";
+
   private static HiveMscAdapter hiveMetastoreClient;
   static HiveToRelConverter hiveToRelConverter;
 
@@ -184,9 +188,8 @@ public class TestUtils {
     Hook.REL_BUILDER_SIMPLIFY.add(Hook.propertyJ(false));
   }
 
-  public static void initializeViews(Path metastoreDbDirectory) throws HiveException, MetaException {
-    HiveConf conf = loadResourceHiveConf();
-    conf.set("javax.jdo.option.ConnectionURL", format("jdbc:derby:;databaseName=%s;create=true", metastoreDbDirectory));
+  public static void initializeViews(HiveConf conf) throws HiveException, MetaException, IOException {
+    FileUtils.deleteDirectory(new File(conf.get(CORAL_TRINO_TEST_DIR)));
     SessionState.start(conf);
     Driver driver = new Driver(conf);
     hiveMetastoreClient = new HiveMscAdapter(Hive.get(conf).getMSC());
@@ -360,9 +363,11 @@ public class TestUtils {
     return new HiveToRelConverter(hiveMetastoreClient).convertView(db, view);
   }
 
-  private static HiveConf loadResourceHiveConf() {
+  public static HiveConf loadResourceHiveConf() {
     InputStream hiveConfStream = TestUtils.class.getClassLoader().getResourceAsStream("hive.xml");
     HiveConf hiveConf = new HiveConf();
+    hiveConf.set(CORAL_TRINO_TEST_DIR,
+        System.getProperty("java.io.tmpdir") + "/coral/trino/" + UUID.randomUUID().toString());
     hiveConf.addResource(hiveConfStream);
     hiveConf.set("mapreduce.framework.name", "local-trino");
     hiveConf.set("_hive.hdfs.session.path", "/tmp/coral/trino");

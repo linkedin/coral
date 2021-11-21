@@ -5,14 +5,18 @@
  */
 package com.linkedin.coral.hive.hive2rel;
 
+import java.io.File;
 import java.io.IOException;
 
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.sql.type.SqlTypeFamily;
 import org.apache.calcite.sql.type.SqlTypeName;
+import org.apache.commons.io.FileUtils;
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
+import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -27,11 +31,20 @@ import static org.testng.Assert.*;
 
 
 public class LateralViewTest {
+
+  private static HiveConf conf;
+
   @BeforeClass
   public static void beforeClass() throws HiveException, MetaException, IOException {
-    ToRelConverterTestUtils.setup();
+    conf = TestUtils.loadResourceHiveConf();
+    ToRelConverterTestUtils.setup(conf);
     StaticHiveFunctionRegistry.createAddUserDefinedTableFunction("com.linkedin.coral.hive.hive2rel.CoralTestUDTF",
         ImmutableList.of("col1"), ImmutableList.of(SqlTypeName.INTEGER), family(SqlTypeFamily.INTEGER));
+  }
+
+  @AfterTest
+  public void afterClass() throws IOException {
+    FileUtils.deleteDirectory(new File(conf.get(TestUtils.CORAL_HIVE_TEST_DIR)));
   }
 
   @Test
