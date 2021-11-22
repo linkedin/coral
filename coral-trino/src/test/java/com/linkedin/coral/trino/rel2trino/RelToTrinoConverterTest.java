@@ -28,7 +28,7 @@ import static org.testng.Assert.*;
 public class RelToTrinoConverterTest {
 
   static FrameworkConfig config;
-  static SqlParser trinoParser = new SqlParser();
+  static final SqlParser trinoParser = new SqlParser();
   static final String tableOne = TABLE_ONE.getTableName();
   static final String tableTwo = TABLE_TWO.getTableName();
   static final String tableThree = TABLE_THREE.getTableName();
@@ -51,7 +51,7 @@ public class RelToTrinoConverterTest {
           trinoParser.createStatement(trinoSql, new ParsingOptions(ParsingOptions.DecimalLiteralTreatment.AS_DECIMAL));
       assertNotNull(statement);
     } catch (Exception e) {
-      assertTrue(false, "Failed to parse sql: " + trinoSql);
+      fail("Failed to parse sql: " + trinoSql);
     }
     assertEquals(trinoSql, expected);
   }
@@ -272,21 +272,21 @@ public class RelToTrinoConverterTest {
 
   // set queries
   @Test
-  public void testUnion() throws Exception {
+  public void testUnion() {
     testSetQueries("UNION");
   }
 
   @Test
-  public void testIntersect() throws Exception {
+  public void testIntersect() {
     testSetQueries("INTERSECT");
   }
 
   @Test
-  public void testExcept() throws Exception {
+  public void testExcept() {
     testSetQueries("EXCEPT");
   }
 
-  private void testSetQueries(String operator) throws Exception {
+  private void testSetQueries(String operator) {
     String sql = "SELECT icol FROM " + tableOne + " " + operator + "\n" + "SELECT ifield FROM "
         + TABLE_TWO.getTableName() + " WHERE sfield = 'abc'";
     String expectedSql = formatSql("SELECT icol as icol FROM " + tableOne + " " + operator
@@ -295,7 +295,7 @@ public class RelToTrinoConverterTest {
   }
 
   @Test
-  public void testCast() throws Exception {
+  public void testCast() {
     String sql = "SELECT cast(dcol as integer) as d, cast(icol as double) as i " + "FROM " + TABLE_ONE.getTableName();
     String expectedSql =
         formatSql("SELECT CAST(dcol as integer) as d, cast(icol as double) as i" + " from " + tableOne);
@@ -309,7 +309,7 @@ public class RelToTrinoConverterTest {
   }
 
   @Test
-  public void testRand() throws Exception {
+  public void testRand() {
     String sql1 = "SELECT icol, rand() " + "FROM " + TABLE_ONE.getTableName();
     String expectedSql1 = formatSql("SELECT icol AS \"ICOL\", \"RANDOM\"()" + " from " + tableOne);
     testConversion(sql1, expectedSql1);
@@ -320,7 +320,7 @@ public class RelToTrinoConverterTest {
   }
 
   @Test
-  public void testRandInteger() throws Exception {
+  public void testRandInteger() {
     String sql1 = "SELECT rand_integer(2, icol) " + "FROM " + TABLE_ONE.getTableName();
     String expectedSql1 = formatSql("SELECT \"RANDOM\"(icol)" + " from " + tableOne);
     testConversion(sql1, expectedSql1);
@@ -337,7 +337,7 @@ public class RelToTrinoConverterTest {
   }
 
   @Test
-  public void testTruncate() throws Exception {
+  public void testTruncate() {
     String sql1 = "SELECT truncate(dcol) " + "FROM " + TABLE_ONE.getTableName();
     String expectedSql1 = formatSql("SELECT TRUNCATE(dcol)" + " from " + tableOne);
     testConversion(sql1, expectedSql1);
@@ -348,14 +348,14 @@ public class RelToTrinoConverterTest {
   }
 
   @Test
-  public void testSubString2() throws Exception {
+  public void testSubString2() {
     String sql = "SELECT SUBSTRING(scol FROM 1) " + "FROM " + TABLE_ONE.getTableName();
     String expectedSql = formatSql("SELECT \"SUBSTR\"(scol, 1)" + " from " + tableOne);
     testConversion(sql, expectedSql);
   }
 
   @Test
-  public void testSubString3() throws Exception {
+  public void testSubString3() {
     String sql = "SELECT SUBSTRING(scol FROM icol FOR 3) " + "FROM " + TABLE_ONE.getTableName();
     String expectedSql = formatSql("SELECT \"SUBSTR\"(scol, icol, 3)" + " from " + tableOne);
     testConversion(sql, expectedSql);

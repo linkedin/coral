@@ -5,8 +5,6 @@
  */
 package com.linkedin.coral.hive.hive2rel;
 
-import java.io.IOException;
-
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.runtime.CalciteContextException;
 import org.apache.hadoop.hive.metastore.api.MetaException;
@@ -23,7 +21,7 @@ import static org.testng.Assert.*;
 public class NamedStructTest {
 
   @BeforeClass
-  public static void beforeClass() throws HiveException, MetaException, IOException {
+  public static void beforeClass() throws HiveException, MetaException {
     ToRelConverterTestUtils.setup();
   }
 

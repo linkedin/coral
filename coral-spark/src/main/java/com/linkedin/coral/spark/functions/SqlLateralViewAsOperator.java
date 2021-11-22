@@ -29,7 +29,7 @@ import org.apache.calcite.util.Util;
  * {@link org.apache.calcite.rel.rel2sql.SqlImplementor#wrapSelect(SqlNode)}
  */
 public class SqlLateralViewAsOperator extends SqlAsOperator {
-  public static SqlLateralViewAsOperator instance = new SqlLateralViewAsOperator();
+  public static final SqlLateralViewAsOperator instance = new SqlLateralViewAsOperator();
 
   public SqlLateralViewAsOperator() {
     super("LAS", SqlKind.AS, 20, true, ReturnTypes.ARG0, InferTypes.RETURN_TYPE, OperandTypes.ANY_ANY);

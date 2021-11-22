@@ -5,13 +5,10 @@
  */
 package com.linkedin.coral.hive.hive2rel;
 
-import java.io.IOException;
-
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 import org.apache.calcite.schema.Schema;
-import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -26,18 +23,18 @@ public class HiveSchemaTest {
   private static TestHive hive;
 
   @BeforeClass
-  public static void beforeClass() throws IOException {
+  public static void beforeClass() {
     hive = TestUtils.setupDefaultHive();
   }
 
   @Test
-  public void testHiveSchema() throws HiveException {
+  public void testHiveSchema() {
     HiveMetastoreClientProvider mscProvider = new HiveMetastoreClientProvider(hive.getConf());
     HiveSchema schema = new HiveSchema(mscProvider.getMetastoreClient());
     assertEquals(schema.getSubSchemaNames(), ImmutableSet.copyOf(hive.getDbNames()));
-    assertEquals(schema.getSubSchema("noSuchSchema"), null);
+    assertNull(schema.getSubSchema("noSuchSchema"));
     assertEquals(schema.getTableNames(), ImmutableSet.of());
-    assertEquals(schema.getTable("noSuchTable"), null);
+    assertNull(schema.getTable("noSuchTable"));
     assertEquals(schema.getFunctionNames(), ImmutableSet.of());
     assertEquals(schema.getFunctions("foo"), ImmutableList.of());
     assertTrue(schema.isMutable());

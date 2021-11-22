@@ -50,8 +50,6 @@ import org.apache.calcite.rex.RexRangeRef;
 import org.apache.calcite.rex.RexShuttle;
 import org.apache.calcite.rex.RexSubQuery;
 import org.apache.calcite.rex.RexTableInputRef;
-import org.apache.calcite.sql.SqlOperator;
-import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
 import org.apache.calcite.util.Pair;
 import org.apache.hadoop.hive.metastore.api.Table;
 import org.slf4j.Logger;
@@ -152,9 +150,9 @@ public class RelToAvroSchemaConverter {
    * this way is that we want to build avro schema in a bottom-up manner
    *
    */
-  private class SchemaRelShuttle extends RelShuttleImpl {
-    private Map<RelNode, Schema> schemaMap;
-    private boolean strictMode;
+  private static class SchemaRelShuttle extends RelShuttleImpl {
+    private final Map<RelNode, Schema> schemaMap;
+    private final boolean strictMode;
 
     private final HiveMetastoreClient hiveMetastoreClient;
 
@@ -228,11 +226,11 @@ public class RelToAvroSchemaConverter {
       SchemaBuilder.FieldAssembler<Schema> logicalJoinFieldAssembler =
           SchemaBuilder.record(leftInputSchema.getName()).namespace(leftInputSchema.getNamespace()).fields();
 
-      for (int i = 0; i < leftInputSchemaFields.size(); i++) {
-        SchemaUtilities.appendField(leftInputSchemaFields.get(i), logicalJoinFieldAssembler);
+      for (Schema.Field leftInputSchemaField : leftInputSchemaFields) {
+        SchemaUtilities.appendField(leftInputSchemaField, logicalJoinFieldAssembler);
       }
-      for (int i = 0; i < rightInputSchemaFields.size(); i++) {
-        SchemaUtilities.appendField(rightInputSchemaFields.get(i), logicalJoinFieldAssembler);
+      for (Schema.Field rightInputSchemaField : rightInputSchemaFields) {
+        SchemaUtilities.appendField(rightInputSchemaField, logicalJoinFieldAssembler);
       }
 
       schemaMap.put(logicalJoin, logicalJoinFieldAssembler.endRecord());
@@ -368,11 +366,11 @@ public class RelToAvroSchemaConverter {
   /**
    * This class extends RexShuttle. It's used to generate avro schema while traversing RexNode.
    */
-  private class SchemaRexShuttle extends RexShuttle {
-    private Schema inputSchema;
+  private static class SchemaRexShuttle extends RexShuttle {
+    private final Schema inputSchema;
+    private final Queue<String> suggestedFieldNames;
+    private final SchemaBuilder.FieldAssembler<Schema> fieldAssembler;
     private RelNode inputNode;
-    private Queue<String> suggestedFieldNames;
-    private SchemaBuilder.FieldAssembler<Schema> fieldAssembler;
 
     public SchemaRexShuttle(Schema inputSchema, Queue<String> suggestedFieldNames,
         SchemaBuilder.FieldAssembler<Schema> fieldAssembler) {
@@ -421,21 +419,17 @@ public class RelToAvroSchemaConverter {
 
     @Override
     public RexNode visitCall(RexCall rexCall) {
-      if (rexCall.getOperator() instanceof SqlUserDefinedFunction || rexCall.getOperator() instanceof SqlOperator) {
-        /**
-         * For SqlUserDefinedFunction and SqlOperator RexCall, no need to handle it recursively
-         * and only return type of udf or sql operator is relevant
-         */
-        RelDataType fieldType = rexCall.getType();
-        boolean isNullable = SchemaUtilities.isFieldNullable(rexCall, inputSchema);
+      /**
+       * For SqlUserDefinedFunction and SqlOperator RexCall, no need to handle it recursively
+       * and only return type of udf or sql operator is relevant
+       */
+      RelDataType fieldType = rexCall.getType();
+      boolean isNullable = SchemaUtilities.isFieldNullable(rexCall, inputSchema);
 
-        appendField(fieldType, isNullable,
-            SchemaUtilities.generateDocumentationForFunctionCall(rexCall, inputSchema, inputNode));
+      appendField(fieldType, isNullable,
+          SchemaUtilities.generateDocumentationForFunctionCall(rexCall, inputSchema, inputNode));
 
-        return rexCall;
-      } else {
-        return super.visitCall(rexCall);
-      }
+      return rexCall;
     }
 
     @Override

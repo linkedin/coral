@@ -47,8 +47,8 @@ import org.apache.calcite.sql.type.SqlTypeFamily;
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import com.linkedin.coral.com.google.common.collect.ImmutableMultimap;
 import com.linkedin.coral.com.google.common.collect.Multimap;
-import com.linkedin.coral.common.GenericProjectFunction;
-import com.linkedin.coral.hive.hive2rel.functions.HiveReturnTypes;
+import com.linkedin.coral.common.functions.FunctionReturnTypes;
+import com.linkedin.coral.common.functions.GenericProjectFunction;
 import com.linkedin.coral.trino.rel2trino.functions.GenericProjectToTrinoConverter;
 
 import static com.linkedin.coral.trino.rel2trino.CoralTrinoConfigKeys.*;
@@ -159,7 +159,7 @@ public class Calcite2TrinoUDFConverter {
     private final RexBuilder rexBuilder;
     private final RelDataTypeFactory typeFactory;
     private final RelNode node;
-    private Map<String, Boolean> configs;
+    private final Map<String, Boolean> configs;
 
     // SUPPORTED_TYPE_CAST_MAP is a static mapping that maps a SqlTypeFamily key to its set of
     // type-castable SqlTypeFamilies.
@@ -240,7 +240,7 @@ public class Calcite2TrinoUDFConverter {
 
     private Optional<RexNode> visitCollectListOrSetFunction(RexCall call) {
       List<RexNode> convertedOperands = visitList(call.getOperands(), (boolean[]) null);
-      final SqlOperator arrayAgg = createUDF("array_agg", HiveReturnTypes.ARRAY_OF_ARG0_TYPE);
+      final SqlOperator arrayAgg = createUDF("array_agg", FunctionReturnTypes.ARRAY_OF_ARG0_TYPE);
       final SqlOperator arrayDistinct = createUDF("array_distinct", ReturnTypes.ARG0_NULLABLE);
       final String operatorName = call.getOperator().getName();
       if (operatorName.equalsIgnoreCase("collect_list")) {
@@ -252,7 +252,7 @@ public class Calcite2TrinoUDFConverter {
 
     private Optional<RexNode> visitFromUnixtime(RexCall call) {
       List<RexNode> convertedOperands = visitList(call.getOperands(), (boolean[]) null);
-      SqlOperator formatDatetime = createUDF("format_datetime", HiveReturnTypes.STRING);
+      SqlOperator formatDatetime = createUDF("format_datetime", FunctionReturnTypes.STRING);
       SqlOperator fromUnixtime = createUDF("from_unixtime", explicit(TIMESTAMP));
       if (convertedOperands.size() == 1) {
         return Optional

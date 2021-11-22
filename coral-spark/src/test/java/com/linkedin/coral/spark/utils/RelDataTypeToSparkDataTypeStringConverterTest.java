@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2020 LinkedIn Corporation. All rights reserved.
+ * Copyright 2019-2021 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -53,7 +53,7 @@ public class RelDataTypeToSparkDataTypeStringConverterTest {
         + "{\"type\":\"string\",\"name\":\"str\",\"nullable\":true,\"metadata\":{}},"
         + "{\"type\":\"integer\",\"name\":\"int\",\"nullable\":true,\"metadata\":{}}" + "]}";
 
-    List<RelDataTypeField> fields = new ArrayList();
+    List<RelDataTypeField> fields = new ArrayList<>();
     fields.add(new RelDataTypeFieldImpl("str", 0, new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.VARCHAR)));
     fields.add(new RelDataTypeFieldImpl("int", 0, new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.INTEGER)));
 
@@ -97,7 +97,7 @@ public class RelDataTypeToSparkDataTypeStringConverterTest {
         + "{\"type\":\"integer\",\"name\":\"int\",\"nullable\":true,\"metadata\":{}}]},"
         + "\"name\":\"struct\",\"nullable\":true,\"metadata\":{}}]}";
 
-    List<RelDataTypeField> nestedFields = new ArrayList();
+    List<RelDataTypeField> nestedFields = new ArrayList<>();
     nestedFields
         .add(new RelDataTypeFieldImpl("str", 0, new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.VARCHAR)));
     nestedFields
@@ -105,7 +105,7 @@ public class RelDataTypeToSparkDataTypeStringConverterTest {
 
     RelRecordType nestedRelRecordType = new RelRecordType(nestedFields);
 
-    List<RelDataTypeField> fields = new ArrayList();
+    List<RelDataTypeField> fields = new ArrayList<>();
     fields.add(new RelDataTypeFieldImpl("str", 0, new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.VARCHAR)));
     fields.add(new RelDataTypeFieldImpl("struct", 0, nestedRelRecordType));
 
@@ -122,7 +122,7 @@ public class RelDataTypeToSparkDataTypeStringConverterTest {
         + "{\"type\":\"string\",\"name\":\"str\",\"nullable\":true,\"metadata\":{}},"
         + "{\"type\":\"integer\",\"name\":\"int\",\"nullable\":true,\"metadata\":{}}]}}";
 
-    List<RelDataTypeField> fields = new ArrayList();
+    List<RelDataTypeField> fields = new ArrayList<>();
     fields.add(new RelDataTypeFieldImpl("str", 0, new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.VARCHAR)));
     fields.add(new RelDataTypeFieldImpl("int", 0, new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.INTEGER)));
 
@@ -143,7 +143,7 @@ public class RelDataTypeToSparkDataTypeStringConverterTest {
         + "{\"type\":\"string\",\"name\":\"str\",\"nullable\":true,\"metadata\":{}},"
         + "{\"type\":\"integer\",\"name\":\"int\",\"nullable\":true,\"metadata\":{}}]}}";
 
-    List<RelDataTypeField> fields = new ArrayList();
+    List<RelDataTypeField> fields = new ArrayList<>();
     fields.add(new RelDataTypeFieldImpl("str", 0, new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.VARCHAR)));
     fields.add(new RelDataTypeFieldImpl("int", 0, new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.INTEGER)));
 
@@ -167,7 +167,7 @@ public class RelDataTypeToSparkDataTypeStringConverterTest {
             + "{\"type\":\"integer\",\"name\":\"int\",\"nullable\":true,\"metadata\":{}}]},"
             + "\"name\":\"struct\",\"nullable\":true,\"metadata\":{}}]}}}";
 
-    List<RelDataTypeField> nestedFields = new ArrayList();
+    List<RelDataTypeField> nestedFields = new ArrayList<>();
     nestedFields
         .add(new RelDataTypeFieldImpl("str", 0, new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.VARCHAR)));
     nestedFields
@@ -175,7 +175,7 @@ public class RelDataTypeToSparkDataTypeStringConverterTest {
 
     RelRecordType nestedRelRecordType = new RelRecordType(nestedFields);
 
-    List<RelDataTypeField> fields = new ArrayList();
+    List<RelDataTypeField> fields = new ArrayList<>();
     fields.add(new RelDataTypeFieldImpl("str", 0, new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.VARCHAR)));
     fields.add(new RelDataTypeFieldImpl("struct", 0, nestedRelRecordType));
 

@@ -60,7 +60,6 @@ abstract class GenericTemplateFunction extends SqlUserDefinedFunction {
 
   @Override
   protected void checkOperandCount(SqlValidator validator, SqlOperandTypeChecker argTypeChecker, SqlCall call) {
-    return;
   }
 
   @Override

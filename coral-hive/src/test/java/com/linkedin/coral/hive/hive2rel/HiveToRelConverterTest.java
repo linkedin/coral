@@ -5,7 +5,6 @@
  */
 package com.linkedin.coral.hive.hive2rel;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -21,24 +20,22 @@ import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.tools.RelBuilder;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
-import org.apache.thrift.TException;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import com.linkedin.coral.common.ToRelConverterTestUtils;
+import com.linkedin.coral.common.functions.UnknownSqlFunctionException;
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
-import com.linkedin.coral.hive.hive2rel.functions.UnknownSqlFunctionException;
 
 import static com.linkedin.coral.common.ToRelConverterTestUtils.*;
 import static org.apache.calcite.sql.type.OperandTypes.*;
 import static org.testng.Assert.*;
-import static org.testng.Assert.assertEquals;
 
 
 public class HiveToRelConverterTest {
 
   @BeforeClass
-  public static void beforeClass() throws IOException, HiveException, MetaException {
+  public static void beforeClass() throws HiveException, MetaException {
     ToRelConverterTestUtils.setup();
 
     // add the following 3 test UDF to StaticHiveFunctionRegistry for testing purpose.
@@ -354,7 +351,7 @@ public class HiveToRelConverterTest {
   }
 
   @Test
-  public void testViewExpansion() throws TException {
+  public void testViewExpansion() {
     {
       String sql = "SELECT avg(sum_c) from foo_view";
       RelNode rel = converter.convertSql(sql);

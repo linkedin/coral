@@ -156,8 +156,7 @@ public class HiveViewTable extends HiveTable implements TranslatableTable {
 
     int inputIndex = 0;
     int inputFieldsSize = inputFields.size();
-    for (int i = 0; i < castToFields.size(); i++) {
-      RelDataTypeField castToField = castToFields.get(i);
+    for (RelDataTypeField castToField : castToFields) {
       while (inputIndex < inputFieldsSize) {
         RelDataTypeField inputField = inputFields.get(inputIndex);
         if (inputField.getName().equalsIgnoreCase(castToField.getName())) {

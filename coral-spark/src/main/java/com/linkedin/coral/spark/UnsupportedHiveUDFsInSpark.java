@@ -19,7 +19,7 @@ class UnsupportedHiveUDFsInSpark {
   private UnsupportedHiveUDFsInSpark() {
   }
 
-  private static HashSet<String> unsupportedUDFSet = new HashSet<>();
+  private static final HashSet<String> unsupportedUDFSet = new HashSet<>();
 
   /**
    * Add hive UDFs that do not work with Spark.

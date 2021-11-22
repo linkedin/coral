@@ -16,7 +16,6 @@ import com.google.common.collect.ImmutableSet;
 import org.apache.calcite.linq4j.tree.Expression;
 import org.apache.calcite.rel.type.RelProtoDataType;
 import org.apache.calcite.schema.*;
-import org.apache.calcite.schema.Function;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 

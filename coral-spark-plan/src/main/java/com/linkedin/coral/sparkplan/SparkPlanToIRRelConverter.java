@@ -45,8 +45,6 @@ import static com.linkedin.coral.sparkplan.containers.SparkPlanNode.PLANTYPE.*;
 public class SparkPlanToIRRelConverter {
 
   private static HiveToRelConverter hiveToRelConverter;
-  private HiveMetastoreClient hiveMetastoreClient;
-  private Map<String, Map<String, List<String>>> localMetastore;
 
   // this set contains all the simple predicate operators
   private static final Set<String> SIMPLE_PREDICATE_OPERATORS = new HashSet<>(
@@ -62,7 +60,6 @@ public class SparkPlanToIRRelConverter {
   private SparkPlanToIRRelConverter(HiveMetastoreClient hiveMetastoreClient) {
     checkNotNull(hiveMetastoreClient);
     SparkPlanToIRRelConverter.hiveToRelConverter = new HiveToRelConverter(hiveMetastoreClient);
-    this.hiveMetastoreClient = hiveMetastoreClient;
   }
 
   /**
@@ -74,7 +71,6 @@ public class SparkPlanToIRRelConverter {
   private SparkPlanToIRRelConverter(Map<String, Map<String, List<String>>> localMetastore) {
     checkNotNull(localMetastore);
     SparkPlanToIRRelConverter.hiveToRelConverter = new HiveToRelConverter(localMetastore);
-    this.localMetastore = localMetastore;
   }
 
   /**
@@ -403,7 +399,6 @@ public class SparkPlanToIRRelConverter {
       return null;
     }
     String sql = "SELECT * FROM " + databaseName + "." + tableName + " WHERE " + modifiedFilterCondition;
-    ;
     RelNode convertedNode = hiveToRelConverter.convertSql(sql);
     return convertedNode.getInput(0).getChildExps().get(0);
   }
@@ -501,14 +496,14 @@ public class SparkPlanToIRRelConverter {
       } else if (c == ',') {
         if (parenthesis == 0) {
           sb.deleteCharAt(sb.length() - 1);
-          if (!"null".equals(sb.toString().trim().toLowerCase())) {
+          if (!"null".equalsIgnoreCase(sb.toString().trim())) {
             conditions.add(sb.toString());
           }
           sb = new StringBuilder();
         }
       }
     }
-    if (!"".equals(sb.toString()) && !"null".equals(sb.toString().trim().toLowerCase())) {
+    if (!"".equals(sb.toString()) && !"null".equalsIgnoreCase(sb.toString().trim())) {
       conditions.add(sb.toString());
     }
     return String.join(" AND ", conditions);

@@ -138,7 +138,6 @@ public class HiveTypeSystem extends RelDataTypeSystemImpl {
       case SMALLINT:
         return nullableType(typeFactory, SqlTypeName.INTEGER);
       case INTEGER:
-        return nullableType(typeFactory, SqlTypeName.BIGINT);
       case BIGINT:
         return nullableType(typeFactory, SqlTypeName.BIGINT);
       case REAL:

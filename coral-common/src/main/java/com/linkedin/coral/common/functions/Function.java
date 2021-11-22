@@ -3,7 +3,7 @@
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
-package com.linkedin.coral.common;
+package com.linkedin.coral.common.functions;
 
 import java.util.List;
 
@@ -43,6 +43,6 @@ public class Function {
   }
 
   public SqlCall createCall(SqlNode function, List<SqlNode> operands, SqlLiteral qualifier) {
-    return sqlOperator.createCall(qualifier, ZERO, operands.toArray(new SqlNode[operands.size()]));
+    return sqlOperator.createCall(qualifier, ZERO, operands.toArray(new SqlNode[0]));
   }
 }

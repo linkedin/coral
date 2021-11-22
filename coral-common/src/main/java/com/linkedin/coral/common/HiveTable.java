@@ -74,9 +74,10 @@ public class HiveTable implements ScannableTable {
    */
   static final String TBLPROPERTIES_DEPENDENCIES_KEY = "dependencies";
 
-  private static Splitter tblpropertiesSplitter = Splitter.on(Pattern.compile("\\s+")).omitEmptyStrings().trimResults();
+  private static final Splitter tblpropertiesSplitter =
+      Splitter.on(Pattern.compile("\\s+")).omitEmptyStrings().trimResults();
 
-  private static Splitter.MapSplitter functionsKeyValueSplitter =
+  private static final Splitter.MapSplitter functionsKeyValueSplitter =
       tblpropertiesSplitter.withKeyValueSeparator(Splitter.on(":").limit(2));
 
   /**

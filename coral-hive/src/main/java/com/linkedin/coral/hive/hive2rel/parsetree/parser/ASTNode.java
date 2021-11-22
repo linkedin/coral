@@ -53,7 +53,7 @@ public class ASTNode extends CommonTree implements Node, Serializable {
       return null;
     }
 
-    ArrayList<Node> ret_vec = new ArrayList<Node>();
+    ArrayList<Node> ret_vec = new ArrayList<>();
     for (int i = 0; i < super.getChildCount(); ++i) {
       ret_vec.add((Node) super.getChild(i));
     }
@@ -93,7 +93,7 @@ public class ASTNode extends CommonTree implements Node, Serializable {
     return sb.toString();
   }
 
-  private StringBuilder dump(StringBuilder sb, String ws) {
+  private void dump(StringBuilder sb, String ws) {
     sb.append(ws);
     sb.append(toString());
     sb.append("\n");
@@ -110,7 +110,6 @@ public class ASTNode extends CommonTree implements Node, Serializable {
         }
       }
     }
-    return sb;
   }
 }
 //spotless:on

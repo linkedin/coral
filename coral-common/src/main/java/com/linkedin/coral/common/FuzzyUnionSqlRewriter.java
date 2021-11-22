@@ -23,6 +23,8 @@ import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.sql.util.SqlShuttle;
 
+import com.linkedin.coral.common.functions.GenericProjectFunction;
+
 
 /**
  * Fuzzy union occur when there is a mismatch in the schemas of the branches of a union. This can occur in a Dali view
@@ -99,7 +101,7 @@ public class FuzzyUnionSqlRewriter extends SqlShuttle {
       // We need to compare the schemas of all leaves of the union (A,B,C) and adjust if necessary.
       // expectedDataType is the column subset of the union (A, B, C)
       final RelDataType expectedDataType = getUnionDataType(call);
-      call = addFuzzyUnionToUnionCall(call, expectedDataType);
+      addFuzzyUnionToUnionCall(call, expectedDataType);
     }
     return super.visit(call);
   }

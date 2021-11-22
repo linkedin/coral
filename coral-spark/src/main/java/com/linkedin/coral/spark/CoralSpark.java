@@ -34,14 +34,11 @@ import com.linkedin.coral.spark.dialect.SparkSqlDialect;
  */
 public class CoralSpark {
 
-  private RelNode sparkRelNode;
-  private List<String> baseTables;
-  private List<SparkUDFInfo> sparkUDFInfoList;
-  private String sparkSql;
+  private final List<String> baseTables;
+  private final List<SparkUDFInfo> sparkUDFInfoList;
+  private final String sparkSql;
 
-  private CoralSpark(RelNode sparkRelNode, List<String> baseTables, List<SparkUDFInfo> sparkUDFInfoList,
-      String sparkSql) {
-    this.sparkRelNode = sparkRelNode;
+  private CoralSpark(List<String> baseTables, List<SparkUDFInfo> sparkUDFInfoList, String sparkSql) {
     this.baseTables = baseTables;
     this.sparkUDFInfoList = sparkUDFInfoList;
     this.sparkSql = sparkSql;
@@ -67,7 +64,7 @@ public class CoralSpark {
     String sparkSQL = constructSparkSQL(sparkRelNode);
     List<String> baseTables = constructBaseTables(sparkRelNode);
     List<SparkUDFInfo> sparkUDFInfos = sparkRelInfo.getSparkUDFInfoList();
-    return new CoralSpark(sparkRelNode, baseTables, sparkUDFInfos, sparkSQL);
+    return new CoralSpark(baseTables, sparkUDFInfos, sparkSQL);
   }
 
   /**

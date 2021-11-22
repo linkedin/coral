@@ -1,11 +1,10 @@
 /**
- * Copyright 2020 LinkedIn Corporation. All rights reserved.
+ * Copyright 2020-2021 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
 package com.linkedin.coral.sparkplan;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -42,8 +41,8 @@ public class TestUtils {
         this.name = name;
         this.tables = ImmutableList.copyOf(tables);
       }
-      String name;
-      List<String> tables;
+      final String name;
+      final List<String> tables;
     }
 
     public List<String> getDbNames() {
@@ -51,7 +50,7 @@ public class TestUtils {
     }
 
     public List<String> getTables(String db) {
-      return databases.stream().filter(d -> d.name == db).findFirst()
+      return databases.stream().filter(d -> d.name.equals(db)).findFirst()
           .orElseThrow(() -> new RuntimeException("DB " + db + " not found")).tables;
     }
 
@@ -60,7 +59,7 @@ public class TestUtils {
     }
   }
 
-  public static TestHive setupDefaultHive() throws IOException {
+  public static TestHive setupDefaultHive() {
     if (hive != null) {
       return hive;
     }

@@ -3,7 +3,7 @@
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
-package com.linkedin.coral.hive.hive2rel.functions;
+package com.linkedin.coral.common.functions;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -19,9 +19,12 @@ import org.apache.calcite.sql.type.SqlTypeName;
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
 
 
-public class HiveReturnTypes {
+/**
+ * This class provides function return types that are not in {@link ReturnTypes}
+ */
+public final class FunctionReturnTypes {
 
-  private HiveReturnTypes() {
+  private FunctionReturnTypes() {
 
   }
 

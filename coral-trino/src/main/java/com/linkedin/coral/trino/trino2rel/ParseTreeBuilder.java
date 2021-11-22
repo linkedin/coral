@@ -31,13 +31,11 @@ import com.linkedin.coral.hive.hive2rel.functions.HiveFunctionResolver;
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 
 import io.trino.sql.tree.*;
-import io.trino.sql.tree.AstVisitor;
 
 import static com.linkedin.coral.common.calcite.CalciteUtil.*;
 import static java.lang.String.format;
 import static org.apache.calcite.sql.SqlFunctionCategory.USER_DEFINED_FUNCTION;
 import static org.apache.calcite.sql.fun.SqlStdOperatorTable.*;
-import static org.apache.calcite.sql.fun.SqlStdOperatorTable.SOME_GE;
 import static org.apache.calcite.sql.parser.SqlParserPos.ZERO;
 
 
@@ -371,7 +369,7 @@ public class ParseTreeBuilder extends AstVisitor<SqlNode, ParserVisitorContext> 
     List<SqlNode> operands =
         node.getArguments().stream().map(arg -> process(arg, context)).collect(Collectors.toList());
     SqlIdentifier functionName = convertQualifiedName(node.getName(), getPos(node));
-    if (node.getName().toString().toUpperCase().equals("COUNT") && operands.isEmpty()) {
+    if (node.getName().toString().equalsIgnoreCase("COUNT") && operands.isEmpty()) {
       operands.add(createStarIdentifier(ZERO));
     }
     SqlUnresolvedFunction unresolvedFunction =
