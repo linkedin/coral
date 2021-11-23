@@ -5,19 +5,21 @@
  */
 package com.linkedin.coral.trino.rel2trino;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.io.File;
+import java.io.IOException;
 
 import com.google.common.collect.ImmutableMap;
 
 import org.apache.calcite.rel.RelNode;
-import org.testng.annotations.AfterClass;
+import org.apache.commons.io.FileUtils;
+import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.hive.metastore.api.MetaException;
+import org.apache.hadoop.hive.ql.metadata.HiveException;
+import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-import static com.google.common.io.MoreFiles.deleteRecursively;
-import static com.google.common.io.RecursiveDeleteOption.ALLOW_INSECURE;
 import static com.linkedin.coral.trino.rel2trino.CoralTrinoConfigKeys.*;
 import static com.linkedin.coral.trino.rel2trino.TestUtils.hiveToRelConverter;
 import static org.testng.Assert.assertEquals;
@@ -25,18 +27,17 @@ import static org.testng.Assert.assertEquals;
 
 public class HiveToTrinoConverterTest {
 
-  Path metastoreDbDirectory;
+  private HiveConf conf;
 
   @BeforeTest
-  public void beforeClass() throws Exception {
-    metastoreDbDirectory = Files.createTempFile("coral-trino", "metastore.db");
-    Files.delete(metastoreDbDirectory); // it will be re-created
-    TestUtils.initializeViews(metastoreDbDirectory);
+  public void beforeClass() throws IOException, HiveException, MetaException {
+    conf = TestUtils.loadResourceHiveConf();
+    TestUtils.initializeViews(conf);
   }
 
-  @AfterClass(alwaysRun = true)
-  public void afterClass() throws Exception {
-    deleteRecursively(metastoreDbDirectory, ALLOW_INSECURE);
+  @AfterTest
+  public void afterClass() throws IOException {
+    FileUtils.deleteDirectory(new File(conf.get(TestUtils.CORAL_TRINO_TEST_DIR)));
   }
 
   @Test(dataProvider = "viewTestCases")

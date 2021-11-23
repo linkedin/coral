@@ -5,10 +5,16 @@
  */
 package com.linkedin.coral.hive.hive2rel;
 
+import java.io.File;
+import java.io.IOException;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 import org.apache.calcite.schema.Schema;
+import org.apache.commons.io.FileUtils;
+import org.apache.hadoop.hive.conf.HiveConf;
+import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -21,10 +27,17 @@ import static org.testng.Assert.*;
 public class HiveSchemaTest {
 
   private static TestHive hive;
+  private static HiveConf conf;
 
   @BeforeClass
-  public static void beforeClass() {
-    hive = TestUtils.setupDefaultHive();
+  public void beforeClass() throws IOException {
+    conf = TestUtils.loadResourceHiveConf();
+    hive = TestUtils.setupDefaultHive(conf);
+  }
+
+  @AfterTest
+  public void afterClass() throws IOException {
+    FileUtils.deleteDirectory(new File(conf.get(TestUtils.CORAL_HIVE_TEST_DIR)));
   }
 
   @Test

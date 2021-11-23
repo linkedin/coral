@@ -5,13 +5,17 @@
  */
 package com.linkedin.coral.pig.rel2pig;
 
+import java.io.File;
 import java.io.IOException;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.pig.pigunit.PigTest;
 import org.apache.pig.tools.parameters.ParseException;
 import org.testng.Assert;
+import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
@@ -19,11 +23,18 @@ import org.testng.annotations.Test;
 public class CalcitePigUDFTest {
 
   static final String OUTPUT_RELATION = "view";
+  static private HiveConf conf;
 
   @BeforeTest
-  public static void beforeTest() throws HiveException, MetaException {
+  public static void beforeTest() throws HiveException, MetaException, IOException {
+    conf = TestUtils.loadResourceHiveConf();
     TestUtils.turnOffRelSimplification();
-    TestUtils.initializeViews();
+    TestUtils.initializeViews(conf);
+  }
+
+  @AfterTest
+  public void afterClass() throws IOException {
+    FileUtils.deleteDirectory(new File(conf.get(TestUtils.CORAL_PIG_TEST_DIR)));
   }
 
   /**

@@ -5,9 +5,15 @@
  */
 package com.linkedin.coral.hive.hive2rel;
 
+import java.io.File;
+import java.io.IOException;
+
 import org.apache.calcite.sql.SqlNode;
+import org.apache.commons.io.FileUtils;
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
+import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -20,9 +26,17 @@ import static org.testng.Assert.*;
 
 public class FuzzyUnionTest {
 
+  private static HiveConf conf;
+
   @BeforeClass
-  public static void beforeClass() throws HiveException, MetaException {
-    ToRelConverterTestUtils.setup();
+  public static void beforeClass() throws HiveException, MetaException, IOException {
+    conf = TestUtils.loadResourceHiveConf();
+    ToRelConverterTestUtils.setup(conf);
+  }
+
+  @AfterTest
+  public void afterClass() throws IOException {
+    FileUtils.deleteDirectory(new File(conf.get(TestUtils.CORAL_HIVE_TEST_DIR)));
   }
 
   private SqlNode getFuzzyUnionView(String databaseName, String viewName) {

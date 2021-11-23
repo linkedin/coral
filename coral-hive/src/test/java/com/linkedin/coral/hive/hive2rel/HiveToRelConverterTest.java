@@ -5,6 +5,8 @@
  */
 package com.linkedin.coral.hive.hive2rel;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -18,8 +20,11 @@ import org.apache.calcite.sql.type.ReturnTypes;
 import org.apache.calcite.sql.type.SqlTypeFamily;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.tools.RelBuilder;
+import org.apache.commons.io.FileUtils;
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
+import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -34,9 +39,12 @@ import static org.testng.Assert.*;
 
 public class HiveToRelConverterTest {
 
+  private static HiveConf conf;
+
   @BeforeClass
-  public static void beforeClass() throws HiveException, MetaException {
-    ToRelConverterTestUtils.setup();
+  public static void beforeClass() throws IOException, HiveException, MetaException {
+    conf = TestUtils.loadResourceHiveConf();
+    ToRelConverterTestUtils.setup(conf);
 
     // add the following 3 test UDF to StaticHiveFunctionRegistry for testing purpose.
     StaticHiveFunctionRegistry.createAddUserDefinedFunction("com.linkedin.coral.hive.hive2rel.CoralTestUDF",
@@ -45,7 +53,11 @@ public class HiveToRelConverterTest {
         ReturnTypes.BOOLEAN, family(SqlTypeFamily.INTEGER), "com.linkedin:udf:1.0");
     StaticHiveFunctionRegistry.createAddUserDefinedFunction("com.linkedin.coral.hive.hive2rel.CoralTestUdfSquare",
         ReturnTypes.INTEGER, family(SqlTypeFamily.INTEGER), "com.linkedin:udf:1.1");
+  }
 
+  @AfterTest
+  public void afterClass() throws IOException {
+    FileUtils.deleteDirectory(new File(conf.get(TestUtils.CORAL_HIVE_TEST_DIR)));
   }
 
   public void testBasicWithSQL(String sql) {

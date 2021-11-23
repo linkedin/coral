@@ -5,12 +5,16 @@
  */
 package com.linkedin.coral.sparkplan;
 
+import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.ImmutableList;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.IMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.MetaException;
@@ -21,6 +25,8 @@ import org.apache.hadoop.hive.ql.session.SessionState;
 
 
 public class TestUtils {
+
+  public static final String CORAL_SPARKPLAN_TEST_DIR = "coral.sparkplan.test.dir";
 
   static TestHive hive;
 
@@ -59,12 +65,13 @@ public class TestUtils {
     }
   }
 
-  public static TestHive setupDefaultHive() {
+  public static TestHive setupDefaultHive(HiveConf conf) throws IOException {
     if (hive != null) {
       return hive;
     }
-    System.out.println(System.getProperty("java.io.tmpdir"));
-    HiveConf conf = loadResourceHiveConf();
+    String testDir = conf.get(CORAL_SPARKPLAN_TEST_DIR);
+    System.out.println("Test Workspace: " + testDir);
+    FileUtils.deleteDirectory(new File(testDir));
     TestHive testHive = new TestHive(conf);
     SessionState.start(conf);
     Driver driver = new Driver(conf);
@@ -84,6 +91,8 @@ public class TestUtils {
   public static HiveConf loadResourceHiveConf() {
     InputStream hiveConfStream = TestUtils.class.getClassLoader().getResourceAsStream("hive.xml");
     HiveConf hiveConf = new HiveConf();
+    hiveConf.set(CORAL_SPARKPLAN_TEST_DIR,
+        System.getProperty("java.io.tmpdir") + "/coral/sparkplan/" + UUID.randomUUID().toString());
     hiveConf.addResource(hiveConfStream);
     hiveConf.set("mapreduce.framework.name", "local");
     hiveConf.set("_hive.hdfs.session.path", "/tmp/coral");

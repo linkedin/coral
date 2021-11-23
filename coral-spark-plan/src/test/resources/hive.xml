@@ -8,11 +8,11 @@
 <configuration>
   <property>
     <name>hive.exec.scratchdir</name>
-    <value>${java.io.tmpdir}/coral/sparkplan/hive-scratch-dir</value>
+    <value>${coral.sparkplan.test.dir}/hive-scratch-dir</value>
   </property>
   <property>
     <name>hive.metastore.warehouse.dir</name>
-    <value>${java.io.tmpdir}/coral/sparkplan/warehouse</value>
+    <value>${coral.sparkplan.test.dir}/warehouse</value>
   </property>
   <property>
     <name>javax.jdo.option.ConnectionDriverName</name>
@@ -20,7 +20,7 @@
   </property>
   <property>
     <name>javax.jdo.option.ConnectionURL</name>
-    <value>jdbc:derby:;databaseName=${java.io.tmpdir}/coral/sparkplan/metastore.db;create=true</value>
+    <value>jdbc:derby:;databaseName=${coral.sparkplan.test.dir}/metastore.db;create=true</value>
   </property>
   <property>
     <name>hive.metastore.schema.verification</name>
