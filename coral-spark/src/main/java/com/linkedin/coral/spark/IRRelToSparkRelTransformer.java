@@ -52,6 +52,7 @@ import org.slf4j.LoggerFactory;
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import com.linkedin.coral.common.functions.GenericProjectFunction;
 import com.linkedin.coral.com.google.common.collect.Lists;
+import com.linkedin.coral.hive.hive2rel.functions.CoalesceStructUtility;
 import com.linkedin.coral.hive.hive2rel.functions.HiveNamedStructFunction;
 import com.linkedin.coral.hive.hive2rel.functions.VersionedSqlUserDefinedFunction;
 import com.linkedin.coral.spark.containers.SparkRelInfo;
@@ -330,7 +331,7 @@ class IRRelToSparkRelTransformer {
      * we need to swap the reference of "extract_union" to a new UDF that is coalescing the difference between
      * struct_tr and struct_ex.
      *
-     * See com.linkedin.coral.hive.hive2rel.functions.HiveReturnTypes#COALESCE_STRUCT_FUNCTION_RETURN_STRATEGY
+     * See com.linkedin.coral.common.functions.FunctionReturnTypes#COALESCE_STRUCT_FUNCTION_RETURN_STRATEGY
      * and its comments for more details.
      *
      * @param call the original extract_union function call.
@@ -341,7 +342,7 @@ class IRRelToSparkRelTransformer {
         // one arg case: extract_union(field_name)
         if (call.getOperands().size() == 1) {
           return Optional.of(rexBuilder.makeCall(
-              createUDF("coalesce_struct", HiveReturnTypes.COALESCE_STRUCT_FUNCTION_RETURN_STRATEGY),
+              createUDF("coalesce_struct", CoalesceStructUtility.COALESCE_STRUCT_FUNCTION_RETURN_STRATEGY),
               call.getOperands()));
         }
         // two arg case: extract_union(field_name, ordinal)
@@ -350,7 +351,7 @@ class IRRelToSparkRelTransformer {
           List<RexNode> operandsCopy = Lists.newArrayList(call.getOperands());
           operandsCopy.set(1, rexBuilder.makeExactLiteral(new BigDecimal(ordinal)));
           return Optional.of(rexBuilder.makeCall(
-              createUDF("coalesce_struct", HiveReturnTypes.COALESCE_STRUCT_FUNCTION_RETURN_STRATEGY), operandsCopy));
+              createUDF("coalesce_struct", CoalesceStructUtility.COALESCE_STRUCT_FUNCTION_RETURN_STRATEGY), operandsCopy));
         }
       }
       return Optional.empty();

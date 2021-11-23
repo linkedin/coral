@@ -191,6 +191,12 @@ public class TestUtils {
       driver.run(
           "CREATE TABLE IF NOT EXISTS union_table(foo uniontype<int, double, array<string>, struct<a:int,b:string>>)");
 
+      // Nested union case.
+      // We don't put a union directly under a union since sources like https://avro.apache.org/docs/current/spec.html#Unions
+      // explicitly put that union cannot be directly nested under a union.
+      driver.run(
+          "CREATE TABLE IF NOT EXISTS nested_union(foo uniontype<int, double, struct<a:int, b:uniontype<int, double>>>)");
+
       testHive.databases =
           ImmutableList.of(new TestHive.DB("test", ImmutableList.of("tableOne", "tableTwo", "tableOneView")),
               new TestHive.DB("default",
