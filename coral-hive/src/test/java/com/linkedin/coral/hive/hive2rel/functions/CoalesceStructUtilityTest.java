@@ -20,6 +20,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import com.linkedin.coral.common.ToRelConverterTestUtils;
+import com.linkedin.coral.hive.hive2rel.TestUtils;
 
 import static com.linkedin.coral.hive.hive2rel.functions.CoalesceStructUtility.coalesce;
 import static com.linkedin.coral.hive.hive2rel.functions.CoalesceStructUtility.isTrinoStructPattern;
@@ -33,7 +34,7 @@ public class CoalesceStructUtilityTest {
 
   @BeforeClass
   public void setup() throws Exception {
-    ToRelConverterTestUtils.setup();
+    ToRelConverterTestUtils.setup(TestUtils.loadResourceHiveConf());
     typeFactory = ToRelConverterTestUtils.createRelBuilder().getTypeFactory();
 
     List<String> names = ImmutableList.of("tag", "field0", "field1");
