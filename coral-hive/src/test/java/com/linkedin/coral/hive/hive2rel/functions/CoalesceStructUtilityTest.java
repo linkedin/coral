@@ -12,13 +12,14 @@ import java.util.Set;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
-import org.apache.calcite.jdbc.JavaTypeFactoryImpl;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+
+import com.linkedin.coral.common.ToRelConverterTestUtils;
 
 import static com.linkedin.coral.hive.hive2rel.functions.CoalesceStructUtility.coalesce;
 import static com.linkedin.coral.hive.hive2rel.functions.CoalesceStructUtility.isTrinoStructPattern;
@@ -32,7 +33,8 @@ public class CoalesceStructUtilityTest {
 
   @BeforeClass
   public void setup() throws Exception {
-    typeFactory = new JavaTypeFactoryImpl();
+    ToRelConverterTestUtils.setup();
+    typeFactory = ToRelConverterTestUtils.createRelBuilder().getTypeFactory();
 
     List<String> names = ImmutableList.of("tag", "field0", "field1");
     List<RelDataType> types = ImmutableList.of(typeFactory.createSqlType(SqlTypeName.INTEGER),
