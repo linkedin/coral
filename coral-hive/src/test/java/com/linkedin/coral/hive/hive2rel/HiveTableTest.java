@@ -110,22 +110,17 @@ public class HiveTableTest {
     assertNotNull(rowType);
 
     String expectedTypeString =
-    "RecordType("
-        + "RecordType("
-        + "TINYINT tag, INTEGER field0, DOUBLE field1, RecordType("
-        + "INTEGER a, RecordType(TINYINT tag, INTEGER field0, DOUBLE field1) b)"
-        + " field2) foo)";
+        "RecordType(" + "RecordType(" + "TINYINT tag, INTEGER field0, DOUBLE field1, RecordType("
+            + "INTEGER a, RecordType(TINYINT tag, INTEGER field0, DOUBLE field1) b)" + " field2) foo)";
     assertEquals(rowType.toString(), expectedTypeString);
 
     // Case for with extract_union as part of view definition.
     // Put the alias of foo as bar. The outcome type complies with extract_union's schema recursively
     ToRelConverterTestUtils.setup();
-    RelDataType rowType2
-        = ToRelConverterTestUtils.toRel("SELECT coalesce_struct(foo) AS bar from nested_union").getRowType();
+    RelDataType rowType2 =
+        ToRelConverterTestUtils.toRel("SELECT coalesce_struct(foo) AS bar from nested_union").getRowType();
     assertNotNull(rowType2);
-    expectedTypeString = "RecordType("
-        + "RecordType("
-        + "INTEGER tag_0, DOUBLE tag_1, "
+    expectedTypeString = "RecordType(" + "RecordType(" + "INTEGER tag_0, DOUBLE tag_1, "
         + "RecordType(INTEGER a, RecordType(INTEGER tag_0, DOUBLE tag_1) b) tag_2) bar)";
     assertEquals(rowType2.toString(), expectedTypeString);
   }

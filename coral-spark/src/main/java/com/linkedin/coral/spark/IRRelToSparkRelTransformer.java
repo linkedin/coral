@@ -50,8 +50,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
-import com.linkedin.coral.common.functions.GenericProjectFunction;
 import com.linkedin.coral.com.google.common.collect.Lists;
+import com.linkedin.coral.common.functions.GenericProjectFunction;
 import com.linkedin.coral.hive.hive2rel.functions.CoalesceStructUtility;
 import com.linkedin.coral.hive.hive2rel.functions.HiveNamedStructFunction;
 import com.linkedin.coral.hive.hive2rel.functions.VersionedSqlUserDefinedFunction;
@@ -351,7 +351,8 @@ class IRRelToSparkRelTransformer {
           List<RexNode> operandsCopy = Lists.newArrayList(call.getOperands());
           operandsCopy.set(1, rexBuilder.makeExactLiteral(new BigDecimal(ordinal)));
           return Optional.of(rexBuilder.makeCall(
-              createUDF("coalesce_struct", CoalesceStructUtility.COALESCE_STRUCT_FUNCTION_RETURN_STRATEGY), operandsCopy));
+              createUDF("coalesce_struct", CoalesceStructUtility.COALESCE_STRUCT_FUNCTION_RETURN_STRATEGY),
+              operandsCopy));
         }
       }
       return Optional.empty();

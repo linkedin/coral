@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
@@ -18,7 +19,6 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import com.google.common.collect.ImmutableSet;
 import com.linkedin.coral.common.ToRelConverterTestUtils;
 
 import static com.linkedin.coral.hive.hive2rel.functions.CoalesceStructUtility.coalesce;
@@ -80,8 +80,8 @@ public class CoalesceStructUtilityTest {
   @Test
   public void testMap() {
     RelDataType structInMap = typeFactory.createMapType(typeFactory.createSqlType(SqlTypeName.VARCHAR), trinoStruct);
-    RelDataType expectedCoalesced = typeFactory.createMapType(typeFactory.createSqlType(SqlTypeName.VARCHAR),
-        extractUnionStruct);
+    RelDataType expectedCoalesced =
+        typeFactory.createMapType(typeFactory.createSqlType(SqlTypeName.VARCHAR), extractUnionStruct);
     Assert.assertEquals(coalesce(structInMap, typeFactory), expectedCoalesced);
   }
 
