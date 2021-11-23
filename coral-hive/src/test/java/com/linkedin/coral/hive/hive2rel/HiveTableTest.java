@@ -54,7 +54,7 @@ public class HiveTableTest {
   }
 
   @Test
-  public void testTable() throws Exception {
+  public void testTable() {
     Table fooTable = getTable("default", "foo");
     assertEquals(fooTable.getJdbcTableType(), Schema.TableType.TABLE);
     RelDataTypeFactory typeFactory = new JavaTypeFactoryImpl();

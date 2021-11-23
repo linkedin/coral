@@ -15,7 +15,7 @@ import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import com.linkedin.coral.com.google.common.base.CaseFormat;
 import com.linkedin.coral.com.google.common.base.Converter;
 import com.linkedin.coral.com.google.common.collect.ImmutableMultimap;
-import com.linkedin.coral.common.Function;
+import com.linkedin.coral.common.functions.Function;
 import com.linkedin.coral.hive.hive2rel.functions.HiveRLikeOperator;
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 import com.linkedin.coral.trino.rel2trino.functions.TrinoElementAtFunction;
@@ -27,7 +27,7 @@ public class CalciteTrinoUDFMap {
   private CalciteTrinoUDFMap() {
   }
 
-  private static final Map<String, UDFTransformer> UDF_MAP = new HashMap();
+  private static final Map<String, UDFTransformer> UDF_MAP = new HashMap<>();
   private static final StaticHiveFunctionRegistry HIVE_REGISTRY = new StaticHiveFunctionRegistry();
   static {
     // conditional functions

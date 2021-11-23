@@ -51,18 +51,18 @@ public class CoralParseDriver extends ParseDriver {
     return tree;
   }
 
-  public class HiveLexerCoral extends HiveLexer {
+  public static class HiveLexerCoral extends HiveLexer {
 
     private final ArrayList<ParseError> errors;
 
     public HiveLexerCoral() {
       super();
-      errors = new ArrayList<ParseError>();
+      errors = new ArrayList<>();
     }
 
     public HiveLexerCoral(CharStream input) {
       super(input);
-      errors = new ArrayList<ParseError>();
+      errors = new ArrayList<>();
     }
 
     @Override

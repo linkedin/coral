@@ -47,10 +47,6 @@ public class HiveSchemaUtils {
   public static Optional<Table> getTable(@Nonnull HiveSchema schema, @Nonnull String db, @Nonnull String table) {
     Preconditions.checkNotNull(table);
     Optional<Schema> dbSchema = getDb(schema, db);
-    if (dbSchema.isPresent()) {
-      return Optional.ofNullable(dbSchema.get().getTable(table));
-    } else {
-      return Optional.empty();
-    }
+    return dbSchema.map(value -> value.getTable(table));
   }
 }

@@ -50,7 +50,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
-import com.linkedin.coral.common.GenericProjectFunction;
+import com.linkedin.coral.common.functions.GenericProjectFunction;
 import com.linkedin.coral.hive.hive2rel.functions.HiveNamedStructFunction;
 import com.linkedin.coral.hive.hive2rel.functions.VersionedSqlUserDefinedFunction;
 import com.linkedin.coral.spark.containers.SparkRelInfo;
@@ -175,7 +175,7 @@ class IRRelToSparkRelTransformer {
    */
   private static class SparkRexConverter extends RexShuttle {
     private final RexBuilder rexBuilder;
-    private List<SparkUDFInfo> sparkUDFInfos;
+    private final List<SparkUDFInfo> sparkUDFInfos;
     private static final Logger LOG = LoggerFactory.getLogger(SparkRexConverter.class);
 
     SparkRexConverter(RexBuilder rexBuilder, List<SparkUDFInfo> sparkUDFInfos) {

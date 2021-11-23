@@ -118,9 +118,8 @@ class SchemaUtilities {
         Schema finalTableSchema;
 
         // Add partition column if table partitioned
-        final List<FieldSchema> cols = new ArrayList<>();
 
-        cols.addAll(table.getSd().getCols());
+        final List<FieldSchema> cols = new ArrayList<>(table.getSd().getCols());
         if (isPartitioned(table)) {
           cols.addAll(getPartitionCols(table));
         }
@@ -137,9 +136,7 @@ class SchemaUtilities {
     String recordName = table.getTableName();
     String recordNamespace = table.getDbName() + "." + recordName;
 
-    final List<FieldSchema> cols = new ArrayList<>();
-
-    cols.addAll(table.getSd().getCols());
+    final List<FieldSchema> cols = new ArrayList<>(table.getSd().getCols());
     if (isPartitioned(table)) {
       cols.addAll(getPartitionCols(table));
     }
@@ -204,7 +201,7 @@ class SchemaUtilities {
    * @param fieldAssembler
    */
   static void appendField(@Nonnull String fieldName, @Nonnull RelDataType fieldRelDataType, @Nullable String doc,
-      @Nonnull SchemaBuilder.FieldAssembler<Schema> fieldAssembler, @Nonnull boolean isNullable) {
+      @Nonnull SchemaBuilder.FieldAssembler<Schema> fieldAssembler, boolean isNullable) {
     Preconditions.checkNotNull(fieldName);
     Preconditions.checkNotNull(fieldRelDataType);
     Preconditions.checkNotNull(fieldAssembler);
@@ -344,10 +341,6 @@ class SchemaUtilities {
     Preconditions.checkNotNull(tableOrView);
 
     List<FieldSchema> partitionColumns = getPartitionCols(tableOrView);
-
-    if (partitionColumns == null) {
-      return false;
-    }
 
     return (partitionColumns.size() != 0);
   }
@@ -669,16 +662,12 @@ class SchemaUtilities {
           appendField(field, fieldAssembler);
           break;
         case MAP:
-          Schema newMapFieldSchema = setupNestedNamespace(field.schema(), nestedNamespace);
-          Schema.Field newMapField =
-              new Schema.Field(field.name(), newMapFieldSchema, field.doc(), field.defaultValue(), field.order());
-          appendField(newMapField, fieldAssembler);
-          break;
+        case UNION:
         case ARRAY:
-          Schema newArrayFieldSchema = setupNestedNamespace(field.schema(), nestedNamespace);
-          Schema.Field newArrayField =
-              new Schema.Field(field.name(), newArrayFieldSchema, field.doc(), field.defaultValue(), field.order());
-          appendField(newArrayField, fieldAssembler);
+          Schema newFieldSchema = setupNestedNamespace(field.schema(), nestedNamespace);
+          Schema.Field newField =
+              new Schema.Field(field.name(), newFieldSchema, field.doc(), field.defaultValue(), field.order());
+          appendField(newField, fieldAssembler);
           break;
         case ENUM:
           appendFieldWithNewNamespace(field, nestedNamespace, fieldAssembler);
@@ -688,12 +677,6 @@ class SchemaUtilities {
           Schema.Field newRecordFiled = new Schema.Field(field.name(), recordSchemaWithNestedNamespace, field.doc(),
               field.defaultValue(), field.order());
           appendField(newRecordFiled, fieldAssembler);
-          break;
-        case UNION:
-          Schema unionSchemaWithNestedNamespace = setupNestedNamespace(field.schema(), nestedNamespace);
-          Schema.Field newUnionField = new Schema.Field(field.name(), unionSchemaWithNestedNamespace, field.doc(),
-              field.defaultValue(), field.order());
-          appendField(newUnionField, fieldAssembler);
           break;
         default:
           throw new IllegalArgumentException("Unsupported Schema type: " + field.schema().getType().toString());
@@ -773,8 +756,7 @@ class SchemaUtilities {
   }
 
   private static Schema convertFieldSchemaToAvroSchema(@Nonnull final String recordName,
-      @Nonnull final String recordNamespace, @Nonnull final boolean mkFieldsOptional,
-      @Nonnull final List<FieldSchema> columns) {
+      @Nonnull final String recordNamespace, final boolean mkFieldsOptional, @Nonnull final List<FieldSchema> columns) {
     Preconditions.checkNotNull(recordName);
     Preconditions.checkNotNull(recordNamespace);
     Preconditions.checkNotNull(mkFieldsOptional);

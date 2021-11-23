@@ -50,8 +50,8 @@ public class TestUtils {
         this.name = name;
         this.tables = ImmutableList.copyOf(tables);
       }
-      String name;
-      List<String> tables;
+      final String name;
+      final List<String> tables;
     }
 
     public List<String> getDbNames() {
@@ -59,7 +59,7 @@ public class TestUtils {
     }
 
     public List<String> getTables(String db) {
-      return databases.stream().filter(d -> d.name == db).findFirst()
+      return databases.stream().filter(d -> d.name.equals(db)).findFirst()
           .orElseThrow(() -> new RuntimeException("DB " + db + " not found")).tables;
     }
 
@@ -72,7 +72,9 @@ public class TestUtils {
     if (hive != null) {
       return hive;
     }
-    FileUtils.deleteDirectory(new File(conf.get(CORAL_HIVE_TEST_DIR)));
+    String testDir = conf.get(CORAL_HIVE_TEST_DIR);
+    System.out.println("Test Workspace: " + testDir);
+    FileUtils.deleteDirectory(new File(testDir));
     TestHive testHive = new TestHive(conf);
     SessionState.start(conf);
     Driver driver = new Driver(conf);
@@ -229,7 +231,7 @@ public class TestUtils {
   static void setOrUpdateDaliFunction(Table table, String functionName, String functionClass) {
     table.setOwner("daliview");
     Map<String, String> parameters = table.getParameters();
-    String[] split = table.getParameters().getOrDefault("functions", new String()).split(" |:");
+    String[] split = table.getParameters().getOrDefault("functions", "").split(" |:");
     Map<String, String> functionMap = new HashMap<>();
     for (int i = 0; i < split.length - 1; i += 2) {
       functionMap.put(split[i], split[i + 1]);

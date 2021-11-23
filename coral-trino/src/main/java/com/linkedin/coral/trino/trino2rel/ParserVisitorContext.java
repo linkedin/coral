@@ -18,10 +18,10 @@ import static org.apache.calcite.sql.parser.SqlParserPos.ZERO;
 
 
 public class ParserVisitorContext {
-  List<SqlIdentifier> fieldNames = new ArrayList<>();
-  List<SqlDataTypeSpec> fieldTypes = new ArrayList<>();
-  List<SqlNode> whenClauses = new ArrayList<>();
-  List<SqlNode> thenClauses = new ArrayList<>();
+  final List<SqlIdentifier> fieldNames = new ArrayList<>();
+  final List<SqlDataTypeSpec> fieldTypes = new ArrayList<>();
+  final List<SqlNode> whenClauses = new ArrayList<>();
+  final List<SqlNode> thenClauses = new ArrayList<>();
   boolean isRows = false;
   SqlNode lowerBound = null;
   SqlNode upperBound = null;

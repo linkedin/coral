@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -42,7 +43,9 @@ public class TestUtils {
   private static final String AVRO_SCHEMA_LITERAL = "avro.schema.literal";
 
   public static HiveMetastoreClient setup(HiveConf conf) throws HiveException, MetaException, IOException {
-    FileUtils.deleteDirectory(new File(conf.get(CORAL_SCHEMA_TEST_DIR)));
+    String testDir = conf.get(CORAL_SCHEMA_TEST_DIR);
+    System.out.println("Test Workspace: " + testDir);
+    FileUtils.deleteDirectory(new File(testDir));
     SessionState.start(conf);
     driver = new Driver(conf);
     HiveMetastoreClient metastoreClient = new HiveMscAdapter(Hive.get(conf).getMSC());
@@ -136,7 +139,7 @@ public class TestUtils {
     executeCreateFunctionQuery("default", viewsToCreateFuncSquare, "FuncSquare",
         "com.linkedin.coral.hive.hive2rel.CoralTestUDF3");
 
-    executeCreateFunctionQuery("default", Arrays.asList("foo_lateral_udtf"), "CountOfRow",
+    executeCreateFunctionQuery("default", Collections.singletonList("foo_lateral_udtf"), "CountOfRow",
         "com.linkedin.coral.hive.hive2rel.CoralTestUDTF");
   }
 

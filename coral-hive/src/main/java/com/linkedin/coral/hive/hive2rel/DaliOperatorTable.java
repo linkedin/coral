@@ -19,7 +19,7 @@ import org.apache.calcite.sql.SqlSyntax;
 import org.apache.calcite.sql.validate.SqlNameMatcher;
 import org.apache.calcite.util.Util;
 
-import com.linkedin.coral.common.Function;
+import com.linkedin.coral.common.functions.Function;
 import com.linkedin.coral.hive.hive2rel.functions.HiveFunctionResolver;
 
 
@@ -30,7 +30,7 @@ import com.linkedin.coral.hive.hive2rel.functions.HiveFunctionResolver;
 public class DaliOperatorTable implements SqlOperatorTable {
   // TODO: support injection framework to inject same function resolver here and ParseTreeBuilder.
   // For now, we create another instance since the function registry is simple.
-  private HiveFunctionResolver funcResolver;
+  private final HiveFunctionResolver funcResolver;
 
   public DaliOperatorTable(HiveFunctionResolver funcResolver) {
     this.funcResolver = funcResolver;

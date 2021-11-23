@@ -177,8 +177,10 @@ public abstract class ToRelConverter {
     // OR, AND, CASE clauses and simplify those. This has two problems:
     // 1. Our type system is not perfect replication of Hive so this can be incorrect
     // 2. Converted expression is harder to validate for correctness(because it appears different from input)
-    Hook.REL_BUILDER_SIMPLIFY.add(Hook.propertyJ(false));
-    relBuilder = RelBuilder.create(config);
+    if (relBuilder == null) {
+      Hook.REL_BUILDER_SIMPLIFY.add(Hook.propertyJ(false));
+      relBuilder = RelBuilder.create(config);
+    }
     return relBuilder;
   }
 

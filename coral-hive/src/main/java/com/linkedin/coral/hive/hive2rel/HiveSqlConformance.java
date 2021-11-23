@@ -12,7 +12,7 @@ import org.apache.calcite.sql.validate.SqlDelegatingConformance;
 
 public class HiveSqlConformance extends SqlDelegatingConformance {
 
-  public static SqlConformance HIVE_SQL = new HiveSqlConformance();
+  public static final SqlConformance HIVE_SQL = new HiveSqlConformance();
 
   private HiveSqlConformance() {
     super(SqlConformanceEnum.PRAGMATIC_2003);

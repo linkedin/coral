@@ -14,7 +14,6 @@ import com.google.common.collect.ImmutableSet;
 import org.apache.calcite.schema.Schema;
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -42,13 +41,13 @@ public class HiveSchemaTest {
   }
 
   @Test
-  public void testHiveSchema() throws HiveException {
+  public void testHiveSchema() {
     HiveMetastoreClientProvider mscProvider = new HiveMetastoreClientProvider(hive.getConf());
     HiveSchema schema = new HiveSchema(mscProvider.getMetastoreClient());
     assertEquals(schema.getSubSchemaNames(), ImmutableSet.copyOf(hive.getDbNames()));
-    assertEquals(schema.getSubSchema("noSuchSchema"), null);
+    assertNull(schema.getSubSchema("noSuchSchema"));
     assertEquals(schema.getTableNames(), ImmutableSet.of());
-    assertEquals(schema.getTable("noSuchTable"), null);
+    assertNull(schema.getTable("noSuchTable"));
     assertEquals(schema.getFunctionNames(), ImmutableSet.of());
     assertEquals(schema.getFunctions("foo"), ImmutableList.of());
     assertTrue(schema.isMutable());

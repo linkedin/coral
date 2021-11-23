@@ -9,7 +9,7 @@ import java.util.List;
 
 import org.apache.calcite.rex.RexCall;
 
-import com.linkedin.coral.hive.hive2rel.functions.UnknownSqlFunctionException;
+import com.linkedin.coral.common.functions.UnknownSqlFunctionException;
 import com.linkedin.coral.pig.rel2pig.rel.PigRexUtils;
 
 

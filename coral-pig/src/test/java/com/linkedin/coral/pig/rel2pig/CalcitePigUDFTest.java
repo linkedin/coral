@@ -70,7 +70,6 @@ public class CalcitePigUDFTest {
     final String[] expectedOutput = { "(greater)" };
 
     final String[] translatedPigLatin = TestUtils.sqlToPigLatin(sql, OUTPUT_RELATION);
-    System.out.println(translatedPigLatin);
 
     Assert.assertEquals(translatedPigLatin, expectedPigLatin);
 
@@ -91,7 +90,6 @@ public class CalcitePigUDFTest {
     final String[] expectedOutput = { "(1.5849625007211563)" };
 
     final String[] translatedPigLatin = TestUtils.sqlToPigLatin(sql, OUTPUT_RELATION);
-    System.out.println(translatedPigLatin);
 
     Assert.assertEquals(translatedPigLatin, expectedPigLatin);
 
@@ -112,7 +110,6 @@ public class CalcitePigUDFTest {
     final String[] expectedOutput = { "(1.5849625007211563)" };
 
     final String[] translatedPigLatin = TestUtils.sqlToPigLatin(sql, OUTPUT_RELATION);
-    System.out.println(translatedPigLatin);
 
     Assert.assertEquals(translatedPigLatin, expectedPigLatin);
 
@@ -278,8 +275,7 @@ public class CalcitePigUDFTest {
   private static void runTestSuite(String sqlTemplate, String expectedPigLatinTemplate, PigFunctionTest[] testSuite)
       throws IOException, ParseException {
 
-    for (int i = 0; i < testSuite.length; ++i) {
-      final PigFunctionTest pigFunctionTest = testSuite[i];
+    for (final PigFunctionTest pigFunctionTest : testSuite) {
       final String sql = String.format(sqlTemplate, pigFunctionTest.getSqlName(), pigFunctionTest.getOperands());
       final String[] expectedPigLatin = String
           .format(expectedPigLatinTemplate, pigFunctionTest.getPigName(), pigFunctionTest.getOperands()).split("\n");

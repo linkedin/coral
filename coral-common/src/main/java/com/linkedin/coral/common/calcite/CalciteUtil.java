@@ -23,7 +23,7 @@ import static org.apache.calcite.sql.parser.SqlParserPos.ZERO;
 public class CalciteUtil {
   private final static Logger LOG = LoggerFactory.getLogger(CalciteUtil.class);
 
-  public static SqlParser.Config SQL_PARSER_CONFIG =
+  public static final SqlParser.Config SQL_PARSER_CONFIG =
       SqlParser.configBuilder().setCaseSensitive(false).setUnquotedCasing(Casing.UNCHANGED)
           .setQuotedCasing(Casing.UNCHANGED).setConformance(SqlConformanceEnum.ORACLE_10).build();
 

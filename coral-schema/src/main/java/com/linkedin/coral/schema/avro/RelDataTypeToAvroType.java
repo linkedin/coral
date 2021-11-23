@@ -99,11 +99,10 @@ class RelDataTypeToAvroType {
       case CHAR:
         return Schema.create(Schema.Type.STRING);
       case BINARY:
+      case ANY:
         return Schema.create(Schema.Type.BYTES);
       case NULL:
         return Schema.create(Schema.Type.NULL);
-      case ANY:
-        return Schema.create(Schema.Type.BYTES);
       case TIMESTAMP:
         Schema schema = Schema.create(Schema.Type.LONG);
         schema.addProp("logicalType", "timestamp");
@@ -134,7 +133,7 @@ class RelDataTypeToAvroType {
    */
   private static Schema relRecordTypeToAvroType(RelDataType relRecord, List<String> fieldComments, String recordName,
       String recordNamespace, String doc) {
-    final List<Schema.Field> fields = new ArrayList();
+    final List<Schema.Field> fields = new ArrayList<>();
     final Schema avroSchema = Schema.createRecord(recordName, doc, recordNamespace, false);
 
     for (RelDataTypeField relField : relRecord.getFieldList()) {

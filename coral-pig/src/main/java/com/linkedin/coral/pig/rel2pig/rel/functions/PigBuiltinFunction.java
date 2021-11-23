@@ -45,7 +45,7 @@ public class PigBuiltinFunction extends Function {
   @Override
   public String unparse(RexCall rexCall, List<String> inputFieldNames) {
     final String functionName = transformFunctionName(rexCall, inputFieldNames);
-    final String operands = transformOperands(rexCall, inputFieldNames).stream().collect(Collectors.joining(", "));
+    final String operands = String.join(", ", transformOperands(rexCall, inputFieldNames));
     return String.format(FUNCTION_CALL_TEMPLATE, functionName, operands);
   }
 

@@ -71,8 +71,8 @@ import com.linkedin.coral.pig.rel2pig.rel.PigTableScan;
  */
 public class RelToPigLatinConverter {
 
-  private PigLoadFunction pigLoadFunction;
-  private TableToPigPathFunction tableToPigPathFunction;
+  private final PigLoadFunction pigLoadFunction;
+  private final TableToPigPathFunction tableToPigPathFunction;
 
   public RelToPigLatinConverter(PigLoadFunction pigLoadFunction, TableToPigPathFunction tableToPigPathFunction) {
     this.pigLoadFunction = pigLoadFunction;

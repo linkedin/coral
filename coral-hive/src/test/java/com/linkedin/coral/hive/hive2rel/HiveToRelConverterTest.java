@@ -24,19 +24,17 @@ import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
-import org.apache.thrift.TException;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import com.linkedin.coral.common.ToRelConverterTestUtils;
+import com.linkedin.coral.common.functions.UnknownSqlFunctionException;
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
-import com.linkedin.coral.hive.hive2rel.functions.UnknownSqlFunctionException;
 
 import static com.linkedin.coral.common.ToRelConverterTestUtils.*;
 import static org.apache.calcite.sql.type.OperandTypes.*;
 import static org.testng.Assert.*;
-import static org.testng.Assert.assertEquals;
 
 
 public class HiveToRelConverterTest {
@@ -365,7 +363,7 @@ public class HiveToRelConverterTest {
   }
 
   @Test
-  public void testViewExpansion() throws TException {
+  public void testViewExpansion() {
     {
       String sql = "SELECT avg(sum_c) from foo_view";
       RelNode rel = converter.convertSql(sql);

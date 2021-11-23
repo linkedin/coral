@@ -47,8 +47,8 @@ public class TestUtils {
         this.name = name;
         this.tables = ImmutableList.copyOf(tables);
       }
-      String name;
-      List<String> tables;
+      final String name;
+      final List<String> tables;
     }
 
     public List<String> getDbNames() {
@@ -56,7 +56,7 @@ public class TestUtils {
     }
 
     public List<String> getTables(String db) {
-      return databases.stream().filter(d -> d.name == db).findFirst()
+      return databases.stream().filter(d -> d.name.equals(db)).findFirst()
           .orElseThrow(() -> new RuntimeException("DB " + db + " not found")).tables;
     }
 
@@ -69,7 +69,9 @@ public class TestUtils {
     if (hive != null) {
       return hive;
     }
-    FileUtils.deleteDirectory(new File(conf.get(CORAL_SPARKPLAN_TEST_DIR)));
+    String testDir = conf.get(CORAL_SPARKPLAN_TEST_DIR);
+    System.out.println("Test Workspace: " + testDir);
+    FileUtils.deleteDirectory(new File(testDir));
     TestHive testHive = new TestHive(conf);
     SessionState.start(conf);
     Driver driver = new Driver(conf);

@@ -22,13 +22,13 @@ import org.apache.calcite.util.Util;
 
 public class SqlLateralJoin extends SqlJoin {
 
-  SqlLateralJoinOperator _operator;
+  final SqlLateralJoinOperator _operator;
 
-  SqlNode left;
+  final SqlNode left;
 
-  SqlNode right;
+  final SqlNode right;
 
-  boolean isOuter;
+  final boolean isOuter;
 
   public SqlLateralJoin(SqlParserPos pos, SqlNode left, SqlLiteral natural, SqlLiteral joinType, SqlNode right,
       SqlLiteral conditionType, SqlNode condition, boolean isOuter) {
@@ -45,7 +45,7 @@ public class SqlLateralJoin extends SqlJoin {
   }
 
   public static class SqlLateralJoinOperator extends SqlOperator {
-    boolean isOuter;
+    final boolean isOuter;
 
     public SqlLateralJoinOperator(boolean isOuter) {
       super("JOIN", SqlKind.JOIN, 16, true, null, null, null);

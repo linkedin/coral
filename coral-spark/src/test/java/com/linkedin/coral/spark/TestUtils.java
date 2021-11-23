@@ -43,7 +43,9 @@ public class TestUtils {
   }
 
   public static void initializeViews(HiveConf conf) throws HiveException, MetaException, IOException {
-    FileUtils.deleteDirectory(new File(conf.get(CORAL_SPARK_TEST_DIR)));
+    String testDir = conf.get(CORAL_SPARK_TEST_DIR);
+    System.out.println("Test Workspace: " + testDir);
+    FileUtils.deleteDirectory(new File(testDir));
     SessionState.start(conf);
     Driver driver = new Driver(conf);
     HiveMetastoreClient hiveMetastoreClient = new HiveMscAdapter(Hive.get(conf).getMSC());
