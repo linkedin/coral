@@ -5,6 +5,8 @@
  */
 package com.linkedin.coral.hive.hive2rel.functions;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -15,7 +17,10 @@ import com.google.common.collect.ImmutableSet;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.sql.type.SqlTypeName;
+import org.apache.commons.io.FileUtils;
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.testng.Assert;
+import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -31,14 +36,16 @@ public class CoalesceStructUtilityTest {
   private RelDataType trinoStruct;
   private RelDataType extractUnionStruct;
   private RelDataType nonTrinoStruct;
+  private static HiveConf conf;
 
   @BeforeClass
   public void setup() throws Exception {
-    ToRelConverterTestUtils.setup(TestUtils.loadResourceHiveConf());
+    this.conf = TestUtils.loadResourceHiveConf();
+    ToRelConverterTestUtils.setup(this.conf);
     typeFactory = ToRelConverterTestUtils.createRelBuilder().getTypeFactory();
 
     List<String> names = ImmutableList.of("tag", "field0", "field1");
-    List<RelDataType> types = ImmutableList.of(typeFactory.createSqlType(SqlTypeName.INTEGER),
+    List<RelDataType> types = ImmutableList.of(typeFactory.createSqlType(SqlTypeName.TINYINT),
         typeFactory.createSqlType(SqlTypeName.BOOLEAN), typeFactory.createSqlType(SqlTypeName.DOUBLE));
     trinoStruct = typeFactory.createStructType(types, names);
 
@@ -48,9 +55,14 @@ public class CoalesceStructUtilityTest {
     extractUnionStruct = typeFactory.createStructType(types2, names2);
 
     List<String> names3 = ImmutableList.of("tag", "field1", "field2");
-    List<RelDataType> types3 = ImmutableList.of(typeFactory.createSqlType(SqlTypeName.INTEGER),
+    List<RelDataType> types3 = ImmutableList.of(typeFactory.createSqlType(SqlTypeName.TINYINT),
         typeFactory.createSqlType(SqlTypeName.INTEGER), typeFactory.createSqlType(SqlTypeName.DOUBLE));
     nonTrinoStruct = typeFactory.createStructType(types3, names3);
+  }
+
+  @AfterTest
+  public void afterClass() throws IOException {
+    FileUtils.deleteDirectory(new File(conf.get(TestUtils.CORAL_HIVE_TEST_DIR)));
   }
 
   @Test
@@ -100,7 +112,7 @@ public class CoalesceStructUtilityTest {
     // expected: struct<tag_0: exStruct, tag_1:nonTrinoStruct>
     List<String> names = ImmutableList.of("tag", "field0", "field1");
     List<RelDataType> types =
-        ImmutableList.of(typeFactory.createSqlType(SqlTypeName.INTEGER), trinoStruct, nonTrinoStruct);
+        ImmutableList.of(typeFactory.createSqlType(SqlTypeName.TINYINT), trinoStruct, nonTrinoStruct);
     RelDataType nested = typeFactory.createStructType(types, names);
 
     List<String> names2 = ImmutableList.of("tag_0", "tag_1");

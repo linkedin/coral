@@ -43,6 +43,7 @@ public class CoalesceStructUtility {
       return opBinding.getOperandType(0).getFieldList().get(ordinal).getType();
     }
   };
+
   /**
    * Represents the return type for the coalesce_struct UDF that is built for bridging the schema difference
    * between extract_union UDF's processed schema of union field in Coral IR (let's call it struct_ex) and
@@ -92,7 +93,7 @@ public class CoalesceStructUtility {
   }
 
   /**
-   * Converting a {@link RelDataType} that could potentially contains a Trino-format exploded-union(i.e. a struct
+   * Converting a {@link RelDataType} that could potentially contain a Trino-format exploded-union(i.e. a struct
    * in a format of {tag, field0, field1, ..., fieldN} to represent a union after being deserialized)
    * into a exploded-union that complies with Hive's extract_union UDF format
    * (i.e. a struct as {tag_0, tag_1, ..., tag_{N}} to represent a union after being deserialized)
