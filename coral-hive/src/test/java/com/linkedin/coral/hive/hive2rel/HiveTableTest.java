@@ -104,7 +104,7 @@ public class HiveTableTest {
     // the reader returns a trino-compliant schema for a union field)
     final RelDataTypeFactory typeFactory = new JavaTypeFactoryImpl();
     // Schema: foo uniontype<int, double, struct<a:int, b:uniontype<int, double>>>
-    // it should become struct<tag:int, field0:int, field1:double, field2: struct<a:int,b:struct<tag:tinyint, field0:int, field1:double>>>
+    // it should become struct<tag:tinyint, field0:int, field1:double, field2: struct<a:int,b:struct<tag:tinyint, field0:int, field1:double>>>
     Table nestedUnionTable = getTable("default", "nested_union");
     RelDataType rowType = nestedUnionTable.getRowType(typeFactory);
     assertNotNull(rowType);

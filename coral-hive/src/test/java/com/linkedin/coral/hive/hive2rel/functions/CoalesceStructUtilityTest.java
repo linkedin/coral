@@ -108,7 +108,7 @@ public class CoalesceStructUtilityTest {
   @Test
   public void testNested() {
     // Create a complex nested schema:
-    // struct<tag:int, field0: trinoStruct, field1:nonTrinoStruct>
+    // struct<tag:tinyint, field0: trinoStruct, field1:nonTrinoStruct>
     // expected: struct<tag_0: exStruct, tag_1:nonTrinoStruct>
     List<String> names = ImmutableList.of("tag", "field0", "field1");
     List<RelDataType> types =
