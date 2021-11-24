@@ -37,13 +37,18 @@ import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexShuttle;
+import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.fun.SqlMapValueConstructor;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
+import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.ReturnTypes;
 import org.apache.calcite.sql.type.SqlTypeFamily;
+import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
 
+import com.linkedin.coral.com.google.common.base.CaseFormat;
+import com.linkedin.coral.com.google.common.base.Converter;
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import com.linkedin.coral.com.google.common.collect.ImmutableMultimap;
 import com.linkedin.coral.com.google.common.collect.Multimap;
@@ -234,8 +239,32 @@ public class Calcite2TrinoUDFConverter {
         return adjustReturnTypeWithCast(rexBuilder,
             super.visitCall((RexCall) transformer.transformCall(rexBuilder, call.getOperands())));
       }
+
+      if (operatorName.startsWith("com.linkedin") && transformer == null) {
+        return visitUnregisteredUDF(call);
+      }
+
       RexCall modifiedCall = adjustInconsistentTypesToEqualityOperator(call);
       return adjustReturnTypeWithCast(rexBuilder, super.visitCall(modifiedCall));
+    }
+
+    private RexNode visitUnregisteredUDF(RexCall call) {
+      // If the UDF is not registered in `CalciteTrinoUDFMap#UDF_MAP`, we convert the name to lowercase-underscore format to increase
+      // the possibility of successful query, because the tradition of registered Trino UDF name is lowercase-underscore format
+      // i.e. com.linkedin.jemslookup.udf.hive.UrnArrayToIdStringConverter -> urn_array_to_id_string_converter
+
+      final List<RexNode> convertedOperands = visitList(call.getOperands(), (boolean[]) null);
+      final Converter<String, String> caseConverter = CaseFormat.UPPER_CAMEL.converterTo(CaseFormat.LOWER_UNDERSCORE);
+
+      final SqlOperator operator = call.getOperator();
+      final String operatorName = operator.getName();
+      final String[] nameSplit = operatorName.split("\\.");
+      final String className = nameSplit[nameSplit.length - 1];
+      final String convertedFunctionName = caseConverter.convert(className);
+      final SqlUserDefinedFunction convertedFunctionOperator =
+          new SqlUserDefinedFunction(new SqlIdentifier(convertedFunctionName, SqlParserPos.ZERO),
+              operator.getReturnTypeInference(), null, operator.getOperandTypeChecker(), null, null);
+      return rexBuilder.makeCall(call.getType(), convertedFunctionOperator, convertedOperands);
     }
 
     private Optional<RexNode> visitCollectListOrSetFunction(RexCall call) {
