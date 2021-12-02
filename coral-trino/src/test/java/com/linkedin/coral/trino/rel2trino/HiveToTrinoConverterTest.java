@@ -690,4 +690,16 @@ public class HiveToTrinoConverterTest {
     String expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
   }
+
+  @Test
+  public void testDateFormatFunction() {
+    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+
+    RelNode relNode = hiveToRelConverter.convertSql("select date_format(date_sub(current_date(),1),'yyyyMMdd')");
+    String targetSql =
+        "SELECT \"date_format\"(\"date_add\"('day', 1 * -1, \"date\"(CAST(CURRENT_DATE AS TIMESTAMP))), 'yyyyMMdd')\n"
+            + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
+    String expandedSql = relToTrinoConverter.convert(relNode);
+    assertEquals(expandedSql, targetSql);
+  }
 }
