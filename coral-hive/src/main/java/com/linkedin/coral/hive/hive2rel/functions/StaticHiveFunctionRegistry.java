@@ -351,8 +351,8 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
     createAddUserDefinedFunction("trunc", FunctionReturnTypes.STRING, STRING_STRING);
     createAddUserDefinedFunction("months_between", DOUBLE, family(SqlTypeFamily.DATE, SqlTypeFamily.DATE));
     createAddUserDefinedFunction("date_format", FunctionReturnTypes.STRING,
-        or(family(SqlTypeFamily.DATE, SqlTypeFamily.INTEGER), family(SqlTypeFamily.TIMESTAMP, SqlTypeFamily.INTEGER),
-            family(SqlTypeFamily.STRING, SqlTypeFamily.INTEGER)));
+        or(family(SqlTypeFamily.DATE, SqlTypeFamily.STRING), family(SqlTypeFamily.TIMESTAMP, SqlTypeFamily.STRING),
+            family(SqlTypeFamily.STRING, SqlTypeFamily.STRING)));
     createAddUserDefinedFunction("to_utc_timestamp", FunctionReturnTypes.STRING,
         or(STRING_STRING, family(SqlTypeFamily.NUMERIC, SqlTypeFamily.STRING)));
 
