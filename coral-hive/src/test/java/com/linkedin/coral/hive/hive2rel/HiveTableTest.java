@@ -104,14 +104,14 @@ public class HiveTableTest {
     // the reader returns a trino-compliant schema for a union field)
     final RelDataTypeFactory typeFactory = new JavaTypeFactoryImpl();
     // Schema: foo uniontype<int, double, struct<a:int, b:uniontype<int, double>>>
-    // it should become struct<tag:tinyint, field0:int, field1:double, field2: struct<a:int,b:struct<tag:tinyint, field0:int, field1:double>>>
+    // it should become struct<tag:int, field0:int, field1:double, field2: struct<a:int,b:struct<tag:int, field0:int, field1:double>>>
     Table nestedUnionTable = getTable("default", "nested_union");
     RelDataType rowType = nestedUnionTable.getRowType(typeFactory);
     assertNotNull(rowType);
 
     String expectedTypeString =
-        "RecordType(" + "RecordType(" + "TINYINT tag, INTEGER field0, DOUBLE field1, RecordType("
-            + "INTEGER a, RecordType(TINYINT tag, INTEGER field0, DOUBLE field1) b)" + " field2) foo)";
+        "RecordType(" + "RecordType(" + "INTEGER tag, INTEGER field0, DOUBLE field1, RecordType("
+            + "INTEGER a, RecordType(INTEGER tag, INTEGER field0, DOUBLE field1) b)" + " field2) foo)";
     assertEquals(rowType.toString(), expectedTypeString);
 
     // Case for with extract_union as part of view definition.

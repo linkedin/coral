@@ -45,7 +45,7 @@ public class CoalesceStructUtilityTest {
     typeFactory = ToRelConverterTestUtils.createRelBuilder().getTypeFactory();
 
     List<String> names = ImmutableList.of("tag", "field0", "field1");
-    List<RelDataType> types = ImmutableList.of(typeFactory.createSqlType(SqlTypeName.TINYINT),
+    List<RelDataType> types = ImmutableList.of(typeFactory.createSqlType(SqlTypeName.INTEGER),
         typeFactory.createSqlType(SqlTypeName.BOOLEAN), typeFactory.createSqlType(SqlTypeName.DOUBLE));
     trinoStruct = typeFactory.createStructType(types, names);
 
@@ -55,7 +55,7 @@ public class CoalesceStructUtilityTest {
     extractUnionStruct = typeFactory.createStructType(types2, names2);
 
     List<String> names3 = ImmutableList.of("tag", "field1", "field2");
-    List<RelDataType> types3 = ImmutableList.of(typeFactory.createSqlType(SqlTypeName.TINYINT),
+    List<RelDataType> types3 = ImmutableList.of(typeFactory.createSqlType(SqlTypeName.INTEGER),
         typeFactory.createSqlType(SqlTypeName.INTEGER), typeFactory.createSqlType(SqlTypeName.DOUBLE));
     nonTrinoStruct = typeFactory.createStructType(types3, names3);
   }
@@ -108,11 +108,11 @@ public class CoalesceStructUtilityTest {
   @Test
   public void testNested() {
     // Create a complex nested schema:
-    // struct<tag:tinyint, field0: trinoStruct, field1:nonTrinoStruct>
+    // struct<tag:int, field0: trinoStruct, field1:nonTrinoStruct>
     // expected: struct<tag_0: exStruct, tag_1:nonTrinoStruct>
     List<String> names = ImmutableList.of("tag", "field0", "field1");
     List<RelDataType> types =
-        ImmutableList.of(typeFactory.createSqlType(SqlTypeName.TINYINT), trinoStruct, nonTrinoStruct);
+        ImmutableList.of(typeFactory.createSqlType(SqlTypeName.INTEGER), trinoStruct, nonTrinoStruct);
     RelDataType nested = typeFactory.createStructType(types, names);
 
     List<String> names2 = ImmutableList.of("tag_0", "tag_1");

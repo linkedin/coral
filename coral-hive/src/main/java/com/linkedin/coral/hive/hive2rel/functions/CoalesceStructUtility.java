@@ -60,7 +60,7 @@ public class CoalesceStructUtility {
    *
    * Further details:
    * struct_tr looks like:
-   * struct&lt;tag:tinyint, field0:type0, field1:type1, ... fieldN:typeN&gt;
+   * struct&lt;tag:int, field0:type0, field1:type1, ... fieldN:typeN&gt;
    *
    * struct_ex looks like:
    * struct&lt;tag_0:type0, tag_1:type1, ... tag_N:typeN&gt;
