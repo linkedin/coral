@@ -85,12 +85,12 @@ public class HiveTableTest {
     // test handling of union
     Table unionTable = getTable("default", "union_table");
     // union_table:(foo uniontype<int, double, array<string>, struct<a:int,b:string>>)
-    // expected outcome schema: struct<tag:tinyint, field0:int, field1:double, field2:array<string>, field3:struct<a:int,b:string>>
+    // expected outcome schema: struct<tag:int, field0:int, field1:double, field2:array<string>, field3:struct<a:int,b:string>>
     RelDataType rowType = unionTable.getRowType(typeFactory);
     assertNotNull(rowType);
 
     String expectedTypeString =
-        "RecordType(" + "RecordType(" + "TINYINT tag, INTEGER field0, DOUBLE field1, VARCHAR(65536) ARRAY field2, "
+        "RecordType(" + "RecordType(" + "INTEGER tag, INTEGER field0, DOUBLE field1, VARCHAR(65536) ARRAY field2, "
             + "RecordType(INTEGER a, VARCHAR(65536) b) field3" + ") " + "foo)";
     assertEquals(rowType.toString(), expectedTypeString);
   }
