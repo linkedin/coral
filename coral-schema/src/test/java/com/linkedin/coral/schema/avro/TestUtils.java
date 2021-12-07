@@ -31,6 +31,7 @@ import org.apache.hadoop.hive.ql.session.SessionState;
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import com.linkedin.coral.common.HiveMetastoreClient;
 import com.linkedin.coral.common.HiveMscAdapter;
+import com.linkedin.coral.common.functions.FunctionReturnTypes;
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 
 import static org.apache.calcite.sql.type.OperandTypes.*;
@@ -76,6 +77,10 @@ public class TestUtils {
         ReturnTypes.INTEGER, family(SqlTypeFamily.INTEGER));
     StaticHiveFunctionRegistry.createAddUserDefinedTableFunction("com.linkedin.coral.hive.hive2rel.CoralTestUDTF",
         ImmutableList.of("col1"), ImmutableList.of(SqlTypeName.INTEGER), family(SqlTypeFamily.INTEGER));
+    StaticHiveFunctionRegistry.createAddUserDefinedFunction(
+        "com.linkedin.coral.hive.hive2rel.CoralTestUDFReturnStruct", FunctionReturnTypes
+            .rowOf(ImmutableList.of("isEven", "number"), ImmutableList.of(SqlTypeName.BOOLEAN, SqlTypeName.INTEGER)),
+        family(SqlTypeFamily.INTEGER));
   }
 
   private static void initializeTables() {
@@ -141,6 +146,9 @@ public class TestUtils {
 
     executeCreateFunctionQuery("default", Collections.singletonList("foo_lateral_udtf"), "CountOfRow",
         "com.linkedin.coral.hive.hive2rel.CoralTestUDTF");
+
+    executeCreateFunctionQuery("default", Collections.singletonList("foo_udf_return_struct"), "FuncIsEven",
+        "com.linkedin.coral.hive.hive2rel.CoralTestUDFReturnStruct");
   }
 
   private static void executeCreateTableQuery(String dbName, String tableName, String schema) {

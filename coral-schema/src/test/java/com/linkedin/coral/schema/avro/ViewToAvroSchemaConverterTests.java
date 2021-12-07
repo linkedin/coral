@@ -924,5 +924,22 @@ public class ViewToAvroSchemaConverterTests {
     Assert.assertEquals(actualSchema.toString(true), TestUtils.loadSchema("testComplexUnionType-expected.avsc"));
   }
 
+  @Test
+  public void testProjectUdfReturnedStruct() {
+    String viewSql = "CREATE VIEW foo_udf_return_struct "
+        + "tblproperties('functions' = 'FuncIsEven:com.linkedin.coral.hive.hive2rel.CoralTestUDFReturnStruct') " + "AS "
+        + "SELECT bc.Id AS Id_View_Col, default_foo_udf_return_struct_FuncIsEven(bc.Id) AS Id_View_FuncIsEven_Col,  "
+        + "default_foo_udf_return_struct_FuncIsEven(bc.Id).isEven AS View_IsEven_Col, "
+        + "default_foo_udf_return_struct_FuncIsEven(bc.Id).number AS View_Number_Col " + "FROM basecomplex bc";
+
+    TestUtils.executeCreateViewQuery("default", "foo_udf_return_struct", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "foo_udf_return_struct");
+
+    Assert.assertEquals(actualSchema.toString(true),
+        TestUtils.loadSchema("testProjectUdfReturnedStruct-expected.avsc"));
+  }
+
   // TODO: add more unit tests
 }

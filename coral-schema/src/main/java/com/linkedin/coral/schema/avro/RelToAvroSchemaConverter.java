@@ -50,6 +50,7 @@ import org.apache.calcite.rex.RexRangeRef;
 import org.apache.calcite.rex.RexShuttle;
 import org.apache.calcite.rex.RexSubQuery;
 import org.apache.calcite.rex.RexTableInputRef;
+import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
 import org.apache.calcite.util.Pair;
 import org.apache.hadoop.hive.metastore.api.Table;
 import org.slf4j.Logger;
@@ -459,31 +460,41 @@ public class RelToAvroSchemaConverter {
     @Override
     public RexNode visitFieldAccess(RexFieldAccess rexFieldAccess) {
       RexNode referenceExpr = rexFieldAccess.getReferenceExpr();
-      Deque<String> innerRecordNames = new LinkedList<>();
-      while (!(referenceExpr instanceof RexInputRef)) {
-        if (referenceExpr instanceof RexCall
-            && ((RexCall) referenceExpr).getOperator().getName().equalsIgnoreCase("ITEM")) {
-          // While selecting `int_field` from `array_col:array<struct<int_field:int>>` using `array_col[x].int_field`,
-          // `rexFieldAccess` is like `ITEM($1, 1).int_field`, we need to set `referenceExpr` to be the first operand (`$1`) of `ITEM` function
-          referenceExpr = ((RexCall) referenceExpr).getOperands().get(0);
-        } else if (referenceExpr instanceof RexFieldAccess) {
-          // While selecting `int_field` from `struct_col:struct<inner_struct_col:struct<int_field:int>>` using `struct_col.inner_struct_col.int_field`,
-          // `rexFieldAccess` is like `$3.inner_struct_col.int_field`, we need to set `referenceExpr` to be the expr (`$3`) of itself.
-          // Besides, we need to store the field name (`inner_struct_col`) in `fieldNames` so that we can retrieve the correct inner struct from `topSchema` afterwards
-          innerRecordNames.push(((RexFieldAccess) referenceExpr).getField().getName());
-          referenceExpr = ((RexFieldAccess) referenceExpr).getReferenceExpr();
-        } else {
-          return super.visitFieldAccess(rexFieldAccess);
-        }
-      }
       String oldFieldName = rexFieldAccess.getField().getName();
       String suggestNewFieldName = suggestedFieldNames.poll();
       String newFieldName = SchemaUtilities.getFieldName(oldFieldName, suggestNewFieldName);
-      Schema topSchema = inputSchema.getFields().get(((RexInputRef) referenceExpr).getIndex()).schema();
 
-      Schema.Field accessedField = getFieldFromTopSchema(topSchema, oldFieldName, innerRecordNames);
-      assert accessedField != null;
-      SchemaUtilities.appendField(newFieldName, accessedField, fieldAssembler);
+      if (referenceExpr instanceof RexCall
+          && ((RexCall) referenceExpr).getOperator() instanceof SqlUserDefinedFunction) {
+        RelDataType fieldType = rexFieldAccess.getType();
+        boolean isNullable = SchemaUtilities.isFieldNullable((RexCall) referenceExpr, inputSchema);
+        // TODO: add field documentation
+        SchemaUtilities.appendField(newFieldName, fieldType, "", fieldAssembler, isNullable);
+      } else {
+        Deque<String> innerRecordNames = new LinkedList<>();
+        while (!(referenceExpr instanceof RexInputRef)) {
+          if (referenceExpr instanceof RexCall
+              && ((RexCall) referenceExpr).getOperator().getName().equalsIgnoreCase("ITEM")) {
+            // While selecting `int_field` from `array_col:array<struct<int_field:int>>` using `array_col[x].int_field`,
+            // `rexFieldAccess` is like `ITEM($1, 1).int_field`, we need to set `referenceExpr` to be the first operand (`$1`) of `ITEM` function
+            referenceExpr = ((RexCall) referenceExpr).getOperands().get(0);
+          } else if (referenceExpr instanceof RexFieldAccess) {
+            // While selecting `int_field` from `struct_col:struct<inner_struct_col:struct<int_field:int>>` using `struct_col.inner_struct_col.int_field`,
+            // `rexFieldAccess` is like `$3.inner_struct_col.int_field`, we need to set `referenceExpr` to be the expr (`$3`) of itself.
+            // Besides, we need to store the field name (`inner_struct_col`) in `fieldNames` so that we can retrieve the correct inner struct from `topSchema` afterwards
+            innerRecordNames.push(((RexFieldAccess) referenceExpr).getField().getName());
+            referenceExpr = ((RexFieldAccess) referenceExpr).getReferenceExpr();
+          } else {
+            return super.visitFieldAccess(rexFieldAccess);
+          }
+        }
+        Schema topSchema = inputSchema.getFields().get(((RexInputRef) referenceExpr).getIndex()).schema();
+
+        Schema.Field accessedField = getFieldFromTopSchema(topSchema, oldFieldName, innerRecordNames);
+        assert accessedField != null;
+        SchemaUtilities.appendField(newFieldName, accessedField, fieldAssembler);
+      }
+
       return rexFieldAccess;
     }
 
