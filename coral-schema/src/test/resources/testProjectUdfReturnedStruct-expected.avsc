@@ -1,0 +1,30 @@
+{
+  "type" : "record",
+  "name" : "foo_udf_return_struct",
+  "namespace" : "default.foo_udf_return_struct",
+  "fields" : [ {
+    "name" : "Id_View_Col",
+    "type" : "int"
+  }, {
+    "name" : "Id_View_FuncIsEven_Col",
+    "type" : {
+      "type" : "record",
+      "name" : "Id_View_FuncIsEven_Col",
+      "namespace" : "default.foo_udf_return_struct.foo_udf_return_struct",
+      "fields" : [ {
+        "name" : "isEven",
+        "type" : "boolean"
+      }, {
+        "name" : "number",
+        "type" : "int"
+      } ]
+    },
+    "doc" : "Field created in view by applying UDF 'com.linkedin.coral.hive.hive2rel.CoralTestUDFReturnStruct' with argument(s): coral.schema.avro.base.complex.basecomplex.Id"
+  }, {
+    "name" : "View_IsEven_Col",
+    "type" : "boolean"
+  }, {
+    "name" : "View_Number_Col",
+    "type" : "int"
+  } ]
+}
