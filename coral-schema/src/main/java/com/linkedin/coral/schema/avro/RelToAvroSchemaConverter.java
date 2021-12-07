@@ -460,16 +460,17 @@ public class RelToAvroSchemaConverter {
     @Override
     public RexNode visitFieldAccess(RexFieldAccess rexFieldAccess) {
       RexNode referenceExpr = rexFieldAccess.getReferenceExpr();
-      String oldFieldName = rexFieldAccess.getField().getName();
-      String suggestNewFieldName = suggestedFieldNames.poll();
-      String newFieldName = SchemaUtilities.getFieldName(oldFieldName, suggestNewFieldName);
 
       if (referenceExpr instanceof RexCall
           && ((RexCall) referenceExpr).getOperator() instanceof SqlUserDefinedFunction) {
+        String oldFieldName = rexFieldAccess.getField().getName();
+        String suggestNewFieldName = suggestedFieldNames.poll();
+        String newFieldName = SchemaUtilities.getFieldName(oldFieldName, suggestNewFieldName);
+
         RelDataType fieldType = rexFieldAccess.getType();
         boolean isNullable = SchemaUtilities.isFieldNullable((RexCall) referenceExpr, inputSchema);
         // TODO: add field documentation
-        SchemaUtilities.appendField(newFieldName, fieldType, "", fieldAssembler, isNullable);
+        SchemaUtilities.appendField(newFieldName, fieldType, null, fieldAssembler, isNullable);
       } else {
         Deque<String> innerRecordNames = new LinkedList<>();
         while (!(referenceExpr instanceof RexInputRef)) {
@@ -488,6 +489,10 @@ public class RelToAvroSchemaConverter {
             return super.visitFieldAccess(rexFieldAccess);
           }
         }
+
+        String oldFieldName = rexFieldAccess.getField().getName();
+        String suggestNewFieldName = suggestedFieldNames.poll();
+        String newFieldName = SchemaUtilities.getFieldName(oldFieldName, suggestNewFieldName);
         Schema topSchema = inputSchema.getFields().get(((RexInputRef) referenceExpr).getIndex()).schema();
 
         Schema.Field accessedField = getFieldFromTopSchema(topSchema, oldFieldName, innerRecordNames);
