@@ -22,11 +22,9 @@
     "doc" : "Field created in view by applying UDF 'com.linkedin.coral.hive.hive2rel.CoralTestUDFReturnStruct' with argument(s): coral.schema.avro.base.complex.basecomplex.Id"
   }, {
     "name" : "View_IsEven_Col",
-    "type" : "boolean",
-    "doc" : ""
+    "type" : "boolean"
   }, {
     "name" : "View_Number_Col",
-    "type" : "int",
-    "doc" : ""
+    "type" : "int"
   } ]
 }
