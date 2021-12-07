@@ -138,12 +138,17 @@ public class TypeConverter {
 
   // Mimic the StructTypeInfo conversion to convert a UnionTypeInfo to the corresponding RelDataType
   // The schema of output Struct conforms to https://github.com/trinodb/trino/pull/3483
+  // except we adopted "integer" for the type of "tag" field instead of "tinyint" in the Trino patch
+  // for compatibility with other platforms that Iceberg currently doesn't support tinyint type.
+
+  // Note: this is subject to change in the future pending on the discussion in
+  // https://mail-archives.apache.org/mod_mbox/iceberg-dev/202112.mbox/browser
   public static RelDataType convert(UnionTypeInfo unionType, RelDataTypeFactory dtFactory) {
     List<RelDataType> fTypes = unionType.getAllUnionObjectTypeInfos().stream()
         .map(typeInfo -> convert(typeInfo, dtFactory)).collect(Collectors.toList());
     List<String> fNames = IntStream.range(0, unionType.getAllUnionObjectTypeInfos().size()).mapToObj(i -> "field" + i)
         .collect(Collectors.toList());
-    fTypes.add(0, dtFactory.createSqlType(SqlTypeName.TINYINT));
+    fTypes.add(0, dtFactory.createSqlType(SqlTypeName.INTEGER));
     fNames.add(0, "tag");
 
     RelDataType rowType = dtFactory.createStructType(fTypes, fNames);
