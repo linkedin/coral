@@ -191,18 +191,24 @@ public class TestUtils {
       driver.run(
           "CREATE TABLE IF NOT EXISTS union_table(foo uniontype<int, double, array<string>, struct<a:int,b:string>>)");
 
-      testHive.databases =
-          ImmutableList.of(new TestHive.DB("test", ImmutableList.of("tableOne", "tableTwo", "tableOneView")),
-              new TestHive.DB("default",
-                  ImmutableList.of("bar", "complex", "foo", "foo_view", "null_check_view", "null_check_wrapper",
-                      "schema_evolve", "view_schema_evolve", "view_schema_evolve_wrapper", "union_table")),
-              new TestHive.DB("fuzzy_union",
-                  ImmutableList.of("tableA", "tableB", "tableC", "union_view", "union_view_with_more_than_two_tables",
-                      "union_view_with_alias", "union_view_single_branch_evolved",
-                      "union_view_double_branch_evolved_different", "union_view_map_with_struct_value_evolved",
-                      "union_view_array_with_struct_value_evolved", "union_view_deeply_nested_struct_evolved",
-                      "union_view_more_than_two_branches_evolved",
-                      "union_view_same_schema_evolution_with_different_ordering")));
+      // Nested union case.
+      // We don't put a union directly under a union since sources like https://avro.apache.org/docs/current/spec.html#Unions
+      // explicitly put that union cannot be directly nested under a union.
+      driver.run(
+          "CREATE TABLE IF NOT EXISTS nested_union(foo uniontype<int, double, struct<a:int, b:uniontype<int, double>>>)");
+
+      testHive.databases = ImmutableList.of(
+          new TestHive.DB("test", ImmutableList.of("tableOne", "tableTwo", "tableOneView")),
+          new TestHive.DB("default",
+              ImmutableList.of("bar", "complex", "foo", "foo_view", "null_check_view", "null_check_wrapper",
+                  "schema_evolve", "view_schema_evolve", "view_schema_evolve_wrapper", "union_table", "nested_union")),
+          new TestHive.DB("fuzzy_union",
+              ImmutableList.of("tableA", "tableB", "tableC", "union_view", "union_view_with_more_than_two_tables",
+                  "union_view_with_alias", "union_view_single_branch_evolved",
+                  "union_view_double_branch_evolved_different", "union_view_map_with_struct_value_evolved",
+                  "union_view_array_with_struct_value_evolved", "union_view_deeply_nested_struct_evolved",
+                  "union_view_more_than_two_branches_evolved",
+                  "union_view_same_schema_evolution_with_different_ordering")));
 
       // add some Dali functions to table properties
       IMetaStoreClient msc = testHive.getMetastoreClient();

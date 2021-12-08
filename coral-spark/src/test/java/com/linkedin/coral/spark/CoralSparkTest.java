@@ -31,6 +31,7 @@ import com.linkedin.coral.spark.exceptions.UnsupportedUDFException;
 
 import static org.apache.calcite.sql.type.OperandTypes.*;
 import static org.testng.Assert.*;
+import static org.testng.Assert.assertEquals;
 
 
 public class CoralSparkTest {
@@ -392,14 +393,19 @@ public class CoralSparkTest {
     assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
   }
 
-  @Test(enabled = false)
+  @Test
   public void testUnionExtractUDF() {
     RelNode relNode = TestUtils.toRelNode("SELECT extract_union(foo) from union_table");
-    String targetSql = String.join("\n", "SELECT foo", "FROM default.union_table");
+    String targetSql = String.join("\n", "SELECT coalesce_struct(foo)", "FROM default.union_table");
     assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
 
-    RelNode relNode2 = TestUtils.toRelNode("SELECT extract_union(foo, 2) from union_table");
-    String targetSql2 = String.join("\n", "SELECT foo.tag_2", "FROM default.union_table");
+    RelNode relNode1 = TestUtils.toRelNode("SELECT extract_union(foo, 2) from union_table");
+    String targetSql1 = String.join("\n", "SELECT coalesce_struct(foo, 3)", "FROM default.union_table");
+    assertEquals(CoralSpark.create(relNode1).getSparkSql(), targetSql1);
+
+    // Nested union case
+    RelNode relNode2 = TestUtils.toRelNode("SELECT extract_union(a) from nested_union");
+    String targetSql2 = String.join("\n", "SELECT coalesce_struct(a)", "FROM default.nested_union");
     assertEquals(CoralSpark.create(relNode2).getSparkSql(), targetSql2);
   }
 

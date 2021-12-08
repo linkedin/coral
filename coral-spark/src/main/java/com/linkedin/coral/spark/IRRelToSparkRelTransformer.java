@@ -50,7 +50,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
+import com.linkedin.coral.com.google.common.collect.Lists;
 import com.linkedin.coral.common.functions.GenericProjectFunction;
+import com.linkedin.coral.hive.hive2rel.functions.CoalesceStructUtility;
 import com.linkedin.coral.hive.hive2rel.functions.HiveNamedStructFunction;
 import com.linkedin.coral.hive.hive2rel.functions.VersionedSqlUserDefinedFunction;
 import com.linkedin.coral.spark.containers.SparkRelInfo;
@@ -204,7 +206,7 @@ class IRRelToSparkRelTransformer {
           convertToZeroBasedArrayIndex(updatedCall).orElseGet(() -> convertToNamedStruct(updatedCall)
               .orElseGet(() -> convertFuzzyUnionGenericProject(updatedCall).orElseGet(() -> convertDaliUDF(updatedCall)
                   .orElseGet(() -> convertBuiltInUDF(updatedCall).orElseGet(() -> fallbackToHiveUdf(updatedCall)
-                      .orElseGet(() -> removeExtractUnionFunction(updatedCall).orElse(updatedCall)))))));
+                      .orElseGet(() -> swapExtractUnionFunction(updatedCall).orElse(updatedCall)))))));
 
       return convertToNewNode;
     }
@@ -323,16 +325,34 @@ class IRRelToSparkRelTransformer {
       return Optional.empty();
     }
 
-    private Optional<RexNode> removeExtractUnionFunction(RexCall call) {
+    /**
+     * Instead of leaving extract_union visible to (Hive)Spark, since we adopted the new exploded struct schema(
+     * a.k.a struct_tr) that is different from extract_union's output (a.k.a struct_ex) to interpret union in Coral IR,
+     * we need to swap the reference of "extract_union" to a new UDF that is coalescing the difference between
+     * struct_tr and struct_ex.
+     *
+     * See com.linkedin.coral.common.functions.FunctionReturnTypes#COALESCE_STRUCT_FUNCTION_RETURN_STRATEGY
+     * and its comments for more details.
+     *
+     * @param call the original extract_union function call.
+     * @return A new {@link RexNode} replacing the original extract_union call.
+     */
+    private Optional<RexNode> swapExtractUnionFunction(RexCall call) {
       if (call.getOperator().getName().equalsIgnoreCase("extract_union")) {
         // one arg case: extract_union(field_name)
         if (call.getOperands().size() == 1) {
-          return Optional.of(call.getOperands().get(0));
+          return Optional.of(rexBuilder.makeCall(
+              createUDF("coalesce_struct", CoalesceStructUtility.COALESCE_STRUCT_FUNCTION_RETURN_STRATEGY),
+              call.getOperands()));
         }
         // two arg case: extract_union(field_name, ordinal)
         else if (call.getOperands().size() == 2) {
-          int ordinal = ((RexLiteral) call.getOperands().get(1)).getValueAs(Integer.class);
-          return Optional.of(rexBuilder.makeFieldAccess(call.getOperands().get(0), ordinal));
+          int ordinal = ((RexLiteral) call.getOperands().get(1)).getValueAs(Integer.class) + 1;
+          List<RexNode> operandsCopy = Lists.newArrayList(call.getOperands());
+          operandsCopy.set(1, rexBuilder.makeExactLiteral(new BigDecimal(ordinal)));
+          return Optional.of(rexBuilder.makeCall(
+              createUDF("coalesce_struct", CoalesceStructUtility.COALESCE_STRUCT_FUNCTION_RETURN_STRATEGY),
+              operandsCopy));
         }
       }
       return Optional.empty();

@@ -44,6 +44,7 @@ import com.linkedin.coral.common.functions.GenericProjectFunction;
 import com.linkedin.coral.common.functions.OperandTypeInference;
 import com.linkedin.coral.common.functions.SameOperandTypeExceptFirstOperandChecker;
 
+import static com.linkedin.coral.hive.hive2rel.functions.CoalesceStructUtility.*;
 import static org.apache.calcite.sql.fun.SqlLibraryOperators.*;
 import static org.apache.calcite.sql.fun.SqlStdOperatorTable.*;
 import static org.apache.calcite.sql.type.OperandTypes.*;
@@ -373,7 +374,9 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
 
     createAddUserDefinedFunction("array_contains", ReturnTypes.BOOLEAN, family(SqlTypeFamily.ARRAY, SqlTypeFamily.ANY));
     createAddUserDefinedFunction("sort_array", ARG0, ARRAY);
-    createAddUserDefinedFunction("extract_union", FunctionReturnTypes.EXTRACT_UNION_FUNCTION_RETURN_STRATEGY,
+    createAddUserDefinedFunction("extract_union", EXTRACT_UNION_FUNCTION_RETURN_STRATEGY,
+        or(ANY, family(SqlTypeFamily.ANY, SqlTypeFamily.INTEGER)));
+    createAddUserDefinedFunction("coalesce_struct", COALESCE_STRUCT_FUNCTION_RETURN_STRATEGY,
         or(ANY, family(SqlTypeFamily.ANY, SqlTypeFamily.INTEGER)));
 
     // LinkedIn UDFs: Dali stores mapping from UDF name to the implementing Java class as table properties

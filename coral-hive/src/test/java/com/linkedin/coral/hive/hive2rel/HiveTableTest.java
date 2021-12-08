@@ -28,6 +28,7 @@ import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import com.linkedin.coral.common.HiveMscAdapter;
 import com.linkedin.coral.common.HiveSchema;
 import com.linkedin.coral.common.HiveTable;
 
@@ -79,7 +80,7 @@ public class HiveTableTest {
   }
 
   @Test
-  public void testTableWithUnion() throws Exception {
+  public void testTableWithUnion() {
     final RelDataTypeFactory typeFactory = new JavaTypeFactoryImpl();
 
     // test handling of union
@@ -93,6 +94,36 @@ public class HiveTableTest {
         "RecordType(" + "RecordType(" + "INTEGER tag, INTEGER field0, DOUBLE field1, VARCHAR(65536) ARRAY field2, "
             + "RecordType(INTEGER a, VARCHAR(65536) b) field3" + ") " + "foo)";
     assertEquals(rowType.toString(), expectedTypeString);
+  }
+
+  @Test
+  public void testTableWithUnionComplex() throws Exception {
+    // Two complex scenarios for union:
+    // 1. nested union: a struct within a union that has another union as one of the member types.
+    // 2. when there's existing extract_union UDF (where we replace it with coalesce_struct when
+    // the reader returns a trino-compliant schema for a union field)
+    final RelDataTypeFactory typeFactory = new JavaTypeFactoryImpl();
+    // Schema: foo uniontype<int, double, struct<a:int, b:uniontype<int, double>>>
+    // it should become struct<tag:int, field0:int, field1:double, field2: struct<a:int,b:struct<tag:int, field0:int, field1:double>>>
+    Table nestedUnionTable = getTable("default", "nested_union");
+    RelDataType rowType = nestedUnionTable.getRowType(typeFactory);
+    assertNotNull(rowType);
+
+    String expectedTypeString =
+        "RecordType(" + "RecordType(" + "INTEGER tag, INTEGER field0, DOUBLE field1, RecordType("
+            + "INTEGER a, RecordType(INTEGER tag, INTEGER field0, DOUBLE field1) b)" + " field2) foo)";
+    assertEquals(rowType.toString(), expectedTypeString);
+
+    // Case for with extract_union as part of view definition.
+    // Put the alias of foo as bar. The outcome type complies with extract_union's schema recursively
+
+    HiveMscAdapter mscAdapter = new HiveMscAdapter(hive.getMetastoreClient());
+    HiveToRelConverter converter = new HiveToRelConverter(mscAdapter);
+    RelDataType rowType2 = converter.convertSql("SELECT coalesce_struct(foo) AS bar from nested_union").getRowType();
+    assertNotNull(rowType2);
+    expectedTypeString = "RecordType(" + "RecordType(" + "INTEGER tag_0, DOUBLE tag_1, "
+        + "RecordType(INTEGER a, RecordType(INTEGER tag_0, DOUBLE tag_1) b) tag_2) bar)";
+    assertEquals(rowType2.toString(), expectedTypeString);
   }
 
   @Test
