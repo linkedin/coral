@@ -169,7 +169,8 @@ public class HiveOperatorsTest {
     }
   }
 
-  private void testLikeFamilyOperators(String operator) {
+  @Test
+  public void testLikeFamilyOperators(String operator) {
     final String sql = "SELECT a, b FROM foo WHERE b " + operator + " 'abc%'";
     String expectedRel = "LogicalProject(a=[$0], b=[$1])\n" + "  LogicalFilter(condition=[" + operator.toUpperCase()
         + "($1, 'abc%')])\n" + "    LogicalTableScan(table=[[hive, default, foo]])\n";
@@ -178,5 +179,12 @@ public class HiveOperatorsTest {
     String expectedSql = "SELECT \"a\", \"b\"\nFROM \"hive\".\"default\".\"foo\"\n" + "WHERE \"b\" "
         + operator.toUpperCase() + " 'abc%'";
     assertEquals(relToSql(rel), expectedSql);
+  }
+
+  @Test
+  public void testIfFunctionReturnType() {
+    final String sql = "SELECT IF(FALSE, 0, c) c FROM test.tableOne";
+    RelNode rel = toRel(sql);
+    assertEquals(rel.getRowType().toString(), "RecordType(DOUBLE c)");
   }
 }
