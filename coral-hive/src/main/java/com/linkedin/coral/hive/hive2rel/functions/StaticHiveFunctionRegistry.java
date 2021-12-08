@@ -129,7 +129,7 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
     // to SQL to be odd although correct. So, we add 'if' as UDF
     // TODO: add check to verify 2nd and 3rd operands are same
     addFunctionEntry("if",
-        createCalciteUDF("if", FunctionReturnTypes.ARG1_OR_ARG2, OperandTypeInference.BOOLEAN_ANY_SAME,
+        createCalciteUDF("if", FunctionReturnTypes.IF_FUNC_RETURN_TYPE, OperandTypeInference.BOOLEAN_ANY_SAME,
             new SameOperandTypeExceptFirstOperandChecker(3, SqlTypeName.BOOLEAN), null));
 
     addFunctionEntry("coalesce", COALESCE);

@@ -28,13 +28,16 @@ public final class FunctionReturnTypes {
 
   }
 
-  public static final SqlReturnTypeInference ARG1_OR_ARG2 = opBinding -> {
+  public static final SqlReturnTypeInference IF_FUNC_RETURN_TYPE = opBinding -> {
     Preconditions.checkState(opBinding.getOperandCount() == 3);
-    if (!opBinding.isOperandNull(1, false)) {
-      return opBinding.getOperandType(1);
-    } else {
-      return opBinding.getOperandType(2);
+    final RelDataType type1 = opBinding.getOperandType(1);
+    final RelDataType type2 = opBinding.getOperandType(2);
+    if (type1 == type2) {
+      return type1;
     }
+    // If the types mismatch, the non-literal one's type should be picked
+    // i.e. the type of `if(..., 0, bigint_type_field)` should be bigint rather than int
+    return opBinding.isOperandLiteral(1, false) ? type2 : type1;
   };
 
   public static final SqlReturnTypeInference STRING = ReturnTypes.explicit(SqlTypeName.VARCHAR);
