@@ -712,4 +712,11 @@ public class CoralSparkTest {
     String targetSql = "SELECT collect_set(a)\n" + "FROM default.foo";
     assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
   }
+
+  @Test
+  public void testSelectArrayIndex() {
+    RelNode relNode = TestUtils.toRelNode("SELECT * FROM default.view_expand_array_index");
+    String targetSql = "SELECT c[1] c1\n" + "FROM default.complex";
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+  }
 }

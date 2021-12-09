@@ -14,8 +14,10 @@ import com.google.common.base.Preconditions;
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.rel.RelRoot;
 import org.apache.calcite.rel.type.RelDataType;
-import org.apache.calcite.sql.SqlKind;
+import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.util.Util;
+
+import com.linkedin.coral.common.FuzzyUnionSqlRewriter;
 
 
 /**
@@ -42,6 +44,8 @@ public class HiveViewExpander implements RelOptTable.ViewExpander {
     String dbName = Util.last(schemaPath);
     String tableName = viewPath.get(0);
 
-    return RelRoot.of(hiveToRelConverter.convertView(dbName, tableName), SqlKind.SELECT);
+    SqlNode sqlNode = hiveToRelConverter.processView(dbName, tableName)
+        .accept(new FuzzyUnionSqlRewriter(tableName, hiveToRelConverter));
+    return hiveToRelConverter.getSqlToRelConverter().convertQuery(sqlNode, true, true);
   }
 }

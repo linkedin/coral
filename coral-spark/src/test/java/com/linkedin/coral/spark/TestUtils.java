@@ -203,6 +203,8 @@ public class TestUtils {
         "CREATE TABLE IF NOT EXISTS union_table(foo uniontype<int, double, array<string>, struct<a:int,b:string>>)");
 
     run(driver, "CREATE TABLE IF NOT EXISTS nested_union(a uniontype<int, struct<a:uniontype<int, double>, b:int>>)");
+
+    run(driver, "CREATE VIEW IF NOT EXISTS view_expand_array_index AS SELECT c[1] c1 FROM default.complex");
   }
 
   public static RelNode toRelNode(String db, String view) {
