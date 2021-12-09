@@ -77,7 +77,6 @@ public class CoralSparkTest {
 
   @Test
   public void testLiteralColumnsFromView() {
-    // [LIHADOOP-47172] use date literal in view definition
     String targetSql = "SELECT '2013-01-01', '2017-08-22 01:02:03', CAST(123 AS SMALLINT), CAST(123 AS TINYINT)\n"
         + "FROM default.foo\n" + "LIMIT 1";
     RelNode relNode = TestUtils.toRelNode("default", "foo_v1");
@@ -123,7 +122,6 @@ public class CoralSparkTest {
     List<String> listOfUriStrings = convertToListOfUriStrings(udfJars.get(0).getArtifactoryUrls());
     String targetArtifactoryUrl = "ivy://com.linkedin.coral.spark.CoralTestUDF";
     assertTrue(listOfUriStrings.contains(targetArtifactoryUrl));
-    // LIHADOOP-48379: need to check the UDF type
     SparkUDFInfo.UDFTYPE testUdfType = udfJars.get(0).getUdfType();
     SparkUDFInfo.UDFTYPE targetUdfType = SparkUDFInfo.UDFTYPE.TRANSPORTABLE_UDF;
     assertEquals(testUdfType, targetUdfType);
@@ -147,11 +145,9 @@ public class CoralSparkTest {
     String udfFunctionName = udfJars.get(0).getFunctionName();
     String targetFunctionName = "default_foo_dali_udf2_GreaterThanHundred";
     assertEquals(udfFunctionName, targetFunctionName);
-    // LIHADOOP-48635: check if CoralSpark can fetch artifactory url from Dali View definition.
     List<String> listOfUriStrings = convertToListOfUriStrings(udfJars.get(0).getArtifactoryUrls());
     String targetArtifactoryUrl = "ivy://com.linkedin:udf:1.0";
     assertTrue(listOfUriStrings.contains(targetArtifactoryUrl));
-    // LIHADOOP-48379: need to check the UDF type
     SparkUDFInfo.UDFTYPE testUdfType = udfJars.get(0).getUdfType();
     SparkUDFInfo.UDFTYPE targetUdfType = SparkUDFInfo.UDFTYPE.HIVE_CUSTOM_UDF;
     assertEquals(testUdfType, targetUdfType);
@@ -299,7 +295,7 @@ public class CoralSparkTest {
     System.out.println(relNodePlan);
     String convertToSparkSql = CoralSpark.create(relNode).getSparkSql();
 
-    /*  [LIHADOOP-43199] the test query is translated to:
+    /*  the test query is translated to:
      *  SELECT named_struct('abc', 123, 'def', 'xyz') named_struc FROM default.bar;
      */
     String targetSql =

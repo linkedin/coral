@@ -37,7 +37,7 @@ import com.linkedin.coral.spark.dialect.SparkSqlDialect;
 public class SparkSqlRewriter extends SqlShuttle {
 
   /**
-   *  [LIHADOOP-43199] Spark SQL doesn't support CASTING the named_struct function to a row/struct.
+   *  Spark SQL doesn't support CASTING the named_struct function to a row/struct.
    *  Sushant suggests that we remove this behavior here.
    *
    *  For example:
