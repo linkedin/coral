@@ -146,7 +146,7 @@ public abstract class ToRelConverter {
    * @return Calcite SqlNode representing parse tree that calcite framework can understand
    */
   @VisibleForTesting
-  protected SqlNode processView(String dbName, String tableName) {
+  public SqlNode processView(String dbName, String tableName) {
     org.apache.hadoop.hive.metastore.api.Table table = hiveMetastoreClient.getTable(dbName, tableName);
     if (table == null) {
       throw new RuntimeException(String.format("Unknown table %s.%s", dbName, tableName));
