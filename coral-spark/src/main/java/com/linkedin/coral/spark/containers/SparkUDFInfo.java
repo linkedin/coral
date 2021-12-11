@@ -7,6 +7,7 @@ package com.linkedin.coral.spark.containers;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Objects;
 
 
 /**
@@ -93,5 +94,23 @@ public class SparkUDFInfo {
   public String toString() {
     return "SparkUDFInfo{" + "className='" + className + '\'' + ", functionName='" + functionName + '\''
         + ", artifactoryUrls='" + artifactoryUrls + '\'' + ", udfType='" + udfType + '\'' + '}';
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    SparkUDFInfo that = (SparkUDFInfo) o;
+    return Objects.equals(className, that.className) && Objects.equals(functionName, that.functionName)
+        && Objects.equals(artifactoryUrls, that.artifactoryUrls) && udfType == that.udfType;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(className, functionName, artifactoryUrls, udfType);
   }
 }

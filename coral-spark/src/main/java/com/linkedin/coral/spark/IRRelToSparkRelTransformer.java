@@ -8,6 +8,7 @@ package com.linkedin.coral.spark;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -165,7 +166,8 @@ class IRRelToSparkRelTransformer {
         return new SparkRexConverter(node.getCluster().getRexBuilder(), sparkUDFInfos);
       }
     };
-    return new SparkRelInfo(calciteNode.accept(converter), sparkUDFInfos);
+    // Deduplicate sparkUDFInfos to avoid registering the same UDF many times in Spark
+    return new SparkRelInfo(calciteNode.accept(converter), new ArrayList<>(new HashSet<>(sparkUDFInfos)));
   }
 
   /**

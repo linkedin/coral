@@ -68,6 +68,8 @@ public class TestUtils {
         "CREATE FUNCTION default_foo_dali_udf5_UnsupportedUDF as 'com.linkedin.coral.hive.hive2rel.CoralTestUnsupportedUDF'");
     run(driver,
         "create function default_foo_lateral_udtf_CountOfRow as 'com.linkedin.coral.hive.hive2rel.CoralTestUDTF'");
+    run(driver,
+        "create function default_foo_duplicate_udf_LessThanHundred as 'com.linkedin.coral.hive.hive2rel.CoralTestUDF'");
 
     run(driver, String.join("\n", "", "CREATE VIEW IF NOT EXISTS foo_view", "AS", "SELECT b AS bcol, sum(c) AS sum_c",
         "FROM foo", "GROUP BY b"));
@@ -205,6 +207,13 @@ public class TestUtils {
     run(driver, "CREATE TABLE IF NOT EXISTS nested_union(a uniontype<int, struct<a:uniontype<int, double>, b:int>>)");
 
     run(driver, "CREATE VIEW IF NOT EXISTS view_expand_array_index AS SELECT c[1] c1 FROM default.complex");
+
+    run(driver,
+        String.join("\n", "", "CREATE VIEW IF NOT EXISTS foo_duplicate_udf",
+            "tblproperties('functions' = 'LessThanHundred:com.linkedin.coral.hive.hive2rel.CoralTestUDF',",
+            "              'dependencies' = 'ivy://com.linkedin:udf:1.0')", "AS",
+            "SELECT default_foo_duplicate_udf_LessThanHundred(a), default_foo_duplicate_udf_LessThanHundred(a)",
+            "FROM foo"));
   }
 
   public static RelNode toRelNode(String db, String view) {
