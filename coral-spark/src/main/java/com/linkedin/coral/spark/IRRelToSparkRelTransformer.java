@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.calcite.rel.RelNode;
@@ -85,7 +86,7 @@ class IRRelToSparkRelTransformer {
    *
    */
   static SparkRelInfo transform(RelNode calciteNode) {
-    List<SparkUDFInfo> sparkUDFInfos = new ArrayList<>();
+    Set<SparkUDFInfo> sparkUDFInfos = new HashSet<>();
     RelShuttle converter = new RelShuttleImpl() {
       @Override
       public RelNode visit(LogicalProject project) {
@@ -166,8 +167,7 @@ class IRRelToSparkRelTransformer {
         return new SparkRexConverter(node.getCluster().getRexBuilder(), sparkUDFInfos);
       }
     };
-    // Deduplicate sparkUDFInfos to avoid registering the same UDF many times in Spark
-    return new SparkRelInfo(calciteNode.accept(converter), new ArrayList<>(new HashSet<>(sparkUDFInfos)));
+    return new SparkRelInfo(calciteNode.accept(converter), new ArrayList<>(sparkUDFInfos));
   }
 
   /**
@@ -179,10 +179,10 @@ class IRRelToSparkRelTransformer {
    */
   private static class SparkRexConverter extends RexShuttle {
     private final RexBuilder rexBuilder;
-    private final List<SparkUDFInfo> sparkUDFInfos;
+    private final Set<SparkUDFInfo> sparkUDFInfos;
     private static final Logger LOG = LoggerFactory.getLogger(SparkRexConverter.class);
 
-    SparkRexConverter(RexBuilder rexBuilder, List<SparkUDFInfo> sparkUDFInfos) {
+    SparkRexConverter(RexBuilder rexBuilder, Set<SparkUDFInfo> sparkUDFInfos) {
       this.sparkUDFInfos = sparkUDFInfos;
       this.rexBuilder = rexBuilder;
     }
