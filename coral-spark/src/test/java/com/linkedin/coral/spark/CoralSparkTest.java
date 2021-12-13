@@ -719,4 +719,12 @@ public class CoralSparkTest {
     String targetSql = "SELECT c[1] c1\n" + "FROM default.complex";
     assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
   }
+
+  @Test
+  public void testDeduplicateUdf() {
+    RelNode relNode = TestUtils.toRelNode("default", "foo_duplicate_udf");
+    CoralSpark coralSpark = CoralSpark.create(relNode);
+    List<SparkUDFInfo> udfJars = coralSpark.getSparkUDFInfoList();
+    assertEquals(1, udfJars.size());
+  }
 }
