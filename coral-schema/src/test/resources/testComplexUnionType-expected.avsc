@@ -4,6 +4,6 @@
   "namespace" : "default.v",
   "fields" : [ {
     "name" : "unionCol",
-    "type" : [ "int", "string" ]
+    "type" : [ "null", "int", "string" ]
   } ]
 }
