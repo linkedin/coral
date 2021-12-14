@@ -4,6 +4,6 @@
   "namespace" : "coral.schema.avro.base.complex.union.type",
   "fields" : [ {
     "name" : "unionCol",
-    "type" : [ "int", "string" ]
+    "type" : [ "null", "int", "string" ]
   } ]
 }

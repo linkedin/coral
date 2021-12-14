@@ -691,6 +691,7 @@ class SchemaUtilities {
     Preconditions.checkNotNull(namespace);
 
     switch (schema.getType()) {
+      case NULL:
       case BOOLEAN:
       case BYTES:
       case DOUBLE:
