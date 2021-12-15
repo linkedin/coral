@@ -26,25 +26,6 @@ import org.apache.calcite.sql.type.SqlReturnTypeInference;
 public class CoalesceStructUtility {
 
   /**
-   * The semantics for the extract_union is now pass-through: Assuming the engine's reader could deal with
-   * union type and explode it into a struct, this extract_union UDF's return type will simply follow exploded struct's
-   * schema based on how many arguments passed by users.
-   */
-  public static final SqlReturnTypeInference EXTRACT_UNION_FUNCTION_RETURN_STRATEGY = opBinding -> {
-    int numArgs = opBinding.getOperandCount();
-    Preconditions.checkState(numArgs == 1 || numArgs == 2);
-    // 1-arg case
-    if (numArgs == 1) {
-      return opBinding.getOperandType(0);
-    }
-    // 2-arg case
-    else {
-      int ordinal = opBinding.getOperandLiteralValue(1, Integer.class);
-      return opBinding.getOperandType(0).getFieldList().get(ordinal).getType();
-    }
-  };
-
-  /**
    * Represents the return type for the coalesce_struct UDF that is built for bridging the schema difference
    * between extract_union UDF's processed schema of union field in Coral IR (let's call it struct_ex) and
    * Trino's schema when deserializing union field from its reader.

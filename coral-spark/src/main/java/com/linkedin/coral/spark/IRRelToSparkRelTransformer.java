@@ -341,6 +341,11 @@ class IRRelToSparkRelTransformer {
      */
     private Optional<RexNode> swapExtractUnionFunction(RexCall call) {
       if (call.getOperator().getName().equalsIgnoreCase("extract_union")) {
+        // Only when there's a necessity to register coalesce_struct UDF
+        sparkUDFInfos.add(new SparkUDFInfo("com.linkedin.coalescestruct.GenericUDFCoalesceStruct", "coalesce_struct",
+            ImmutableList.of(URI.create("ivy://com.linkedin.coalesce-struct:coalesce-struct-impl:0.0.1")),
+            SparkUDFInfo.UDFTYPE.HIVE_CUSTOM_UDF));
+
         // one arg case: extract_union(field_name)
         if (call.getOperands().size() == 1) {
           return Optional.of(rexBuilder.makeCall(
