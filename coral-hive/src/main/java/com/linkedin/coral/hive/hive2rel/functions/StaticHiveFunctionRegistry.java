@@ -373,9 +373,8 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
 
     createAddUserDefinedFunction("array_contains", ReturnTypes.BOOLEAN, family(SqlTypeFamily.ARRAY, SqlTypeFamily.ANY));
     createAddUserDefinedFunction("sort_array", ARG0, ARRAY);
-    createAddUserDefinedFunction("extract_union", EXTRACT_UNION_FUNCTION_RETURN_STRATEGY,
-        or(ANY, family(SqlTypeFamily.ANY, SqlTypeFamily.INTEGER)));
-    createAddUserDefinedFunction("coalesce_struct", COALESCE_STRUCT_FUNCTION_RETURN_STRATEGY,
+
+    createAddUserDefinedFunction("extract_union", COALESCE_STRUCT_FUNCTION_RETURN_STRATEGY,
         or(ANY, family(SqlTypeFamily.ANY, SqlTypeFamily.INTEGER)));
 
     // LinkedIn UDFs: Dali stores mapping from UDF name to the implementing Java class as table properties
