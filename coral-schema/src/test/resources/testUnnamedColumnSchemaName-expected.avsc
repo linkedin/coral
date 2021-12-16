@@ -1,0 +1,14 @@
+{
+  "type" : "record",
+  "name" : "foo_unnamed_column",
+  "namespace" : "default.foo_unnamed_column",
+  "fields" : [ {
+    "name" : "_c0",
+    "type" : [ "null", "int" ],
+    "doc" : "Field created from view literal with value: 1"
+  }, {
+    "name" : "_c1",
+    "type" : [ "null", "string" ],
+    "doc" : "Field created from view literal with value: \"foo\""
+  } ]
+}

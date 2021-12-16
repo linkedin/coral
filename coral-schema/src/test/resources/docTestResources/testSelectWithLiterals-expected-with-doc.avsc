@@ -11,7 +11,7 @@
     "type" : [ "null", "int" ],
     "doc" : "Field created from view literal with value: 100"
   }, {
-    "name" : "EXPR_2",
+    "name" : "_c2",
     "type" : [ "null", "int" ],
     "doc" : "Field created from view literal with value: 200"
   }, {

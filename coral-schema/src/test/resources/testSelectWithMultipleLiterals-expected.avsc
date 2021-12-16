@@ -3,11 +3,11 @@
   "name" : "v",
   "namespace" : "default.v",
   "fields" : [ {
-    "name" : "EXPR_0",
+    "name" : "_c0",
     "type" : [ "null", "int" ],
     "doc" : "Field created from view literal with value: 200"
   }, {
-    "name" : "EXPR_1",
+    "name" : "_c1",
     "type" : [ "null", "int" ],
     "doc" : "Field created from view literal with value: 1"
   }, {
@@ -18,19 +18,19 @@
     "type" : [ "null", "int" ],
     "doc" : "Field created from view literal with value: 100"
   }, {
-    "name" : "EXPR_4",
+    "name" : "_c4",
     "type" : [ "null", "int" ],
     "doc" : "Field created from view literal with value: 200"
   }, {
-    "name" : "EXPR_5",
+    "name" : "_c5",
     "type" : [ "null", "int" ],
     "doc" : "Field created from view literal with value: 1"
   }, {
-    "name" : "EXPR_6",
+    "name" : "_c6",
     "type" : [ "null", "int" ],
     "doc" : "Field created from view literal with value: 1"
   }, {
-    "name" : "EXPR_7",
+    "name" : "_c7",
     "type" : [ "null", "int" ],
     "doc" : "Field created from view literal with value: 1"
   }, {

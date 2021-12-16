@@ -200,8 +200,17 @@ public class RelToAvroSchemaConverter {
       Schema inputSchema = schemaMap.get(logicalProject.getInput());
 
       Queue<String> suggestedFieldNames = new LinkedList<>();
-      for (RelDataTypeField field : logicalProject.getRowType().getFieldList()) {
-        suggestedFieldNames.offer(field.getName());
+
+      for (int i = 0; i < logicalProject.getChildExps().size(); ++i) {
+        final RexNode rexNode = logicalProject.getChildExps().get(i);
+        final String fieldName = logicalProject.getRowType().getFieldList().get(i).getName();
+        if (rexNode instanceof RexLiteral && fieldName.toLowerCase().startsWith("expr$")) {
+          // we should respect the column names provided by Hive here for unnamed columns
+          // i.e. EXPR$0 -> _c0
+          suggestedFieldNames.offer("_c" + fieldName.substring(5));
+        } else {
+          suggestedFieldNames.offer(fieldName);
+        }
       }
 
       SchemaBuilder.FieldAssembler<Schema> logicalProjectFieldAssembler =
