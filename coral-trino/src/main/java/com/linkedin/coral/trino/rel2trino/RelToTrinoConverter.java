@@ -117,7 +117,7 @@ public class RelToTrinoConverter extends RelToSqlConverter {
 
   @Override
   public void addSelect(List<SqlNode> selectList, SqlNode node, RelDataType rowType) {
-    // APA-7366 Override this method from parent class RelToSqlConverter to always add "as"
+    // Override this method from parent class RelToSqlConverter to always add "as"
     // when accessing nested struct.
     // In parent class "as" is skipped for "select a.b as b", here we will keep the "a.b as b"
     SqlNode selectNode = node;
