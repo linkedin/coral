@@ -943,7 +943,7 @@ public class ViewToAvroSchemaConverterTests {
 
   @Test
   public void testUnnamedColumnSchemaName() {
-    String viewSql = "CREATE VIEW foo_unnamed_column " + "AS " + "SELECT 1, 'foo' FROM basecomplex bc";
+    String viewSql = "CREATE VIEW foo_unnamed_column " + "AS " + "SELECT 1 + 1, 'foo' FROM basecomplex bc";
 
     TestUtils.executeCreateViewQuery("default", "foo_unnamed_column", viewSql);
 

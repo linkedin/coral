@@ -3,79 +3,79 @@
   "name" : "foo_dali_udf_nullability",
   "namespace" : "default.foo_dali_udf_nullability",
   "fields" : [ {
-    "name" : "EXPR_0",
+    "name" : "_c0",
     "type" : [ "null", "boolean" ],
     "doc" : "Field created in view by applying UDF 'com.linkedin.coral.hive.hive2rel.CoralTestUDF1' with argument(s): coral.schema.avro.base.nullability.basenullability.Int_Field_1"
   }, {
-    "name" : "EXPR_1",
+    "name" : "_c1",
     "type" : "boolean",
     "doc" : "Field created in view by applying UDF 'com.linkedin.coral.hive.hive2rel.CoralTestUDF1' with argument(s): coral.schema.avro.base.nullability.basenullability.Int_Field_2"
   }, {
-    "name" : "EXPR_2",
+    "name" : "_c2",
     "type" : [ "null", "boolean" ],
     "doc" : "Field created in view by applying UDF 'com.linkedin.coral.hive.hive2rel.CoralTestUDF2' with argument(s): coral.schema.avro.base.nullability.basenullability.Int_Field_1"
   }, {
-    "name" : "EXPR_3",
+    "name" : "_c3",
     "type" : "boolean",
     "doc" : "Field created in view by applying UDF 'com.linkedin.coral.hive.hive2rel.CoralTestUDF2' with argument(s): coral.schema.avro.base.nullability.basenullability.Int_Field_2"
   }, {
-    "name" : "EXPR_4",
+    "name" : "_c4",
     "type" : [ "null", "int" ],
     "doc" : "Field created in view by applying UDF 'com.linkedin.coral.hive.hive2rel.CoralTestUDF3' with argument(s): coral.schema.avro.base.nullability.basenullability.Int_Field_1"
   }, {
-    "name" : "EXPR_5",
+    "name" : "_c5",
     "type" : "int",
     "doc" : "Field created in view by applying UDF 'com.linkedin.coral.hive.hive2rel.CoralTestUDF3' with argument(s): coral.schema.avro.base.nullability.basenullability.Int_Field_2"
   }, {
-    "name" : "EXPR_6",
+    "name" : "_c6",
     "type" : [ "null", "boolean" ],
     "doc" : "Field created in view by applying operator 'AND' with argument(s): value with type BOOLEAN, value with type BOOLEAN"
   }, {
-    "name" : "EXPR_7",
+    "name" : "_c7",
     "type" : [ "null", "boolean" ],
     "doc" : "Field created in view by applying operator 'OR' with argument(s): value with type BOOLEAN, value with type BOOLEAN"
   }, {
-    "name" : "EXPR_8",
+    "name" : "_c8",
     "type" : [ "null", "int" ],
     "doc" : "Field created in view by applying operator '+' with argument(s): value with type INTEGER, coral.schema.avro.base.nullability.basenullability.Id"
   }, {
-    "name" : "EXPR_9",
+    "name" : "_c9",
     "type" : "int",
     "doc" : "Field created in view by applying operator '+' with argument(s): value with type INTEGER, coral.schema.avro.base.nullability.basenullability.Id"
   }, {
-    "name" : "EXPR_10",
+    "name" : "_c10",
     "type" : [ "null", "string" ],
     "doc" : "Field created in view by applying UDF 'concat' with argument(s): coral.schema.avro.base.nullability.basenullability.String_Field_1, coral.schema.avro.base.nullability.basenullability.String_Field_1"
   }, {
-    "name" : "EXPR_11",
+    "name" : "_c11",
     "type" : "string",
     "doc" : "Field created in view by applying UDF 'concat' with argument(s): coral.schema.avro.base.nullability.basenullability.String_Field_2, coral.schema.avro.base.nullability.basenullability.String_Field_2"
   }, {
-    "name" : "EXPR_12",
+    "name" : "_c12",
     "type" : [ "null", "string" ],
     "doc" : "Field created in view by applying UDF 'concat' with argument(s): coral.schema.avro.base.nullability.basenullability.String_Field_1, coral.schema.avro.base.nullability.basenullability.String_Field_2"
   }, {
-    "name" : "EXPR_13",
+    "name" : "_c13",
     "type" : [ "null", "int" ],
     "doc" : "Field created in view by applying operator '+' with argument(s): value with type INTEGER, 1"
   }, {
-    "name" : "EXPR_14",
+    "name" : "_c14",
     "type" : [ "null", "int" ],
     "doc" : "Field created in view by applying operator '+' with argument(s): value with type INTEGER, 1"
   }, {
-    "name" : "EXPR_15",
+    "name" : "_c15",
     "type" : "int",
     "doc" : "Field created in view by applying operator '+' with argument(s): value with type INTEGER, coral.schema.avro.base.nullability.basenullability.Id"
   }, {
-    "name" : "EXPR_16",
+    "name" : "_c16",
     "type" : [ "null", "int" ],
     "doc" : "Field created in view by applying operator '+' with argument(s): value with type INTEGER, coral.schema.avro.base.nullability.basenullability.Id"
   }, {
-    "name" : "EXPR_17",
+    "name" : "_c17",
     "type" : "int",
     "doc" : "Field created in view by applying operator '+' with argument(s): value with type INTEGER, coral.schema.avro.base.nullability.basenullability.Id"
   }, {
-    "name" : "EXPR_18",
+    "name" : "_c18",
     "type" : "int",
     "doc" : "Field created in view by applying operator '+' with argument(s): coral.schema.avro.base.nullability.basenullability.Id, value with type INTEGER"
   } ]
