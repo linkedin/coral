@@ -28,4 +28,7 @@ nexusPublishing {
       }
     }
   }
+  transitionCheckOptions {
+    maxRetries.set(100)
+  }
 }
