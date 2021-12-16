@@ -505,6 +505,11 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
         family(Collections.nCopies(2, SqlTypeFamily.STRING)));
     createAddUserDefinedFunction("com.linkedin.stdudfs.parsing.hive.Ip2Str", FunctionReturnTypes.STRING,
         or(family(SqlTypeFamily.STRING, SqlTypeFamily.NUMERIC, SqlTypeFamily.NUMERIC), family(SqlTypeFamily.STRING)));
+    createAddUserDefinedFunction("com.linkedin.stdudfs.lookup.hive.BrowserLookup",
+        FunctionReturnTypes.rowOfInference(
+            ImmutableList.of("browser_name", "browser_major_version", "browser_full_version"),
+            ImmutableList.of(FunctionReturnTypes.STRING, FunctionReturnTypes.STRING, FunctionReturnTypes.STRING)),
+        STRING_STRING_STRING);
     createAddUserDefinedFunction("com.linkedin.stdudfs.daliudfs.hive.IsTestMemberId", ReturnTypes.BOOLEAN,
         family(SqlTypeFamily.NUMERIC, SqlTypeFamily.STRING));
     createAddUserDefinedFunction("com.linkedin.udfs.standard.hive.ObfuscateMemberIdNumeric", BIGINT,
