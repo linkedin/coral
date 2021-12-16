@@ -42,7 +42,7 @@ jobs:
           && github.repository == 'linkedin/coral'
           && !contains(toJSON(github.event.commits.*.message), '[skip release]')
 
-        run: ./gradlew githubRelease publishToSonatype closeAndReleaseStagingRepository
+        run: ./gradlew githubRelease publishToSonatype closeAndReleaseStagingRepository --stacktrace
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
           SONATYPE_USER: ${{secrets.SONATYPE_USER}}
