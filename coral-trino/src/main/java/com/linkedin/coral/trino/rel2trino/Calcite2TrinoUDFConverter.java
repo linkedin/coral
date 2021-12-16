@@ -234,6 +234,13 @@ public class Calcite2TrinoUDFConverter {
         }
       }
 
+      if (operatorName.equalsIgnoreCase("current_timestamp")) {
+        Optional<RexNode> modifiedCall = visitCurrentTimestamp(call);
+        if (modifiedCall.isPresent()) {
+          return modifiedCall.get();
+        }
+      }
+
       final UDFTransformer transformer = CalciteTrinoUDFMap.getUDFTransformer(operatorName, call.operands.size());
       if (transformer != null && shouldTransformOperator(operatorName)) {
         return adjustReturnTypeWithCast(rexBuilder,
@@ -365,6 +372,13 @@ public class Calcite2TrinoUDFConverter {
       }
 
       return Optional.empty();
+    }
+
+    private Optional<RexNode> visitCurrentTimestamp(RexCall call) {
+      final SqlOperator op = call.getOperator();
+      // We may want to extend this to allow current_timestamp(n) in case of Trino <-> Trino conversion, to make
+      // intermediate representation more complete.
+      return Optional.of(rexBuilder.makeCast(typeFactory.createSqlType(TIMESTAMP, 3), rexBuilder.makeCall(op)));
     }
 
     // Hive allows for casting of TIMESTAMP to DECIMAL, which converts it to unix time if the decimal format is valid
