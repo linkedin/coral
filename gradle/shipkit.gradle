@@ -1,4 +1,3 @@
-import java.time.Duration
 //Plugin jars are added to the buildscript classpath in the root build.gradle file
 apply plugin: "org.shipkit.shipkit-auto-version" //https://github.com/shipkit/shipkit-auto-version
 
@@ -31,6 +30,5 @@ nexusPublishing {
   }
   transitionCheckOptions {
     maxRetries.set(100)
-    delayBetween.set(Duration.ofSeconds(10))
   }
 }
