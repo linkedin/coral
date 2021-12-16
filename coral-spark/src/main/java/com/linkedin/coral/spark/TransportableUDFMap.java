@@ -45,7 +45,7 @@ class TransportableUDFMap {
 
   static {
 
-    // LIHADOOP-48502: The following UDFs are the legacy Hive UDF. Since they have been converted to
+    // The following UDFs are the legacy Hive UDF. Since they have been converted to
     // Transport UDF, we point their class files to the corresponding Spark jar.
     add("com.linkedin.dali.udf.date.hive.DateFormatToEpoch", "com.linkedin.stdudfs.daliudfs.spark.DateFormatToEpoch",
         DALI_UDFS_IVY_URL_SPARK_2_11, DALI_UDFS_IVY_URL_SPARK_2_12);
@@ -61,7 +61,7 @@ class TransportableUDFMap {
         "com.linkedin.stdudfs.daliudfs.spark.IsGuestMemberId", DALI_UDFS_IVY_URL_SPARK_2_11,
         DALI_UDFS_IVY_URL_SPARK_2_12);
 
-    // LIHADOOP-49851 add the transportudf spark version for lookup UDF
+    // add the transportudf spark version for lookup UDF
     add("com.linkedin.dali.udf.istestmemberid.hive.IsTestMemberId",
         "com.linkedin.stdudfs.daliudfs.spark.IsTestMemberId", DALI_UDFS_IVY_URL_SPARK_2_11,
         DALI_UDFS_IVY_URL_SPARK_2_12);
@@ -72,12 +72,12 @@ class TransportableUDFMap {
     add("com.linkedin.dali.udf.sanitize.hive.Sanitize", "com.linkedin.stdudfs.daliudfs.spark.Sanitize",
         DALI_UDFS_IVY_URL_SPARK_2_11, DALI_UDFS_IVY_URL_SPARK_2_12);
 
-    // LIHADOOP-49851 add the transportudf spark version for lookup UDF
+    // add the transportudf spark version for lookup UDF
     add("com.linkedin.dali.udf.watbotcrawlerlookup.hive.WATBotCrawlerLookup",
         "com.linkedin.stdudfs.daliudfs.spark.WatBotCrawlerLookup", DALI_UDFS_IVY_URL_SPARK_2_11,
         DALI_UDFS_IVY_URL_SPARK_2_12);
 
-    // LIHADOOP-48502: The following UDFs are already defined using Transport UDF.
+    // The following UDFs are already defined using Transport UDF.
     // The class name is the corresponding Hive UDF.
     // We point their class files to the corresponding Spark jar file.
     add("com.linkedin.stdudfs.daliudfs.hive.DateFormatToEpoch", "com.linkedin.stdudfs.daliudfs.spark.DateFormatToEpoch",

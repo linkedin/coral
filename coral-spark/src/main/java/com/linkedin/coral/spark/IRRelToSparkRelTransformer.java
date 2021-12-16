@@ -234,7 +234,7 @@ class IRRelToSparkRelTransformer {
     }
 
     /**
-     * [LIHADOOP-43198] After failing to find the function name in BuiltinUDFMap and TransportableUDFMap,
+     * After failing to find the function name in BuiltinUDFMap and TransportableUDFMap,
      * we call this function to fall back to the original Hive UDF defined in HiveFunctionRegistry.
      * This is reasonable since Spark understands and has ability to run Hive UDF.
      */
@@ -251,7 +251,7 @@ class IRRelToSparkRelTransformer {
           // We do not need to handle the keyword built-in functions.
           VersionedSqlUserDefinedFunction daliUdf = (VersionedSqlUserDefinedFunction) sqlOp;
           String expandedFuncName = daliUdf.getViewDependentFunctionName();
-          //[LIHADOOP-44515] need to provide UDF dependency with ivy coordinates
+          // need to provide UDF dependency with ivy coordinates
           List<String> dependencies = daliUdf.getIvyDependencies();
           List<URI> listOfUris = dependencies.stream().map(URI::create).collect(Collectors.toList());
           sparkUDFInfo = Optional.of(

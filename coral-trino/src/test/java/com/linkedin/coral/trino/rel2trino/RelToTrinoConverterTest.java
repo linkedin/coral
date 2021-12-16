@@ -74,7 +74,6 @@ public class RelToTrinoConverterTest {
 
   @Test
   public void testMapStructAccess() {
-    // This test reproduces the bug in APA-6771, APA-7366
     String sql = String.format(
         "SELECT mcol[scol].IFIELD as mapStructAccess, mcol[scol].SFIELD as sField from %s where icol < 5", tableFour);
 

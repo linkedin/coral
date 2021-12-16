@@ -73,7 +73,6 @@ public class TestUtils {
 
     run(driver, String.join("\n", "", "CREATE VIEW IF NOT EXISTS foo_view", "AS", "SELECT b AS bcol, sum(c) AS sum_c",
         "FROM foo", "GROUP BY b"));
-    // [LIHADOOP-47172 test date literal in view definition
     run(driver, "DROP VIEW IF EXITS foo_v1");
     run(driver,
         String.join("\n", "", "CREATE VIEW IF NOT EXISTS foo_v1 ", "AS ",

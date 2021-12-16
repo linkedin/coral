@@ -431,7 +431,7 @@ public class ViewToAvroSchemaConverterTests {
     Assert.assertEquals(actualSchema.toString(true), TestUtils.loadSchema("testSelfJoin-expected.avsc"));
   }
 
-  // TODO: handle complex type (Array[Struct] in lateral view:  LIHADOOP-46695)
+  // TODO: handle complex type (Array[Struct] in lateral view)
   @Test(enabled = false)
   public void testLateralViewArrayWithComplexType() {
     String viewSql = "CREATE VIEW v AS " + "SELECT bl.Id AS Id_View_Col, bl.Array_Col_Struct AS Array_Struct_View_Col, "

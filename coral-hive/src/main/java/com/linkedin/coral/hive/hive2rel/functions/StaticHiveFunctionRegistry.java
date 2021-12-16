@@ -472,7 +472,7 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
     createAddUserDefinedFunction("com.linkedin.tscp.reporting.dali.udfs.SponsoredMessageNodeId", ReturnTypes.INTEGER,
         family(SqlTypeFamily.STRING));
 
-    // LIHADOOP-48502: The following UDFs are already defined using Transport UDF.
+    // The following UDFs are already defined using Transport UDF.
     // The class name is the corresponding Hive UDF.
     // We point their class files to the corresponding Spark jar file in TransportableUDFMap.
     createAddUserDefinedFunction("com.linkedin.stdudfs.daliudfs.hive.DateFormatToEpoch", BIGINT_NULLABLE,

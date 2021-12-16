@@ -137,8 +137,8 @@ public class TypeInfoToAvroSchemaConverter {
     return Schema.createUnion(schemas);
   }
 
-  // Previously, Hive use recordType[N] as the recordName for each structType, with the change we made in LIHADOOP-36761,
-  // the new record name will be in the form of "structNamespace.structName"
+  // Previously, Hive use recordType[N] as the recordName for each structType,
+  // now the new record name will be in the form of "structNamespace.structName" given the change made earlier.
   private Schema parseSchemaFromStruct(final StructTypeInfo typeInfo, final String recordNamespace,
       final String recordName) {
     final Schema recordSchema = convertFieldsTypeInfoToAvroSchema(recordNamespace, recordName,
