@@ -144,8 +144,8 @@ public class TestUtils {
       String replacement = null;
       String alias = m.group(1);
       if (alias.equalsIgnoreCase("integer") || alias.equalsIgnoreCase("double") || alias.equalsIgnoreCase("boolean")
-          || alias.equalsIgnoreCase("varchar") || alias.equalsIgnoreCase("real")
-          || alias.equalsIgnoreCase("varbinary")) {
+          || alias.equalsIgnoreCase("varchar") || alias.equalsIgnoreCase("real") || alias.equalsIgnoreCase("varbinary")
+          || alias.equalsIgnoreCase("timestamp")) {
         replacement = "AS " + alias.toUpperCase();
       } else {
         replacement = "AS \"" + m.group(1).toUpperCase() + "\"";
