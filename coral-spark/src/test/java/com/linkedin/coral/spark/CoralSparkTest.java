@@ -218,8 +218,8 @@ public class CoralSparkTest {
     System.out.println(relNodePlan);
     String convertToSparkSql = CoralSpark.create(relNode).getSparkSql();
 
-    String targetSql = "SELECT complex.a, t0.ccol\n"
-        + "FROM default.complex LATERAL VIEW OUTER EXPLODE(if(complex.c IS NOT NULL AND size(complex.c) > 0, complex.c, ARRAY (NULL))) t0 AS ccol";
+    String targetSql =
+        "SELECT complex.a, t0.ccol\n" + "FROM default.complex LATERAL VIEW OUTER EXPLODE(complex.c) t0 AS ccol";
     assertEquals(convertToSparkSql, targetSql);
   }
 
@@ -245,8 +245,8 @@ public class CoralSparkTest {
   public void testLateralViewMapOuter() {
     RelNode relNode = TestUtils.toRelNode(String.join("\n", "", "SELECT a, t.ccol1, t.ccol2", "FROM complex",
         "LATERAL VIEW OUTER explode(complex.m) t as ccol1, ccol2"));
-    String targetSql = String.join("\n", "SELECT complex.a, t0.ccol1, t0.ccol2",
-        "FROM default.complex LATERAL VIEW OUTER EXPLODE(if(complex.m IS NOT NULL AND size(complex.m) > 0, complex.m, MAP (NULL, NULL))) t0 AS ccol1, ccol2");
+    String targetSql = "SELECT complex.a, t0.ccol1, t0.ccol2\n"
+        + "FROM default.complex LATERAL VIEW OUTER EXPLODE(complex.m) t0 AS ccol1, ccol2";
     assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
   }
 
@@ -537,8 +537,8 @@ public class CoralSparkTest {
     RelNode relNode = TestUtils
         .toRelNode("SELECT arr.alias FROM foo tmp LATERAL VIEW OUTER POSEXPLODE(ARRAY('a', 'b')) arr AS pos, alias");
 
-    String targetSql = "SELECT t0.alias\n"
-        + "FROM default.foo LATERAL VIEW OUTER POSEXPLODE(if(ARRAY ('a', 'b') IS NOT NULL AND size(ARRAY ('a', 'b')) > 0, ARRAY ('a', 'b'), ARRAY (NULL))) t0 AS pos, alias";
+    String targetSql =
+        "SELECT t0.alias\n" + "FROM default.foo LATERAL VIEW OUTER POSEXPLODE(ARRAY ('a', 'b')) t0 AS pos, alias";
     assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
   }
 
