@@ -42,7 +42,7 @@ git clone https://github.com/linkedin/coral.git
 Build:
 
 ```bash
-./gradlew build
+./gradlew clean build
 ```
 
 ## Contributing
