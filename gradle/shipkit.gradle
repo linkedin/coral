@@ -25,6 +25,8 @@ nexusPublishing {
       sonatype {
         username = System.getenv("SONATYPE_USER")
         password = System.getenv("SONATYPE_PWD")
+        nexusUrl.set(uri("https://s01.oss.sonatype.org/service/local/"))
+        snapshotRepositoryUrl.set(uri("https://s01.oss.sonatype.org/content/repositories/snapshots/"))
       }
     }
   }
