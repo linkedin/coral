@@ -386,7 +386,7 @@ class SchemaUtilities {
     }
 
     Schema partitionColumnsSchema =
-        convertFieldSchemaToAvroSchema("partitionCols", "partitionCols", false, tableOrView.getPartitionKeys());
+        convertFieldSchemaToAvroSchema("partitionCols", "partitionCols", true, tableOrView.getPartitionKeys());
 
     List<Schema.Field> fieldsWithPartitionColumns = cloneFieldList(schema.getFields());
     fieldsWithPartitionColumns.addAll(cloneFieldList(partitionColumnsSchema.getFields(), true));
