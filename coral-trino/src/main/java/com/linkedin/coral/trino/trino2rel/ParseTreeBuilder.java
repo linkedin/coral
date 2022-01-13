@@ -30,7 +30,7 @@ import com.linkedin.coral.common.calcite.CalciteUtil;
 import com.linkedin.coral.hive.hive2rel.functions.HiveFunctionResolver;
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 
-import io.trino.sql.tree.*;
+import coral.shading.io.trino.sql.tree.*;
 
 import static com.linkedin.coral.common.calcite.CalciteUtil.*;
 import static java.lang.String.format;
