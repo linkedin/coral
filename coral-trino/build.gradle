@@ -3,8 +3,8 @@ apply from: "$rootDir/gradle/java-publication.gradle"
 dependencies {
   compile deps.'gson'
   compile deps.'javax-annotation'
-  compile deps.'trino-parser'
   compile project(path: ':coral-hive')
+  implementation deps.'trino-parser'
   implementation 'com.github.vertical-blank:sql-formatter:2.0.2'
 
   testCompile deps.'assertj'
