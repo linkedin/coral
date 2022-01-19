@@ -471,6 +471,10 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
         FunctionReturnTypes.STRING, family(SqlTypeFamily.INTEGER));
     createAddUserDefinedFunction("com.linkedin.tscp.reporting.dali.udfs.SponsoredMessageNodeId", ReturnTypes.INTEGER,
         family(SqlTypeFamily.STRING));
+    createAddUserDefinedFunction("com.linkedin.orbit.emerger.coercerudfs.DynamicsLineOfBusinessCoercer",
+        FunctionReturnTypes.STRING, STRING);
+    createAddUserDefinedFunction("com.linkedin.etg.business.common.udfs.MapD365OptionSet", FunctionReturnTypes.STRING,
+        STRING_STRING_STRING);
 
     // The following UDFs are already defined using Transport UDF.
     // The class name is the corresponding Hive UDF.
@@ -534,7 +538,7 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
         family(SqlTypeFamily.ANY, SqlTypeFamily.STRING));
     createAddUserDefinedFunction("com.linkedin.udfs.standard.hive.ObfuscateMapValEvolve", ARG0,
         family(SqlTypeFamily.ANY, SqlTypeFamily.STRING));
-
+    createAddUserDefinedFunction("com.linkedin.jobs.udf.hive.ConvertIndustryCode", FunctionReturnTypes.STRING, STRING);
     // This is a Hive Custom UDF which is a simplified version of 'date-converter' package.
     // This UDF is not converted to a transport UDF.
     createAddUserDefinedFunction("com.linkedin.dali.customudf.date.hive.DateFormatToEpoch", BIGINT_NULLABLE,

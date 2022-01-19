@@ -95,6 +95,9 @@ public class CalciteTrinoUDFMap {
     createUDFMapEntry(UDF_MAP, daliToCalciteOp("com.linkedin.stdudfs.parsing.hive.UserAgentParser"), 2,
         "useragentparser");
     createUDFMapEntry(UDF_MAP, daliToCalciteOp("com.linkedin.stdudfs.lookup.hive.BrowserLookup"), 3, "browserlookup");
+    createUDFMapEntry(UDF_MAP, daliToCalciteOp("com.linkedin.jobs.udf.hive.ConvertIndustryCode"), 1,
+        "converttoindustryv1");
+
     addDaliUDFs();
   }
 
