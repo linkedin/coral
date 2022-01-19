@@ -137,6 +137,10 @@ class TransportableUDFMap {
     add("com.linkedin.stdudfs.lookup.hive.BrowserLookup", "com.linkedin.stdudfs.lookup.spark.BrowserLookup",
         "ivy://com.linkedin.standard-udfs-parsing:parsing-stdudfs:3.0.3?classifier=spark_2.11",
         "ivy://com.linkedin.standard-udfs-parsing:parsing-stdudfs:3.0.3?classifier=spark_2.12");
+
+    add("com.linkedin.jobs.udf.hive.ConvertIndustryCode", "com.linkedin.jobs.udf.spark.ConvertIndustryCode",
+        "ivy://com.linkedin.jobs-udf:jobs-udfs:2.1.2?classifier=spark_2.11",
+        "ivy://com.linkedin.jobs-udf:jobs-udfs:2.1.2?classifier=spark_2.12");
   }
 
   /**
