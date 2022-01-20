@@ -34,11 +34,6 @@ import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 import static com.linkedin.coral.trino.trino2rel.TrinoSqlConformance.*;
 
 
-/**TrinoSqlConformance
- * Public class to convert Trino SQL to Calcite relational algebra.
- * This class should serve as the main entry point for clients to convert
- * Trino queries.
- */
 /*
  * We provide this class as a public interface by providing a thin wrapper
  * around TrinoSqlToRelConverter. Directly using TrinoSqlToRelConverter will

@@ -39,7 +39,7 @@ import com.linkedin.coral.hive.hive2rel.rel.HiveUncollect;
 
 
 /**
- * Class to convert Hive SQL to Calcite RelNode. This class
+ * Class to convert Trino SQL to Calcite RelNode. This class
  * specializes the functionality provided by {@link SqlToRelConverter}.
  */
 class TrinoSqlToRelConverter extends SqlToRelConverter {
