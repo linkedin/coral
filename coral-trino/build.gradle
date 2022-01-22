@@ -4,7 +4,7 @@ dependencies {
   compile deps.'gson'
   compile deps.'javax-annotation'
   compile project(path: ':coral-hive')
-  implementation deps.'trino-parser'
+  compile project(path: ':shading:coral-trino-parser', configuration: 'shadow')
   implementation 'com.github.vertical-blank:sql-formatter:2.0.2'
 
   testCompile deps.'assertj'
