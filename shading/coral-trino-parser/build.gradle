@@ -1,11 +1,11 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ConfigureShadowRelocation
 
 plugins {
-  id 'java'
-  id 'maven-publish'
   id 'com.github.johnrengelman.shadow'
 }
+
 apply from: "$rootDir/gradle/java-publication.gradle"
+
 dependencies {
   implementation 'io.trino:trino-parser:355'
 }
@@ -20,14 +20,6 @@ shadowJar {
 }
 
 assemble.dependsOn shadowJar
-
-publishing {
-  publications {
-    shadow(MavenPublication) { publication ->
-      project.shadow.component(publication)
-    }
-  }
-}
 
 artifacts {
   archives shadowJar, javadocJar, sourcesJar
