@@ -5,7 +5,7 @@
  */
 package com.linkedin.coral.trino.trino2rel;
 
-import coral.shading.io.trino.sql.tree.Node;
+import io.trino.sql.tree.Node;
 
 
 public class UnhandledASTNodeException extends RuntimeException {
