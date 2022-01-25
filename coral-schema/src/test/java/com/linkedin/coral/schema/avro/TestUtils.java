@@ -70,11 +70,11 @@ public class TestUtils {
   public static void registerUdfs() {
     // add the following 3 test UDF to StaticHiveFunctionRegistry for testing purpose.
     StaticHiveFunctionRegistry.createAddUserDefinedFunction("com.linkedin.coral.hive.hive2rel.CoralTestUDF1",
-        ReturnTypes.BOOLEAN, family(SqlTypeFamily.INTEGER));
+        ReturnTypes.BOOLEAN_NULLABLE, family(SqlTypeFamily.INTEGER));
     StaticHiveFunctionRegistry.createAddUserDefinedFunction("com.linkedin.coral.hive.hive2rel.CoralTestUDF2",
-        ReturnTypes.BOOLEAN, family(SqlTypeFamily.INTEGER));
+        ReturnTypes.BOOLEAN_NULLABLE, family(SqlTypeFamily.INTEGER));
     StaticHiveFunctionRegistry.createAddUserDefinedFunction("com.linkedin.coral.hive.hive2rel.CoralTestUDF3",
-        ReturnTypes.INTEGER, family(SqlTypeFamily.INTEGER));
+        ReturnTypes.INTEGER_NULLABLE, family(SqlTypeFamily.INTEGER));
     StaticHiveFunctionRegistry.createAddUserDefinedTableFunction("com.linkedin.coral.hive.hive2rel.CoralTestUDTF",
         ImmutableList.of("col1"), ImmutableList.of(SqlTypeName.INTEGER), family(SqlTypeFamily.INTEGER));
     StaticHiveFunctionRegistry.createAddUserDefinedFunction(

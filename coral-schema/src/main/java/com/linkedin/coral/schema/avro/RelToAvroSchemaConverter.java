@@ -424,10 +424,10 @@ public class RelToAvroSchemaConverter {
        * For SqlUserDefinedFunction and SqlOperator RexCall, no need to handle it recursively
        * and only return type of udf or sql operator is relevant
        */
-      RelDataType fieldType = rexCall.getType();
-      boolean isNullable = SchemaUtilities.isFieldNullable(rexCall, inputSchema);
+      RelDataType inferredType = rexCall.getType();
+      boolean isNullable = inferredType.isNullable();
 
-      appendField(fieldType, isNullable,
+      appendField(inferredType, isNullable,
           SchemaUtilities.generateDocumentationForFunctionCall(rexCall, inputSchema, inputNode));
 
       return rexCall;
@@ -468,7 +468,7 @@ public class RelToAvroSchemaConverter {
         String newFieldName = SchemaUtilities.getFieldName(oldFieldName, suggestNewFieldName);
 
         RelDataType fieldType = rexFieldAccess.getType();
-        boolean isNullable = SchemaUtilities.isFieldNullable((RexCall) referenceExpr, inputSchema);
+        boolean isNullable = fieldType.isNullable();
         // TODO: add field documentation
         SchemaUtilities.appendField(newFieldName, fieldType, null, fieldAssembler, isNullable);
       } else {

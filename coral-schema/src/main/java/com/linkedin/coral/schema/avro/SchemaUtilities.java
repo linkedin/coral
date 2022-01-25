@@ -217,32 +217,6 @@ class SchemaUtilities {
     }
   }
 
-  static boolean isFieldNullable(@Nonnull RexCall rexCall, @Nonnull Schema inputSchema) {
-    Preconditions.checkNotNull(rexCall);
-    Preconditions.checkNotNull(inputSchema);
-
-    // the field is non-nullable only if all operands are RexInputRef
-    // and corresponding field schema type of RexInputRef index is not UNION
-    List<RexNode> operands = rexCall.getOperands();
-    for (RexNode operand : operands) {
-      if (operand instanceof RexInputRef) {
-        Schema.Field field = inputSchema.getFields().get(((RexInputRef) operand).getIndex());
-        if (Schema.Type.UNION.equals(field.schema().getType())) {
-          return true;
-        }
-      } else if (operand instanceof RexCall) {
-        boolean isNullable = isFieldNullable((RexCall) operand, inputSchema);
-        if (isNullable) {
-          return true;
-        }
-      } else {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
   static void appendField(@Nonnull String fieldName, @Nonnull Schema.Field field,
       @Nonnull SchemaBuilder.FieldAssembler<Schema> fieldAssembler) {
     Preconditions.checkNotNull(fieldName);
