@@ -1,0 +1,34 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ConfigureShadowRelocation
+
+plugins {
+  id 'java'
+  id 'maven-publish'
+  id 'com.github.johnrengelman.shadow'
+}
+apply from: "$rootDir/gradle/java-publication.gradle"
+dependencies {
+  implementation 'io.trino:trino-parser:355'
+}
+
+task relocateShadowJar(type: ConfigureShadowRelocation) {
+  target = tasks.shadowJar
+  prefix = 'coral.shading'
+}
+
+shadowJar {
+  dependsOn(relocateShadowJar)
+}
+
+assemble.dependsOn shadowJar
+
+publishing {
+  publications {
+    shadow(MavenPublication) { publication ->
+      project.shadow.component(publication)
+    }
+  }
+}
+
+artifacts {
+  archives shadowJar, javadocJar, sourcesJar
+}

@@ -9,9 +9,9 @@ import org.apache.calcite.tools.FrameworkConfig;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
-import io.trino.sql.parser.ParsingOptions;
-import io.trino.sql.parser.SqlParser;
-import io.trino.sql.tree.Statement;
+import coral.shading.io.trino.sql.parser.ParsingOptions;
+import coral.shading.io.trino.sql.parser.SqlParser;
+import coral.shading.io.trino.sql.tree.Statement;
 
 import static com.linkedin.coral.trino.rel2trino.TestTable.*;
 import static com.linkedin.coral.trino.rel2trino.TestUtils.*;
