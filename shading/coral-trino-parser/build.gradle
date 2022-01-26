@@ -7,7 +7,7 @@ plugins {
 apply from: "$rootDir/gradle/java-publication.gradle"
 
 dependencies {
-  implementation 'io.trino:trino-parser:355'
+  compileOnly 'io.trino:trino-parser:355'
 }
 
 task relocateShadowJar(type: ConfigureShadowRelocation) {
@@ -16,6 +16,9 @@ task relocateShadowJar(type: ConfigureShadowRelocation) {
 }
 
 shadowJar {
+  configurations = [
+    project.configurations.compileOnly
+  ]
   dependsOn(relocateShadowJar)
 }
 
