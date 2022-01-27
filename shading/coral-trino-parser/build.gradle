@@ -1,0 +1,29 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ConfigureShadowRelocation
+
+plugins {
+  id 'com.github.johnrengelman.shadow'
+}
+
+apply from: "$rootDir/gradle/java-publication.gradle"
+
+dependencies {
+  compileOnly 'io.trino:trino-parser:355'
+}
+
+task relocateShadowJar(type: ConfigureShadowRelocation) {
+  target = tasks.shadowJar
+  prefix = 'coral.shading'
+}
+
+shadowJar {
+  configurations = [
+    project.configurations.compileOnly
+  ]
+  dependsOn(relocateShadowJar)
+}
+
+assemble.dependsOn shadowJar
+
+artifacts {
+  archives shadowJar, javadocJar, sourcesJar
+}

@@ -28,7 +28,7 @@ import com.linkedin.coral.common.HiveTypeSystem;
 import com.linkedin.coral.common.calcite.CalciteUtil;
 import com.linkedin.coral.common.functions.Function;
 
-import io.trino.sql.tree.*;
+import coral.shading.io.trino.sql.tree.*;
 
 import static com.linkedin.coral.common.calcite.CalciteUtil.*;
 import static java.lang.String.format;
