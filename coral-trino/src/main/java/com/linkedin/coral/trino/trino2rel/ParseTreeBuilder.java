@@ -6,7 +6,6 @@
 package com.linkedin.coral.trino.trino2rel;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
@@ -27,8 +26,7 @@ import org.apache.commons.lang3.ObjectUtils;
 
 import com.linkedin.coral.common.HiveTypeSystem;
 import com.linkedin.coral.common.calcite.CalciteUtil;
-import com.linkedin.coral.hive.hive2rel.functions.HiveFunctionResolver;
-import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
+import com.linkedin.coral.common.functions.Function;
 
 import io.trino.sql.tree.*;
 
@@ -86,8 +84,7 @@ public class ParseTreeBuilder extends AstVisitor<SqlNode, ParserVisitorContext> 
       ImmutableSet.of(SqlKind.FIRST_VALUE, SqlKind.LAST_VALUE, SqlKind.LEAD, SqlKind.LAG);
 
   private final SqlTypeFactoryImpl sqlTypeFactory = new SqlTypeFactoryImpl(new HiveTypeSystem());
-  private final HiveFunctionResolver functionResolver =
-      new HiveFunctionResolver(new StaticHiveFunctionRegistry(), new ConcurrentHashMap<>());
+  private final StaticTrinoFunctionRegistry functionRegistry = new StaticTrinoFunctionRegistry();
 
   // convert the Presto node parse location to the Calcite SqlParserPos
   private SqlParserPos getPos(Node node) {
@@ -365,17 +362,26 @@ public class ParseTreeBuilder extends AstVisitor<SqlNode, ParserVisitorContext> 
     if (node.getFilter().isPresent()) {
       throw new UnhandledASTNodeException(node, UNSUPPORTED_EXCEPTION_MSG);
     }
+    String functionName = node.getName().toString().toLowerCase(Locale.ROOT);
     SqlParserPos pos = getPos(node);
     List<SqlNode> operands =
         node.getArguments().stream().map(arg -> process(arg, context)).collect(Collectors.toList());
-    SqlIdentifier functionName = convertQualifiedName(node.getName(), getPos(node));
+    SqlIdentifier functionIdentifier = convertQualifiedName(node.getName(), getPos(node));
     if (node.getName().toString().equalsIgnoreCase("COUNT") && operands.isEmpty()) {
       operands.add(createStarIdentifier(ZERO));
     }
-    SqlUnresolvedFunction unresolvedFunction =
-        new SqlUnresolvedFunction(functionName, null, null, null, null, SqlFunctionCategory.USER_DEFINED_FUNCTION);
+
+    SqlOperator convertedFunction;
+    Collection<Function> functions = functionRegistry.lookup(functionName);
+
+    if (!functions.isEmpty()) {
+      convertedFunction = functions.iterator().next().getSqlOperator();
+    } else {
+      convertedFunction = new SqlUnresolvedFunction(functionIdentifier, null, null, null, null,
+          SqlFunctionCategory.USER_DEFINED_FUNCTION);
+    }
     SqlLiteral functionQualifier = node.isDistinct() ? SqlLiteral.createSymbol(SqlSelectKeyword.DISTINCT, ZERO) : null;
-    SqlCall call = createCall(unresolvedFunction, operands, functionQualifier);
+    SqlCall call = createCall(convertedFunction, operands, functionQualifier);
     if (NULL_CARED_OPERATOR.contains(call.getKind())) {
       if (node.getNullTreatment().isPresent()) {
         if (node.getNullTreatment().get().equals(FunctionCall.NullTreatment.IGNORE)) {
@@ -852,8 +858,17 @@ public class ParseTreeBuilder extends AstVisitor<SqlNode, ParserVisitorContext> 
 
   @Override
   protected SqlNode visitCall(Call node, ParserVisitorContext context) {
-    return PROCEDURE_CALL.createCall(getPos(node),
-        getUnresolvedFunction(node.getName().toString(), toListOfSqlNode(node.getArguments(), context)));
+    String callName = node.getName().toString().toLowerCase(Locale.ROOT);
+    Collection<Function> functions = functionRegistry.lookup(callName);
+    SqlCall call;
+
+    if (!functions.isEmpty()) {
+      call = createCall(functions.iterator().next().getSqlOperator(), toListOfSqlNode(node.getArguments(), context));
+
+    } else {
+      call = getUnresolvedFunction(node.getName().toString(), toListOfSqlNode(node.getArguments(), context));
+    }
+    return PROCEDURE_CALL.createCall(getPos(node), call);
   }
 
   @Override
