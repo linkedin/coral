@@ -24,6 +24,25 @@ import static org.testng.Assert.*;
 public class TrinoToRelConverterTest {
   public static TrinoToRelConverter converter;
 
+
+  @BeforeClass
+  public void beforeClass() {
+    // TODO: migrate to use HiveMetastoreClient
+    Map<String, Map<String, List<String>>> localMetastore = new HashMap<>();
+    HashMap<String, List<String>> db = new HashMap<>();
+    localMetastore.put("default", db);
+
+    db.put("foo", ImmutableList.of("show|int", "a|int", "b|int", "x|date", "y|date"));
+    db.put("my_table", ImmutableList.of("x|array<int>", "y|array<array<int>>", "z|int"));
+    db.put("src", ImmutableList.of("x|int", "k|int", "v|string"));
+    db.put("emp", ImmutableList.of("depname|string", "empno|int", "salary|int"));
+
+    db.put("a", ImmutableList.of("b|int", "id|int", "x|int"));
+    db.put("b", ImmutableList.of("foobar|int", "id|int", "y|int"));
+
+    this.converter = new TrinoToRelConverter(localMetastore);
+  }
+
   @DataProvider(name = "support")
   public Iterator<Object[]> getSupportedSql() {
     return ImmutableList.<List<String>> builder()
@@ -73,72 +92,73 @@ public class TrinoToRelConverterTest {
         .add(ImmutableList.of("select x from unnest(array[1, 2, 3]) t(x)",
             "LogicalProject(X=[$0])\n" + "  HiveUncollect\n" + "    LogicalProject(col=[ARRAY(1, 2, 3)])\n"
                 + "      LogicalValues(tuples=[[{ 0 }]])\n"))
-        .add(ImmutableList.of("select * from users cross join unnest(friends)",
-            "LogicalProject(id=[$0], friends=[$1], EXPR$0=[$2])\n"
-                + "  LogicalCorrelate(correlation=[$cor0], joinType=[inner], requiredColumns=[{1}])\n"
-                + "    LogicalTableScan(table=[[hive, default, users]])\n" + "    HiveUncollect\n"
-                + "      LogicalProject(col=[$cor0.friends])\n" + "        LogicalValues(tuples=[[{ 0 }]])\n"))
-        .add(ImmutableList.of("select id, friend from users cross join unnest(friends) t(friend)",
-            "LogicalProject(ID=[$0], FRIEND=[$2])\n"
-                + "  LogicalCorrelate(correlation=[$cor0], joinType=[inner], requiredColumns=[{1}])\n"
-                + "    LogicalTableScan(table=[[hive, default, users]])\n" + "    HiveUncollect\n"
-                + "      LogicalProject(col=[$cor0.friends])\n" + "        LogicalValues(tuples=[[{ 0 }]])\n"))
+        .add(ImmutableList.of("select * from my_table cross join unnest(x)",
+            "LogicalProject(x=[$0], y=[$1], z=[$2], EXPR$0=[$3])\n"
+                + "  LogicalCorrelate(correlation=[$cor0], joinType=[inner], requiredColumns=[{0}])\n"
+                + "    LogicalTableScan(table=[[hive, default, my_table]])\n" + "    HiveUncollect\n"
+                + "      LogicalProject(col=[$cor0.x])\n" + "        LogicalValues(tuples=[[{ 0 }]])\n"))
+        .add(ImmutableList.of("select z from my_table cross join unnest(x) t(x_)",
+            "LogicalProject(Z=[$2])\n"
+                + "  LogicalCorrelate(correlation=[$cor0], joinType=[inner], requiredColumns=[{0}])\n"
+                + "    LogicalTableScan(table=[[hive, default, my_table]])\n" + "    HiveUncollect\n"
+                + "      LogicalProject(col=[$cor0.x])\n" + "        LogicalValues(tuples=[[{ 0 }]])\n"))
         .add(ImmutableList.of("select * from unnest(array[1, 2, 3]) with ordinality",
             "LogicalProject(EXPR$0=[$0], ORDINALITY=[$1])\n" + "  HiveUncollect(withOrdinality=[true])\n"
                 + "    LogicalProject(col=[ARRAY(1, 2, 3)])\n" + "      LogicalValues(tuples=[[{ 0 }]])\n"))
         .add(ImmutableList.of("select * from unnest(array[1, 2, 3]) with ordinality t(x, y)",
             "LogicalProject(X=[$0], Y=[$1])\n" + "  HiveUncollect(withOrdinality=[true])\n"
                 + "    LogicalProject(col=[ARRAY(1, 2, 3)])\n" + "      LogicalValues(tuples=[[{ 0 }]])\n"))
-        .add(ImmutableList.of("select * from users cross join unnest(friends) with ordinality",
-            "LogicalProject(id=[$0], friends=[$1], EXPR$0=[$2], ORDINALITY=[$3])\n"
-                + "  LogicalCorrelate(correlation=[$cor0], joinType=[inner], requiredColumns=[{1}])\n"
-                + "    LogicalTableScan(table=[[hive, default, users]])\n"
-                + "    HiveUncollect(withOrdinality=[true])\n" + "      LogicalProject(col=[$cor0.friends])\n"
+        .add(ImmutableList.of("select * from my_table cross join unnest(x) with ordinality",
+            "LogicalProject(x=[$0], y=[$1], z=[$2], EXPR$0=[$3], ORDINALITY=[$4])\n"
+                + "  LogicalCorrelate(correlation=[$cor0], joinType=[inner], requiredColumns=[{0}])\n"
+                + "    LogicalTableScan(table=[[hive, default, my_table]])\n"
+                + "    HiveUncollect(withOrdinality=[true])\n" + "      LogicalProject(col=[$cor0.x])\n"
                 + "        LogicalValues(tuples=[[{ 0 }]])\n"))
-        .add(ImmutableList.of("select id, friends from users cross join unnest(friends) with ordinality t(x, y)",
-            "LogicalProject(ID=[$0], FRIENDS=[$1])\n"
-                + "  LogicalCorrelate(correlation=[$cor0], joinType=[inner], requiredColumns=[{1}])\n"
-                + "    LogicalTableScan(table=[[hive, default, users]])\n"
-                + "    HiveUncollect(withOrdinality=[true])\n" + "      LogicalProject(col=[$cor0.friends])\n"
+        .add(ImmutableList.of("select z from my_table cross join unnest(x) with ordinality t(a, b)",
+            "LogicalProject(Z=[$2])\n"
+                + "  LogicalCorrelate(correlation=[$cor0], joinType=[inner], requiredColumns=[{0}])\n"
+                + "    LogicalTableScan(table=[[hive, default, my_table]])\n"
+                + "    HiveUncollect(withOrdinality=[true])\n" + "      LogicalProject(col=[$cor0.x])\n"
                 + "        LogicalValues(tuples=[[{ 0 }]])\n"))
         .add(ImmutableList.of(
-            "with a (id) as (with x as (select 123 from c) select * from x)    , b (id) as (select 999 from c) select * from a join b using (id)",
+            "with a (id) as (with x as (select 123 from foo) select * from x)    , b (id) as (select 999 from foo) select * from a join b using (id)",
             "LogicalProject(ID=[COALESCE($0, $1)])\n" + "  LogicalJoin(condition=[=($0, $1)], joinType=[inner])\n"
-                + "    LogicalProject(EXPR$0=[123])\n" + "      LogicalTableScan(table=[[hive, default, c]])\n"
-                + "    LogicalProject(EXPR$0=[999])\n" + "      LogicalTableScan(table=[[hive, default, c]])\n"))
+                + "    LogicalProject(EXPR$0=[123])\n" + "      LogicalTableScan(table=[[hive, default, foo]])\n"
+                + "    LogicalProject(EXPR$0=[999])\n" + "      LogicalTableScan(table=[[hive, default, foo]])\n"))
         .add(ImmutableList.of("select cast('123' as bigint)",
             "LogicalProject(EXPR$0=[CAST('123'):BIGINT])\n" + "  LogicalValues(tuples=[[{ 0 }]])\n"))
-        .add(ImmutableList.of("select TOTALPRICE \"my price\" from \"$MY\" \"ORDERS\"",
-            "LogicalProject(MY PRICE=[$0])\n" + "  LogicalTableScan(table=[[hive, default, $MY]])\n"))
+        .add(ImmutableList.of("select a \"my price\" from \"foo\" \"ORDERS\"",
+            "LogicalProject(MY PRICE=[$1])\n" + "  LogicalTableScan(table=[[hive, default, foo]])\n"))
         .add(ImmutableList.of(
-            "select * from a cross join b tablesample system (10) join bar tablesample bernoulli (30) on a.id = b.id",
-            "LogicalProject(b=[$0], id=[$1], x=[$2], foobar=[$3], id0=[$4], my_array=[$5])\n"
+            "select * from a cross join b tablesample system (10) join my_table tablesample bernoulli (30) on a.id = b.id",
+            "LogicalProject(b=[$0], id=[$1], x=[$2], foobar=[$3], id0=[$4], y=[$5], x0=[$6], y0=[$7], z=[$8])\n"
                 + "  LogicalJoin(condition=[=($1, $4)], joinType=[inner])\n"
                 + "    LogicalJoin(condition=[true], joinType=[inner])\n"
                 + "      LogicalTableScan(table=[[hive, default, a]])\n"
                 + "      Sample(mode=[system], rate=[0.1], repeatableSeed=[-])\n"
                 + "        LogicalTableScan(table=[[hive, default, b]])\n"
                 + "    Sample(mode=[bernoulli], rate=[0.3], repeatableSeed=[-])\n"
-                + "      LogicalTableScan(table=[[hive, default, bar]])\n"))
+                + "      LogicalTableScan(table=[[hive, default, my_table]])\n"))
         .add(ImmutableList.of(
-            "select * from a cross join b tablesample system (10) join bar tablesample bernoulli (30) on not(a.id > b.id)",
-            "LogicalProject(b=[$0], id=[$1], x=[$2], foobar=[$3], id0=[$4], my_array=[$5])\n"
+            "select * from a cross join b tablesample system (10) join my_table tablesample bernoulli (30) on not(a.id > b.id)",
+            "LogicalProject(b=[$0], id=[$1], x=[$2], foobar=[$3], id0=[$4], y=[$5], x0=[$6], y0=[$7], z=[$8])\n"
                 + "  LogicalJoin(condition=[NOT(>($1, $4))], joinType=[inner])\n"
                 + "    LogicalJoin(condition=[true], joinType=[inner])\n"
                 + "      LogicalTableScan(table=[[hive, default, a]])\n"
                 + "      Sample(mode=[system], rate=[0.1], repeatableSeed=[-])\n"
                 + "        LogicalTableScan(table=[[hive, default, b]])\n"
                 + "    Sample(mode=[bernoulli], rate=[0.3], repeatableSeed=[-])\n"
-                + "      LogicalTableScan(table=[[hive, default, bar]])\n"))
+                + "      LogicalTableScan(table=[[hive, default, my_table]])\n"))
         .add(ImmutableList.of("select * from a limit all",
             "LogicalProject(b=[$0], id=[$1], x=[$2])\n" + "  LogicalTableScan(table=[[hive, default, a]])\n"))
         .add(ImmutableList.of("select * from a order by x limit all",
             "LogicalSort(sort0=[$2], dir0=[ASC-nulls-first])\n" + "  LogicalProject(b=[$0], id=[$1], x=[$2])\n"
                 + "    LogicalTableScan(table=[[hive, default, a]])\n"))
-        .add(ImmutableList.of("select * from c union select * from d",
-            "LogicalUnion(all=[false])\n" + "  LogicalProject(foobar=[$0])\n"
-                + "    LogicalTableScan(table=[[hive, default, c]])\n" + "  LogicalProject(foobar=[$0])\n"
-                + "    LogicalTableScan(table=[[hive, default, d]])\n"))
+        .add(ImmutableList.of("select * from a union select * from b",
+            "LogicalUnion(all=[false])\n" + "  LogicalProject(b=[$0], id=[$1], x=[$2])\n"
+                + "    LogicalTableScan(table=[[hive, default, a]])\n"
+                + "  LogicalProject(foobar=[$0], id=[$1], y=[$2])\n"
+                + "    LogicalTableScan(table=[[hive, default, b]])\n"))
         .add(ImmutableList.of("select strpos('foobar', 'b') as pos",
             "LogicalProject(POS=[instr('FOOBAR', 'B')])\n" + "  LogicalValues(tuples=[[{ 0 }]])\n"))
         .add(ImmutableList.of("select foo(3)",
@@ -167,31 +187,6 @@ public class TrinoToRelConverterTest {
   }
 
   //TODO: Add unsupported SQL tests
-
-  @BeforeClass
-  public void beforeClass() {
-    // TODO: migrate to use HiveMetastoreClient
-    Map<String, Map<String, List<String>>> localMetastore = new HashMap<>();
-    HashMap<String, List<String>> db = new HashMap<>();
-    localMetastore.put("default", db);
-
-    db.put("bar", ImmutableList.of("my_array|array<int>"));
-    db.put("foo", ImmutableList.of("show|int", "a|int", "b|int", "x|date", "y|date"));
-    db.put("my_table", ImmutableList.of("x|array<int>", "y|array<array<int>>", "z|int"));
-    db.put("users", ImmutableList.of("id|int", "friends|array<int>"));
-    db.put("src", ImmutableList.of("x|int", "k|int", "v|string"));
-    db.put("emp", ImmutableList.of("depname|string", "empno|int", "salary|int"));
-    db.put("information_schema", ImmutableList.of("tables|string", "empno|int", "salary|int"));
-
-    db.put("a", ImmutableList.of("b|int", "id|int", "x|int"));
-    db.put("b", ImmutableList.of("foobar|int", "id|int"));
-    db.put("c", ImmutableList.of("foobar|int"));
-    db.put("d", ImmutableList.of("foobar|int"));
-
-    db.put("$MY", ImmutableList.of("totalprice|int"));
-
-    this.converter = new TrinoToRelConverter(localMetastore);
-  }
 
   public static String relToStr(RelNode rel) {
     return RelOptUtil.toString(rel);
