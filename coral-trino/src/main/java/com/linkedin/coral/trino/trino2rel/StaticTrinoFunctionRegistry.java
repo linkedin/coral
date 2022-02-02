@@ -6,10 +6,7 @@
 package com.linkedin.coral.trino.trino2rel;
 
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Predicate;
 
 import org.apache.calcite.rel.type.RelDataType;
@@ -36,18 +33,9 @@ import com.linkedin.coral.com.google.common.collect.Multimap;
 import com.linkedin.coral.common.functions.Function;
 import com.linkedin.coral.common.functions.FunctionRegistry;
 import com.linkedin.coral.common.functions.FunctionReturnTypes;
-import com.linkedin.coral.common.functions.GenericProjectFunction;
 import com.linkedin.coral.common.functions.OperandTypeInference;
 import com.linkedin.coral.common.functions.SameOperandTypeExceptFirstOperandChecker;
-import com.linkedin.coral.hive.hive2rel.functions.HiveExplodeOperator;
-import com.linkedin.coral.hive.hive2rel.functions.HiveFunction;
-import com.linkedin.coral.hive.hive2rel.functions.HiveJsonTupleOperator;
-import com.linkedin.coral.hive.hive2rel.functions.HiveNamedStructFunction;
-import com.linkedin.coral.hive.hive2rel.functions.HivePosExplodeOperator;
-import com.linkedin.coral.hive.hive2rel.functions.HiveRLikeOperator;
-import com.linkedin.coral.hive.hive2rel.functions.HiveReflectOperator;
 
-import static com.linkedin.coral.hive.hive2rel.functions.CoalesceStructUtility.*;
 import static org.apache.calcite.sql.fun.SqlLibraryOperators.*;
 import static org.apache.calcite.sql.fun.SqlStdOperatorTable.*;
 import static org.apache.calcite.sql.type.OperandTypes.*;
@@ -79,8 +67,6 @@ public class StaticTrinoFunctionRegistry implements FunctionRegistry {
     addFunctionEntry("avg", AVG);
     addFunctionEntry("min", MIN);
     addFunctionEntry("max", MAX);
-    createAddUserDefinedFunction("collect_list", FunctionReturnTypes.ARRAY_OF_ARG0_TYPE, ANY);
-    createAddUserDefinedFunction("collect_set", FunctionReturnTypes.ARRAY_OF_ARG0_TYPE, ANY);
 
     // window functions
     addFunctionEntry("row_number", ROW_NUMBER);
@@ -99,29 +85,12 @@ public class StaticTrinoFunctionRegistry implements FunctionRegistry {
     addFunctionEntry("var_samp", VAR_SAMP);
     addFunctionEntry("var_pop", VAR_POP);
 
-    //addFunctionEntry("in", HiveInOperator.IN);
-    FUNCTION_MAP.put("in", HiveFunction.IN);
-
-    //addFunctionEntry("in", SqlStdOperatorTable.IN);
-
     // operators
-    addFunctionEntry("rlike", HiveRLikeOperator.RLIKE);
-    addFunctionEntry("regexp", HiveRLikeOperator.REGEXP);
     addFunctionEntry("!=", NOT_EQUALS);
     addFunctionEntry("==", EQUALS);
 
     // conditional function
-    addFunctionEntry("tok_isnull", IS_NULL);
-    addFunctionEntry("tok_isnotnull", IS_NOT_NULL);
-    FUNCTION_MAP.put("when", HiveFunction.WHEN);
-    FUNCTION_MAP.put("case", HiveFunction.CASE);
-    FUNCTION_MAP.put("between", HiveFunction.BETWEEN);
     addFunctionEntry("nullif", NULLIF);
-    addFunctionEntry("isnull", IS_NULL);
-    addFunctionEntry("isnotnull", IS_NOT_NULL);
-
-    // TODO: this should be arg1 or arg2 nullable
-    createAddUserDefinedFunction("nvl", ARG0_NULLABLE, and(family(SqlTypeFamily.ANY, SqlTypeFamily.ANY), SAME_SAME));
 
     // calcite models 'if' function as CASE operator. We can use CASE but that will cause translation
     // to SQL to be odd although correct. So, we add 'if' as UDF
@@ -130,29 +99,16 @@ public class StaticTrinoFunctionRegistry implements FunctionRegistry {
             new SameOperandTypeExceptFirstOperandChecker(3, SqlTypeName.BOOLEAN), null));
 
     addFunctionEntry("coalesce", COALESCE);
-    // cast operator
-    addCastOperatorEntries();
 
     // Complex type constructors
     addFunctionEntry("array", ARRAY_VALUE_CONSTRUCTOR);
-    addFunctionEntry("struct", ROW);
-    addFunctionEntry("named_struct", HiveNamedStructFunction.NAMED_STRUCT);
-    addFunctionEntry("generic_project", GenericProjectFunction.GENERIC_PROJECT);
-
-    // conversion functions
-    createAddUserDefinedFunction("binary", FunctionReturnTypes.BINARY,
-        or(family(SqlTypeFamily.STRING), family(SqlTypeFamily.BINARY)));
 
     // mathematical functions
     // we need to define new strategy for hive to allow null operands by default for everything
-    createAddUserDefinedFunction("pmod", FunctionReturnTypes.BIGINT, NUMERIC_NUMERIC);
     createAddUserDefinedFunction("round", DOUBLE_NULLABLE,
-        family(ImmutableList.of(SqlTypeFamily.NUMERIC, SqlTypeFamily.INTEGER), optionalOrd(1)));
-    createAddUserDefinedFunction("bround", DOUBLE_NULLABLE,
         family(ImmutableList.of(SqlTypeFamily.NUMERIC, SqlTypeFamily.INTEGER), optionalOrd(1)));
     createAddUserDefinedFunction("floor", BIGINT_FORCE_NULLABLE, family(SqlTypeFamily.NUMERIC));
     createAddUserDefinedFunction("ceil", BIGINT_FORCE_NULLABLE, family(SqlTypeFamily.NUMERIC));
-    createAddUserDefinedFunction("ceiling", BIGINT_FORCE_NULLABLE, family(SqlTypeFamily.NUMERIC));
     createAddUserDefinedFunction("rand", DOUBLE_NULLABLE,
         family(ImmutableList.of(SqlTypeFamily.INTEGER), optionalOrd(0)));
     createAddUserDefinedFunction("exp", DOUBLE_NULLABLE, NUMERIC);
@@ -163,12 +119,6 @@ public class StaticTrinoFunctionRegistry implements FunctionRegistry {
     createAddUserDefinedFunction("pow", DOUBLE_NULLABLE, NUMERIC_NUMERIC);
     createAddUserDefinedFunction("power", DOUBLE_NULLABLE, NUMERIC_NUMERIC);
     createAddUserDefinedFunction("sqrt", DOUBLE_NULLABLE, NUMERIC);
-    createAddUserDefinedFunction("hex", FunctionReturnTypes.STRING,
-        or(family(SqlTypeFamily.STRING), family(SqlTypeFamily.NUMERIC), family(SqlTypeFamily.BINARY)));
-    createAddUserDefinedFunction("unhex", FunctionReturnTypes.BINARY, STRING);
-    createAddUserDefinedFunction("conv", FunctionReturnTypes.STRING,
-        or(family(SqlTypeFamily.EXACT_NUMERIC, SqlTypeFamily.INTEGER, SqlTypeFamily.INTEGER),
-            family(SqlTypeFamily.STRING, SqlTypeFamily.INTEGER, SqlTypeFamily.INTEGER)));
     createAddUserDefinedFunction("abs", DOUBLE_NULLABLE, NUMERIC);
     createAddUserDefinedFunction("sin", DOUBLE_NULLABLE, NUMERIC);
     createAddUserDefinedFunction("asin", DOUBLE_NULLABLE, NUMERIC);
@@ -183,11 +133,7 @@ public class StaticTrinoFunctionRegistry implements FunctionRegistry {
     createAddUserDefinedFunction("sign", ARG0_NULLABLE, NUMERIC);
     createAddUserDefinedFunction("e", DOUBLE, NILADIC);
     createAddUserDefinedFunction("pi", DOUBLE, NILADIC);
-    createAddUserDefinedFunction("factorial", BIGINT_NULLABLE, family(SqlTypeFamily.INTEGER));
     createAddUserDefinedFunction("cbrt", DOUBLE_NULLABLE, NUMERIC);
-    createAddUserDefinedFunction("shiftleft", ARG0_NULLABLE, EXACT_NUMERIC_EXACT_NUMERIC);
-    createAddUserDefinedFunction("shiftright", ARG0_NULLABLE, EXACT_NUMERIC_EXACT_NUMERIC);
-    createAddUserDefinedFunction("shiftrightunsigned", ARG0_NULLABLE, EXACT_NUMERIC_EXACT_NUMERIC);
     createAddUserDefinedFunction("greatest", ARG0_NULLABLE, SAME_VARIADIC);
     createAddUserDefinedFunction("least", ARG0_NULLABLE, SAME_VARIADIC);
     createAddUserDefinedFunction("width_bucket", INTEGER_NULLABLE,
@@ -195,11 +141,6 @@ public class StaticTrinoFunctionRegistry implements FunctionRegistry {
 
     // string functions
     // TODO: operand types are not strictly true since these functions can take null literal
-    // and most of these entries don't allow null literals. This will work for most common usages
-    // but it's easy to write HiveQL to make these fail
-    createAddUserDefinedFunction("ascii", ReturnTypes.INTEGER, STRING);
-    createAddUserDefinedFunction("base64", FunctionReturnTypes.STRING, BINARY);
-    createAddUserDefinedFunction("character_length", ReturnTypes.INTEGER, STRING);
     createAddUserDefinedFunction("chr", FunctionReturnTypes.STRING, NUMERIC);
     createAddUserDefinedFunction("concat", FunctionReturnTypes.STRING, SAME_VARIADIC);
     // [CORAL-24] Tried setting this to
@@ -234,36 +175,13 @@ public class StaticTrinoFunctionRegistry implements FunctionRegistry {
       }
     });
 
-    createAddUserDefinedFunction("context_ngrams", LEAST_RESTRICTIVE,
-        family(SqlTypeFamily.ARRAY, SqlTypeFamily.ARRAY, SqlTypeFamily.INTEGER, SqlTypeFamily.INTEGER));
-    createAddUserDefinedFunction("decode", FunctionReturnTypes.STRING,
-        family(SqlTypeFamily.BINARY, SqlTypeFamily.STRING));
-    createAddUserDefinedFunction("elt", FunctionReturnTypes.STRING, VARIADIC);
-    createAddUserDefinedFunction("encode", FunctionReturnTypes.BINARY, STRING_STRING);
-    createAddUserDefinedFunction("field", ReturnTypes.INTEGER, VARIADIC);
-    createAddUserDefinedFunction("find_in_set", ReturnTypes.INTEGER, STRING_STRING);
-    createAddUserDefinedFunction("format_number", FunctionReturnTypes.STRING, NUMERIC_INTEGER);
-    createAddUserDefinedFunction("get_json_object", FunctionReturnTypes.STRING, STRING_STRING);
-    createAddUserDefinedFunction("in_file", ReturnTypes.BOOLEAN, STRING_STRING);
     createAddUserDefinedFunction("initcap", FunctionReturnTypes.STRING, STRING);
-    createAddUserDefinedFunction("instr", ReturnTypes.INTEGER, STRING_STRING);
     createAddUserDefinedFunction("length", INTEGER_NULLABLE, STRING);
-    createAddUserDefinedFunction("levenshtein", ReturnTypes.INTEGER, STRING_STRING);
-    createAddUserDefinedFunction("locate", FunctionReturnTypes.STRING,
-        family(ImmutableList.of(SqlTypeFamily.STRING, SqlTypeFamily.STRING, SqlTypeFamily.INTEGER), optionalOrd(2)));
     addFunctionEntry("lower", LOWER);
-    addFunctionEntry("lcase", LOWER);
     addFunctionEntry("translate", TRANSLATE3);
-    addFunctionEntry("translate3", TRANSLATE3);
-    createAddUserDefinedFunction("lpad", FunctionReturnTypes.STRING,
-        family(SqlTypeFamily.STRING, SqlTypeFamily.INTEGER, SqlTypeFamily.STRING));
     createAddUserDefinedFunction("ltrim", FunctionReturnTypes.STRING, STRING);
     createAddUserDefinedFunction("ngrams", LEAST_RESTRICTIVE,
         family(SqlTypeFamily.ARRAY, SqlTypeFamily.INTEGER, SqlTypeFamily.INTEGER, SqlTypeFamily.INTEGER));
-    createAddUserDefinedFunction("octet_length", ReturnTypes.INTEGER, STRING);
-    createAddUserDefinedFunction("parse_url", FunctionReturnTypes.STRING,
-        family(Collections.nCopies(3, SqlTypeFamily.STRING), optionalOrd(2)));
-    createAddUserDefinedFunction("printf", FunctionReturnTypes.STRING, VARIADIC);
     createAddUserDefinedFunction("regexp_extract", ARG0,
         family(ImmutableList.of(SqlTypeFamily.STRING, SqlTypeFamily.STRING, SqlTypeFamily.INTEGER), optionalOrd(2)));
     createAddUserDefinedFunction("regexp_replace", FunctionReturnTypes.STRING, STRING_STRING_STRING);
@@ -274,42 +192,21 @@ public class StaticTrinoFunctionRegistry implements FunctionRegistry {
     createAddUserDefinedFunction("rpad", FunctionReturnTypes.STRING,
         family(SqlTypeFamily.STRING, SqlTypeFamily.INTEGER, SqlTypeFamily.STRING));
     createAddUserDefinedFunction("rtrim", FunctionReturnTypes.STRING, STRING);
-    createAddUserDefinedFunction("sentences", LEAST_RESTRICTIVE, STRING_STRING_STRING);
-    createAddUserDefinedFunction("soundex", FunctionReturnTypes.STRING, STRING);
-    createAddUserDefinedFunction("space", FunctionReturnTypes.STRING, NUMERIC);
     createAddUserDefinedFunction("split", FunctionReturnTypes.arrayOfType(SqlTypeName.VARCHAR), STRING_STRING);
-    createAddUserDefinedFunction("str_to_map", FunctionReturnTypes.mapOfType(SqlTypeName.VARCHAR, SqlTypeName.VARCHAR),
-        family(Collections.nCopies(3, SqlTypeFamily.STRING), optionalOrd(ImmutableList.of(1, 2))));
     createAddUserDefinedFunction("substr", FunctionReturnTypes.STRING,
         family(ImmutableList.of(SqlTypeFamily.STRING, SqlTypeFamily.INTEGER, SqlTypeFamily.INTEGER), optionalOrd(2)));
     createAddUserDefinedFunction("substring", FunctionReturnTypes.STRING,
         family(ImmutableList.of(SqlTypeFamily.STRING, SqlTypeFamily.INTEGER, SqlTypeFamily.INTEGER), optionalOrd(2)));
 
-    createAddUserDefinedFunction("substring_index", FunctionReturnTypes.STRING, STRING_STRING_INTEGER);
     createAddUserDefinedFunction("trim", FunctionReturnTypes.STRING, STRING);
-    createAddUserDefinedFunction("unbase64", explicit(SqlTypeName.VARBINARY), or(STRING, NULLABLE_LITERAL));
     addFunctionEntry("upper", UPPER);
-    addFunctionEntry("ucase", UPPER);
     addFunctionEntry("initcap", INITCAP);
     createAddUserDefinedFunction("md5", FunctionReturnTypes.STRING,
         or(family(SqlTypeFamily.STRING), family(SqlTypeFamily.BINARY)));
     createAddUserDefinedFunction("sha1", FunctionReturnTypes.STRING,
         or(family(SqlTypeFamily.STRING), family(SqlTypeFamily.BINARY)));
-    createAddUserDefinedFunction("sha", FunctionReturnTypes.STRING,
-        or(family(SqlTypeFamily.STRING), family(SqlTypeFamily.BINARY)));
     createAddUserDefinedFunction("crc32", FunctionReturnTypes.BIGINT,
         or(family(SqlTypeFamily.STRING), family(SqlTypeFamily.BINARY)));
-
-    // xpath functions
-    createAddUserDefinedFunction("xpath", FunctionReturnTypes.arrayOfType(SqlTypeName.VARCHAR), STRING_STRING);
-    createAddUserDefinedFunction("xpath_string", FunctionReturnTypes.STRING, STRING_STRING);
-    createAddUserDefinedFunction("xpath_boolean", ReturnTypes.BOOLEAN, STRING_STRING);
-    createAddUserDefinedFunction("xpath_short", FunctionReturnTypes.SMALLINT, STRING_STRING);
-    createAddUserDefinedFunction("xpath_int", ReturnTypes.INTEGER, STRING_STRING);
-    createAddUserDefinedFunction("xpath_long", FunctionReturnTypes.BIGINT, STRING_STRING);
-    createAddUserDefinedFunction("xpath_float", DOUBLE, STRING_STRING);
-    createAddUserDefinedFunction("xpath_double", DOUBLE, STRING_STRING);
-    createAddUserDefinedFunction("xpath_number", DOUBLE, STRING_STRING);
 
     // Date Functions
     createAddUserDefinedFunction("from_unixtime", FunctionReturnTypes.STRING,
@@ -322,30 +219,19 @@ public class StaticTrinoFunctionRegistry implements FunctionRegistry {
     createAddUserDefinedFunction("quarter", ReturnTypes.INTEGER, STRING);
     createAddUserDefinedFunction("month", ReturnTypes.INTEGER, STRING);
     createAddUserDefinedFunction("day", ReturnTypes.INTEGER, STRING);
-    createAddUserDefinedFunction("dayofmonth", ReturnTypes.INTEGER, STRING);
     createAddUserDefinedFunction("hour", ReturnTypes.INTEGER, or(STRING, DATETIME));
     createAddUserDefinedFunction("minute", ReturnTypes.INTEGER, STRING);
     createAddUserDefinedFunction("second", ReturnTypes.INTEGER, STRING);
-    createAddUserDefinedFunction("weekofyear", ReturnTypes.INTEGER, STRING);
     //TODO: add extract UDF
     createAddUserDefinedFunction("datediff", ReturnTypes.INTEGER, STRING_STRING);
     createAddUserDefinedFunction("date_add", FunctionReturnTypes.STRING,
         or(family(SqlTypeFamily.DATE, SqlTypeFamily.INTEGER), family(SqlTypeFamily.TIMESTAMP, SqlTypeFamily.INTEGER),
             family(SqlTypeFamily.STRING, SqlTypeFamily.INTEGER)));
 
-    createAddUserDefinedFunction("date_sub", FunctionReturnTypes.STRING,
-        or(family(SqlTypeFamily.DATE, SqlTypeFamily.INTEGER), family(SqlTypeFamily.TIMESTAMP, SqlTypeFamily.INTEGER),
-            family(SqlTypeFamily.STRING, SqlTypeFamily.INTEGER)));
     createAddUserDefinedFunction("from_utc_timestamp", explicit(SqlTypeName.TIMESTAMP),
         family(SqlTypeFamily.ANY, SqlTypeFamily.STRING));
     addFunctionEntry("current_date", CURRENT_DATE);
     addFunctionEntry("current_timestamp", CURRENT_TIMESTAMP);
-    createAddUserDefinedFunction("add_months", FunctionReturnTypes.STRING,
-        family(SqlTypeFamily.STRING, SqlTypeFamily.INTEGER));
-    createAddUserDefinedFunction("last_day", FunctionReturnTypes.STRING, STRING);
-    createAddUserDefinedFunction("next_day", FunctionReturnTypes.STRING, STRING_STRING);
-    createAddUserDefinedFunction("trunc", FunctionReturnTypes.STRING, STRING_STRING);
-    createAddUserDefinedFunction("months_between", DOUBLE, family(SqlTypeFamily.DATE, SqlTypeFamily.DATE));
     createAddUserDefinedFunction("date_format", FunctionReturnTypes.STRING,
         or(family(SqlTypeFamily.DATE, SqlTypeFamily.STRING), family(SqlTypeFamily.TIMESTAMP, SqlTypeFamily.STRING),
             family(SqlTypeFamily.STRING, SqlTypeFamily.STRING)));
@@ -353,8 +239,6 @@ public class StaticTrinoFunctionRegistry implements FunctionRegistry {
         or(STRING_STRING, family(SqlTypeFamily.NUMERIC, SqlTypeFamily.STRING)));
 
     // Collection functions
-    addFunctionEntry("size", CARDINALITY);
-    createAddUserDefinedFunction("array_contains", ReturnTypes.BOOLEAN, family(SqlTypeFamily.ARRAY, SqlTypeFamily.ANY));
     createAddUserDefinedFunction("map_keys", opBinding -> {
       RelDataType operandType = opBinding.getOperandType(0);
       RelDataTypeFactory typeFactory = opBinding.getTypeFactory();
@@ -366,23 +250,6 @@ public class StaticTrinoFunctionRegistry implements FunctionRegistry {
       RelDataTypeFactory typeFactory = opBinding.getTypeFactory();
       return typeFactory.createArrayType(operandType.getValueType(), -1);
     }, family(SqlTypeFamily.MAP));
-
-    createAddUserDefinedFunction("array_contains", ReturnTypes.BOOLEAN, family(SqlTypeFamily.ARRAY, SqlTypeFamily.ANY));
-    createAddUserDefinedFunction("sort_array", ARG0, ARRAY);
-
-    createAddUserDefinedFunction("extract_union", COALESCE_STRUCT_FUNCTION_RETURN_STRATEGY,
-        or(ANY, family(SqlTypeFamily.ANY, SqlTypeFamily.INTEGER)));
-    createAddUserDefinedFunction("coalesce_struct", COALESCE_STRUCT_FUNCTION_RETURN_STRATEGY,
-        or(ANY, family(SqlTypeFamily.ANY, SqlTypeFamily.INTEGER)));
-
-    // UDTFs
-    addFunctionEntry("explode", HiveExplodeOperator.EXPLODE);
-    addFunctionEntry("posexplode", HivePosExplodeOperator.POS_EXPLODE);
-    addFunctionEntry("json_tuple", HiveJsonTupleOperator.JSON_TUPLE);
-
-    // reflect functions
-    addFunctionEntry("reflect", HiveReflectOperator.REFLECT);
-    addFunctionEntry("java_method", HiveReflectOperator.REFLECT);
 
     // Context functions
     addFunctionEntry("current_user", CURRENT_USER);
@@ -450,14 +317,6 @@ public class StaticTrinoFunctionRegistry implements FunctionRegistry {
       SqlOperandTypeChecker operandTypeChecker) {
     return new SqlUserDefinedFunction(new SqlIdentifier(functionName, SqlParserPos.ZERO), returnTypeInference, null,
         operandTypeChecker, null, null);
-  }
-
-  private static void addCastOperatorEntries() {
-    String[] castFunctions =
-        { "tok_boolean", "tok_int", "tok_string", "tok_double", "tok_float", "tok_bigint", "tok_tinyint", "tok_smallint", "tok_char", "tok_decimal", "tok_varchar", "tok_binary", "tok_date", "tok_timestamp" };
-    for (String f : castFunctions) {
-      FUNCTION_MAP.put(f, HiveFunction.CAST);
-    }
   }
 
   /**
