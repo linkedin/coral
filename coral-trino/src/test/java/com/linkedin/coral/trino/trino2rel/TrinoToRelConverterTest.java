@@ -5,42 +5,46 @@
  */
 package com.linkedin.coral.trino.trino2rel;
 
-import java.util.HashMap;
+import java.io.File;
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import com.google.common.collect.ImmutableList;
 
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.sql.type.ReturnTypes;
+import org.apache.calcite.sql.type.SqlTypeFamily;
+import org.apache.commons.io.FileUtils;
+import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.hive.metastore.api.MetaException;
+import org.apache.hadoop.hive.ql.metadata.HiveException;
+import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import static com.linkedin.coral.trino.trino2rel.ToRelTestUtils.*;
+import static org.apache.calcite.sql.type.OperandTypes.*;
 import static org.testng.Assert.*;
 
 
 public class TrinoToRelConverterTest {
-  public static TrinoToRelConverter converter;
-
+  private static HiveConf conf;
 
   @BeforeClass
-  public void beforeClass() {
-    // TODO: migrate to use HiveMetastoreClient
-    Map<String, Map<String, List<String>>> localMetastore = new HashMap<>();
-    HashMap<String, List<String>> db = new HashMap<>();
-    localMetastore.put("default", db);
+  public void beforeClass() throws HiveException, IOException, MetaException {
+    conf = ToRelTestUtils.loadResourceHiveConf();
+    ToRelTestUtils.initializeViews(conf);
 
-    db.put("foo", ImmutableList.of("show|int", "a|int", "b|int", "x|date", "y|date"));
-    db.put("my_table", ImmutableList.of("x|array<int>", "y|array<array<int>>", "z|int"));
-    db.put("src", ImmutableList.of("x|int", "k|int", "v|string"));
-    db.put("emp", ImmutableList.of("depname|string", "empno|int", "salary|int"));
+    StaticTrinoFunctionRegistry.createAddTrinoFunction("foo", "foo", ReturnTypes.INTEGER,
+        or(NILADIC, family(SqlTypeFamily.ANY)));
+  }
 
-    db.put("a", ImmutableList.of("b|int", "id|int", "x|int"));
-    db.put("b", ImmutableList.of("foobar|int", "id|int", "y|int"));
-
-    this.converter = new TrinoToRelConverter(localMetastore);
+  @AfterTest
+  public void afterClass() throws IOException {
+    FileUtils.deleteDirectory(new File(conf.get(CORAL_FROM_TRINO_TEST_DIR)));
   }
 
   @DataProvider(name = "support")
@@ -173,16 +177,16 @@ public class TrinoToRelConverterTest {
         .add(ImmutableList.of("select count(*) from foo",
             "LogicalAggregate(group=[{}], EXPR$0=[COUNT()])\n" + "  LogicalProject($f0=[0])\n"
                 + "    LogicalTableScan(table=[[hive, default, foo]])\n"))
-        .add(ImmutableList.of("select count(*) as x from src group by k, v",
-            "LogicalProject(X=[$2])\n" + "  LogicalAggregate(group=[{0, 1}], X=[COUNT()])\n"
-                + "    LogicalProject(k=[$1], v=[$2])\n" + "      LogicalTableScan(table=[[hive, default, src]])\n"))
-        .add(ImmutableList.of("select count(*) as x from src group by cube (k, v)",
-            "LogicalProject(X=[$2])\n"
-                + "  LogicalAggregate(group=[{0, 1}], groups=[[{0, 1}, {0}, {1}, {}]], X=[COUNT()])\n"
-                + "    LogicalProject(k=[$1], v=[$2])\n" + "      LogicalTableScan(table=[[hive, default, src]])\n"))
-        .add(ImmutableList.of("select count(*) x from src group by rollup (k, v)",
-            "LogicalProject(X=[$2])\n" + "  LogicalAggregate(group=[{0, 1}], groups=[[{0, 1}, {0}, {}]], X=[COUNT()])\n"
-                + "    LogicalProject(k=[$1], v=[$2])\n" + "      LogicalTableScan(table=[[hive, default, src]])\n"))
+        .add(ImmutableList.of("select count(*) as c from foo group by a, b",
+            "LogicalProject(C=[$2])\n" + "  LogicalAggregate(group=[{0, 1}], C=[COUNT()])\n"
+                + "    LogicalProject(a=[$1], b=[$2])\n" + "      LogicalTableScan(table=[[hive, default, foo]])\n"))
+        .add(ImmutableList.of("select count(*) as c from foo group by cube (a, b)",
+            "LogicalProject(C=[$2])\n"
+                + "  LogicalAggregate(group=[{0, 1}], groups=[[{0, 1}, {0}, {1}, {}]], C=[COUNT()])\n"
+                + "    LogicalProject(a=[$1], b=[$2])\n" + "      LogicalTableScan(table=[[hive, default, foo]])\n"))
+        .add(ImmutableList.of("select count(*) c from foo group by rollup (a, b)",
+            "LogicalProject(C=[$2])\n" + "  LogicalAggregate(group=[{0, 1}], groups=[[{0, 1}, {0}, {}]], C=[COUNT()])\n"
+                + "    LogicalProject(a=[$1], b=[$2])\n" + "      LogicalTableScan(table=[[hive, default, foo]])\n"))
         .build().stream().map(x -> new Object[] { x.get(0), x.get(1) }).iterator();
   }
 

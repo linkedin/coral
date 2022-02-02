@@ -66,14 +66,8 @@ import static org.apache.calcite.sql.type.ReturnTypes.*;
  */
 public class StaticTrinoFunctionRegistry implements FunctionRegistry {
 
-  public static final String IS_TEST_MEMBER_ID_CLASS = "com.linkedin.dali.udf.istestmemberid.hive.IsTestMemberId";
-
   // TODO: Make this immutable using builder
   static final Multimap<String, Function> FUNCTION_MAP = HashMultimap.create();
-
-  // Used for registering UDTFs, the key is the function name and the value is a list of field names returned by the UDTF
-  // We need it because we need to know the return field names of UDTF to do the conversion in ParseTreeBuilder.visitLateralViewUDTF
-  public static final Map<String, ImmutableList<String>> UDTF_RETURN_FIELD_NAME_MAP = new HashMap<>();
 
   static {
 
@@ -97,7 +91,6 @@ public class StaticTrinoFunctionRegistry implements FunctionRegistry {
     addFunctionEntry("first_value", FIRST_VALUE);
     addFunctionEntry("last_value", LAST_VALUE);
     addFunctionEntry("nth_value", NTH_VALUE);
-    addFunctionEntry("lag", LAG);
     addFunctionEntry("lead", LEAD);
     addFunctionEntry("stddev", STDDEV);
     addFunctionEntry("stddev_samp", STDDEV_SAMP);
@@ -143,7 +136,6 @@ public class StaticTrinoFunctionRegistry implements FunctionRegistry {
     // Complex type constructors
     addFunctionEntry("array", ARRAY_VALUE_CONSTRUCTOR);
     addFunctionEntry("struct", ROW);
-    addFunctionEntry("map", MAP_VALUE_CONSTRUCTOR);
     addFunctionEntry("named_struct", HiveNamedStructFunction.NAMED_STRUCT);
     addFunctionEntry("generic_project", GenericProjectFunction.GENERIC_PROJECT);
 
@@ -396,8 +388,6 @@ public class StaticTrinoFunctionRegistry implements FunctionRegistry {
     addFunctionEntry("current_user", CURRENT_USER);
 
     // Trino specific functions
-    createAddTrinoFunction("foo", "foo", ReturnTypes.INTEGER, NILADIC); // for testing
-    createAddTrinoFunction("foo", "foo", ReturnTypes.INTEGER, family(SqlTypeFamily.ANY)); // for testing
     createAddTrinoFunction("strpos", "instr", ReturnTypes.INTEGER, STRING_STRING);
   }
 

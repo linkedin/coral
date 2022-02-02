@@ -22,6 +22,10 @@ import org.apache.calcite.sql.validate.SqlValidatorScope;
 import com.linkedin.coral.common.functions.FunctionFieldReferenceOperator;
 
 
+/**
+ * Validates the parse tree of a Trino SQL statement,
+ * and provides semantic information about the parse tree.
+ */
 class TrinoSqlValidator extends SqlValidatorImpl {
 
   public TrinoSqlValidator(SqlOperatorTable opTab, CalciteCatalogReader catalogReader, JavaTypeFactory typeFactory,
