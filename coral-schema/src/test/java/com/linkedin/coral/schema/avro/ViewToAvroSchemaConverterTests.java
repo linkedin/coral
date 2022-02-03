@@ -521,6 +521,16 @@ public class ViewToAvroSchemaConverterTests {
     Assert.assertEquals(actualSchema.toString(true), TestUtils.loadSchema("testNullabilityUdf-expected.avsc"));
   }
 
+  @Test
+  public void testNullabliltyExtractUnionUDF() {
+    String sql = "select extract_union(unionCol) as c1 from basenestedunion";
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+
+    Schema actual = viewToAvroSchemaConverter.toAvroSchema(sql);
+
+    Assert.assertEquals(actual.toString(true), TestUtils.loadSchema("testNullabilityExtractUnionUDF-expected.avsc"));
+  }
+
   @Test(enabled = false)
   public void testRenameToLowercase() {
     String viewSql = "CREATE VIEW v AS " + "SELECT bc.Id AS id, bc.Array_Col AS array_col " + "FROM basecomplex bc "

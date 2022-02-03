@@ -7,12 +7,7 @@ package com.linkedin.coral.schema.avro;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.StringJoiner;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -55,6 +50,11 @@ import static org.apache.avro.Schema.Type.NULL;
 class SchemaUtilities {
   private static final Logger LOG = LoggerFactory.getLogger(SchemaUtilities.class);
   private static final String DALI_ROW_SCHEMA = "dali.row.schema";
+
+  // TODO: 2/2/22 Needs to refactor this into a separate registry class
+  // if the num of functions in this set get bigger
+  private static final Set<String> USE_CALCITE_NULLABILITY_FUNCS =
+      Collections.unmodifiableSet(new HashSet<>(Arrays.asList("extract_union")));
 
   // private constructor for utility class
   private SchemaUtilities() {
@@ -220,6 +220,12 @@ class SchemaUtilities {
   static boolean isFieldNullable(@Nonnull RexCall rexCall, @Nonnull Schema inputSchema) {
     Preconditions.checkNotNull(rexCall);
     Preconditions.checkNotNull(inputSchema);
+
+    // we first filter against these static list of functions, whose nullability should be
+    // determined by calcite rather than avro.schema.literal
+    if (USE_CALCITE_NULLABILITY_FUNCS.contains(rexCall.getOperator().getName().toLowerCase())) {
+      return rexCall.getType().isNullable();
+    }
 
     // the field is non-nullable only if all operands are RexInputRef
     // and corresponding field schema type of RexInputRef index is not UNION

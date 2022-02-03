@@ -1,0 +1,38 @@
+{
+  "type" : "record",
+  "name" : "baseNestedUnion",
+  "namespace" : "coral.schema.avro.base.nested.union",
+  "fields" : [ {
+    "name" : "c1",
+    "type" : [ {
+      "type" : "record",
+      "name" : "c1",
+      "namespace" : "rel_avro",
+      "fields" : [ {
+        "name" : "tag_0",
+        "type" : [ "null", {
+          "type" : "record",
+          "name" : "tag_0",
+          "fields" : [ {
+            "name" : "f1",
+            "type" : [ "null", "string" ]
+          } ]
+        } ]
+      }, {
+        "name" : "tag_1",
+        "type" : [ "null", {
+          "type" : "record",
+          "name" : "tag_1",
+          "fields" : [ {
+            "name" : "f1",
+            "type" : [ "null", "int" ]
+          }, {
+            "name" : "f2",
+            "type" : [ "null", "string" ]
+          } ]
+        } ]
+      } ]
+    }, "null" ],
+    "doc" : "Field created in view by applying UDF 'extract_union' with argument(s): coral.schema.avro.base.nested.union.baseNestedUnion.unionCol"
+  } ]
+}

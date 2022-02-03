@@ -15,7 +15,9 @@ import com.google.common.base.Preconditions;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeField;
+import org.apache.calcite.sql.type.ReturnTypes;
 import org.apache.calcite.sql.type.SqlReturnTypeInference;
+import org.apache.calcite.sql.type.SqlTypeTransforms;
 
 
 /**
@@ -51,21 +53,22 @@ public class CoalesceStructUtility {
    * def coalesce_struct(struct:struct_tr, ordinal: int): field_at_ordinal = {...}
    *
    */
-  public static final SqlReturnTypeInference COALESCE_STRUCT_FUNCTION_RETURN_STRATEGY = opBinding -> {
-    int numArgs = opBinding.getOperandCount();
-    RelDataTypeFactory typeFactory = opBinding.getTypeFactory();
-    Preconditions.checkState(numArgs == 1 || numArgs == 2);
-    RelDataType coalescedDataType = coalesce(opBinding.getOperandType(0), typeFactory);
-    // 1-arg case
-    if (numArgs == 1) {
-      return coalescedDataType;
-    }
-    // 2-arg case
-    else {
-      int ordinal = opBinding.getOperandLiteralValue(1, Integer.class);
-      return coalescedDataType.getFieldList().get(ordinal).getType();
-    }
-  };
+  public static final SqlReturnTypeInference COALESCE_STRUCT_FUNCTION_RETURN_STRATEGY =
+      ReturnTypes.cascade(opBinding -> {
+        int numArgs = opBinding.getOperandCount();
+        RelDataTypeFactory typeFactory = opBinding.getTypeFactory();
+        Preconditions.checkState(numArgs == 1 || numArgs == 2);
+        RelDataType coalescedDataType = coalesce(opBinding.getOperandType(0), typeFactory);
+        // 1-arg case
+        if (numArgs == 1) {
+          return coalescedDataType;
+        }
+        // 2-arg case
+        else {
+          int ordinal = opBinding.getOperandLiteralValue(1, Integer.class);
+          return coalescedDataType.getFieldList().get(ordinal).getType();
+        }
+      }, SqlTypeTransforms.TO_NULLABLE);
   private static final String TRINO_PREFIX = "field";
   private static final String HIVE_EXTRACT_UNION_PREFIX = "tag_";
 
