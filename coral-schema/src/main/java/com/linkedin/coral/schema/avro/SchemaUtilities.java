@@ -51,6 +51,8 @@ class SchemaUtilities {
   private static final Logger LOG = LoggerFactory.getLogger(SchemaUtilities.class);
   private static final String DALI_ROW_SCHEMA = "dali.row.schema";
 
+  // TODO: 2/2/22 Needs to refactor this into a separate registry class
+  // if the num of functions in this set get bigger
   private static final Set<String> USE_CALCITE_NULLABILITY_FUNCS =
       Collections.unmodifiableSet(new HashSet<>(Arrays.asList("extract_union")));
 

@@ -1,0 +1,49 @@
+{
+  "type": "record",
+  "name": "baseNestedUnion",
+  "namespace" : "coral.schema.avro.base.nested.union",
+  "fields": [
+    {
+      "name": "unionCol",
+      "type": [
+        {
+          "type": "record",
+          "name": "r1",
+          "fields": [
+            {
+              "name": "f1",
+              "type": [
+                "null",
+                "string"
+              ],
+              "default": null
+            }
+          ]
+        },
+        {
+          "type": "record",
+          "name": "r2",
+          "fields": [
+            {
+              "name": "f1",
+              "type": [
+                "null",
+                "int"
+              ],
+              "default": null
+            },
+            {
+              "name": "f2",
+              "type": [
+                "null",
+                "string"
+              ],
+              "default": null
+            }
+          ]
+        }
+      ],
+      "default": null
+    }
+  ]
+}
