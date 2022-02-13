@@ -219,9 +219,9 @@ public class HiveToRelConverterTest {
     RelNode rel = converter.convertSql(sql);
     String relString = relToStr(rel);
     String expected = "LogicalProject(col=[$1])\n"
-        + "  LogicalCorrelate(correlation=[$cor0], joinType=[inner], requiredColumns=[{0}])\n"
+        + "  LogicalCorrelate(correlation=[$cor1], joinType=[inner], requiredColumns=[{0}])\n"
         + "    LogicalProject(a=[ARRAY('a1', 'a2')])\n" + "      LogicalValues(tuples=[[{ 0 }]])\n"
-        + "    HiveUncollect\n" + "      LogicalProject(col=[$cor0.a])\n" + "        LogicalValues(tuples=[[{ 0 }]])\n";
+        + "    HiveUncollect\n" + "      LogicalProject(col=[$cor1.a])\n" + "        LogicalValues(tuples=[[{ 0 }]])\n";
     assertEquals(relString, expected);
   }
 
@@ -233,9 +233,9 @@ public class HiveToRelConverterTest {
     RelNode rel = converter.convertSql(sql);
     String relString = relToStr(rel);
     String expected = "LogicalProject(key=[$1], value=[$2])\n"
-        + "  LogicalCorrelate(correlation=[$cor0], joinType=[inner], requiredColumns=[{0}])\n"
+        + "  LogicalCorrelate(correlation=[$cor2], joinType=[inner], requiredColumns=[{0}])\n"
         + "    LogicalProject(m=[MAP('key1', 'value1')])\n" + "      LogicalValues(tuples=[[{ 0 }]])\n"
-        + "    HiveUncollect\n" + "      LogicalProject(col=[$cor0.m])\n" + "        LogicalValues(tuples=[[{ 0 }]])\n";
+        + "    HiveUncollect\n" + "      LogicalProject(col=[$cor2.m])\n" + "        LogicalValues(tuples=[[{ 0 }]])\n";
     assertEquals(relString, expected);
   }
 
@@ -246,9 +246,9 @@ public class HiveToRelConverterTest {
     RelNode rel = converter.convertSql(sql);
     String relString = relToStr(rel);
     String expected = "LogicalProject(key=[$1], value=[$2])\n"
-        + "  LogicalCorrelate(correlation=[$cor0], joinType=[inner], requiredColumns=[{0}])\n"
+        + "  LogicalCorrelate(correlation=[$cor3], joinType=[inner], requiredColumns=[{0}])\n"
         + "    LogicalProject(m=[MAP('key1', 'value1')])\n" + "      LogicalValues(tuples=[[{ 0 }]])\n"
-        + "    HiveUncollect\n" + "      LogicalProject(col=[$cor0.m])\n" + "        LogicalValues(tuples=[[{ 0 }]])\n";
+        + "    HiveUncollect\n" + "      LogicalProject(col=[$cor3.m])\n" + "        LogicalValues(tuples=[[{ 0 }]])\n";
     assertEquals(relString, expected);
   }
 
