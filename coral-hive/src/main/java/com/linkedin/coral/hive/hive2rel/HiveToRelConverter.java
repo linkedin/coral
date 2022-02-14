@@ -24,7 +24,6 @@ import org.apache.hadoop.hive.metastore.api.Table;
 
 import com.linkedin.coral.common.HiveMetastoreClient;
 import com.linkedin.coral.common.ToRelConverter;
-import com.linkedin.coral.common.functions.Function;
 import com.linkedin.coral.hive.hive2rel.functions.HiveFunctionResolver;
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 import com.linkedin.coral.hive.hive2rel.parsetree.ParseTreeBuilder;
@@ -46,7 +45,7 @@ import static com.linkedin.coral.hive.hive2rel.HiveSqlConformance.HIVE_SQL;
  */
 public class HiveToRelConverter extends ToRelConverter {
   private final ParseTreeBuilder parseTreeBuilder;
-  private final ConcurrentHashMap<String, Function> dynamicRegistry = new ConcurrentHashMap<>();
+  private SqlToRelConverter sqlToRelConverter;
   private final HiveFunctionResolver functionResolver =
       new HiveFunctionResolver(new StaticHiveFunctionRegistry(), new ConcurrentHashMap<>());
   private final
@@ -81,9 +80,13 @@ public class HiveToRelConverter extends ToRelConverter {
 
   @Override
   protected SqlToRelConverter getSqlToRelConverter() {
-    return new HiveSqlToRelConverter(new HiveViewExpander(this), getSqlValidator(), getCalciteCatalogReader(),
-        RelOptCluster.create(new VolcanoPlanner(), getRelBuilder().getRexBuilder()), getConvertletTable(),
-        SqlToRelConverter.configBuilder().withRelBuilderFactory(HiveRelBuilder.LOGICAL_BUILDER).build());
+    if (sqlToRelConverter == null) {
+      sqlToRelConverter =
+          new HiveSqlToRelConverter(new HiveViewExpander(this), getSqlValidator(), getCalciteCatalogReader(),
+              RelOptCluster.create(new VolcanoPlanner(), getRelBuilder().getRexBuilder()), getConvertletTable(),
+              SqlToRelConverter.configBuilder().withRelBuilderFactory(HiveRelBuilder.LOGICAL_BUILDER).build());
+    }
+    return sqlToRelConverter;
   }
 
   @Override
