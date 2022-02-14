@@ -579,8 +579,15 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
   /**
    * @return immutable copy of internal function registry
    */
-  public ImmutableMultimap<String, Function> getRegistry() {
+  public ImmutableMultimap<String, Function> getRegistryCopy() {
     return ImmutableMultimap.copyOf(FUNCTION_MAP);
+  }
+
+  /**
+   * @return copy of internal function registry
+   */
+  public Multimap<String, Function> getRegistry() {
+    return FUNCTION_MAP;
   }
 
   /**

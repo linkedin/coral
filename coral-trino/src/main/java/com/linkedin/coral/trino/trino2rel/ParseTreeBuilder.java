@@ -5,7 +5,11 @@
  */
 package com.linkedin.coral.trino.trino2rel;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
@@ -14,7 +18,31 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import org.apache.calcite.avatica.util.TimeUnit;
-import org.apache.calcite.sql.*;
+import org.apache.calcite.sql.JoinConditionType;
+import org.apache.calcite.sql.JoinType;
+import org.apache.calcite.sql.SqlArrayTypeSpec;
+import org.apache.calcite.sql.SqlBasicTypeNameSpec;
+import org.apache.calcite.sql.SqlCall;
+import org.apache.calcite.sql.SqlDataTypeSpec;
+import org.apache.calcite.sql.SqlFunctionCategory;
+import org.apache.calcite.sql.SqlIdentifier;
+import org.apache.calcite.sql.SqlIntervalQualifier;
+import org.apache.calcite.sql.SqlJoin;
+import org.apache.calcite.sql.SqlKind;
+import org.apache.calcite.sql.SqlLiteral;
+import org.apache.calcite.sql.SqlMapTypeSpec;
+import org.apache.calcite.sql.SqlNode;
+import org.apache.calcite.sql.SqlNodeList;
+import org.apache.calcite.sql.SqlNumericLiteral;
+import org.apache.calcite.sql.SqlOperator;
+import org.apache.calcite.sql.SqlOrderBy;
+import org.apache.calcite.sql.SqlSampleSpec;
+import org.apache.calcite.sql.SqlSelect;
+import org.apache.calcite.sql.SqlSelectKeyword;
+import org.apache.calcite.sql.SqlUnresolvedFunction;
+import org.apache.calcite.sql.SqlWindow;
+import org.apache.calcite.sql.SqlWith;
+import org.apache.calcite.sql.SqlWithItem;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.SqlTypeFactoryImpl;
@@ -26,15 +54,186 @@ import org.apache.commons.lang3.ObjectUtils;
 
 import com.linkedin.coral.common.HiveTypeSystem;
 import com.linkedin.coral.common.calcite.CalciteUtil;
-import com.linkedin.coral.common.functions.Function;
 
-import coral.shading.io.trino.sql.tree.*;
+import coral.shading.io.trino.sql.tree.AddColumn;
+import coral.shading.io.trino.sql.tree.AliasedRelation;
+import coral.shading.io.trino.sql.tree.AllColumns;
+import coral.shading.io.trino.sql.tree.AllRows;
+import coral.shading.io.trino.sql.tree.Analyze;
+import coral.shading.io.trino.sql.tree.ArithmeticBinaryExpression;
+import coral.shading.io.trino.sql.tree.ArithmeticUnaryExpression;
+import coral.shading.io.trino.sql.tree.ArrayConstructor;
+import coral.shading.io.trino.sql.tree.AstVisitor;
+import coral.shading.io.trino.sql.tree.AtTimeZone;
+import coral.shading.io.trino.sql.tree.BetweenPredicate;
+import coral.shading.io.trino.sql.tree.BinaryLiteral;
+import coral.shading.io.trino.sql.tree.BindExpression;
+import coral.shading.io.trino.sql.tree.BooleanLiteral;
+import coral.shading.io.trino.sql.tree.Call;
+import coral.shading.io.trino.sql.tree.CallArgument;
+import coral.shading.io.trino.sql.tree.Cast;
+import coral.shading.io.trino.sql.tree.CharLiteral;
+import coral.shading.io.trino.sql.tree.CoalesceExpression;
+import coral.shading.io.trino.sql.tree.ColumnDefinition;
+import coral.shading.io.trino.sql.tree.Comment;
+import coral.shading.io.trino.sql.tree.Commit;
+import coral.shading.io.trino.sql.tree.ComparisonExpression;
+import coral.shading.io.trino.sql.tree.CreateMaterializedView;
+import coral.shading.io.trino.sql.tree.CreateRole;
+import coral.shading.io.trino.sql.tree.CreateSchema;
+import coral.shading.io.trino.sql.tree.CreateTable;
+import coral.shading.io.trino.sql.tree.CreateTableAsSelect;
+import coral.shading.io.trino.sql.tree.CreateView;
+import coral.shading.io.trino.sql.tree.Cube;
+import coral.shading.io.trino.sql.tree.CurrentPath;
+import coral.shading.io.trino.sql.tree.CurrentTime;
+import coral.shading.io.trino.sql.tree.CurrentUser;
+import coral.shading.io.trino.sql.tree.DateTimeDataType;
+import coral.shading.io.trino.sql.tree.Deallocate;
+import coral.shading.io.trino.sql.tree.DecimalLiteral;
+import coral.shading.io.trino.sql.tree.Delete;
+import coral.shading.io.trino.sql.tree.DereferenceExpression;
+import coral.shading.io.trino.sql.tree.DescribeInput;
+import coral.shading.io.trino.sql.tree.DescribeOutput;
+import coral.shading.io.trino.sql.tree.DoubleLiteral;
+import coral.shading.io.trino.sql.tree.DropColumn;
+import coral.shading.io.trino.sql.tree.DropMaterializedView;
+import coral.shading.io.trino.sql.tree.DropRole;
+import coral.shading.io.trino.sql.tree.DropSchema;
+import coral.shading.io.trino.sql.tree.DropTable;
+import coral.shading.io.trino.sql.tree.DropView;
+import coral.shading.io.trino.sql.tree.Except;
+import coral.shading.io.trino.sql.tree.Execute;
+import coral.shading.io.trino.sql.tree.ExistsPredicate;
+import coral.shading.io.trino.sql.tree.Explain;
+import coral.shading.io.trino.sql.tree.ExplainOption;
+import coral.shading.io.trino.sql.tree.Expression;
+import coral.shading.io.trino.sql.tree.Extract;
+import coral.shading.io.trino.sql.tree.FetchFirst;
+import coral.shading.io.trino.sql.tree.FieldReference;
+import coral.shading.io.trino.sql.tree.Format;
+import coral.shading.io.trino.sql.tree.FrameBound;
+import coral.shading.io.trino.sql.tree.FunctionCall;
+import coral.shading.io.trino.sql.tree.GenericDataType;
+import coral.shading.io.trino.sql.tree.GenericLiteral;
+import coral.shading.io.trino.sql.tree.Grant;
+import coral.shading.io.trino.sql.tree.GrantRoles;
+import coral.shading.io.trino.sql.tree.GroupBy;
+import coral.shading.io.trino.sql.tree.GroupingOperation;
+import coral.shading.io.trino.sql.tree.GroupingSets;
+import coral.shading.io.trino.sql.tree.Identifier;
+import coral.shading.io.trino.sql.tree.IfExpression;
+import coral.shading.io.trino.sql.tree.InListExpression;
+import coral.shading.io.trino.sql.tree.InPredicate;
+import coral.shading.io.trino.sql.tree.Insert;
+import coral.shading.io.trino.sql.tree.Intersect;
+import coral.shading.io.trino.sql.tree.IntervalDayTimeDataType;
+import coral.shading.io.trino.sql.tree.IntervalLiteral;
+import coral.shading.io.trino.sql.tree.IsNotNullPredicate;
+import coral.shading.io.trino.sql.tree.IsNullPredicate;
+import coral.shading.io.trino.sql.tree.Isolation;
+import coral.shading.io.trino.sql.tree.Join;
+import coral.shading.io.trino.sql.tree.JoinCriteria;
+import coral.shading.io.trino.sql.tree.JoinOn;
+import coral.shading.io.trino.sql.tree.JoinUsing;
+import coral.shading.io.trino.sql.tree.LambdaArgumentDeclaration;
+import coral.shading.io.trino.sql.tree.LambdaExpression;
+import coral.shading.io.trino.sql.tree.Lateral;
+import coral.shading.io.trino.sql.tree.LikeClause;
+import coral.shading.io.trino.sql.tree.LikePredicate;
+import coral.shading.io.trino.sql.tree.Limit;
+import coral.shading.io.trino.sql.tree.LogicalBinaryExpression;
+import coral.shading.io.trino.sql.tree.LongLiteral;
+import coral.shading.io.trino.sql.tree.Merge;
+import coral.shading.io.trino.sql.tree.MergeDelete;
+import coral.shading.io.trino.sql.tree.MergeInsert;
+import coral.shading.io.trino.sql.tree.MergeUpdate;
+import coral.shading.io.trino.sql.tree.NaturalJoin;
+import coral.shading.io.trino.sql.tree.Node;
+import coral.shading.io.trino.sql.tree.NotExpression;
+import coral.shading.io.trino.sql.tree.NullIfExpression;
+import coral.shading.io.trino.sql.tree.NullLiteral;
+import coral.shading.io.trino.sql.tree.NumericParameter;
+import coral.shading.io.trino.sql.tree.Offset;
+import coral.shading.io.trino.sql.tree.OrderBy;
+import coral.shading.io.trino.sql.tree.Parameter;
+import coral.shading.io.trino.sql.tree.PathElement;
+import coral.shading.io.trino.sql.tree.PathSpecification;
+import coral.shading.io.trino.sql.tree.Prepare;
+import coral.shading.io.trino.sql.tree.Property;
+import coral.shading.io.trino.sql.tree.QualifiedName;
+import coral.shading.io.trino.sql.tree.QuantifiedComparisonExpression;
+import coral.shading.io.trino.sql.tree.Query;
+import coral.shading.io.trino.sql.tree.QuerySpecification;
+import coral.shading.io.trino.sql.tree.RefreshMaterializedView;
+import coral.shading.io.trino.sql.tree.RenameColumn;
+import coral.shading.io.trino.sql.tree.RenameSchema;
+import coral.shading.io.trino.sql.tree.RenameTable;
+import coral.shading.io.trino.sql.tree.RenameView;
+import coral.shading.io.trino.sql.tree.ResetSession;
+import coral.shading.io.trino.sql.tree.Revoke;
+import coral.shading.io.trino.sql.tree.RevokeRoles;
+import coral.shading.io.trino.sql.tree.Rollback;
+import coral.shading.io.trino.sql.tree.Rollup;
+import coral.shading.io.trino.sql.tree.Row;
+import coral.shading.io.trino.sql.tree.RowDataType;
+import coral.shading.io.trino.sql.tree.SampledRelation;
+import coral.shading.io.trino.sql.tree.SearchedCaseExpression;
+import coral.shading.io.trino.sql.tree.Select;
+import coral.shading.io.trino.sql.tree.SetPath;
+import coral.shading.io.trino.sql.tree.SetRole;
+import coral.shading.io.trino.sql.tree.SetSchemaAuthorization;
+import coral.shading.io.trino.sql.tree.SetSession;
+import coral.shading.io.trino.sql.tree.SetTableAuthorization;
+import coral.shading.io.trino.sql.tree.SetViewAuthorization;
+import coral.shading.io.trino.sql.tree.ShowCatalogs;
+import coral.shading.io.trino.sql.tree.ShowColumns;
+import coral.shading.io.trino.sql.tree.ShowCreate;
+import coral.shading.io.trino.sql.tree.ShowFunctions;
+import coral.shading.io.trino.sql.tree.ShowGrants;
+import coral.shading.io.trino.sql.tree.ShowRoleGrants;
+import coral.shading.io.trino.sql.tree.ShowRoles;
+import coral.shading.io.trino.sql.tree.ShowSchemas;
+import coral.shading.io.trino.sql.tree.ShowSession;
+import coral.shading.io.trino.sql.tree.ShowStats;
+import coral.shading.io.trino.sql.tree.ShowTables;
+import coral.shading.io.trino.sql.tree.SimpleCaseExpression;
+import coral.shading.io.trino.sql.tree.SimpleGroupBy;
+import coral.shading.io.trino.sql.tree.SingleColumn;
+import coral.shading.io.trino.sql.tree.SortItem;
+import coral.shading.io.trino.sql.tree.StartTransaction;
+import coral.shading.io.trino.sql.tree.StringLiteral;
+import coral.shading.io.trino.sql.tree.SubqueryExpression;
+import coral.shading.io.trino.sql.tree.SubscriptExpression;
+import coral.shading.io.trino.sql.tree.SymbolReference;
+import coral.shading.io.trino.sql.tree.Table;
+import coral.shading.io.trino.sql.tree.TableSubquery;
+import coral.shading.io.trino.sql.tree.TimeLiteral;
+import coral.shading.io.trino.sql.tree.TimestampLiteral;
+import coral.shading.io.trino.sql.tree.TransactionAccessMode;
+import coral.shading.io.trino.sql.tree.TransactionMode;
+import coral.shading.io.trino.sql.tree.TryExpression;
+import coral.shading.io.trino.sql.tree.TypeParameter;
+import coral.shading.io.trino.sql.tree.Union;
+import coral.shading.io.trino.sql.tree.Unnest;
+import coral.shading.io.trino.sql.tree.Update;
+import coral.shading.io.trino.sql.tree.UpdateAssignment;
+import coral.shading.io.trino.sql.tree.Use;
+import coral.shading.io.trino.sql.tree.Values;
+import coral.shading.io.trino.sql.tree.WhenClause;
+import coral.shading.io.trino.sql.tree.Window;
+import coral.shading.io.trino.sql.tree.WindowDefinition;
+import coral.shading.io.trino.sql.tree.WindowFrame;
+import coral.shading.io.trino.sql.tree.WindowReference;
+import coral.shading.io.trino.sql.tree.WindowSpecification;
+import coral.shading.io.trino.sql.tree.With;
+import coral.shading.io.trino.sql.tree.WithQuery;
 
 import static com.linkedin.coral.common.calcite.CalciteUtil.*;
-import static java.lang.String.format;
-import static org.apache.calcite.sql.SqlFunctionCategory.USER_DEFINED_FUNCTION;
+import static java.lang.String.*;
+import static org.apache.calcite.sql.SqlFunctionCategory.*;
 import static org.apache.calcite.sql.fun.SqlStdOperatorTable.*;
-import static org.apache.calcite.sql.parser.SqlParserPos.ZERO;
+import static org.apache.calcite.sql.parser.SqlParserPos.*;
 
 
 public class ParseTreeBuilder extends AstVisitor<SqlNode, ParserVisitorContext> {
@@ -84,7 +283,6 @@ public class ParseTreeBuilder extends AstVisitor<SqlNode, ParserVisitorContext> 
       ImmutableSet.of(SqlKind.FIRST_VALUE, SqlKind.LAST_VALUE, SqlKind.LEAD, SqlKind.LAG);
 
   private final SqlTypeFactoryImpl sqlTypeFactory = new SqlTypeFactoryImpl(new HiveTypeSystem());
-  private final StaticTrinoFunctionRegistry functionRegistry = new StaticTrinoFunctionRegistry();
 
   // convert the Presto node parse location to the Calcite SqlParserPos
   private SqlParserPos getPos(Node node) {
@@ -362,26 +560,17 @@ public class ParseTreeBuilder extends AstVisitor<SqlNode, ParserVisitorContext> 
     if (node.getFilter().isPresent()) {
       throw new UnhandledASTNodeException(node, UNSUPPORTED_EXCEPTION_MSG);
     }
-    String functionName = node.getName().toString().toLowerCase(Locale.ROOT);
     SqlParserPos pos = getPos(node);
     List<SqlNode> operands =
         node.getArguments().stream().map(arg -> process(arg, context)).collect(Collectors.toList());
-    SqlIdentifier functionIdentifier = convertQualifiedName(node.getName(), getPos(node));
+    SqlIdentifier functionName = convertQualifiedName(node.getName(), getPos(node));
     if (node.getName().toString().equalsIgnoreCase("COUNT") && operands.isEmpty()) {
       operands.add(createStarIdentifier(ZERO));
     }
-
-    SqlOperator convertedFunction;
-    Collection<Function> functions = functionRegistry.lookup(functionName);
-
-    if (!functions.isEmpty()) {
-      convertedFunction = functions.iterator().next().getSqlOperator();
-    } else {
-      convertedFunction = new SqlUnresolvedFunction(functionIdentifier, null, null, null, null,
-          SqlFunctionCategory.USER_DEFINED_FUNCTION);
-    }
+    SqlUnresolvedFunction unresolvedFunction =
+        new SqlUnresolvedFunction(functionName, null, null, null, null, SqlFunctionCategory.USER_DEFINED_FUNCTION);
     SqlLiteral functionQualifier = node.isDistinct() ? SqlLiteral.createSymbol(SqlSelectKeyword.DISTINCT, ZERO) : null;
-    SqlCall call = createCall(convertedFunction, operands, functionQualifier);
+    SqlCall call = createCall(unresolvedFunction, operands, functionQualifier);
     if (NULL_CARED_OPERATOR.contains(call.getKind())) {
       if (node.getNullTreatment().isPresent()) {
         if (node.getNullTreatment().get().equals(FunctionCall.NullTreatment.IGNORE)) {
@@ -858,17 +1047,8 @@ public class ParseTreeBuilder extends AstVisitor<SqlNode, ParserVisitorContext> 
 
   @Override
   protected SqlNode visitCall(Call node, ParserVisitorContext context) {
-    String callName = node.getName().toString().toLowerCase(Locale.ROOT);
-    Collection<Function> functions = functionRegistry.lookup(callName);
-    SqlCall call;
-
-    if (!functions.isEmpty()) {
-      call = createCall(functions.iterator().next().getSqlOperator(), toListOfSqlNode(node.getArguments(), context));
-
-    } else {
-      call = getUnresolvedFunction(node.getName().toString(), toListOfSqlNode(node.getArguments(), context));
-    }
-    return PROCEDURE_CALL.createCall(getPos(node), call);
+    return PROCEDURE_CALL.createCall(getPos(node),
+        getUnresolvedFunction(node.getName().toString(), toListOfSqlNode(node.getArguments(), context)));
   }
 
   @Override

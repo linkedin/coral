@@ -9,13 +9,13 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.ImmutableList;
 
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.sql.type.ReturnTypes;
-import org.apache.calcite.sql.type.SqlTypeFamily;
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.MetaException;
@@ -26,6 +26,7 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import static com.linkedin.coral.trino.trino2rel.ToRelTestUtils.*;
+import static com.linkedin.coral.trino.trino2rel.TrinoCalciteUDFMapUtils.*;
 import static org.apache.calcite.sql.type.OperandTypes.*;
 import static org.testng.Assert.*;
 
@@ -38,8 +39,16 @@ public class TrinoToRelConverterTest {
     conf = ToRelTestUtils.loadResourceHiveConf();
     ToRelTestUtils.initializeViews(conf);
 
-    StaticTrinoFunctionRegistry.createAddTrinoFunction("foo", "foo", ReturnTypes.INTEGER,
-        or(NILADIC, family(SqlTypeFamily.ANY)));
+    Map<String, TrinoCalciteUDFTransformer> TRANSFORMER_MAP = TrinoCalciteUDFMap.getTransformerMap();
+
+    // foo(a) or foo()
+    createUDFMapEntry(TRANSFORMER_MAP, createUDF("foo", ReturnTypes.INTEGER, or(NILADIC, NUMERIC)), 1, "foo", null,
+        null);
+
+    // foo(a, b) => return (10 * a) + (10 * b)
+    createUDFMapEntry(TRANSFORMER_MAP, createUDF("foo", ReturnTypes.INTEGER, NUMERIC_NUMERIC), 2, "foo",
+        "[{\"op\":\"+\",\"operands\":[{\"op\":\"*\",\"operands\":[{\"value\":10},{\"input\":1}]},{\"op\":\"*\",\"operands\":[{\"value\":10},{\"input\":2}]}]}]",
+        null);
   }
 
   @AfterTest
@@ -174,19 +183,8 @@ public class TrinoToRelConverterTest {
         .add(ImmutableList.of("call foo(3)",
             "LogicalProject(EXPR$0=[foo(3)])\n" + "  LogicalValues(tuples=[[{ 0 }]])\n"))
         .add(ImmutableList.of("call foo()", "LogicalProject(EXPR$0=[foo()])\n" + "  LogicalValues(tuples=[[{ 0 }]])\n"))
-        .add(ImmutableList.of("select count(*) from foo",
-            "LogicalAggregate(group=[{}], EXPR$0=[COUNT()])\n" + "  LogicalProject($f0=[0])\n"
-                + "    LogicalTableScan(table=[[hive, default, foo]])\n"))
-        .add(ImmutableList.of("select count(*) as c from foo group by a, b",
-            "LogicalProject(C=[$2])\n" + "  LogicalAggregate(group=[{0, 1}], C=[COUNT()])\n"
-                + "    LogicalProject(a=[$1], b=[$2])\n" + "      LogicalTableScan(table=[[hive, default, foo]])\n"))
-        .add(ImmutableList.of("select count(*) as c from foo group by cube (a, b)",
-            "LogicalProject(C=[$2])\n"
-                + "  LogicalAggregate(group=[{0, 1}], groups=[[{0, 1}, {0}, {1}, {}]], C=[COUNT()])\n"
-                + "    LogicalProject(a=[$1], b=[$2])\n" + "      LogicalTableScan(table=[[hive, default, foo]])\n"))
-        .add(ImmutableList.of("select count(*) c from foo group by rollup (a, b)",
-            "LogicalProject(C=[$2])\n" + "  LogicalAggregate(group=[{0, 1}], groups=[[{0, 1}, {0}, {}]], C=[COUNT()])\n"
-                + "    LogicalProject(a=[$1], b=[$2])\n" + "      LogicalTableScan(table=[[hive, default, foo]])\n"))
+        .add(ImmutableList.of("select foo(10, 2)",
+            "LogicalProject(EXPR$0=[foo(+(*(10, 10), *(10, 2)))])\n" + "  LogicalValues(tuples=[[{ 0 }]])\n"))
         .build().stream().map(x -> new Object[] { x.get(0), x.get(1) }).iterator();
   }
 
