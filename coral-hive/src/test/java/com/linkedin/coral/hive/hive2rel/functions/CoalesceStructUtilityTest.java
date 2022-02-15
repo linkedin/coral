@@ -52,12 +52,12 @@ public class CoalesceStructUtilityTest {
     List<String> names2 = ImmutableList.of("tag_0", "tag_1");
     List<RelDataType> types2 =
         ImmutableList.of(typeFactory.createSqlType(SqlTypeName.BOOLEAN), typeFactory.createSqlType(SqlTypeName.DOUBLE));
-    extractUnionStruct = typeFactory.createStructType(types2, names2);
+    extractUnionStruct = typeFactory.createTypeWithNullability(typeFactory.createStructType(types2, names2), true);
 
     List<String> names3 = ImmutableList.of("tag", "field1", "field2");
     List<RelDataType> types3 = ImmutableList.of(typeFactory.createSqlType(SqlTypeName.INTEGER),
         typeFactory.createSqlType(SqlTypeName.INTEGER), typeFactory.createSqlType(SqlTypeName.DOUBLE));
-    nonTrinoStruct = typeFactory.createStructType(types3, names3);
+    nonTrinoStruct = typeFactory.createTypeWithNullability(typeFactory.createStructType(types3, names3), true);
   }
 
   @AfterTest
@@ -69,10 +69,10 @@ public class CoalesceStructUtilityTest {
   public void testStruct() {
     // coalesce the trino struct directly
     RelDataType coalescedType = coalesce(trinoStruct, typeFactory);
-    Assert.assertEquals(coalescedType, extractUnionStruct);
+    Assert.assertEquals(coalescedType.getFullTypeString(), extractUnionStruct.getFullTypeString());
 
     // A negative case: a struct that doesn't fulfill trino's pattern should not be changed at all.
-    Assert.assertEquals(coalesce(nonTrinoStruct, typeFactory), nonTrinoStruct);
+    Assert.assertEquals(coalesce(nonTrinoStruct, typeFactory).getFullTypeString(), nonTrinoStruct.getFullTypeString());
   }
 
   @Test
@@ -93,16 +93,20 @@ public class CoalesceStructUtilityTest {
   @Test
   public void testMap() {
     RelDataType structInMap = typeFactory.createMapType(typeFactory.createSqlType(SqlTypeName.VARCHAR), trinoStruct);
-    RelDataType expectedCoalesced =
-        typeFactory.createMapType(typeFactory.createSqlType(SqlTypeName.VARCHAR), extractUnionStruct);
-    Assert.assertEquals(coalesce(structInMap, typeFactory), expectedCoalesced);
+    RelDataType expectedCoalesced = typeFactory.createTypeWithNullability(
+        typeFactory.createMapType(typeFactory.createSqlType(SqlTypeName.VARCHAR), extractUnionStruct), true);
+
+    RelDataType actual = coalesce(structInMap, typeFactory);
+    Assert.assertEquals(actual.getFullTypeString(), expectedCoalesced.getFullTypeString());
   }
 
   @Test
   public void testArray() {
     RelDataType structAsArrayElem = typeFactory.createArrayType(trinoStruct, -1);
-    RelDataType expectedCoalesced = typeFactory.createArrayType(extractUnionStruct, -1);
-    Assert.assertEquals(coalesce(structAsArrayElem, typeFactory), expectedCoalesced);
+    RelDataType expectedCoalesced =
+        typeFactory.createTypeWithNullability(typeFactory.createArrayType(extractUnionStruct, -1), true);
+    RelDataType actualRelDataType = coalesce(structAsArrayElem, typeFactory);
+    Assert.assertEquals(actualRelDataType.getFullTypeString(), expectedCoalesced.getFullTypeString());
   }
 
   @Test
@@ -117,8 +121,10 @@ public class CoalesceStructUtilityTest {
 
     List<String> names2 = ImmutableList.of("tag_0", "tag_1");
     List<RelDataType> types2 = ImmutableList.of(extractUnionStruct, nonTrinoStruct);
-    RelDataType coalescedNestedExpected = typeFactory.createStructType(types2, names2);
+    RelDataType coalescedNestedExpected =
+        typeFactory.createTypeWithNullability(typeFactory.createStructType(types2, names2), true);
 
-    Assert.assertEquals(coalesce(nested, typeFactory), coalescedNestedExpected);
+    RelDataType actualRelDataType = coalesce(nested, typeFactory);
+    Assert.assertEquals(actualRelDataType.getFullTypeString(), coalescedNestedExpected.getFullTypeString());
   }
 }

@@ -116,18 +116,21 @@ public class CoalesceStructUtility {
       convertedTypes.add(coalesce(originalTypes.get(i), typeFactory));
     }
 
-    return typeFactory.createStructType(convertedTypes, convertedNames);
+    RelDataType structType = typeFactory.createStructType(convertedTypes, convertedNames);
+    return typeFactory.createTypeWithNullability(structType, true);
   }
 
   private static RelDataType coalesceMap(RelDataType inputNode, RelDataTypeFactory typeFactory) {
     RelDataType coalescedKeyType = coalesce(inputNode.getKeyType(), typeFactory);
     RelDataType coalescedValueType = coalesce(inputNode.getValueType(), typeFactory);
-    return typeFactory.createMapType(coalescedKeyType, coalescedValueType);
+    RelDataType mapType = typeFactory.createMapType(coalescedKeyType, coalescedValueType);
+    return typeFactory.createTypeWithNullability(mapType, true);
   }
 
   private static RelDataType coalesceCollection(RelDataType inputNode, RelDataTypeFactory typeFactory) {
     RelDataType coalescedComponentType = coalesce(inputNode.getComponentType(), typeFactory);
-    return typeFactory.createArrayType(coalescedComponentType, -1);
+    RelDataType arrayType = typeFactory.createArrayType(coalescedComponentType, -1);
+    return typeFactory.createTypeWithNullability(arrayType, true);
   }
 
   /**
