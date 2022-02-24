@@ -102,7 +102,7 @@ public class CalciteTrinoUDFMap {
   }
 
   private static void addDaliUDFs() {
-    ImmutableMultimap<String, Function> registry = HIVE_REGISTRY.getRegistryCopy();
+    ImmutableMultimap<String, Function> registry = HIVE_REGISTRY.getRegistry();
     Converter<String, String> caseConverter = CaseFormat.UPPER_CAMEL.converterTo(CaseFormat.LOWER_UNDERSCORE);
     for (Map.Entry<String, Function> entry : registry.entries()) {
       // we cannot use entry.getKey() as function name directly, because keys are all lowercase, which will

@@ -88,7 +88,6 @@ class TrinoSqlToRelConverter extends SqlToRelConverter {
     }
   }
 
-  //TODO: make convertUnnestFrom Trino specific
   private void convertUnnestFrom(Blackboard bb, SqlNode from) {
     final SqlCall call;
     call = (SqlCall) from;

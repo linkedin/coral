@@ -25,10 +25,12 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
+
 import static com.linkedin.coral.trino.trino2rel.ToRelTestUtils.*;
-import static com.linkedin.coral.trino.trino2rel.TrinoCalciteUDFMapUtils.*;
+import static com.linkedin.coral.trino.trino2rel.TrinoCalciteTransformerMapUtils.*;
 import static org.apache.calcite.sql.type.OperandTypes.*;
-import static org.testng.Assert.*;
+import static org.testng.AssertJUnit.assertEquals;
 
 
 public class TrinoToRelConverterTest {
@@ -36,17 +38,21 @@ public class TrinoToRelConverterTest {
 
   @BeforeClass
   public void beforeClass() throws HiveException, IOException, MetaException {
+    // Simulating a Coral environment where "foo" exists
+    StaticHiveFunctionRegistry.createAddUserDefinedFunction("foo", ReturnTypes.INTEGER,
+        or(NILADIC, NUMERIC, NUMERIC_NUMERIC));
+
     conf = ToRelTestUtils.loadResourceHiveConf();
     ToRelTestUtils.initializeViews(conf);
 
-    Map<String, TrinoCalciteUDFTransformer> TRANSFORMER_MAP = TrinoCalciteUDFMap.getTransformerMap();
+    Map<String, TrinoCalciteOperatorTransformer> TRANSFORMER_MAP = TrinoCalciteTransformerMap.TRANSFORMER_MAP;
 
     // foo(a) or foo()
-    createUDFMapEntry(TRANSFORMER_MAP, createUDF("foo", ReturnTypes.INTEGER, or(NILADIC, NUMERIC)), 1, "foo", null,
-        null);
+    createTransformerMapEntry(TRANSFORMER_MAP, createOperator("foo", ReturnTypes.INTEGER, or(NILADIC, NUMERIC)), 1,
+        "foo", null, null);
 
-    // foo(a, b) => return (10 * a) + (10 * b)
-    createUDFMapEntry(TRANSFORMER_MAP, createUDF("foo", ReturnTypes.INTEGER, NUMERIC_NUMERIC), 2, "foo",
+    // foo(a, b) => foo((10 * a) + (10 * b))
+    createTransformerMapEntry(TRANSFORMER_MAP, createOperator("foo", ReturnTypes.INTEGER, NUMERIC_NUMERIC), 2, "foo",
         "[{\"op\":\"+\",\"operands\":[{\"op\":\"*\",\"operands\":[{\"value\":10},{\"input\":1}]},{\"op\":\"*\",\"operands\":[{\"value\":10},{\"input\":2}]}]}]",
         null);
   }

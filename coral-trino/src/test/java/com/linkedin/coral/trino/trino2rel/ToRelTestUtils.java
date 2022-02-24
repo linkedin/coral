@@ -24,7 +24,7 @@ import com.linkedin.coral.common.HiveMscAdapter;
 
 
 public class ToRelTestUtils {
-  public static final String CORAL_FROM_TRINO_TEST_DIR = "coral.from.trino.test.dir";
+  public static final String CORAL_FROM_TRINO_TEST_DIR = "coral.trino.test.dir";
 
   private static HiveMscAdapter hiveMetastoreClient;
   public static TrinoToRelConverter converter;
@@ -61,7 +61,7 @@ public class ToRelTestUtils {
   }
 
   public static HiveConf loadResourceHiveConf() {
-    InputStream hiveConfStream = ToRelTestUtils.class.getClassLoader().getResourceAsStream("hive-from-trino.xml");
+    InputStream hiveConfStream = ToRelTestUtils.class.getClassLoader().getResourceAsStream("hive.xml");
     HiveConf hiveConf = new HiveConf();
     hiveConf.set(CORAL_FROM_TRINO_TEST_DIR,
         System.getProperty("java.io.tmpdir") + "/coral/trino/" + UUID.randomUUID().toString());

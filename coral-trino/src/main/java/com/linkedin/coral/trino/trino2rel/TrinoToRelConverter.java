@@ -26,10 +26,11 @@ import com.linkedin.coral.common.HiveMetastoreClient;
 import com.linkedin.coral.common.ToRelConverter;
 import com.linkedin.coral.common.functions.Function;
 import com.linkedin.coral.hive.hive2rel.DaliOperatorTable;
+import com.linkedin.coral.hive.hive2rel.HiveConvertletTable;
 import com.linkedin.coral.hive.hive2rel.HiveRelBuilder;
+import com.linkedin.coral.hive.hive2rel.HiveSqlValidator;
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 
-import static com.linkedin.coral.trino.trino2rel.Trino2CalciteUDFConverter.*;
 import static com.linkedin.coral.trino.trino2rel.TrinoSqlConformance.*;
 
 
@@ -41,13 +42,13 @@ import static com.linkedin.coral.trino.trino2rel.TrinoSqlConformance.*;
  * conversion process. This class abstracts that out.
  */
 public class TrinoToRelConverter extends ToRelConverter {
-  private final ParseTreeBuilder parseTreeBuilder = new ParseTreeBuilder();;
+  private final ParseTreeBuilder parseTreeBuilder = new ParseTreeBuilder();
   private final ParserVisitorContext parserVisitorContext = new ParserVisitorContext();
   private final Multimap<String, Function> functionRegistry = new StaticHiveFunctionRegistry().getRegistry();
 
   private final
   // The validator must be reused
-  SqlValidator sqlValidator = new TrinoSqlValidator(getOperatorTable(), getCalciteCatalogReader(),
+  SqlValidator sqlValidator = new HiveSqlValidator(getOperatorTable(), getCalciteCatalogReader(),
       ((JavaTypeFactory) getRelBuilder().getTypeFactory()), TRINO_SQL);
 
   public TrinoToRelConverter(HiveMetastoreClient hiveMetastoreClient) {
@@ -60,7 +61,7 @@ public class TrinoToRelConverter extends ToRelConverter {
 
   @Override
   protected SqlRexConvertletTable getConvertletTable() {
-    return new TrinoConvertletTable();
+    return new HiveConvertletTable();
   }
 
   @Override
@@ -83,8 +84,9 @@ public class TrinoToRelConverter extends ToRelConverter {
   @Override
   protected SqlNode toSqlNode(String sql, Table trinoView) {
     String trimmedSql = trimParenthesis(sql.toUpperCase());
-    SqlNode parsed = PrestoParserDriver.parse(trimmedSql).accept(parseTreeBuilder, parserVisitorContext);
-    return convertSqlNode(parsed);
+    SqlNode parsedSqlNode = PrestoParserDriver.parse(trimmedSql).accept(parseTreeBuilder, parserVisitorContext);
+    SqlNode convertedSqlNode = parsedSqlNode.accept(new Trino2CalciteOperatorConverter());
+    return convertedSqlNode;
   }
 
   @Override

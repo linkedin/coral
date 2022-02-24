@@ -22,17 +22,10 @@ import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
 
 import org.apache.calcite.sql.SqlCall;
-import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlOperator;
-import org.apache.calcite.sql.SqlWriter;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParserPos;
-import org.apache.calcite.sql.type.OperandTypes;
-import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
-
-import com.linkedin.coral.com.google.common.base.Preconditions;
-import com.linkedin.coral.common.functions.FunctionReturnTypes;
 
 import static com.linkedin.coral.common.calcite.CalciteUtil.*;
 
@@ -118,7 +111,7 @@ import static com.linkedin.coral.common.calcite.CalciteUtil.*;
  *   }
  * ]
  */
-class TrinoCalciteUDFTransformer {
+class TrinoCalciteOperatorTransformer {
   private static final Map<String, SqlOperator> OP_MAP = new HashMap<>();
 
   // Operators allowed in the transformation
@@ -129,21 +122,6 @@ class TrinoCalciteUDFTransformer {
     OP_MAP.put("/", SqlStdOperatorTable.DIVIDE);
     OP_MAP.put("^", SqlStdOperatorTable.POWER);
     OP_MAP.put("%", SqlStdOperatorTable.MOD);
-    OP_MAP.put("date", new SqlUserDefinedFunction(new SqlIdentifier("date", SqlParserPos.ZERO),
-        FunctionReturnTypes.DATE, null, OperandTypes.STRING, null, null));
-    OP_MAP.put("timestamp", new SqlUserDefinedFunction(new SqlIdentifier("timestamp", SqlParserPos.ZERO),
-        FunctionReturnTypes.TIMESTAMP, null, OperandTypes.STRING, null, null) {
-      @Override
-      public void unparse(SqlWriter writer, SqlCall call, int leftPrec, int rightPrec) {
-        // for timestamp operator, we need to construct `CAST(x AS TIMESTAMP)`
-        Preconditions.checkState(call.operandCount() == 1);
-        final SqlWriter.Frame frame = writer.startFunCall("CAST");
-        call.operand(0).unparse(writer, 0, 0);
-        writer.sep("AS");
-        writer.literal("TIMESTAMP");
-        writer.endFunCall(frame);
-      }
-    });
   }
 
   public static final String OPERATOR = "op";
@@ -164,7 +142,7 @@ class TrinoCalciteUDFTransformer {
   public final JsonObject resultTransformer;
   public final List<JsonObject> operatorTransformers;
 
-  private TrinoCalciteUDFTransformer(String trinoOperatorName, SqlOperator targetOperator,
+  private TrinoCalciteOperatorTransformer(String trinoOperatorName, SqlOperator targetOperator,
       List<JsonObject> operandTransformers, JsonObject resultTransformer, List<JsonObject> operatorTransformers) {
     this.trinoOperatorName = trinoOperatorName;
     this.targetOperator = targetOperator;
@@ -210,11 +188,12 @@ class TrinoCalciteUDFTransformer {
    *                             As seen in the example above, the single quotation marks are also present in the
    *                             regex matcher.
    *
-   * @return {@link TrinoCalciteUDFTransformer} object
+   * @return {@link TrinoCalciteOperatorTransformer} object
    */
 
-  public static TrinoCalciteUDFTransformer of(@Nonnull String trinoOperatorName, @Nonnull SqlOperator targetOperator,
-      @Nullable String operandTransformers, @Nullable String resultTransformer, @Nullable String operatorTransformers) {
+  public static TrinoCalciteOperatorTransformer of(@Nonnull String trinoOperatorName,
+      @Nonnull SqlOperator targetOperator, @Nullable String operandTransformers, @Nullable String resultTransformer,
+      @Nullable String operatorTransformers) {
     List<JsonObject> operands = null;
     JsonObject result = null;
     List<JsonObject> operators = null;
@@ -227,7 +206,7 @@ class TrinoCalciteUDFTransformer {
     if (operatorTransformers != null) {
       operators = parseJsonObjectsFromString(operatorTransformers);
     }
-    return new TrinoCalciteUDFTransformer(trinoOperatorName, targetOperator, operands, result, operators);
+    return new TrinoCalciteOperatorTransformer(trinoOperatorName, targetOperator, operands, result, operators);
   }
 
   /**
@@ -350,14 +329,13 @@ class TrinoCalciteUDFTransformer {
       String matcher = operatorTransformer.get(REGEX).getAsString();
 
       if (Pattern.matches(matcher, sourceOperands.get(index).toString())) {
-        return TrinoCalciteUDFMapUtils.createUDF(functionName, operator.getReturnTypeInference());
+        return TrinoCalciteTransformerMapUtils.createOperator(functionName, operator.getReturnTypeInference(), null);
       }
     }
     return operator;
   }
 
   /**
-   * TODO(ralam): Add this as a general utility in coral-calcite or look for other base libraries with this function.
    * Creates an ArrayList of JsonObjects from a string input.
    * The input string must be a serialized JSON array.
    */

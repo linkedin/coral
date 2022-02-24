@@ -22,7 +22,7 @@ import org.apache.calcite.sql.validate.SqlValidatorScope;
 import com.linkedin.coral.common.functions.FunctionFieldReferenceOperator;
 
 
-class HiveSqlValidator extends SqlValidatorImpl {
+public class HiveSqlValidator extends SqlValidatorImpl {
 
   public HiveSqlValidator(SqlOperatorTable opTab, CalciteCatalogReader catalogReader, JavaTypeFactory typeFactory,
       SqlConformance conformance) {
