@@ -359,6 +359,11 @@ public class TestUtils {
     run(driver,
         "CREATE VIEW IF NOT EXISTS test.view_with_transform_column_name_reset AS SELECT struct_col AS structCol FROM (SELECT * FROM test.viewA UNION ALL SELECT * FROM test.viewB) X");
     run(driver, "ALTER TABLE test.tableT CHANGE COLUMN structCol structCol struct<a:int, b:string>");
+
+    run(driver, "CREATE TABLE test.duplicate_column_name_a (some_id string)");
+    run(driver, "CREATE TABLE test.duplicate_column_name_b (some_id string)");
+    run(driver, "CREATE VIEW IF NOT EXISTS test.view_namesake_column_names AS \n"
+        + "SELECT a.some_id FROM test.duplicate_column_name_a a LEFT JOIN ( SELECT trim(some_id) AS SOME_ID FROM test.duplicate_column_name_b) b ON a.some_id = b.some_id WHERE a.some_id != ''");
   }
 
   public static RelNode convertView(String db, String view) {

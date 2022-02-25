@@ -114,6 +114,12 @@ public class TestUtils {
     run(driver, String.join("\n", "", "CREATE VIEW IF NOT EXISTS named_struct_view", "AS",
         "SELECT named_struct('abc', 123, 'def', 'xyz') AS named_struc", "FROM bar"));
 
+    run(driver, String.join("\n", "", "CREATE DATABASE IF NOT EXISTS duplicate_column_name"));
+    run(driver, "CREATE TABLE duplicate_column_name.tableA (some_id string)");
+    run(driver, "CREATE TABLE duplicate_column_name.tableB (some_id string)");
+    run(driver, "CREATE VIEW IF NOT EXISTS duplicate_column_name.view_namesake_column_names AS "
+        + "SELECT a.some_id FROM duplicate_column_name.tableA a LEFT JOIN (SELECT trim(some_id) AS SOME_ID FROM duplicate_column_name.tableB) b ON a.some_id = b.some_id WHERE a.some_id != ''");
+
     // Views and tables used in FuzzyUnionViewTest
     run(driver, String.join("\n", "", "CREATE DATABASE IF NOT EXISTS fuzzy_union"));
 
