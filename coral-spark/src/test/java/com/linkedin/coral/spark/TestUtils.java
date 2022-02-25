@@ -73,7 +73,7 @@ public class TestUtils {
 
     run(driver, String.join("\n", "", "CREATE VIEW IF NOT EXISTS foo_view", "AS", "SELECT b AS bcol, sum(c) AS sum_c",
         "FROM foo", "GROUP BY b"));
-    run(driver, "DROP VIEW IF EXITS foo_v1");
+    run(driver, "DROP VIEW IF EXISTS foo_v1");
     run(driver,
         String.join("\n", "", "CREATE VIEW IF NOT EXISTS foo_v1 ", "AS ",
             "SELECT DATE '2013-01-01', '2017-08-22 01:02:03', CAST(123 AS SMALLINT), CAST(123 AS TINYINT) ", "FROM foo",
