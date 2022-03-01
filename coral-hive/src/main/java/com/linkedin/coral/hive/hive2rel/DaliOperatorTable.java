@@ -7,7 +7,6 @@ package com.linkedin.coral.hive.hive2rel;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Locale;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.ImmutableList;
@@ -20,7 +19,6 @@ import org.apache.calcite.sql.SqlSyntax;
 import org.apache.calcite.sql.validate.SqlNameMatcher;
 import org.apache.calcite.util.Util;
 
-import com.linkedin.coral.com.google.common.collect.Multimap;
 import com.linkedin.coral.common.functions.Function;
 import com.linkedin.coral.hive.hive2rel.functions.HiveFunctionResolver;
 
@@ -33,14 +31,9 @@ public class DaliOperatorTable implements SqlOperatorTable {
   // TODO: support injection framework to inject same function resolver here and ParseTreeBuilder.
   // For now, we create another instance since the function registry is simple.
   private HiveFunctionResolver funcResolver;
-  private Multimap<String, Function> funcRegistry;
 
   public DaliOperatorTable(HiveFunctionResolver funcResolver) {
     this.funcResolver = funcResolver;
-  }
-
-  public DaliOperatorTable(Multimap<String, Function> funcRegistry) {
-    this.funcRegistry = funcRegistry;
   }
 
   /**
@@ -55,8 +48,7 @@ public class DaliOperatorTable implements SqlOperatorTable {
   public void lookupOperatorOverloads(SqlIdentifier sqlIdentifier, SqlFunctionCategory sqlFunctionCategory,
       SqlSyntax sqlSyntax, List<SqlOperator> list, SqlNameMatcher sqlNameMatcher) {
     String functionName = Util.last(sqlIdentifier.names);
-    Collection<Function> functions = funcResolver != null ? funcResolver.resolve(functionName)
-        : funcRegistry.get(functionName.toLowerCase(Locale.ROOT));
+    Collection<Function> functions = funcResolver.resolve(functionName);
     functions.stream().map(Function::getSqlOperator).collect(Collectors.toCollection(() -> list));
   }
 
