@@ -37,7 +37,7 @@ import com.linkedin.coral.common.functions.FunctionReturnTypes;
 
 
 /**
- * Object for transforming UDF from one SQL language to another SQL language.
+ * Object for transforming UDF from one SQL language to another SQL language at the RexNode layer.
  *
  * Suppose f1(a1, a2, ..., an) in the first language can be computed by
  * f2(b1, b2, ..., bm) in the second language as follows:

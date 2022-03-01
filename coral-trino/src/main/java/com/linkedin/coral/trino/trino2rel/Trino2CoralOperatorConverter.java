@@ -13,18 +13,18 @@ import org.apache.calcite.sql.util.SqlShuttle;
 
 
 /**
- * Rewrites the SqlNode tree to replace Trino SQL operators with Calcite Operators to obtain a Calcite-compatible plan.
+ * Rewrites the SqlNode tree to replace Trino SQL operators with Coral IR to obtain a Coral-compatible plan.
  */
-public class Trino2CalciteOperatorConverter extends SqlShuttle {
-  public Trino2CalciteOperatorConverter() {
+public class Trino2CoralOperatorConverter extends SqlShuttle {
+  public Trino2CoralOperatorConverter() {
   }
 
   @Override
   public SqlNode visit(final SqlCall call) {
     final String operatorName = call.getOperator().getName();
 
-    final TrinoCalciteOperatorTransformer transformer =
-        TrinoCalciteTransformerMap.getOperatorTransformer(operatorName.toLowerCase(Locale.ROOT), call.operandCount());
+    final OperatorTransformer transformer = Trino2CoralOperatorTransformerMap
+        .getOperatorTransformer(operatorName.toLowerCase(Locale.ROOT), call.operandCount());
 
     if (transformer == null) {
       return super.visit(call);

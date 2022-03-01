@@ -85,7 +85,7 @@ public class TrinoToRelConverter extends ToRelConverter {
   protected SqlNode toSqlNode(String sql, Table trinoView) {
     String trimmedSql = trimParenthesis(sql.toUpperCase());
     SqlNode parsedSqlNode = PrestoParserDriver.parse(trimmedSql).accept(parseTreeBuilder, parserVisitorContext);
-    SqlNode convertedSqlNode = parsedSqlNode.accept(new Trino2CalciteOperatorConverter());
+    SqlNode convertedSqlNode = parsedSqlNode.accept(new Trino2CoralOperatorConverter());
     return convertedSqlNode;
   }
 

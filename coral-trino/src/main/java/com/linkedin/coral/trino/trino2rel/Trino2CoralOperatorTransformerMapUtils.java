@@ -17,10 +17,10 @@ import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 
 
-public class TrinoCalciteTransformerMapUtils {
+public class Trino2CoralOperatorTransformerMapUtils {
   private static final StaticHiveFunctionRegistry HIVE_REGISTRY = new StaticHiveFunctionRegistry();
 
-  private TrinoCalciteTransformerMapUtils() {
+  private Trino2CoralOperatorTransformerMapUtils() {
   }
 
   /**
@@ -31,8 +31,8 @@ public class TrinoCalciteTransformerMapUtils {
    * @param numOperands Number of operands
    * @param calciteOperatorName Name of Calcite Operator
    */
-  static void createTransformerMapEntry(Map<String, TrinoCalciteOperatorTransformer> transformerMap,
-      SqlOperator trinoOp, int numOperands, String calciteOperatorName) {
+  static void createTransformerMapEntry(Map<String, OperatorTransformer> transformerMap, SqlOperator trinoOp,
+      int numOperands, String calciteOperatorName) {
     createTransformerMapEntry(transformerMap, trinoOp, numOperands, calciteOperatorName, null, null);
   }
 
@@ -48,9 +48,8 @@ public class TrinoCalciteTransformerMapUtils {
    * @param operandTransformer Operand transformers, null for identity transformation
    * @param resultTransformer Result transformer, null for identity transformation
    */
-  static void createTransformerMapEntry(Map<String, TrinoCalciteOperatorTransformer> transformerMap,
-      SqlOperator trinoOp, int numOperands, String calciteOperatorName, String operandTransformer,
-      String resultTransformer) {
+  static void createTransformerMapEntry(Map<String, OperatorTransformer> transformerMap, SqlOperator trinoOp,
+      int numOperands, String calciteOperatorName, String operandTransformer, String resultTransformer) {
     createTransformerMapEntry(transformerMap, trinoOp, numOperands,
         createOperator(calciteOperatorName, trinoOp.getReturnTypeInference(), trinoOp.getOperandTypeChecker()),
         operandTransformer, resultTransformer);
@@ -66,12 +65,11 @@ public class TrinoCalciteTransformerMapUtils {
    * @param operandTransformer Operand transformers, null for identity transformation
    * @param resultTransformer Result transformer, null for identity transformation
    */
-  static void createTransformerMapEntry(Map<String, TrinoCalciteOperatorTransformer> transformerMap,
-      SqlOperator trinoOp, int numOperands, SqlOperator calciteSqlOperator, String operandTransformer,
-      String resultTransformer) {
+  static void createTransformerMapEntry(Map<String, OperatorTransformer> transformerMap, SqlOperator trinoOp,
+      int numOperands, SqlOperator calciteSqlOperator, String operandTransformer, String resultTransformer) {
 
-    transformerMap.put(getKey(trinoOp.getName(), numOperands), TrinoCalciteOperatorTransformer.of(trinoOp.getName(),
-        calciteSqlOperator, operandTransformer, resultTransformer, null));
+    transformerMap.put(getKey(trinoOp.getName(), numOperands),
+        OperatorTransformer.of(trinoOp.getName(), calciteSqlOperator, operandTransformer, resultTransformer, null));
   }
 
   static SqlOperator createOperator(String functionName, SqlReturnTypeInference returnTypeInference,

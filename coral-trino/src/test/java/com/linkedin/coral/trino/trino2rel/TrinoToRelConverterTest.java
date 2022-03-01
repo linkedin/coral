@@ -28,7 +28,7 @@ import org.testng.annotations.Test;
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 
 import static com.linkedin.coral.trino.trino2rel.ToRelTestUtils.*;
-import static com.linkedin.coral.trino.trino2rel.TrinoCalciteTransformerMapUtils.*;
+import static com.linkedin.coral.trino.trino2rel.Trino2CoralOperatorTransformerMapUtils.*;
 import static org.apache.calcite.sql.type.OperandTypes.*;
 import static org.testng.AssertJUnit.assertEquals;
 
@@ -45,7 +45,7 @@ public class TrinoToRelConverterTest {
     conf = ToRelTestUtils.loadResourceHiveConf();
     ToRelTestUtils.initializeViews(conf);
 
-    Map<String, TrinoCalciteOperatorTransformer> TRANSFORMER_MAP = TrinoCalciteTransformerMap.TRANSFORMER_MAP;
+    Map<String, OperatorTransformer> TRANSFORMER_MAP = Trino2CoralOperatorTransformerMap.TRANSFORMER_MAP;
 
     // foo(a) or foo()
     createTransformerMapEntry(TRANSFORMER_MAP, createOperator("foo", ReturnTypes.INTEGER, or(NILADIC, NUMERIC)), 1,

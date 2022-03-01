@@ -10,15 +10,15 @@ import java.util.Map;
 
 import org.apache.calcite.sql.type.ReturnTypes;
 
-import static com.linkedin.coral.trino.trino2rel.TrinoCalciteTransformerMapUtils.*;
+import static com.linkedin.coral.trino.trino2rel.Trino2CoralOperatorTransformerMapUtils.*;
 import static org.apache.calcite.sql.type.OperandTypes.*;
 
 
-public class TrinoCalciteTransformerMap {
-  private TrinoCalciteTransformerMap() {
+public class Trino2CoralOperatorTransformerMap {
+  private Trino2CoralOperatorTransformerMap() {
   }
 
-  public static final Map<String, TrinoCalciteOperatorTransformer> TRANSFORMER_MAP = new HashMap<>();
+  public static final Map<String, OperatorTransformer> TRANSFORMER_MAP = new HashMap<>();
 
   static {
     // TODO: keep adding Trino-Specific functions as needed
@@ -32,9 +32,9 @@ public class TrinoCalciteTransformerMap {
    *
    * @param trinoOpName Name of Trino SQL operator
    * @param numOperands Number of operands
-   * @return {@link TrinoCalciteOperatorTransformer} object
+   * @return {@link OperatorTransformer} object
    */
-  public static TrinoCalciteOperatorTransformer getOperatorTransformer(String trinoOpName, int numOperands) {
+  public static OperatorTransformer getOperatorTransformer(String trinoOpName, int numOperands) {
     return TRANSFORMER_MAP.get(getKey(trinoOpName, numOperands));
   }
 }

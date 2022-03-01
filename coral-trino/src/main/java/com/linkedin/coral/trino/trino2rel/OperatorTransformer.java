@@ -31,7 +31,7 @@ import static com.linkedin.coral.common.calcite.CalciteUtil.*;
 
 
 /**
- * Object for transforming UDF from one SQL language to another SQL language.
+ * Object for transforming Operator from one SQL language to another SQL language at the SqlNode layer.
  *
  * Suppose f1(a1, a2, ..., an) in the first language can be computed by
  * f2(b1, b2, ..., bm) in the second language as follows:
@@ -111,7 +111,7 @@ import static com.linkedin.coral.common.calcite.CalciteUtil.*;
  *   }
  * ]
  */
-class TrinoCalciteOperatorTransformer {
+class OperatorTransformer {
   private static final Map<String, SqlOperator> OP_MAP = new HashMap<>();
 
   // Operators allowed in the transformation
@@ -142,7 +142,7 @@ class TrinoCalciteOperatorTransformer {
   public final JsonObject resultTransformer;
   public final List<JsonObject> operatorTransformers;
 
-  private TrinoCalciteOperatorTransformer(String trinoOperatorName, SqlOperator targetOperator,
+  private OperatorTransformer(String trinoOperatorName, SqlOperator targetOperator,
       List<JsonObject> operandTransformers, JsonObject resultTransformer, List<JsonObject> operatorTransformers) {
     this.trinoOperatorName = trinoOperatorName;
     this.targetOperator = targetOperator;
@@ -154,8 +154,8 @@ class TrinoCalciteOperatorTransformer {
   /**
    * Creates a new transformer.
    *
-   * @param trinoOperatorName Name of the Trino function associated with this UDF                                                                                                                                                                                                                                                  Name of the Calcite function associated with this UDF
-   * @param targetOperator Target operator (a UDF in the target language)
+   * @param trinoOperatorName Name of the Trino function associated with this Operator
+   * @param targetOperator Operator in the target language
    * @param operandTransformers JSON string representing the operand transformations,
    *                            null for identity transformations
    * @param resultTransformer JSON string representing the result transformation,
@@ -188,12 +188,11 @@ class TrinoCalciteOperatorTransformer {
    *                             As seen in the example above, the single quotation marks are also present in the
    *                             regex matcher.
    *
-   * @return {@link TrinoCalciteOperatorTransformer} object
+   * @return {@link OperatorTransformer} object
    */
 
-  public static TrinoCalciteOperatorTransformer of(@Nonnull String trinoOperatorName,
-      @Nonnull SqlOperator targetOperator, @Nullable String operandTransformers, @Nullable String resultTransformer,
-      @Nullable String operatorTransformers) {
+  public static OperatorTransformer of(@Nonnull String trinoOperatorName, @Nonnull SqlOperator targetOperator,
+      @Nullable String operandTransformers, @Nullable String resultTransformer, @Nullable String operatorTransformers) {
     List<JsonObject> operands = null;
     JsonObject result = null;
     List<JsonObject> operators = null;
@@ -206,7 +205,7 @@ class TrinoCalciteOperatorTransformer {
     if (operatorTransformers != null) {
       operators = parseJsonObjectsFromString(operatorTransformers);
     }
-    return new TrinoCalciteOperatorTransformer(trinoOperatorName, targetOperator, operands, result, operators);
+    return new OperatorTransformer(trinoOperatorName, targetOperator, operands, result, operators);
   }
 
   /**
@@ -329,7 +328,8 @@ class TrinoCalciteOperatorTransformer {
       String matcher = operatorTransformer.get(REGEX).getAsString();
 
       if (Pattern.matches(matcher, sourceOperands.get(index).toString())) {
-        return TrinoCalciteTransformerMapUtils.createOperator(functionName, operator.getReturnTypeInference(), null);
+        return Trino2CoralOperatorTransformerMapUtils.createOperator(functionName, operator.getReturnTypeInference(),
+            null);
       }
     }
     return operator;
