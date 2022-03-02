@@ -14,11 +14,8 @@ import org.apache.calcite.sql.type.SqlOperandTypeChecker;
 import org.apache.calcite.sql.type.SqlReturnTypeInference;
 import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
 
-import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
-
 
 public class Trino2CoralOperatorTransformerMapUtils {
-  private static final StaticHiveFunctionRegistry HIVE_REGISTRY = new StaticHiveFunctionRegistry();
 
   private Trino2CoralOperatorTransformerMapUtils() {
   }

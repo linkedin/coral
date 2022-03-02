@@ -31,9 +31,9 @@ import coral.shading.io.trino.sql.tree.*;
 
 import static com.linkedin.coral.common.calcite.CalciteUtil.*;
 import static java.lang.String.format;
-import static org.apache.calcite.sql.SqlFunctionCategory.*;
+import static org.apache.calcite.sql.SqlFunctionCategory.USER_DEFINED_FUNCTION;
 import static org.apache.calcite.sql.fun.SqlStdOperatorTable.*;
-import static org.apache.calcite.sql.parser.SqlParserPos.*;
+import static org.apache.calcite.sql.parser.SqlParserPos.ZERO;
 
 
 public class ParseTreeBuilder extends AstVisitor<SqlNode, ParserVisitorContext> {

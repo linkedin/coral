@@ -52,15 +52,15 @@ import static com.linkedin.coral.common.calcite.CalciteUtil.*;
  * Currently, there is no use-case more complicated than matching a parameter string to a static regex.
  *
  * Example 1:
- * In Calcite SQL, TRUNCATE(aDouble, numDigitAfterDot) truncates aDouble by removing
+ * In the input IR, TRUNCATE(aDouble, numDigitAfterDot) truncates aDouble by removing
  * any digit from the position numDigitAfterDot after the dot, like truncate(11.45, 0) = 11,
  * truncate(11.45, 1) = 11.4
  *
- * In Trino, TRUNCATE(aDouble) only takes one argument and removes all digits after the dot,
+ * In the target IR, TRUNCATE(aDouble) only takes one argument and removes all digits after the dot,
  * like truncate(11.45) = 11.
  *
- * The transformation from Calcite TRUNCATE to Trino TRUNCATE is represented as follows:
- * 1. Trino name: TRUNCATE
+ * The transformation of TRUNCATE from one IR to another is represented as follows:
+ * 1. Target IR name: TRUNCATE
  *
  * 2. Operand transformers:
  * g(b1) = a1 * 10 ^ a2, with JSON format:
@@ -88,13 +88,13 @@ import static com.linkedin.coral.common.calcite.CalciteUtil.*;
  * none
  *
  * Example 2:
- * In Calcite, there exists a hive-derived function to decode binary data given a format, DECODE(binary, scheme).
- * In Trino, there is no generic decoding function that takes a decoding-scheme.
+ * In the input IR, there exists a hive-derived function to decode binary data given a format, DECODE(binary, scheme).
+ * In the target IR, there is no generic decoding function that takes a decoding-scheme.
  * Instead, there exist specific decoding functions that are first-class functions like FROM_UTF8(binary).
  * Consequently, we would need to know the operands in the function in order to determine the corresponding call.
  *
- * The transformation from Calcite DECODE to a Trino equivalent is represented as follows:
- * 1. Trino name: There is no function name determined at compile time.
+ * The transformation of DECODE from one IR to another is represented as follows:
+ * 1. Target IR name: There is no function name determined at compile time.
  * null
  *
  * 2. Operand transformers: We want to retain column 1 and drop column 2:
@@ -136,15 +136,15 @@ class OperatorTransformer {
   public static final String REGEX = "regex";
   public static final String NAME = "name";
 
-  public final String trinoOperatorName;
+  public final String fromOperatorName;
   public final SqlOperator targetOperator;
   public final List<JsonObject> operandTransformers;
   public final JsonObject resultTransformer;
   public final List<JsonObject> operatorTransformers;
 
-  private OperatorTransformer(String trinoOperatorName, SqlOperator targetOperator,
-      List<JsonObject> operandTransformers, JsonObject resultTransformer, List<JsonObject> operatorTransformers) {
-    this.trinoOperatorName = trinoOperatorName;
+  private OperatorTransformer(String fromOperatorName, SqlOperator targetOperator, List<JsonObject> operandTransformers,
+      JsonObject resultTransformer, List<JsonObject> operatorTransformers) {
+    this.fromOperatorName = fromOperatorName;
     this.targetOperator = targetOperator;
     this.operandTransformers = operandTransformers;
     this.resultTransformer = resultTransformer;
@@ -154,7 +154,7 @@ class OperatorTransformer {
   /**
    * Creates a new transformer.
    *
-   * @param trinoOperatorName Name of the Trino function associated with this Operator
+   * @param fromOperatorName Name of the function associated with this Operator in the input IR
    * @param targetOperator Operator in the target language
    * @param operandTransformers JSON string representing the operand transformations,
    *                            null for identity transformations
@@ -191,7 +191,7 @@ class OperatorTransformer {
    * @return {@link OperatorTransformer} object
    */
 
-  public static OperatorTransformer of(@Nonnull String trinoOperatorName, @Nonnull SqlOperator targetOperator,
+  public static OperatorTransformer of(@Nonnull String fromOperatorName, @Nonnull SqlOperator targetOperator,
       @Nullable String operandTransformers, @Nullable String resultTransformer, @Nullable String operatorTransformers) {
     List<JsonObject> operands = null;
     JsonObject result = null;
@@ -205,7 +205,7 @@ class OperatorTransformer {
     if (operatorTransformers != null) {
       operators = parseJsonObjectsFromString(operatorTransformers);
     }
-    return new OperatorTransformer(trinoOperatorName, targetOperator, operands, result, operators);
+    return new OperatorTransformer(fromOperatorName, targetOperator, operands, result, operators);
   }
 
   /**
@@ -218,8 +218,9 @@ class OperatorTransformer {
     final SqlOperator newTargetOperator = transformTargetOperator(targetOperator, sourceOperands);
     if (newTargetOperator == null || newTargetOperator.getName().isEmpty()) {
       String operands = sourceOperands.stream().map(SqlNode::toString).collect(Collectors.joining(","));
-      throw new IllegalArgumentException(String.format(
-          "An equivalent Calcite operator was not found for the function call: %s(%s)", trinoOperatorName, operands));
+      throw new IllegalArgumentException(
+          String.format("An equivalent operator in the target IR was not found for the function call: %s(%s)",
+              fromOperatorName, operands));
     }
     final List<SqlNode> newOperands = transformOperands(sourceOperands);
     final SqlCall newCall = createCall(newTargetOperator, newOperands, SqlParserPos.ZERO);
