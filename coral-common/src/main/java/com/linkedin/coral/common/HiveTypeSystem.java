@@ -156,6 +156,11 @@ public class HiveTypeSystem extends RelDataTypeSystemImpl {
     return true;
   }
 
+  @Override
+  public boolean isSchemaCaseSensitive() {
+    return false;
+  }
+
   private RelDataType nullableType(RelDataTypeFactory typeFactory, SqlTypeName typeName) {
     return typeFactory.createTypeWithNullability(typeFactory.createSqlType(typeName), true);
   }

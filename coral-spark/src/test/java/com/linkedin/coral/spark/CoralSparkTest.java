@@ -727,4 +727,16 @@ public class CoralSparkTest {
     List<SparkUDFInfo> udfJars = coralSpark.getSparkUDFInfoList();
     assertEquals(1, udfJars.size());
   }
+
+  @Test
+  public void testNameSakeColumnNamesShouldGetUniqueIdentifiers() {
+    String targetSql = String.join("\n", "SELECT some_id", "FROM (SELECT tablea.some_id, t.SOME_ID SOME_ID0",
+        "FROM duplicate_column_name.tablea",
+        "LEFT JOIN (SELECT TRIM(some_id) SOME_ID, CAST(TRIM(some_id) AS STRING) $f1",
+        "FROM duplicate_column_name.tableb) t ON tablea.some_id = t.$f1) t0", "WHERE t0.some_id <> ''");
+    RelNode relNode = TestUtils.toRelNode("duplicate_column_name", "view_namesake_column_names");
+    CoralSpark coralSpark = CoralSpark.create(relNode);
+    String expandedSql = coralSpark.getSparkSql();
+    assertEquals(expandedSql, targetSql);
+  }
 }

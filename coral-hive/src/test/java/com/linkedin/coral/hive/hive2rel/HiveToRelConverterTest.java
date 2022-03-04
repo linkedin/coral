@@ -16,6 +16,7 @@ import com.google.common.collect.ImmutableMap;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.runtime.CalciteContextException;
+import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.type.ReturnTypes;
 import org.apache.calcite.sql.type.SqlTypeFamily;
 import org.apache.calcite.sql.type.SqlTypeName;
@@ -615,6 +616,20 @@ public class HiveToRelConverterTest {
         "LogicalProject(EXPR$0=[CAST($0):DECIMAL(10, 0)])\n" + "  LogicalTableScan(table=[[hive, default, foo]])\n";
     final String sql = "SELECT CAST(a AS DECIMAL) FROM foo";
     String generated = relToString(sql);
+    assertEquals(generated, expected);
+  }
+
+  @Test
+  public void testNameSakeColumnNamesShouldGetUniqueIdentifiers() {
+    String expected = "SELECT \"some_id\"\n"
+        + "FROM (SELECT \"duplicate_column_name_a\".\"some_id\", \"t\".\"SOME_ID\" AS \"SOME_ID0\"\n"
+        + "FROM \"hive\".\"default\".\"duplicate_column_name_a\"\n"
+        + "LEFT JOIN (SELECT TRIM(\"some_id\") AS \"SOME_ID\", CAST(TRIM(\"some_id\") AS VARCHAR(10485760)) AS \"$f1\"\n"
+        + "FROM \"hive\".\"default\".\"duplicate_column_name_b\") AS \"t\" ON \"duplicate_column_name_a\".\"some_id\" = \"t\".\"$f1\") AS \"t0\"\n"
+        + "WHERE \"t0\".\"some_id\" <> ''";
+    SqlNode node = viewToSqlNode("default", "view_namesake_column_names");
+    converter.getSqlValidator().validate(node);
+    String generated = nodeToStr(node);
     assertEquals(generated, expected);
   }
 

@@ -196,7 +196,14 @@ public class HiveToTrinoConverterTest {
             + "FROM \"test\".\"table_ints_strings\"" },
 
         { "test", "cast_decimal_view", "SELECT CAST(\"a\" AS DECIMAL(6, 2)) AS \"casted_decimal\"\n"
-            + "FROM \"test\".\"table_ints_strings\"" } };
+            + "FROM \"test\".\"table_ints_strings\"" },
+
+        { "test", "view_namesake_column_names", "SELECT \"some_id\"\n"
+            + "FROM (SELECT \"duplicate_column_name_a\".\"some_id\" AS \"some_id\", \"t\".\"SOME_ID\" AS \"SOME_ID0\"\n"
+            + "FROM \"test\".\"duplicate_column_name_a\"\n"
+            + "LEFT JOIN (SELECT TRIM(\"some_id\") AS \"SOME_ID\", CAST(TRIM(\"some_id\") AS VARCHAR(65536)) AS \"$f1\"\n"
+            + "FROM \"test\".\"duplicate_column_name_b\") AS \"t\" ON \"duplicate_column_name_a\".\"some_id\" = \"t\".\"$f1\") AS \"t0\"\n"
+            + "WHERE \"t0\".\"some_id\" <> ''" } };
   }
 
   @Test
