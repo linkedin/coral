@@ -6,7 +6,6 @@
 package com.linkedin.coral.trino.trino2rel;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
@@ -27,8 +26,6 @@ import org.apache.commons.lang3.ObjectUtils;
 
 import com.linkedin.coral.common.HiveTypeSystem;
 import com.linkedin.coral.common.calcite.CalciteUtil;
-import com.linkedin.coral.hive.hive2rel.functions.HiveFunctionResolver;
-import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 
 import coral.shading.io.trino.sql.tree.*;
 
@@ -86,8 +83,6 @@ public class ParseTreeBuilder extends AstVisitor<SqlNode, ParserVisitorContext> 
       ImmutableSet.of(SqlKind.FIRST_VALUE, SqlKind.LAST_VALUE, SqlKind.LEAD, SqlKind.LAG);
 
   private final SqlTypeFactoryImpl sqlTypeFactory = new SqlTypeFactoryImpl(new HiveTypeSystem());
-  private final HiveFunctionResolver functionResolver =
-      new HiveFunctionResolver(new StaticHiveFunctionRegistry(), new ConcurrentHashMap<>());
 
   // convert the Presto node parse location to the Calcite SqlParserPos
   private SqlParserPos getPos(Node node) {

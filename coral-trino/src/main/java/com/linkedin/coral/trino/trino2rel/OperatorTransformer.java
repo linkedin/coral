@@ -3,7 +3,7 @@
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
-package com.linkedin.coral.trino.rel2trino;
+package com.linkedin.coral.trino.trino2rel;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -21,23 +21,17 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
 
-import org.apache.calcite.rex.RexBuilder;
-import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.SqlCall;
-import org.apache.calcite.sql.SqlIdentifier;
+import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlOperator;
-import org.apache.calcite.sql.SqlWriter;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParserPos;
-import org.apache.calcite.sql.type.OperandTypes;
-import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
 
-import com.linkedin.coral.com.google.common.base.Preconditions;
-import com.linkedin.coral.common.functions.FunctionReturnTypes;
+import static com.linkedin.coral.common.calcite.CalciteUtil.*;
 
 
 /**
- * Object for transforming UDF from one SQL language to another SQL language at the RexNode layer.
+ * Object for transforming Operator from one SQL language to another SQL language at the SqlNode layer.
  *
  * Suppose f1(a1, a2, ..., an) in the first language can be computed by
  * f2(b1, b2, ..., bm) in the second language as follows:
@@ -58,15 +52,15 @@ import com.linkedin.coral.common.functions.FunctionReturnTypes;
  * Currently, there is no use-case more complicated than matching a parameter string to a static regex.
  *
  * Example 1:
- * In Calcite SQL, TRUNCATE(aDouble, numDigitAfterDot) truncates aDouble by removing
+ * In the input IR, TRUNCATE(aDouble, numDigitAfterDot) truncates aDouble by removing
  * any digit from the position numDigitAfterDot after the dot, like truncate(11.45, 0) = 11,
  * truncate(11.45, 1) = 11.4
  *
- * In Trino, TRUNCATE(aDouble) only takes one argument and removes all digits after the dot,
+ * In the target IR, TRUNCATE(aDouble) only takes one argument and removes all digits after the dot,
  * like truncate(11.45) = 11.
  *
- * The transformation from Calcite TRUNCATE to Trino TRUNCATE is represented as follows:
- * 1. Trino name: TRUNCATE
+ * The transformation of TRUNCATE from one IR to another is represented as follows:
+ * 1. Target IR name: TRUNCATE
  *
  * 2. Operand transformers:
  * g(b1) = a1 * 10 ^ a2, with JSON format:
@@ -94,13 +88,13 @@ import com.linkedin.coral.common.functions.FunctionReturnTypes;
  * none
  *
  * Example 2:
- * In Calcite, there exists a hive-derived function to decode binary data given a format, DECODE(binary, scheme).
- * In Trino, there is no generic decoding function that takes a decoding-scheme.
+ * In the input IR, there exists a hive-derived function to decode binary data given a format, DECODE(binary, scheme).
+ * In the target IR, there is no generic decoding function that takes a decoding-scheme.
  * Instead, there exist specific decoding functions that are first-class functions like FROM_UTF8(binary).
  * Consequently, we would need to know the operands in the function in order to determine the corresponding call.
  *
- * The transformation from Calcite DECODE to a Trino equivalent is represented as follows:
- * 1. Trino name: There is no function name determined at compile time.
+ * The transformation of DECODE from one IR to another is represented as follows:
+ * 1. Target IR name: There is no function name determined at compile time.
  * null
  *
  * 2. Operand transformers: We want to retain column 1 and drop column 2:
@@ -117,7 +111,7 @@ import com.linkedin.coral.common.functions.FunctionReturnTypes;
  *   }
  * ]
  */
-public class UDFTransformer {
+class OperatorTransformer {
   private static final Map<String, SqlOperator> OP_MAP = new HashMap<>();
 
   // Operators allowed in the transformation
@@ -128,24 +122,6 @@ public class UDFTransformer {
     OP_MAP.put("/", SqlStdOperatorTable.DIVIDE);
     OP_MAP.put("^", SqlStdOperatorTable.POWER);
     OP_MAP.put("%", SqlStdOperatorTable.MOD);
-    OP_MAP.put("date", new SqlUserDefinedFunction(new SqlIdentifier("date", SqlParserPos.ZERO),
-        FunctionReturnTypes.DATE, null, OperandTypes.STRING, null, null));
-    OP_MAP.put("timestamp", new SqlUserDefinedFunction(new SqlIdentifier("timestamp", SqlParserPos.ZERO),
-        FunctionReturnTypes.TIMESTAMP, null, OperandTypes.STRING, null, null) {
-      @Override
-      public void unparse(SqlWriter writer, SqlCall call, int leftPrec, int rightPrec) {
-        // for timestamp operator, we need to construct `CAST(x AS TIMESTAMP)`
-        Preconditions.checkState(call.operandCount() == 1);
-        final SqlWriter.Frame frame = writer.startFunCall("CAST");
-        call.operand(0).unparse(writer, 0, 0);
-        writer.sep("AS");
-        writer.literal("TIMESTAMP");
-        writer.endFunCall(frame);
-      }
-    });
-    OP_MAP.put("hive_pattern_to_trino",
-        new SqlUserDefinedFunction(new SqlIdentifier("hive_pattern_to_trino", SqlParserPos.ZERO),
-            FunctionReturnTypes.STRING, null, OperandTypes.STRING, null, null));
   }
 
   public static final String OPERATOR = "op";
@@ -160,15 +136,15 @@ public class UDFTransformer {
   public static final String REGEX = "regex";
   public static final String NAME = "name";
 
-  public final String calciteOperatorName;
+  public final String fromOperatorName;
   public final SqlOperator targetOperator;
   public final List<JsonObject> operandTransformers;
   public final JsonObject resultTransformer;
   public final List<JsonObject> operatorTransformers;
 
-  private UDFTransformer(String calciteOperatorName, SqlOperator targetOperator, List<JsonObject> operandTransformers,
+  private OperatorTransformer(String fromOperatorName, SqlOperator targetOperator, List<JsonObject> operandTransformers,
       JsonObject resultTransformer, List<JsonObject> operatorTransformers) {
-    this.calciteOperatorName = calciteOperatorName;
+    this.fromOperatorName = fromOperatorName;
     this.targetOperator = targetOperator;
     this.operandTransformers = operandTransformers;
     this.resultTransformer = resultTransformer;
@@ -178,8 +154,8 @@ public class UDFTransformer {
   /**
    * Creates a new transformer.
    *
-   * @param calciteOperatorName Name of the Calcite function associated with this UDF
-   * @param targetOperator Target operator (a UDF in the target language)
+   * @param fromOperatorName Name of the function associated with this Operator in the input IR
+   * @param targetOperator Operator in the target language
    * @param operandTransformers JSON string representing the operand transformations,
    *                            null for identity transformations
    * @param resultTransformer JSON string representing the result transformation,
@@ -212,10 +188,10 @@ public class UDFTransformer {
    *                             As seen in the example above, the single quotation marks are also present in the
    *                             regex matcher.
    *
-   * @return {@link UDFTransformer} object
+   * @return {@link OperatorTransformer} object
    */
 
-  public static UDFTransformer of(@Nonnull String calciteOperatorName, @Nonnull SqlOperator targetOperator,
+  public static OperatorTransformer of(@Nonnull String fromOperatorName, @Nonnull SqlOperator targetOperator,
       @Nullable String operandTransformers, @Nullable String resultTransformer, @Nullable String operatorTransformers) {
     List<JsonObject> operands = null;
     JsonObject result = null;
@@ -229,63 +205,63 @@ public class UDFTransformer {
     if (operatorTransformers != null) {
       operators = parseJsonObjectsFromString(operatorTransformers);
     }
-    return new UDFTransformer(calciteOperatorName, targetOperator, operands, result, operators);
+    return new OperatorTransformer(fromOperatorName, targetOperator, operands, result, operators);
   }
 
   /**
    * Transforms a call to the source operator.
    *
-   * @param rexBuilder Rex Builder
    * @param sourceOperands Source operands
    * @return An expression calling the target operator that is equivalent to the source operator call
    */
-  public RexNode transformCall(RexBuilder rexBuilder, List<RexNode> sourceOperands) {
+  public SqlNode transformCall(List<SqlNode> sourceOperands) {
     final SqlOperator newTargetOperator = transformTargetOperator(targetOperator, sourceOperands);
     if (newTargetOperator == null || newTargetOperator.getName().isEmpty()) {
-      String operands = sourceOperands.stream().map(RexNode::toString).collect(Collectors.joining(","));
-      throw new IllegalArgumentException(String.format(
-          "An equivalent Trino operator was not found for the function call: %s(%s)", calciteOperatorName, operands));
+      String operands = sourceOperands.stream().map(SqlNode::toString).collect(Collectors.joining(","));
+      throw new IllegalArgumentException(
+          String.format("An equivalent operator in the target IR was not found for the function call: %s(%s)",
+              fromOperatorName, operands));
     }
-    final List<RexNode> newOperands = transformOperands(rexBuilder, sourceOperands);
-    final RexNode newCall = rexBuilder.makeCall(newTargetOperator, newOperands);
-    return transformResult(rexBuilder, newCall, sourceOperands);
+    final List<SqlNode> newOperands = transformOperands(sourceOperands);
+    final SqlCall newCall = createCall(newTargetOperator, newOperands, SqlParserPos.ZERO);
+    return transformResult(newCall, sourceOperands);
   }
 
-  private List<RexNode> transformOperands(RexBuilder rexBuilder, List<RexNode> sourceOperands) {
+  private List<SqlNode> transformOperands(List<SqlNode> sourceOperands) {
     if (operandTransformers == null) {
       return sourceOperands;
     }
-    final List<RexNode> sources = new ArrayList<>();
+    final List<SqlNode> sources = new ArrayList<>();
     // Add a dummy expression for input 0
     sources.add(null);
     sources.addAll(sourceOperands);
-    final List<RexNode> results = new ArrayList<>();
+    final List<SqlNode> results = new ArrayList<>();
     for (JsonObject operandTransformer : operandTransformers) {
-      results.add(transformExpression(rexBuilder, operandTransformer, sources));
+      results.add(transformExpression(operandTransformer, sources));
     }
     return results;
   }
 
-  private RexNode transformResult(RexBuilder rexBuilder, RexNode result, List<RexNode> sourceOperands) {
+  private SqlNode transformResult(SqlNode result, List<SqlNode> sourceOperands) {
     if (resultTransformer == null) {
       return result;
     }
-    final List<RexNode> sources = new ArrayList<>();
+    final List<SqlNode> sources = new ArrayList<>();
     // Result will be input 0
     sources.add(result);
     sources.addAll(sourceOperands);
-    return transformExpression(rexBuilder, resultTransformer, sources);
+    return transformExpression(resultTransformer, sources);
   }
 
   /**
    * Performs a single transformer.
    */
-  private RexNode transformExpression(RexBuilder rexBuilder, JsonObject transformer, List<RexNode> sourceOperands) {
+  private SqlNode transformExpression(JsonObject transformer, List<SqlNode> sourceOperands) {
     if (transformer.get(OPERATOR) != null) {
-      final List<RexNode> inputOperands = new ArrayList<>();
+      final List<SqlNode> inputOperands = new ArrayList<>();
       for (JsonElement inputOperand : transformer.getAsJsonArray(OPERANDS)) {
         if (inputOperand.isJsonObject()) {
-          inputOperands.add(transformExpression(rexBuilder, inputOperand.getAsJsonObject(), sourceOperands));
+          inputOperands.add(transformExpression(inputOperand.getAsJsonObject(), sourceOperands));
         }
       }
       final String operatorName = transformer.get(OPERATOR).getAsString();
@@ -293,7 +269,7 @@ public class UDFTransformer {
       if (op == null) {
         throw new UnsupportedOperationException("Operator " + operatorName + " is not supported in transformation");
       }
-      return rexBuilder.makeCall(op, inputOperands);
+      return createCall(op, inputOperands, SqlParserPos.ZERO);
     }
     if (transformer.get(INPUT) != null) {
       int index = transformer.get(INPUT).getAsInt();
@@ -313,13 +289,13 @@ public class UDFTransformer {
 
     final JsonPrimitive primitive = value.getAsJsonPrimitive();
     if (primitive.isString()) {
-      return rexBuilder.makeLiteral(primitive.getAsString());
+      return createStringLiteral(primitive.getAsString(), SqlParserPos.ZERO);
     }
     if (primitive.isBoolean()) {
-      return rexBuilder.makeLiteral(primitive.getAsBoolean());
+      return createLiteralBoolean(primitive.getAsBoolean(), SqlParserPos.ZERO);
     }
     if (primitive.isNumber()) {
-      return rexBuilder.makeBigintLiteral(value.getAsBigDecimal());
+      return createLiteralNumber(value.getAsBigDecimal().longValue(), SqlParserPos.ZERO);
     }
 
     throw new UnsupportedOperationException("Invalid JSON literal value: " + primitive);
@@ -328,7 +304,7 @@ public class UDFTransformer {
   /**
    * Returns a SqlOperator with a function name based on the value of the source operands.
    */
-  private SqlOperator transformTargetOperator(SqlOperator operator, List<RexNode> sourceOperands) {
+  private SqlOperator transformTargetOperator(SqlOperator operator, List<SqlNode> sourceOperands) {
     if (operatorTransformers == null) {
       return operator;
     }
@@ -353,14 +329,14 @@ public class UDFTransformer {
       String matcher = operatorTransformer.get(REGEX).getAsString();
 
       if (Pattern.matches(matcher, sourceOperands.get(index).toString())) {
-        return UDFMapUtils.createUDF(functionName, operator.getReturnTypeInference());
+        return Trino2CoralOperatorTransformerMapUtils.createOperator(functionName, operator.getReturnTypeInference(),
+            null);
       }
     }
     return operator;
   }
 
   /**
-   * TODO(ralam): Add this as a general utility in coral-calcite or look for other base libraries with this function.
    * Creates an ArrayList of JsonObjects from a string input.
    * The input string must be a serialized JSON array.
    */
