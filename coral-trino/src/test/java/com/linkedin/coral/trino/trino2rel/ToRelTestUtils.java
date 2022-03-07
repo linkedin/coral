@@ -27,7 +27,7 @@ public class ToRelTestUtils {
   public static final String CORAL_FROM_TRINO_TEST_DIR = "coral.trino.test.dir";
 
   private static HiveMscAdapter hiveMetastoreClient;
-  public static TrinoToRelConverter converter;
+  public static TrinoToRelConverter trinoToRelConverter;
 
   static void run(Driver driver, String sql) {
     while (true) {
@@ -50,7 +50,7 @@ public class ToRelTestUtils {
     SessionState.start(conf);
     Driver driver = new Driver(conf);
     hiveMetastoreClient = new HiveMscAdapter(Hive.get(conf).getMSC());
-    converter = new TrinoToRelConverter(hiveMetastoreClient);
+    trinoToRelConverter = new TrinoToRelConverter(hiveMetastoreClient);
 
     // Views and tables used in TrinoToTrinoConverterTest
     run(driver, "CREATE DATABASE IF NOT EXISTS default");
