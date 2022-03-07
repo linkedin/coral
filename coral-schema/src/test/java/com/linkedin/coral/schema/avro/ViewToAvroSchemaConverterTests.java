@@ -951,5 +951,16 @@ public class ViewToAvroSchemaConverterTests {
         TestUtils.loadSchema("testProjectUdfReturnedStruct-expected.avsc"));
   }
 
+  @Test
+  public void testUnnamedColumnSchemaName() {
+    String viewSql = "CREATE VIEW foo_unnamed_column " + "AS " + "SELECT 1 + 1, 'foo' FROM basecomplex bc";
+
+    TestUtils.executeCreateViewQuery("default", "foo_unnamed_column", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "foo_unnamed_column");
+
+    Assert.assertEquals(actualSchema.toString(true), TestUtils.loadSchema("testUnnamedColumnSchemaName-expected.avsc"));
+  }
   // TODO: add more unit tests
 }

@@ -6,35 +6,35 @@
     "name" : "Id_Viewc_Col",
     "type" : "int"
   }, {
-    "name" : "EXPR_1",
+    "name" : "_c1",
     "type" : "boolean",
     "doc" : "Field created in view by applying UDF 'com.linkedin.coral.hive.hive2rel.CoralTestUDF1' with argument(s): coral.schema.avro.base.complex.basecomplex.Id"
   }, {
-    "name" : "EXPR_2",
+    "name" : "_c2",
     "type" : "boolean",
     "doc" : "Field created in view by applying UDF 'com.linkedin.coral.hive.hive2rel.CoralTestUDF2' with argument(s): coral.schema.avro.base.complex.basecomplex.Id"
   }, {
-    "name" : "EXPR_3",
+    "name" : "_c3",
     "type" : "int",
     "doc" : "Field created in view by applying UDF 'com.linkedin.coral.hive.hive2rel.CoralTestUDF3' with argument(s): coral.schema.avro.base.complex.basecomplex.Id"
   }, {
-    "name" : "EXPR_4",
+    "name" : "_c4",
     "type" : [ "null", "int" ],
     "doc" : "Field created in view by applying operator '+' with argument(s): 1, 1"
   }, {
-    "name" : "EXPR_5",
+    "name" : "_c5",
     "type" : [ "null", "int" ],
     "doc" : "Field created in view by applying operator '+' with argument(s): coral.schema.avro.base.complex.basecomplex.Id, 1"
   }, {
-    "name" : "EXPR_6",
+    "name" : "_c6",
     "type" : [ "null", "int" ],
     "doc" : "Field created in view by applying operator '+' with argument(s): value with type INTEGER, 1"
   }, {
-    "name" : "EXPR_7",
+    "name" : "_c7",
     "type" : [ "null", "int" ],
     "doc" : "Field created in view by applying operator '+' with argument(s): value with type INTEGER, 1"
   }, {
-    "name" : "EXPR_8",
+    "name" : "_c8",
     "type" : "int",
     "doc" : "Field created in view by applying operator '+' with argument(s): coral.schema.avro.base.complex.basecomplex.Id, value with type INTEGER"
   } ]

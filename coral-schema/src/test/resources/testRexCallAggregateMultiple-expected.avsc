@@ -14,11 +14,11 @@
     "type" : [ "null", "int" ],
     "doc" : "Field created in view by applying operator '*' with argument(s): 33, value with type BIGINT"
   }, {
-    "name" : "EXPR_3",
+    "name" : "_c3",
     "type" : [ "null", "long" ],
     "doc" : "Field created in view by applying aggregate function of type: COUNT"
   }, {
-    "name" : "EXPR_4",
+    "name" : "_c4",
     "type" : [ "null", "long" ],
     "doc" : "Field created in view by applying aggregate function of type: COUNT"
   } ]
