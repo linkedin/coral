@@ -95,4 +95,13 @@ public final class FunctionReturnTypes {
       return typeFactory.createStructType(relTypes, fieldNames);
     };
   }
+
+  public static SqlReturnTypeInference arrayOfNullableType(final SqlTypeName typeName) {
+    return opBinding -> {
+      RelDataTypeFactory typeFactory = opBinding.getTypeFactory();
+      RelDataType relType = typeFactory.createSqlType(typeName);
+      RelDataType arrayType = typeFactory.createArrayType(relType, -1);
+      return typeFactory.createTypeWithNullability(arrayType, true);
+    };
+  }
 }
