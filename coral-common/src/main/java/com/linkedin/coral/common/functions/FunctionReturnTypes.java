@@ -56,9 +56,15 @@ public final class FunctionReturnTypes {
   public static final SqlReturnTypeInference ARRAY_OF_ARG0_TYPE =
       opBinding -> opBinding.getTypeFactory().createArrayType(opBinding.getOperandType(0), -1);
 
-  public static SqlReturnTypeInference arrayOfType(final SqlTypeName typeName) {
-    return opBinding -> opBinding.getTypeFactory().createArrayType(opBinding.getTypeFactory().createSqlType(typeName),
-        -1);
+  public static SqlReturnTypeInference arrayOfType(final SqlTypeName typeName, boolean elementsNullable) {
+    return opBinding -> {
+      RelDataTypeFactory typeFactory = opBinding.getTypeFactory();
+      RelDataType relType = typeFactory.createSqlType(typeName);
+      RelDataType arrayType = typeFactory.createArrayType(relType, -1);
+      if (!elementsNullable)
+        return arrayType;
+      return typeFactory.createTypeWithNullability(arrayType, true);
+    };
   }
 
   public static SqlReturnTypeInference mapOfType(final SqlTypeName keyType, final SqlTypeName valueType) {
@@ -93,15 +99,6 @@ public final class FunctionReturnTypes {
       RelDataTypeFactory typeFactory = opBinding.getTypeFactory();
       List<RelDataType> relTypes = types.stream().map(t -> t.inferReturnType(opBinding)).collect(Collectors.toList());
       return typeFactory.createStructType(relTypes, fieldNames);
-    };
-  }
-
-  public static SqlReturnTypeInference arrayOfNullableType(final SqlTypeName typeName) {
-    return opBinding -> {
-      RelDataTypeFactory typeFactory = opBinding.getTypeFactory();
-      RelDataType relType = typeFactory.createSqlType(typeName);
-      RelDataType arrayType = typeFactory.createArrayType(relType, -1);
-      return typeFactory.createTypeWithNullability(arrayType, true);
     };
   }
 }
