@@ -1,11 +1,6 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ConfigureShadowRelocation
-
-plugins {
-  id 'java'
-  id 'com.github.johnrengelman.shadow'
-  id 'maven-publish' //https://docs.gradle.org/current/userguide/publishing_maven.html
-  id 'signing' //https://docs.gradle.org/current/userguide/signing_plugin.html
-}
+apply plugin: "com.github.johnrengelman.shadow"
+apply from: "$rootDir/gradle/java-publication.gradle"
 
 dependencies {
   compileOnly 'io.trino:trino-parser:355'
@@ -21,33 +16,10 @@ shadowJar {
     project.configurations.compileOnly
   ]
   dependsOn(relocateShadowJar)
-  archiveClassifier.set('shaded')
 }
 
-assemble.dependsOn shadowJar
-
-artifacts {
-  archives shadowJar
-}
-
-publishing {
-  publications {
-    javaLibrary(MavenPublication) {
-      artifact shadowJar
-      artifactId = project.archivesBaseName
-    }
-  }
-
-  //useful for testing - running "publish" will create artifacts/pom in a local dir
-  repositories { maven { url = "$rootProject.buildDir/repo" } }
-}
-
-//fleshes out problems with Maven pom generation when building
-tasks.build.dependsOn("publishJavaLibraryPublicationToMavenLocal")
-
-signing {
-  if (System.getenv("PGP_KEY")) {
-    useInMemoryPgpKeys(System.getenv("PGP_KEY"), System.getenv("PGP_PWD"))
-    sign publishing.publications.javaLibrary
-  }
+// Rename shadow jar to original artifact name, so that 'coral-trino-parser-x.x.x.jar' itself is the shadow jar
+jar {
+  enabled = false
+  dependsOn(shadowJar { classifier = null })
 }
