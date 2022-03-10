@@ -83,7 +83,7 @@ public class TrinoToRelConverter extends ToRelConverter {
 
   @Override
   protected SqlNode toSqlNode(String sql, Table trinoView) {
-    String trimmedSql = trimParenthesis(standardizeSql(sql));
+    String trimmedSql = standardizeSql(sql);
     SqlNode parsedSqlNode = PrestoParserDriver.parse(trimmedSql).accept(parseTreeBuilder, parserVisitorContext);
     SqlNode convertedSqlNode = parsedSqlNode.accept(new Trino2CoralOperatorConverter());
     return convertedSqlNode;
@@ -94,16 +94,15 @@ public class TrinoToRelConverter extends ToRelConverter {
     return relNode;
   }
 
-  private static String standardizeSql(String sql) {
-    return sql.toUpperCase().replaceAll("`", "\"");
-  }
-
-  private static String trimParenthesis(String value) {
+  /*
+   * Standardizing Sql to ensure compatability with Sql Parser.
+   */
+  private static String standardizeSql(String value) {
     String str = value.trim();
     if (str.startsWith("(") && str.endsWith(")")) {
-      return trimParenthesis(str.substring(1, str.length() - 1));
+      return standardizeSql(str.substring(1, str.length() - 1));
     }
-    return str;
+    return str.toUpperCase().replaceAll("`", "\"");
   }
 
 }
