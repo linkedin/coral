@@ -8,7 +8,6 @@ package com.linkedin.coral.schema.avro;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
@@ -450,9 +449,7 @@ class SchemaUtilities {
    *
    * @return Merged schema if the input schemas can be merged
    */
-  static Schema mergeUnionRecordSchema(@Nonnull Schema leftSchema,
-      @Nonnull Schema rightSchema,
-      boolean strictMode,
+  static Schema mergeUnionRecordSchema(@Nonnull Schema leftSchema, @Nonnull Schema rightSchema, boolean strictMode,
       boolean forceLowercase) {
     Preconditions.checkNotNull(leftSchema);
     Preconditions.checkNotNull(rightSchema);
@@ -506,7 +503,8 @@ class SchemaUtilities {
 
     for (Schema.Field leftField : leftSchemaFields) {
       Schema.Field rightField = rightSchemaFieldsMap.get(forceFieldNameLowercase(leftField.name(), forceLowercase));
-      Schema unionFieldSchema = getUnionFieldSchema(leftField.schema(), rightField.schema(), strictMode, forceLowercase);
+      Schema unionFieldSchema =
+          getUnionFieldSchema(leftField.schema(), rightField.schema(), strictMode, forceLowercase);
       Schema.Field unionField = new Schema.Field(leftField.name(), unionFieldSchema, leftField.doc(),
           leftField.defaultValue(), leftField.order());
       leftField.aliases().forEach(unionField::addAlias);
@@ -530,8 +528,8 @@ class SchemaUtilities {
     return forceLowercase ? fieldName.toLowerCase() : fieldName;
   }
 
-  private static Schema getUnionFieldSchema(@Nonnull Schema leftSchema, @Nonnull Schema rightSchema,
-      boolean strictMode, boolean forceLowercase) {
+  private static Schema getUnionFieldSchema(@Nonnull Schema leftSchema, @Nonnull Schema rightSchema, boolean strictMode,
+      boolean forceLowercase) {
     Preconditions.checkNotNull(leftSchema);
     Preconditions.checkNotNull(rightSchema);
 
@@ -544,7 +542,8 @@ class SchemaUtilities {
       return makeNullable(leftSchema);
     }
     if (isNullableType(leftSchema) || isNullableType(rightSchema)) {
-      return makeNullable(getUnionFieldSchema(makeNonNullable(leftSchema), makeNonNullable(rightSchema), strictMode, forceLowercase));
+      return makeNullable(
+          getUnionFieldSchema(makeNonNullable(leftSchema), makeNonNullable(rightSchema), strictMode, forceLowercase));
     }
 
     if (leftSchemaType == rightSchemaType) {
@@ -570,11 +569,12 @@ class SchemaUtilities {
         case RECORD:
           return mergeUnionRecordSchema(leftSchema, rightSchema, strictMode, forceLowercase);
         case MAP:
-          Schema valueType = getUnionFieldSchema(leftSchema.getValueType(), rightSchema.getValueType(), strictMode, forceLowercase);
+          Schema valueType =
+              getUnionFieldSchema(leftSchema.getValueType(), rightSchema.getValueType(), strictMode, forceLowercase);
           return Schema.createMap(valueType);
         case ARRAY:
-          Schema elementType =
-              getUnionFieldSchema(leftSchema.getElementType(), rightSchema.getElementType(), strictMode, forceLowercase);
+          Schema elementType = getUnionFieldSchema(leftSchema.getElementType(), rightSchema.getElementType(),
+              strictMode, forceLowercase);
           return Schema.createArray(elementType);
         default:
           throw new IllegalArgumentException(

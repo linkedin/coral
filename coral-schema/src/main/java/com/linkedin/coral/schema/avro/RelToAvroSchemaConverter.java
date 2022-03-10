@@ -159,8 +159,8 @@ public class RelToAvroSchemaConverter {
 
     private final HiveMetastoreClient hiveMetastoreClient;
 
-    public SchemaRelShuttle(HiveMetastoreClient hiveMetastoreClient, Map<RelNode, Schema> schemaMap,
-        boolean strictMode, boolean forceLowercase) {
+    public SchemaRelShuttle(HiveMetastoreClient hiveMetastoreClient, Map<RelNode, Schema> schemaMap, boolean strictMode,
+        boolean forceLowercase) {
       this.hiveMetastoreClient = hiveMetastoreClient;
       this.schemaMap = schemaMap;
       this.strictMode = strictMode;
@@ -260,7 +260,8 @@ public class RelToAvroSchemaConverter {
       Schema inputSchema1 = schemaMap.get(logicalUnion.getInput(0));
       Schema inputSchema2 = schemaMap.get(logicalUnion.getInput(1));
 
-      Schema mergedSchema = SchemaUtilities.mergeUnionRecordSchema(inputSchema1, inputSchema2, strictMode, forceLowercase);
+      Schema mergedSchema =
+          SchemaUtilities.mergeUnionRecordSchema(inputSchema1, inputSchema2, strictMode, forceLowercase);
 
       schemaMap.put(logicalUnion, mergedSchema);
 
