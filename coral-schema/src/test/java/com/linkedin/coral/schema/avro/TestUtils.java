@@ -96,6 +96,7 @@ public class TestUtils {
     String baseTimestampTypeFieldSchema = loadSchema("base-timestamp-type-field.avsc");
     String baseComplexUnionTypeSchema = loadSchema("base-complex-union-type.avsc");
     String baseNestedUnionSchema = loadSchema("base-nested-union.avsc");
+    String baseComplexUnionForceLowercase = loadSchema("base-complex-union-forcelowercase.avsc");
 
     executeCreateTableQuery("default", "basecomplex", baseComplexSchema);
     executeCreateTableQuery("default", "basecomplexunioncompatible", baseComplexUnionCompatible);
@@ -106,6 +107,7 @@ public class TestUtils {
     executeCreateTableQuery("default", "basetimestamptypefield", baseTimestampTypeFieldSchema);
     executeCreateTableQuery("default", "basecomplexuniontype", baseComplexUnionTypeSchema);
     executeCreateTableQuery("default", "basenestedunion", baseNestedUnionSchema);
+    executeCreateTableQuery("default", "basecomplexunionforcelowercase", baseComplexUnionForceLowercase);
     executeCreateTableWithPartitionQuery("default", "basecasepreservation", baseCasePreservation);
     executeCreateTableWithPartitionFieldSchemaQuery("default", "basecomplexfieldschema", baseComplexFieldSchema);
     executeCreateTableWithPartitionQuery("default", "basenestedcomplex", baseNestedComplexSchema);

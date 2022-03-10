@@ -651,6 +651,19 @@ public class ViewToAvroSchemaConverterTests {
   }
 
   @Test
+  public void testUnionForceLowercase() {
+    String viewSql = "CREATE VIEW v AS " + "SELECT * FROM basecomplex " + "UNION ALL "
+        + "SELECT * FROM basecomplexunionforcelowercase";
+
+    TestUtils.executeCreateViewQuery("default", "v", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v", false, true);
+
+    Assert.assertEquals(actualSchema.toString(true), TestUtils.loadSchema("testUnionForceLowercase.avsc"));
+  }
+
+  @Test
   public void testSelectStarFromNestComplex() {
     String viewSql = "CREATE VIEW v AS SELECT * FROM basenestedcomplex";
 

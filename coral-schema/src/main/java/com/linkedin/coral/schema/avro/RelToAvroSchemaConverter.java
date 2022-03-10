@@ -115,15 +115,16 @@ public class RelToAvroSchemaConverter {
    *
    * @param relNode {@link RelNode} object
    * @param strictMode configure whether to use strict mode
+   * @param forceLowercase  configure whether to force lowercase
    * @return avro schema for calcite IR RelNode
    * @throws RuntimeException if cannot find table in Hive metastore
    * @throws RuntimeException if cannot determine avro schema for tableScan
    */
-  public Schema convert(@Nonnull RelNode relNode, boolean strictMode) {
+  public Schema convert(@Nonnull RelNode relNode, boolean strictMode, boolean forceLowercase) {
     Preconditions.checkNotNull(relNode, "RelNode to convert cannot be null");
 
     Map<RelNode, Schema> schemaMap = new HashMap<>();
-    relNode.accept(new SchemaRelShuttle(hiveMetastoreClient, schemaMap, strictMode));
+    relNode.accept(new SchemaRelShuttle(hiveMetastoreClient, schemaMap, strictMode, forceLowercase));
     Schema viewSchema = schemaMap.get(relNode);
 
     return viewSchema;
@@ -154,14 +155,16 @@ public class RelToAvroSchemaConverter {
   private static class SchemaRelShuttle extends RelShuttleImpl {
     private final Map<RelNode, Schema> schemaMap;
     private final boolean strictMode;
+    private final boolean forceLowercase;
 
     private final HiveMetastoreClient hiveMetastoreClient;
 
     public SchemaRelShuttle(HiveMetastoreClient hiveMetastoreClient, Map<RelNode, Schema> schemaMap,
-        boolean strictMode) {
+        boolean strictMode, boolean forceLowercase) {
       this.hiveMetastoreClient = hiveMetastoreClient;
       this.schemaMap = schemaMap;
       this.strictMode = strictMode;
+      this.forceLowercase = forceLowercase;
     }
 
     @Override
@@ -257,7 +260,7 @@ public class RelToAvroSchemaConverter {
       Schema inputSchema1 = schemaMap.get(logicalUnion.getInput(0));
       Schema inputSchema2 = schemaMap.get(logicalUnion.getInput(1));
 
-      Schema mergedSchema = SchemaUtilities.mergeUnionRecordSchema(inputSchema1, inputSchema2, strictMode);
+      Schema mergedSchema = SchemaUtilities.mergeUnionRecordSchema(inputSchema1, inputSchema2, strictMode, forceLowercase);
 
       schemaMap.put(logicalUnion, mergedSchema);
 
