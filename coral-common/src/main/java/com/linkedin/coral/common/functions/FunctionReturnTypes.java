@@ -15,6 +15,7 @@ import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.sql.type.ReturnTypes;
 import org.apache.calcite.sql.type.SqlReturnTypeInference;
 import org.apache.calcite.sql.type.SqlTypeName;
+import org.apache.calcite.sql.type.SqlTypeTransforms;
 
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
 
@@ -59,11 +60,14 @@ public final class FunctionReturnTypes {
   public static SqlReturnTypeInference arrayOfType(final SqlTypeName typeName, boolean elementsNullable) {
     return opBinding -> {
       RelDataTypeFactory typeFactory = opBinding.getTypeFactory();
-      RelDataType relType = typeFactory.createSqlType(typeName);
-      RelDataType arrayType = typeFactory.createArrayType(relType, -1);
-      if (!elementsNullable)
-        return arrayType;
-      return typeFactory.createTypeWithNullability(arrayType, true);
+      RelDataType relType;
+      if (elementsNullable) {
+        relType = ReturnTypes.cascade(ReturnTypes.explicit(typeName), SqlTypeTransforms.TO_NULLABLE)
+            .inferReturnType(opBinding);
+      } else {
+        relType = typeFactory.createSqlType(typeName);
+      }
+      return typeFactory.createArrayType(relType, -1);
     };
   }
 

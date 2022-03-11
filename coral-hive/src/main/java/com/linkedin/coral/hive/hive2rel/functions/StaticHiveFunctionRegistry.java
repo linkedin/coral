@@ -498,7 +498,7 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
                 "listingtype", "sublistingtype", "istestjob"),
             ImmutableList.of(FunctionReturnTypes.BIGINT, FunctionReturnTypes.STRING,
                 FunctionReturnTypes.arrayOfType(SqlTypeName.BIGINT, true),
-                FunctionReturnTypes.arrayOfType(SqlTypeName.VARCHAR, false), FunctionReturnTypes.STRING,
+                FunctionReturnTypes.arrayOfType(SqlTypeName.VARCHAR, true), FunctionReturnTypes.STRING,
                 FunctionReturnTypes.STRING, ReturnTypes.BOOLEAN)),
         family(
             ImmutableList.of(SqlTypeFamily.NUMERIC, SqlTypeFamily.STRING, SqlTypeFamily.STRING, SqlTypeFamily.STRING)));
