@@ -57,6 +57,10 @@ public final class FunctionReturnTypes {
   public static final SqlReturnTypeInference ARRAY_OF_ARG0_TYPE =
       opBinding -> opBinding.getTypeFactory().createArrayType(opBinding.getOperandType(0), -1);
 
+  public static SqlReturnTypeInference arrayOfType(final SqlTypeName typeName) {
+    return arrayOfType(typeName, false);
+  }
+
   public static SqlReturnTypeInference arrayOfType(final SqlTypeName typeName, boolean elementsNullable) {
     return opBinding -> {
       RelDataTypeFactory typeFactory = opBinding.getTypeFactory();

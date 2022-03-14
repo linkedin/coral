@@ -281,7 +281,7 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
     createAddUserDefinedFunction("sentences", LEAST_RESTRICTIVE, STRING_STRING_STRING);
     createAddUserDefinedFunction("soundex", FunctionReturnTypes.STRING, STRING);
     createAddUserDefinedFunction("space", FunctionReturnTypes.STRING, NUMERIC);
-    createAddUserDefinedFunction("split", FunctionReturnTypes.arrayOfType(SqlTypeName.VARCHAR, false), STRING_STRING);
+    createAddUserDefinedFunction("split", FunctionReturnTypes.arrayOfType(SqlTypeName.VARCHAR), STRING_STRING);
     createAddUserDefinedFunction("str_to_map", FunctionReturnTypes.mapOfType(SqlTypeName.VARCHAR, SqlTypeName.VARCHAR),
         family(Collections.nCopies(3, SqlTypeFamily.STRING), optionalOrd(ImmutableList.of(1, 2))));
     createAddUserDefinedFunction("substr", FunctionReturnTypes.STRING,
@@ -305,7 +305,7 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
         or(family(SqlTypeFamily.STRING), family(SqlTypeFamily.BINARY)));
 
     // xpath functions
-    createAddUserDefinedFunction("xpath", FunctionReturnTypes.arrayOfType(SqlTypeName.VARCHAR, false), STRING_STRING);
+    createAddUserDefinedFunction("xpath", FunctionReturnTypes.arrayOfType(SqlTypeName.VARCHAR), STRING_STRING);
     createAddUserDefinedFunction("xpath_string", FunctionReturnTypes.STRING, STRING_STRING);
     createAddUserDefinedFunction("xpath_boolean", ReturnTypes.BOOLEAN, STRING_STRING);
     createAddUserDefinedFunction("xpath_short", FunctionReturnTypes.SMALLINT, STRING_STRING);
