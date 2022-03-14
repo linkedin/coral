@@ -186,8 +186,8 @@ public class ParseTreeBuilderTest {
   }
 
   @Test(dataProvider = "support")
-  public void testSupport(String prestoSql, String expected) {
-    SqlNode node = PrestoParserDriver.parse(prestoSql.toUpperCase()).accept(builder, context);
+  public void testSupport(String trinoSql, String expected) {
+    SqlNode node = TrinoParserDriver.parse(trinoSql.toUpperCase()).accept(builder, context);
     assertEquals(expected.toLowerCase(), node.toString().toLowerCase().replaceAll("\n", " "));
   }
 
@@ -214,7 +214,7 @@ public class ParseTreeBuilderTest {
   }
 
   private SqlNode convert(String prestoSql) {
-    return PrestoParserDriver.parse(prestoSql.toUpperCase()).accept(builder, context);
+    return TrinoParserDriver.parse(prestoSql.toUpperCase()).accept(builder, context);
   }
 
   public static String loadResource(String fileName) throws IOException {

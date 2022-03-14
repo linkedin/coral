@@ -12,10 +12,10 @@ import coral.shading.io.trino.sql.tree.Statement;
 import static coral.shading.io.trino.sql.parser.ParsingOptions.DecimalLiteralTreatment.AS_DECIMAL;
 
 
-public class PrestoParserDriver {
+public class TrinoParserDriver {
   private final static ParsingOptions parsingOptions = new ParsingOptions(AS_DECIMAL /* anything */);
   /**
-   * Use the Presto SqlParser to parse the command and return the presto statement.
+   * Use the Trino SqlParser to parse the command and return the presto statement.
    *
    * @return {@link Statement} as response
    */
