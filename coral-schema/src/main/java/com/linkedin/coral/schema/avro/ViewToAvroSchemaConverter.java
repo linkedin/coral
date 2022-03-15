@@ -90,8 +90,7 @@ public class ViewToAvroSchemaConverter {
    *                        the resulting schema. The rule is as follows:
    *                                1. Top level namespace is dbName.tableOrViewName
    *                                2. Nested namespace is parentNamespace.parentFieldName
-   * @param forceLowercase if forceLowercase is set to True, we will performance case insensitive field names match
-   *                       when merging union schema
+   * @param forceLowercase if forceLowercase is set to True, we will return schema with lowercased field names
    *
    * @return avro schema for a given Dali view [dbName, viewName]
    */
@@ -184,7 +183,7 @@ public class ViewToAvroSchemaConverter {
 
     if (!tableOrView.getTableType().equals("VIRTUAL_VIEW")) {
       // It's base table, just retrieve the avro schema from Hive metastore
-      return SchemaUtilities.getAvroSchemaForTable(tableOrView, strictMode);
+      return SchemaUtilities.getAvroSchemaForTable(tableOrView, strictMode, forceLowercase);
     } else {
       RelNode relNode = hiveToRelConverter.convertView(dbName, tableOrViewName);
       Schema schema = relToAvroSchemaConverter.convert(relNode, strictMode, forceLowercase);

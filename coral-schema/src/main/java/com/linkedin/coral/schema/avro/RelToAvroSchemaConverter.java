@@ -261,7 +261,7 @@ public class RelToAvroSchemaConverter {
       Schema inputSchema2 = schemaMap.get(logicalUnion.getInput(1));
 
       Schema mergedSchema =
-          SchemaUtilities.mergeUnionRecordSchema(inputSchema1, inputSchema2, strictMode, forceLowercase);
+          SchemaUtilities.mergeUnionRecordSchema(inputSchema1, inputSchema2, strictMode);
 
       schemaMap.put(logicalUnion, mergedSchema);
 
@@ -362,7 +362,7 @@ public class RelToAvroSchemaConverter {
         throw new RuntimeException("Cannot find table " + dbName + "." + tableName + " in Hive metastore");
       }
 
-      Schema tableSchema = SchemaUtilities.getAvroSchemaForTable(baseTable, strictMode);
+      Schema tableSchema = SchemaUtilities.getAvroSchemaForTable(baseTable, strictMode, forceLowercase);
 
       return tableSchema;
     }

@@ -8,6 +8,7 @@ package com.linkedin.coral.schema.avro;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
@@ -87,9 +88,10 @@ class SchemaUtilities {
    *
    * @param table
    * @param strictMode if set to true, we do not fall back to Hive schema
+   * @param forceLowercase if set to true, the schema returned is converted to lowercase
    * @return Avro schema for table including partition columns
    */
-  static Schema getAvroSchemaForTable(@Nonnull final Table table, boolean strictMode) {
+  static Schema getAvroSchemaForTable(@Nonnull final Table table, boolean strictMode, boolean forceLowercase) {
     Preconditions.checkNotNull(table);
     Schema tableSchema = SchemaUtilities.getCasePreservedSchemaForTable(table);
     if (tableSchema == null) {
@@ -100,7 +102,7 @@ class SchemaUtilities {
 
         tableSchema = SchemaUtilities.convertHiveSchemaToAvro(table);
 
-        return tableSchema;
+        return forceLowercaseSchema(tableSchema, forceLowercase);
       } else {
         throw new SchemaNotFoundException("strictMode is set to True and fallback to Hive schema is disabled. "
             + "Cannot determine Avro schema for table " + table.getDbName() + "." + table.getTableName() + ".");
@@ -112,7 +114,7 @@ class SchemaUtilities {
         //         Hive itself uses avro.schema.literal as source of truth for these tables, so this should be fine
         // Case 2: If avro.schema.literal has duplicate column names when lowercased, that means we cannot do reliable
         //         matching with Hive schema as multiple Avro fields can map to the same Hive field
-        return tableSchema;
+        return forceLowercaseSchema(tableSchema, forceLowercase);
       } else {
         Schema finalTableSchema;
 
@@ -124,7 +126,7 @@ class SchemaUtilities {
         }
 
         finalTableSchema = MergeHiveSchemaWithAvro.visit(structTypeInfoFromCols(cols), tableSchema);
-        return finalTableSchema;
+        return forceLowercaseSchema(finalTableSchema, forceLowercase);
       }
     }
   }
@@ -278,6 +280,10 @@ class SchemaUtilities {
     }
 
     return newName;
+  }
+
+  static Schema forceLowercaseSchema(Schema schema, boolean forceLowercase) {
+    return forceLowercase ? Lowercase.visit(schema) : schema;
   }
 
   private static String getLiteralValueAsString(@Nonnull RexLiteral rexLiteral) {
@@ -449,8 +455,7 @@ class SchemaUtilities {
    *
    * @return Merged schema if the input schemas can be merged
    */
-  static Schema mergeUnionRecordSchema(@Nonnull Schema leftSchema, @Nonnull Schema rightSchema, boolean strictMode,
-      boolean forceLowercase) {
+  static Schema mergeUnionRecordSchema(@Nonnull Schema leftSchema, @Nonnull Schema rightSchema, boolean strictMode) {
     Preconditions.checkNotNull(leftSchema);
     Preconditions.checkNotNull(rightSchema);
     if (leftSchema.toString(true).equals(rightSchema.toString(true))) {
@@ -469,32 +474,25 @@ class SchemaUtilities {
       }
     }
 
-    Map<String, Schema.Field> leftSchemaFieldsMap = new HashMap<>();
-    for (Schema.Field field : leftSchemaFields) {
-      leftSchemaFieldsMap.put(forceFieldNameLowercase(field.name(), forceLowercase), field);
-    }
-
-    Map<String, Schema.Field> rightSchemaFieldsMap = new HashMap<>();
-    for (Schema.Field field : rightSchemaFields) {
-      rightSchemaFieldsMap.put(forceFieldNameLowercase(field.name(), forceLowercase), field);
-    }
+    Map<String, Schema.Field> leftSchemaFieldsMap =
+        leftSchemaFields.stream().collect(Collectors.toMap(Schema.Field::name, Function.identity()));
+    Map<String, Schema.Field> rightSchemaFieldsMap =
+        rightSchemaFields.stream().collect(Collectors.toMap(Schema.Field::name, Function.identity()));
 
     for (Schema.Field field : leftSchemaFields) {
-      String fieldName = forceFieldNameLowercase(field.name(), forceLowercase);
-      if (!rightSchemaFieldsMap.containsKey(fieldName)) {
+      if (!rightSchemaFieldsMap.containsKey(field.name())) {
         // field in leftSchema is missing in rightSchema
         throw new RuntimeException(
-            fieldName + " is in schema " + leftSchema.getName() + ": " + leftSchema.toString(true)
+            field.name() + " is in schema " + leftSchema.getName() + ": " + leftSchema.toString(true)
                 + ", but not in schema " + rightSchema.getName() + ": " + rightSchema.toString(true));
       }
     }
 
     for (Schema.Field field : rightSchemaFields) {
-      String fieldName = forceFieldNameLowercase(field.name(), forceLowercase);
-      if (!leftSchemaFieldsMap.containsKey(fieldName)) {
+      if (!leftSchemaFieldsMap.containsKey(field.name())) {
         // field in rightSchema is missing in leftSchema
         throw new RuntimeException(
-            fieldName + " is in schema " + rightSchema.getName() + ": " + rightSchema.toString(true)
+            field.name() + " is in schema " + rightSchema.getName() + ": " + rightSchema.toString(true)
                 + ", but not in schema " + leftSchema.getName() + ": " + leftSchema.toString(true));
       }
     }
@@ -502,9 +500,8 @@ class SchemaUtilities {
     List<Schema.Field> mergedSchemaFields = new ArrayList<>();
 
     for (Schema.Field leftField : leftSchemaFields) {
-      Schema.Field rightField = rightSchemaFieldsMap.get(forceFieldNameLowercase(leftField.name(), forceLowercase));
-      Schema unionFieldSchema =
-          getUnionFieldSchema(leftField.schema(), rightField.schema(), strictMode, forceLowercase);
+      Schema.Field rightField = rightSchemaFieldsMap.get(leftField.name());
+      Schema unionFieldSchema = getUnionFieldSchema(leftField.schema(), rightField.schema(), strictMode);
       Schema.Field unionField = new Schema.Field(leftField.name(), unionFieldSchema, leftField.doc(),
           leftField.defaultValue(), leftField.order());
       leftField.aliases().forEach(unionField::addAlias);
@@ -524,12 +521,8 @@ class SchemaUtilities {
     }
   }
 
-  private static String forceFieldNameLowercase(String fieldName, boolean forceLowercase) {
-    return forceLowercase ? fieldName.toLowerCase() : fieldName;
-  }
-
-  private static Schema getUnionFieldSchema(@Nonnull Schema leftSchema, @Nonnull Schema rightSchema, boolean strictMode,
-      boolean forceLowercase) {
+  private static Schema getUnionFieldSchema(@Nonnull Schema leftSchema, @Nonnull Schema rightSchema,
+      boolean strictMode) {
     Preconditions.checkNotNull(leftSchema);
     Preconditions.checkNotNull(rightSchema);
 
@@ -542,8 +535,7 @@ class SchemaUtilities {
       return makeNullable(leftSchema);
     }
     if (isNullableType(leftSchema) || isNullableType(rightSchema)) {
-      return makeNullable(
-          getUnionFieldSchema(makeNonNullable(leftSchema), makeNonNullable(rightSchema), strictMode, forceLowercase));
+      return makeNullable(getUnionFieldSchema(makeNonNullable(leftSchema), makeNonNullable(rightSchema), strictMode));
     }
 
     if (leftSchemaType == rightSchemaType) {
@@ -567,14 +559,13 @@ class SchemaUtilities {
           }
           break;
         case RECORD:
-          return mergeUnionRecordSchema(leftSchema, rightSchema, strictMode, forceLowercase);
+          return mergeUnionRecordSchema(leftSchema, rightSchema, strictMode);
         case MAP:
-          Schema valueType =
-              getUnionFieldSchema(leftSchema.getValueType(), rightSchema.getValueType(), strictMode, forceLowercase);
+          Schema valueType = getUnionFieldSchema(leftSchema.getValueType(), rightSchema.getValueType(), strictMode);
           return Schema.createMap(valueType);
         case ARRAY:
-          Schema elementType = getUnionFieldSchema(leftSchema.getElementType(), rightSchema.getElementType(),
-              strictMode, forceLowercase);
+          Schema elementType =
+              getUnionFieldSchema(leftSchema.getElementType(), rightSchema.getElementType(), strictMode);
           return Schema.createArray(elementType);
         default:
           throw new IllegalArgumentException(

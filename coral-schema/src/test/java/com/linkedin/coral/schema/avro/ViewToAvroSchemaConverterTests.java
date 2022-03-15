@@ -660,7 +660,7 @@ public class ViewToAvroSchemaConverterTests {
     ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
     Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v", false, true);
 
-    Assert.assertEquals(actualSchema.toString(true), TestUtils.loadSchema("testUnionForceLowercase.avsc"));
+    Assert.assertEquals(actualSchema.toString(true), TestUtils.loadSchema("testUnionForceLowercase-expected.avsc"));
   }
 
   @Test

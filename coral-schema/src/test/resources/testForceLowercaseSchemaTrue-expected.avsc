@@ -1,53 +1,53 @@
 {
   "type" : "record",
-  "name" : "v",
-  "namespace" : "default.v",
+  "name" : "basecomplex",
+  "namespace" : "coral.schema.avro.base.complex",
   "fields" : [ {
-    "name" : "Id",
+    "name" : "id",
     "type" : "int"
   }, {
-    "name" : "Array_Col",
+    "name" : "array_col",
     "type" : [ "null", {
       "type" : "array",
       "items" : [ "null", "string" ]
     } ],
     "default" : null
   }, {
-    "name" : "Map_Col",
+    "name" : "map_col",
     "type" : [ "null", {
       "type" : "map",
       "values" : [ "null", "string" ]
     } ],
     "default" : null
   }, {
-    "name" : "Struct_Col",
+    "name" : "struct_col",
     "type" : [ "null", {
       "type" : "record",
-      "name" : "Struct_col",
-      "namespace" : "default.v.v",
+      "name" : "struct_col",
+      "namespace" : "coral.schema.avro.base.complex.basecomplex",
       "fields" : [ {
-        "name" : "Bool_Field",
+        "name" : "bool_field",
         "type" : "boolean"
       }, {
-        "name" : "Int_Field",
+        "name" : "int_field",
         "type" : [ "null", "int" ],
         "default" : null
       }, {
-        "name" : "Bigint_Field",
+        "name" : "bigint_field",
         "type" : "long"
       }, {
-        "name" : "Float_Field",
+        "name" : "float_field",
         "type" : [ "null", "float" ],
         "default" : null
       }, {
-        "name" : "Double_Field",
+        "name" : "double_field",
         "type" : "double"
       }, {
-        "name" : "Date_String_Field",
+        "name" : "date_string_field",
         "type" : [ "null", "string" ],
         "default" : null
       }, {
-        "name" : "String_Field",
+        "name" : "string_field",
         "type" : [ "null", "string" ],
         "default" : null
       } ]
