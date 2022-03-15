@@ -492,12 +492,14 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
     createAddUserDefinedFunction("com.linkedin.stdudfs.daliudfs.hive.PortalLookup", FunctionReturnTypes.STRING,
         STRING_STRING);
     createAddUserDefinedFunction("com.linkedin.stdudfs.daliudfs.hive.Sanitize", FunctionReturnTypes.STRING, STRING);
-    createAddUserDefinedFunction("com.linkedin.jemslookup.udf.hive.JemsLookup", FunctionReturnTypes.rowOfInference(
-        ImmutableList.of("jobproductid", "jobproductname", "jobentitlementids", "jobentitlementnameswithnamespace",
-            "listingtype", "sublistingtype", "istestjob"),
-        ImmutableList.of(FunctionReturnTypes.BIGINT, FunctionReturnTypes.STRING,
-            FunctionReturnTypes.arrayOfType(SqlTypeName.BIGINT), FunctionReturnTypes.arrayOfType(SqlTypeName.VARCHAR),
-            FunctionReturnTypes.STRING, FunctionReturnTypes.STRING, ReturnTypes.BOOLEAN)),
+    createAddUserDefinedFunction("com.linkedin.jemslookup.udf.hive.JemsLookup",
+        FunctionReturnTypes.rowOfInference(
+            ImmutableList.of("jobproductid", "jobproductname", "jobentitlementids", "jobentitlementnameswithnamespace",
+                "listingtype", "sublistingtype", "istestjob"),
+            ImmutableList.of(FunctionReturnTypes.BIGINT, FunctionReturnTypes.STRING,
+                FunctionReturnTypes.arrayOfType(SqlTypeName.BIGINT, true),
+                FunctionReturnTypes.arrayOfType(SqlTypeName.VARCHAR, true), FunctionReturnTypes.STRING,
+                FunctionReturnTypes.STRING, ReturnTypes.BOOLEAN)),
         family(
             ImmutableList.of(SqlTypeFamily.NUMERIC, SqlTypeFamily.STRING, SqlTypeFamily.STRING, SqlTypeFamily.STRING)));
     createAddUserDefinedFunction("com.linkedin.stdudfs.userinterfacelookup.hive.UserInterfaceLookup",
