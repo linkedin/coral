@@ -77,7 +77,8 @@ public class SchemaUtilitiesTests {
     Schema inputSchema = new Schema.Parser().parse(TestUtils.loadSchema("base-complex.avsc"));
     Schema outputSchema = SchemaUtilities.forceLowercaseSchema(inputSchema, true);
 
-    Assert.assertEquals(outputSchema.toString(true), TestUtils.loadSchema("testForceLowercaseSchemaTrue-expected.avsc"));
+    Assert.assertEquals(outputSchema.toString(true),
+        TestUtils.loadSchema("testForceLowercaseSchemaTrue-expected.avsc"));
   }
 
   @Test

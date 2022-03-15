@@ -1,8 +1,15 @@
+/**
+ * Copyright 2022 LinkedIn Corporation. All rights reserved.
+ * Licensed under the BSD-2 Clause license.
+ * See LICENSE in the project root for license information.
+ */
 package com.linkedin.coral.schema.avro;
 
-import com.google.common.collect.Lists;
 import java.util.List;
 import java.util.Map;
+
+import com.google.common.collect.Lists;
+
 import org.apache.avro.Schema;
 import org.codehaus.jackson.JsonNode;
 
@@ -17,7 +24,8 @@ public class Lowercase extends AvroSchemaVisitor<Schema> {
 
   @Override
   public Schema record(Schema record, List<String> names, List<Schema> fields) {
-    Schema lowercasedSchema = Schema.createRecord(record.getName().toLowerCase(), record.getDoc(), record.getNamespace(), record.isError());
+    Schema lowercasedSchema =
+        Schema.createRecord(record.getName().toLowerCase(), record.getDoc(), record.getNamespace(), record.isError());
 
     List<Schema.Field> lowercasedFields = Lists.newArrayListWithExpectedSize(fields.size());
     for (int i = 0; i < fields.size(); i++) {
@@ -56,7 +64,8 @@ public class Lowercase extends AvroSchemaVisitor<Schema> {
   }
 
   private Schema.Field lowercaseField(Schema.Field field, Schema schema) {
-    Schema.Field lowercasedField = new Schema.Field(field.name().toLowerCase(), schema, field.doc(), field.defaultValue(), field.order());
+    Schema.Field lowercasedField =
+        new Schema.Field(field.name().toLowerCase(), schema, field.doc(), field.defaultValue(), field.order());
 
     for (Map.Entry<String, JsonNode> prop : field.getJsonProps().entrySet()) {
       lowercasedField.addProp(prop.getKey(), prop.getValue());
