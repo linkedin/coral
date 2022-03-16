@@ -1,9 +1,5 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ConfigureShadowRelocation
-
-plugins {
-  id 'com.github.johnrengelman.shadow'
-}
-
+apply plugin: "com.github.johnrengelman.shadow"
 apply from: "$rootDir/gradle/java-publication.gradle"
 
 dependencies {
@@ -22,8 +18,8 @@ shadowJar {
   dependsOn(relocateShadowJar)
 }
 
-assemble.dependsOn shadowJar
-
-artifacts {
-  archives shadowJar, javadocJar, sourcesJar
+// Rename shadow jar to original artifact name, so that 'coral-trino-parser-x.x.x.jar' itself is the shadow jar
+jar {
+  enabled = false
+  dependsOn(shadowJar { classifier = null })
 }
