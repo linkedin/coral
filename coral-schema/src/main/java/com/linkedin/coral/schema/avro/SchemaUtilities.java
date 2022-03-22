@@ -125,7 +125,8 @@ class SchemaUtilities {
       }
     }
 
-    return lowercaseSchema(resultTableSchema, forceLowercase);
+    // Return lowercased schema if forceLowercase is set to True
+    return forceLowercase ? ToLowercaseSchemaVisitor.visit(resultTableSchema) : resultTableSchema;
   }
 
   static Schema convertHiveSchemaToAvro(@Nonnull final Table table) {
@@ -277,10 +278,6 @@ class SchemaUtilities {
     }
 
     return newName;
-  }
-
-  static Schema lowercaseSchema(Schema schema, boolean forceLowercase) {
-    return forceLowercase ? ToLowercaseSchemaVisitor.visit(schema) : schema;
   }
 
   private static String getLiteralValueAsString(@Nonnull RexLiteral rexLiteral) {
