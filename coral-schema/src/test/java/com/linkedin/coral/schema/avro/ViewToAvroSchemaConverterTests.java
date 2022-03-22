@@ -652,8 +652,8 @@ public class ViewToAvroSchemaConverterTests {
 
   @Test
   public void testUnionForceLowercase() {
-    String viewSql = "CREATE VIEW v AS " + "SELECT * FROM basecomplex " + "UNION ALL "
-        + "SELECT * FROM basecomplexunionforcelowercase";
+    String viewSql =
+        "CREATE VIEW v AS " + "SELECT * FROM basecomplex " + "UNION ALL " + "SELECT * FROM basecomplexlowercase";
 
     TestUtils.executeCreateViewQuery("default", "v", viewSql);
 

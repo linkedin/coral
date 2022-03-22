@@ -17,9 +17,9 @@ import org.codehaus.jackson.JsonNode;
 /**
  * Lowercase field names for Avro schema
  */
-public class Lowercase extends AvroSchemaVisitor<Schema> {
+public class ToLowercaseSchemaVisitor extends AvroSchemaVisitor<Schema> {
   public static Schema visit(Schema schema) {
-    return AvroSchemaVisitor.visit(schema, new Lowercase());
+    return AvroSchemaVisitor.visit(schema, new ToLowercaseSchemaVisitor());
   }
 
   @Override

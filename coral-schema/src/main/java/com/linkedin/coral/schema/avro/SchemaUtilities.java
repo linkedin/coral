@@ -283,7 +283,7 @@ class SchemaUtilities {
   }
 
   static Schema forceLowercaseSchema(Schema schema, boolean forceLowercase) {
-    return forceLowercase ? Lowercase.visit(schema) : schema;
+    return forceLowercase ? ToLowercaseSchemaVisitor.visit(schema) : schema;
   }
 
   private static String getLiteralValueAsString(@Nonnull RexLiteral rexLiteral) {

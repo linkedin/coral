@@ -115,7 +115,7 @@ public class RelToAvroSchemaConverter {
    *
    * @param relNode {@link RelNode} object
    * @param strictMode configure whether to use strict mode
-   * @param forceLowercase  configure whether to force lowercase
+   * @param forceLowercase  configure whether to return view schema in lowercase mode
    * @return avro schema for calcite IR RelNode
    * @throws RuntimeException if cannot find table in Hive metastore
    * @throws RuntimeException if cannot determine avro schema for tableScan
@@ -128,6 +128,19 @@ public class RelToAvroSchemaConverter {
     Schema viewSchema = schemaMap.get(relNode);
 
     return viewSchema;
+  }
+
+  /**
+   * This method generates a corresponding avro schema for calcite IR RelNode
+   *
+   * @param relNode {@link RelNode} object
+   * @param strictMode configure whether to use strict mode
+   * @return avro schema for calcite IR RelNode
+   * @throws RuntimeException if cannot find table in Hive metastore
+   * @throws RuntimeException if cannot determine avro schema for tableScan
+   */
+  public Schema convert(@Nonnull RelNode relNode, boolean strictMode) {
+    return convert(relNode, strictMode, false);
   }
 
   /**

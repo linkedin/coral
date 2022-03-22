@@ -1,7 +1,7 @@
 {
   "type" : "record",
   "name" : "basecomplex",
-  "namespace" : "coral.schema.avro.base.complex.union.forcelowercase",
+  "namespace" : "coral.schema.avro.base.complex.lowercase",
   "fields" : [ {
     "name" : "id",
     "type" : "int"
@@ -24,7 +24,7 @@
     "type" : [ "null", {
       "type" : "record",
       "name" : "struct_col",
-      "namespace" : "coral.schema.avro.base.complex.union.forcelowercase",
+      "namespace" : "coral.schema.avro.base.complex.lowercase",
       "fields" : [ {
         "name" : "bool_field",
         "type" : "boolean"
