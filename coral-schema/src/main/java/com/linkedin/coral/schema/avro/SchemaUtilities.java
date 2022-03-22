@@ -88,46 +88,45 @@ class SchemaUtilities {
    *
    * @param table
    * @param strictMode if set to true, we do not fall back to Hive schema
+   * @param forceLowercase if set to true, the schema returned is converted to lowercase
    * @return Avro schema for table including partition columns
    */
-  static Schema getAvroSchemaForTable(@Nonnull final Table table, boolean strictMode) {
+  static Schema getAvroSchemaForTable(@Nonnull final Table table, boolean strictMode, boolean forceLowercase) {
     Preconditions.checkNotNull(table);
-    Schema tableSchema = SchemaUtilities.getCasePreservedSchemaForTable(table);
-    if (tableSchema == null) {
+    Schema resultTableSchema;
+    Schema originalTableSchema = SchemaUtilities.getCasePreservedSchemaForTable(table);
+    if (originalTableSchema == null) {
       if (!strictMode) {
         LOG.warn("Cannot determine Avro schema for table " + table.getDbName() + "." + table.getTableName() + ". "
             + "Deriving Avro schema from Hive schema for that table. "
             + "Please note every field will have lower-cased name and be nullable");
 
-        tableSchema = SchemaUtilities.convertHiveSchemaToAvro(table);
-
-        return tableSchema;
+        resultTableSchema = SchemaUtilities.convertHiveSchemaToAvro(table);
       } else {
         throw new SchemaNotFoundException("strictMode is set to True and fallback to Hive schema is disabled. "
             + "Cannot determine Avro schema for table " + table.getDbName() + "." + table.getTableName() + ".");
       }
     } else {
       if ("org.apache.hadoop.hive.serde2.avro.AvroSerDe".equals(table.getSd().getSerdeInfo().getSerializationLib())
-          || HasDuplicateLowercaseColumnNames.visit(tableSchema)) {
+          || HasDuplicateLowercaseColumnNames.visit(originalTableSchema)) {
         // Case 1: If serde == AVRO, early escape; Hive column info is not reliable and can be empty for these tables
         //         Hive itself uses avro.schema.literal as source of truth for these tables, so this should be fine
         // Case 2: If avro.schema.literal has duplicate column names when lowercased, that means we cannot do reliable
         //         matching with Hive schema as multiple Avro fields can map to the same Hive field
-        return tableSchema;
+        resultTableSchema = originalTableSchema;
       } else {
-        Schema finalTableSchema;
-
-        // Add partition column if table partitioned
-
         final List<FieldSchema> cols = new ArrayList<>(table.getSd().getCols());
+        // Add partition columns if table partitioned
         if (isPartitioned(table)) {
           cols.addAll(getPartitionCols(table));
         }
 
-        finalTableSchema = MergeHiveSchemaWithAvro.visit(structTypeInfoFromCols(cols), tableSchema);
-        return finalTableSchema;
+        resultTableSchema = MergeHiveSchemaWithAvro.visit(structTypeInfoFromCols(cols), originalTableSchema);
       }
     }
+
+    // Return lowercased schema if forceLowercase is set to True
+    return forceLowercase ? ToLowercaseSchemaVisitor.visit(resultTableSchema) : resultTableSchema;
   }
 
   static Schema convertHiveSchemaToAvro(@Nonnull final Table table) {

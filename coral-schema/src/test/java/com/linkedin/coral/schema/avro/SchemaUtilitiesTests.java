@@ -71,4 +71,13 @@ public class SchemaUtilitiesTests {
 
     Assert.assertFalse(hasDuplicateLowercaseColumnNames);
   }
+
+  @Test
+  public void testForceLowercaseSchemaTrue() {
+    Schema inputSchema = new Schema.Parser().parse(TestUtils.loadSchema("base-complex.avsc"));
+    Schema outputSchema = ToLowercaseSchemaVisitor.visit(inputSchema);
+
+    Assert.assertEquals(outputSchema.toString(true),
+        TestUtils.loadSchema("testForceLowercaseSchemaTrue-expected.avsc"));
+  }
 }

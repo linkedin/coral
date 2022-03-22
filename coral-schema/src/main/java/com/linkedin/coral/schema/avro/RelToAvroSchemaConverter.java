@@ -115,18 +115,32 @@ public class RelToAvroSchemaConverter {
    *
    * @param relNode {@link RelNode} object
    * @param strictMode configure whether to use strict mode
+   * @param forceLowercase  configure whether to return view schema in lowercase mode
+   * @return avro schema for calcite IR RelNode
+   * @throws RuntimeException if cannot find table in Hive metastore
+   * @throws RuntimeException if cannot determine avro schema for tableScan
+   */
+  public Schema convert(@Nonnull RelNode relNode, boolean strictMode, boolean forceLowercase) {
+    Preconditions.checkNotNull(relNode, "RelNode to convert cannot be null");
+
+    Map<RelNode, Schema> schemaMap = new HashMap<>();
+    relNode.accept(new SchemaRelShuttle(hiveMetastoreClient, schemaMap, strictMode, forceLowercase));
+    Schema viewSchema = schemaMap.get(relNode);
+
+    return viewSchema;
+  }
+
+  /**
+   * This method generates a corresponding avro schema for calcite IR RelNode
+   *
+   * @param relNode {@link RelNode} object
+   * @param strictMode configure whether to use strict mode
    * @return avro schema for calcite IR RelNode
    * @throws RuntimeException if cannot find table in Hive metastore
    * @throws RuntimeException if cannot determine avro schema for tableScan
    */
   public Schema convert(@Nonnull RelNode relNode, boolean strictMode) {
-    Preconditions.checkNotNull(relNode, "RelNode to convert cannot be null");
-
-    Map<RelNode, Schema> schemaMap = new HashMap<>();
-    relNode.accept(new SchemaRelShuttle(hiveMetastoreClient, schemaMap, strictMode));
-    Schema viewSchema = schemaMap.get(relNode);
-
-    return viewSchema;
+    return convert(relNode, strictMode, false);
   }
 
   /**
@@ -154,14 +168,16 @@ public class RelToAvroSchemaConverter {
   private static class SchemaRelShuttle extends RelShuttleImpl {
     private final Map<RelNode, Schema> schemaMap;
     private final boolean strictMode;
+    private final boolean forceLowercase;
 
     private final HiveMetastoreClient hiveMetastoreClient;
 
-    public SchemaRelShuttle(HiveMetastoreClient hiveMetastoreClient, Map<RelNode, Schema> schemaMap,
-        boolean strictMode) {
+    public SchemaRelShuttle(HiveMetastoreClient hiveMetastoreClient, Map<RelNode, Schema> schemaMap, boolean strictMode,
+        boolean forceLowercase) {
       this.hiveMetastoreClient = hiveMetastoreClient;
       this.schemaMap = schemaMap;
       this.strictMode = strictMode;
+      this.forceLowercase = forceLowercase;
     }
 
     @Override
@@ -358,7 +374,7 @@ public class RelToAvroSchemaConverter {
         throw new RuntimeException("Cannot find table " + dbName + "." + tableName + " in Hive metastore");
       }
 
-      Schema tableSchema = SchemaUtilities.getAvroSchemaForTable(baseTable, strictMode);
+      Schema tableSchema = SchemaUtilities.getAvroSchemaForTable(baseTable, strictMode, forceLowercase);
 
       return tableSchema;
     }

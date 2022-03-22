@@ -1,0 +1,57 @@
+{
+  "type" : "record",
+  "name" : "basecomplex",
+  "namespace" : "coral.schema.avro.base.complex.lowercase",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "int"
+  }, {
+    "name" : "array_col",
+    "type" : [ "null", {
+      "type" : "array",
+      "items" : [ "null", "string" ]
+    } ],
+    "default" : null
+  }, {
+    "name" : "map_col",
+    "type" : [ "null", {
+      "type" : "map",
+      "values" : [ "null", "string" ]
+    } ],
+    "default" : null
+  }, {
+    "name" : "struct_col",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "struct_col",
+      "namespace" : "coral.schema.avro.base.complex.lowercase",
+      "fields" : [ {
+        "name" : "bool_field",
+        "type" : "boolean"
+      }, {
+        "name" : "int_field",
+        "type" : [ "null", "int" ],
+        "default" : null
+      }, {
+        "name" : "bigint_field",
+        "type" : "long"
+      }, {
+        "name" : "float_field",
+        "type" : [ "null", "float" ],
+        "default" : null
+      }, {
+        "name" : "double_field",
+        "type" : "double"
+      }, {
+        "name" : "date_string_field",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "string_field",
+        "type" : [ "null", "string" ],
+        "default" : null
+      } ]
+    } ],
+    "default" : null
+  } ]
+}
