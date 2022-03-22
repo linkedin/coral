@@ -75,7 +75,7 @@ public class SchemaUtilitiesTests {
   @Test
   public void testForceLowercaseSchemaTrue() {
     Schema inputSchema = new Schema.Parser().parse(TestUtils.loadSchema("base-complex.avsc"));
-    Schema outputSchema = SchemaUtilities.forceLowercaseSchema(inputSchema, true);
+    Schema outputSchema = SchemaUtilities.lowercaseSchema(inputSchema, true);
 
     Assert.assertEquals(outputSchema.toString(true),
         TestUtils.loadSchema("testForceLowercaseSchemaTrue-expected.avsc"));
@@ -84,7 +84,7 @@ public class SchemaUtilitiesTests {
   @Test
   public void testForceLowercaseSchemaFalse() {
     Schema inputSchema = new Schema.Parser().parse(TestUtils.loadSchema("base-complex.avsc"));
-    Schema outputSchema = SchemaUtilities.forceLowercaseSchema(inputSchema, false);
+    Schema outputSchema = SchemaUtilities.lowercaseSchema(inputSchema, false);
 
     Assert.assertEquals(outputSchema.toString(true), TestUtils.loadSchema("base-complex.avsc"));
   }
