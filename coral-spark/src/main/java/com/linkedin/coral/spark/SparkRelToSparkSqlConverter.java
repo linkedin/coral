@@ -36,6 +36,7 @@ import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.fun.SqlMultisetValueConstructor;
 import org.apache.calcite.sql.parser.SqlParserPos;
+import org.apache.calcite.sql.validate.SqlValidatorUtil;
 
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import com.linkedin.coral.hive.hive2rel.functions.HiveExplodeOperator;
@@ -43,7 +44,6 @@ import com.linkedin.coral.hive.hive2rel.functions.HivePosExplodeOperator;
 import com.linkedin.coral.spark.dialect.SparkSqlDialect;
 import com.linkedin.coral.spark.functions.SqlLateralJoin;
 import com.linkedin.coral.spark.functions.SqlLateralViewAsOperator;
-import org.apache.calcite.sql.validate.SqlValidatorUtil;
 
 
 /**
@@ -215,8 +215,7 @@ public class SparkRelToSparkSqlConverter extends RelToSqlConverter {
    * will be correctly analyzed by spark3 sql analyzer.
    */
   @Override
-  public void addSelect(List<SqlNode> selectList, SqlNode node,
-                                  RelDataType rowType) {
+  public void addSelect(List<SqlNode> selectList, SqlNode node, RelDataType rowType) {
     String name = rowType.getFieldNames().get(selectList.size());
     String alias = SqlValidatorUtil.getAlias(node, -1);
     final String lowerName = name.toLowerCase(Locale.ROOT);

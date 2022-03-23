@@ -747,8 +747,7 @@ public class CoralSparkTest {
     CoralSpark coralSpark = CoralSpark.create(relNode);
     String expandedSql = coralSpark.getSparkSql();
 
-    String targetSql = "SELECT s.name name\n" +
-            "FROM default.complex";
+    String targetSql = "SELECT s.name name\n" + "FROM default.complex";
     assertEquals(expandedSql, targetSql);
   }
 }
