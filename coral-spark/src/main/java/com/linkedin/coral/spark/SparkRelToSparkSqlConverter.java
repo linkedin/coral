@@ -7,6 +7,7 @@ package com.linkedin.coral.spark;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -18,6 +19,7 @@ import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rel.core.Uncollect;
 import org.apache.calcite.rel.logical.LogicalTableFunctionScan;
 import org.apache.calcite.rel.rel2sql.RelToSqlConverter;
+import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexCorrelVariable;
 import org.apache.calcite.rex.RexFieldAccess;
@@ -41,6 +43,7 @@ import com.linkedin.coral.hive.hive2rel.functions.HivePosExplodeOperator;
 import com.linkedin.coral.spark.dialect.SparkSqlDialect;
 import com.linkedin.coral.spark.functions.SqlLateralJoin;
 import com.linkedin.coral.spark.functions.SqlLateralViewAsOperator;
+import org.apache.calcite.sql.validate.SqlValidatorUtil;
 
 
 /**
@@ -201,6 +204,29 @@ public class SparkRelToSparkSqlConverter extends RelToSqlConverter {
     // "AS" to be added to the generated SQL statement and make it invalid.
     return new Result(asNode, ImmutableList.of(Clause.FROM), null, e.getRowType(),
         ImmutableMap.of(x.neededAlias, e.getRowType()));
+  }
+
+  /**
+   * This overriden method only differs from the super method in the alias
+   * equality check, where this method still generates the alias even if
+   * the alias is the same as the simple last part of the column name,
+   * this is to ensure the translated sparkSQL for view like the following
+   *   select foo.bar as bar from t
+   * will be correctly analyzed by spark3 sql analyzer.
+   */
+  @Override
+  public void addSelect(List<SqlNode> selectList, SqlNode node,
+                                  RelDataType rowType) {
+    String name = rowType.getFieldNames().get(selectList.size());
+    String alias = SqlValidatorUtil.getAlias(node, -1);
+    final String lowerName = name.toLowerCase(Locale.ROOT);
+    if (lowerName.startsWith("expr$")) {
+      // Put it in ordinalMap
+      ordinalMap.put(lowerName, node);
+    } else {
+      node = as(node, name);
+    }
+    selectList.add(node);
   }
 
   /**

@@ -739,4 +739,16 @@ public class CoralSparkTest {
     String expandedSql = coralSpark.getSparkSql();
     assertEquals(expandedSql, targetSql);
   }
+
+  @Test
+  public void testNestedFieldProjectionWithSameNameAlias() {
+    String sourceSql = "SELECT complex.s.name as name FROM default.complex";
+    RelNode relNode = TestUtils.toRelNode(sourceSql);
+    CoralSpark coralSpark = CoralSpark.create(relNode);
+    String expandedSql = coralSpark.getSparkSql();
+
+    String targetSql = "SELECT s.name name\n" +
+            "FROM default.complex";
+    assertEquals(expandedSql, targetSql);
+  }
 }
