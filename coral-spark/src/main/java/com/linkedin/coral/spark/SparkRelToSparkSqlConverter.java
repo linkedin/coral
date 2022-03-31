@@ -36,7 +36,6 @@ import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.fun.SqlMultisetValueConstructor;
 import org.apache.calcite.sql.parser.SqlParserPos;
-import org.apache.calcite.sql.validate.SqlValidatorUtil;
 
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import com.linkedin.coral.hive.hive2rel.functions.HiveExplodeOperator;
@@ -44,6 +43,7 @@ import com.linkedin.coral.hive.hive2rel.functions.HivePosExplodeOperator;
 import com.linkedin.coral.spark.dialect.SparkSqlDialect;
 import com.linkedin.coral.spark.functions.SqlLateralJoin;
 import com.linkedin.coral.spark.functions.SqlLateralViewAsOperator;
+import com.linkedin.coral.spark.utils.SparkSqlValidatorUtil;
 
 
 /**
@@ -207,21 +207,27 @@ public class SparkRelToSparkSqlConverter extends RelToSqlConverter {
   }
 
   /**
-   * This overriden method only differs from the super method in the alias
+   * This overridden method differs from the super method in the alias
    * equality check, where this method still generates the alias even if
    * the alias is the same as the simple last part of the column name,
    * this is to ensure the translated sparkSQL for view like the following
    *   select foo.bar as bar from t
    * will be correctly analyzed by spark3 sql analyzer.
+   *
+   * It also will auto-generate alisas of pattern EXPR_[ordinal] for case like:
+   *   select cast(foo as string) ...
+   *   select lower(foo.bar) ...
    */
   @Override
   public void addSelect(List<SqlNode> selectList, SqlNode node, RelDataType rowType) {
     String name = rowType.getFieldNames().get(selectList.size());
-    String alias = SqlValidatorUtil.getAlias(node, -1);
+    String alias = SparkSqlValidatorUtil.getAlias(node, selectList.size());
     final String lowerName = name.toLowerCase(Locale.ROOT);
     if (lowerName.startsWith("expr$")) {
       // Put it in ordinalMap
       ordinalMap.put(lowerName, node);
+    } else if (alias != null) {
+      node = as(node, alias);
     } else {
       node = as(node, name);
     }

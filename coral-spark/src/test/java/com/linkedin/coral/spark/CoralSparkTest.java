@@ -750,4 +750,27 @@ public class CoralSparkTest {
     String targetSql = "SELECT s.name name\n" + "FROM default.complex";
     assertEquals(expandedSql, targetSql);
   }
+
+  @Test
+  public void testProjectionOfFunctionCall() {
+    String sourceSql = "SELECT LOWER(complex.s.name) AS name FROM default.complex";
+    RelNode relNode = TestUtils.toRelNode(sourceSql);
+    CoralSpark coralSpark = CoralSpark.create(relNode);
+    String expandedSql = coralSpark.getSparkSql();
+
+    String targetSql = "SELECT LOWER(s.name) EXPR_0\n" + "FROM default.complex";
+    assertEquals(expandedSql, targetSql);
+  }
+
+  @Test
+  public void testProjectionOfCastCall() {
+    String sourceSql = "SELECT CAST(complex.a AS STRING) AS name FROM default.complex";
+    RelNode relNode = TestUtils.toRelNode(sourceSql);
+    CoralSpark coralSpark = CoralSpark.create(relNode);
+    String expandedSql = coralSpark.getSparkSql();
+    System.out.println(expandedSql);
+
+    String targetSql = "SELECT CAST(a AS STRING) EXPR_0\n" + "FROM default.complex";
+    assertEquals(expandedSql, targetSql);
+  }
 }
