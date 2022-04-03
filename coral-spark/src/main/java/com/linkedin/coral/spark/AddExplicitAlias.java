@@ -41,17 +41,19 @@ public class AddExplicitAlias extends SqlShuttle {
       // Make sure the select list is the same length as the coral-schema fields
       Preconditions.checkState(aliases.size() == select.getSelectList().size());
       List<SqlNode> aliasedSelectNodes = IntStream.range(0, select.getSelectList().size())
-          .mapToObj(i -> modifyAlias(select.getSelectList().get(i), aliases.get(i))).collect(Collectors.toList());
+          .mapToObj(i -> updateAlias(select.getSelectList().get(i), aliases.get(i))).collect(Collectors.toList());
       select.setSelectList(new SqlNodeList(aliasedSelectNodes, SqlParserPos.ZERO));
     }
     return super.visit(call);
   }
 
-  private SqlNode modifyAlias(SqlNode node, String newAlias) {
+  private SqlNode updateAlias(SqlNode node, String newAlias) {
     if (node.getKind() == SqlKind.AS) {
+      // If alias already exists, replace it with the new one
       SqlNode selectWithoutAlias = ((SqlCall) node).getOperandList().get(0);
       return SqlStdOperatorTable.AS.createCall(POS, selectWithoutAlias, new SqlIdentifier(newAlias, POS));
     } else {
+      // If there's no existing alias, just add the new alias
       return SqlStdOperatorTable.AS.createCall(POS, node, new SqlIdentifier(newAlias, POS));
     }
   }
