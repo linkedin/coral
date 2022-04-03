@@ -7,7 +7,6 @@ package com.linkedin.coral.spark;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -19,7 +18,6 @@ import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rel.core.Uncollect;
 import org.apache.calcite.rel.logical.LogicalTableFunctionScan;
 import org.apache.calcite.rel.rel2sql.RelToSqlConverter;
-import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexCorrelVariable;
 import org.apache.calcite.rex.RexFieldAccess;
@@ -203,17 +201,6 @@ public class SparkRelToSparkSqlConverter extends RelToSqlConverter {
     // "AS" to be added to the generated SQL statement and make it invalid.
     return new Result(asNode, ImmutableList.of(Clause.FROM), null, e.getRowType(),
         ImmutableMap.of(x.neededAlias, e.getRowType()));
-  }
-
-  @Override
-  public void addSelect(List<SqlNode> selectList, SqlNode node, RelDataType rowType) {
-    String name = rowType.getFieldNames().get(selectList.size());
-    final String lowerName = name.toLowerCase(Locale.ROOT);
-    if (lowerName.startsWith("expr$")) {
-      // Put it in ordinalMap
-      ordinalMap.put(lowerName, node);
-    }
-    selectList.add(node);
   }
 
   /**

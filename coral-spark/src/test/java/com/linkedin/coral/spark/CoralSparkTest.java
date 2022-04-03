@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.avro.Schema;
 import org.apache.calcite.plan.RelOptUtil;
@@ -744,7 +745,7 @@ public class CoralSparkTest {
   @Test
   public void testNestedFieldProjectionWithSameNameAlias() {
     String sourceSql = "SELECT complex.s.name as name FROM default.complex";
-    String expandedSql = getCoralSparkTranslatedSql(sourceSql);
+    String expandedSql = getCoralSparkTranslatedSqlWithAliasFromCoralSchema(sourceSql);
 
     String targetSql = "SELECT s.name name\n" + "FROM default.complex";
     assertEquals(expandedSql, targetSql);
@@ -753,7 +754,7 @@ public class CoralSparkTest {
   @Test
   public void testProjectionOfFunctionCall() {
     String sourceSql = "SELECT LOWER(complex.s.name) FROM default.complex";
-    String expandedSql = getCoralSparkTranslatedSql(sourceSql);
+    String expandedSql = getCoralSparkTranslatedSqlWithAliasFromCoralSchema(sourceSql);
 
     String targetSql = "SELECT LOWER(s.name) EXPR_0\n" + "FROM default.complex";
     assertEquals(expandedSql, targetSql);
@@ -762,7 +763,7 @@ public class CoralSparkTest {
   @Test
   public void testProjectionOfCastCall() {
     String sourceSql = "SELECT CAST(complex.a AS STRING) FROM default.complex";
-    String expandedSql = getCoralSparkTranslatedSql(sourceSql);
+    String expandedSql = getCoralSparkTranslatedSqlWithAliasFromCoralSchema(sourceSql);
 
     String targetSql = "SELECT CAST(a AS STRING) EXPR_0\n" + "FROM default.complex";
     assertEquals(expandedSql, targetSql);
@@ -771,7 +772,7 @@ public class CoralSparkTest {
   @Test
   public void testCasePreservedAlias() {
     String sourceSql = "SELECT basecomplex.id FROM default.basecomplex";
-    String expandedSql = getCoralSparkTranslatedSql(sourceSql);
+    String expandedSql = getCoralSparkTranslatedSqlWithAliasFromCoralSchema(sourceSql);
 
     String targetSql = "SELECT id Id\n" + "FROM default.basecomplex";
     assertEquals(expandedSql, targetSql);
@@ -780,7 +781,7 @@ public class CoralSparkTest {
   @Test
   public void testSubFieldProjection() {
     String sourceSql = "SELECT basecomplex.Struct_Col.String_Field FROM default.basecomplex";
-    String expandedSql = getCoralSparkTranslatedSql(sourceSql);
+    String expandedSql = getCoralSparkTranslatedSqlWithAliasFromCoralSchema(sourceSql);
 
     String targetSql = "SELECT struct_col.string_field String_Field\n" + "FROM default.basecomplex";
     assertEquals(expandedSql, targetSql);
@@ -789,7 +790,7 @@ public class CoralSparkTest {
   @Test
   public void testAccessingMapField() {
     String sourceSql = "SELECT basecomplex.map_col['foo'] FROM default.basecomplex";
-    String expandedSql = getCoralSparkTranslatedSql(sourceSql);
+    String expandedSql = getCoralSparkTranslatedSqlWithAliasFromCoralSchema(sourceSql);
 
     String targetSql = "SELECT map_col['foo'] EXPR_0\n" + "FROM default.basecomplex";
     assertEquals(expandedSql, targetSql);
@@ -798,16 +799,36 @@ public class CoralSparkTest {
   @Test
   public void testAccessingMapField2() {
     String sourceSql = "SELECT basecomplex.map_col['foo'] as foo FROM default.basecomplex";
-    String expandedSql = getCoralSparkTranslatedSql(sourceSql);
+    String expandedSql = getCoralSparkTranslatedSqlWithAliasFromCoralSchema(sourceSql);
 
     String targetSql = "SELECT map_col['foo'] foo\n" + "FROM default.basecomplex";
     assertEquals(expandedSql, targetSql);
   }
 
-  private static String getCoralSparkTranslatedSql(String source) {
+  @Test
+  public void tesCTEViewWithAlias() {
+    String sourceSql =
+        "with tmp as (SELECT b bcol, SUM(c) sum_c from default.foo group by b) select tmp.bcol, bar.x from tmp inner join default.bar on tmp.sum_c = bar.y";
+    String expandedSql = getCoralSparkTranslatedSqlWithAliasFromCoralSchema(sourceSql);
+
+    String targetSql = "SELECT t1.bcol bcol, bar.x x\n" + "FROM (SELECT b bcol, SUM(c) sum_c\n" + "FROM default.foo\n"
+        + "GROUP BY b) t1\n" + "INNER JOIN default.bar ON t1.sum_c = bar.y";
+    assertEquals(expandedSql, targetSql);
+  }
+
+  private static String getCoralSparkTranslatedSqlWithAliasFromCoralSchema(String db, String view) {
+    RelNode relNode = TestUtils.toRelNode(db, view);
+    Schema schema = TestUtils.getAvroSchemaForView(db, view, false);
+    List<String> aliases = schema.getFields().stream().map(Schema.Field::name).collect(Collectors.toList());
+    CoralSpark coralSpark = CoralSpark.createWithAlias(relNode, aliases);
+    return coralSpark.getSparkSql();
+  }
+
+  private static String getCoralSparkTranslatedSqlWithAliasFromCoralSchema(String source) {
     RelNode relNode = TestUtils.toRelNode(source);
     Schema schema = TestUtils.getAvroSchemaForView(source, false);
-    CoralSpark coralSpark = CoralSpark.create(relNode, schema);
+    List<String> aliases = schema.getFields().stream().map(Schema.Field::name).collect(Collectors.toList());
+    CoralSpark coralSpark = CoralSpark.createWithAlias(relNode, aliases);
     return coralSpark.getSparkSql();
   }
 

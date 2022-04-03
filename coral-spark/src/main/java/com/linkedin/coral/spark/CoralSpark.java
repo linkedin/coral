@@ -8,7 +8,6 @@ package com.linkedin.coral.spark;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.apache.avro.Schema;
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
@@ -68,10 +67,18 @@ public class CoralSpark {
     return new CoralSpark(baseTables, sparkUDFInfos, sparkSQL);
   }
 
-  public static CoralSpark create(RelNode irRelNode, Schema schema) {
+  /**
+   * Users use this function as the main API for getting CoralSpark instance.
+   * This should be used when user need to explicitly add alias for the output SparkSQL string
+   *
+   * @param irRelNode An IR RelNode for which CoralSpark will be constructed.
+   * @param aliases A list of aliases for the translated SparkSQL select list
+   * @return [[CoralSparkInfo]]
+   */
+  public static CoralSpark createWithAlias(RelNode irRelNode, List<String> aliases) {
     SparkRelInfo sparkRelInfo = IRRelToSparkRelTransformer.transform(irRelNode);
     RelNode sparkRelNode = sparkRelInfo.getSparkRelNode();
-    String sparkSQL = constructSparkSQLNew(sparkRelNode, schema);
+    String sparkSQL = constructSparkSQLWithExplicitAlias(sparkRelNode, aliases);
     List<String> baseTables = constructBaseTables(sparkRelNode);
     List<SparkUDFInfo> sparkUDFInfos = sparkRelInfo.getSparkUDFInfoList();
     return new CoralSpark(baseTables, sparkUDFInfos, sparkSQL);
@@ -99,13 +106,13 @@ public class CoralSpark {
     return rewritten.toSqlString(SparkSqlDialect.INSTANCE).getSql();
   }
 
-  private static String constructSparkSQLNew(RelNode sparkRelNode, Schema schema) {
+  private static String constructSparkSQLWithExplicitAlias(RelNode sparkRelNode, List<String> aliases) {
     SparkRelToSparkSqlConverter rel2sql = new SparkRelToSparkSqlConverter();
     // Create temporary objects r and rewritten to make debugging easier
     SqlImplementor.Result r = rel2sql.visitChild(0, sparkRelNode);
     SqlNode rewritten = r.asStatement().accept(new SparkSqlRewriter());
-    // Use a second pass visit to add explicit alias names from coral-schema
-    SqlNode aliasAdded = rewritten.accept(new AddAliasFromCoralSchema(schema));
+    // Use a second pass visit to add explicit alias names
+    SqlNode aliasAdded = rewritten.accept(new AddExplicitAlias(aliases));
     return aliasAdded.toSqlString(SparkSqlDialect.INSTANCE).getSql();
   }
 
