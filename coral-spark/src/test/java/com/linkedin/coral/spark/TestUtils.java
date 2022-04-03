@@ -5,11 +5,11 @@
  */
 package com.linkedin.coral.spark;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
+import org.apache.avro.Schema;
 import org.apache.calcite.rel.RelNode;
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -23,13 +23,16 @@ import org.apache.hadoop.hive.ql.session.SessionState;
 import com.linkedin.coral.common.HiveMetastoreClient;
 import com.linkedin.coral.common.HiveMscAdapter;
 import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
+import com.linkedin.coral.schema.avro.ViewToAvroSchemaConverter;
 
 
 public class TestUtils {
 
   public static final String CORAL_SPARK_TEST_DIR = "coral.spark.test.dir";
+  private static final String AVRO_SCHEMA_LITERAL = "avro.schema.literal";
 
   static HiveToRelConverter hiveToRelConverter;
+  static ViewToAvroSchemaConverter viewToAvroSchemaConverter;
 
   static void run(Driver driver, String sql) {
     while (true) {
@@ -50,10 +53,15 @@ public class TestUtils {
     Driver driver = new Driver(conf);
     HiveMetastoreClient hiveMetastoreClient = new HiveMscAdapter(Hive.get(conf).getMSC());
     hiveToRelConverter = new HiveToRelConverter(hiveMetastoreClient);
+    viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
     run(driver, "CREATE TABLE IF NOT EXISTS foo(a int, b varchar(30), c double)");
     run(driver, "CREATE TABLE IF NOT EXISTS bar(x int, y double)");
     run(driver,
-        "CREATE TABLE IF NOT EXISTS complex(a int, b string, c array<double>, s struct<name:string, age:int>, m map<int, string>, sarr array<struct<name:string, age:int>>)");
+        "CREATE TABLE IF NOT EXISTS complex(a int, b string, c array<double>, s struct<name:string, age:int>, m map<string, int>, sarr array<struct<name:string, age:int>>)");
+
+    String baseComplexSchema = loadSchema("base-complex.avsc");
+    executeCreateTableQuery(driver, "default", "basecomplex", baseComplexSchema);
+
     run(driver,
         "CREATE FUNCTION default_foo_dali_udf_LessThanHundred as 'com.linkedin.coral.hive.hive2rel.CoralTestUDF'");
     run(driver,
@@ -221,6 +229,20 @@ public class TestUtils {
             "FROM foo"));
   }
 
+  private static void executeCreateTableQuery(Driver driver, String dbName, String tableName, String schema) {
+    run(driver, "DROP TABLE IF EXISTS " + dbName + "." + tableName);
+    run(driver,
+        "CREATE EXTERNAL TABLE " + tableName + " " + "ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.avro.AvroSerDe' "
+            + "STORED AS " + "INPUTFORMAT 'org.apache.hadoop.hive.ql.io.avro.AvroContainerInputFormat' "
+            + "OUTPUTFORMAT 'org.apache.hadoop.hive.ql.io.avro.AvroContainerOutputFormat' " + "TBLPROPERTIES ('"
+            + AVRO_SCHEMA_LITERAL + "'='" + schema + "')");
+  }
+
+  private static String loadSchema(String fileName) {
+    InputStream inputStream = TestUtils.class.getClassLoader().getResourceAsStream(fileName);
+    return new BufferedReader(new InputStreamReader(inputStream)).lines().collect(Collectors.joining("\n"));
+  }
+
   public static RelNode toRelNode(String db, String view) {
     return hiveToRelConverter.convertView(db, view);
   }
@@ -239,6 +261,14 @@ public class TestUtils {
     hiveConf.set("_hive.hdfs.session.path", "/tmp/coral/spark");
     hiveConf.set("_hive.local.session.path", "/tmp/coral/spark");
     return hiveConf;
+  }
+
+  public static Schema getAvroSchemaForView(String db, String view, boolean lowercase) {
+    return viewToAvroSchemaConverter.toAvroSchema(db, view, false, lowercase);
+  }
+
+  public static Schema getAvroSchemaForView(String sql, boolean lowercase) {
+    return viewToAvroSchemaConverter.toAvroSchema(sql, false, lowercase);
   }
 
 }

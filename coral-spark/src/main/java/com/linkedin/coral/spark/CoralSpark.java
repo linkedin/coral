@@ -8,6 +8,7 @@ package com.linkedin.coral.spark;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.apache.avro.Schema;
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
@@ -67,6 +68,15 @@ public class CoralSpark {
     return new CoralSpark(baseTables, sparkUDFInfos, sparkSQL);
   }
 
+  public static CoralSpark create(RelNode irRelNode, Schema schema) {
+    SparkRelInfo sparkRelInfo = IRRelToSparkRelTransformer.transform(irRelNode);
+    RelNode sparkRelNode = sparkRelInfo.getSparkRelNode();
+    String sparkSQL = constructSparkSQLNew(sparkRelNode, schema);
+    List<String> baseTables = constructBaseTables(sparkRelNode);
+    List<SparkUDFInfo> sparkUDFInfos = sparkRelInfo.getSparkUDFInfoList();
+    return new CoralSpark(baseTables, sparkUDFInfos, sparkSQL);
+  }
+
   /**
    * This function returns a completely expanded SQL statement in HiveQL Dialect.
    *
@@ -87,6 +97,16 @@ public class CoralSpark {
     SqlImplementor.Result r = rel2sql.visitChild(0, sparkRelNode);
     SqlNode rewritten = r.asStatement().accept(new SparkSqlRewriter());
     return rewritten.toSqlString(SparkSqlDialect.INSTANCE).getSql();
+  }
+
+  private static String constructSparkSQLNew(RelNode sparkRelNode, Schema schema) {
+    SparkRelToSparkSqlConverter rel2sql = new SparkRelToSparkSqlConverter();
+    // Create temporary objects r and rewritten to make debugging easier
+    SqlImplementor.Result r = rel2sql.visitChild(0, sparkRelNode);
+    SqlNode rewritten = r.asStatement().accept(new SparkSqlRewriter());
+    // Use a second pass visit to add explicit alias names from coral-schema
+    SqlNode aliasAdded = rewritten.accept(new AddAliasFromCoralSchema(schema));
+    return aliasAdded.toSqlString(SparkSqlDialect.INSTANCE).getSql();
   }
 
   /**

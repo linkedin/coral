@@ -126,11 +126,18 @@ public class ViewToAvroSchemaConverter {
    * @return avro schema for a given sql query
    */
   // TODO: 2/3/22  to revisit whether we want to make it public
-  protected Schema toAvroSchema(String sql) {
+  public Schema toAvroSchema(String sql) {
     Preconditions.checkNotNull(sql);
 
     RelNode relNode = hiveToRelConverter.convertSql(sql);
     return relToAvroSchemaConverter.convert(relNode, false, false);
+  }
+
+  public Schema toAvroSchema(String sql, boolean strictMode, boolean forceLowercase) {
+    Preconditions.checkNotNull(sql);
+
+    RelNode relNode = hiveToRelConverter.convertSql(sql);
+    return relToAvroSchemaConverter.convert(relNode, strictMode, forceLowercase);
   }
 
   /**
