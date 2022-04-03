@@ -22,20 +22,21 @@ import static org.apache.calcite.rel.rel2sql.SqlImplementor.POS;
 public class AddExplicitAlias extends SqlShuttle {
 
   private final List<String> aliases;
-  // Use an integer to track the depth of select statement the visitor has traversed so far
-  private int sqlSelectDepth;
+  // Use a boolean to track if it's the outermost select statement
+  private boolean isOutermostLevel;
 
   public AddExplicitAlias(List<String> aliases) {
     this.aliases = aliases;
-    this.sqlSelectDepth = 0;
+    this.isOutermostLevel = true;
   }
 
   @Override
   public SqlNode visit(SqlCall call) {
-    // We only care about the outermost SqlSelect (sqlSelectDepth == 0),
-    // that's the select list we want to explicitly add aliases to
-    if (call.getKind() == SqlKind.SELECT && sqlSelectDepth == 0) {
-      sqlSelectDepth += 1;
+    // We only care about the outermost SqlSelect (isOutermostLevel == true),
+    // that's the select list we want to explicitly add aliases to,
+    // the visitor should enter the following block only once.
+    if (call.getKind() == SqlKind.SELECT && isOutermostLevel) {
+      isOutermostLevel = false;
       SqlSelect select = (SqlSelect) call;
       // Make sure the select list is the same length as the coral-schema fields
       Preconditions.checkState(aliases.size() == select.getSelectList().size());
