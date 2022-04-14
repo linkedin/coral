@@ -1,5 +1,0 @@
-REPOSITORY = "coral-os"
-TARGET_PEOPLE='atumbde,khtran,wmoustaf,csteinba,wyzhang'
-TARGET_GROUPS='dali-reviewers'
-GUESS_FIELDS='yes'
-TRACKING_BRANCH='origin/master'
