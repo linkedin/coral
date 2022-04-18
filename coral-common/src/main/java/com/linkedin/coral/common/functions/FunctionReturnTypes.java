@@ -45,6 +45,7 @@ public final class FunctionReturnTypes {
   public static final SqlReturnTypeInference BINARY = ReturnTypes.explicit(SqlTypeName.BINARY);
   public static final SqlReturnTypeInference BIGINT = ReturnTypes.explicit(SqlTypeName.BIGINT);
   public static final SqlReturnTypeInference SMALLINT = ReturnTypes.explicit(SqlTypeName.SMALLINT);
+  public static final SqlReturnTypeInference INTEGER = ReturnTypes.explicit(SqlTypeName.INTEGER);
   public static final SqlReturnTypeInference DATE = ReturnTypes.explicit(SqlTypeName.DATE);
   public static final SqlReturnTypeInference TIMESTAMP = ReturnTypes.explicit(SqlTypeName.TIMESTAMP);
 
