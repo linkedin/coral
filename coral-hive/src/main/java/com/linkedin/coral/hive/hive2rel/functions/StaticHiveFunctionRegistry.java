@@ -436,6 +436,8 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
         family(SqlTypeFamily.MAP, SqlTypeFamily.STRING));
     createAddUserDefinedFunction("com.linkedin.dali.views.premium.udf.GetChooserId", FunctionReturnTypes.STRING,
         family(SqlTypeFamily.MAP));
+    createAddUserDefinedFunction("com.linkedin.dali.views.premium.udf.GetFamily", FunctionReturnTypes.STRING,
+        family(SqlTypeFamily.MAP));
     createAddUserDefinedFunction("com.linkedin.dali.views.search.udf.GetTYAHResultTypeUDF", FunctionReturnTypes.STRING,
         STRING);
     createAddUserDefinedFunction("com.linkedin.dali.views.search.udf.GetVerticalUDF", FunctionReturnTypes.STRING,
