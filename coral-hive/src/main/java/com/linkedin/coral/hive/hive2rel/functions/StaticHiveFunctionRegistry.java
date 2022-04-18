@@ -382,6 +382,7 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
     // LinkedIn UDFs: Dali stores mapping from UDF name to the implementing Java class as table properties
     // in the HCatalog. So, an UDF implementation may be referred by different names by different views.
     // We register these UDFs by the implementing class name to create a single entry for each UDF.
+    createAddUserDefinedFunction("com.linkedin.dali.bug.DummyUdf", FunctionReturnTypes.STRING, or(STRING, ARRAY));
     createAddUserDefinedFunction(IS_TEST_MEMBER_ID_CLASS, ReturnTypes.BOOLEAN,
         family(SqlTypeFamily.NUMERIC, SqlTypeFamily.CHARACTER));
     createAddUserDefinedFunction("com.linkedin.dali.udf.urnextractor.hive.UrnExtractor",
@@ -430,24 +431,37 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
         STRING);
     createAddUserDefinedFunction("com.linkedin.dali.view.udf.entityhandles.PhoneNumberNormalizer",
         FunctionReturnTypes.STRING, STRING_STRING_STRING);
-    createAddUserDefinedFunction("com.linkedin.dwh.udf.sessionization.CleanupBrowserId", FunctionReturnTypes.STRING,
-        STRING);
-    createAddUserDefinedFunction("com.linkedin.dwh.udf.profile.GetProfileUrl", FunctionReturnTypes.STRING, family(
-        SqlTypeFamily.NUMERIC, SqlTypeFamily.STRING, SqlTypeFamily.STRING, SqlTypeFamily.STRING, SqlTypeFamily.STRING));
-    createAddUserDefinedFunction("com.linkedin.dali.views.premium.udf.GetFamily", FunctionReturnTypes.STRING,
-        family(SqlTypeFamily.MAP));
+    createAddUserDefinedFunction("com.linkedin.dali.views.job.udf.GetUUID", FunctionReturnTypes.STRING, BINARY);
     createAddUserDefinedFunction("com.linkedin.dali.views.premium.udf.GetOrderUrn", FunctionReturnTypes.STRING,
         family(SqlTypeFamily.MAP, SqlTypeFamily.STRING));
     createAddUserDefinedFunction("com.linkedin.dali.views.premium.udf.GetChooserId", FunctionReturnTypes.STRING,
         family(SqlTypeFamily.MAP));
+    createAddUserDefinedFunction("com.linkedin.dali.views.premium.udf.GetFamily", FunctionReturnTypes.STRING,
+        family(SqlTypeFamily.MAP));
+    createAddUserDefinedFunction("com.linkedin.dali.views.search.udf.GetTYAHResultTypeUDF", FunctionReturnTypes.STRING,
+        STRING);
+    createAddUserDefinedFunction("com.linkedin.dali.views.search.udf.GetVerticalUDF", FunctionReturnTypes.STRING,
+        or(STRING_STRING_STRING, STRING_STRING));
+    createAddUserDefinedFunction("com.linkedin.dali.views.search.udf.IsTYAHSearchResultsUDF", ReturnTypes.BOOLEAN,
+        STRING);
+    createAddUserDefinedFunction("com.linkedin.dali.views.search.udf.IsValidKeyUDF", FunctionReturnTypes.STRING,
+        or(STRING_STRING_STRING, STRING_STRING));
+    createAddUserDefinedFunction("com.linkedin.dwh.udf.profile.GetProfileUrl", FunctionReturnTypes.STRING, family(
+        SqlTypeFamily.NUMERIC, SqlTypeFamily.STRING, SqlTypeFamily.STRING, SqlTypeFamily.STRING, SqlTypeFamily.STRING));
+    createAddUserDefinedFunction("com.linkedin.dwh.udf.sessionization.CleanupBrowserId", FunctionReturnTypes.STRING,
+        STRING);
     createAddUserDefinedFunction("com.linkedin.etg.business.common.udfs.MapSfdcProductName", FunctionReturnTypes.STRING,
         STRING);
     createAddUserDefinedFunction("com.linkedin.etg.business.common.udfs.MapSfdcProductCode", FunctionReturnTypes.STRING,
         STRING);
     createAddUserDefinedFunction("com.linkedin.etg.business.common.udfs.MapSfdcProductId", ReturnTypes.INTEGER, STRING);
     createAddUserDefinedFunction("udfs.SeoReferrerTrkUdf", FunctionReturnTypes.STRING, STRING_STRING_STRING);
+    createAddUserDefinedFunction("com.linkedin.vector.daliview.udf.PresentDataType", FunctionReturnTypes.STRING,
+        family(SqlTypeFamily.ANY));
     createAddUserDefinedFunction("com.linkedin.vector.daliview.udf.PresentMediaType", FunctionReturnTypes.STRING,
         family(SqlTypeFamily.ANY));
+    createAddUserDefinedFunction("com.linkedin.vector.daliview.udf.UnifyVideoOrAudioDurationMicroSeconds",
+        FunctionReturnTypes.BIGINT, family(SqlTypeFamily.ANY));
     createAddUserDefinedFunction("com.linkedin.tscp.reporting.dali.udfs.AdClickClassifier", FunctionReturnTypes.rowOf(
         ImmutableList.of("clicks", "landingPageClicks", "totalEngagements", "otherEngagements", "likes", "commentLikes",
             "comments", "shares", "follows", "oneClickLeadFormOpens", "companyPageClicks", "fullScreenPlays",
