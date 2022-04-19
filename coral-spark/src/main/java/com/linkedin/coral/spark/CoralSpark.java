@@ -8,6 +8,7 @@ package com.linkedin.coral.spark;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.apache.avro.Schema;
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
@@ -69,13 +70,19 @@ public class CoralSpark {
 
   /**
    * Users use this function as the main API for getting CoralSpark instance.
-   * This should be used when user need to explicitly add alias for the output SparkSQL string
+   * This should be used when user need to align the Coral-spark translated SQL
+   * with Coral-schema output schema
    *
    * @param irRelNode An IR RelNode for which CoralSpark will be constructed.
-   * @param aliases A list of aliases for the translated SparkSQL select list
+   * @param schema Coral schema that is represented by an Avro schema
    * @return [[CoralSparkInfo]]
    */
-  public static CoralSpark createWithAlias(RelNode irRelNode, List<String> aliases) {
+  public static CoralSpark createWithCoralSchema(RelNode irRelNode, Schema schema) {
+    List<String> aliases = schema.getFields().stream().map(Schema.Field::name).collect(Collectors.toList());
+    return createWithAlias(irRelNode, aliases);
+  }
+
+  private static CoralSpark createWithAlias(RelNode irRelNode, List<String> aliases) {
     SparkRelInfo sparkRelInfo = IRRelToSparkRelTransformer.transform(irRelNode);
     RelNode sparkRelNode = sparkRelInfo.getSparkRelNode();
     String sparkSQL = constructSparkSQLWithExplicitAlias(sparkRelNode, aliases);

@@ -11,6 +11,7 @@ import org.apache.hadoop.hive.metastore.api.Table;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.linkedin.coral.com.google.common.annotations.VisibleForTesting;
 import com.linkedin.coral.com.google.common.base.Preconditions;
 import com.linkedin.coral.common.HiveMetastoreClient;
 import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
@@ -125,7 +126,7 @@ public class ViewToAvroSchemaConverter {
    * @param sql SQL string literal
    * @return avro schema for a given sql query
    */
-  // TODO: 2/3/22  to revisit whether we want to make it public
+  @VisibleForTesting
   public Schema toAvroSchema(String sql) {
     Preconditions.checkNotNull(sql);
 
@@ -133,6 +134,7 @@ public class ViewToAvroSchemaConverter {
     return relToAvroSchemaConverter.convert(relNode, false, false);
   }
 
+  @VisibleForTesting
   public Schema toAvroSchema(String sql, boolean strictMode, boolean forceLowercase) {
     Preconditions.checkNotNull(sql);
 

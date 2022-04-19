@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.apache.avro.Schema;
 import org.apache.calcite.plan.RelOptUtil;
@@ -819,16 +818,14 @@ public class CoralSparkTest {
   private static String getCoralSparkTranslatedSqlWithAliasFromCoralSchema(String db, String view) {
     RelNode relNode = TestUtils.toRelNode(db, view);
     Schema schema = TestUtils.getAvroSchemaForView(db, view, false);
-    List<String> aliases = schema.getFields().stream().map(Schema.Field::name).collect(Collectors.toList());
-    CoralSpark coralSpark = CoralSpark.createWithAlias(relNode, aliases);
+    CoralSpark coralSpark = CoralSpark.createWithCoralSchema(relNode, schema);
     return coralSpark.getSparkSql();
   }
 
   private static String getCoralSparkTranslatedSqlWithAliasFromCoralSchema(String source) {
     RelNode relNode = TestUtils.toRelNode(source);
     Schema schema = TestUtils.getAvroSchemaForView(source, false);
-    List<String> aliases = schema.getFields().stream().map(Schema.Field::name).collect(Collectors.toList());
-    CoralSpark coralSpark = CoralSpark.createWithAlias(relNode, aliases);
+    CoralSpark coralSpark = CoralSpark.createWithCoralSchema(relNode, schema);
     return coralSpark.getSparkSql();
   }
 
