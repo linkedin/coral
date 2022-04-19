@@ -123,8 +123,8 @@ class TransportableUDFMap {
         DALI_UDFS_IVY_URL_SPARK_2_12);
 
     add("com.linkedin.jemslookup.udf.hive.JemsLookup", "com.linkedin.jemslookup.udf.spark.JemsLookup",
-        "ivy://com.linkedin.jobs-udf:jems-udfs:2.1.4?classifier=spark_2.11",
-        "ivy://com.linkedin.jobs-udf:jems-udfs:2.1.4?classifier=spark_2.12");
+        "ivy://com.linkedin.jobs-udf:jems-udfs:2.1.6?classifier=spark_2.11",
+        "ivy://com.linkedin.jobs-udf:jems-udfs:2.1.6?classifier=spark_2.12");
 
     add("com.linkedin.stdudfs.parsing.hive.UserAgentParser", "com.linkedin.stdudfs.parsing.spark.UserAgentParser",
         "ivy://com.linkedin.standard-udfs-parsing:parsing-stdudfs:3.0.3?classifier=spark_2.11",
@@ -139,8 +139,8 @@ class TransportableUDFMap {
         "ivy://com.linkedin.standard-udfs-parsing:parsing-stdudfs:3.0.3?classifier=spark_2.12");
 
     add("com.linkedin.jobs.udf.hive.ConvertIndustryCode", "com.linkedin.jobs.udf.spark.ConvertIndustryCode",
-        "ivy://com.linkedin.jobs-udf:jobs-udfs:2.1.4?classifier=spark_2.11",
-        "ivy://com.linkedin.jobs-udf:jobs-udfs:2.1.4?classifier=spark_2.12");
+        "ivy://com.linkedin.jobs-udf:jobs-udfs:2.1.6?classifier=spark_2.11",
+        "ivy://com.linkedin.jobs-udf:jobs-udfs:2.1.6?classifier=spark_2.12");
   }
 
   /**
