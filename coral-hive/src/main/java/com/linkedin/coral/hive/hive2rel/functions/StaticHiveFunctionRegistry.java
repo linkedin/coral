@@ -149,7 +149,7 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
 
     // mathematical functions
     // we need to define new strategy for hive to allow null operands by default for everything
-    createAddUserDefinedFunction("pmod", FunctionReturnTypes.BIGINT, NUMERIC_NUMERIC);
+    createAddUserDefinedFunction("pmod", BIGINT, NUMERIC_NUMERIC);
     createAddUserDefinedFunction("round", DOUBLE_NULLABLE,
         family(ImmutableList.of(SqlTypeFamily.NUMERIC, SqlTypeFamily.INTEGER), optionalOrd(1)));
     createAddUserDefinedFunction("bround", DOUBLE_NULLABLE,
@@ -301,8 +301,7 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
         or(family(SqlTypeFamily.STRING), family(SqlTypeFamily.BINARY)));
     createAddUserDefinedFunction("sha", FunctionReturnTypes.STRING,
         or(family(SqlTypeFamily.STRING), family(SqlTypeFamily.BINARY)));
-    createAddUserDefinedFunction("crc32", FunctionReturnTypes.BIGINT,
-        or(family(SqlTypeFamily.STRING), family(SqlTypeFamily.BINARY)));
+    createAddUserDefinedFunction("crc32", BIGINT, or(family(SqlTypeFamily.STRING), family(SqlTypeFamily.BINARY)));
 
     // xpath functions
     createAddUserDefinedFunction("xpath", FunctionReturnTypes.arrayOfType(SqlTypeName.VARCHAR), STRING_STRING);
@@ -310,7 +309,7 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
     createAddUserDefinedFunction("xpath_boolean", ReturnTypes.BOOLEAN, STRING_STRING);
     createAddUserDefinedFunction("xpath_short", FunctionReturnTypes.SMALLINT, STRING_STRING);
     createAddUserDefinedFunction("xpath_int", ReturnTypes.INTEGER, STRING_STRING);
-    createAddUserDefinedFunction("xpath_long", FunctionReturnTypes.BIGINT, STRING_STRING);
+    createAddUserDefinedFunction("xpath_long", BIGINT, STRING_STRING);
     createAddUserDefinedFunction("xpath_float", DOUBLE, STRING_STRING);
     createAddUserDefinedFunction("xpath_double", DOUBLE, STRING_STRING);
     createAddUserDefinedFunction("xpath_number", DOUBLE, STRING_STRING);
@@ -387,6 +386,7 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
         family(SqlTypeFamily.NUMERIC, SqlTypeFamily.CHARACTER));
     createAddUserDefinedFunction("com.linkedin.dali.udf.urnextractor.hive.UrnExtractor",
         FunctionReturnTypes.ARRAY_OF_STR_STR_MAP, or(STRING, ARRAY));
+    createAddUserDefinedFunction("com.linkedin.udf.aws.ReadJsonUDF", FunctionReturnTypes.STRING, STRING_STRING);
     createAddUserDefinedFunction("com.linkedin.udf.hdfs.GetDatasetNameFromPathUDF", FunctionReturnTypes.STRING, STRING);
     createAddUserDefinedFunction("com.linkedin.dali.udf.isguestmemberid.hive.IsGuestMemberId", ReturnTypes.BOOLEAN,
         NUMERIC);
@@ -429,6 +429,8 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
     createAddUserDefinedFunction("com.linkedin.dali.view.udf.entityhandles.EpochTimeInSeconds", BIGINT, STRING);
     createAddUserDefinedFunction("com.linkedin.dali.view.udf.entityhandles.EpochTimeInSecondsNullable", BIGINT_NULLABLE,
         STRING);
+    createAddUserDefinedFunction("com.linkedin.dali.view.udf.entityhandles.IsUrnForType", ReturnTypes.BOOLEAN,
+        STRING_STRING);
     createAddUserDefinedFunction("com.linkedin.dali.view.udf.entityhandles.PhoneNumberNormalizer",
         FunctionReturnTypes.STRING, STRING_STRING_STRING);
     createAddUserDefinedFunction("com.linkedin.dali.views.job.udf.GetUUID", FunctionReturnTypes.STRING, BINARY);
@@ -438,14 +440,47 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
         family(SqlTypeFamily.MAP));
     createAddUserDefinedFunction("com.linkedin.dali.views.premium.udf.GetFamily", FunctionReturnTypes.STRING,
         family(SqlTypeFamily.MAP));
+
+    final SqlReturnTypeInference hitInfo = FunctionReturnTypes.rowOfInference(
+        ImmutableList.of("secondarysearchresultinfo", "entityawaresuggestioninfo"),
+        ImmutableList.of(FunctionReturnTypes.rowOf(ImmutableList.of("vertical"), ImmutableList.of(SqlTypeName.VARCHAR)),
+            FunctionReturnTypes.rowOfInference(ImmutableList.of("suggestedentities"),
+                ImmutableList.of(FunctionReturnTypes.arrayOfType(SqlTypeName.VARCHAR, true)))));
+
+    final SqlReturnTypeInference gridPositionInfo = FunctionReturnTypes.rowOf(ImmutableList.of("row", "column"),
+        ImmutableList.of(SqlTypeName.INTEGER, SqlTypeName.INTEGER));
+
+    createAddUserDefinedFunction("com.linkedin.dali.views.search.udf.CreateSearchActionResultUDF",
+        FunctionReturnTypes.rowOfInference(
+            ImmutableList.of("entityurn", "resulttype", "absoluteposition", "positioninvertical", "iscachehit",
+                "isanonymized", "hitinfo", "gridposition", "isnamematch", "trackingid"),
+            ImmutableList.of(FunctionReturnTypes.STRING, FunctionReturnTypes.STRING, INTEGER_NULLABLE, INTEGER_NULLABLE,
+                ReturnTypes.BOOLEAN, ReturnTypes.BOOLEAN, hitInfo, gridPositionInfo, ReturnTypes.BOOLEAN,
+                FunctionReturnTypes.BINARY)),
+        family(SqlTypeFamily.MAP, SqlTypeFamily.STRING, SqlTypeFamily.STRING));
+    createAddUserDefinedFunction("com.linkedin.dali.views.search.udf.GetActionTypeUDF", FunctionReturnTypes.STRING,
+        or(STRING_STRING_STRING, STRING_STRING));
     createAddUserDefinedFunction("com.linkedin.dali.views.search.udf.GetTYAHResultTypeUDF", FunctionReturnTypes.STRING,
         STRING);
     createAddUserDefinedFunction("com.linkedin.dali.views.search.udf.GetVerticalUDF", FunctionReturnTypes.STRING,
         or(STRING_STRING_STRING, STRING_STRING));
     createAddUserDefinedFunction("com.linkedin.dali.views.search.udf.IsTYAHSearchResultsUDF", ReturnTypes.BOOLEAN,
         STRING);
-    createAddUserDefinedFunction("com.linkedin.dali.views.search.udf.IsValidKeyUDF", FunctionReturnTypes.STRING,
+    createAddUserDefinedFunction("com.linkedin.dali.views.search.udf.IsValidKeyUDF", ReturnTypes.BOOLEAN,
         or(STRING_STRING_STRING, STRING_STRING));
+    createAddUserDefinedFunction("com.linkedin.ds.udf.hive.filter.IsTestMemberId", ReturnTypes.BOOLEAN,
+        family(SqlTypeFamily.NUMERIC, SqlTypeFamily.STRING));
+    createAddUserDefinedFunction("com.linkedin.ds.udf.hive.lookup.PortalLookup", FunctionReturnTypes.STRING,
+        STRING_STRING_STRING);
+    createAddUserDefinedFunction("com.linkedin.ds.udf.hive.lookup.UserInterfaceLookup", FunctionReturnTypes.STRING,
+        family(Collections.nCopies(8, SqlTypeFamily.STRING)));
+    createAddUserDefinedFunction("com.linkedin.ds.udf.hive.lookup.WATBotCrawlerLookup", FunctionReturnTypes
+        .rowOf(ImmutableList.of("iscrawler", "crawlerid"), ImmutableList.of(SqlTypeName.BOOLEAN, SqlTypeName.VARCHAR)),
+        or(STRING_STRING_STRING, STRING_STRING));
+    createAddUserDefinedFunction("com.linkedin.dwh.udf.hive.lookup.OsLookup",
+        FunctionReturnTypes.rowOf(ImmutableList.of("os_name", "os_major_version", "os_full_version"),
+            ImmutableList.of(SqlTypeName.VARCHAR, SqlTypeName.VARCHAR, SqlTypeName.VARCHAR)),
+        or(STRING_STRING, family(SqlTypeFamily.STRING, SqlTypeFamily.ANY)));
     createAddUserDefinedFunction("com.linkedin.dwh.udf.profile.GetProfileUrl", FunctionReturnTypes.STRING, family(
         SqlTypeFamily.NUMERIC, SqlTypeFamily.STRING, SqlTypeFamily.STRING, SqlTypeFamily.STRING, SqlTypeFamily.STRING));
     createAddUserDefinedFunction("com.linkedin.dwh.udf.sessionization.CleanupBrowserId", FunctionReturnTypes.STRING,
@@ -460,8 +495,8 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
         family(SqlTypeFamily.ANY));
     createAddUserDefinedFunction("com.linkedin.vector.daliview.udf.PresentMediaType", FunctionReturnTypes.STRING,
         family(SqlTypeFamily.ANY));
-    createAddUserDefinedFunction("com.linkedin.vector.daliview.udf.UnifyVideoOrAudioDurationMicroSeconds",
-        FunctionReturnTypes.BIGINT, family(SqlTypeFamily.ANY));
+    createAddUserDefinedFunction("com.linkedin.vector.daliview.udf.UnifyVideoOrAudioDurationMicroSeconds", BIGINT,
+        family(SqlTypeFamily.ANY));
     createAddUserDefinedFunction("com.linkedin.tscp.reporting.dali.udfs.AdClickClassifier", FunctionReturnTypes.rowOf(
         ImmutableList.of("clicks", "landingPageClicks", "totalEngagements", "otherEngagements", "likes", "commentLikes",
             "comments", "shares", "follows", "oneClickLeadFormOpens", "companyPageClicks", "fullScreenPlays",
@@ -481,8 +516,7 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
             SqlTypeFamily.STRING));
     createAddUserDefinedFunction("com.linkedin.tscp.reporting.dali.udfs.UnifiedCampaignType",
         FunctionReturnTypes.STRING, STRING);
-    createAddUserDefinedFunction("com.linkedin.tscp.reporting.dali.udfs.ActivityId", FunctionReturnTypes.BIGINT,
-        family(SqlTypeFamily.MAP));
+    createAddUserDefinedFunction("com.linkedin.tscp.reporting.dali.udfs.ActivityId", BIGINT, family(SqlTypeFamily.MAP));
     createAddUserDefinedFunction("com.linkedin.tscp.reporting.dali.udfs.AdPlacementClassifier",
         FunctionReturnTypes.STRING, family(SqlTypeFamily.INTEGER));
     createAddUserDefinedFunction("com.linkedin.tscp.reporting.dali.udfs.SponsoredMessageNodeId", ReturnTypes.INTEGER,
@@ -508,14 +542,12 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
     createAddUserDefinedFunction("com.linkedin.stdudfs.daliudfs.hive.PortalLookup", FunctionReturnTypes.STRING,
         STRING_STRING);
     createAddUserDefinedFunction("com.linkedin.stdudfs.daliudfs.hive.Sanitize", FunctionReturnTypes.STRING, STRING);
-    createAddUserDefinedFunction("com.linkedin.jemslookup.udf.hive.JemsLookup",
-        FunctionReturnTypes.rowOfInference(
-            ImmutableList.of("jobproductid", "jobproductname", "jobentitlementids", "jobentitlementnameswithnamespace",
-                "listingtype", "sublistingtype", "istestjob"),
-            ImmutableList.of(FunctionReturnTypes.BIGINT, FunctionReturnTypes.STRING,
-                FunctionReturnTypes.arrayOfType(SqlTypeName.BIGINT, true),
-                FunctionReturnTypes.arrayOfType(SqlTypeName.VARCHAR, true), FunctionReturnTypes.STRING,
-                FunctionReturnTypes.STRING, ReturnTypes.BOOLEAN)),
+    createAddUserDefinedFunction("com.linkedin.jemslookup.udf.hive.JemsLookup", FunctionReturnTypes.rowOfInference(
+        ImmutableList.of("jobproductid", "jobproductname", "jobentitlementids", "jobentitlementnameswithnamespace",
+            "listingtype", "sublistingtype", "istestjob"),
+        ImmutableList.of(BIGINT, FunctionReturnTypes.STRING, FunctionReturnTypes.arrayOfType(SqlTypeName.BIGINT, true),
+            FunctionReturnTypes.arrayOfType(SqlTypeName.VARCHAR, true), FunctionReturnTypes.STRING,
+            FunctionReturnTypes.STRING, ReturnTypes.BOOLEAN)),
         family(
             ImmutableList.of(SqlTypeFamily.NUMERIC, SqlTypeFamily.STRING, SqlTypeFamily.STRING, SqlTypeFamily.STRING)));
     createAddUserDefinedFunction("com.linkedin.stdudfs.userinterfacelookup.hive.UserInterfaceLookup",
