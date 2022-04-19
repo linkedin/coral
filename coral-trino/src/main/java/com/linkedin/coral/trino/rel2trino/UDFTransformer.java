@@ -30,6 +30,7 @@ import org.apache.calcite.sql.SqlWriter;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.OperandTypes;
+import org.apache.calcite.sql.type.ReturnTypes;
 import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
 
 import com.linkedin.coral.com.google.common.base.Preconditions;
@@ -128,8 +129,8 @@ public class UDFTransformer {
     OP_MAP.put("/", SqlStdOperatorTable.DIVIDE);
     OP_MAP.put("^", SqlStdOperatorTable.POWER);
     OP_MAP.put("%", SqlStdOperatorTable.MOD);
-    OP_MAP.put("date", new SqlUserDefinedFunction(new SqlIdentifier("date", SqlParserPos.ZERO),
-        FunctionReturnTypes.DATE, null, OperandTypes.STRING, null, null));
+    OP_MAP.put("date", new SqlUserDefinedFunction(new SqlIdentifier("date", SqlParserPos.ZERO), ReturnTypes.DATE, null,
+        OperandTypes.STRING, null, null));
     OP_MAP.put("timestamp", new SqlUserDefinedFunction(new SqlIdentifier("timestamp", SqlParserPos.ZERO),
         FunctionReturnTypes.TIMESTAMP, null, OperandTypes.STRING, null, null) {
       @Override
