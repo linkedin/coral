@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @Service
-@Profile({"hiveMetastoreClient", "default"})
+@Profile({"remoteMetastore", "default"})
 public class TranslationController implements ApplicationListener<ContextRefreshedEvent> {
 
   @Override
@@ -41,7 +41,7 @@ public class TranslationController implements ApplicationListener<ContextRefresh
           .body("Please choose different languages to translate between.");
     }
 
-    String translatedSql = "Translation not supported yet.";
+    String translatedSql = "Translation from" + fromLanguage + " to " + toLanguage + " not currently supported.";
 
     // TODO: add more translations once n-to-one-to-n is completed
     // From Trino
@@ -63,7 +63,7 @@ public class TranslationController implements ApplicationListener<ContextRefresh
       }
     }
 
-    String successMessage = String.format("Original query in " + fromLanguage + ": " + query + "   |   " + "Translated to " + toLanguage + ": " + translatedSql);
+    String successMessage = "Original query in " + fromLanguage + ": " + query + "\n" + "Translated to " + toLanguage + ": " + translatedSql;
     return ResponseEntity
         .status(HttpStatus.OK)
         .body(successMessage);

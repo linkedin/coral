@@ -5,37 +5,32 @@ plugins {
 }
 
 group = 'com.linkedin.coral'
-version = '0.0.1-SNAPSHOT'
+version = '0.0.1'
 sourceCompatibility = '1.8'
 
 repositories {
   mavenCentral()
   maven { url 'https://repo.spring.io/milestone' }
-  maven { url 'https://repo.spring.io/snapshot' }
   maven { url "http://conjars.org/repo" }
 }
 
+// Exclusions required to fix issue of multiple bindings on the class path
 configurations.all {
   exclude module: 'slf4j-log4j12'
-  exclude group: 'org.apache.logging.log4j'
-  exclude group: 'org.eclipse.jetty.orbit'
   exclude group: 'javax.servlet'
 }
 
 dependencies {
   // Spring Boot
   implementation 'org.springframework.boot:spring-boot-starter-web'
-  testImplementation 'org.springframework.boot:spring-boot-starter-test:' + '2.6.1'
+  testImplementation 'org.springframework.boot:spring-boot-starter-test:2.6.1'
 
   // Coral
-  implementation 'com.linkedin.coral:coral-common:2.0.62'
-  implementation 'com.linkedin.coral:coral-trino:2.0.61'
-  implementation 'com.linkedin.coral:coral-hive:2.0.61'
-  implementation 'com.linkedin.coral:coral-pig:2.0.61'
-  implementation ('com.linkedin.coral:coral-spark:2.0.61') {
-    exclude group: 'org.slf4j'
-  }
-  compile('com.linkedin.coral:coral-trino-parser:2.0.61') {
+  implementation 'com.linkedin.coral:coral-common:+'
+  implementation 'com.linkedin.coral:coral-trino:+'
+  implementation 'com.linkedin.coral:coral-hive:+'
+  implementation ('com.linkedin.coral:coral-spark:+')
+  implementation('com.linkedin.coral:coral-trino-parser:+') {
     artifact {
       name = 'coral-trino-parser'
       extension = 'jar'
@@ -54,9 +49,4 @@ dependencies {
   implementation 'org.apache.hadoop:hadoop-common:2.7.0'
   implementation 'org.apache.hadoop:hadoop-mapreduce-client-common:2.7.0'
   implementation 'org.apache.hadoop:hadoop-mapreduce-client-core:2.7.0'
-
-}
-
-tasks.named('test') {
-  useJUnitPlatform()
 }

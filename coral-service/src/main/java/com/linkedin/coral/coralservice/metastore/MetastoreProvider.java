@@ -25,40 +25,33 @@ import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.*;
 
 
 /**
- * Utility class to get Hive metastore client for local hive or grid based hive using kerberos
+ * Utility class to get Hive metastore client for local hive or remote based hive using kerberos
  */
 @SuppressWarnings("WeakerAccess")
 public class MetastoreProvider {
 
-  public static final String HIVE_METASTORE_URIS = "hive.metastore.uris";
-  public static final String HIVE_METASTORE_AUTHENTICATION = "hive.metastore.authentication";
-  public static final String HIVE_METASTORE_CLIENT_PRINCIPAL = "hive.metastore.client.principal";
-  public static final String HIVE_METASTORE_CLIENT_KEYTAB = "hive.metastore.client.keytab";
-  public static final String HIVE_METASTORE_SERVICE_PRINCIPAL = "hive.metastore.service.principal";
-  public static final String HADOOP_SECURITY_AUTHENTICATION = "hadoop.security.authentication";
+  private static final String HIVE_METASTORE_URIS = "hive.metastore.uris";
+  private static final String HIVE_METASTORE_AUTHENTICATION = "hive.metastore.authentication";
+  private static final String HIVE_METASTORE_CLIENT_PRINCIPAL = "hive.metastore.client.principal";
+  private static final String HIVE_METASTORE_CLIENT_KEYTAB = "hive.metastore.client.keytab";
+  private static final String HIVE_METASTORE_SERVICE_PRINCIPAL = "hive.metastore.service.principal";
+  private static final String HADOOP_SECURITY_AUTHENTICATION = "hadoop.security.authentication";
 
-  // following properties are to create local hive metastore
-  public static final String HIVE_DIR = "hive.dir";
+  private static final String DEFAULT_METASTORE_URI = "thrift://localhost:7552";
+  private static final String DEFAULT_METASTORE_AUTHENTICATION = "SIMPLE";
+  private static final String KERBEROS_AUTHENTICATION = "kerberos";
 
-  public static final String DEFAULT_METASTORE_URI = "thrift://localhost:7552";
-  public static final String DEFAULT_METASTORE_AUTHENTICATION = "SIMPLE";
-  public static final String KERBEROS_AUTHENTICATION = "kerberos";
-  public static final String DEFAULT_TMP_HIVE_DIR;
-
-  static {
-    DEFAULT_TMP_HIVE_DIR = Paths.get(System.getProperty("java.io.tmpdir"), "coral").toString();
-  }
 
   public static HiveMetastoreClient getMetastoreClient() throws Exception {
     final InputStream hiveConfStream =
         CoralUtils.class.getClassLoader().getResourceAsStream("hive.properties");
     final Properties props = new Properties();
     props.load(hiveConfStream);
-    return new HiveMscAdapter(MetastoreProvider.getGridMetastoreClient(props));
+    return new HiveMscAdapter(MetastoreProvider.getRemoteMetastoreClient(props));
   }
 
   /**
-   * Get metastore client for the hive metastore on Grid. Supports kerberos based
+   * Get metastore client for the remote hive metastore. Supports kerberos based
    * authentication. Using kerberos requires user to get kerberos ticket and setup
    * keytab externally.
    * @param props hive configuration to use for connecting to the metastore
@@ -67,7 +60,7 @@ public class MetastoreProvider {
    * @throws MetaException indicates failure to instantiate metastore client
    * @throws ConfigurationException on missing required configuration parameter
    */
-  public static IMetaStoreClient getGridMetastoreClient(Properties props)
+  private static IMetaStoreClient getRemoteMetastoreClient(Properties props)
       throws IOException, MetaException, ConfigurationException {
 
     HiveConf conf = new HiveConf();
@@ -98,28 +91,5 @@ public class MetastoreProvider {
       UserGroupInformation.loginUserFromKeytab(clientPrincipal, clientKeytab);
     }
     return new HiveMetaStoreClient(conf);
-  }
-
-  /**
-   * Get hive metastore client for local hive. Uses locally setup database
-   * and uses embedded derby to connect.
-   * @param props properties to connect to the local store
-   * @return Local hive metastore client
-   * @throws HiveException on failure to instantiate local hive
-   * @throws MetaException on failure to create local hive metastore
-   */
-  public static IMetaStoreClient getLocalMetastoreClient(Properties props) throws HiveException, MetaException {
-    HiveConf conf = new HiveConf();
-    String tmpDir = props.getProperty(HIVE_DIR, DEFAULT_TMP_HIVE_DIR);
-    conf.setVar(SCRATCHDIR, getPath(tmpDir, "hive-scratch-dir"));
-    conf.setVar(METASTOREWAREHOUSE, getPath(tmpDir, "warehouse"));
-    conf.setVar(METASTORE_CONNECTION_DRIVER, "org.apache.derby.jdbc.EmbeddedDriver");
-    conf.setVar(METASTORECONNECTURLKEY, "jdbc:derby:;databaseName=" + getPath(tmpDir, "metastore.db") + ";create=true");
-    SessionState.start(conf);
-    return Hive.get(conf).getMSC();
-  }
-
-  private static String getPath(String parent, String child) {
-    return Paths.get(parent, child).toString();
   }
 }

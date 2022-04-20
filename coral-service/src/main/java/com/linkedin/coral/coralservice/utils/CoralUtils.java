@@ -20,13 +20,18 @@ import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.processors.CommandProcessorResponse;
 import org.apache.hadoop.hive.ql.session.SessionState;
+import org.springframework.context.annotation.Configuration;
+
+import static com.linkedin.coral.coralservice.CoralServiceApplication.*;
+
 
 /**
  * Utility class to provide Coral functionality to Coral Service.
  */
+@Configuration
 public class CoralUtils {
 
-  public static HiveMetastoreClient hiveMetastoreClient;
+  private static HiveMetastoreClient hiveMetastoreClient;
 
   // Converters
   public static HiveToRelConverter hiveToRelConverter;
@@ -48,9 +53,16 @@ public class CoralUtils {
   public static void initLocalMetastore() throws IOException, HiveException, MetaException {
     // Create a temporary local metastore
     conf = loadResourceHiveConf();
-    String tempDir = conf.get(CORAL_SERVICE_DIR);
-    System.out.println("Temp Workspace: " + tempDir);
-    FileUtils.deleteDirectory(new File(tempDir));
+
+    try {
+      // Delete existing local metastore if it exists
+      String tempDir = conf.get(CORAL_SERVICE_DIR);
+      LOGGER.info("Temp Workspace: " + tempDir);
+      FileUtils.deleteDirectory(new File(tempDir));
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+
     SessionState.start(conf);
     driver = new Driver(conf);
 
@@ -77,7 +89,7 @@ public class CoralUtils {
     InputStream hiveConfStream = CoralUtils.class.getClassLoader().getResourceAsStream("hive.xml");
     HiveConf hiveConf = new HiveConf();
     hiveConf.set(CORAL_SERVICE_DIR,
-        System.getProperty("java.io.tmpdir") + "/coral/service/" + UUID.randomUUID().toString());
+        System.getProperty("java.io.tmpdir") + "/coral/service/" + UUID.randomUUID());
     hiveConf.addResource(hiveConfStream);
     hiveConf.set("mapreduce.framework.name", "local");
     hiveConf.set("_hive.hdfs.session.path", "/tmp/coral/service");
