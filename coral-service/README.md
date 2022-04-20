@@ -23,7 +23,7 @@ cd coral-service
 ./gradlew clean build
 ```
 To run Coral Service using the **production metastore** (Hive Metastore Client):
-4. a) Add authenticated `daliview.headless.keytab` to `coral-service/src/main/resources`
+4. a) Add kerberos client keytab file `daliview.headless.keytab` to `coral-service/src/main/resources`
 4. b) Appropriately replace all instances of `SET_ME` in `coral-service/src/main/resources/hive.properties`
 4. c) Run
 ```
