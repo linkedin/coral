@@ -8,6 +8,7 @@ package com.linkedin.coral.spark;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.apache.avro.Schema;
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
@@ -68,6 +69,29 @@ public class CoralSpark {
   }
 
   /**
+   * Users use this function as the main API for getting CoralSpark instance.
+   * This should be used when user need to align the Coral-spark translated SQL
+   * with Coral-schema output schema
+   *
+   * @param irRelNode An IR RelNode for which CoralSpark will be constructed.
+   * @param schema Coral schema that is represented by an Avro schema
+   * @return [[CoralSparkInfo]]
+   */
+  public static CoralSpark create(RelNode irRelNode, Schema schema) {
+    List<String> aliases = schema.getFields().stream().map(Schema.Field::name).collect(Collectors.toList());
+    return createWithAlias(irRelNode, aliases);
+  }
+
+  private static CoralSpark createWithAlias(RelNode irRelNode, List<String> aliases) {
+    SparkRelInfo sparkRelInfo = IRRelToSparkRelTransformer.transform(irRelNode);
+    RelNode sparkRelNode = sparkRelInfo.getSparkRelNode();
+    String sparkSQL = constructSparkSQLWithExplicitAlias(sparkRelNode, aliases);
+    List<String> baseTables = constructBaseTables(sparkRelNode);
+    List<SparkUDFInfo> sparkUDFInfos = sparkRelInfo.getSparkUDFInfoList();
+    return new CoralSpark(baseTables, sparkUDFInfos, sparkSQL);
+  }
+
+  /**
    * This function returns a completely expanded SQL statement in HiveQL Dialect.
    *
    * A SQL statement is 'completely expanded' if it doesn't depend
@@ -87,6 +111,16 @@ public class CoralSpark {
     SqlImplementor.Result r = rel2sql.visitChild(0, sparkRelNode);
     SqlNode rewritten = r.asStatement().accept(new SparkSqlRewriter());
     return rewritten.toSqlString(SparkSqlDialect.INSTANCE).getSql();
+  }
+
+  private static String constructSparkSQLWithExplicitAlias(RelNode sparkRelNode, List<String> aliases) {
+    SparkRelToSparkSqlConverter rel2sql = new SparkRelToSparkSqlConverter();
+    // Create temporary objects r and rewritten to make debugging easier
+    SqlImplementor.Result r = rel2sql.visitChild(0, sparkRelNode);
+    SqlNode rewritten = r.asStatement().accept(new SparkSqlRewriter());
+    // Use a second pass visit to add explicit alias names
+    SqlNode aliasAdded = rewritten.accept(new AddExplicitAlias(aliases));
+    return aliasAdded.toSqlString(SparkSqlDialect.INSTANCE).getSql();
   }
 
   /**

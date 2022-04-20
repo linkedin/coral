@@ -6,8 +6,11 @@ dependencies {
   compile deps.'slf4j-api'
   compile deps.'slf4j-log4j12'
   compile project(':coral-hive')
+  compile project(':coral-schema')
+
 
   compileOnly deps.'spark'.'sql'
+
   testCompile(deps.'hive'.'hive-exec-core') {
     exclude group: 'org.apache.avro', module: 'avro-tools'
     // These exclusions are required to prevent duplicate classes since we include
