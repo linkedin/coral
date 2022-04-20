@@ -33,7 +33,7 @@ public class TranslationControllerLocal extends TranslationController{
   @PostMapping("/create")
   public ResponseEntity createInLocalMetastore(@RequestParam String createQuery) {
     String[] splitQuery = createQuery.split("\\s+");
-    if (!queryIsCreate(splitQuery)) {
+    if (!isCreateQuery(splitQuery)) {
       return ResponseEntity
           .status(HttpStatus.BAD_REQUEST)
           .body("Only queries starting with \"CREATE DATABASE|TABLE|VIEW\" are accepted.");
@@ -48,11 +48,12 @@ public class TranslationControllerLocal extends TranslationController{
   }
 
   /** Method to check that query starts with "CREATE DATABASE|TABLE|VIEW" */
-  private boolean queryIsCreate(String[] splitQuery) {
-    if (!splitQuery[0].equalsIgnoreCase("create")
-        || (!splitQuery[1].equalsIgnoreCase("table") && !splitQuery[1].equalsIgnoreCase("database") && !splitQuery[1].equalsIgnoreCase("view"))) {
+  private boolean isCreateQuery(String[] splitQuery) {
+    if (splitQuery.length < 3) {
       return false;
     }
-    return true;
+
+    return splitQuery[0].equalsIgnoreCase("create") && (splitQuery[1].equalsIgnoreCase("table")
+        || splitQuery[1].equalsIgnoreCase("database") || splitQuery[1].equalsIgnoreCase("view"));
   }
 }
