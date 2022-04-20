@@ -818,14 +818,14 @@ public class CoralSparkTest {
   private static String getCoralSparkTranslatedSqlWithAliasFromCoralSchema(String db, String view) {
     RelNode relNode = TestUtils.toRelNode(db, view);
     Schema schema = TestUtils.getAvroSchemaForView(db, view, false);
-    CoralSpark coralSpark = CoralSpark.createWithCoralSchema(relNode, schema);
+    CoralSpark coralSpark = CoralSpark.create(relNode, schema);
     return coralSpark.getSparkSql();
   }
 
   private static String getCoralSparkTranslatedSqlWithAliasFromCoralSchema(String source) {
     RelNode relNode = TestUtils.toRelNode(source);
     Schema schema = TestUtils.getAvroSchemaForView(source, false);
-    CoralSpark coralSpark = CoralSpark.createWithCoralSchema(relNode, schema);
+    CoralSpark coralSpark = CoralSpark.create(relNode, schema);
     return coralSpark.getSparkSql();
   }
 

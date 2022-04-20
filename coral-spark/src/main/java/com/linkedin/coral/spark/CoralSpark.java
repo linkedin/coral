@@ -77,7 +77,7 @@ public class CoralSpark {
    * @param schema Coral schema that is represented by an Avro schema
    * @return [[CoralSparkInfo]]
    */
-  public static CoralSpark createWithCoralSchema(RelNode irRelNode, Schema schema) {
+  public static CoralSpark create(RelNode irRelNode, Schema schema) {
     List<String> aliases = schema.getFields().stream().map(Schema.Field::name).collect(Collectors.toList());
     return createWithAlias(irRelNode, aliases);
   }
