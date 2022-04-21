@@ -1,6 +1,6 @@
 package com.linkedin.coral.coralservice.controller;
 
-import com.linkedin.coral.coralservice.utils.CoralUtils;
+import com.linkedin.coral.coralservice.utils.CoralProvider;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.springframework.context.annotation.Profile;
 import org.springframework.context.event.ContextRefreshedEvent;
@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import static com.linkedin.coral.coralservice.utils.CoralUtils.*;
+import static com.linkedin.coral.coralservice.utils.CoralProvider.*;
 
 
 /**
@@ -24,7 +24,7 @@ public class TranslationControllerLocal extends TranslationController{
   public void onApplicationEvent(ContextRefreshedEvent event) {
     // runs after the Spring context has been initialized
     try {
-      CoralUtils.initLocalMetastore();
+      CoralProvider.initLocalMetastore();
     } catch (Exception e) {
       e.printStackTrace();
     }

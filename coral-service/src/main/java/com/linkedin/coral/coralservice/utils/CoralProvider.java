@@ -29,7 +29,8 @@ import static com.linkedin.coral.coralservice.CoralServiceApplication.*;
  * Utility class to provide Coral functionality to Coral Service.
  */
 @Configuration
-public class CoralUtils {
+public class CoralProvider {
+  //TODO: provide beans for fields
 
   private static HiveMetastoreClient hiveMetastoreClient;
 
@@ -86,7 +87,7 @@ public class CoralUtils {
   }
 
   public static HiveConf loadResourceHiveConf() {
-    InputStream hiveConfStream = CoralUtils.class.getClassLoader().getResourceAsStream("hive.xml");
+    InputStream hiveConfStream = CoralProvider.class.getClassLoader().getResourceAsStream("hive.xml");
     HiveConf hiveConf = new HiveConf();
     hiveConf.set(CORAL_SERVICE_DIR,
         System.getProperty("java.io.tmpdir") + "/coral/service/" + UUID.randomUUID());

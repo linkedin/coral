@@ -2,10 +2,9 @@ package com.linkedin.coral.coralservice.metastore;
 
 import com.linkedin.coral.common.HiveMetastoreClient;
 import com.linkedin.coral.common.HiveMscAdapter;
-import com.linkedin.coral.coralservice.utils.CoralUtils;
+import com.linkedin.coral.coralservice.utils.CoralProvider;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Paths;
 import java.util.Properties;
 
 import javax.naming.ConfigurationException;
@@ -16,9 +15,6 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
 import org.apache.hadoop.hive.metastore.IMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.MetaException;
-import org.apache.hadoop.hive.ql.metadata.Hive;
-import org.apache.hadoop.hive.ql.metadata.HiveException;
-import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hadoop.security.UserGroupInformation;
 
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.*;
@@ -44,7 +40,7 @@ public class MetastoreProvider {
 
   public static HiveMetastoreClient getMetastoreClient() throws Exception {
     final InputStream hiveConfStream =
-        CoralUtils.class.getClassLoader().getResourceAsStream("hive.properties");
+        CoralProvider.class.getClassLoader().getResourceAsStream("hive.properties");
     final Properties props = new Properties();
     props.load(hiveConfStream);
     return new HiveMscAdapter(MetastoreProvider.getRemoteMetastoreClient(props));
@@ -81,8 +77,6 @@ public class MetastoreProvider {
       if (Strings.isNullOrEmpty(servicePrincipal)) {
         throw new ConfigurationException(String.format("%s is required", HIVE_METASTORE_SERVICE_PRINCIPAL));
       }
-      // leave this commented...handy debugging option rather than searching
-      // System.setProperty("sun.security.krb5.debug", "true");
       conf.setVar(METASTORE_USE_THRIFT_SASL, "true");
       conf.setVar(METASTORE_KERBEROS_PRINCIPAL, servicePrincipal);
       conf.set(HADOOP_SECURITY_AUTHENTICATION, KERBEROS_AUTHENTICATION);

@@ -1,6 +1,6 @@
 package com.linkedin.coral.coralservice.controller;
 
-import static com.linkedin.coral.coralservice.utils.CoralUtils.*;
+import static com.linkedin.coral.coralservice.utils.CoralProvider.*;
 import static com.linkedin.coral.coralservice.utils.TranslationUtils.*;
 
 
