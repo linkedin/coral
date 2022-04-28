@@ -13,7 +13,9 @@ import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.rel2sql.SqlImplementor;
+import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlNode;
+import org.apache.calcite.sql.SqlSelect;
 
 import com.linkedin.coral.spark.containers.SparkRelInfo;
 import com.linkedin.coral.spark.containers.SparkUDFInfo;
@@ -118,9 +120,13 @@ public class CoralSpark {
     // Create temporary objects r and rewritten to make debugging easier
     SqlImplementor.Result r = rel2sql.visitChild(0, sparkRelNode);
     SqlNode rewritten = r.asStatement().accept(new SparkSqlRewriter());
-    // Use a second pass visit to add explicit alias names
-    SqlNode aliasAdded = rewritten.accept(new AddExplicitAlias(aliases));
-    return aliasAdded.toSqlString(SparkSqlDialect.INSTANCE).getSql();
+    // Use a second pass visit to add explicit alias names,
+    // only do this when it's not a select star case,
+    // since for select star we don't need to add any explicit aliases
+    if (rewritten.getKind() == SqlKind.SELECT && ((SqlSelect) rewritten).getSelectList() != null) {
+      rewritten = rewritten.accept(new AddExplicitAlias(aliases));
+    }
+    return rewritten.toSqlString(SparkSqlDialect.INSTANCE).getSql();
   }
 
   /**

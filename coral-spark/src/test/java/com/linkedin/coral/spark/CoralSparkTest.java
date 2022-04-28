@@ -815,6 +815,15 @@ public class CoralSparkTest {
     assertEquals(expandedSql, targetSql);
   }
 
+  @Test
+  public void testSelectStar() {
+    String sourceSql = "SELECT * FROM default.basecomplex";
+    String expandedSql = getCoralSparkTranslatedSqlWithAliasFromCoralSchema(sourceSql);
+
+    String targetSql = "SELECT *\n" + "FROM default.basecomplex";
+    assertEquals(expandedSql, targetSql);
+  }
+
   private static String getCoralSparkTranslatedSqlWithAliasFromCoralSchema(String db, String view) {
     RelNode relNode = TestUtils.toRelNode(db, view);
     Schema schema = TestUtils.getAvroSchemaForView(db, view, false);
