@@ -120,14 +120,13 @@ public class CoralSpark {
     // Create temporary objects r and rewritten to make debugging easier
     SqlImplementor.Result r = rel2sql.visitChild(0, sparkRelNode);
     SqlNode rewritten = r.asStatement().accept(new SparkSqlRewriter());
-    SqlNode ret = rewritten;
     // Use a second pass visit to add explicit alias names,
     // only do this when it's not a select star case,
     // since for select star we don't need to add any explicit aliases
     if (rewritten.getKind() == SqlKind.SELECT && ((SqlSelect) rewritten).getSelectList() != null) {
-      ret = rewritten.accept(new AddExplicitAlias(aliases));
+      rewritten = rewritten.accept(new AddExplicitAlias(aliases));
     }
-    return ret.toSqlString(SparkSqlDialect.INSTANCE).getSql();
+    return rewritten.toSqlString(SparkSqlDialect.INSTANCE).getSql();
   }
 
   /**
