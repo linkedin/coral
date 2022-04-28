@@ -30,6 +30,9 @@ import com.linkedin.coral.hive.hive2rel.HiveRelBuilder;
 import com.linkedin.coral.hive.hive2rel.HiveSqlValidator;
 import com.linkedin.coral.hive.hive2rel.functions.HiveFunctionResolver;
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
+import com.linkedin.coral.trino.trino2rel.parsetree.ParseTreeBuilder;
+import com.linkedin.coral.trino.trino2rel.parsetree.ParserVisitorContext;
+import com.linkedin.coral.trino.trino2rel.parsetree.TrinoParserDriver;
 
 import static com.linkedin.coral.trino.trino2rel.TrinoSqlConformance.*;
 

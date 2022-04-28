@@ -8,6 +8,7 @@
 *.iws
 /build
 */build
+*/*/build
 out/
 */bin/
 target/
@@ -16,4 +17,3 @@ derby.log
 ligradle
 .DS_Store
 *.patch
-
