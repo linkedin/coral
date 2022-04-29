@@ -3,7 +3,7 @@
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
-package com.linkedin.coral.trino.trino2rel;
+package com.linkedin.coral.trino.trino2rel.parsetree;
 
 import java.util.*;
 import java.util.stream.Collectors;
