@@ -1,5 +1,3 @@
-apply from: "$rootDir/gradle/java-publication.gradle"
-
 dependencies {
   compile('com.linkedin.calcite:calcite-core:1.21.0.151') {
     artifact {
@@ -18,8 +16,4 @@ dependencies {
   }
 
   compile deps.'hadoop'.'hadoop-common'
-}
-
-artifacts {
-  archives jar, javadocJar, sourcesJar
 }
