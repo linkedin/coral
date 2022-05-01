@@ -1,11 +1,10 @@
+/**
+ * Copyright 2022 LinkedIn Corporation. All rights reserved.
+ * Licensed under the BSD-2 Clause license.
+ * See LICENSE in the project root for license information.
+ */
 package com.linkedin.coral.coralservice.utils;
 
-import com.linkedin.coral.common.HiveMetastoreClient;
-import com.linkedin.coral.common.HiveMscAdapter;
-import com.linkedin.coral.coralservice.metastore.MetastoreProvider;
-import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
-import com.linkedin.coral.trino.rel2trino.RelToTrinoConverter;
-import com.linkedin.coral.trino.trino2rel.TrinoToRelConverter;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,6 +20,13 @@ import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.processors.CommandProcessorResponse;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.springframework.context.annotation.Configuration;
+
+import com.linkedin.coral.common.HiveMetastoreClient;
+import com.linkedin.coral.common.HiveMscAdapter;
+import com.linkedin.coral.coralservice.metastore.MetastoreProvider;
+import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
+import com.linkedin.coral.trino.rel2trino.RelToTrinoConverter;
+import com.linkedin.coral.trino.trino2rel.TrinoToRelConverter;
 
 import static com.linkedin.coral.coralservice.CoralServiceApplication.*;
 
@@ -44,11 +50,11 @@ public class CoralProvider {
   public static HiveConf conf;
   public static final String CORAL_SERVICE_DIR = "coral.service.test.dir";
 
-  public static void initHiveMetastoreClient() throws Exception{
+  public static void initHiveMetastoreClient() throws Exception {
     // Connect to remote production Hive Metastore Client
-    hiveMetastoreClient  = MetastoreProvider.getMetastoreClient();
+    hiveMetastoreClient = MetastoreProvider.getMetastoreClient();
     hiveToRelConverter = new HiveToRelConverter(hiveMetastoreClient);
-    trinoToRelConverter  = new TrinoToRelConverter(hiveMetastoreClient);
+    trinoToRelConverter = new TrinoToRelConverter(hiveMetastoreClient);
   }
 
   public static void initLocalMetastore() throws IOException, HiveException, MetaException {
@@ -69,7 +75,7 @@ public class CoralProvider {
 
     hiveMetastoreClient = new HiveMscAdapter(Hive.get(conf).getMSC());
     hiveToRelConverter = new HiveToRelConverter(hiveMetastoreClient);
-    trinoToRelConverter  = new TrinoToRelConverter(hiveMetastoreClient);
+    trinoToRelConverter = new TrinoToRelConverter(hiveMetastoreClient);
   }
 
   public static void run(Driver driver, String sql) {
@@ -89,8 +95,7 @@ public class CoralProvider {
   public static HiveConf loadResourceHiveConf() {
     InputStream hiveConfStream = CoralProvider.class.getClassLoader().getResourceAsStream("hive.xml");
     HiveConf hiveConf = new HiveConf();
-    hiveConf.set(CORAL_SERVICE_DIR,
-        System.getProperty("java.io.tmpdir") + "/coral/service/" + UUID.randomUUID());
+    hiveConf.set(CORAL_SERVICE_DIR, System.getProperty("java.io.tmpdir") + "/coral/service/" + UUID.randomUUID());
     hiveConf.addResource(hiveConfStream);
     hiveConf.set("mapreduce.framework.name", "local");
     hiveConf.set("_hive.hdfs.session.path", "/tmp/coral/service");

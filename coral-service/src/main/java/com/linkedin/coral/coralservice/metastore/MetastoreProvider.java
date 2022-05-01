@@ -1,8 +1,10 @@
+/**
+ * Copyright 2022 LinkedIn Corporation. All rights reserved.
+ * Licensed under the BSD-2 Clause license.
+ * See LICENSE in the project root for license information.
+ */
 package com.linkedin.coral.coralservice.metastore;
 
-import com.linkedin.coral.common.HiveMetastoreClient;
-import com.linkedin.coral.common.HiveMscAdapter;
-import com.linkedin.coral.coralservice.utils.CoralProvider;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
@@ -16,6 +18,10 @@ import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
 import org.apache.hadoop.hive.metastore.IMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.security.UserGroupInformation;
+
+import com.linkedin.coral.common.HiveMetastoreClient;
+import com.linkedin.coral.common.HiveMscAdapter;
+import com.linkedin.coral.coralservice.utils.CoralProvider;
 
 import static org.apache.hadoop.hive.conf.HiveConf.ConfVars.*;
 
@@ -37,10 +43,8 @@ public class MetastoreProvider {
   private static final String DEFAULT_METASTORE_AUTHENTICATION = "SIMPLE";
   private static final String KERBEROS_AUTHENTICATION = "kerberos";
 
-
   public static HiveMetastoreClient getMetastoreClient() throws Exception {
-    final InputStream hiveConfStream =
-        CoralProvider.class.getClassLoader().getResourceAsStream("hive.properties");
+    final InputStream hiveConfStream = CoralProvider.class.getClassLoader().getResourceAsStream("hive.properties");
     final Properties props = new Properties();
     props.load(hiveConfStream);
     return new HiveMscAdapter(MetastoreProvider.getRemoteMetastoreClient(props));

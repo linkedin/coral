@@ -1,8 +1,9 @@
+/**
+ * Copyright 2022 LinkedIn Corporation. All rights reserved.
+ * Licensed under the BSD-2 Clause license.
+ * See LICENSE in the project root for license information.
+ */
 package com.linkedin.coral.coralservice.controller;
-
-import static com.linkedin.coral.coralservice.utils.CoralProvider.*;
-import static com.linkedin.coral.coralservice.utils.TranslationUtils.*;
-
 
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Profile;
@@ -14,13 +15,16 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import static com.linkedin.coral.coralservice.utils.CoralProvider.*;
+import static com.linkedin.coral.coralservice.utils.TranslationUtils.*;
+
 
 /**
  * Class defining the REST endpoints to translate queries using Coral.
  */
 @RestController
 @Service
-@Profile({"remoteMetastore", "default"})
+@Profile({ "remoteMetastore", "default" })
 public class TranslationController implements ApplicationListener<ContextRefreshedEvent> {
 
   @Override
@@ -34,10 +38,10 @@ public class TranslationController implements ApplicationListener<ContextRefresh
   }
 
   @GetMapping("/translate")
-  public ResponseEntity translate(@RequestParam String query, @RequestParam String fromLanguage, @RequestParam String toLanguage) {
+  public ResponseEntity translate(@RequestParam String query, @RequestParam String fromLanguage,
+      @RequestParam String toLanguage) {
     if (fromLanguage.equalsIgnoreCase(toLanguage)) {
-      return ResponseEntity
-          .status(HttpStatus.BAD_REQUEST)
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
           .body("Please choose different languages to translate between.");
     }
 
@@ -63,9 +67,8 @@ public class TranslationController implements ApplicationListener<ContextRefresh
       }
     }
 
-    String successMessage = "Original query in " + fromLanguage + ": " + query + "\n" + "Translated to " + toLanguage + ": " + translatedSql;
-    return ResponseEntity
-        .status(HttpStatus.OK)
-        .body(successMessage);
+    String successMessage = "Original query in " + fromLanguage + ": " + query + "\n" + "Translated to " + toLanguage
+        + ": " + translatedSql;
+    return ResponseEntity.status(HttpStatus.OK).body(successMessage);
   }
 }

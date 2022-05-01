@@ -1,6 +1,10 @@
+/**
+ * Copyright 2022 LinkedIn Corporation. All rights reserved.
+ * Licensed under the BSD-2 Clause license.
+ * See LICENSE in the project root for license information.
+ */
 package com.linkedin.coral.coralservice.controller;
 
-import com.linkedin.coral.coralservice.utils.CoralProvider;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.springframework.context.annotation.Profile;
 import org.springframework.context.event.ContextRefreshedEvent;
@@ -10,6 +14,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import com.linkedin.coral.coralservice.utils.CoralProvider;
+
 import static com.linkedin.coral.coralservice.utils.CoralProvider.*;
 
 
@@ -18,7 +24,7 @@ import static com.linkedin.coral.coralservice.utils.CoralProvider.*;
  */
 @Service
 @Profile("localMetastore")
-public class TranslationControllerLocal extends TranslationController{
+public class TranslationControllerLocal extends TranslationController {
 
   @Override
   public void onApplicationEvent(ContextRefreshedEvent event) {
@@ -34,17 +40,14 @@ public class TranslationControllerLocal extends TranslationController{
   public ResponseEntity createInLocalMetastore(@RequestParam String createQuery) {
     String[] splitQuery = createQuery.split("\\s+");
     if (!isCreateQuery(splitQuery)) {
-      return ResponseEntity
-          .status(HttpStatus.BAD_REQUEST)
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
           .body("Only queries starting with \"CREATE DATABASE|TABLE|VIEW\" are accepted.");
     }
 
     SessionState.start(conf);
     run(driver, createQuery);
 
-    return ResponseEntity
-        .status(HttpStatus.OK)
-        .body("Creation successful");
+    return ResponseEntity.status(HttpStatus.OK).body("Creation successful");
   }
 
   /** Method to check that query starts with "CREATE DATABASE|TABLE|VIEW" */

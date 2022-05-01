@@ -4,13 +4,7 @@ plugins {
   id 'java'
 }
 
-group = 'com.linkedin.coral'
-version = '0.0.1'
-sourceCompatibility = '1.8'
-
 repositories {
-  mavenCentral()
-  maven { url 'https://repo.spring.io/milestone' }
   maven { url "http://conjars.org/repo" }
 }
 
@@ -21,32 +15,12 @@ configurations.all {
 }
 
 dependencies {
-  // Spring Boot
-  implementation 'org.springframework.boot:spring-boot-starter-web'
-  testImplementation 'org.springframework.boot:spring-boot-starter-test:2.6.1'
+  implementation project(':coral-common')
+  implementation project(':coral-hive')
+  implementation project(':coral-trino')
+  implementation project(':coral-spark')
 
-  // Coral
-  implementation 'com.linkedin.coral:coral-common:+'
-  implementation 'com.linkedin.coral:coral-trino:+'
-  implementation 'com.linkedin.coral:coral-hive:+'
-  implementation ('com.linkedin.coral:coral-spark:+')
-  implementation('com.linkedin.coral:coral-trino-parser:+') {
-    artifact {
-      name = 'coral-trino-parser'
-      extension = 'jar'
-      type = 'jar'
-    }
-  }
-
-  // Hive
-  implementation 'org.apache.hive:hive-metastore:1.2.2'
-  implementation ('org.apache.hive:hive-exec:1.2.2:core') {
-    exclude group: 'jline', module: 'jline'
-  }
-  implementation ('org.apache.hive:hive-common:1.2.2')
-
-  // Hadoop
-  implementation 'org.apache.hadoop:hadoop-common:2.7.0'
-  implementation 'org.apache.hadoop:hadoop-mapreduce-client-common:2.7.0'
+  implementation 'org.apache.hive:hive-exec:1.2.2:core'
   implementation 'org.apache.hadoop:hadoop-mapreduce-client-core:2.7.0'
+  implementation 'org.springframework.boot:spring-boot-starter-web'
 }
