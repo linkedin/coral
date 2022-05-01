@@ -74,5 +74,5 @@ subprojects {
   }
 
   apply from: "${rootDir}/gradle/dependencies.gradle"
-  apply from: "$rootDir/gradle/java-publication.gradle"
+  apply from: "${rootDir}/gradle/java-publication.gradle"
 }
