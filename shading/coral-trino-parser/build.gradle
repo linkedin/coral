@@ -1,6 +1,5 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ConfigureShadowRelocation
 apply plugin: "com.github.johnrengelman.shadow"
-apply from: "$rootDir/gradle/java-publication.gradle"
 
 dependencies {
   compileOnly 'io.trino:trino-parser:355'

@@ -1,4 +1,3 @@
-apply from: "$rootDir/gradle/java-publication.gradle"
 apply from: "spark_itest.gradle"
 
 dependencies {
@@ -20,8 +19,4 @@ dependencies {
   }
   testCompile deps.'hadoop'.'hadoop-mapreduce-client-core'
   testCompile deps.'kryo'
-}
-
-artifacts {
-  archives jar, javadocJar, sourcesJar
 }

@@ -1,5 +1,3 @@
-apply from: "$rootDir/gradle/java-publication.gradle"
-
 dependencies {
   compile deps.'gson'
   compile deps.'javax-annotation'
@@ -20,8 +18,4 @@ dependencies {
 
   testCompile deps.'hadoop'.'hadoop-mapreduce-client-common'
   testCompile deps.'kryo'
-}
-
-artifacts {
-  archives jar, javadocJar, sourcesJar
 }

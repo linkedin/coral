@@ -1,4 +1,3 @@
-apply from: "$rootDir/gradle/java-publication.gradle"
 apply plugin: 'antlr'
 
 dependencies {
@@ -29,11 +28,6 @@ generateGrammarSource {
     '-lib',
     'src/main/antlr/imports'
   ]}
-
-artifacts {
-  archives jar, javadocJar, sourcesJar
-}
-
 
 task customFatJar(type: Jar) {
   manifest {
