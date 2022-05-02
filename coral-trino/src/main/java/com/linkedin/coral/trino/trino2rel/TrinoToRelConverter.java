@@ -5,9 +5,9 @@
  */
 package com.linkedin.coral.trino.trino2rel;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.calcite.adapter.java.JavaTypeFactory;
 import org.apache.calcite.plan.RelOptCluster;
@@ -24,11 +24,12 @@ import org.apache.hadoop.hive.metastore.api.Table;
 
 import com.linkedin.coral.common.HiveMetastoreClient;
 import com.linkedin.coral.common.ToRelConverter;
-import com.linkedin.coral.hive.hive2rel.DaliOperatorTable;
+import com.linkedin.coral.common.functions.CoralOperatorTable;
+import com.linkedin.coral.common.functions.Function;
+import com.linkedin.coral.common.functions.FunctionResolver;
 import com.linkedin.coral.hive.hive2rel.HiveConvertletTable;
 import com.linkedin.coral.hive.hive2rel.HiveRelBuilder;
 import com.linkedin.coral.hive.hive2rel.HiveSqlValidator;
-import com.linkedin.coral.hive.hive2rel.functions.HiveFunctionResolver;
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 import com.linkedin.coral.trino.trino2rel.parsetree.ParseTreeBuilder;
 import com.linkedin.coral.trino.trino2rel.parsetree.ParserVisitorContext;
@@ -47,8 +48,12 @@ import static com.linkedin.coral.trino.trino2rel.TrinoSqlConformance.*;
 public class TrinoToRelConverter extends ToRelConverter {
   private final ParseTreeBuilder parseTreeBuilder = new ParseTreeBuilder();
   private final ParserVisitorContext parserVisitorContext = new ParserVisitorContext();
-  private final HiveFunctionResolver functionResolver =
-      new HiveFunctionResolver(new StaticHiveFunctionRegistry(), new ConcurrentHashMap<>());
+  private final FunctionResolver functionResolver = new FunctionResolver(new StaticHiveFunctionRegistry()) {
+    @Override
+    public Collection<Function> resolve(String functionName) {
+      return super.resolve(functionName);
+    }
+  };
   private final
   // The validator must be reused
   SqlValidator sqlValidator = new HiveSqlValidator(getOperatorTable(), getCalciteCatalogReader(),
@@ -74,7 +79,7 @@ public class TrinoToRelConverter extends ToRelConverter {
 
   @Override
   protected SqlOperatorTable getOperatorTable() {
-    return ChainedSqlOperatorTable.of(SqlStdOperatorTable.instance(), new DaliOperatorTable(functionResolver));
+    return ChainedSqlOperatorTable.of(SqlStdOperatorTable.instance(), new CoralOperatorTable(functionResolver));
   }
 
   @Override
