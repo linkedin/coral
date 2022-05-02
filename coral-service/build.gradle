@@ -23,4 +23,6 @@ dependencies {
   implementation 'org.apache.hive:hive-exec:1.2.2:core'
   implementation 'org.apache.hadoop:hadoop-mapreduce-client-core:2.7.0'
   implementation 'org.springframework.boot:spring-boot-starter-web'
+  // Need to add this to avoid class not found issue while setting up local metastore
+  implementation 'com.esotericsoftware.kryo:kryo:2.22'
 }

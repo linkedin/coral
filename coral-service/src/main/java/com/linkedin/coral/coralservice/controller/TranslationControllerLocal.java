@@ -47,7 +47,7 @@ public class TranslationControllerLocal extends TranslationController {
     SessionState.start(conf);
     run(driver, createQuery);
 
-    return ResponseEntity.status(HttpStatus.OK).body("Creation successful");
+    return ResponseEntity.status(HttpStatus.OK).body("Creation successful\n");
   }
 
   /** Method to check that query starts with "CREATE DATABASE|TABLE|VIEW" */
