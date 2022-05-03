@@ -74,7 +74,7 @@ public class ViewToAvroSchemaConverter {
     Preconditions.checkNotNull(dbName);
     Preconditions.checkNotNull(tableOrViewName);
 
-    Schema avroSchema = inferAvroSchema(dbName, tableOrViewName, strictMode, false);
+    Schema avroSchema = inferAvroSchema(dbName, tableOrViewName, strictMode, false, false);
 
     return avroSchema;
   }
@@ -99,7 +99,34 @@ public class ViewToAvroSchemaConverter {
     Preconditions.checkNotNull(dbName);
     Preconditions.checkNotNull(tableOrViewName);
 
-    Schema avroSchema = inferAvroSchema(dbName, tableOrViewName, strictMode, forceLowercase);
+    Schema avroSchema = inferAvroSchema(dbName, tableOrViewName, strictMode, forceLowercase, false);
+
+    return avroSchema;
+  }
+
+  /**
+   * An API to generate the avro schema for a view
+   *
+   * @param dbName database name
+   * @param tableOrViewName table or view name
+   * @param strictMode if strictMode is set to True, we will not fall back to Hive schema if avro.schema.literal
+   *                        is missing in table properties. In addition, original namespace in base tables will be preserved.
+   *                   if strictMode is set to False, we will fall back to Hive schema if avro.schema.literal
+   *                        is missing in table properties. A new set of namespace will be generated for
+   *                        the resulting schema. The rule is as follows:
+   *                                1. Top level namespace is dbName.tableOrViewName
+   *                                2. Nested namespace is parentNamespace.parentFieldName
+   * @param forceLowercase if forceLowercase is set to True, we will return schema with lowercased field names
+   * @param useDaliRowSchema if useDaliRowSchema is set to True, we will check dali.row.schema in SchemaUtilities.getCasePreservedSchemaFromTblProperties
+   *
+   * @return avro schema for a given Dali view [dbName, viewName]
+   */
+  public Schema toAvroSchema(String dbName, String tableOrViewName, boolean strictMode, boolean forceLowercase,
+      boolean useDaliRowSchema) {
+    Preconditions.checkNotNull(dbName);
+    Preconditions.checkNotNull(tableOrViewName);
+
+    Schema avroSchema = inferAvroSchema(dbName, tableOrViewName, strictMode, forceLowercase, useDaliRowSchema);
 
     return avroSchema;
   }
@@ -115,7 +142,7 @@ public class ViewToAvroSchemaConverter {
     Preconditions.checkNotNull(dbName);
     Preconditions.checkNotNull(tableOrViewName);
 
-    Schema avroSchema = inferAvroSchema(dbName, tableOrViewName, false, false);
+    Schema avroSchema = inferAvroSchema(dbName, tableOrViewName, false, false, false);
 
     return avroSchema;
   }
@@ -131,7 +158,7 @@ public class ViewToAvroSchemaConverter {
     Preconditions.checkNotNull(sql);
 
     RelNode relNode = hiveToRelConverter.convertSql(sql);
-    return relToAvroSchemaConverter.convert(relNode, false, false);
+    return relToAvroSchemaConverter.convert(relNode, false, false, false);
   }
 
   @VisibleForTesting
@@ -139,7 +166,7 @@ public class ViewToAvroSchemaConverter {
     Preconditions.checkNotNull(sql);
 
     RelNode relNode = hiveToRelConverter.convertSql(sql);
-    return relToAvroSchemaConverter.convert(relNode, strictMode, forceLowercase);
+    return relToAvroSchemaConverter.convert(relNode, strictMode, forceLowercase, false);
   }
 
   /**
@@ -159,7 +186,7 @@ public class ViewToAvroSchemaConverter {
    * @return avro schema String for a given Dali view [dbName, viewName]
    */
   public String toAvroSchemaString(String dbName, String tableOrViewName, boolean strictMode, boolean isPrettyPrint) {
-    return toAvroSchema(dbName, tableOrViewName, strictMode).toString(isPrettyPrint);
+    return toAvroSchemaString(dbName, tableOrViewName, strictMode, false, false, isPrettyPrint);
   }
 
   /**
@@ -181,7 +208,30 @@ public class ViewToAvroSchemaConverter {
     return toAvroSchemaString(dbName, tableOrViewName, strictMode, false);
   }
 
-  private Schema inferAvroSchema(String dbName, String tableOrViewName, boolean strictMode, boolean forceLowercase) {
+  /**
+   * An API to generate the avro schema string for a view
+   *
+   * @param dbName database name
+   * @param tableOrViewName table or view name
+   * @param strictMode if strictMode is set to True, we will not fall back to Hive schema if avro.schema.literal
+   *                        is missing in table properties. In addition, original namespace in base tables will be preserved.
+   *                   if strictMode is set to False, we will fall back to Hive schema if avro.schema.literal
+   *                        is missing in table properties. A new set of namespace will be generated for
+   *                        the resulting schema. The rule is as follows:
+   *                                1. Top level namespace is dbName.tableOrViewName
+   *                                2. Nested namespace is parentNamespace.parentFieldName
+   * @param forceLowercase if forceLowercase is set to True, we will return schema with lowercased field names
+   * @param useDaliRowSchema if useDaliRowSchema is set to True, we will check dali.row.schema in SchemaUtilities.getCasePreservedSchemaFromTblProperties
+   *
+   * @return avro schema String for a given Dali view [dbName, viewName]
+   */
+  public String toAvroSchemaString(String dbName, String tableOrViewName, boolean strictMode, boolean forceLowercase,
+      boolean useDaliRowSchema, boolean isPrettyPrint) {
+    return toAvroSchema(dbName, tableOrViewName, strictMode, forceLowercase, useDaliRowSchema).toString(isPrettyPrint);
+  }
+
+  private Schema inferAvroSchema(String dbName, String tableOrViewName, boolean strictMode, boolean forceLowercase,
+      boolean useDaliRowSchema) {
     Preconditions.checkNotNull(dbName);
     Preconditions.checkNotNull(tableOrViewName);
 
@@ -192,10 +242,10 @@ public class ViewToAvroSchemaConverter {
 
     if (!tableOrView.getTableType().equals("VIRTUAL_VIEW")) {
       // It's base table, just retrieve the avro schema from Hive metastore
-      return SchemaUtilities.getAvroSchemaForTable(tableOrView, strictMode, forceLowercase);
+      return SchemaUtilities.getAvroSchemaForTable(tableOrView, strictMode, forceLowercase, true);
     } else {
       RelNode relNode = hiveToRelConverter.convertView(dbName, tableOrViewName);
-      Schema schema = relToAvroSchemaConverter.convert(relNode, strictMode, forceLowercase);
+      Schema schema = relToAvroSchemaConverter.convert(relNode, strictMode, forceLowercase, useDaliRowSchema);
       Schema avroSchema = schema;
 
       // In flex mode, we assign a new set of namespace

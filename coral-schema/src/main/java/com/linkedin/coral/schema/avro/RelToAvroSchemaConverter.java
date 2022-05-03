@@ -120,11 +120,12 @@ public class RelToAvroSchemaConverter {
    * @throws RuntimeException if cannot find table in Hive metastore
    * @throws RuntimeException if cannot determine avro schema for tableScan
    */
-  public Schema convert(@Nonnull RelNode relNode, boolean strictMode, boolean forceLowercase) {
+  public Schema convert(@Nonnull RelNode relNode, boolean strictMode, boolean forceLowercase,
+      boolean useDaliRowSchema) {
     Preconditions.checkNotNull(relNode, "RelNode to convert cannot be null");
 
     Map<RelNode, Schema> schemaMap = new HashMap<>();
-    relNode.accept(new SchemaRelShuttle(hiveMetastoreClient, schemaMap, strictMode, forceLowercase));
+    relNode.accept(new SchemaRelShuttle(hiveMetastoreClient, schemaMap, strictMode, forceLowercase, useDaliRowSchema));
     Schema viewSchema = schemaMap.get(relNode);
 
     return viewSchema;
@@ -140,7 +141,7 @@ public class RelToAvroSchemaConverter {
    * @throws RuntimeException if cannot determine avro schema for tableScan
    */
   public Schema convert(@Nonnull RelNode relNode, boolean strictMode) {
-    return convert(relNode, strictMode, false);
+    return convert(relNode, strictMode, false, false);
   }
 
   /**
@@ -169,21 +170,23 @@ public class RelToAvroSchemaConverter {
     private final Map<RelNode, Schema> schemaMap;
     private final boolean strictMode;
     private final boolean forceLowercase;
+    private final boolean useDaliRowSchema;
 
     private final HiveMetastoreClient hiveMetastoreClient;
 
     public SchemaRelShuttle(HiveMetastoreClient hiveMetastoreClient, Map<RelNode, Schema> schemaMap, boolean strictMode,
-        boolean forceLowercase) {
+        boolean forceLowercase, boolean useDaliRowSchema) {
       this.hiveMetastoreClient = hiveMetastoreClient;
       this.schemaMap = schemaMap;
       this.strictMode = strictMode;
       this.forceLowercase = forceLowercase;
+      this.useDaliRowSchema = useDaliRowSchema;
     }
 
     @Override
     public RelNode visit(TableScan tableScan) {
       RelNode relNode = super.visit(tableScan);
-      Schema tableScanSchema = getTableScanSchema(tableScan);
+      Schema tableScanSchema = getTableScanSchema(tableScan, useDaliRowSchema);
       schemaMap.put(tableScan, tableScanSchema);
 
       return relNode;
@@ -365,7 +368,7 @@ public class RelToAvroSchemaConverter {
      * @throws RuntimeException if cannot find table in Hive metastore
      * @throws RuntimeException if cannot determine avro schema for tableScan
      */
-    private Schema getTableScanSchema(TableScan tableScan) {
+    private Schema getTableScanSchema(TableScan tableScan, boolean useDaliRowSchema) {
       List<String> qualifiedName = tableScan.getTable().getQualifiedName();
       String dbName = qualifiedName.get(1);
       String tableName = qualifiedName.get(2);
@@ -374,7 +377,8 @@ public class RelToAvroSchemaConverter {
         throw new RuntimeException("Cannot find table " + dbName + "." + tableName + " in Hive metastore");
       }
 
-      Schema tableSchema = SchemaUtilities.getAvroSchemaForTable(baseTable, strictMode, forceLowercase);
+      Schema tableSchema =
+          SchemaUtilities.getAvroSchemaForTable(baseTable, strictMode, forceLowercase, useDaliRowSchema);
 
       return tableSchema;
     }

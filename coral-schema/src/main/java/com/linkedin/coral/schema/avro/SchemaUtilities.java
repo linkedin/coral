@@ -66,9 +66,9 @@ class SchemaUtilities {
    * @param table
    * @return case preserved avro schema for table including partition columns
    */
-  static Schema getCasePreservedSchemaForTable(@Nonnull final Table table) {
+  static Schema getCasePreservedSchemaForTable(@Nonnull final Table table, boolean useDaliRowSchema) {
     Preconditions.checkNotNull(table);
-    Schema avroSchema = getCasePreservedSchemaFromTblProperties(table);
+    Schema avroSchema = getCasePreservedSchemaFromTblProperties(table, useDaliRowSchema);
 
     if (avroSchema == null) {
       return null;
@@ -91,10 +91,11 @@ class SchemaUtilities {
    * @param forceLowercase if set to true, the schema returned is converted to lowercase
    * @return Avro schema for table including partition columns
    */
-  static Schema getAvroSchemaForTable(@Nonnull final Table table, boolean strictMode, boolean forceLowercase) {
+  static Schema getAvroSchemaForTable(@Nonnull final Table table, boolean strictMode, boolean forceLowercase,
+      boolean useDaliRowSchema) {
     Preconditions.checkNotNull(table);
     Schema resultTableSchema;
-    Schema originalTableSchema = SchemaUtilities.getCasePreservedSchemaForTable(table);
+    Schema originalTableSchema = SchemaUtilities.getCasePreservedSchemaForTable(table, useDaliRowSchema);
     if (originalTableSchema == null) {
       if (!strictMode) {
         LOG.warn("Cannot determine Avro schema for table " + table.getDbName() + "." + table.getTableName() + ". "
@@ -152,14 +153,14 @@ class SchemaUtilities {
    * @return Avro schema stored under 'avro.schema.literal', under 'dali.row.schema',
    * or null if none of the above are present
    */
-  static Schema getCasePreservedSchemaFromTblProperties(@Nonnull final Table table) {
+  static Schema getCasePreservedSchemaFromTblProperties(@Nonnull final Table table, boolean useDaliRowSchema) {
     Preconditions.checkNotNull(table);
 
     // First try avro.schema.literal
     String schemaStr = readSchemaFromSchemaLiteral(table);
 
     // Then, try dali.row.schema
-    if (Strings.isNullOrEmpty(schemaStr)) {
+    if (useDaliRowSchema && Strings.isNullOrEmpty(schemaStr)) {
       schemaStr = table.getParameters().get(DALI_ROW_SCHEMA);
       if (!Strings.isNullOrEmpty(schemaStr)) {
         schemaStr = schemaStr.replaceAll("\n", "\\\\n");
