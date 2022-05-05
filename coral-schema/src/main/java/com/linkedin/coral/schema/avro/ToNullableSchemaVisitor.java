@@ -16,7 +16,7 @@ import org.codehaus.jackson.JsonNode;
 
 
 /**
- * Converts all the fields to be nullable for a given schema
+ * Converts all the fields (including nested fields) to be nullable for a given schema
  */
 public class ToNullableSchemaVisitor extends AvroSchemaVisitor<Schema> {
   public static Schema visit(Schema schema) {
