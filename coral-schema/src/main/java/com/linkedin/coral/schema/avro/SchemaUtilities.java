@@ -157,19 +157,25 @@ class SchemaUtilities {
 
     // First try avro.schema.literal
     String schemaStr = readSchemaFromSchemaLiteral(table);
+    Schema schema = null;
 
     // Then, try dali.row.schema
     if (Strings.isNullOrEmpty(schemaStr)) {
       schemaStr = table.getParameters().get(DALI_ROW_SCHEMA);
       if (!Strings.isNullOrEmpty(schemaStr)) {
         schemaStr = schemaStr.replaceAll("\n", "\\\\n");
+        // Given schemas stored in `dali.row.schema` are all non-nullable, we need to convert them to be nullable to be compatible with Spark
+        schema = ToNullableSchemaVisitor.visit(new Schema.Parser().parse(schemaStr));
+        schemaStr = schema.toString();
       }
+    } else {
+      schema = new Schema.Parser().parse(schemaStr);
     }
 
     if (!Strings.isNullOrEmpty(schemaStr)) {
       LOG.info("Schema found for table {}", getCompleteName(table));
       LOG.debug("Schema is {}", schemaStr);
-      return new Schema.Parser().parse(schemaStr);
+      return schema;
     } else {
       LOG.warn("Cannot determine avro schema for table {}", getCompleteName(table));
       return null;
@@ -570,7 +576,7 @@ class SchemaUtilities {
         + leftSchema.toString(true) + ". " + "Right schema is: " + rightSchema.toString(true));
   }
 
-  private static Schema makeNonNullable(Schema schema) {
+  static Schema makeNonNullable(Schema schema) {
     if (isNullableType(schema)) {
       return getOtherTypeFromNullableType(schema);
     } else {
