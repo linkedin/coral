@@ -241,6 +241,13 @@ public class Calcite2TrinoUDFConverter {
         }
       }
 
+      if (operatorName.equalsIgnoreCase("concat")) {
+        Optional<RexNode> modifiedCall = visitConcat(call);
+        if (modifiedCall.isPresent()) {
+          return modifiedCall.get();
+        }
+      }
+
       final UDFTransformer transformer = CalciteTrinoUDFMap.getUDFTransformer(operatorName, call.operands.size());
       if (transformer != null && shouldTransformOperator(operatorName)) {
         return adjustReturnTypeWithCast(rexBuilder,
@@ -253,6 +260,24 @@ public class Calcite2TrinoUDFConverter {
 
       RexCall modifiedCall = adjustInconsistentTypesToEqualityOperator(call);
       return adjustReturnTypeWithCast(rexBuilder, super.visitCall(modifiedCall));
+    }
+
+    private Optional<RexNode> visitConcat(RexCall call) {
+      // Hive supports operations like CONCAT(date, varchar) while Trino only supports CONCAT(varchar, varchar)
+      // So we need to cast the unsupported types to varchar
+      final SqlOperator op = call.getOperator();
+      List<RexNode> convertedOperands = visitList(call.getOperands(), (boolean[]) null);
+      List<RexNode> castOperands = new ArrayList<>();
+
+      for (RexNode inputOperand : convertedOperands) {
+        if (inputOperand.getType().getSqlTypeName() != VARCHAR && inputOperand.getType().getSqlTypeName() != CHAR) {
+          final RexNode castOperand = rexBuilder.makeCast(typeFactory.createSqlType(VARCHAR), inputOperand);
+          castOperands.add(castOperand);
+        } else {
+          castOperands.add(inputOperand);
+        }
+      }
+      return Optional.of(rexBuilder.makeCall(op, castOperands));
     }
 
     private RexNode visitUnregisteredUDF(RexCall call) {

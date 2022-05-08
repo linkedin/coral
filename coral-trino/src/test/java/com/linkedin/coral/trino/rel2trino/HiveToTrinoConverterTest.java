@@ -709,4 +709,16 @@ public class HiveToTrinoConverterTest {
     String expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
   }
+
+  @Test
+  public void testConcatFunction() {
+    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+
+    RelNode relNode = hiveToRelConverter.convertSql("select concat(current_date(), '|', current_date(), '-00')");
+    String targetSql =
+        "SELECT \"concat\"(CAST(CURRENT_DATE AS VARCHAR(65535)), '|', CAST(CURRENT_DATE AS VARCHAR(65535)), '-00')\n"
+            + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
+    String expandedSql = relToTrinoConverter.convert(relNode);
+    assertEquals(expandedSql, targetSql);
+  }
 }

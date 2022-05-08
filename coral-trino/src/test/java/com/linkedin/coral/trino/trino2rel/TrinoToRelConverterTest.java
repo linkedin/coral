@@ -105,7 +105,7 @@ public class TrinoToRelConverterTest {
             "SELECT EXTRACT(DAY FROM \"x\"), EXTRACT(DOW FROM \"x\")\n" + "FROM \"default\".\"foo\""))
         .add(ImmutableList.of("select 1 + 13 || '15' from foo",
             "LogicalProject(EXPR$0=[concat(+(1, 13), '15')])\n" + "  LogicalTableScan(table=[[hive, default, foo]])\n",
-            "SELECT \"concat\"(1 + 13, '15')\n" + "FROM \"default\".\"foo\""))
+            "SELECT \"concat\"(CAST(1 + 13 AS VARCHAR(65535)), '15')\n" + "FROM \"default\".\"foo\""))
         .add(ImmutableList.of("select x is distinct from y from foo where a is not distinct from b",
             "LogicalProject(EXPR$0=[AND(OR(IS NOT NULL($3), IS NOT NULL($4)), IS NOT TRUE(=($3, $4)))])\n"
                 + "  LogicalFilter(condition=[NOT(AND(OR(IS NOT NULL($1), IS NOT NULL($2)), IS NOT TRUE(=($1, $2))))])\n"
