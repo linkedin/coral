@@ -51,7 +51,7 @@ public class TrinoToRelConverter extends ToRelConverter {
   private final FunctionResolver functionResolver = new FunctionResolver(new StaticHiveFunctionRegistry()) {
     @Override
     public Collection<Function> resolve(String functionName) {
-      return super.resolve(functionName);
+      return registry.lookup(functionName);
     }
   };
   private final

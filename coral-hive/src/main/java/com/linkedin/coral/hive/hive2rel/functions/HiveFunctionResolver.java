@@ -144,7 +144,7 @@ public class HiveFunctionResolver extends FunctionResolver {
    */
   @Override
   public Collection<Function> resolve(String functionName) {
-    Collection<Function> staticLookup = super.resolve(functionName);
+    Collection<Function> staticLookup = registry.lookup(functionName);
     if (!staticLookup.isEmpty()) {
       return staticLookup;
     } else {

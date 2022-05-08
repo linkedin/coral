@@ -9,7 +9,7 @@ import java.util.Collection;
 
 
 /**
- * Class to resolve hive function names in SQL to Function.
+ * Class to resolve function names in SQL to Function.
  */
 public abstract class FunctionResolver {
 
@@ -24,7 +24,5 @@ public abstract class FunctionResolver {
    * @param functionName function name to resolve
    * @return list of matching Functions or empty list if there is no match
    */
-  public Collection<Function> resolve(String functionName) {
-    return registry.lookup(functionName);
-  }
+  public abstract Collection<Function> resolve(String functionName);
 }
