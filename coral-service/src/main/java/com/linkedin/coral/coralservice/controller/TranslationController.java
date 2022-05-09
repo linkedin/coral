@@ -45,7 +45,7 @@ public class TranslationController implements ApplicationListener<ContextRefresh
           .body("Please choose different languages to translate between.");
     }
 
-    String translatedSql = "Translation from" + fromLanguage + " to " + toLanguage + " not currently supported.";
+    String translatedSql = null;
 
     // TODO: add more translations once n-to-one-to-n is completed
     // From Trino
@@ -67,8 +67,14 @@ public class TranslationController implements ApplicationListener<ContextRefresh
       }
     }
 
-    String successMessage = "Original query in " + fromLanguage + ": " + query + "\n" + "Translated to " + toLanguage
-        + ": " + translatedSql;
-    return ResponseEntity.status(HttpStatus.OK).body(successMessage);
+    String message;
+    if (translatedSql == null) {
+      message = "Translation from " + fromLanguage + " to " + toLanguage + " is not currently supported."
+          + " Coral-Service only supports translation from Hive to Trino/Spark, or translation from Trino to Spark.\n";
+    } else {
+      message = "Original query in " + fromLanguage + ": " + query + "\n" + "Translated to " + toLanguage
+          + ": " + translatedSql + "\n";
+    }
+    return ResponseEntity.status(HttpStatus.OK).body(message);
   }
 }
