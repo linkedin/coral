@@ -166,15 +166,14 @@ class SchemaUtilities {
         schemaStr = schemaStr.replaceAll("\n", "\\\\n");
         // Given schemas stored in `dali.row.schema` are all non-nullable, we need to convert them to be nullable to be compatible with Spark
         schema = ToNullableSchemaVisitor.visit(new Schema.Parser().parse(schemaStr));
-        schemaStr = schema.toString();
       }
     } else {
       schema = new Schema.Parser().parse(schemaStr);
     }
 
-    if (!Strings.isNullOrEmpty(schemaStr)) {
+    if (schema != null) {
       LOG.info("Schema found for table {}", getCompleteName(table));
-      LOG.debug("Schema is {}", schemaStr);
+      LOG.debug("Schema is {}", schema.toString(true));
       return schema;
     } else {
       LOG.warn("Cannot determine avro schema for table {}", getCompleteName(table));
