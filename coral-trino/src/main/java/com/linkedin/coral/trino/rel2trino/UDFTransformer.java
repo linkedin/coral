@@ -144,9 +144,6 @@ public class UDFTransformer {
         writer.endFunCall(frame);
       }
     });
-    OP_MAP.put("hive_pattern_to_trino",
-        new SqlUserDefinedFunction(new SqlIdentifier("hive_pattern_to_trino", SqlParserPos.ZERO),
-            FunctionReturnTypes.STRING, null, OperandTypes.STRING, null, null));
   }
 
   public static final String OPERATOR = "op";

@@ -709,4 +709,15 @@ public class HiveToTrinoConverterTest {
     String expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
   }
+
+  @Test
+  public void testRegexpExtractFunction() {
+    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+
+    RelNode relNode = hiveToRelConverter.convertSql("SELECT regexp_extract('1abc 2b 14m', '(\\d+)([a-z]+)', 2)");
+    String targetSql =
+        "SELECT \"regexp_extract\"('1abc 2b 14m', '(\\d+)([a-z]+)', 2)\n" + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
+    String expandedSql = relToTrinoConverter.convert(relNode);
+    assertEquals(expandedSql, targetSql);
+  }
 }
