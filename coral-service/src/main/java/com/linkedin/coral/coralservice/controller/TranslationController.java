@@ -72,8 +72,8 @@ public class TranslationController implements ApplicationListener<ContextRefresh
       message = "Translation from " + fromLanguage + " to " + toLanguage + " is not currently supported."
           + " Coral-Service only supports translation from Hive to Trino/Spark, or translation from Trino to Spark.\n";
     } else {
-      message = "Original query in " + fromLanguage + ": " + query + "\n" + "Translated to " + toLanguage
-          + ": " + translatedSql + "\n";
+      message = "Original query in " + fromLanguage + ": " + query + "\n" + "Translated to " + toLanguage + ": "
+          + translatedSql + "\n";
     }
     return ResponseEntity.status(HttpStatus.OK).body(message);
   }
