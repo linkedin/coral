@@ -6,6 +6,12 @@
     "name" : "Id",
     "type" : [ "null", "int" ]
   }, {
+    "name" : "Nullable_Union_Col",
+    "type" : [ "null", "int", "string" ]
+  }, {
+    "name" : "Non_Nullable_Union_Col",
+    "type" : [ "null", "int", "string" ]
+  }, {
     "name" : "Array_Col",
     "type" : [ "null", {
       "type" : "array",

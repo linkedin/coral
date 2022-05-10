@@ -44,7 +44,7 @@ import com.linkedin.coral.com.google.common.base.Strings;
 import com.linkedin.coral.schema.avro.exceptions.SchemaNotFoundException;
 
 import static com.linkedin.coral.schema.avro.AvroSerdeUtils.*;
-import static org.apache.avro.Schema.Type.NULL;
+import static org.apache.avro.Schema.Type.*;
 
 
 class SchemaUtilities {
@@ -586,6 +586,16 @@ class SchemaUtilities {
   static Schema makeNullable(Schema schema) {
     if (schema.getType() == NULL || isNullableType(schema)) {
       return schema;
+    } else if (schema.getType() == UNION) {
+      for (Schema innerSchema : schema.getTypes()) {
+        if (innerSchema.getType() == NULL) {
+          return schema;
+        }
+      }
+      final List<Schema> types = new ArrayList<>();
+      types.add(Schema.create(NULL));
+      types.addAll(schema.getTypes());
+      return Schema.createUnion(types);
     } else {
       return Schema.createUnion(Arrays.asList(Schema.create(Schema.Type.NULL), schema));
     }
