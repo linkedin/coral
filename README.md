@@ -30,7 +30,7 @@ and implementing query rewrite algorithms for data governance and query optimiza
 - Coral-Pig: Converts view logical plan to Pig-latin.
 - Coral-Schema: Derives Avro schema of view using view logical plan and input Avro schemas of base tables.
 - Coral-Spark-Plan: Converts Spark plan strings to equivalent logical plan (in progress).
-- Coral-Service: Service that exposes REST APIs that allow users to interact with Coral (see below [Coral-as-a-Service](##Coral-as-a-Service) for more details).
+- Coral-Service: Service that exposes REST APIs that allow users to interact with Coral (see [Coral-as-a-Service](##Coral-as-a-Service) for more details).
 
 ## How to Build
 
@@ -67,30 +67,30 @@ Please see the [Contribution Agreement](CONTRIBUTING.md).
 
 #### /translate
 A **GET** API which takes the following parameters and returns the translated query:
-- `query`: query you want to have translated
-- `fromLanguage`: input SQL language of query
-- `toLanguage`: target SQL language you want query translated to
+- `query`: SQL query to translate between two dialects
+- `fromLanguage`: Input dialect (e.g., spark, trino, hive -- see below for supported inputs)
+- `toLanguage`: Output dialect (e.g., spark, trino, hive -- see below for supported outputs)
 
 #### /create
 A **POST** API which takes a SQL query to create a database/table/view in the local metastore
-(note: this endpoint is only available if users choose to use Coral Service with local metastore).
+(note: this endpoint is only available with Coral Service in local metastore mode).
 
-### Instructions to Use with Examples
+### Instructions to use with examples
 1. Clone [Coral repo](https://github.com/linkedin/coral)
-```  
+```bash  
 git clone https://github.com/linkedin/coral.git  
 ```  
 2. From the root directory of Coral, access the coral-service module
-```  
+```bash  
 cd coral-service  
 ```  
 3. Build
-```  
+```bash  
 ../gradlew clean build  
 ```  
-To run Coral Service using the **local metastore**:
+#### To run Coral Service using the **local metastore**:
 4. Run
-```  
+```bash  
 ../gradlew bootRun --args='--spring.profiles.active=localMetastore'  
 ```  
 Example workflow using local metastore:
@@ -100,28 +100,31 @@ Example workflow using local metastore:
 5. Create a database called `db1` in local metastore using the /create endpoint
 ```
 createQuery (non URL encoded): CREATE DATABASE IF NOT EXISTS db1
-
-$ curl -X POST "http://localhost:8080/create?createQuery=CREATE%20DATABASE%20IF%20NOT%20EXISTS%20db1"
+```
+```bash
+curl -X POST "http://localhost:8080/create?createQuery=CREATE%20DATABASE%20IF%20NOT%20EXISTS%20db1"
 Creation successful
 ```
 6. Create a table called `airport` within `db1` in local metastore using the /create endpoint
 ```
 createQuery (non URL encoded): CREATE TABLE IF NOT EXISTS db1.airport(name string, country string, area_code int, code string, datepartition string)
-
-$ curl -X POST "http://localhost:8080/create?createQuery=CREATE%20TABLE%20IF%20NOT%20EXISTS%20db1.airport%28name%20string%2C%20country%20string%2C%20area_code%20int%2C%20code%20string%2C%20datepartition%20string%29"
+```
+```bash
+curl -X POST "http://localhost:8080/create?createQuery=CREATE%20TABLE%20IF%20NOT%20EXISTS%20db1.airport%28name%20string%2C%20country%20string%2C%20area_code%20int%2C%20code%20string%2C%20datepartition%20string%29"
 Creation successful
 ```
 
 7. Translate a query on `db1.airport` in local metastore using the /translate endpoint
 ```
 query (non URL encoded): select * from db1.airport
-
-$ curl "http://localhost:8080/translate?query=select%20%2A%20from%20db1.airport&fromLanguage=hive&toLanguage=trino"
+```
+```bash
+curl "http://localhost:8080/translate?query=select%20%2A%20from%20db1.airport&fromLanguage=hive&toLanguage=trino"
 Original query in hive: select * from db1.airport
 Translated to trino: SELECT "name", "country", "area_code", "code", "datepartition"
 ```
 
-To run Coral Service using the **remote metastore**:
+#### To run Coral Service using the **remote metastore**:
 4. Add your kerberos client keytab file to `coral-service/src/main/resources`
 5. Appropriately replace all instances of `SET_ME` in `coral-service/src/main/resources/hive.properties`
 6. Run
@@ -134,4 +137,4 @@ To run Coral Service using the **remote metastore**:
 1. Hive to Trino
 2. Hive to Spark
 3. Trino to Spark  
-   Note: During Trino to Spark translations, views referenced in queries are treated like they are defined in HiveQL and hence cannot be used when translating a view from Trino. Currently, only referencing base tables are supported in Trino queries. This translation path is currently in a POC stage and may need further improvements.
+   Note: During Trino to Spark translations, views referenced in queries are considered to be defined in HiveQL and hence cannot be used when translating a view from Trino. Currently, only referencing base tables is supported in Trino queries. This translation path is currently a POC and may need further improvements.
