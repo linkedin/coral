@@ -99,29 +99,30 @@ Example workflow using local metastore:
 
 5. Create a database called `db1` in local metastore using the /create endpoint
 ```
-createQuery (non URL encoded): CREATE DATABASE IF NOT EXISTS db1
+statement (non URL encoded): CREATE DATABASE IF NOT EXISTS db1
 ```
 ```bash
-curl -X POST "http://localhost:8080/create?createQuery=CREATE%20DATABASE%20IF%20NOT%20EXISTS%20db1"
+curl -X POST "http://localhost:8080/create?statement=CREATE%20DATABASE%20IF%20NOT%20EXISTS%20db1"
 Creation successful
 ```
 6. Create a table called `airport` within `db1` in local metastore using the /create endpoint
 ```
-createQuery (non URL encoded): CREATE TABLE IF NOT EXISTS db1.airport(name string, country string, area_code int, code string, datepartition string)
+statement (non URL encoded): CREATE TABLE IF NOT EXISTS db1.airport(name string, country string, area_code int, code string, datepartition string)
 ```
 ```bash
-curl -X POST "http://localhost:8080/create?createQuery=CREATE%20TABLE%20IF%20NOT%20EXISTS%20db1.airport%28name%20string%2C%20country%20string%2C%20area_code%20int%2C%20code%20string%2C%20datepartition%20string%29"
+curl -X POST "http://localhost:8080/create?statement=CREATE%20TABLE%20IF%20NOT%20EXISTS%20db1.airport%28name%20string%2C%20country%20string%2C%20area_code%20int%2C%20code%20string%2C%20datepartition%20string%29"
 Creation successful
 ```
 
 7. Translate a query on `db1.airport` in local metastore using the /translate endpoint
 ```
-query (non URL encoded): select * from db1.airport
+query (non URL encoded): SELECT * FROM db1.airport
 ```
 ```bash
-curl "http://localhost:8080/translate?query=select%20%2A%20from%20db1.airport&fromLanguage=hive&toLanguage=trino"
-Original query in hive: select * from db1.airport
+curl "http://localhost:8080/translate?query=SELECT%20%2A%20FROM%20db1.airport&fromLanguage=hive&toLanguage=trino"
+Original query in hive: SELECT * FROM db1.airport
 Translated to trino: SELECT "name", "country", "area_code", "code", "datepartition"
+FROM "db1"."airport"
 ```
 
 #### To run Coral Service using the **remote metastore**:
