@@ -74,5 +74,9 @@ subprojects {
   }
 
   apply from: "${rootDir}/gradle/dependencies.gradle"
-  apply from: "${rootDir}/gradle/java-publication.gradle"
+
+  // We exclude `coral-service` given it's a SpringBoot submodule and not compatible with `java-publication.gradle`
+  if (it.name != 'coral-service') {
+    apply from: "${rootDir}/gradle/java-publication.gradle"
+  }
 }

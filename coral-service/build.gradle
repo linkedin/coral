@@ -1,0 +1,28 @@
+plugins {
+  id 'org.springframework.boot' version '2.1.2.RELEASE'
+  id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+  id 'java'
+}
+
+repositories {
+  maven { url "http://conjars.org/repo" }
+}
+
+// Exclusions required to fix issue of multiple bindings on the class path
+configurations.all {
+  exclude module: 'slf4j-log4j12'
+  exclude group: 'javax.servlet'
+}
+
+dependencies {
+  implementation project(':coral-common')
+  implementation project(':coral-hive')
+  implementation project(':coral-trino')
+  implementation project(':coral-spark')
+
+  implementation 'org.apache.hive:hive-exec:1.2.2:core'
+  implementation 'org.apache.hadoop:hadoop-mapreduce-client-core:2.7.0'
+  implementation 'org.springframework.boot:spring-boot-starter-web'
+  // Need to add this to avoid class not found issue while setting up local metastore
+  implementation 'com.esotericsoftware.kryo:kryo:2.22'
+}
