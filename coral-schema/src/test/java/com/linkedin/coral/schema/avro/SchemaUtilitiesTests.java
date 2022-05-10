@@ -80,4 +80,12 @@ public class SchemaUtilitiesTests {
     Assert.assertEquals(outputSchema.toString(true),
         TestUtils.loadSchema("testForceLowercaseSchemaTrue-expected.avsc"));
   }
+
+  @Test
+  public void testToNullableSchema() {
+    Schema inputSchema = new Schema.Parser().parse(TestUtils.loadSchema("base-complex-non-nullable.avsc"));
+    Schema outputSchema = ToNullableSchemaVisitor.visit(inputSchema);
+
+    Assert.assertEquals(outputSchema.toString(true), TestUtils.loadSchema("testToNullableSchema-expected.avsc"));
+  }
 }

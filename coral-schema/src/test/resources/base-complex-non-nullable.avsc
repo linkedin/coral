@@ -1,0 +1,79 @@
+{
+  "type" : "record",
+  "name" : "basecomplexnonnullable",
+  "namespace" : "coral.schema.avro.base.complex.nonnullable",
+  "fields" : [ {
+    "name" : "Id",
+    "type" : "int"
+  }, {
+    "name" : "Nullable_Union_Col",
+    "type" : [ "null", "int", "string" ]
+  }, {
+    "name" : "Non_Nullable_Union_Col",
+    "type" : [ "int", "string" ]
+  }, {
+    "name" : "Array_Col",
+    "type" : {
+      "type" : "array",
+      "items" : "string"
+    }
+  }, {
+    "name" : "Map_Col",
+    "type" : {
+      "type" : "map",
+      "values" : "string"
+    }
+  }, {
+    "name" : "Struct_Col",
+    "type" : {
+      "type" : "record",
+      "name" : "Struct_col",
+      "namespace" : "coral.schema.avro.base.complex.nonnullable.basecomplexnonnullable",
+      "fields" : [ {
+        "name" : "Bool_Field",
+        "type" : "boolean"
+      }, {
+        "name" : "Int_Field",
+        "type" : "int"
+      }, {
+        "name" : "Bigint_Field",
+        "type" : "long"
+      }, {
+        "name" : "Float_Field",
+        "type" : "float"
+      }, {
+        "name" : "Double_Field",
+        "type" : "double"
+      }, {
+        "name" : "Date_String_Field",
+        "type" : "string"
+      }, {
+        "name" : "String_Field",
+        "type" : "string"
+      }, {
+        "name" : "Array_Col",
+        "type" : {
+          "type" : "array",
+          "items" : {
+            "type" : "record",
+            "name" : "Struct_col",
+            "namespace" : "coral.schema.avro.base.complex.nonnullable.basecomplexnonnullable.basecomplexnonnullable",
+            "fields" : [ {
+              "name" : "key",
+              "type" : "string"
+            }, {
+              "name" : "value",
+              "type" : "string"
+            } ]
+          }
+        }
+      }, {
+        "name" : "Map_Col",
+        "type" : {
+          "type" : "map",
+          "values" : "string"
+        }
+      } ]
+    }
+  } ]
+}

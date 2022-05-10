@@ -1,0 +1,79 @@
+{
+  "type" : "record",
+  "name" : "basecomplexnonnullable",
+  "namespace" : "coral.schema.avro.base.complex.nonnullable",
+  "fields" : [ {
+    "name" : "Id",
+    "type" : [ "null", "int" ]
+  }, {
+    "name" : "Nullable_Union_Col",
+    "type" : [ "null", "int", "string" ]
+  }, {
+    "name" : "Non_Nullable_Union_Col",
+    "type" : [ "null", "int", "string" ]
+  }, {
+    "name" : "Array_Col",
+    "type" : [ "null", {
+      "type" : "array",
+      "items" : "string"
+    } ]
+  }, {
+    "name" : "Map_Col",
+    "type" : [ "null", {
+      "type" : "map",
+      "values" : "string"
+    } ]
+  }, {
+    "name" : "Struct_Col",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "Struct_col",
+      "namespace" : "coral.schema.avro.base.complex.nonnullable.basecomplexnonnullable",
+      "fields" : [ {
+        "name" : "Bool_Field",
+        "type" : [ "null", "boolean" ]
+      }, {
+        "name" : "Int_Field",
+        "type" : [ "null", "int" ]
+      }, {
+        "name" : "Bigint_Field",
+        "type" : [ "null", "long" ]
+      }, {
+        "name" : "Float_Field",
+        "type" : [ "null", "float" ]
+      }, {
+        "name" : "Double_Field",
+        "type" : [ "null", "double" ]
+      }, {
+        "name" : "Date_String_Field",
+        "type" : [ "null", "string" ]
+      }, {
+        "name" : "String_Field",
+        "type" : [ "null", "string" ]
+      }, {
+        "name" : "Array_Col",
+        "type" : [ "null", {
+          "type" : "array",
+          "items" : [ "null", {
+            "type" : "record",
+            "name" : "Struct_col",
+            "namespace" : "coral.schema.avro.base.complex.nonnullable.basecomplexnonnullable.basecomplexnonnullable",
+            "fields" : [ {
+              "name" : "key",
+              "type" : [ "null", "string" ]
+            }, {
+              "name" : "value",
+              "type" : [ "null", "string" ]
+            } ]
+          } ]
+        } ]
+      }, {
+        "name" : "Map_Col",
+        "type" : [ "null", {
+          "type" : "map",
+          "values" : "string"
+        } ]
+      } ]
+    } ]
+  } ]
+}

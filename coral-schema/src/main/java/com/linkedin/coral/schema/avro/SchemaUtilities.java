@@ -44,7 +44,7 @@ import com.linkedin.coral.com.google.common.base.Strings;
 import com.linkedin.coral.schema.avro.exceptions.SchemaNotFoundException;
 
 import static com.linkedin.coral.schema.avro.AvroSerdeUtils.*;
-import static org.apache.avro.Schema.Type.NULL;
+import static org.apache.avro.Schema.Type.*;
 
 
 class SchemaUtilities {
@@ -157,19 +157,24 @@ class SchemaUtilities {
 
     // First try avro.schema.literal
     String schemaStr = readSchemaFromSchemaLiteral(table);
+    Schema schema = null;
 
     // Then, try dali.row.schema
     if (Strings.isNullOrEmpty(schemaStr)) {
       schemaStr = table.getParameters().get(DALI_ROW_SCHEMA);
       if (!Strings.isNullOrEmpty(schemaStr)) {
         schemaStr = schemaStr.replaceAll("\n", "\\\\n");
+        // Given schemas stored in `dali.row.schema` are all non-nullable, we need to convert them to be nullable to be compatible with Spark
+        schema = ToNullableSchemaVisitor.visit(new Schema.Parser().parse(schemaStr));
       }
+    } else {
+      schema = new Schema.Parser().parse(schemaStr);
     }
 
-    if (!Strings.isNullOrEmpty(schemaStr)) {
+    if (schema != null) {
       LOG.info("Schema found for table {}", getCompleteName(table));
-      LOG.debug("Schema is {}", schemaStr);
-      return new Schema.Parser().parse(schemaStr);
+      LOG.debug("Schema is {}", schema.toString(true));
+      return schema;
     } else {
       LOG.warn("Cannot determine avro schema for table {}", getCompleteName(table));
       return null;
@@ -570,7 +575,7 @@ class SchemaUtilities {
         + leftSchema.toString(true) + ". " + "Right schema is: " + rightSchema.toString(true));
   }
 
-  private static Schema makeNonNullable(Schema schema) {
+  static Schema makeNonNullable(Schema schema) {
     if (isNullableType(schema)) {
       return getOtherTypeFromNullableType(schema);
     } else {
@@ -581,6 +586,16 @@ class SchemaUtilities {
   static Schema makeNullable(Schema schema) {
     if (schema.getType() == NULL || isNullableType(schema)) {
       return schema;
+    } else if (schema.getType() == UNION) {
+      for (Schema innerSchema : schema.getTypes()) {
+        if (innerSchema.getType() == NULL) {
+          return schema;
+        }
+      }
+      final List<Schema> types = new ArrayList<>();
+      types.add(Schema.create(NULL));
+      types.addAll(schema.getTypes());
+      return Schema.createUnion(types);
     } else {
       return Schema.createUnion(Arrays.asList(Schema.create(Schema.Type.NULL), schema));
     }
