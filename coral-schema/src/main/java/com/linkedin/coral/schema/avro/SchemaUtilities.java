@@ -684,7 +684,7 @@ class SchemaUtilities {
         case MAP:
         case UNION:
         case ARRAY:
-          Schema newFieldSchema = setupNestedNamespace(field.schema(), nestedNamespace);
+          Schema newFieldSchema = setupNestedNamespace(field.schema(), nestedNamespace, field.defaultValue());
           Schema.Field newField =
               new Schema.Field(field.name(), newFieldSchema, field.doc(), field.defaultValue(), field.order());
           appendField(newField, fieldAssembler);
@@ -706,7 +706,8 @@ class SchemaUtilities {
     return fieldAssembler.endRecord();
   }
 
-  private static Schema setupNestedNamespace(@Nonnull Schema schema, @Nonnull String namespace) {
+  private static Schema setupNestedNamespace(@Nonnull Schema schema, @Nonnull String namespace,
+      @Nullable JsonNode defaultValue) {
     Preconditions.checkNotNull(schema);
     Preconditions.checkNotNull(namespace);
 
@@ -724,41 +725,37 @@ class SchemaUtilities {
         return schema;
       case MAP:
         Schema valueSchema = schema.getValueType();
-        Schema valueSchemaWithNestedNamespace = setupNestedNamespace(valueSchema, namespace);
-        Schema mapSchema = Schema.createMap(valueSchemaWithNestedNamespace);
-
-        return mapSchema;
+        Schema valueSchemaWithNestedNamespace = setupNestedNamespace(valueSchema, namespace, defaultValue);
+        return Schema.createMap(valueSchemaWithNestedNamespace);
       case ARRAY:
         Schema elementSchema = schema.getElementType();
-        Schema elementSchemaWithNestedNamespace = setupNestedNamespace(elementSchema, namespace);
-        Schema arraySchema = Schema.createArray(elementSchemaWithNestedNamespace);
-
-        return arraySchema;
+        Schema elementSchemaWithNestedNamespace = setupNestedNamespace(elementSchema, namespace, defaultValue);
+        return Schema.createArray(elementSchemaWithNestedNamespace);
       case ENUM:
-        Schema enumSchemaWithNestedNamespace =
-            Schema.createEnum(schema.getName(), schema.getDoc(), namespace, schema.getEnumSymbols());
-
-        return enumSchemaWithNestedNamespace;
+        return Schema.createEnum(schema.getName(), schema.getDoc(), namespace, schema.getEnumSymbols());
       case RECORD:
-        Schema recordSchema = setupNestedNamespaceForRecord(schema, namespace);
-        return recordSchema;
+        return setupNestedNamespaceForRecord(schema, namespace);
       case UNION:
         List<Schema> types = new ArrayList<>();
         if (isNullableType(schema)) {
           Schema otherType = getOtherTypeFromNullableType(schema);
-          Schema otherTypeWithNestedNamespace = setupNestedNamespace(otherType, namespace);
+          Schema otherTypeWithNestedNamespace = setupNestedNamespace(otherType, namespace, defaultValue);
           Schema nullSchema = Schema.create(Schema.Type.NULL);
-          types.add(nullSchema);
-          types.add(otherTypeWithNestedNamespace);
+
+          if (defaultValue == null || defaultValue.isNull()) {
+            types.add(nullSchema);
+            types.add(otherTypeWithNestedNamespace);
+          } else {
+            types.add(otherTypeWithNestedNamespace);
+            types.add(nullSchema);
+          }
         } else {
           for (Schema type : schema.getTypes()) {
-            Schema typeWithNestNamespace = setupNestedNamespace(type, namespace);
+            Schema typeWithNestNamespace = setupNestedNamespace(type, namespace, defaultValue);
             types.add(typeWithNestNamespace);
           }
         }
-        Schema unionSchema = Schema.createUnion(types);
-
-        return unionSchema;
+        return Schema.createUnion(types);
       default:
         throw new IllegalArgumentException("Unsupported Schema type: " + schema.getType().toString());
     }

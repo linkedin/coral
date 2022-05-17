@@ -58,6 +58,18 @@ public class ViewToAvroSchemaConverterTests {
   }
 
   @Test
+  public void testSchemaWithNullableFieldsAndDefaults() {
+    String viewSql = "CREATE VIEW v AS SELECT * FROM basecomplexnullablewithdefaults";
+
+    TestUtils.executeCreateViewQuery("default", "v", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v");
+
+    Assert.assertEquals(actualSchema.toString(true), TestUtils.loadSchema("testSelectStarWithNullsAndDefaults.avsc"));
+  }
+
+  @Test
   public void testFilter() {
     String viewSql = "CREATE VIEW v AS " + "SELECT bc.Id AS Id_View_Col, bc.Array_Col AS Array_View_Col "
         + "FROM basecomplex bc " + "WHERE bc.Id > 0 AND bc.Struct_Col IS NOT NULL";
