@@ -3,7 +3,7 @@ def versions = [
   'assertj': '3.19.0',
   'jsr305': '3.0.2',
   'jline': '0.9.94',
-  'gson': '2.8.1',
+  'gson': '2.9.0',
   'slf4j': '1.7.25',
   'kryo': '2.22',
   'testing': '6.4',
