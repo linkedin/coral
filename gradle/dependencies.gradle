@@ -1,40 +1,28 @@
 def versions = [
   'antlr': '3.4',
-  'assertj': '3.19.0',
-  'jsr305': '3.0.2',
   'jline': '0.9.94',
-  'gson': '2.9.0',
-  'slf4j': '1.7.25',
   'kryo': '2.22',
   'testing': '6.4',
-  'coral-calcite': '0.0.3',
   'hive': '1.2.2',
   'hadoop': '2.7.0',
   'pig': '0.15.0',
   'ivy': '2.4.0',
   'spark': '2.4.0',
   'spark3': '3.1.1',
-  'presto-parser': '0.262'
+  'linkedin-calcite-core': '1.21.0.151'
 ]
 
 ext.deps = [
   'antlr': "org.antlr:antlr:${versions['antlr']}",
   'antlr-runtime': "org.antlr:antlr-runtime:${versions['antlr']}",
-  'assertj': "org.assertj:assertj-core:${versions['assertj']}",
-  'javax-annotation': "com.google.code.findbugs:jsr305:${versions['jsr305']}",
   'jline': "jline:jline:${versions['jline']}",
-  'gson': "com.google.code.gson:gson:${versions['gson']}",
-  'slf4j-api': "org.slf4j:slf4j-api:${versions['slf4j']}",
-  'slf4j-log4j12': "org.slf4j:slf4j-log4j12:${versions['slf4j']}",
   'kryo': "com.esotericsoftware.kryo:kryo:${versions['kryo']}",
   'testing': "org.testng:testng:${versions['testing']}",
   'ivy': "org.apache.ivy:ivy:${versions['ivy']}",
-  'presto-parser': "com.facebook.presto:presto-parser:${versions['presto-parser']}",
-
+  'linkedin-calcite-core': "com.linkedin.calcite:calcite-core:${versions['linkedin-calcite-core']}",
   'hive':[
     'hive-metastore': "org.apache.hive:hive-metastore:${versions['hive']}",
-    'hive-exec-core': "org.apache.hive:hive-exec:${versions['hive']}:core",
-    'hive-common': "org.apache.hive:hive-common:${versions['hive']}"
+    'hive-exec-core': "org.apache.hive:hive-exec:${versions['hive']}:core"
   ],
   'hadoop': [
     'hadoop-common': "org.apache.hadoop:hadoop-common:${versions['hadoop']}",

@@ -8,7 +8,6 @@ dependencies {
   // required for hiveSQL parser code
   compile deps.'antlr-runtime'
 
-  testCompile project(path: ':coral-common')
   testCompile(deps.'hive'.'hive-exec-core') {
     exclude group: 'org.apache.avro', module: 'avro-tools'
     // These exclusions are required to prevent duplicate classes since we include
@@ -28,12 +27,3 @@ generateGrammarSource {
     '-lib',
     'src/main/antlr/imports'
   ]}
-
-task customFatJar(type: Jar) {
-  manifest {
-    attributes 'Main-Class': 'com.baeldung.fatjar.Application'
-  }
-  baseName = 'coral-hive-all'
-  from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
-  with jar
-}
