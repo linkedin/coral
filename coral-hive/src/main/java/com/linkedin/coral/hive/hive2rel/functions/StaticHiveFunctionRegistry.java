@@ -440,6 +440,8 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
         family(SqlTypeFamily.MAP));
     createAddUserDefinedFunction("com.linkedin.dali.views.premium.udf.GetFamily", FunctionReturnTypes.STRING,
         family(SqlTypeFamily.MAP));
+    createAddUserDefinedFunction("com.linkedin.dali.views.premium.udf.GetPriceUrnList",
+        FunctionReturnTypes.arrayOfType(SqlTypeName.VARCHAR), family(SqlTypeFamily.MAP));
 
     final SqlReturnTypeInference hitInfo = FunctionReturnTypes.rowOfInference(
         ImmutableList.of("secondarysearchresultinfo", "entityawaresuggestioninfo"),
@@ -566,6 +568,11 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
         STRING_STRING_STRING);
     createAddUserDefinedFunction("com.linkedin.stdudfs.daliudfs.hive.IsTestMemberId", ReturnTypes.BOOLEAN,
         family(SqlTypeFamily.NUMERIC, SqlTypeFamily.STRING));
+    createAddUserDefinedFunction("com.linkedin.stdudfs.urnextractor.hive.UrnExtractorFunctionWrapper", opBinding -> {
+      RelDataTypeFactory typeFactory = opBinding.getTypeFactory();
+      return typeFactory.createArrayType(typeFactory.createMapType(typeFactory.createSqlType(SqlTypeName.VARCHAR),
+          typeFactory.createSqlType(SqlTypeName.VARCHAR)), -1);
+    }, STRING);
     createAddUserDefinedFunction("com.linkedin.udfs.standard.hive.ObfuscateMemberIdNumeric", BIGINT,
         family(SqlTypeFamily.ANY, SqlTypeFamily.STRING));
     createAddUserDefinedFunction("com.linkedin.udfs.standard.hive.ObfuscateMemberIdNumericInt", BIGINT,
