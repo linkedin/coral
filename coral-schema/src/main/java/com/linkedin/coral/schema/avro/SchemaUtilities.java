@@ -214,7 +214,7 @@ class SchemaUtilities {
 
     // TODO: handle default value properly
     if (isNullable && fieldSchema.getType() != Schema.Type.NULL) {
-      Schema fieldSchemaNullable = Schema.createUnion(Arrays.asList(fieldSchema, Schema.create(Schema.Type.NULL)));
+      Schema fieldSchemaNullable = Schema.createUnion(Arrays.asList(Schema.create(Schema.Type.NULL), fieldSchema));
       fieldAssembler.name(fieldName).doc(doc).type(fieldSchemaNullable).noDefault();
     } else {
       fieldAssembler.name(fieldName).doc(doc).type(fieldSchema).noDefault();

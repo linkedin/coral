@@ -4,7 +4,7 @@
   "namespace" : "coral.schema.avro.base.nested.union",
   "fields" : [ {
     "name" : "c1",
-    "type" : [ {
+    "type" : [ "null", {
       "type" : "record",
       "name" : "c1",
       "namespace" : "rel_avro",
@@ -32,7 +32,7 @@
           } ]
         } ]
       } ]
-    }, "null" ],
+    } ],
     "doc" : "Field created in view by applying UDF 'extract_union' with argument(s): coral.schema.avro.base.nested.union.baseNestedUnion.unionCol"
   } ]
 }

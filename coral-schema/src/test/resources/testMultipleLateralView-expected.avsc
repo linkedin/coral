@@ -7,9 +7,9 @@
     "type" : "int"
   }, {
     "name" : "Array_Lateral_View_Col_1",
-    "type" : [ "string", "null" ]
+    "type" : [ "null", "string" ]
   }, {
     "name" : "Array_Lateral_View_Col_2",
-    "type" : [ "string", "null" ]
+    "type" : [ "null", "string" ]
   } ]
 }

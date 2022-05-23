@@ -7,6 +7,6 @@
     "type" : "int"
   }, {
     "name" : "Col1",
-    "type" : [ "int", "null" ]
+    "type" : [ "null", "int" ]
   } ]
 }

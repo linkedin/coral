@@ -7,6 +7,6 @@
     "type" : "int"
   }, {
     "name" : "Array_Lateral_View_Col",
-    "type" : [ "string", "null" ]
+    "type" : [ "null", "string" ]
   } ]
 }

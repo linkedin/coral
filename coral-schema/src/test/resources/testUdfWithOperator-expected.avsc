@@ -19,19 +19,19 @@
     "doc" : "Field created in view by applying UDF 'com.linkedin.coral.hive.hive2rel.CoralTestUDF3' with argument(s): coral.schema.avro.base.complex.basecomplex.Id"
   }, {
     "name" : "EXPR_4",
-    "type" : [ "int", "null" ],
+    "type" : [ "null", "int" ],
     "doc" : "Field created in view by applying operator '+' with argument(s): 1, 1"
   }, {
     "name" : "EXPR_5",
-    "type" : [ "int", "null" ],
+    "type" : [ "null", "int" ],
     "doc" : "Field created in view by applying operator '+' with argument(s): coral.schema.avro.base.complex.basecomplex.Id, 1"
   }, {
     "name" : "EXPR_6",
-    "type" : [ "int", "null" ],
+    "type" : [ "null", "int" ],
     "doc" : "Field created in view by applying operator '+' with argument(s): value with type INTEGER, 1"
   }, {
     "name" : "EXPR_7",
-    "type" : [ "int", "null" ],
+    "type" : [ "null", "int" ],
     "doc" : "Field created in view by applying operator '+' with argument(s): value with type INTEGER, 1"
   }, {
     "name" : "EXPR_8",
