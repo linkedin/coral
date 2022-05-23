@@ -7,7 +7,7 @@
     "type" : "int"
   }, {
     "name" : "Count_Col",
-    "type" : [ "null", "long" ],
+    "type" : [ "long", "null" ],
     "doc" : "Field created in view by applying aggregate function of type: COUNT"
   } ]
 }

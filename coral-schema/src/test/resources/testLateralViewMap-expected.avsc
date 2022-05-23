@@ -7,9 +7,9 @@
     "type" : "int"
   }, {
     "name" : "col1",
-    "type" : [ "null", "string" ]
+    "type" : [ "string", "null" ]
   }, {
     "name" : "col2",
-    "type" : [ "null", "string" ]
+    "type" : [ "string", "null" ]
   } ]
 }

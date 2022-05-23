@@ -7,7 +7,7 @@
     "type" : "int"
   }, {
     "name" : "Int_Field",
-    "type" : [ "int", "null" ],
+    "type" : [ "null", "int" ],
     "default" : 101
   }, {
     "name" : "Array_Col",

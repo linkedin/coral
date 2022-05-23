@@ -7,19 +7,19 @@
     "type" : "int"
   }, {
     "name" : "Array_Count",
-    "type" : [ "null", "int" ],
+    "type" : [ "int", "null" ],
     "doc" : "Field created in view by applying operator '*' with argument(s): 22, value with type BIGINT"
   }, {
     "name" : "Map_Count",
-    "type" : [ "null", "int" ],
+    "type" : [ "int", "null" ],
     "doc" : "Field created in view by applying operator '*' with argument(s): 33, value with type BIGINT"
   }, {
     "name" : "EXPR_3",
-    "type" : [ "null", "long" ],
+    "type" : [ "long", "null" ],
     "doc" : "Field created in view by applying aggregate function of type: COUNT"
   }, {
     "name" : "EXPR_4",
-    "type" : [ "null", "long" ],
+    "type" : [ "long", "null" ],
     "doc" : "Field created in view by applying aggregate function of type: COUNT"
   } ]
 }

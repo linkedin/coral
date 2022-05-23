@@ -684,7 +684,7 @@ class SchemaUtilities {
         case MAP:
         case UNION:
         case ARRAY:
-          Schema newFieldSchema = setupNestedNamespace(field.schema(), nestedNamespace, field.defaultValue());
+          Schema newFieldSchema = setupNestedNamespace(field.schema(), nestedNamespace);
           Schema.Field newField =
               new Schema.Field(field.name(), newFieldSchema, field.doc(), field.defaultValue(), field.order());
           appendField(newField, fieldAssembler);
@@ -706,8 +706,7 @@ class SchemaUtilities {
     return fieldAssembler.endRecord();
   }
 
-  private static Schema setupNestedNamespace(@Nonnull Schema schema, @Nonnull String namespace,
-      @Nullable JsonNode defaultValue) {
+  private static Schema setupNestedNamespace(@Nonnull Schema schema, @Nonnull String namespace) {
     Preconditions.checkNotNull(schema);
     Preconditions.checkNotNull(namespace);
 
@@ -725,11 +724,11 @@ class SchemaUtilities {
         return schema;
       case MAP:
         Schema valueSchema = schema.getValueType();
-        Schema valueSchemaWithNestedNamespace = setupNestedNamespace(valueSchema, namespace, defaultValue);
+        Schema valueSchemaWithNestedNamespace = setupNestedNamespace(valueSchema, namespace);
         return Schema.createMap(valueSchemaWithNestedNamespace);
       case ARRAY:
         Schema elementSchema = schema.getElementType();
-        Schema elementSchemaWithNestedNamespace = setupNestedNamespace(elementSchema, namespace, defaultValue);
+        Schema elementSchemaWithNestedNamespace = setupNestedNamespace(elementSchema, namespace);
         return Schema.createArray(elementSchemaWithNestedNamespace);
       case ENUM:
         return Schema.createEnum(schema.getName(), schema.getDoc(), namespace, schema.getEnumSymbols());
@@ -737,23 +736,10 @@ class SchemaUtilities {
         return setupNestedNamespaceForRecord(schema, namespace);
       case UNION:
         List<Schema> types = new ArrayList<>();
-        if (isNullableType(schema)) {
-          Schema otherType = getOtherTypeFromNullableType(schema);
-          Schema otherTypeWithNestedNamespace = setupNestedNamespace(otherType, namespace, defaultValue);
-          Schema nullSchema = Schema.create(Schema.Type.NULL);
 
-          if (defaultValue == null || defaultValue.isNull()) {
-            types.add(nullSchema);
-            types.add(otherTypeWithNestedNamespace);
-          } else {
-            types.add(otherTypeWithNestedNamespace);
-            types.add(nullSchema);
-          }
-        } else {
-          for (Schema type : schema.getTypes()) {
-            Schema typeWithNestNamespace = setupNestedNamespace(type, namespace, defaultValue);
-            types.add(typeWithNestNamespace);
-          }
+        for (Schema type : schema.getTypes()) {
+          Schema typeWithNestNamespace = setupNestedNamespace(type, namespace);
+          types.add(typeWithNestNamespace);
         }
         return Schema.createUnion(types);
       default:
