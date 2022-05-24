@@ -1,0 +1,63 @@
+{
+  "type" : "record",
+  "name" : "v",
+  "namespace" : "default.v",
+  "fields" : [ {
+    "name" : "Id",
+    "type" : "int"
+  }, {
+    "name" : "Int_Field",
+    "type" : [ "null", "int" ],
+    "default" : 101
+  }, {
+    "name" : "Array_Col",
+    "type" : [ "null", {
+      "type" : "array",
+      "items" : [ "null", "string" ]
+    } ],
+    "default" : null
+  }, {
+    "name" : "Map_Col",
+    "type" : [ "null", {
+      "type" : "map",
+      "values" : [ "null", "string" ]
+    } ],
+    "default" : null
+  }, {
+    "name" : "Struct_Col",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "Struct_col",
+      "namespace" : "default.v.v",
+      "fields" : [ {
+        "name" : "Bool_Field",
+        "type" : "boolean"
+      }, {
+        "name" : "Int_Field1",
+        "type" : [ "null", "int" ],
+        "default" : null
+      }, {
+        "name" : "Int_Field2",
+        "type" : [ "int", "null" ],
+        "default" : 123
+      }, {
+        "name" : "Double_Field",
+        "type" : "double"
+      }, {
+        "name" : "Date_String_Field",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "String_Field",
+        "type" : [ "string", "null" ],
+        "default" : ""
+      } ]
+    } ],
+    "default" : null
+  }, {
+    "name" : "datepartition",
+    "type" : [ "null", "string" ],
+    "doc" : "This is the partition column. Partition columns, if present in the schema, should also be projected in the data.",
+    "default" : null
+  } ]
+}
