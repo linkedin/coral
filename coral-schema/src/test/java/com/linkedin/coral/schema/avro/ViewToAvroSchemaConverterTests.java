@@ -976,5 +976,16 @@ public class ViewToAvroSchemaConverterTests {
         TestUtils.loadSchema("testProjectUdfReturnedStruct-expected.avsc"));
   }
 
+  @Test
+  public void testLowercaseSchema() {
+    String viewSql = "CREATE VIEW v AS SELECT id as Id FROM basecomplex";
+    TestUtils.executeCreateViewQuery("default", "v", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v", false, true);
+
+    Assert.assertEquals(actualSchema.toString(true), TestUtils.loadSchema("testLowercaseSchema-expected.avsc"));
+  }
+
   // TODO: add more unit tests
 }

@@ -192,10 +192,14 @@ public class ViewToAvroSchemaConverter {
 
     if (!tableOrView.getTableType().equals("VIRTUAL_VIEW")) {
       // It's base table, just retrieve the avro schema from Hive metastore
-      return SchemaUtilities.getAvroSchemaForTable(tableOrView, strictMode, forceLowercase);
+      Schema schema = SchemaUtilities.getAvroSchemaForTable(tableOrView, strictMode);
+      return forceLowercase ? ToLowercaseSchemaVisitor.visit(schema) : schema;
     } else {
       RelNode relNode = hiveToRelConverter.convertView(dbName, tableOrViewName);
       Schema schema = relToAvroSchemaConverter.convert(relNode, strictMode, forceLowercase);
+      if (forceLowercase) {
+        schema = ToLowercaseSchemaVisitor.visit(schema);
+      }
       Schema avroSchema = schema;
 
       // In flex mode, we assign a new set of namespace
