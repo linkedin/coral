@@ -1,9 +1,6 @@
 apply from: "spark_itest.gradle"
 
 dependencies {
-  compile deps.'gson'
-  compile deps.'slf4j-api'
-  compile deps.'slf4j-log4j12'
   compile project(':coral-hive')
   compile project(':coral-schema')
 

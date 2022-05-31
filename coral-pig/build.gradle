@@ -1,5 +1,4 @@
 dependencies {
-  compile deps.'javax-annotation'
   // NOTE: jline is needed as testCompile for PigUnit tests because it is missing from Pig runtime
   testCompile deps.'jline'
 
@@ -13,7 +12,7 @@ dependencies {
   // Pull in hive-metastore transitively through hive-exec.
   // Use shaded hive-exec/hive-metastore dependencies for Coral to prevent classpath
   // conflicts with DaliStorage/PiggyBank.
-  compile(deps.'hive'.'hive-exec-core') {
+  testCompile(deps.'hive'.'hive-exec-core') {
     exclude group: 'org.apache.avro', module: 'avro-tools'
     // These exclusions are required to prevent duplicate classes since we include
     // shaded coral-calcite jar above

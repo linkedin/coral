@@ -1,10 +1,5 @@
 dependencies {
-  compile deps.'slf4j-api'
-  compile deps.'slf4j-log4j12'
-
   compile project(path: ':coral-hive')
-
-  testCompile project(path: ':coral-hive')
 
   testCompile(deps.'hive'.'hive-exec-core') {
     exclude group: 'org.apache.avro', module: 'avro-tools'

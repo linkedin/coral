@@ -1,46 +1,33 @@
 def versions = [
   'antlr': '3.4',
-  'assertj': '3.19.0',
-  'jsr305': '3.0.2',
-  'jline': '0.9.94',
-  'gson': '2.9.0',
-  'slf4j': '1.7.25',
-  'kryo': '2.22',
-  'testing': '6.4',
-  'coral-calcite': '0.0.3',
-  'hive': '1.2.2',
   'hadoop': '2.7.0',
-  'pig': '0.15.0',
+  'hive': '1.2.2',
   'ivy': '2.4.0',
+  'jline': '0.9.94',
+  'kryo': '2.22',
+  'linkedin-calcite-core': '1.21.0.151',
+  'pig': '0.15.0',
   'spark': '2.4.0',
   'spark3': '3.1.1',
-  'presto-parser': '0.262'
+  'testing': '6.4'
 ]
 
 ext.deps = [
   'antlr': "org.antlr:antlr:${versions['antlr']}",
   'antlr-runtime': "org.antlr:antlr-runtime:${versions['antlr']}",
-  'assertj': "org.assertj:assertj-core:${versions['assertj']}",
-  'javax-annotation': "com.google.code.findbugs:jsr305:${versions['jsr305']}",
-  'jline': "jline:jline:${versions['jline']}",
-  'gson': "com.google.code.gson:gson:${versions['gson']}",
-  'slf4j-api': "org.slf4j:slf4j-api:${versions['slf4j']}",
-  'slf4j-log4j12': "org.slf4j:slf4j-log4j12:${versions['slf4j']}",
-  'kryo': "com.esotericsoftware.kryo:kryo:${versions['kryo']}",
-  'testing': "org.testng:testng:${versions['testing']}",
-  'ivy': "org.apache.ivy:ivy:${versions['ivy']}",
-  'presto-parser': "com.facebook.presto:presto-parser:${versions['presto-parser']}",
-
-  'hive':[
-    'hive-metastore': "org.apache.hive:hive-metastore:${versions['hive']}",
-    'hive-exec-core': "org.apache.hive:hive-exec:${versions['hive']}:core",
-    'hive-common': "org.apache.hive:hive-common:${versions['hive']}"
-  ],
   'hadoop': [
     'hadoop-common': "org.apache.hadoop:hadoop-common:${versions['hadoop']}",
     'hadoop-mapreduce-client-common': "org.apache.hadoop:hadoop-mapreduce-client-common:${versions['hadoop']}",
     'hadoop-mapreduce-client-core': "org.apache.hadoop:hadoop-mapreduce-client-core:${versions['hadoop']}"
   ],
+  'hive':[
+    'hive-metastore': "org.apache.hive:hive-metastore:${versions['hive']}",
+    'hive-exec-core': "org.apache.hive:hive-exec:${versions['hive']}:core"
+  ],
+  'ivy': "org.apache.ivy:ivy:${versions['ivy']}",
+  'jline': "jline:jline:${versions['jline']}",
+  'kryo': "com.esotericsoftware.kryo:kryo:${versions['kryo']}",
+  'linkedin-calcite-core': "com.linkedin.calcite:calcite-core:${versions['linkedin-calcite-core']}",
   'pig': [
     'pig': "org.apache.pig:pig:${versions['pig']}:h2",
     'pigunit': "org.apache.pig:pigunit:${versions['pig']}"
@@ -51,5 +38,6 @@ ext.deps = [
   ],
   'spark3': [
     'hive': "org.apache.spark:spark-hive_2.12:${versions['spark3']}"
-  ]
+  ],
+  'testing': "org.testng:testng:${versions['testing']}"
 ]

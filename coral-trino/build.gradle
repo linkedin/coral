@@ -1,12 +1,6 @@
 dependencies {
-  compile deps.'gson'
-  compile deps.'javax-annotation'
   compile project(path: ':coral-hive')
   compile project(path: ':shading:coral-trino-parser', configuration: 'shadow')
-  implementation 'com.github.vertical-blank:sql-formatter:2.0.2'
-
-  testCompile deps.'assertj'
-
 
   testCompile(deps.'hive'.'hive-exec-core') {
     exclude group: 'org.apache.avro', module: 'avro-tools'

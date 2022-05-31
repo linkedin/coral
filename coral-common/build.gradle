@@ -1,5 +1,5 @@
 dependencies {
-  compile('com.linkedin.calcite:calcite-core:1.21.0.151') {
+  compile(deps.'linkedin-calcite-core') {
     artifact {
       name = 'calcite-core'
       extension = 'jar'
