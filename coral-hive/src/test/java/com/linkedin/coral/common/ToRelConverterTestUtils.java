@@ -62,6 +62,10 @@ public class ToRelConverterTestUtils {
     return relToSql(relNode);
   }
 
+  public static RelNode sqlNodeToRelNode(SqlNode sqlNode) {
+    return converter.toRel(sqlNode);
+  }
+
   public static RelBuilder createRelBuilder() {
     return converter.getRelBuilder();
   }
