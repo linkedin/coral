@@ -22,9 +22,9 @@ import org.apache.calcite.sql2rel.SqlRexConvertletTable;
 import org.apache.calcite.sql2rel.SqlToRelConverter;
 import org.apache.hadoop.hive.metastore.api.Table;
 
+import com.linkedin.coral.common.CoralOperatorTable;
 import com.linkedin.coral.common.HiveMetastoreClient;
 import com.linkedin.coral.common.ToRelConverter;
-import com.linkedin.coral.common.functions.CoralOperatorTable;
 import com.linkedin.coral.hive.hive2rel.functions.HiveFunctionResolver;
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 import com.linkedin.coral.hive.hive2rel.parsetree.ParseTreeBuilder;

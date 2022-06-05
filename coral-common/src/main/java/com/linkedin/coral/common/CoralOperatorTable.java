@@ -3,7 +3,7 @@
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
-package com.linkedin.coral.common.functions;
+package com.linkedin.coral.common;
 
 import java.util.Collection;
 import java.util.List;
@@ -18,6 +18,9 @@ import org.apache.calcite.sql.SqlOperatorTable;
 import org.apache.calcite.sql.SqlSyntax;
 import org.apache.calcite.sql.validate.SqlNameMatcher;
 import org.apache.calcite.util.Util;
+
+import com.linkedin.coral.common.functions.Function;
+import com.linkedin.coral.common.functions.FunctionResolver;
 
 
 /**
