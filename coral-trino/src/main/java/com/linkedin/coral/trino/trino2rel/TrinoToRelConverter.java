@@ -5,7 +5,6 @@
  */
 package com.linkedin.coral.trino.trino2rel;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -25,7 +24,6 @@ import org.apache.hadoop.hive.metastore.api.Table;
 import com.linkedin.coral.common.CoralOperatorTable;
 import com.linkedin.coral.common.HiveMetastoreClient;
 import com.linkedin.coral.common.ToRelConverter;
-import com.linkedin.coral.common.functions.Function;
 import com.linkedin.coral.common.functions.FunctionResolver;
 import com.linkedin.coral.hive.hive2rel.HiveConvertletTable;
 import com.linkedin.coral.hive.hive2rel.HiveRelBuilder;
@@ -48,12 +46,7 @@ import static com.linkedin.coral.trino.trino2rel.TrinoSqlConformance.*;
 public class TrinoToRelConverter extends ToRelConverter {
   private final ParseTreeBuilder parseTreeBuilder = new ParseTreeBuilder();
   private final ParserVisitorContext parserVisitorContext = new ParserVisitorContext();
-  private final FunctionResolver functionResolver = new FunctionResolver(new StaticHiveFunctionRegistry()) {
-    @Override
-    public Collection<Function> resolve(String functionName) {
-      return registry.lookup(functionName);
-    }
-  };
+  private final FunctionResolver functionResolver = new TrinoFunctionResolver(new StaticHiveFunctionRegistry());
   private final
   // The validator must be reused
   SqlValidator sqlValidator = new HiveSqlValidator(getOperatorTable(), getCalciteCatalogReader(),
