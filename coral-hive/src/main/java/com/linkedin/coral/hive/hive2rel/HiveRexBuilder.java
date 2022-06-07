@@ -25,7 +25,8 @@ public class HiveRexBuilder extends RexBuilder {
    * because if the base table `t` contains non-lowercase struct field like `s struct(A:string)`,
    * the schema of the view `v` based on the base table would become `s struct(a:string)`,
    * translation for SQL `SELECT * FROM v WHERE v.s.A='xxx'` will fail with the following exception
-   * if caseSensitive=true:
+   * if caseSensitive=true, given Calcite would convert `v.s.A` to `v.s.a` to be aligned with the
+   * schema of view `v` during the validation phase:
    *
    * java.lang.AssertionError: Type 'RecordType(VARCHAR(2147483647) A)' has no field 'a'
    *
