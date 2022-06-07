@@ -172,6 +172,10 @@ public class TestUtils {
       driver.run("CREATE VIEW IF NOT EXISTS view_schema_evolve_wrapper AS SELECT * from view_schema_evolve");
       driver.run("ALTER TABLE schema_evolve CHANGE COLUMN b b array<struct<b1:string, b2:double, b3:int>>");
 
+      driver.run("CREATE TABLE IF NOT EXISTS test.table_with_uppercase_struct_field(s struct<Name:string>)");
+      driver.run(
+          "CREATE VIEW IF NOT EXISTS test.view_with_uppercase_struct_field AS SELECT * FROM test.table_with_uppercase_struct_field");
+
       CommandProcessorResponse response = driver
           .run("create function test_tableOneView_LessThanHundred as 'com.linkedin.coral.hive.hive2rel.CoralTestUDF'");
       response = driver.run(

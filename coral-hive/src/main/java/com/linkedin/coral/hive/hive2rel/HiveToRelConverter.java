@@ -13,8 +13,6 @@ import org.apache.calcite.adapter.java.JavaTypeFactory;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.volcano.VolcanoPlanner;
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rex.RexBuilder;
-import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlOperatorTable;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
@@ -85,13 +83,8 @@ public class HiveToRelConverter extends ToRelConverter {
     if (sqlToRelConverter == null) {
       sqlToRelConverter =
           new HiveSqlToRelConverter(new HiveViewExpander(this), getSqlValidator(), getCalciteCatalogReader(),
-              RelOptCluster.create(new VolcanoPlanner(), new RexBuilder(getRelBuilder().getTypeFactory()) {
-                @Override
-                public RexNode makeFieldAccess(RexNode expr, String fieldName, boolean caseSensitive) {
-                  // We make field access case-insensitively in struct because Hive only stores lowercase field names in HMS
-                  return super.makeFieldAccess(expr, fieldName, false);
-                }
-              }), getConvertletTable(),
+              RelOptCluster.create(new VolcanoPlanner(), new HiveRexBuilder(getRelBuilder().getTypeFactory())),
+              getConvertletTable(),
               SqlToRelConverter.configBuilder().withRelBuilderFactory(HiveRelBuilder.LOGICAL_BUILDER).build());
     }
     return sqlToRelConverter;

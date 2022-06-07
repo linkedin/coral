@@ -633,6 +633,17 @@ public class HiveToRelConverterTest {
     assertEquals(generated, expected);
   }
 
+  @Test
+  public void testCaseInsensitiveFieldAccess() {
+    final String expected = "LogicalProject(s=[$0])\n" + "  LogicalFilter(condition=[=($0.name, 'Jason')])\n"
+        + "    LogicalProject(s=[$0])\n"
+        + "      LogicalTableScan(table=[[hive, test, table_with_uppercase_struct_field]])\n";
+    final String sql =
+        "SELECT * FROM test.view_with_uppercase_struct_field WHERE view_with_uppercase_struct_field.s.Name='Jason'";
+    String generated = relToString(sql);
+    assertEquals(generated, expected);
+  }
+
   private String relToString(String sql) {
     return RelOptUtil.toString(converter.convertSql(sql));
   }
