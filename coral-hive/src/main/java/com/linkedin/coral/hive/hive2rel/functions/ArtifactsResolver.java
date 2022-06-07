@@ -58,11 +58,11 @@ public class ArtifactsResolver {
    * "group:name:version@extension"
    * "group:name:version"
    */
-  public List<File> resolve(String dependencySpecString) {
+  public List<File> resolve(String udfClassName, String dependencySpecString) {
     List<File> uris = new ArrayList<>();
     try {
       _ivyInstance.pushContext();
-      final ResolveReport report = getDependencies(createDependencySpec(dependencySpecString));
+      final ResolveReport report = getDependencies(udfClassName, createDependencySpec(dependencySpecString));
       for (ArtifactDownloadReport adr : report.getAllArtifactsReports()) {
         if (adr.getLocalFile() != null) {
           uris.add(adr.getLocalFile());
@@ -105,7 +105,7 @@ public class ArtifactsResolver {
     return dependencySpec;
   }
 
-  private ResolveReport getDependencies(DependencySpec dependencySpec) {
+  private ResolveReport getDependencies(String udfClassName, DependencySpec dependencySpec) {
     final long millis = System.currentTimeMillis();
     final DefaultModuleDescriptor md = DefaultModuleDescriptor
         .newDefaultInstance(ModuleRevisionId.newInstance("caller", "all-caller", "working-" + millis));
@@ -128,11 +128,12 @@ public class ArtifactsResolver {
     try {
       final ResolveReport report = _ivyInstance.resolve(md, resolveOptions);
       if (report.hasError()) {
-        LOG.warn("Unable to fetch dependencies: " + report.getAllProblemMessages());
+        LOG.warn(
+            String.format("Unable to fetch dependencies for UDF %s: %s", udfClassName, report.getAllProblemMessages()));
       }
       return report;
     } catch (ParseException | IOException e) {
-      throw new RuntimeException("Unable to fetch dependencies", e);
+      throw new RuntimeException(String.format("Unable to fetch dependencies for UDF %s", udfClassName), e);
     }
   }
 

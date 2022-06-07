@@ -93,9 +93,9 @@ public class HiveGenericUDFReturnTypeInference implements SqlReturnTypeInference
 
   private URLClassLoader getUdfClassLoader() {
     if (_udfClassLoader == null) {
-      URL[] urls =
-          _udfDependencies.stream().flatMap(udfDependency -> _artifactsResolver.resolve(udfDependency).stream())
-              .map(file -> url(file.toURI())).toArray(URL[]::new);
+      URL[] urls = _udfDependencies.stream()
+          .flatMap(udfDependency -> _artifactsResolver.resolve(_udfClassName, udfDependency).stream())
+          .map(file -> url(file.toURI())).toArray(URL[]::new);
 
       _udfClassLoader = new URLClassLoader(urls, ClassLoader.getSystemClassLoader());
     }
