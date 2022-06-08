@@ -22,7 +22,7 @@ public class HiveRexBuilder extends RexBuilder {
 
   /**
    * HiveRexBuilder overrides this method to make field access case-insensitively,
-   * because if the base table `t` contains non-lowercase struct field like `s struct(A:string)`,
+   * because in Hive 1.1, if the base table `t` contains non-lowercase struct field like `s struct(A:string)`,
    * the schema of the view `v` based on the base table would become `s struct(a:string)`,
    * translation for SQL `SELECT * FROM v WHERE v.s.A='xxx'` will fail with the following exception
    * if caseSensitive=true, given Calcite would convert `v.s.A` to `v.s.a` to be aligned with the
