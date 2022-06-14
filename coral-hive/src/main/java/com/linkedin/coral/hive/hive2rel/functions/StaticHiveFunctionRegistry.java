@@ -433,6 +433,11 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
         STRING_STRING);
     createAddUserDefinedFunction("com.linkedin.dali.view.udf.entityhandles.PhoneNumberNormalizer",
         FunctionReturnTypes.STRING, STRING_STRING_STRING);
+    createAddUserDefinedFunction("com.linkedin.dali.views.feed.udf.GenerateDecoratedFeedUpdateData",
+        FunctionReturnTypes.arrayOfType(SqlTypeName.ANY),
+        family(SqlTypeFamily.STRING, SqlTypeFamily.MAP, SqlTypeFamily.MAP));
+    createAddUserDefinedFunction("com.linkedin.dali.views.feed.udf.UnifiedResultsToFeedUpdates",
+        FunctionReturnTypes.arrayOfType(SqlTypeName.ANY), family(SqlTypeFamily.ARRAY));
     createAddUserDefinedFunction("com.linkedin.dali.views.job.udf.GetUUID", FunctionReturnTypes.STRING, BINARY);
     createAddUserDefinedFunction("com.linkedin.dali.views.premium.udf.GetOrderUrn", FunctionReturnTypes.STRING,
         family(SqlTypeFamily.MAP, SqlTypeFamily.STRING));
@@ -527,6 +532,8 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
         FunctionReturnTypes.STRING, STRING);
     createAddUserDefinedFunction("com.linkedin.etg.business.common.udfs.MapD365OptionSet", FunctionReturnTypes.STRING,
         STRING_STRING_STRING);
+    createAddUserDefinedFunction("isb.GetProfileSections", FunctionReturnTypes.arrayOfType(SqlTypeName.ANY),
+        or(family(SqlTypeFamily.MAP, SqlTypeFamily.ARRAY), family(SqlTypeFamily.MAP)));
 
     // The following UDFs are already defined using Transport UDF.
     // The class name is the corresponding Hive UDF.
@@ -572,7 +579,7 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
       RelDataTypeFactory typeFactory = opBinding.getTypeFactory();
       return typeFactory.createArrayType(typeFactory.createMapType(typeFactory.createSqlType(SqlTypeName.VARCHAR),
           typeFactory.createSqlType(SqlTypeName.VARCHAR)), -1);
-    }, STRING);
+    }, or(ARRAY, STRING));
     createAddUserDefinedFunction("com.linkedin.udfs.standard.hive.ObfuscateMemberIdNumeric", BIGINT,
         family(SqlTypeFamily.ANY, SqlTypeFamily.STRING));
     createAddUserDefinedFunction("com.linkedin.udfs.standard.hive.ObfuscateMemberIdNumericInt", BIGINT,
