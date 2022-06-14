@@ -1,0 +1,12 @@
+{
+  "type" : "record",
+  "name" : "basebytes",
+  "namespace" : "coral.schema.avro.base.bytes",
+  "fields" : [ {
+    "name" : "Bytes_field",
+    "type" : [ "null", {
+      "type" : "bytes",
+      "name": "bytes_field"
+    } ]
+  } ]
+}

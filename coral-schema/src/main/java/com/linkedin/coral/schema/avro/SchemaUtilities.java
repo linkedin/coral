@@ -582,6 +582,9 @@ class SchemaUtilities {
       if (ImmutableSet.of(ENUM, STRING).equals(types)) {
         return Schema.create(STRING);
       }
+      if (ImmutableSet.of(FIXED, BYTES).equals(types)) {
+        return Schema.create(BYTES);
+      }
     }
 
     throw new RuntimeException("Found two incompatible schemas for LogicalUnion operator. Left schema is: "
