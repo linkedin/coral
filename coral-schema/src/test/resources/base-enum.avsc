@@ -27,6 +27,13 @@
       "symbols" : [ "Spark", "Pig", "Hive", "MR" ]
     }
   }, {
+    "name" : "Enum_Second_Col",
+    "type" : {
+      "type" : "enum",
+      "name" : "Enum_Second_col",
+      "symbols" : [ "Spark", "Pig", "Hive", "MR", "Avro" ]
+    }
+  }, {
     "name" : "Struct_Col",
     "type" : [ "null", {
       "type" : "record",

@@ -949,6 +949,30 @@ public class ViewToAvroSchemaConverterTests {
   }
 
   @Test
+  public void testEnumUnionEnum() {
+    String viewSql = "CREATE VIEW v AS SELECT b1.Enum_Top_Col AS c1 FROM baseenum b1"
+        + " UNION ALL SELECT b2.Enum_Second_Col AS c1 FROM baseenum b2";
+    TestUtils.executeCreateViewQuery("default", "v", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v");
+
+    Assert.assertEquals(actualSchema.toString(true), TestUtils.loadSchema("testEnumUnionEnum-expected.avsc"));
+  }
+
+  @Test
+  public void testEnumUnionString() {
+    String viewSql = "CREATE VIEW v AS SELECT b1.Enum_Top_Col AS c1 FROM baseenum b1"
+        + " UNION ALL SELECT b2.Struct_Col.String_Field AS c1 FROM basecomplex b2";
+    TestUtils.executeCreateViewQuery("default", "v", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v");
+
+    Assert.assertEquals(actualSchema.toString(true), TestUtils.loadSchema("testEnumUnionString-expected.avsc"));
+  }
+
+  @Test
   public void testComplexUnionType() {
     String viewSql = "CREATE VIEW v AS SELECT * FROM basecomplexuniontype";
     TestUtils.executeCreateViewQuery("default", "v", viewSql);
