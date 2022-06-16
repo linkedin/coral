@@ -8,7 +8,7 @@
       "type" : "enum",
       "name" : "Enum_Second_col",
       "namespace" : "default.v.v",
-      "symbols" : [ "Spark", "Pig", "Hive", "MR", "Avro" ]
+      "symbols" : [ "Spark", "Pig", "Hive", "MR", "Avro", "Option1", "Option2", "Option3", "Option4" ]
     }
   } ]
 }

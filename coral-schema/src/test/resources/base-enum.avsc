@@ -34,6 +34,13 @@
       "symbols" : [ "Spark", "Pig", "Hive", "MR", "Avro" ]
     }
   }, {
+      "name" : "Enum_Third_Col",
+      "type" : {
+        "type" : "enum",
+        "name" : "Enum_Third_Col",
+        "symbols" : [ "Option1", "Option2", "Option3", "Option4" ]
+      }
+    },{
     "name" : "Struct_Col",
     "type" : [ "null", {
       "type" : "record",

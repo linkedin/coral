@@ -554,19 +554,11 @@ class SchemaUtilities {
           }
           break;
         case ENUM:
-          if (leftSchema.getEnumSymbols().size() == rightSchema.getEnumSymbols().size()) {
-            return leftSchema;
-          }
-          // Check if the symbols of one Enum is a strict subset of the other
-          final ImmutableSet<String> leftSchemaSymbols = ImmutableSet.copyOf(leftSchema.getEnumSymbols());
-          final ImmutableSet<String> rightSchemaSymbols = ImmutableSet.copyOf(rightSchema.getEnumSymbols());
-          if (leftSchemaSymbols.containsAll(rightSchemaSymbols)) {
-            return leftSchema;
-          }
-          if (rightSchemaSymbols.containsAll(leftSchemaSymbols)) {
-            return rightSchema;
-          }
-          break;
+          // Union symbols of two Enum
+          ImmutableSet<String> schemaSymbols = ImmutableSet.<String> builder().addAll(leftSchema.getEnumSymbols())
+              .addAll(rightSchema.getEnumSymbols()).build();
+          return Schema.createEnum(leftSchema.getName(), leftSchema.getDoc(), leftSchema.getNamespace(),
+              schemaSymbols.asList());
         case RECORD:
           return mergeUnionRecordSchema(leftSchema, rightSchema, strictMode);
         case MAP:

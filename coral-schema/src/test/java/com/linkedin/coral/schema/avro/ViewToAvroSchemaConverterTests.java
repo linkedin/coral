@@ -950,8 +950,8 @@ public class ViewToAvroSchemaConverterTests {
 
   @Test
   public void testEnumUnionEnum() {
-    String viewSql = "CREATE VIEW v AS SELECT b1.Enum_Top_Col AS c1 FROM baseenum b1"
-        + " UNION ALL SELECT b2.Enum_Second_Col AS c1 FROM baseenum b2";
+    String viewSql = "CREATE VIEW v AS SELECT b1.Enum_Second_Col AS c1 FROM baseenum b1"
+        + " UNION ALL SELECT b2.Enum_Third_Col AS c1 FROM baseenum b2";
     TestUtils.executeCreateViewQuery("default", "v", viewSql);
 
     ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
