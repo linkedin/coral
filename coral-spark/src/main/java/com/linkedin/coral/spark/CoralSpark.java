@@ -20,6 +20,7 @@ import org.apache.calcite.sql.SqlSelect;
 import com.linkedin.coral.spark.containers.SparkRelInfo;
 import com.linkedin.coral.spark.containers.SparkUDFInfo;
 import com.linkedin.coral.spark.dialect.SparkSqlDialect;
+import com.linkedin.coral.transformers.CoralRelToSqlNodeConverter;
 
 
 /**
@@ -64,7 +65,9 @@ public class CoralSpark {
   public static CoralSpark create(RelNode irRelNode) {
     SparkRelInfo sparkRelInfo = IRRelToSparkRelTransformer.transform(irRelNode);
     RelNode sparkRelNode = sparkRelInfo.getSparkRelNode();
-    String sparkSQL = constructSparkSQL(sparkRelNode);
+    //    String sparkSQL = constructSparkSQL(sparkRelNode);
+    String sparkSQL = constructSparkSQLtmp(sparkRelNode);
+
     List<String> baseTables = constructBaseTables(sparkRelNode);
     List<SparkUDFInfo> sparkUDFInfos = sparkRelInfo.getSparkUDFInfoList();
     return new CoralSpark(baseTables, sparkUDFInfos, sparkSQL);
@@ -113,6 +116,22 @@ public class CoralSpark {
     SqlImplementor.Result r = rel2sql.visitChild(0, sparkRelNode);
     SqlNode rewritten = r.asStatement().accept(new SparkSqlRewriter());
     return rewritten.toSqlString(SparkSqlDialect.INSTANCE).getSql();
+  }
+
+  /**
+   * Temporary method to integrate CoralRelToSqlNodeConverter in the translation pipeline
+   * which converts a hive SQL to Spark SQL.
+   * @param sparkRelNode A Spark compatible RelNode
+   * @return SQL String in SparkSqlDialect dialect
+   */
+  private static String constructSparkSQLtmp(RelNode sparkRelNode) {
+    SqlNode coralSqlNode = new CoralRelToSqlNodeConverter().visitChild(0, sparkRelNode).node;
+
+    SqlNode sparkSqlNode = new CoralSqlNodeToSparkSqlNodeConverter().convert(coralSqlNode);
+
+    SqlNode rewrittenSparkSqlNode = sparkSqlNode.accept(new SparkSqlRewriter());
+
+    return rewrittenSparkSqlNode.toSqlString(SparkSqlDialect.INSTANCE).getSql();
   }
 
   private static String constructSparkSQLWithExplicitAlias(RelNode sparkRelNode, List<String> aliases) {

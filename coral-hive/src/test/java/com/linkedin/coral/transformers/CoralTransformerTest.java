@@ -74,7 +74,37 @@ public class CoralTransformerTest {
     assertEquals(coralSqlNodeResult.toString(), coralSqlNodeExpected.toString());
   }
 
-  private CoralRelNodeToCoralSqlNodeTransformer getCoralRelToSqlNodeTransformer() {
-    return new CoralRelNodeToCoralSqlNodeTransformer();
+  @Test
+  public void testLateralViewOuterForArrayOfDouble() {
+    final String sql =
+        "SELECT complex.a, t0.ccol from default.complex lateral view outer explode(complex.c) t0 as ccol";
+    SqlNode coralSqlNodeExpected = converter.toSqlNode(sql);
+
+    RelNode coralRelNode = converter.convertSql(sql);
+    SqlNode coralSqlNodeResult = getCoralRelToSqlNodeTransformer().visitChild(0, coralRelNode).node;
+
+    System.out.println(coralSqlNodeExpected);
+    System.out.println(coralSqlNodeResult);
+
+    assertEquals(coralSqlNodeResult.toString(), coralSqlNodeExpected.toString());
+  }
+
+  @Test
+  public void testLateralViewPosExplodeForArrayOfDouble() {
+    final String sql =
+        "SELECT complex.a, t0.ccol from default.complex lateral view posexplode(complex.c) t0 as pos, ccol";
+    SqlNode coralSqlNodeExpected = converter.toSqlNode(sql);
+
+    RelNode coralRelNode = converter.convertSql(sql);
+    SqlNode coralSqlNodeResult = getCoralRelToSqlNodeTransformer().visitChild(0, coralRelNode).node;
+
+    System.out.println(coralSqlNodeExpected);
+    System.out.println(coralSqlNodeResult);
+
+    assertEquals(coralSqlNodeResult.toString(), coralSqlNodeExpected.toString());
+  }
+
+  private CoralRelToSqlNodeConverter getCoralRelToSqlNodeTransformer() {
+    return new CoralRelToSqlNodeConverter();
   }
 }
