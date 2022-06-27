@@ -12,8 +12,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.linkedin.coral.coralservice.entity.TranslateRequestBody;
 
 import static com.linkedin.coral.coralservice.utils.CoralProvider.*;
 import static com.linkedin.coral.coralservice.utils.TranslationUtils.*;
@@ -38,8 +40,11 @@ public class TranslationController implements ApplicationListener<ContextRefresh
   }
 
   @PostMapping("/api/translations/translate")
-  public ResponseEntity translate(@RequestParam String fromLanguage, @RequestParam String toLanguage,
-      @RequestParam String query) {
+  public ResponseEntity translate(@RequestBody TranslateRequestBody translateRequestBody) {
+    final String fromLanguage = translateRequestBody.getFromLanguage();
+    final String toLanguage = translateRequestBody.getToLanguage();
+    final String query = translateRequestBody.getQuery();
+
     if (fromLanguage.equalsIgnoreCase(toLanguage)) {
       return ResponseEntity.status(HttpStatus.BAD_REQUEST)
           .body("Please choose different languages to translate between.\n");

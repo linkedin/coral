@@ -66,7 +66,7 @@ Please see the [Contribution Agreement](CONTRIBUTING.md).
 ### API Reference
 
 #### /api/translations/translate
-A **POST** API which takes the following parameters and returns the translated query:
+A **POST** API which takes JSON request body containing following parameters and returns the translated query:
 - `fromLanguage`: Input dialect (e.g., spark, trino, hive -- see below for supported inputs)
 - `toLanguage`: Output dialect (e.g., spark, trino, hive -- see below for supported outputs)
 - `query`: SQL query to translate between two dialects
@@ -95,30 +95,34 @@ cd coral-service
 ```  
 Example workflow using local metastore:
 
-(Note: Use an [online URL encoder](https://www.urlencoder.org/) to encode SQL queries.)
-
-5. Create a database called `db1` in local metastore using the /create endpoint
+5. Create a database called `db1` in local metastore using the /api/catalog-ops/execute endpoint
 
 ```bash
-# Non-URL encoded statement: CREATE DATABASE IF NOT EXISTS db1
+curl --header "Content-Type: application/json" \
+  --request POST \
+  --data "CREATE DATABASE IF NOT EXISTS db1" \
+  http://localhost:8080/api/catalog-ops/execute
 
-curl -X POST "http://localhost:8080/api/catalog-ops/execute?statement=CREATE%20DATABASE%20IF%20NOT%20EXISTS%20db1"
 Creation successful
 ```
-6. Create a table called `airport` within `db1` in local metastore using the /create endpoint
+6. Create a table called `airport` within `db1` in local metastore using the /api/catalog-ops/execute endpoint
 
 ```bash
-# Non-URL encoded statement: CREATE TABLE IF NOT EXISTS db1.airport(name string, country string, area_code int, code string, datepartition string)
+curl --header "Content-Type: application/json" \
+  --request POST \
+  --data "CREATE TABLE IF NOT EXISTS db1.airport(name string, country string, area_code int, code string, datepartition string)" \
+  http://localhost:8080/api/catalog-ops/execute
 
-curl -X POST "http://localhost:8080/api/catalog-ops/execute?statement=CREATE%20TABLE%20IF%20NOT%20EXISTS%20db1.airport%28name%20string%2C%20country%20string%2C%20area_code%20int%2C%20code%20string%2C%20datepartition%20string%29"
+Creation successful
 ```
 
-7. Translate a query on `db1.airport` in local metastore using the /translate endpoint
+7. Translate a query on `db1.airport` in local metastore using the /api/translations/translate endpoint
 
 ```bash
-# Non-URL encoded statement: SELECT * FROM db1.airport
-
-curl -X POST "http://localhost:8080/api/translations/translate?fromLanguage=hive&toLanguage=trino&query=SELECT%20%2A%20FROM%20db1.airport"
+curl --header "Content-Type: application/json" \
+  --request POST \
+  --data '{"fromLanguage":"hive","toLanguage":"trino","query":"SELECT * FROM db1.airport"}' \
+  http://localhost:8080/api/translations/translate
 ```
 The translation result is:
 ```

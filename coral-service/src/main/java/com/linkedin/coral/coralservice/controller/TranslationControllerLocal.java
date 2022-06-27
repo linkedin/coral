@@ -12,7 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import com.linkedin.coral.coralservice.utils.CoralProvider;
 
@@ -37,7 +37,7 @@ public class TranslationControllerLocal extends TranslationController {
   }
 
   @PostMapping("/api/catalog-ops/execute")
-  public ResponseEntity createInLocalMetastore(@RequestParam String statement) {
+  public ResponseEntity createInLocalMetastore(@RequestBody String statement) {
     String[] splitQuery = statement.split("\\s+");
     if (!isCreateQuery(splitQuery)) {
       return ResponseEntity.status(HttpStatus.BAD_REQUEST)
