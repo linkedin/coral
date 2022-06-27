@@ -1,7 +1,7 @@
 # Coral
 
 <p align="center">
- <img src="docs/coral-logo.png" width="400" title="Coral Logo">
+ <img src="docs/coral-logo.jpg" width="400" title="Coral Logo">
 </p>
 
 **Coral** is a library for analyzing, processing, and rewriting views defined in the Hive Metastore, and sharing them
