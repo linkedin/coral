@@ -36,12 +36,12 @@ public class TranslationControllerLocal extends TranslationController {
     }
   }
 
-  @PostMapping("/create")
+  @PostMapping("/api/catalog-ops/execute")
   public ResponseEntity createInLocalMetastore(@RequestParam String statement) {
     String[] splitQuery = statement.split("\\s+");
     if (!isCreateQuery(splitQuery)) {
       return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-          .body("Only queries starting with \"CREATE DATABASE|TABLE|VIEW\" are accepted.");
+          .body("Only queries starting with \"CREATE DATABASE|TABLE|VIEW\" are accepted.\n");
     }
 
     SessionState.start(conf);

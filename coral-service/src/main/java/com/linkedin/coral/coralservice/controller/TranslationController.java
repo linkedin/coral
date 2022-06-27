@@ -11,7 +11,7 @@ import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -37,12 +37,12 @@ public class TranslationController implements ApplicationListener<ContextRefresh
     }
   }
 
-  @GetMapping("/translate")
-  public ResponseEntity translate(@RequestParam String query, @RequestParam String fromLanguage,
-      @RequestParam String toLanguage) {
+  @PostMapping("/api/translations/translate")
+  public ResponseEntity translate(@RequestParam String fromLanguage, @RequestParam String toLanguage,
+      @RequestParam String query) {
     if (fromLanguage.equalsIgnoreCase(toLanguage)) {
       return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-          .body("Please choose different languages to translate between.");
+          .body("Please choose different languages to translate between.\n");
     }
 
     String translatedSql = null;
@@ -72,7 +72,7 @@ public class TranslationController implements ApplicationListener<ContextRefresh
       message = "Translation from " + fromLanguage + " to " + toLanguage + " is not currently supported."
           + " Coral-Service only supports translation from Hive to Trino/Spark, or translation from Trino to Spark.\n";
     } else {
-      message = "Original query in " + fromLanguage + ": " + query + "\n" + "Translated to " + toLanguage + ": "
+      message = "Original query in " + fromLanguage + ": " + query + "\n" + "Translated to " + toLanguage + ":\n"
           + translatedSql + "\n";
     }
     return ResponseEntity.status(HttpStatus.OK).body(message);
