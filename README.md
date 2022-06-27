@@ -118,7 +118,7 @@ curl -X POST "http://localhost:8080/api/catalog-ops/execute?statement=CREATE%20T
 ```bash
 # Non-URL encoded statement: SELECT * FROM db1.airport
 
-curl -X POST "http://localhost:8080//api/translations/translate?fromLanguage=hive&toLanguage=trino&query=SELECT%20%2A%20FROM%20db1.airport"
+curl -X POST "http://localhost:8080/api/translations/translate?fromLanguage=hive&toLanguage=trino&query=SELECT%20%2A%20FROM%20db1.airport"
 ```
 The translation result is:
 ```
