@@ -121,7 +121,11 @@ Creation successful
 ```bash
 curl --header "Content-Type: application/json" \
   --request POST \
-  --data '{"fromLanguage":"hive","toLanguage":"trino","query":"SELECT * FROM db1.airport"}' \
+  --data '{
+    "fromLanguage":"hive", 
+    "toLanguage":"trino", 
+    "query":"SELECT * FROM db1.airport"
+  }' \
   http://localhost:8080/api/translations/translate
 ```
 The translation result is:
