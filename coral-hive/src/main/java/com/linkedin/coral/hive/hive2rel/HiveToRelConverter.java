@@ -83,7 +83,8 @@ public class HiveToRelConverter extends ToRelConverter {
     if (sqlToRelConverter == null) {
       sqlToRelConverter =
           new HiveSqlToRelConverter(new HiveViewExpander(this), getSqlValidator(), getCalciteCatalogReader(),
-              RelOptCluster.create(new VolcanoPlanner(), getRelBuilder().getRexBuilder()), getConvertletTable(),
+              RelOptCluster.create(new VolcanoPlanner(), new HiveRexBuilder(getRelBuilder().getTypeFactory())),
+              getConvertletTable(),
               SqlToRelConverter.configBuilder().withRelBuilderFactory(HiveRelBuilder.LOGICAL_BUILDER).build());
     }
     return sqlToRelConverter;
