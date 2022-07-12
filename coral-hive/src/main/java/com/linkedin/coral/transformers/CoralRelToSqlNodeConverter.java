@@ -50,9 +50,9 @@ import static org.apache.calcite.sql.parser.SqlParserPos.*;
 
 
 /**
- * This class converts Coral RelNode to Coral SqlNode.
- *
- * This class currently handles only lateral view transformations
+ * This class converts a Coral intermediate representation, RelNode, to
+ * the original query's semantically equivalent but alternate representation: Coral SqlNode,
+ * supplemented with additional details, such as aliases required and clause association information.
  */
 public class CoralRelToSqlNodeConverter extends RelToSqlConverter {
 
@@ -73,31 +73,57 @@ public class CoralRelToSqlNodeConverter extends RelToSqlConverter {
   }
 
   /**
-   * This overridden implementation removes the catalog name from the table path.
-   * from the function makes sure that the basetable names in the output SqlNode
+   * TableScan RelNode represents a relational operator that returns the contents of a table.
+   * This overridden implementation removes the catalog name from the table namespace.
    *
-   * Example: input TableScan RelNode is:
-   * LogicalTableScan(table=[[hive, default, complex]])
-   * This override returns a Result whose sqlNode representation is: SqlIdentifier(default, complex)
+   * @param e Input TableScan RelNode is. An example:
+   *         <pre>
+   *            LogicalTableScan(table=[[hive, default, complex]])
+   *         </pre>
+   * @return This override returns a Result whose sqlNode representation would be:
+   *         <pre>
+   *            SqlIdentifier(default, complex)
+   *         </pre>
+   *         supplemented with additional clause association details.
    */
   @Override
   public Result visit(TableScan e) {
-    checkQualifiedName(e.getTable().getQualifiedName());
+    if (e.getTable().getQualifiedName().size() != 3) {
+      throw new RuntimeException("CoralRelToSqlNodeConverter Error: Qualified name has incorrect number of elements");
+    }
+
     List<String> tableNameWithoutCatalog = e.getTable().getQualifiedName().subList(1, 3);
     final SqlIdentifier identifier = new SqlIdentifier(tableNameWithoutCatalog, SqlParserPos.ZERO);
     return result(identifier, ImmutableList.of(Clause.FROM), e, null);
   }
 
   /**
-   * Correlate RelNode represents the FROM clause of the final sql query
-   * when the FROM clause contains explode() UDF as well
+   * Correlate relNode represents a Node with two correlated child queries,
+   * which upon conversion will be joined by non-traditional Join type.
+   * The transformation strategy for a correlate Node involves independently evaluating
+   * the two sub-expressions, joining them with COMMA joinType and associating the resulting expression
+   * with the FROM clause of the SQL.
    *
-   * Overriding the default implementation is required because
-   * the rightChildResult is also overriden and doesn't match super's expectation
+   * @param e We take a RelNode of type Correlate with two child nodes as input. Example:
+   *        <pre>
+   *           LogicalCorrelate(correlation=[$cor0], joinType=[inner], requiredColumns=[{2}])
+   *                          /                                                  \
+   *    LogicalTableScan(table=[[hive, default, complex]])                   HiveUncollect
+   *                                                                               \
+   *           			          			             			          		  	LogicalProject(col=[$cor0.c])
+   *                                                                                 \
+   *           			          			            			         			 	LogicalValues(tuples=[[{ 0 }]])
+   *        </pre>
+   *
+   * @return Result of transforming the RelNode into a SqlNode with additional supplemental details.
+   *         A sample generated Result would have the following SqlNode representation:
+   *        <pre>
+   *          default.complex , LATERAL UNNEST(`complex`.`c`) AS `t0` (`ccol`)
+   *        </pre>
+   *        supplemented with additional clause association and optional alias details.
    */
   @Override
   public Result visit(Correlate e) {
-    //Left Result removes the catalog name "hive" from the table path
     final Result leftResult = visitChild(0, e.getLeft());
 
     // Add context specifying correlationId has same context as its left child
@@ -108,11 +134,8 @@ public class CoralRelToSqlNodeConverter extends RelToSqlConverter {
     SqlJoin join = new SqlJoin(POS, leftResult.asFrom(), SqlLiteral.createBoolean(false, POS),
         JoinType.COMMA.symbol(POS), rightResult.asFrom(), JoinConditionType.NONE.symbol(POS), null);
 
-    //The default implementation assumes that the rightLateralNode, for LateralSqlOperator,
-    // has a null alias. At the same time, it expects a non-null alias for the same node.
-    // At this point, we can either customize the rightResult to pass the alias check
-    // or we can bypass the check and work around it. The latter approach has been chosen.
-
+    // Collect the right aliases for child Results. The child Results have SqlNodes with Kind IDENTIFIER and LATERAL.
+    // Super's implementation for alias collection assumes a null type alias for LATERAL SqlNode.
     final ImmutableMap.Builder<String, RelDataType> builder = ImmutableMap.<String, RelDataType> builder();
     collectAliases(builder, join,
         Iterables.concat(leftResult.aliases.values(), rightResult.aliases.values()).iterator());
@@ -121,18 +144,26 @@ public class CoralRelToSqlNodeConverter extends RelToSqlConverter {
   }
 
   /**
-   * Coral represents table function as an LogicalTableFunctionScan RelNode.
+   * Coral represents custom table-valued functions as LogicalTableFunctionScan type relational expression.
+   * This type of expression is often a leaf node in the overall SQL's tree of relational operators' representation.
+   * The Result generated is returned to its parent expression of type Correlate / Join.
    *
-   * Current version of calcite used in Coral does not have a default implementation for
-   * visiting a LogicalTableFunctionScan RelNode and throws an assertionError instead. Hence this implementation is required.
+   * Current version of Calcite used in Coral does not support traversing
+   * a LogicalTableFunctionScan type RelNode. Hence, this implementation is added.
    *
-   * In this function we override default SQL conversion for LogicalTableFunctionScan and
-   * handle correctly converting it to a table function by resetting table name
+   * @param e We take a RelNode of type LogicalTableFunctionScan as input. Example:
+   *           <pre>
+   *             LogicalTableFunctionScan(invocation=[default_foo_lateral_udtf_CountOfRow($cor0.a)])
+   *           </pre>
    *
-   * For Example:
-   *  default_foo_lateral_udtf_CountOfRow($cor0.a)
-   *            is converted to
-   *  `default_foo_lateral_udtf_CountOfRow`(`complex`.`a`)
+   * @return Result of transforming the RelNode into a SqlNode with additional supplemental details.
+   *         This output has similar semantics as the output of transforming an
+   *         Uncollect type RelNode. (Why? Since both have similar tree representations and hence, similar parent nodes.)
+   *         A sample generated Result would have the following SqlNode representation:
+   *            <pre>
+   *              LATERAL COLLECTION_TABLE(`default_foo_lateral_udtf_CountOfRow`(`complex`.`a`)) AS `t` (`col1`)
+   *            </pre>
+   *         supplemented with additional clause association and alias details.
    */
   public Result visit(LogicalTableFunctionScan e) {
     RexCall call = (RexCall) e.getCall();
@@ -148,26 +179,38 @@ public class CoralRelToSqlNodeConverter extends RelToSqlConverter {
     SqlCall functionOperatorCall = functionOperator.createCall(POS, functionOperands.toArray(new SqlNode[0]));
 
     SqlNode tableCall = new SqlLateralOperator(SqlKind.COLLECTION_TABLE).createCall(POS, functionOperatorCall);
+    Result tableCallResultWithAlias = result(tableCall, ImmutableList.of(Clause.FROM), e, null);
 
-    Result x = result(tableCall, ImmutableList.of(Clause.FROM), e, null);
-
-    List<SqlNode> asOperands = createAsFullOperands(e.getRowType(), tableCall, x.neededAlias);
-
+    List<SqlNode> asOperands = createAsFullOperands(e.getRowType(), tableCall, tableCallResultWithAlias.neededAlias);
     SqlCall aliasCall = SqlStdOperatorTable.AS.createCall(ZERO, asOperands);
 
-    final SqlNode lateralNode = SqlStdOperatorTable.LATERAL.createCall(POS, aliasCall);
+    SqlNode lateralCall = SqlStdOperatorTable.LATERAL.createCall(POS, aliasCall);
 
-    return new Result(lateralNode, ImmutableList.of(Clause.FROM), null, e.getRowType(),
-        ImmutableMap.of(x.neededAlias, e.getRowType()));
+    return new Result(lateralCall, ImmutableList.of(Clause.FROM), null, e.getRowType(),
+        ImmutableMap.of(tableCallResultWithAlias.neededAlias, e.getRowType()));
   }
 
   /**
-   * Join has a right child node, Hive uncollect. SqlNode of the Result
-   * from this right child node is now of kind LATERAL, as opposed to AS as per the super's implementation.
-   * SqlValidatorUtil.getAlias assumes a null alias for LATERAL SqlNodes and hence, Result construction fails for Join.
+   * Join relNode represents a Node with two child relational expressions linked by traditional join types and conditions.
    *
-   * @param e
-   * @return
+   * @param e We take a RelNode of type Join with two child nodes as input. Example:
+   *
+   *        <pre>
+   *                             LogicalJoin(condition=[true], joinType=[inner])
+   *                                /                                      \
+   *    LogicalTableScan(table=[[hive, default, complex]])              HiveUncollect
+   *                                                                         \
+   *           			          			                     		  	LogicalProject(col=[ARRAY('a', 'b')])
+   *                                                                           \
+   *           			          			         			         			 	LogicalValues(tuples=[[{ 0 }]])
+   *        </pre>
+   *
+   * @return Result of transforming the RelNode into a SqlNode with additional supplemental details.
+   *         A sample generated Result would have the following SqlNode representation:
+   *        <pre>
+   *          default.complex , LATERAL UNNEST(ARRAY ('a', 'b')) AS `t0` (`ccol`)
+   *        </pre>
+   *        supplemented with additional clause association and optional alias details.
    */
   @Override
   public Result visit(Join e) {
@@ -179,7 +222,7 @@ public class CoralRelToSqlNodeConverter extends RelToSqlConverter {
     SqlLiteral condType = JoinConditionType.ON.symbol(POS);
     JoinType joinType = joinType(e.getJoinType());
 
-    if (isCrossJoin(e)) {
+    if (e.getJoinType() == JoinRelType.INNER && e.getCondition().isAlwaysTrue()) {
       joinType = dialect.emulateJoinTypeForCrossJoin();
       condType = JoinConditionType.NONE.symbol(POS);
     } else {
@@ -190,66 +233,80 @@ public class CoralRelToSqlNodeConverter extends RelToSqlConverter {
     SqlNode join = new SqlJoin(POS, leftResult.asFrom(), SqlLiteral.createBoolean(false, POS), joinType.symbol(POS),
         rightResult.asFrom(), condType, sqlCondition);
 
+    // Collect the right aliases for child Results. The child Results have SqlNodes with Kind IDENTIFIER and LATERAL.
+    // Super's implementation for alias collection assumes a null type alias for LATERAL SqlNode.
     final ImmutableMap.Builder<String, RelDataType> builder = ImmutableMap.<String, RelDataType> builder();
     collectAliases(builder, join,
         Iterables.concat(leftResult.aliases.values(), rightResult.aliases.values()).iterator());
 
-    //Calling new Result(...) explicitly prevents addition of new aliases.
-    // The builder provided has the needed aliases for all SqlNode kinds available to the join clause.
+    // Reuse the existing aliases, if any, since that's already unique by directly calling "new Result(...)"
+    // instead of calling super.result(...), which will generate a new table alias and cause an extra
+    // "AS" to be added to the generated SQL statement and make it invalid.
     return new Result(join, Expressions.list(Clause.FROM), null, null, builder.build());
   }
 
   /**
-   * Coral represents explode function as an Uncollect RelNode.
-   * The default super's implementation takes Project RelNode as input in the form of
-   *        SELECT `complex`.`c` as`ccol` FROM (VALUES  (0))
-   * and appends the UNNEST and AS operators on top of it.
+   * Coral represents relational expression that unboxes its input's column(s)
+   * using explode() function as an Uncollect type RelNode.
+   * The Result generated is returned to its parent RelNode of type Correlate / Join.
    *
-   * However, the result generated is unmanageable for the following reasons:
-   * 1. Result has some extra clauses with make parsing difficult.
-   * 2. It also doesn't work well for unboxing array of type struct.
-   * It attempts to generate individual columns for each datatype inside the struct.
-   * 3. It doesn't append the LATERAL operator
+   * @param e We take a RelNode of type Uncollect as input. Example:
+   *          <pre>
+   *             HiveUncollect
+   *               LogicalProject(col=[$cor0.c])
+   *                 LogicalValues(tuples=[[{ 0 }]])
+   *          </pre>
    *
-   * Overriding the function helps generate a more easily parsable SqlNode:
-   * LATERAL UNNEST(`complex`.`c`) AS t0 (ccol)
+   * @return Result with simplified custom transformations.
+   *         The default super's implementation traverses this tree in post order traversal.
+   *         The additive transformations applied generates a Result with SqlNode like:
+   * 				<pre>
+   *           UNNEST (SELECT `complex`.`c` AS `col` FROM (VALUES  (0)) AS `t` (`ZERO`)) AS `t0` (`ccol`)
+   *        </pre>
+   *         and additional unessential alias requirements which is then returned to the parent RelNode.
+   *
+   *         However, the above Result is unmanageable for the parent node for the following reasons:
+   *         1. Result's SqlNode has some extra clauses, such as the SELECT clause inside UNNEST operator, with make parsing cumbersome in the parent RelNode's transformations.
+   *         2. It also doesn't work well for unboxing array of type struct as the transformation attempts to generate individual columns for each datatype inside the struct.
+   *         3. It doesn't append the LATERAL operator
+   *         Also, the above Result's SqlNode does not mimic the original SqlNode as expected.
+   *
+   *         Overriding this transformation outputs a more easily parsable Result which is consistent with the original SqlNOde. The generated Result has the following simplified SqlNode representation:
+   *        <pre>
+   *           LATERAL UNNEST(`complex`.`c`) AS `t0` (`ccol`)
+   *        </pre>
+   *         and supplemental information about clause associations and optional aliases as required.
    */
   @Override
   public Result visit(Uncollect e) {
 
-    final Result x = visitChild(0, e.getInput());
+    // projectResult's SqlNode representation: SELECT `complex`.`c` AS `col` FROM (VALUES  (0)) AS `t` (`ZERO`)
+    final Result projectResult = visitChild(0, e.getInput());
 
-    // Extract unnestColumns from result x: (SELECT <unnestColumns> FROM (VALUES(0)))
+    // Extract column(s) to unnest from projectResult
     // and generate UNNEST(<unnestColumns>) instead.
     final List<SqlNode> unnestOperands = new ArrayList<>();
     for (RexNode unnestCol : ((Project) e.getInput()).getChildExps()) {
-      unnestOperands.add(x.qualifiedContext().toSql(null, unnestCol));
+      unnestOperands.add(projectResult.qualifiedContext().toSql(null, unnestCol));
     }
 
-    // Convert UNNEST to EXPLODE or POSEXPLODE function
-    final SqlNode unnestNode = (e.withOrdinality ? HivePosExplodeOperator.POS_EXPLODE : HiveExplodeOperator.EXPLODE)
+    // Convert UNNEST to EXPLODE or POSEXPLODE function and create the simplified SqlCall with UNNEST operand(s) such as:
+    // UNNEST(`complex`.`c`)
+    final SqlNode unnestCall = (e.withOrdinality ? HivePosExplodeOperator.POS_EXPLODE : HiveExplodeOperator.EXPLODE)
         .createCall(POS, unnestOperands.toArray(new SqlNode[0]));
 
-    List<SqlNode> asOperands = createAsFullOperands(e.getRowType(), unnestNode, x.neededAlias);
-    final SqlNode asNode = SqlStdOperatorTable.AS.createCall(POS, asOperands);
+    // Append the alias to unnestCall by generating SqlCall with AS operator
+    List<SqlNode> asOperands = createAsFullOperands(e.getRowType(), unnestCall, projectResult.neededAlias);
+    final SqlNode aliasCall = SqlStdOperatorTable.AS.createCall(POS, asOperands);
 
-    final SqlNode lateralNode = SqlStdOperatorTable.LATERAL.createCall(POS, asNode);
+    // Append the LATERAL operator
+    final SqlNode lateralCall = SqlStdOperatorTable.LATERAL.createCall(POS, aliasCall);
 
-    // Reuse the same x.neededAlias since that's already unique by directly calling "new Result(...)"
+    // Reuse the same projectResult.neededAlias since that's already unique by directly calling "new Result(...)"
     // instead of calling super.result(...), which will generate a new table alias and cause an extra
     // "AS" to be added to the generated SQL statement and make it invalid.
-    return new Result(lateralNode, ImmutableList.of(Clause.FROM), null, e.getRowType(),
-        ImmutableMap.of(x.neededAlias, e.getRowType()));
-  }
-
-  private void checkQualifiedName(List<String> qualifiedName) {
-    if (qualifiedName.size() != 3) {
-      throw new RuntimeException("CoralRelToSqlNodeConverter Error: Qualified name has incorrect number of elements");
-    }
-  }
-
-  private boolean isCrossJoin(Join e) {
-    return e.getJoinType() == JoinRelType.INNER && e.getCondition().isAlwaysTrue();
+    return new Result(lateralCall, ImmutableList.of(Clause.FROM), null, e.getRowType(),
+        ImmutableMap.of(projectResult.neededAlias, e.getRowType()));
   }
 
   private void collectAliases(ImmutableMap.Builder<String, RelDataType> builder, SqlNode node,

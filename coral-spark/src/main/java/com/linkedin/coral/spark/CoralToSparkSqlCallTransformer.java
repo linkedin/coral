@@ -11,8 +11,11 @@ import org.apache.calcite.sql.util.SqlShuttle;
 
 
 /**
- * Rewrites the Coral SqlNode tree to replace Coral IR SqlCalls
- * with Spark compatible SqlCalls to obtain a Spark compatible translated sql.
+ * CoralToSparkSqlCallTransformer rewrites the Coral SqlNode AST to replace Coral IR SqlCalls
+ * with Spark compatible SqlCalls to obtain a Spark compatible SqlNode AST.
+ *
+ * It does so by visiting the Coral SqlNode AST in a pre-order traversal manner and
+ * returning transformed SqlCalls wherever a transformation is required.
  */
 public class CoralToSparkSqlCallTransformer extends SqlShuttle {
   public CoralToSparkSqlCallTransformer() {

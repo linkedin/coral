@@ -91,7 +91,6 @@ public class CoralToSparkSqlCallTransformationUtils {
   }
 
   private static SqlCall getTransformedJoinSqlCall(SqlCall sqlCall) {
-
     if (((SqlJoin) sqlCall).getJoinType() != JoinType.COMMA
         || ((SqlCall) ((SqlJoin) sqlCall).getRight()).getOperator().kind != SqlKind.LATERAL) {
       return sqlCall;
