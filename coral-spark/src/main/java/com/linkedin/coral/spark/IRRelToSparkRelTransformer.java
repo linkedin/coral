@@ -60,7 +60,7 @@ import com.linkedin.coral.hive.hive2rel.functions.VersionedSqlUserDefinedFunctio
 import com.linkedin.coral.spark.containers.SparkRelInfo;
 import com.linkedin.coral.spark.containers.SparkUDFInfo;
 import com.linkedin.coral.spark.exceptions.UnsupportedUDFException;
-import com.linkedin.coral.spark.utils.RelDataTypeToSparkDataTypeStringConverter;
+import com.linkedin.coral.spark.utils.RelDataTypeToHiveTypeStringConverter;
 
 
 /**
@@ -315,7 +315,7 @@ class IRRelToSparkRelTransformer {
       if (call.getOperator() instanceof GenericProjectFunction) {
         RelDataType expectedRelDataType = call.getType();
         String expectedRelDataTypeString =
-            RelDataTypeToSparkDataTypeStringConverter.convertRelDataType(expectedRelDataType);
+            RelDataTypeToHiveTypeStringConverter.buildHiveTypeString(expectedRelDataType);
 
         List<RexNode> newOperands = new ArrayList<>();
         newOperands.add(call.getOperands().get(0));
