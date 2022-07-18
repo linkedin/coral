@@ -21,20 +21,21 @@ import org.apache.calcite.sql.type.MapSqlType;
  *
  * Example 1:
  * RelDataType:
- *   struct(s1: integer, s2: varchar)
+ *   struct(s1:integer,s2:varchar)
  * Hive Type String:
- *   struct(s1:int,s2:string)
+ *   struct&lt;s1:int,s2:string&gt;
  *
  * Example 2:
  * RelDataType:
- *   map(varchar, struct(s1: integer, s2: varchar))
+ *   map(varchar,struct(s1:integer,s2:varchar))
  * Hive Type String:
- *   map(string,struct(s1:int,s2:string))
+ *   map&lt;string,struct(s1:int,s2:string&gt;&gt;
+ *
  * Example 3:
  * RelDataType:
- *   array(struct(s1: integer, s2: varchar))
+ *   array(struct(s1:integer,s2:varchar))
  * Hive Type String:
- *   array(struct(s1:int,s2:string))
+ *   array&lt;struct&lt;s1:int,s2:string&gt;&gt;
  */
 public class RelDataTypeToHiveTypeStringConverter {
   private RelDataTypeToHiveTypeStringConverter() {
