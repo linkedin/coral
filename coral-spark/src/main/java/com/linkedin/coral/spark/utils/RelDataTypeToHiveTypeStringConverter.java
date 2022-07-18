@@ -17,6 +17,24 @@ import org.apache.calcite.sql.type.MapSqlType;
 
 /**
  * Transforms a RelDataType to a Hive type string such that it is parseable and semantically correct.
+ * Some example of Hive type string for a RelDataType are as follows:
+ *
+ * Example 1:
+ * RelDataType:
+ *   struct(s1: integer, s2: varchar)
+ * Hive Type String:
+ *   struct(s1:int,s2:string)
+ *
+ * Example 2:
+ * RelDataType:
+ *   map(varchar, struct(s1: integer, s2: varchar))
+ * Hive Type String:
+ *   map(string,struct(s1:int,s2:string))
+ * Example 3:
+ * RelDataType:
+ *   array(struct(s1: integer, s2: varchar))
+ * Hive Type String:
+ *   array(struct(s1:int,s2:string))
  */
 public class RelDataTypeToHiveTypeStringConverter {
   private RelDataTypeToHiveTypeStringConverter() {
@@ -26,7 +44,7 @@ public class RelDataTypeToHiveTypeStringConverter {
    * @param relDataType a given RelDataType
    * @return a syntactically and semantically correct Hive type string for relDataType
    */
-  public static String buildHiveTypeString(RelDataType relDataType) {
+  public static String convertRelDataType(RelDataType relDataType) {
     switch (relDataType.getSqlTypeName()) {
       case ROW:
         return buildStructDataTypeString((RelRecordType) relDataType);
@@ -50,6 +68,7 @@ public class RelDataTypeToHiveTypeStringConverter {
       case BOOLEAN:
         return "boolean";
       case CHAR:
+        return "char";
       case VARCHAR:
         return "string";
       case DATE:
@@ -74,7 +93,9 @@ public class RelDataTypeToHiveTypeStringConverter {
       case INTERVAL_MONTH:
       case INTERVAL_YEAR:
       case INTERVAL_YEAR_MONTH:
+        return "interval";
       case NULL:
+        return "null";
       default:
         throw new RuntimeException(String.format(
             "Unhandled RelDataType %s in Converter from RelDataType to Hive DataType", relDataType.getSqlTypeName()));
@@ -91,7 +112,7 @@ public class RelDataTypeToHiveTypeStringConverter {
     List<String> structFieldStrings = new ArrayList<>();
     for (RelDataTypeField fieldRelDataType : relRecordType.getFieldList()) {
       structFieldStrings
-          .add(String.format("%s:%s", fieldRelDataType.getName(), buildHiveTypeString(fieldRelDataType.getType())));
+          .add(String.format("%s:%s", fieldRelDataType.getName(), convertRelDataType(fieldRelDataType.getType())));
     }
     String subFieldsString = String.join(",", structFieldStrings);
     return String.format("struct<%s>", subFieldsString);
@@ -104,7 +125,7 @@ public class RelDataTypeToHiveTypeStringConverter {
    * @return a string that represents the given arraySqlType
    */
   private static String buildArrayDataTypeString(ArraySqlType arraySqlType) {
-    String elementDataTypeString = buildHiveTypeString(arraySqlType.getComponentType());
+    String elementDataTypeString = convertRelDataType(arraySqlType.getComponentType());
     return String.format("array<%s>", elementDataTypeString);
   }
 
@@ -115,8 +136,8 @@ public class RelDataTypeToHiveTypeStringConverter {
    * @return a string that represents the given mapSqlType
    */
   private static String buildMapDataTypeString(MapSqlType mapSqlType) {
-    String keyDataTypeString = buildHiveTypeString(mapSqlType.getKeyType());
-    String valueDataTypeString = buildHiveTypeString(mapSqlType.getValueType());
+    String keyDataTypeString = convertRelDataType(mapSqlType.getKeyType());
+    String valueDataTypeString = convertRelDataType(mapSqlType.getValueType());
     return String.format("map<%s,%s>", keyDataTypeString, valueDataTypeString);
   }
 }

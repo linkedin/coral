@@ -34,13 +34,13 @@ public class RelDataTypeToHiveDataTypeStringConverterTest {
             .put("int", SqlTypeName.INTEGER).put("smallint", SqlTypeName.SMALLINT).put("bigint", SqlTypeName.BIGINT)
             .put("double", SqlTypeName.DOUBLE).put("float", SqlTypeName.FLOAT).put("boolean", SqlTypeName.BOOLEAN)
             .put("date", SqlTypeName.DATE).put("timestamp", SqlTypeName.TIMESTAMP).put("binary", SqlTypeName.BINARY)
-            .build();
+            .put("interval", SqlTypeName.INTERVAL_DAY).put("null", SqlTypeName.NULL).build();
 
     for (Map.Entry<String, SqlTypeName> entry : hiveDataTypeStringToSqlTypeNameMap.entries()) {
       String expectedHiveDataTypeSchemaString = entry.getKey();
       SqlTypeName sqlTypeName = entry.getValue();
       RelDataType relDataType = new BasicSqlType(RelDataTypeSystem.DEFAULT, sqlTypeName);
-      String hiveDataTypeSchemaString = RelDataTypeToHiveTypeStringConverter.buildHiveTypeString(relDataType);
+      String hiveDataTypeSchemaString = RelDataTypeToHiveTypeStringConverter.convertRelDataType(relDataType);
       assertEquals(hiveDataTypeSchemaString, expectedHiveDataTypeSchemaString);
     }
   }
@@ -54,7 +54,7 @@ public class RelDataTypeToHiveDataTypeStringConverterTest {
     fields.add(new RelDataTypeFieldImpl("int", 0, new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.INTEGER)));
 
     RelRecordType relRecordType = new RelRecordType(fields);
-    String hiveDataTypeSchemaString = RelDataTypeToHiveTypeStringConverter.buildHiveTypeString(relRecordType);
+    String hiveDataTypeSchemaString = RelDataTypeToHiveTypeStringConverter.convertRelDataType(relRecordType);
 
     assertEquals(hiveDataTypeSchemaString, expectedHiveDataTypeSchemaString);
   }
@@ -66,7 +66,7 @@ public class RelDataTypeToHiveDataTypeStringConverterTest {
     ArraySqlType arraySqlType =
         new ArraySqlType(new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.INTEGER), true);
 
-    String hiveDataTypeSchemaString = RelDataTypeToHiveTypeStringConverter.buildHiveTypeString(arraySqlType);
+    String hiveDataTypeSchemaString = RelDataTypeToHiveTypeStringConverter.convertRelDataType(arraySqlType);
 
     assertEquals(hiveDataTypeSchemaString, expectedHiveDataTypeSchemaString);
   }
@@ -78,7 +78,7 @@ public class RelDataTypeToHiveDataTypeStringConverterTest {
     MapSqlType mapSqlType = new MapSqlType(new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.INTEGER),
         new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.INTEGER), true);
 
-    String hiveDataTypeSchemaString = RelDataTypeToHiveTypeStringConverter.buildHiveTypeString(mapSqlType);
+    String hiveDataTypeSchemaString = RelDataTypeToHiveTypeStringConverter.convertRelDataType(mapSqlType);
 
     assertEquals(hiveDataTypeSchemaString, expectedHiveDataTypeSchemaString);
   }
@@ -100,7 +100,7 @@ public class RelDataTypeToHiveDataTypeStringConverterTest {
     fields.add(new RelDataTypeFieldImpl("struct", 0, nestedRelRecordType));
 
     RelRecordType relRecordType = new RelRecordType(fields);
-    String hiveDataTypeSchemaString = RelDataTypeToHiveTypeStringConverter.buildHiveTypeString(relRecordType);
+    String hiveDataTypeSchemaString = RelDataTypeToHiveTypeStringConverter.convertRelDataType(relRecordType);
 
     assertEquals(hiveDataTypeSchemaString, expectedHiveDataTypeSchemaString);
   }
@@ -118,7 +118,7 @@ public class RelDataTypeToHiveDataTypeStringConverterTest {
     MapSqlType mapSqlType =
         new MapSqlType(new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.INTEGER), relRecordType, true);
 
-    String hiveDataTypeSchemaString = RelDataTypeToHiveTypeStringConverter.buildHiveTypeString(mapSqlType);
+    String hiveDataTypeSchemaString = RelDataTypeToHiveTypeStringConverter.convertRelDataType(mapSqlType);
 
     assertEquals(hiveDataTypeSchemaString, expectedHiveDataTypeSchemaString);
   }
@@ -135,7 +135,7 @@ public class RelDataTypeToHiveDataTypeStringConverterTest {
 
     ArraySqlType arraySqlType = new ArraySqlType(relRecordType, true);
 
-    String hiveDataTypeSchemaString = RelDataTypeToHiveTypeStringConverter.buildHiveTypeString(arraySqlType);
+    String hiveDataTypeSchemaString = RelDataTypeToHiveTypeStringConverter.convertRelDataType(arraySqlType);
 
     assertEquals(hiveDataTypeSchemaString, expectedHiveDataTypeSchemaString);
   }
@@ -163,7 +163,7 @@ public class RelDataTypeToHiveDataTypeStringConverterTest {
     MapSqlType mapSqlType =
         new MapSqlType(new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.INTEGER), arraySqlType, true);
 
-    String hiveDataTypeSchemaString = RelDataTypeToHiveTypeStringConverter.buildHiveTypeString(mapSqlType);
+    String hiveDataTypeSchemaString = RelDataTypeToHiveTypeStringConverter.convertRelDataType(mapSqlType);
 
     assertEquals(hiveDataTypeSchemaString, expectedHiveDataTypeSchemaString);
   }

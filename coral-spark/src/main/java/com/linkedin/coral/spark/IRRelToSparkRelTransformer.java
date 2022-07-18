@@ -314,8 +314,7 @@ class IRRelToSparkRelTransformer {
     private Optional<RexNode> convertFuzzyUnionGenericProject(RexCall call) {
       if (call.getOperator() instanceof GenericProjectFunction) {
         RelDataType expectedRelDataType = call.getType();
-        String expectedRelDataTypeString =
-            RelDataTypeToHiveTypeStringConverter.buildHiveTypeString(expectedRelDataType);
+        String expectedRelDataTypeString = RelDataTypeToHiveTypeStringConverter.convertRelDataType(expectedRelDataType);
 
         List<RexNode> newOperands = new ArrayList<>();
         newOperands.add(call.getOperands().get(0));
