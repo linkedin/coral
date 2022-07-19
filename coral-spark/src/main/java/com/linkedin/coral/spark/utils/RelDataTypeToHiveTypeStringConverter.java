@@ -29,7 +29,7 @@ import org.apache.calcite.sql.type.MapSqlType;
  * RelDataType:
  *   map(varchar,struct(s1:integer,s2:varchar))
  * Hive Type String:
- *   map&lt;string,struct(s1:int,s2:string&gt;&gt;
+ *   map&lt;string,struct&lt;s1:int,s2:string&gt;&gt;
  *
  * Example 3:
  * RelDataType:
