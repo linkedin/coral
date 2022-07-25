@@ -23,14 +23,7 @@ import org.apache.calcite.sql.SqlOperandCountRange;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParserPos;
-import org.apache.calcite.sql.type.ReturnTypes;
-import org.apache.calcite.sql.type.SameOperandTypeChecker;
-import org.apache.calcite.sql.type.SqlOperandCountRanges;
-import org.apache.calcite.sql.type.SqlOperandTypeChecker;
-import org.apache.calcite.sql.type.SqlOperandTypeInference;
-import org.apache.calcite.sql.type.SqlReturnTypeInference;
-import org.apache.calcite.sql.type.SqlTypeFamily;
-import org.apache.calcite.sql.type.SqlTypeName;
+import org.apache.calcite.sql.type.*;
 import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
 
 import com.linkedin.coral.com.google.common.collect.HashMultimap;
@@ -205,7 +198,7 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
     createAddUserDefinedFunction("base64", FunctionReturnTypes.STRING, BINARY);
     createAddUserDefinedFunction("character_length", ReturnTypes.INTEGER, STRING);
     createAddUserDefinedFunction("chr", FunctionReturnTypes.STRING, NUMERIC);
-    createAddUserDefinedFunction("concat", FunctionReturnTypes.STRING, SAME_VARIADIC);
+    createAddUserDefinedFunction("concat", cascade(FunctionReturnTypes.STRING, SqlTypeTransforms.TO_NULLABLE), SAME_VARIADIC);
     // [CORAL-24] Tried setting this to
     // or(family(SqlTypeFamily.STRING, SqlTypeFamily.ARRAY),
     // and(variadic(SqlOperandCountRanges.from(2)), repeat(SqlOperandCountRanges.from(2), STRING)))
@@ -405,8 +398,9 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
         STRING_STRING_STRING);
     createAddUserDefinedFunction("com.linkedin.dali.udf.useragentparser.hive.UserAgentParser",
         FunctionReturnTypes.STRING, STRING_STRING);
-    createAddUserDefinedFunction("com.linkedin.dali.udf.maplookup.hive.MapLookup", FunctionReturnTypes.STRING,
-        family(SqlTypeFamily.MAP, SqlTypeFamily.STRING, SqlTypeFamily.STRING));
+    createAddUserDefinedFunction("com.linkedin.dali.udf.maplookup.hive.MapLookup",
+        cascade(FunctionReturnTypes.STRING, SqlTypeTransforms.FORCE_NULLABLE),
+            family(SqlTypeFamily.MAP, SqlTypeFamily.STRING, SqlTypeFamily.STRING));
     createAddUserDefinedFunction("com.linkedin.dali.udf.monarch.UrnGenerator", FunctionReturnTypes.STRING, VARIADIC);
     createAddUserDefinedFunction("com.linkedin.dali.udf.genericlookup.hive.GenericLookup", FunctionReturnTypes.STRING,
         or(family(SqlTypeFamily.STRING, SqlTypeFamily.STRING, SqlTypeFamily.STRING, SqlTypeFamily.ANY,
@@ -551,8 +545,9 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
         NUMERIC);
     createAddUserDefinedFunction("com.linkedin.stdudfs.stringudfs.hive.InitCap", FunctionReturnTypes.STRING, STRING);
     createAddUserDefinedFunction("com.linkedin.stdudfs.daliudfs.hive.IsGuestMemberId", ReturnTypes.BOOLEAN, NUMERIC);
-    createAddUserDefinedFunction("com.linkedin.stdudfs.daliudfs.hive.MapLookup", FunctionReturnTypes.STRING,
-        family(SqlTypeFamily.MAP, SqlTypeFamily.STRING, SqlTypeFamily.STRING));
+    createAddUserDefinedFunction("com.linkedin.stdudfs.daliudfs.hive.MapLookup",
+        cascade(FunctionReturnTypes.STRING, SqlTypeTransforms.FORCE_NULLABLE),
+            family(SqlTypeFamily.MAP, SqlTypeFamily.STRING, SqlTypeFamily.STRING));
     createAddUserDefinedFunction("com.linkedin.stdudfs.daliudfs.hive.PortalLookup", FunctionReturnTypes.STRING,
         STRING_STRING);
     createAddUserDefinedFunction("com.linkedin.stdudfs.daliudfs.hive.Sanitize", FunctionReturnTypes.STRING, STRING);
