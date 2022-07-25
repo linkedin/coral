@@ -198,7 +198,8 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
     createAddUserDefinedFunction("base64", FunctionReturnTypes.STRING, BINARY);
     createAddUserDefinedFunction("character_length", ReturnTypes.INTEGER, STRING);
     createAddUserDefinedFunction("chr", FunctionReturnTypes.STRING, NUMERIC);
-    createAddUserDefinedFunction("concat", cascade(FunctionReturnTypes.STRING, SqlTypeTransforms.TO_NULLABLE), SAME_VARIADIC);
+    createAddUserDefinedFunction("concat", cascade(FunctionReturnTypes.STRING, SqlTypeTransforms.TO_NULLABLE),
+        SAME_VARIADIC);
     // [CORAL-24] Tried setting this to
     // or(family(SqlTypeFamily.STRING, SqlTypeFamily.ARRAY),
     // and(variadic(SqlOperandCountRanges.from(2)), repeat(SqlOperandCountRanges.from(2), STRING)))
@@ -400,7 +401,7 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
         FunctionReturnTypes.STRING, STRING_STRING);
     createAddUserDefinedFunction("com.linkedin.dali.udf.maplookup.hive.MapLookup",
         cascade(FunctionReturnTypes.STRING, SqlTypeTransforms.FORCE_NULLABLE),
-            family(SqlTypeFamily.MAP, SqlTypeFamily.STRING, SqlTypeFamily.STRING));
+        family(SqlTypeFamily.MAP, SqlTypeFamily.STRING, SqlTypeFamily.STRING));
     createAddUserDefinedFunction("com.linkedin.dali.udf.monarch.UrnGenerator", FunctionReturnTypes.STRING, VARIADIC);
     createAddUserDefinedFunction("com.linkedin.dali.udf.genericlookup.hive.GenericLookup", FunctionReturnTypes.STRING,
         or(family(SqlTypeFamily.STRING, SqlTypeFamily.STRING, SqlTypeFamily.STRING, SqlTypeFamily.ANY,
@@ -547,7 +548,7 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
     createAddUserDefinedFunction("com.linkedin.stdudfs.daliudfs.hive.IsGuestMemberId", ReturnTypes.BOOLEAN, NUMERIC);
     createAddUserDefinedFunction("com.linkedin.stdudfs.daliudfs.hive.MapLookup",
         cascade(FunctionReturnTypes.STRING, SqlTypeTransforms.FORCE_NULLABLE),
-            family(SqlTypeFamily.MAP, SqlTypeFamily.STRING, SqlTypeFamily.STRING));
+        family(SqlTypeFamily.MAP, SqlTypeFamily.STRING, SqlTypeFamily.STRING));
     createAddUserDefinedFunction("com.linkedin.stdudfs.daliudfs.hive.PortalLookup", FunctionReturnTypes.STRING,
         STRING_STRING);
     createAddUserDefinedFunction("com.linkedin.stdudfs.daliudfs.hive.Sanitize", FunctionReturnTypes.STRING, STRING);
