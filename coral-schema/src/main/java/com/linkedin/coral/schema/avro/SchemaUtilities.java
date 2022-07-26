@@ -89,10 +89,9 @@ class SchemaUtilities {
    *
    * @param table
    * @param strictMode if set to true, we do not fall back to Hive schema
-   * @param forceLowercase if set to true, the schema returned is converted to lowercase
    * @return Avro schema for table including partition columns
    */
-  static Schema getAvroSchemaForTable(@Nonnull final Table table, boolean strictMode, boolean forceLowercase) {
+  static Schema getAvroSchemaForTable(@Nonnull final Table table, boolean strictMode) {
     Preconditions.checkNotNull(table);
     Schema resultTableSchema;
     Schema originalTableSchema = SchemaUtilities.getCasePreservedSchemaForTable(table);
@@ -126,8 +125,7 @@ class SchemaUtilities {
       }
     }
 
-    // Return lowercased schema if forceLowercase is set to True
-    return forceLowercase ? ToLowercaseSchemaVisitor.visit(resultTableSchema) : resultTableSchema;
+    return resultTableSchema;
   }
 
   static Schema convertHiveSchemaToAvro(@Nonnull final Table table) {
@@ -452,12 +450,19 @@ class SchemaUtilities {
    * @param rightSchema Right schema to be merged
    * @param strictMode If set to true, namespaces are required to be same.
    *                   If set to false, we don't check namespaces.
-   *
+   * @param forceLowercase If set to true, cast schema to lowercase
    * @return Merged schema if the input schemas can be merged
    */
-  static Schema mergeUnionRecordSchema(@Nonnull Schema leftSchema, @Nonnull Schema rightSchema, boolean strictMode) {
+  static Schema mergeUnionRecordSchema(@Nonnull Schema leftSchema, @Nonnull Schema rightSchema, boolean strictMode,
+      boolean forceLowercase) {
     Preconditions.checkNotNull(leftSchema);
     Preconditions.checkNotNull(rightSchema);
+    // TODO: we should investigate simplify casing transformations
+    if (forceLowercase) {
+      leftSchema = ToLowercaseSchemaVisitor.visit(leftSchema);
+      rightSchema = ToLowercaseSchemaVisitor.visit(rightSchema);
+    }
+
     if (leftSchema.toString(true).equals(rightSchema.toString(true))) {
       return leftSchema;
     }
@@ -560,7 +565,7 @@ class SchemaUtilities {
           return Schema.createEnum(leftSchema.getName(), leftSchema.getDoc(), leftSchema.getNamespace(),
               schemaSymbols.asList());
         case RECORD:
-          return mergeUnionRecordSchema(leftSchema, rightSchema, strictMode);
+          return mergeUnionRecordSchema(leftSchema, rightSchema, strictMode, false);
         case MAP:
           Schema valueType = getUnionFieldSchema(leftSchema.getValueType(), rightSchema.getValueType(), strictMode);
           return Schema.createMap(valueType);
