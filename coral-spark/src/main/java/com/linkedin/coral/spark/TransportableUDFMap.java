@@ -115,8 +115,8 @@ class TransportableUDFMap {
 
     add("com.linkedin.stdudfs.userinterfacelookup.hive.UserInterfaceLookup",
         "com.linkedin.stdudfs.userinterfacelookup.spark.UserInterfaceLookup",
-        "ivy://com.linkedin.standard-udf-userinterfacelookup:userinterfacelookup-std-udf:0.0.22?classifier=spark_2.11",
-        "ivy://com.linkedin.standard-udf-userinterfacelookup:userinterfacelookup-std-udf:0.0.22?classifier=spark_2.12");
+        "ivy://com.linkedin.standard-udf-userinterfacelookup:userinterfacelookup-std-udf:0.0.27?classifier=spark_2.11",
+        "ivy://com.linkedin.standard-udf-userinterfacelookup:userinterfacelookup-std-udf:0.0.27?classifier=spark_2.12");
 
     add("com.linkedin.stdudfs.daliudfs.hive.WatBotCrawlerLookup",
         "com.linkedin.stdudfs.daliudfs.spark.WatBotCrawlerLookup", DALI_UDFS_IVY_URL_SPARK_2_11,
