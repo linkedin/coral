@@ -15,6 +15,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableSet;
 
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
@@ -553,10 +554,11 @@ class SchemaUtilities {
           }
           break;
         case ENUM:
-          if (leftSchema.getEnumSymbols().size() == rightSchema.getEnumSymbols().size()) {
-            return leftSchema;
-          }
-          break;
+          // Union symbols of two Enum
+          ImmutableSet<String> schemaSymbols = ImmutableSet.<String> builder().addAll(leftSchema.getEnumSymbols())
+              .addAll(rightSchema.getEnumSymbols()).build();
+          return Schema.createEnum(leftSchema.getName(), leftSchema.getDoc(), leftSchema.getNamespace(),
+              schemaSymbols.asList());
         case RECORD:
           return mergeUnionRecordSchema(leftSchema, rightSchema, strictMode);
         case MAP:
@@ -570,7 +572,13 @@ class SchemaUtilities {
           throw new IllegalArgumentException(
               "Unsupported Avro type " + leftSchema.getType() + " in schema: " + leftSchema.toString(true));
       }
+    } else {
+      final ImmutableSet<Schema.Type> types = ImmutableSet.of(leftSchemaType, rightSchemaType);
+      if (ImmutableSet.of(ENUM, STRING).equals(types)) {
+        return Schema.create(STRING);
+      }
     }
+
     throw new RuntimeException("Found two incompatible schemas for LogicalUnion operator. Left schema is: "
         + leftSchema.toString(true) + ". " + "Right schema is: " + rightSchema.toString(true));
   }

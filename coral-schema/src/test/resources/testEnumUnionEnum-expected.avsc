@@ -1,0 +1,14 @@
+{
+  "type" : "record",
+  "name" : "v",
+  "namespace" : "default.v",
+  "fields" : [ {
+    "name" : "c1",
+    "type" : {
+      "type" : "enum",
+      "name" : "Enum_Second_col",
+      "namespace" : "default.v.v",
+      "symbols" : [ "Spark", "Pig", "Hive", "MR", "Avro", "Option1", "Option2", "Option3", "Option4" ]
+    }
+  } ]
+}
