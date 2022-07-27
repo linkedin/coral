@@ -985,8 +985,8 @@ public class ViewToAvroSchemaConverterTests {
 
   @Test
   public void testUnionFixedAndBytes() {
-    String viewSql = "CREATE VIEW v AS SELECT b1.Fixed_field as c1 FROM basefixed b1" + " UNION ALL "
-        + "SELECT b2.Bytes_field as c1 FROM basebytes b2";
+    String viewSql = "CREATE VIEW v AS SELECT b1.Fixed_field AS c1 FROM basefixed b1" + " UNION ALL "
+        + "SELECT b2.Bytes_field AS c1 FROM basebytes b2";
 
     TestUtils.executeCreateViewQuery("default", "v", viewSql);
 
