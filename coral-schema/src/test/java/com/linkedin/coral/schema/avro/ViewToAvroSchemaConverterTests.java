@@ -984,6 +984,19 @@ public class ViewToAvroSchemaConverterTests {
   }
 
   @Test
+  public void testUnionFixedAndBytes() {
+    String viewSql = "CREATE VIEW v AS SELECT b1.Fixed_field AS c1 FROM basefixed b1" + " UNION ALL "
+        + "SELECT b2.Bytes_field AS c1 FROM basebytes b2";
+
+    TestUtils.executeCreateViewQuery("default", "v", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v");
+
+    Assert.assertEquals(actualSchema.toString(true), TestUtils.loadSchema("testUnionFixedAndBytes-expected.avsc"));
+  }
+
+  @Test
   public void testProjectUdfReturnedStruct() {
     String viewSql = "CREATE VIEW foo_udf_return_struct "
         + "tblproperties('functions' = 'FuncIsEven:com.linkedin.coral.hive.hive2rel.CoralTestUDFReturnStruct') " + "AS "

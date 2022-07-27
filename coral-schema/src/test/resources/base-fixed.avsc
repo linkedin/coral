@@ -1,0 +1,13 @@
+{
+  "type" : "record",
+  "name" : "basefixed",
+  "namespace" : "coral.schema.avro.base.fixed",
+  "fields" : [ {
+    "name" : "Fixed_field",
+    "type" : [ "null", {
+      "type" : "fixed",
+      "size": 16,
+      "name": "fixed_field"
+    } ]
+  } ]
+}

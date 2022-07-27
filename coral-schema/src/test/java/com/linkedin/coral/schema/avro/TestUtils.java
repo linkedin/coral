@@ -87,6 +87,8 @@ public class TestUtils {
     String baseComplexSchema = loadSchema("base-complex.avsc");
     String baseComplexUnionCompatible = loadSchema("base-complex-union-compatible.avsc");
     String baseEnumSchema = loadSchema("base-enum.avsc");
+    String baseBytes = loadSchema("base-bytes.avsc");
+    String baseFixed = loadSchema("base-fixed.avsc");
     String baseLateralViewSchema = loadSchema("base-lateralview.avsc");
     String baseNullabilitySchema = loadSchema("base-nullability.avsc");
     String baseCasePreservation = loadSchema("base-casepreservation.avsc");
@@ -102,6 +104,8 @@ public class TestUtils {
     executeCreateTableQuery("default", "basecomplex", baseComplexSchema);
     executeCreateTableQuery("default", "basecomplexunioncompatible", baseComplexUnionCompatible);
     executeCreateTableQuery("default", "baseenum", baseEnumSchema);
+    executeCreateTableQuery("default", "basebytes", baseBytes);
+    executeCreateTableQuery("default", "basefixed", baseFixed);
     executeCreateTableQuery("default", "baselateralview", baseLateralViewSchema);
     executeCreateTableQuery("default", "basenullability", baseNullabilitySchema);
     executeCreateTableQuery("default", "basenulltypefield", baseNullTypeFieldSchema);
