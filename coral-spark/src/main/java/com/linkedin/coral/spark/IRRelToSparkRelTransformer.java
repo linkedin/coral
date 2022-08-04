@@ -313,6 +313,10 @@ class IRRelToSparkRelTransformer {
      */
     private Optional<RexNode> convertFuzzyUnionGenericProject(RexCall call) {
       if (call.getOperator() instanceof GenericProjectFunction) {
+        // Register generic_project UDF
+        sparkUDFInfos.add(new SparkUDFInfo("com.linkedin.genericprojectudf.GenericProject", "generic_project",
+            ImmutableList.of(URI.create("ivy://com.linkedin.GenericProject:GenericProject-impl:0.0.2")),
+            SparkUDFInfo.UDFTYPE.HIVE_CUSTOM_UDF));
         RelDataType expectedRelDataType = call.getType();
         String expectedRelDataTypeString = RelDataTypeToHiveTypeStringConverter.convertRelDataType(expectedRelDataType);
 
