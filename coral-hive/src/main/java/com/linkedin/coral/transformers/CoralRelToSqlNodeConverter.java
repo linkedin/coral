@@ -245,7 +245,7 @@ public class CoralRelToSqlNodeConverter extends RelToSqlConverter {
 
     // Collect the true aliases for child Results. The child Results have SqlNodes with Kind IDENTIFIER and LATERAL.
     // Super's implementation for alias collection assumes a null type alias for LATERAL SqlNode.
-    final ImmutableMap.Builder<String, RelDataType> builder = ImmutableMap.<String, RelDataType> builder();
+    final ImmutableMap.Builder<String, RelDataType> builder = ImmutableMap.builder();
     collectAliases(builder, join,
         Iterables.concat(leftResult.aliases.values(), rightResult.aliases.values()).iterator());
 
@@ -346,7 +346,7 @@ public class CoralRelToSqlNodeConverter extends RelToSqlConverter {
       case OVER:
         return getAlias(((SqlCall) node).operand(0), ordinal);
       case IDENTIFIER:
-        return (String) Util.last(((SqlIdentifier) node).names);
+        return Util.last(((SqlIdentifier) node).names);
       case LATERAL:
         SqlCall asNode = ((SqlCall) node).operand(0);
         return getAlias(asNode, ordinal);
