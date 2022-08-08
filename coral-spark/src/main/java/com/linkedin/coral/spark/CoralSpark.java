@@ -128,7 +128,7 @@ public class CoralSpark {
   private static String constructSparkSQLTmp(RelNode sparkRelNode) {
     SqlNode coralSqlNode = new CoralRelToSqlNodeConverter().visitChild(0, sparkRelNode).asStatement();
 
-    SqlNode sparkSqlNode = new CoralSqlNodeToSparkSqlNodeConverter().convert(coralSqlNode);
+    SqlNode sparkSqlNode = coralSqlNode.accept(new CoralSqlNodeToSparkSqlNodeConverter());
 
     SqlNode rewrittenSparkSqlNode = sparkSqlNode.accept(new SparkSqlRewriter());
 
@@ -138,7 +138,7 @@ public class CoralSpark {
   // Temporary method to integrate CoralRelToSqlNodeConverter in the translation pipeline
   private static String constructSparkSQLWithExplicitAliasTmp(RelNode sparkRelNode, List<String> aliases) {
     SqlNode coralSqlNode = new CoralRelToSqlNodeConverter().visitChild(0, sparkRelNode).asStatement();
-    SqlNode sparkSqlNode = new CoralSqlNodeToSparkSqlNodeConverter().convert(coralSqlNode);
+    SqlNode sparkSqlNode = coralSqlNode.accept(new CoralSqlNodeToSparkSqlNodeConverter());
 
     SparkRelToSparkSqlConverter rel2sql = new SparkRelToSparkSqlConverter();
     SqlNode legacySparkSqlNode = rel2sql.visitChild(0, sparkRelNode).asStatement();

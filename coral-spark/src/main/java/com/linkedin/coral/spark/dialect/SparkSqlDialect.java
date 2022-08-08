@@ -14,6 +14,7 @@ import org.apache.calcite.sql.SqlWriter;
 import org.apache.calcite.sql.fun.SqlMultisetValueConstructor;
 import org.apache.calcite.sql.fun.SqlSubstringFunction;
 
+import com.linkedin.coral.hive.hive2rel.functions.CoralSqlUnnestOperator;
 import com.linkedin.coral.hive.hive2rel.functions.HivePosExplodeOperator;
 
 
@@ -83,7 +84,8 @@ public class SparkSqlDialect extends SqlDialect {
    *  Code referred from SqlFunctionalOperator.java
    * */
   private void unparseUnnest(SqlWriter writer, SqlCall call) {
-    if (call.getOperator() instanceof HivePosExplodeOperator) {
+    if (call.getOperator() instanceof HivePosExplodeOperator || (call.getOperator() instanceof CoralSqlUnnestOperator
+        && ((CoralSqlUnnestOperator) call.getOperator()).withOrdinality)) {
       writer.keyword("POSEXPLODE");
     } else {
       writer.keyword("EXPLODE");

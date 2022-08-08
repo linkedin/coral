@@ -38,13 +38,13 @@ import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.SqlUtil;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParserPos;
+import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.util.Util;
 
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import com.linkedin.coral.com.google.common.collect.ImmutableMap;
 import com.linkedin.coral.com.google.common.collect.Iterables;
-import com.linkedin.coral.hive.hive2rel.functions.HiveExplodeOperator;
-import com.linkedin.coral.hive.hive2rel.functions.HivePosExplodeOperator;
+import com.linkedin.coral.hive.hive2rel.functions.CoralSqlUnnestOperator;
 
 import static org.apache.calcite.sql.parser.SqlParserPos.*;
 
@@ -74,7 +74,7 @@ public class CoralRelToSqlNodeConverter extends RelToSqlConverter {
 
   /**
    * TableScan RelNode represents a relational operator that returns the contents of a table.
-   * This overridden implementation removes the catalog name from the table namespace.
+   * This overridden implementation removes the catalog name from the table namespace, if present
    *
    * @param e Input TableScan RelNode is. An example:
    *         <pre>
@@ -88,21 +88,24 @@ public class CoralRelToSqlNodeConverter extends RelToSqlConverter {
    */
   @Override
   public Result visit(TableScan e) {
-    if (e.getTable().getQualifiedName().size() != 3) {
-      throw new RuntimeException("CoralRelToSqlNodeConverter Error: Qualified name has incorrect number of elements");
+    List<String> qualifiedName = e.getTable().getQualifiedName();
+    if (qualifiedName.size() > 2) {
+      qualifiedName = qualifiedName.subList(qualifiedName.size() - 2, qualifiedName.size()); // take last two entries
     }
-
-    List<String> tableNameWithoutCatalog = e.getTable().getQualifiedName().subList(1, 3);
-    final SqlIdentifier identifier = new SqlIdentifier(tableNameWithoutCatalog, SqlParserPos.ZERO);
+    final SqlIdentifier identifier = new SqlIdentifier(qualifiedName, SqlParserPos.ZERO);
     return result(identifier, ImmutableList.of(Clause.FROM), e, null);
   }
 
   /**
    * Correlate relNode represents a Node with two correlated child queries,
    * which upon conversion will be joined by non-traditional Join type.
-   * The transformation strategy for a correlate Node involves independently evaluating
+   * The transformation strategy for a correlate type RelNode involves independently evaluating
    * the two sub-expressions, joining them with COMMA joinType and associating the resulting expression
    * with the FROM clause of the SQL.
+   * The right sub-expression of a Correlate node is generally an Uncollect type RelNode. Hence, the expression
+   * obtained from evaluating this right child node will be padded with a LATERAL SqlOperator. In cases when the right
+   * sub-expression is of a different type of RelNode, ex - Project, we add the LATERAL operator on the returned Result
+   * in this step.
    *
    * @param e We take a RelNode of type Correlate with two child nodes as input. Example:
    *        <pre>
@@ -131,8 +134,12 @@ public class CoralRelToSqlNodeConverter extends RelToSqlConverter {
 
     final Result rightResult = visitChild(1, e.getRight());
 
+    SqlNode rightSqlNode = rightResult.asFrom();
+    if (rightResult.node.getKind() != SqlKind.LATERAL) {
+      rightSqlNode = SqlStdOperatorTable.LATERAL.createCall(POS, rightSqlNode);
+    }
     SqlJoin join = new SqlJoin(POS, leftResult.asFrom(), SqlLiteral.createBoolean(false, POS),
-        JoinType.COMMA.symbol(POS), rightResult.asFrom(), JoinConditionType.NONE.symbol(POS), null);
+        JoinType.COMMA.symbol(POS), rightSqlNode, JoinConditionType.NONE.symbol(POS), null);
 
     // Collect the right aliases for child Results. The child Results have SqlNodes with Kind IDENTIFIER and LATERAL.
     // Super's implementation for alias collection assumes a null type alias for LATERAL SqlNode.
@@ -140,6 +147,9 @@ public class CoralRelToSqlNodeConverter extends RelToSqlConverter {
     collectAliases(builder, join,
         Iterables.concat(leftResult.aliases.values(), rightResult.aliases.values()).iterator());
 
+    // Reuse the existing aliases, if any, since that's already unique by directly calling "new Result(...)"
+    // instead of calling super.result(...), which will generate a new table alias and cause an extra
+    // "AS" to be added to the generated SQL statement and make it invalid.
     return new Result(join, Expressions.list(Clause.FROM), null, null, builder.build());
   }
 
@@ -233,7 +243,7 @@ public class CoralRelToSqlNodeConverter extends RelToSqlConverter {
     SqlNode join = new SqlJoin(POS, leftResult.asFrom(), SqlLiteral.createBoolean(false, POS), joinType.symbol(POS),
         rightResult.asFrom(), condType, sqlCondition);
 
-    // Collect the right aliases for child Results. The child Results have SqlNodes with Kind IDENTIFIER and LATERAL.
+    // Collect the true aliases for child Results. The child Results have SqlNodes with Kind IDENTIFIER and LATERAL.
     // Super's implementation for alias collection assumes a null type alias for LATERAL SqlNode.
     final ImmutableMap.Builder<String, RelDataType> builder = ImmutableMap.<String, RelDataType> builder();
     collectAliases(builder, join,
@@ -284,16 +294,23 @@ public class CoralRelToSqlNodeConverter extends RelToSqlConverter {
     final Result projectResult = visitChild(0, e.getInput());
 
     // Extract column(s) to unnest from projectResult
-    // and generate UNNEST(<unnestColumns>) instead.
+    // to generate simpler operand for UNNEST operator
     final List<SqlNode> unnestOperands = new ArrayList<>();
+
+    RelDataType recordType = null;
+    boolean withOrdinality = e.withOrdinality;
+
     for (RexNode unnestCol : ((Project) e.getInput()).getChildExps()) {
       unnestOperands.add(projectResult.qualifiedContext().toSql(null, unnestCol));
+      if (unnestCol.getType().getSqlTypeName().equals(SqlTypeName.ARRAY)
+          && unnestCol.getType().getComponentType().getSqlTypeName().equals(SqlTypeName.ROW)) {
+        recordType = unnestCol.getType().getComponentType();
+      }
     }
 
-    // Convert UNNEST to EXPLODE or POSEXPLODE function and create the simplified SqlCall with UNNEST operand(s) such as:
-    // UNNEST(`complex`.`c`)
-    final SqlNode unnestCall = (e.withOrdinality ? HivePosExplodeOperator.POS_EXPLODE : HiveExplodeOperator.EXPLODE)
-        .createCall(POS, unnestOperands.toArray(new SqlNode[0]));
+    // Generate SqlCall with Coral's UNNEST Operator and the unnestOperands. Also, persist ordinality and operand's datatype
+    final SqlNode unnestCall =
+        new CoralSqlUnnestOperator(withOrdinality, recordType).createCall(POS, unnestOperands.toArray(new SqlNode[0]));
 
     // Append the alias to unnestCall by generating SqlCall with AS operator
     List<SqlNode> asOperands = createAsFullOperands(e.getRowType(), unnestCall, projectResult.neededAlias);
