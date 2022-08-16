@@ -115,7 +115,7 @@ public class CoralSqlNodeToSparkSqlNodeConverter extends SqlShuttle {
   }
 
   private static SqlCall getEmptyOperatorSqlCall(SqlCall sqlCall) {
-    // For sqlCalls with SqlOperaotrs, Calcite prints out the operator name during the sqlCall's un-parsing.
+    // For sqlCalls with SqlOperators, Calcite prints out the operator name during the sqlCall's un-parsing.
     // In Spark, for SqlCalls with LATERAL / COLLECTION_TABLE operator, the operator name is not needed.
     // Hence, the operator is replaced with another operator with empty string as the operator name.
     return CoralEmptyOperator.EMPTY_OPERATOR.createCall(SqlParserPos.ZERO, sqlCall.getOperandList());
