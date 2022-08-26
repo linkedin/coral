@@ -1,4 +1,5 @@
 dependencies {
+  compile deps.'avro'
   compile(deps.'linkedin-calcite-core') {
     artifact {
       name = 'calcite-core'

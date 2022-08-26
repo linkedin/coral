@@ -1,7 +1,10 @@
 def versions = [
   'antlr': '3.4',
+  'avro' : '1.10.0',
+  'avro-utl': '0.2.84',
   'hadoop': '2.7.0',
-  'hive': '1.2.2',
+  'hive': '1.2.0',
+  'hive-cl': '2.3.8',
   'ivy': '2.4.0',
   'jline': '0.9.94',
   'kryo': '2.22',
@@ -15,6 +18,8 @@ def versions = [
 ext.deps = [
   'antlr': "org.antlr:antlr:${versions['antlr']}",
   'antlr-runtime': "org.antlr:antlr-runtime:${versions['antlr']}",
+  'avro': "org.apache.avro:avro:${versions['avro']}",
+  'avroCompatHelper': "com.linkedin.avroutil1:helper-all:${versions['avro-utl']}",
   'hadoop': [
     'hadoop-common': "org.apache.hadoop:hadoop-common:${versions['hadoop']}",
     'hadoop-mapreduce-client-common': "org.apache.hadoop:hadoop-mapreduce-client-common:${versions['hadoop']}",
