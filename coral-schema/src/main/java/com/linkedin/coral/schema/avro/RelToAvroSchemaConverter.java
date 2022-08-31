@@ -197,8 +197,10 @@ public class RelToAvroSchemaConverter {
 
     @Override
     public RelNode visit(LogicalValues logicalValues) {
-      // TODO: implement this method
-      return super.visit(logicalValues);
+      RelNode relNode = super.visit(logicalValues);
+      schemaMap.put(logicalValues,
+          RelDataTypeToAvroType.relDataTypeToAvroTypeNonNullable(logicalValues.getRowType(), "literalvalue"));
+      return relNode;
     }
 
     @Override

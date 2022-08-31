@@ -1,0 +1,10 @@
+{
+  "type" : "record",
+  "name" : "literalvalue",
+  "namespace" : "rel_avro",
+  "fields" : [ {
+    "name" : "intCol",
+    "type" : [ "null", "int" ],
+    "doc" : "Field created from view literal with value: 1"
+  } ]
+}
