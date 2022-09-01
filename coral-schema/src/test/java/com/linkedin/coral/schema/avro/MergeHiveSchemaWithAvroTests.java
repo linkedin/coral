@@ -9,6 +9,8 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.linkedin.avroutil1.compatibility.AvroCompatibilityHelper;
+
 import org.apache.avro.Schema;
 import org.apache.hadoop.hive.serde2.avro.AvroSerDe;
 import org.apache.hadoop.hive.serde2.typeinfo.StructTypeInfo;
@@ -289,7 +291,9 @@ public class MergeHiveSchemaWithAvroTests {
 
   private Schema.Field nullable(Schema.Field field) {
     Preconditions.checkArgument(!AvroSerdeUtils.isNullableType(field.schema()));
-    return field(field.name(), nullable(field.schema()), field.doc(), null, field.getProps());
+    Schema.Field checkedField = AvroCompatibilityHelper.newField(null).setName(field.name())
+        .setSchema(nullable(field.schema())).setDoc(field.doc()).setDefault(null).setOrder(field.order()).build();
+    return checkedField;
   }
 
   private Schema nullable(Schema schema) {

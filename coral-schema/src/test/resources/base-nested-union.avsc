@@ -6,6 +6,7 @@
     {
       "name": "unionCol",
       "type": [
+        "null",
         {
           "type": "record",
           "name": "r1",

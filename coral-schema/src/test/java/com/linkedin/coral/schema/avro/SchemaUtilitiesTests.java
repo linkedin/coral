@@ -19,10 +19,11 @@ public class SchemaUtilitiesTests {
   public void testCloneFieldList() {
     Schema dummySchema = SchemaBuilder.record("test").fields().name("a").type().intType().noDefault().endRecord();
     Schema.Field field1 =
-        new Schema.Field("one", dummySchema, "", dummySchema.getJsonProp("key"), Schema.Field.Order.IGNORE);
+        new Schema.Field("one", dummySchema, "", dummySchema.getProp("key"), Schema.Field.Order.IGNORE);
+
     field1.addProp("field_key1", "field_value1");
     Schema.Field field2 =
-        new Schema.Field("two", dummySchema, "", dummySchema.getJsonProp("key"), Schema.Field.Order.IGNORE);
+        new Schema.Field("two", dummySchema, "", dummySchema.getProp("key"), Schema.Field.Order.IGNORE);
     field2.addProp("field_key2", "field_value2");
     List<Schema.Field> originalList = new ArrayList<>();
     originalList.add(field1);
@@ -35,7 +36,7 @@ public class SchemaUtilitiesTests {
     // Without props being identical, equal-check will not pass.
     // A dummy field3 with only property being different from field1
     Schema.Field field3 =
-        new Schema.Field("one", dummySchema, "", dummySchema.getJsonProp("key"), Schema.Field.Order.IGNORE);
+        new Schema.Field("one", dummySchema, "", dummySchema.getProp("key"), Schema.Field.Order.IGNORE);
     field3.addProp("field_key1", "random");
     Assert.assertFalse(resultList.contains(field3));
   }

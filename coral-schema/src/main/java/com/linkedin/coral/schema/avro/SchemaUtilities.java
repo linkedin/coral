@@ -36,10 +36,10 @@ import org.apache.hadoop.hive.serde2.typeinfo.StructTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
-import org.codehaus.jackson.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.linkedin.avroutil1.compatibility.AvroCompatibilityHelper;
 import com.linkedin.coral.com.google.common.base.Preconditions;
 import com.linkedin.coral.com.google.common.base.Strings;
 import com.linkedin.coral.schema.avro.exceptions.SchemaNotFoundException;
@@ -67,6 +67,7 @@ class SchemaUtilities {
    * @param table
    * @return case preserved avro schema for table including partition columns
    */
+
   static Schema getCasePreservedSchemaForTable(@Nonnull final Table table) {
     Preconditions.checkNotNull(table);
     Schema avroSchema = getCasePreservedSchemaFromTblProperties(table);
@@ -184,7 +185,7 @@ class SchemaUtilities {
     Preconditions.checkNotNull(field);
     Preconditions.checkNotNull(fieldAssembler);
 
-    JsonNode defaultValue = field.defaultValue();
+    Object defaultValue = defaultValue(field);
 
     SchemaBuilder.GenericDefault genericDefault =
         fieldAssembler.name(field.name()).doc(field.doc()).type(field.schema());
@@ -258,7 +259,7 @@ class SchemaUtilities {
     Preconditions.checkNotNull(field);
     Preconditions.checkNotNull(fieldAssembler);
 
-    JsonNode defaultValue = field.defaultValue();
+    Object defaultValue = defaultValue(field);
 
     SchemaBuilder.GenericDefault genericDefault = fieldAssembler.name(fieldName).doc(field.doc()).type(field.schema());
     if (defaultValue != null) {
@@ -360,9 +361,9 @@ class SchemaUtilities {
       String fieldDoc = isPartCol ? "This is the partition column. "
           + "Partition columns, if present in the schema, should also be projected in the data." : field.doc();
       Schema.Field clonedField =
-          new Schema.Field(field.name(), field.schema(), fieldDoc, field.defaultValue(), field.order());
+          new Schema.Field(field.name(), field.schema(), fieldDoc, field.defaultVal(), field.order());
       // Copy field level properties, which could be critical for things like logical type.
-      for (Map.Entry<String, JsonNode> prop : field.getJsonProps().entrySet()) {
+      for (Map.Entry<String, Object> prop : field.getObjectProps().entrySet()) {
         clonedField.addProp(prop.getKey(), prop.getValue());
       }
       result.add(clonedField);
@@ -379,7 +380,7 @@ class SchemaUtilities {
   }
 
   static void replicateSchemaProps(Schema srcSchema, Schema targetSchema) {
-    for (Map.Entry<String, JsonNode> prop : srcSchema.getJsonProps().entrySet()) {
+    for (Map.Entry<String, Object> prop : srcSchema.getObjectProps().entrySet()) {
       if (targetSchema.getProp(prop.getKey()) == null) {
         targetSchema.addProp(prop.getKey(), prop.getValue());
       }
@@ -508,9 +509,9 @@ class SchemaUtilities {
       Schema.Field rightField = rightSchemaFieldsMap.get(leftField.name());
       Schema unionFieldSchema = getUnionFieldSchema(leftField.schema(), rightField.schema(), strictMode);
       Schema.Field unionField = new Schema.Field(leftField.name(), unionFieldSchema, leftField.doc(),
-          leftField.defaultValue(), leftField.order());
+          leftField.defaultVal(), leftField.order());
       leftField.aliases().forEach(unionField::addAlias);
-      leftField.getJsonProps().forEach(unionField::addProp);
+      leftField.getObjectProps().forEach(unionField::addProp);
       mergedSchemaFields.add(unionField);
     }
     Schema schema = Schema.createRecord(leftSchema.getName(), leftSchema.getDoc(), leftSchema.getNamespace(), false);
@@ -660,7 +661,8 @@ class SchemaUtilities {
         break;
     }
 
-    JsonNode defaultValue = field.defaultValue();
+    Object defaultValue = defaultValue(field);
+
     SchemaBuilder.GenericDefault genericDefault = fieldAssembler.name(field.name()).doc(field.doc()).type(fieldSchema);
     if (defaultValue != null) {
       genericDefault.withDefault(defaultValue);
@@ -702,7 +704,7 @@ class SchemaUtilities {
         case ARRAY:
           Schema newFieldSchema = setupNestedNamespace(field.schema(), nestedNamespace);
           Schema.Field newField =
-              new Schema.Field(field.name(), newFieldSchema, field.doc(), field.defaultValue(), field.order());
+              new Schema.Field(field.name(), newFieldSchema, field.doc(), field.defaultVal(), field.order());
           appendField(newField, fieldAssembler);
           break;
         case ENUM:
@@ -711,7 +713,7 @@ class SchemaUtilities {
         case RECORD:
           Schema recordSchemaWithNestedNamespace = setupNestedNamespaceForRecord(field.schema(), nestedNamespace);
           Schema.Field newRecordFiled = new Schema.Field(field.name(), recordSchemaWithNestedNamespace, field.doc(),
-              field.defaultValue(), field.order());
+              field.defaultVal(), field.order());
           appendField(newRecordFiled, fieldAssembler);
           break;
         default:
@@ -889,12 +891,9 @@ class SchemaUtilities {
   }
 
   static Schema.Field copyField(Schema.Field field, Schema newSchema) {
-    Schema.Field copy = new Schema.Field(field.name(), newSchema, field.doc(), field.defaultValue(), field.order());
 
-    for (Map.Entry<String, JsonNode> prop : field.getJsonProps().entrySet()) {
-      copy.addProp(prop.getKey(), prop.getValue());
-    }
-
+    Schema.Field copy = AvroCompatibilityHelper.newField(null).setName(field.name()).setSchema(newSchema)
+        .setDoc(field.doc()).setDefault(field.defaultVal()).setOrder(field.order()).build();
     return copy;
   }
 
@@ -956,5 +955,18 @@ class SchemaUtilities {
     List<TypeInfo> fieldTypeInfos =
         cols.stream().map(f -> TypeInfoUtils.getTypeInfoFromTypeString(f.getType())).collect(Collectors.toList());
     return (StructTypeInfo) TypeInfoFactory.getStructTypeInfo(fieldNames, fieldTypeInfos);
+  }
+
+  //   When using AvroCompatibilityHelper.getGenericDefaultValue(field), an error is thrown
+  //   So we avoid that error and return null to avoid changing existing code.
+  //   @param field Schema.Field for which default value needs to be extracted
+  //   @return For avro 1.4-1.8, returns JsonNode. For avro 1.9 and newer, return the expected
+  //   object directly. If no default value, returns null.
+
+  public static Object defaultValue(Schema.Field field) {
+    if (AvroCompatibilityHelper.fieldHasDefault(field)) {
+      return AvroCompatibilityHelper.getGenericDefaultValue(field);
+    }
+    return null;
   }
 }

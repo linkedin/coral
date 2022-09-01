@@ -1,7 +1,7 @@
 def versions = [
   'antlr': '3.4',
   'avro' : '1.10.0',
-  'avro-utl': '0.2.84',
+  'avro-utl': '0.2.113',
   'hadoop': '2.7.0',
   'hive': '1.2.0',
   'hive-cl': '2.3.8',

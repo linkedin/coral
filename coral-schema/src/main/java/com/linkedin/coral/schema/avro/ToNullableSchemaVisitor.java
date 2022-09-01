@@ -7,12 +7,11 @@ package com.linkedin.coral.schema.avro;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import com.google.common.collect.Lists;
 
+import java.util.Map;
 import org.apache.avro.Schema;
-import org.codehaus.jackson.JsonNode;
 
 
 /**
@@ -61,13 +60,13 @@ public class ToNullableSchemaVisitor extends AvroSchemaVisitor<Schema> {
   }
 
   private Schema.Field nullableField(Schema.Field field, Schema schema) {
-    Schema.Field nullableField = new Schema.Field(field.name(), SchemaUtilities.makeNullable(schema), field.doc(),
-        field.defaultValue(), field.order());
 
-    for (Map.Entry<String, JsonNode> prop : field.getJsonProps().entrySet()) {
+    Schema.Field nullableField = new Schema.Field(field.name(), SchemaUtilities.makeNullable(schema), field.doc(),
+        field.defaultVal(), field.order());
+
+    for (Map.Entry<String, Object> prop : field.getObjectProps().entrySet()) {
       nullableField.addProp(prop.getKey(), prop.getValue());
     }
-
     return nullableField;
   }
 }

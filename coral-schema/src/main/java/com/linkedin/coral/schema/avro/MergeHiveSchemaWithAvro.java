@@ -72,7 +72,7 @@ class MergeHiveSchemaWithAvro extends HiveSchemaWithPartnerVisitor<Schema, Schem
       // TODO: How to ensure that field default value is compatible with new field type generated from Hive?
       // Copy field type from the visitor result, copy everything else from the partner
       // Avro requires the default value to match the first type in the option, reorder option if required
-      Schema reordered = reorderOptionIfRequired(fieldResult, partner.defaultValue());
+      Schema reordered = reorderOptionIfRequired(fieldResult, (JsonNode) partner.defaultVal());
       return SchemaUtilities.copyField(partner, reordered);
     }
   }

@@ -6,12 +6,11 @@
 package com.linkedin.coral.schema.avro;
 
 import java.util.List;
-import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.linkedin.avroutil1.compatibility.AvroCompatibilityHelper;
 
 import org.apache.avro.Schema;
-import org.codehaus.jackson.JsonNode;
 
 
 /**
@@ -64,12 +63,9 @@ public class ToLowercaseSchemaVisitor extends AvroSchemaVisitor<Schema> {
   }
 
   private Schema.Field lowercaseField(Schema.Field field, Schema schema) {
-    Schema.Field lowercasedField =
-        new Schema.Field(field.name().toLowerCase(), schema, field.doc(), field.defaultValue(), field.order());
 
-    for (Map.Entry<String, JsonNode> prop : field.getJsonProps().entrySet()) {
-      lowercasedField.addProp(prop.getKey(), prop.getValue());
-    }
+    Schema.Field lowercasedField = AvroCompatibilityHelper.newField(null).setName(field.name().toLowerCase())
+        .setSchema(schema).setDoc(field.doc()).setDefault(field.defaultVal()).setOrder(field.order()).build();
 
     return lowercasedField;
   }
