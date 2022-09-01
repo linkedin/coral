@@ -14,7 +14,7 @@ import org.apache.calcite.sql.SqlWriter;
 import org.apache.calcite.sql.fun.SqlMultisetValueConstructor;
 import org.apache.calcite.sql.fun.SqlSubstringFunction;
 
-import com.linkedin.coral.hive.hive2rel.functions.CoralSqlUnnestOperator;
+import com.linkedin.coral.common.functions.CoralSqlUnnestOperator;
 import com.linkedin.coral.hive.hive2rel.functions.HivePosExplodeOperator;
 
 

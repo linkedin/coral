@@ -243,13 +243,15 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     }
     unnestCall = operator.createCall(ZERO, unnestOperand);
 
+    SqlNode lateralCall = SqlStdOperatorTable.LATERAL.createCall(ZERO, unnestCall);
+
     // The following code can work in both of the two cases:
     // A. Table alias only, no column aliases.
     // B. Both table and column aliases.  Note that in this case, the number of column aliases need to match the
     //    actual number of columns generated from the EXPLODE function, which is calculated by HiveUncollect.deriveRowType
     /** See also {@link HiveUncollect#deriveRowType()} */
     List<SqlNode> asOperands = new ArrayList<>();
-    asOperands.add(unnestCall);
+    asOperands.add(lateralCall);
 
     // For POSEXPLODE case, we need to change the order of 2 alias. i.e. `pos, val` -> `val, pos` to be aligned with calcite validation
     if (operator instanceof HivePosExplodeOperator && operandCount == 4) {
@@ -261,9 +263,8 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     }
     SqlNode as = SqlStdOperatorTable.AS.createCall(ZERO, asOperands);
 
-    SqlNode lateralCall = SqlStdOperatorTable.LATERAL.createCall(ZERO, as);
-    return new SqlJoin(ZERO, sqlNodes.get(1), SqlLiteral.createBoolean(false, ZERO), JoinType.COMMA.symbol(ZERO),
-        lateralCall, JoinConditionType.NONE.symbol(ZERO), null);
+    return new SqlJoin(ZERO, sqlNodes.get(1), SqlLiteral.createBoolean(false, ZERO), JoinType.COMMA.symbol(ZERO), as,
+        JoinConditionType.NONE.symbol(ZERO), null);
   }
 
   private SqlNode visitLateralViewJsonTuple(List<SqlNode> sqlNodes, List<SqlNode> aliasOperands, SqlCall sqlCall) {

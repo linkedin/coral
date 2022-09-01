@@ -20,8 +20,7 @@ import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.util.SqlShuttle;
 
-import com.linkedin.coral.hive.hive2rel.functions.CoralEmptyOperator;
-import com.linkedin.coral.hive.hive2rel.functions.CoralSqlUnnestOperator;
+import com.linkedin.coral.common.functions.CoralSqlUnnestOperator;
 import com.linkedin.coral.spark.functions.SqlLateralJoin;
 import com.linkedin.coral.spark.functions.SqlLateralViewAsOperator;
 
@@ -31,7 +30,7 @@ import com.linkedin.coral.spark.functions.SqlLateralViewAsOperator;
  * with Spark compatible SqlCalls to subsequently obtain a Spark compatible SqlNode AST representation.
  * This will enable generating a SQL which can be accurately interpreted by the Spark engine.
  *
- * It does so by visiting the Coral SqlNode AST in a pre-order traversal manner and
+ * This is achieved by visiting the Coral SqlNode AST in a pre-order traversal manner and
  * transforming each SqlNode (SqlCall), wherever required.
  * The transformation may involve change in operator, reordering the operands
  * or even re-constructing the SqlCall.
@@ -52,9 +51,6 @@ public class CoralSqlNodeToSparkSqlNodeConverter extends SqlShuttle {
         return getTransformedJoinSqlCall(sqlCall);
       case AS:
         return getTransformedAsSqlCall(sqlCall);
-      case LATERAL:
-      case COLLECTION_TABLE:
-        return getEmptyOperatorSqlCall(sqlCall);
       case UNNEST:
         return getTransformedUnnestSqlCall(sqlCall);
       default:
@@ -80,30 +76,35 @@ public class CoralSqlNodeToSparkSqlNodeConverter extends SqlShuttle {
   }
 
   private static SqlCall getTransformedAsSqlCall(SqlCall sqlCall) {
-    // For a SqlCall with AS operator, Calcite un-parsing generates SQL:
+    // For a SqlCall with AS operator, default Calcite un-parsing generates SQL:
     //        table_alias.column_alias t0 (ccol)
     // However, Spark SQL needs the AS operands to be un-parsed in the following manner:
     //        table_alias.column_alias t0 AS ccol
-    // this transformation is enabled by substituting the operator with the SqlLateralViewAsOperator
-
+    // this transformation is enabled by substituting the operator with the Coral's SqlLateralViewAsOperator
     if (sqlCall.operandCount() <= 2 || !(sqlCall.operand(0) instanceof SqlBasicCall)
-        || (sqlCall.operand(0) instanceof SqlBasicCall && sqlCall.operand(0).getKind() == SqlKind.VALUES)) {
+        || !(sqlCall.operand(0) instanceof SqlBasicCall && sqlCall.operand(0).getKind() == SqlKind.LATERAL)) {
       return sqlCall;
     }
 
     List<SqlNode> aliasOperands = sqlCall.getOperandList();
-    SqlCall childSqlCall = sqlCall.operand(0);
-    final SqlOperator childSqlCallOperator = childSqlCall.getOperator();
+    SqlCall lateralSqlCall = sqlCall.operand(0);
+    SqlCall functionSqlCall = lateralSqlCall.operand(0);
+    SqlOperator functionSqlCallOperator = functionSqlCall.getOperator();
 
+    // For sqlCalls with SqlOperators, Calcite prints out the operator name during the sqlCall's un-parsing.
+    // In Spark, for SqlCalls with LATERAL / COLLECTION_TABLE operator, the operator name is not needed in the translated SQL.
+    // Hence, operand of the AS sqlCall is reassigned.
+    SqlCall aliasFirstOperand =
+        (functionSqlCallOperator.getKind() == SqlKind.COLLECTION_TABLE) ? functionSqlCall.operand(0) : functionSqlCall;
     List<SqlNode> newAsSqlCallOperands = new ArrayList<>();
-    newAsSqlCallOperands.add(childSqlCall);
+    newAsSqlCallOperands.add(aliasFirstOperand);
 
     // If the sqlCall with AS operator has a child sqlCall with POSEXPLODE operator,
     // we reorder the operands again from (`val, pos`) to (`pos, val`).
     // This will undo the reordering done during creation of CoralRelNode
     // in ParseTreeBuilder#visitLateralViewExplode for calcite validation
-    if (childSqlCallOperator instanceof CoralSqlUnnestOperator
-        && ((CoralSqlUnnestOperator) childSqlCallOperator).withOrdinality && sqlCall.getOperandList().size() == 4) {
+    if (functionSqlCallOperator instanceof CoralSqlUnnestOperator
+        && ((CoralSqlUnnestOperator) functionSqlCallOperator).withOrdinality && sqlCall.getOperandList().size() == 4) {
       newAsSqlCallOperands.add(aliasOperands.get(1));
       newAsSqlCallOperands.add(aliasOperands.get(3));
       newAsSqlCallOperands.add(aliasOperands.get(2));
@@ -114,18 +115,10 @@ public class CoralSqlNodeToSparkSqlNodeConverter extends SqlShuttle {
     return SqlLateralViewAsOperator.instance.createCall(SqlParserPos.ZERO, newAsSqlCallOperands);
   }
 
-  private static SqlCall getEmptyOperatorSqlCall(SqlCall sqlCall) {
-    // For sqlCalls with SqlOperators, Calcite prints out the operator name during the sqlCall's un-parsing.
-    // In Spark, for SqlCalls with LATERAL / COLLECTION_TABLE operator, the operator name is not needed.
-    // Hence, the operator is replaced with another operator with empty string as the operator name.
-    return CoralEmptyOperator.EMPTY_OPERATOR.createCall(SqlParserPos.ZERO, sqlCall.getOperandList());
-  }
-
   private static SqlCall getTransformedJoinSqlCall(SqlCall sqlCall) {
     // All SQL JOIN clauses are represented as a SqlJoin SqlCall in the CoralSqlNode AST.
     // A transformation is only needed for SqlJoin SqlCalls with LATERAL joins.
-    if (((SqlJoin) sqlCall).getJoinType() != JoinType.COMMA
-        || ((SqlCall) ((SqlJoin) sqlCall).getRight()).getOperator().kind != SqlKind.LATERAL) {
+    if (((SqlJoin) sqlCall).getJoinType() != JoinType.COMMA) {
       return sqlCall;
     }
 
@@ -144,12 +137,12 @@ public class CoralSqlNodeToSparkSqlNodeConverter extends SqlShuttle {
   }
 
   private static boolean isCorrelateRightChildOuter(SqlCall sqlCall) {
-    SqlCall lateralOperatorSqlCall = (SqlCall) ((SqlJoin) sqlCall).getRight();
-    SqlCall asOperatorSqlCall = lateralOperatorSqlCall.operand(0);
-    SqlCall unnestOperatorSqlCall = asOperatorSqlCall.operand(0);
+    SqlCall asOperatorSqlCall = (SqlCall) ((SqlJoin) sqlCall).getRight();
+    SqlCall lateralOperatorSqlCall = asOperatorSqlCall.operand(0);
+    SqlCall functionSqlCall = lateralOperatorSqlCall.operand(0);
 
-    if (unnestOperatorSqlCall.getKind() == SqlKind.UNNEST) {
-      SqlBasicCall unnestCall = (SqlBasicCall) unnestOperatorSqlCall;
+    if (functionSqlCall.getKind() == SqlKind.UNNEST) {
+      SqlBasicCall unnestCall = (SqlBasicCall) functionSqlCall;
 
       SqlNode ifNode = getOrDefault(unnestCall.getOperandList(), 0, null);
       if (ifNode instanceof SqlBasicCall && ((SqlBasicCall) ifNode).getOperator().getName().equalsIgnoreCase("if")) {
