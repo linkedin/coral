@@ -45,9 +45,7 @@ import com.linkedin.coral.common.functions.CoralSqlUnnestOperator;
 
 
 /**
- * This class converts a Coral intermediate representation, RelNode, to
- * the original query's semantically equivalent but alternate representation: Coral SqlNode,
- * supplemented with additional details, such as aliases required and clause association information.
+ * This class converts a Coral intermediate representation, CoralRelNode, to CoralSqlNode.
  */
 public class CoralRelToSqlNodeConverter extends RelToSqlConverter {
 
@@ -69,17 +67,19 @@ public class CoralRelToSqlNodeConverter extends RelToSqlConverter {
 
   /**
    * TableScan RelNode represents a relational operator that returns the contents of a table.
-   * This overridden implementation removes the catalog name from the table namespace, if present
+   * This overridden implementation removes the catalog name from the table namespace, if present.
    *
-   * @param e Input TableScan RelNode is. An example:
+   * @param e TableScan RelNode. An example:
    *         <pre>
    *            LogicalTableScan(table=[[hive, default, complex]])
    *         </pre>
-   * @return This override returns a Result whose sqlNode representation would be:
-   *         <pre>
-   *            SqlIdentifier(default, complex)
-   *         </pre>
-   *         supplemented with additional clause association details.
+   *
+   * @return Result of converting the RelNode to a SqlNode.
+   *         The conversion result of the above example is:
+   *        <pre>
+   *               (SqlIdentifier)
+   *            names: `default``complex`
+   *        </pre>
    */
   @Override
   public Result visit(TableScan e) {
@@ -92,13 +92,11 @@ public class CoralRelToSqlNodeConverter extends RelToSqlConverter {
   }
 
   /**
-   * Correlate relNode represents a Node with two correlated child queries,
-   * which upon conversion will be joined by non-traditional Join type.
    * The transformation strategy for a correlate type RelNode involves independently evaluating
    * the two sub-expressions, joining them with COMMA joinType and associating the resulting expression
    * with the FROM clause of the SQL.
-   * When the right sub-expression of a Correlate node is an Uncollect / TableFunction type RelNode, the expression
-   * obtained from evaluating this right child node will be padded with a LATERAL and AS SqlOperator sequentially.
+   * When the right child of a Correlate node is an Uncollect / TableFunction type RelNode,
+   * this method introduces LATERAL and AS operators as parents of the conversion result of the right child
    *
    * @param e RelNode of type Correlate with two child nodes as input. Example:
    *        <pre>
@@ -111,12 +109,17 @@ public class CoralRelToSqlNodeConverter extends RelToSqlConverter {
    *           			          			            			         			 	LogicalValues(tuples=[[{ 0 }]])
    *        </pre>
    *
-   * @return Result of transforming the RelNode into a SqlNode with additional supplemental details.
-   *         A sample generated Result would have the following SqlNode representation:
+   * @return Result of converting the RelNode to a SqlNode.
+   *        The conversion result of the above example is:
    *        <pre>
-   *          default.complex , LATERAL UNNEST(`complex`.`c`) AS `t0` (`ccol`)
+   *                                      (SqlCall)
+   *        SqlJoin[default.complex , LATERAL UNNEST(`complex`.`c`) AS `t0` (`ccol`)]
+   *                                         |
+   *                _________________________|_____________________________
+   *               |                         |                            |
+   *  left: `default`.`complex`         joinType: ,       right: LATERAL UNNEST(`complex`.`c`) AS `t0` (`ccol`)
+   *
    *        </pre>
-   *        supplemented with additional clause association and optional alias details.
    */
   @Override
   public Result visit(Correlate e) {
@@ -140,23 +143,29 @@ public class CoralRelToSqlNodeConverter extends RelToSqlConverter {
   }
 
   /**
-   * Coral represents custom table-valued functions as LogicalTableFunctionScan type relational expression.
-   * Current version of Calcite used in Coral does not support traversing
+   * Custom table-valued functions are represented as LogicalTableFunctionScan type relational expression.
+   * Current version of Calcite used in Coral does not implement traversing
    * a LogicalTableFunctionScan type RelNode. Hence, this implementation is added.
    *
    * @param e RelNode of type LogicalTableFunctionScan as input. Example:
    *           <pre>
-   *             LogicalTableFunctionScan(invocation=[default_foo_lateral_udtf_CountOfRow($cor0.a)])
+   *             LogicalTableFunctionScan(invocation=[foo_udtf_CountOfRow($cor0.a)])
    *           </pre>
    *
-   * @return Result of transforming the RelNode into a SqlNode with additional supplemental details.
-   *         This output has similar semantics as the output of transforming an
-   *         Uncollect type RelNode. (Why? Since both have similar tree representations and hence, similar parent nodes.)
-   *         A sample generated Result would have the following SqlNode representation:
-   *            <pre>
-   *              COLLECTION_TABLE(`default_foo_lateral_udtf_CountOfRow`(`complex`.`a`))
-   *            </pre>
-   *         supplemented with additional clause association and alias details.
+   * @return Result of converting the RelNode to a SqlNode.
+   *         The conversion result of the above example is:
+   *         <pre>
+   *                                (SqlBasicCall)
+   *          COLLECTION_TABLE(`foo_udtf_CountOfRow`(`complex`.`a`))
+   *                                     |
+   *            _________________________|__________________________
+   *           |                                                   |
+   *  Operator: COLLECTION_TABLE               Operand: `foo_udtf_CountOfRow`(`complex`.`a`)
+   *                                                              |
+   *                                             _________________|______________________
+   *                                            |                                       |
+   *                             Operator: foo_udtf_CountOfRow               Operand: `complex`.`a`
+   *         </pre>
    */
   public Result visit(LogicalTableFunctionScan e) {
     RexCall call = (RexCall) e.getCall();
@@ -180,25 +189,31 @@ public class CoralRelToSqlNodeConverter extends RelToSqlConverter {
   }
 
   /**
-   * Join relNode represents a Node with two child relational expressions linked by different join type conditions.
-   *
+   * Join RelNode represents a Node with two child relational expressions linked by different join type conditions.
+   * When the right child of a Correlate node is an Uncollect / TableFunction type RelNode,
+   * this method introduces LATERAL and AS operators as parents of the conversion result of the right child.
    * @param e RelNode of type Join with two child nodes as input. Example:
    *        <pre>
    *                             LogicalJoin(condition=[true], joinType=[inner])
    *                                /                                      \
    *    LogicalTableScan(table=[[hive, default, complex]])              HiveUncollect
    *                                                                         \
-   *           			          			                     		  	LogicalProject(col=[ARRAY('a', 'b')])
+   *           			          			                        		  	LogicalProject(col=[$cor0.c])
    *                                                                           \
-   *           			          			         			         			 	LogicalValues(tuples=[[{ 0 }]])
+   *           			          			         			          			 	LogicalValues(tuples=[[{ 0 }]])
    *        </pre>
    *
-   * @return Result of transforming the RelNode into a SqlNode with additional supplemental details.
-   *         A sample generated Result would have the following SqlNode representation:
+   * @return Result of converting the RelNode to a SqlNode.
+   *        The conversion result of the above example is:
    *        <pre>
-   *          default.complex , LATERAL UNNEST(ARRAY ('a', 'b')) AS `t0` (`ccol`)
+   *                                      (SqlCall)
+   *          SqlJoin[`default`.`complex` , LATERAL UNNEST(`complex`.`c`) AS `t0` (`ccol`)]
+   *                                         |
+   *                _________________________|_____________________________
+   *               |                         |                            |
+   *  left: `default`.`complex`         joinType: ,       right: LATERAL UNNEST(`complex`.`c`) AS `t0` (`ccol`)
+   *
    *        </pre>
-   *        supplemented with additional clause association and optional alias details.
    */
   @Override
   public Result visit(Join e) {
@@ -231,35 +246,40 @@ public class CoralRelToSqlNodeConverter extends RelToSqlConverter {
   }
 
   /**
-   * Coral represents relational expression that unnests its input's column(s)
-   * using explode() function as an Uncollect type RelNode.
+   * UNNEST function is represented as HiveUncollect type relational expression.
+   * The default super's implementation traverses this tree in post order traversal and generates a Result with SqlNode like:
+   * <pre>
+   *     UNNEST (SELECT `complex`.`c` AS `col` FROM (VALUES  (0)) AS `t` (`ZERO`)) AS `t0` (`ccol`)
+   * </pre>
+   * and additional unessential alias requirements which is then returned to the parent RelNode.
    *
-   * @param e RelNode of type Uncollect as input. Example:
+   * However, the above Result adds complexity to the overall transformations for the following reasons:
+   *   1. Super's Result has some expendable clauses, such as the SELECT clause inside UNNEST operator, with make parsing cumbersome in the parent RelNode's transformations.
+   *   2. It also doesn't work well for unnesting array of type struct as the conversion attempts to generate individual columns for each datatype inside the struct.
+   *   3. Super's Result does not mimic the original SqlNode constructed from an input SQL.
+   *
+   * Overriding this conversion outputs a more easily parsable Result which is consistent with the original SqlNode.
+   *
+   * @param e RelNode of type HiveUncollect as input. Example:
    *          <pre>
    *             HiveUncollect
+   *                      \
    *               LogicalProject(col=[$cor0.c])
+   *                        \
    *                 LogicalValues(tuples=[[{ 0 }]])
    *          </pre>
    *
-   * @return Result with simplified custom transformations.
-   *         The default super's implementation traverses this tree in post order traversal.
-   *         The additive transformations applied generates a Result with SqlNode like:
-   * 				<pre>
-   *           UNNEST (SELECT `complex`.`c` AS `col` FROM (VALUES  (0)) AS `t` (`ZERO`)) AS `t0` (`ccol`)
-   *        </pre>
-   *         and additional unessential alias requirements which is then returned to the parent RelNode.
-   *
-   *         However, the above Result adds complexity to the overall transformations for the following reasons:
-   *         1. Result's SqlNode has some expendable clauses, such as the SELECT clause inside UNNEST operator, with make parsing cumbersome in the parent RelNode's transformations.
-   *         2. It also doesn't work well for unnesting array of type struct as the transformation attempts to generate individual columns for each datatype inside the struct.
-   *         3. The above Result's SqlNode does not mimic the original SqlNode constructed from an input SQL.
-   *
-   *         Overriding this transformation outputs a more easily parsable Result which is consistent with the original SqlNode.
-   *         The generated Result has the following simplified SqlNode representation:
+   * @return Result of converting the RelNode to a SqlNode.
+   *         The conversion result of the above example is:
    *        <pre>
-   *           UNNEST(`complex`.`c`)
+   *                               (SqlBasicCall)
+   *                           UNNEST(`complex`.`c`)
+   *                                     |
+   *            _________________________|__________________________
+   *           |                                                   |
+   *  Operator: CoralSqlUnnestOperator                 Operand: `complex`.`c`
+   *
    *        </pre>
-   *         and supplemental information about clause associations and optional aliases as required.
    */
   @Override
   public Result visit(Uncollect e) {
