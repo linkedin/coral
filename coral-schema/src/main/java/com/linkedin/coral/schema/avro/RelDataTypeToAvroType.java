@@ -5,6 +5,7 @@
  */
 package com.linkedin.coral.schema.avro;
 
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -22,8 +23,8 @@ import org.apache.calcite.sql.type.MapSqlType;
 import org.apache.calcite.sql.type.MultisetSqlType;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.hadoop.hive.serde2.avro.AvroSerDe;
-import org.codehaus.jackson.node.JsonNodeFactory;
 
+import com.linkedin.avroutil1.compatibility.AvroCompatibilityHelper;
 import com.linkedin.coral.com.google.common.base.Preconditions;
 
 
@@ -139,7 +140,7 @@ class RelDataTypeToAvroType {
     for (RelDataTypeField relField : relRecord.getFieldList()) {
       final String comment = fieldComments != null && fieldComments.size() > relField.getIndex()
           ? fieldComments.get(relField.getIndex()) : null;
-      fields.add(new Schema.Field(toAvroQualifiedName(relField.getName()),
+      fields.add(AvroCompatibilityHelper.createSchemaField(toAvroQualifiedName(relField.getName()),
           relDataTypeToAvroType(relField.getType(), toAvroQualifiedName(relField.getName())), comment, null));
     }
 

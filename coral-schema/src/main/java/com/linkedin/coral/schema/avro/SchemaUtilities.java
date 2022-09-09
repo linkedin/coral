@@ -39,11 +39,11 @@ import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.linkedin.avroutil1.compatibility.AvroCompatibilityHelper;
 import com.linkedin.coral.com.google.common.base.Preconditions;
 import com.linkedin.coral.com.google.common.base.Strings;
 import com.linkedin.coral.schema.avro.exceptions.SchemaNotFoundException;
 
+import com.linkedin.avroutil1.compatibility.AvroCompatibilityHelper;
 import static com.linkedin.coral.schema.avro.AvroSerdeUtils.*;
 import static org.apache.avro.Schema.Type.*;
 
@@ -67,7 +67,6 @@ class SchemaUtilities {
    * @param table
    * @return case preserved avro schema for table including partition columns
    */
-
   static Schema getCasePreservedSchemaForTable(@Nonnull final Table table) {
     Preconditions.checkNotNull(table);
     Schema avroSchema = getCasePreservedSchemaFromTblProperties(table);
@@ -165,10 +164,10 @@ class SchemaUtilities {
       if (!Strings.isNullOrEmpty(schemaStr)) {
         schemaStr = schemaStr.replaceAll("\n", "\\\\n");
         // Given schemas stored in `dali.row.schema` are all non-nullable, we need to convert them to be nullable to be compatible with Spark
-        schema = ToNullableSchemaVisitor.visit(new Schema.Parser().parse(schemaStr));
+        schema = ToNullableSchemaVisitor.visit(AvroCompatibilityHelper.parse(schemaStr));
       }
     } else {
-      schema = new Schema.Parser().parse(schemaStr);
+      schema = AvroCompatibilityHelper.parse(schemaStr);
     }
 
     if (schema != null) {
@@ -179,6 +178,19 @@ class SchemaUtilities {
       LOG.warn("Cannot determine avro schema for table {}", getCompleteName(table));
       return null;
     }
+  }
+
+  //   When using AvroCompatibilityHelper.getGenericDefaultValue(field), an error is thrown
+  //   So we avoid that error and return null to avoid changing existing code.
+  //   @param field Schema.Field for which default value needs to be extracted
+  //   @return For avro 1.4-1.8, returns JsonNode. For avro 1.9 and newer, return the expected
+  //   object directly. If no default value, returns null.
+
+  public static Object defaultValue(Schema.Field field) {
+    if (AvroCompatibilityHelper.fieldHasDefault(field)) {
+      return AvroCompatibilityHelper.getGenericDefaultValue(field);
+    }
+    return null;
   }
 
   static void appendField(@Nonnull Schema.Field field, @Nonnull SchemaBuilder.FieldAssembler<Schema> fieldAssembler) {
@@ -360,8 +372,8 @@ class SchemaUtilities {
     for (Schema.Field field : fieldList) {
       String fieldDoc = isPartCol ? "This is the partition column. "
           + "Partition columns, if present in the schema, should also be projected in the data." : field.doc();
-      Schema.Field clonedField =
-          new Schema.Field(field.name(), field.schema(), fieldDoc, field.defaultVal(), field.order());
+      Schema.Field clonedField = AvroCompatibilityHelper.createSchemaField(field.name(), field.schema(), fieldDoc,
+          defaultValue(field), field.order());
       // Copy field level properties, which could be critical for things like logical type.
       for (Map.Entry<String, Object> prop : field.getObjectProps().entrySet()) {
         clonedField.addProp(prop.getKey(), prop.getValue());
@@ -508,8 +520,8 @@ class SchemaUtilities {
     for (Schema.Field leftField : leftSchemaFields) {
       Schema.Field rightField = rightSchemaFieldsMap.get(leftField.name());
       Schema unionFieldSchema = getUnionFieldSchema(leftField.schema(), rightField.schema(), strictMode);
-      Schema.Field unionField = new Schema.Field(leftField.name(), unionFieldSchema, leftField.doc(),
-          leftField.defaultVal(), leftField.order());
+      Schema.Field unionField = AvroCompatibilityHelper.createSchemaField(leftField.name(), unionFieldSchema,
+          leftField.doc(), defaultValue(leftField), leftField.order());
       leftField.aliases().forEach(unionField::addAlias);
       leftField.getObjectProps().forEach(unionField::addProp);
       mergedSchemaFields.add(unionField);
@@ -662,7 +674,6 @@ class SchemaUtilities {
     }
 
     Object defaultValue = defaultValue(field);
-
     SchemaBuilder.GenericDefault genericDefault = fieldAssembler.name(field.name()).doc(field.doc()).type(fieldSchema);
     if (defaultValue != null) {
       genericDefault.withDefault(defaultValue);
@@ -703,8 +714,8 @@ class SchemaUtilities {
         case UNION:
         case ARRAY:
           Schema newFieldSchema = setupNestedNamespace(field.schema(), nestedNamespace);
-          Schema.Field newField =
-              new Schema.Field(field.name(), newFieldSchema, field.doc(), field.defaultVal(), field.order());
+          Schema.Field newField = AvroCompatibilityHelper.createSchemaField(field.name(), newFieldSchema, field.doc(),
+              defaultValue(field), field.order());
           appendField(newField, fieldAssembler);
           break;
         case ENUM:
@@ -712,8 +723,8 @@ class SchemaUtilities {
           break;
         case RECORD:
           Schema recordSchemaWithNestedNamespace = setupNestedNamespaceForRecord(field.schema(), nestedNamespace);
-          Schema.Field newRecordFiled = new Schema.Field(field.name(), recordSchemaWithNestedNamespace, field.doc(),
-              field.defaultVal(), field.order());
+          Schema.Field newRecordFiled = AvroCompatibilityHelper.createSchemaField(field.name(),
+              recordSchemaWithNestedNamespace, field.doc(), defaultValue(field), field.order());
           appendField(newRecordFiled, fieldAssembler);
           break;
         default:
@@ -891,9 +902,13 @@ class SchemaUtilities {
   }
 
   static Schema.Field copyField(Schema.Field field, Schema newSchema) {
+    Schema.Field copy = AvroCompatibilityHelper.createSchemaField(field.name(), newSchema, field.doc(),
+        defaultValue(field), field.order());
 
-    Schema.Field copy = AvroCompatibilityHelper.newField(null).setName(field.name()).setSchema(newSchema)
-        .setDoc(field.doc()).setDefault(field.defaultVal()).setOrder(field.order()).build();
+    for (Map.Entry<String, Object> prop : field.getObjectProps().entrySet()) {
+      copy.addProp(prop.getKey(), prop.getValue());
+    }
+
     return copy;
   }
 
@@ -955,18 +970,5 @@ class SchemaUtilities {
     List<TypeInfo> fieldTypeInfos =
         cols.stream().map(f -> TypeInfoUtils.getTypeInfoFromTypeString(f.getType())).collect(Collectors.toList());
     return (StructTypeInfo) TypeInfoFactory.getStructTypeInfo(fieldNames, fieldTypeInfos);
-  }
-
-  //   When using AvroCompatibilityHelper.getGenericDefaultValue(field), an error is thrown
-  //   So we avoid that error and return null to avoid changing existing code.
-  //   @param field Schema.Field for which default value needs to be extracted
-  //   @return For avro 1.4-1.8, returns JsonNode. For avro 1.9 and newer, return the expected
-  //   object directly. If no default value, returns null.
-
-  public static Object defaultValue(Schema.Field field) {
-    if (AvroCompatibilityHelper.fieldHasDefault(field)) {
-      return AvroCompatibilityHelper.getGenericDefaultValue(field);
-    }
-    return null;
   }
 }

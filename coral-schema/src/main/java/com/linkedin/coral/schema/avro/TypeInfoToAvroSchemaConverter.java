@@ -21,10 +21,11 @@ import org.apache.hadoop.hive.serde2.typeinfo.PrimitiveTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.StructTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.UnionTypeInfo;
-import org.codehaus.jackson.node.JsonNodeFactory;
-import org.codehaus.jackson.node.NullNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 
 import com.linkedin.coral.com.google.common.collect.Lists;
+import com.linkedin.avroutil1.compatibility.AvroCompatibilityHelper;
+
 
 
 /**
@@ -63,7 +64,8 @@ public class TypeInfoToAvroSchemaConverter {
       // We will set the recordName to be capitalized, and the recordNameSpace will be in lower case
       final Schema schema = convertTypeInfoToAvroSchema(fieldTypeInfo, recordNamespace + "." + recordName.toLowerCase(),
           StringUtils.capitalize(fieldName));
-      final Schema.Field f = new Schema.Field(fieldName, schema, null, mkFieldsOptional ? NullNode.instance : null);
+      final Schema.Field f = AvroCompatibilityHelper.createSchemaField(fieldName, schema, null,
+          mkFieldsOptional ? Schema.Field.NULL_DEFAULT_VALUE : null);
       fields.add(f);
     }
 

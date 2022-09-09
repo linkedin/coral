@@ -5,6 +5,7 @@
  */
 package com.linkedin.coral.schema.avro;
 
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -19,11 +20,10 @@ import org.apache.hadoop.hive.serde2.typeinfo.PrimitiveTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.StructTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.UnionTypeInfo;
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.node.JsonNodeFactory;
 
 import com.linkedin.coral.com.google.common.base.Preconditions;
 
+import com.linkedin.avroutil1.compatibility.AvroCompatibilityHelper;
 import static com.linkedin.coral.schema.avro.AvroSerdeUtils.*;
 
 
@@ -67,12 +67,13 @@ class MergeHiveSchemaWithAvro extends HiveSchemaWithPartnerVisitor<Schema, Schem
     // in their field results if required
     if (partner == null) {
       // if there was no matching Avro field, use name form the Hive schema and set a null default
-      return new Schema.Field(SchemaUtilities.makeCompatibleName(name), fieldResult, null, null);
+      return AvroCompatibilityHelper.createSchemaField(SchemaUtilities.makeCompatibleName(name), fieldResult, null,
+          null);
     } else {
       // TODO: How to ensure that field default value is compatible with new field type generated from Hive?
       // Copy field type from the visitor result, copy everything else from the partner
       // Avro requires the default value to match the first type in the option, reorder option if required
-      Schema reordered = reorderOptionIfRequired(fieldResult, (JsonNode) partner.defaultVal());
+      Schema reordered = reorderOptionIfRequired(fieldResult, SchemaUtilities.defaultValue(partner));
       return SchemaUtilities.copyField(partner, reordered);
     }
   }
@@ -83,10 +84,10 @@ class MergeHiveSchemaWithAvro extends HiveSchemaWithPartnerVisitor<Schema, Schem
    * e.g. If the schema is (NULL, INT) and the default value is 1, the returned schema is (INT, NULL)
    * If the schema is not an option schema or if there is no default value, schema is returned as-is
    */
-  private Schema reorderOptionIfRequired(Schema schema, JsonNode defaultValue) {
+  private Schema reorderOptionIfRequired(Schema schema, Object defaultValue) {
     if (isNullableType(schema) && defaultValue != null) {
       boolean isNullFirstOption = schema.getTypes().get(0).getType() == Schema.Type.NULL;
-      if (isNullFirstOption && defaultValue.isNull()) {
+      if (isNullFirstOption && (defaultValue == null)) {
         return schema;
       } else {
         return Schema.createUnion(Arrays.asList(schema.getTypes().get(1), schema.getTypes().get(0)));

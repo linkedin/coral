@@ -8,6 +8,8 @@ package com.linkedin.coral.schema.avro;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.linkedin.avroutil1.compatibility.AvroCompatibilityHelper;
+
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
 import org.testng.Assert;
@@ -18,12 +20,11 @@ public class SchemaUtilitiesTests {
   @Test
   public void testCloneFieldList() {
     Schema dummySchema = SchemaBuilder.record("test").fields().name("a").type().intType().noDefault().endRecord();
-    Schema.Field field1 =
-        new Schema.Field("one", dummySchema, "", dummySchema.getProp("key"), Schema.Field.Order.IGNORE);
-
+    Schema.Field field1 = AvroCompatibilityHelper.createSchemaField("one", dummySchema, "", dummySchema.getProp("key"),
+        Schema.Field.Order.IGNORE);
     field1.addProp("field_key1", "field_value1");
-    Schema.Field field2 =
-        new Schema.Field("two", dummySchema, "", dummySchema.getProp("key"), Schema.Field.Order.IGNORE);
+    Schema.Field field2 = AvroCompatibilityHelper.createSchemaField("two", dummySchema, "", dummySchema.getProp("key"),
+        Schema.Field.Order.IGNORE);
     field2.addProp("field_key2", "field_value2");
     List<Schema.Field> originalList = new ArrayList<>();
     originalList.add(field1);
@@ -35,8 +36,8 @@ public class SchemaUtilitiesTests {
 
     // Without props being identical, equal-check will not pass.
     // A dummy field3 with only property being different from field1
-    Schema.Field field3 =
-        new Schema.Field("one", dummySchema, "", dummySchema.getProp("key"), Schema.Field.Order.IGNORE);
+    Schema.Field field3 = AvroCompatibilityHelper.createSchemaField("one", dummySchema, "", dummySchema.getProp("key"),
+        Schema.Field.Order.IGNORE);
     field3.addProp("field_key1", "random");
     Assert.assertFalse(resultList.contains(field3));
   }
@@ -59,7 +60,7 @@ public class SchemaUtilitiesTests {
 
   @Test
   public void testHasDuplicateLowercaseColumnNames() {
-    Schema schema = new Schema.Parser().parse(TestUtils.loadSchema("testHasDuplicateLowercaseColumnNames.avsc"));
+    Schema schema = AvroCompatibilityHelper.parse(TestUtils.loadSchema("testHasDuplicateLowercaseColumnNames.avsc"));
     boolean hasDuplicateLowercaseColumnNames = SchemaUtilities.HasDuplicateLowercaseColumnNames.visit(schema);
 
     Assert.assertTrue(hasDuplicateLowercaseColumnNames);
@@ -67,7 +68,7 @@ public class SchemaUtilitiesTests {
 
   @Test
   public void testNotHasDuplicateLowercaseColumnNames() {
-    Schema schema = new Schema.Parser().parse(TestUtils.loadSchema("testNotHasDuplicateLowercaseColumnNames.avsc"));
+    Schema schema = AvroCompatibilityHelper.parse(TestUtils.loadSchema("testNotHasDuplicateLowercaseColumnNames.avsc"));
     boolean hasDuplicateLowercaseColumnNames = SchemaUtilities.HasDuplicateLowercaseColumnNames.visit(schema);
 
     Assert.assertFalse(hasDuplicateLowercaseColumnNames);
@@ -75,7 +76,7 @@ public class SchemaUtilitiesTests {
 
   @Test
   public void testForceLowercaseSchemaTrue() {
-    Schema inputSchema = new Schema.Parser().parse(TestUtils.loadSchema("base-complex.avsc"));
+    Schema inputSchema = AvroCompatibilityHelper.parse(TestUtils.loadSchema("base-complex.avsc"));
     Schema outputSchema = ToLowercaseSchemaVisitor.visit(inputSchema);
 
     Assert.assertEquals(outputSchema.toString(true),
@@ -84,7 +85,7 @@ public class SchemaUtilitiesTests {
 
   @Test
   public void testToNullableSchema() {
-    Schema inputSchema = new Schema.Parser().parse(TestUtils.loadSchema("base-complex-non-nullable.avsc"));
+    Schema inputSchema = AvroCompatibilityHelper.parse(TestUtils.loadSchema("base-complex-non-nullable.avsc"));
     Schema outputSchema = ToNullableSchemaVisitor.visit(inputSchema);
 
     Assert.assertEquals(outputSchema.toString(true), TestUtils.loadSchema("testToNullableSchema-expected.avsc"));
