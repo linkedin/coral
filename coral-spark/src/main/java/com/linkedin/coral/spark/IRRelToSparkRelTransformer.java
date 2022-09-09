@@ -315,7 +315,7 @@ class IRRelToSparkRelTransformer {
       if (call.getOperator() instanceof GenericProjectFunction) {
         // Register generic_project UDF
         sparkUDFInfos.add(new SparkUDFInfo("com.linkedin.genericprojectudf.GenericProject", "generic_project",
-            ImmutableList.of(URI.create("ivy://com.linkedin.GenericProject:GenericProject-impl:0.0.2")),
+            ImmutableList.of(URI.create("ivy://com.linkedin.GenericProject:GenericProject-impl:+")),
             SparkUDFInfo.UDFTYPE.HIVE_CUSTOM_UDF));
         RelDataType expectedRelDataType = call.getType();
         String expectedRelDataTypeString = RelDataTypeToHiveTypeStringConverter.convertRelDataType(expectedRelDataType);
@@ -346,7 +346,7 @@ class IRRelToSparkRelTransformer {
       if (call.getOperator().getName().equalsIgnoreCase("extract_union")) {
         // Only when there's a necessity to register coalesce_struct UDF
         sparkUDFInfos.add(new SparkUDFInfo("com.linkedin.coalescestruct.GenericUDFCoalesceStruct", "coalesce_struct",
-            ImmutableList.of(URI.create("ivy://com.linkedin.coalesce-struct:coalesce-struct-impl:0.0.1")),
+            ImmutableList.of(URI.create("ivy://com.linkedin.coalesce-struct:coalesce-struct-impl:+")),
             SparkUDFInfo.UDFTYPE.HIVE_CUSTOM_UDF));
 
         // one arg case: extract_union(field_name)
