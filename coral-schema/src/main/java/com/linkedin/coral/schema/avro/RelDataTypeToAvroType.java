@@ -5,12 +5,14 @@
  */
 package com.linkedin.coral.schema.avro;
 
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import javax.annotation.Nonnull;
+
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.linkedin.avroutil1.compatibility.AvroCompatibilityHelper;
 
 import org.apache.avro.Schema;
 import org.apache.calcite.rel.type.DynamicRecordType;
@@ -24,7 +26,6 @@ import org.apache.calcite.sql.type.MultisetSqlType;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.hadoop.hive.serde2.avro.AvroSerDe;
 
-import com.linkedin.avroutil1.compatibility.AvroCompatibilityHelper;
 import com.linkedin.coral.com.google.common.base.Preconditions;
 
 

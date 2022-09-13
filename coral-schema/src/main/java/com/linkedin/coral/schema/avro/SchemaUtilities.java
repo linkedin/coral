@@ -16,6 +16,7 @@ import javax.annotation.Nullable;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
+import com.linkedin.avroutil1.compatibility.AvroCompatibilityHelper;
 
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
@@ -43,7 +44,6 @@ import com.linkedin.coral.com.google.common.base.Preconditions;
 import com.linkedin.coral.com.google.common.base.Strings;
 import com.linkedin.coral.schema.avro.exceptions.SchemaNotFoundException;
 
-import com.linkedin.avroutil1.compatibility.AvroCompatibilityHelper;
 import static com.linkedin.coral.schema.avro.AvroSerdeUtils.*;
 import static org.apache.avro.Schema.Type.*;
 

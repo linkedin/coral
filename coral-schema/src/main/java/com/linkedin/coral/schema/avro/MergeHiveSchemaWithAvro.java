@@ -5,11 +5,13 @@
  */
 package com.linkedin.coral.schema.avro;
 
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.linkedin.avroutil1.compatibility.AvroCompatibilityHelper;
 
 import org.apache.avro.Schema;
 import org.apache.hadoop.hive.serde2.avro.AvroSerDe;
@@ -23,7 +25,6 @@ import org.apache.hadoop.hive.serde2.typeinfo.UnionTypeInfo;
 
 import com.linkedin.coral.com.google.common.base.Preconditions;
 
-import com.linkedin.avroutil1.compatibility.AvroCompatibilityHelper;
 import static com.linkedin.coral.schema.avro.AvroSerdeUtils.*;
 
 
