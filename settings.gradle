@@ -7,6 +7,7 @@ def modules = [
   'coral-spark-plan',
   'coral-trino',
   'coral-service',
+  'coral-spark-catalog',
   'shading'
 ]
 
