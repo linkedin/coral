@@ -16,26 +16,24 @@ import org.apache.calcite.sql.type.SqlTypeName;
 
 
 /**
- * This Coral operator enables unboxing an array or map of an operand.
- * The function returns a row set of single column for the array operand, or
- * a row set with two columns corresponding to (key, value) for
- * map operand type.
+ * This Coral operator represents a table function that expands an array/map column into a relation.
+ *
+ * This operator supports returning a row set of a single column for operand type array[struct]
+ * as opposed to super's behavior which returns individual columns for each data type inside the struct.
+ * For the map operand, the return type is same as the super's - a row set with two columns corresponding to (key, value).
  */
 public class CoralSqlUnnestOperator extends SqlUnnestOperator {
 
   // _withOrdinality represents whether output should contain an additional ORDINALITY column
   final boolean _withOrdinality;
-  // _relDataType represents the datatype of the operand to be unboxed.
+  // _relDataType represents the data type of the operand to be expanded.
   RelDataType _relDataType;
 
   public static final String ARRAY_ELEMENT_COLUMN_NAME = "col";
   public static final String ARRAY_ELEMENT_POS_NAME = "pos";
 
   public CoralSqlUnnestOperator(boolean withOrdinality, RelDataType relDataType) {
-    // keep the same as base class 'UNNEST' operator
-    // Hive has a separate 'posexplode' function for ordinality
     super(withOrdinality);
-
     _withOrdinality = withOrdinality;
     _relDataType = relDataType;
   }
@@ -54,16 +52,14 @@ public class CoralSqlUnnestOperator extends SqlUnnestOperator {
     RelDataType operandType = opBinding.getOperandType(0);
     final RelDataTypeFactory.Builder builder = opBinding.getTypeFactory().builder();
 
-    if (withOrdinality) {
+    if (operandType instanceof ArraySqlType) {
       builder.add(ARRAY_ELEMENT_COLUMN_NAME, operandType.getComponentType());
-      builder.add(ARRAY_ELEMENT_POS_NAME, SqlTypeName.INTEGER);
     } else {
-      if (operandType instanceof ArraySqlType) {
-        builder.add(ARRAY_ELEMENT_COLUMN_NAME, operandType.getComponentType());
-      } else {
-        builder.add(MAP_KEY_COLUMN_NAME, operandType.getKeyType());
-        builder.add(MAP_VALUE_COLUMN_NAME, operandType.getValueType());
-      }
+      return super.inferReturnType(opBinding);
+    }
+
+    if (withOrdinality) {
+      builder.add(ARRAY_ELEMENT_POS_NAME, SqlTypeName.INTEGER);
     }
     return builder.build();
   }
