@@ -527,8 +527,17 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
         FunctionReturnTypes.STRING, STRING);
     createAddUserDefinedFunction("com.linkedin.etg.business.common.udfs.MapD365OptionSet", FunctionReturnTypes.STRING,
         STRING_STRING_STRING);
-    createAddUserDefinedFunction("isb.GetProfileSections", FunctionReturnTypes.arrayOfType(SqlTypeName.ANY),
-        or(family(SqlTypeFamily.MAP, SqlTypeFamily.ARRAY), family(SqlTypeFamily.MAP)));
+
+    SqlReturnTypeInference getProfileSectionsReturnTypeInference = opBinding -> {
+      int numArgs = opBinding.getOperandCount();
+      Preconditions.checkState(numArgs == 2, "UDF isb.GetProfileSections must take 2 arguments.");
+      RelDataTypeFactory typeFactory = opBinding.getTypeFactory();
+      RelDataType retType = opBinding.getOperandType(0).getValueType();
+      return typeFactory.createArrayType(retType, -1);
+    };
+    createAddUserDefinedFunction("isb.GetProfileSections", getProfileSectionsReturnTypeInference,
+        family(SqlTypeFamily.MAP, SqlTypeFamily.ARRAY));
+
     createAddUserDefinedFunction("com.linkedin.recruiter.udf.GetEventOriginUDF", FunctionReturnTypes.STRING,
         or(STRING_STRING_STRING,
             family(SqlTypeFamily.STRING, SqlTypeFamily.STRING, SqlTypeFamily.STRING, SqlTypeFamily.STRING)));
@@ -577,6 +586,11 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
     createAddUserDefinedFunction("com.linkedin.stdudfs.daliudfs.hive.IsTestMemberId", ReturnTypes.BOOLEAN,
         family(SqlTypeFamily.NUMERIC, SqlTypeFamily.STRING));
     createAddUserDefinedFunction("com.linkedin.stdudfs.urnextractor.hive.UrnExtractorFunctionWrapper", opBinding -> {
+      RelDataTypeFactory typeFactory = opBinding.getTypeFactory();
+      return typeFactory.createArrayType(typeFactory.createMapType(typeFactory.createSqlType(SqlTypeName.VARCHAR),
+          typeFactory.createSqlType(SqlTypeName.VARCHAR)), -1);
+    }, or(ARRAY, STRING));
+    createAddUserDefinedFunction("com.linkedin.stdudfs.hive.daliudfs.UrnExtractorFunctionWrapper", opBinding -> {
       RelDataTypeFactory typeFactory = opBinding.getTypeFactory();
       return typeFactory.createArrayType(typeFactory.createMapType(typeFactory.createSqlType(SqlTypeName.VARCHAR),
           typeFactory.createSqlType(SqlTypeName.VARCHAR)), -1);
