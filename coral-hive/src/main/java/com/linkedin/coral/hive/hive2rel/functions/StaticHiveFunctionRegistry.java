@@ -590,6 +590,11 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
       return typeFactory.createArrayType(typeFactory.createMapType(typeFactory.createSqlType(SqlTypeName.VARCHAR),
           typeFactory.createSqlType(SqlTypeName.VARCHAR)), -1);
     }, or(ARRAY, STRING));
+    createAddUserDefinedFunction("com.linkedin.stdudfs.hive.daliudfs.UrnExtractorFunctionWrapper", opBinding -> {
+      RelDataTypeFactory typeFactory = opBinding.getTypeFactory();
+      return typeFactory.createArrayType(typeFactory.createMapType(typeFactory.createSqlType(SqlTypeName.VARCHAR),
+          typeFactory.createSqlType(SqlTypeName.VARCHAR)), -1);
+    }, or(ARRAY, STRING));
     createAddUserDefinedFunction("com.linkedin.udfs.standard.hive.ObfuscateMemberIdNumeric", BIGINT,
         family(SqlTypeFamily.ANY, SqlTypeFamily.STRING));
     createAddUserDefinedFunction("com.linkedin.udfs.standard.hive.ObfuscateMemberIdNumericInt", BIGINT,
