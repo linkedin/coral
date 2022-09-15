@@ -82,9 +82,8 @@ public class CalciteTrinoUDFMap {
         null);
 
     // DALI functions
-    // Most "com.linkedin..." UDFs follow convention of having UDF names mapped from their class name by converting
-    // the classname to LOWER_UNDERSCORE. For example: For class name IsGuestMemberId, the conventional udf name would
-    // be is_guest_member_id.
+    // Most "com.linkedin..." UDFs follow convention of having UDF names mapped from camel-cased name to snake-cased name.
+    // For example: For class name IsGuestMemberId, the conventional udf name would be is_guest_member_id.
     // While this convention fits most UDFs it doesn't fit all. With the following mapping we override the conventional
     // UDF name mapping behavior to a hardcoded one.
     // For example instead of UserAgentParser getting mapped to user_agent_parser, we mapped it here to useragentparser
@@ -94,9 +93,14 @@ public class CalciteTrinoUDFMap {
     createUDFMapEntry(UDF_MAP, daliToCalciteOp("com.linkedin.stdudfs.parsing.hive.Ip2Str"), 3, "ip2str");
     createUDFMapEntry(UDF_MAP, daliToCalciteOp("com.linkedin.stdudfs.parsing.hive.UserAgentParser"), 2,
         "useragentparser");
+
     createUDFMapEntry(UDF_MAP, daliToCalciteOp("com.linkedin.stdudfs.lookup.hive.BrowserLookup"), 3, "browserlookup");
     createUDFMapEntry(UDF_MAP, daliToCalciteOp("com.linkedin.jobs.udf.hive.ConvertIndustryCode"), 1,
         "converttoindustryv1");
+    createUDFMapEntry(UDF_MAP, daliToCalciteOp("com.linkedin.stdudfs.urnextractor.hive.UrnExtractorFunctionWrapper"), 1,
+        "urn_extractor");
+    createUDFMapEntry(UDF_MAP, daliToCalciteOp("com.linkedin.stdudfs.hive.daliudfs.UrnExtractorFunctionWrapper"), 1,
+        "urn_extractor");
 
     addDaliUDFs();
   }
