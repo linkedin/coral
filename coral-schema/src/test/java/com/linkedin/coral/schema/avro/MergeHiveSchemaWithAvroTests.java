@@ -310,7 +310,7 @@ public class MergeHiveSchemaWithAvroTests {
   }
 
   private Schema.Field field(String name, Schema schema, String doc, int defaultValue, Map<String, Object> props) {
-    Schema.Field field = AvroCompatibilityHelper.createSchemaField(name, schema, doc, new IntNode(defaultValue));
+    Schema.Field field = AvroCompatibilityHelper.createSchemaField(name, schema, doc, defaultValue);
     if (props != null) {
       props.forEach(field::addProp);
     }
