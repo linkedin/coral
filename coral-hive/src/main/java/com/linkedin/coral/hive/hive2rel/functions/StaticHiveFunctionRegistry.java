@@ -543,6 +543,10 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
             family(SqlTypeFamily.STRING, SqlTypeFamily.STRING, SqlTypeFamily.STRING, SqlTypeFamily.STRING)));
     createAddUserDefinedFunction("com.linkedin.recruiter.udf.QueryRoutingTypeUDF", FunctionReturnTypes.STRING, STRING);
     createAddUserDefinedFunction("com.linkedin.recruiter.udf.SearchQueryUDF", FunctionReturnTypes.STRING, STRING);
+    createAddUserDefinedFunction("com.linkedin.snapshot.udf.ConstructSnapshotUrnUdf", ReturnTypes.BOOLEAN,
+        family(SqlTypeFamily.NUMERIC, SqlTypeFamily.STRING));
+    createAddUserDefinedFunction("com.linkedin.snapshot.udf.SnapshotPurgeEligibleUdf", FunctionReturnTypes.STRING,
+        family(SqlTypeFamily.NUMERIC, SqlTypeFamily.STRING));
 
     // The following UDFs are already defined using Transport UDF.
     // The class name is the corresponding Hive UDF.
