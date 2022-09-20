@@ -30,6 +30,7 @@ import com.linkedin.coral.com.google.common.collect.HashMultimap;
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import com.linkedin.coral.com.google.common.collect.ImmutableMultimap;
 import com.linkedin.coral.com.google.common.collect.Multimap;
+import com.linkedin.coral.common.functions.CoralSqlUnnestOperator;
 import com.linkedin.coral.common.functions.Function;
 import com.linkedin.coral.common.functions.FunctionRegistry;
 import com.linkedin.coral.common.functions.FunctionReturnTypes;
@@ -628,8 +629,8 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
         STRING_STRING_STRING);
 
     // UDTFs
-    addFunctionEntry("explode", HiveExplodeOperator.EXPLODE);
-    addFunctionEntry("posexplode", HivePosExplodeOperator.POS_EXPLODE);
+    addFunctionEntry("explode", new CoralSqlUnnestOperator(false));
+    addFunctionEntry("posexplode", new CoralSqlUnnestOperator(true));
     addFunctionEntry("json_tuple", HiveJsonTupleOperator.JSON_TUPLE);
 
     // reflect functions
