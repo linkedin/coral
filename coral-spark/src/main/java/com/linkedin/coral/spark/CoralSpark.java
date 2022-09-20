@@ -12,7 +12,6 @@ import org.apache.avro.Schema;
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rel.rel2sql.SqlImplementor;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlSelect;
@@ -65,9 +64,7 @@ public class CoralSpark {
   public static CoralSpark create(RelNode irRelNode) {
     SparkRelInfo sparkRelInfo = IRRelToSparkRelTransformer.transform(irRelNode);
     RelNode sparkRelNode = sparkRelInfo.getSparkRelNode();
-    //    String sparkSQL = constructSparkSQL(sparkRelNode);
-    String sparkSQL = constructSparkSQLTmp(sparkRelNode);
-
+    String sparkSQL = constructSparkSQL(sparkRelNode);
     List<String> baseTables = constructBaseTables(sparkRelNode);
     List<SparkUDFInfo> sparkUDFInfos = sparkRelInfo.getSparkUDFInfoList();
     return new CoralSpark(baseTables, sparkUDFInfos, sparkSQL);
@@ -90,79 +87,41 @@ public class CoralSpark {
   private static CoralSpark createWithAlias(RelNode irRelNode, List<String> aliases) {
     SparkRelInfo sparkRelInfo = IRRelToSparkRelTransformer.transform(irRelNode);
     RelNode sparkRelNode = sparkRelInfo.getSparkRelNode();
-    //    String sparkSQL = constructSparkSQLWithExplicitAlias(sparkRelNode, aliases);
-    String sparkSQL = constructSparkSQLWithExplicitAliasTmp(sparkRelNode, aliases);
+    String sparkSQL = constructSparkSQLWithExplicitAlias(sparkRelNode, aliases);
     List<String> baseTables = constructBaseTables(sparkRelNode);
     List<SparkUDFInfo> sparkUDFInfos = sparkRelInfo.getSparkUDFInfoList();
     return new CoralSpark(baseTables, sparkUDFInfos, sparkSQL);
   }
 
   /**
-   * This function returns a completely expanded SQL statement in HiveQL Dialect.
+   * This function returns a completely expanded SQL statement in Spark SQL Dialect.
    *
    * A SQL statement is 'completely expanded' if it doesn't depend
    * on (or selects from) Hive views, but instead, just on base tables.
-   * This function internally calls [[SparkRelToSparkSqlConverter]] module to
+   * This function internally calls [[CoralRelToSqlNodeConverter]] module to
    * convert CoralSpark to SparkSQL.
    *
    * Converts Spark RelNode to Spark SQL
    *
    * @param sparkRelNode A Spark compatible RelNode
    *
-   * @return SQL String in HiveQL dialect which is 'completely expanded'
+   * @return SQL String in Spark SQL dialect which is 'completely expanded'
    */
   private static String constructSparkSQL(RelNode sparkRelNode) {
-    SparkRelToSparkSqlConverter rel2sql = new SparkRelToSparkSqlConverter();
-    // Create temporary objects r and rewritten to make debugging easier
-    SqlImplementor.Result r = rel2sql.visitChild(0, sparkRelNode);
-    SqlNode rewritten = r.asStatement().accept(new SparkSqlRewriter());
-    return rewritten.toSqlString(SparkSqlDialect.INSTANCE).getSql();
-  }
-
-  /**
-   * Temporary method to integrate CoralRelToSqlNodeConverter in the translation pipeline
-   * which converts a hive SQL to Spark SQL.
-   * @param sparkRelNode A Spark compatible RelNode
-   * @return SQL String in SparkSqlDialect dialect
-   */
-  private static String constructSparkSQLTmp(RelNode sparkRelNode) {
-    SqlNode coralSqlNode = new CoralRelToSqlNodeConverter().visitChild(0, sparkRelNode).asStatement();
-
+    CoralRelToSqlNodeConverter rel2sql = new CoralRelToSqlNodeConverter();
+    SqlNode coralSqlNode = rel2sql.convert(sparkRelNode);
     SqlNode sparkSqlNode = coralSqlNode.accept(new CoralSqlNodeToSparkSqlNodeConverter());
-
     SqlNode rewrittenSparkSqlNode = sparkSqlNode.accept(new SparkSqlRewriter());
-
-    return rewrittenSparkSqlNode.toSqlString(SparkSqlDialect.INSTANCE).getSql();
-  }
-
-  // Temporary method to integrate CoralRelToSqlNodeConverter in the translation pipeline
-  private static String constructSparkSQLWithExplicitAliasTmp(RelNode sparkRelNode, List<String> aliases) {
-    SqlNode coralSqlNode = new CoralRelToSqlNodeConverter().visitChild(0, sparkRelNode).asStatement();
-    SqlNode sparkSqlNode = coralSqlNode.accept(new CoralSqlNodeToSparkSqlNodeConverter());
-
-    SparkRelToSparkSqlConverter rel2sql = new SparkRelToSparkSqlConverter();
-    SqlNode legacySparkSqlNode = rel2sql.visitChild(0, sparkRelNode).asStatement();
-
-    System.out.println("LegacySparkSqlNode: " + legacySparkSqlNode + " and newSparkSqlNode: " + sparkSqlNode
-        + " for relNode: " + RelOptUtil.toString(sparkRelNode));
-
-    SqlNode rewrittenSparkSqlNode = sparkSqlNode.accept(new SparkSqlRewriter());
-
-    // Use a second pass visit to add explicit alias names,
-    // only do this when it's not a select star case,
-    // since for select star we don't need to add any explicit aliases
-    if (rewrittenSparkSqlNode.getKind() == SqlKind.SELECT
-        && ((SqlSelect) rewrittenSparkSqlNode).getSelectList() != null) {
-      rewrittenSparkSqlNode = rewrittenSparkSqlNode.accept(new AddExplicitAlias(aliases));
-    }
     return rewrittenSparkSqlNode.toSqlString(SparkSqlDialect.INSTANCE).getSql();
   }
 
   private static String constructSparkSQLWithExplicitAlias(RelNode sparkRelNode, List<String> aliases) {
-    SparkRelToSparkSqlConverter rel2sql = new SparkRelToSparkSqlConverter();
+    CoralRelToSqlNodeConverter rel2sql = new CoralRelToSqlNodeConverter();
     // Create temporary objects r and rewritten to make debugging easier
-    SqlImplementor.Result r = rel2sql.visitChild(0, sparkRelNode);
-    SqlNode rewritten = r.asStatement().accept(new SparkSqlRewriter());
+    SqlNode coralSqlNode = rel2sql.convert(sparkRelNode);
+    SqlNode sparkSqlNode = coralSqlNode.accept(new CoralSqlNodeToSparkSqlNodeConverter());
+
+    SqlNode rewritten = sparkSqlNode.accept(new SparkSqlRewriter());
     // Use a second pass visit to add explicit alias names,
     // only do this when it's not a select star case,
     // since for select star we don't need to add any explicit aliases

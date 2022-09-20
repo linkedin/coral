@@ -43,12 +43,11 @@ import org.apache.hadoop.hive.metastore.api.Table;
 
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import com.linkedin.coral.com.google.common.collect.Iterables;
+import com.linkedin.coral.common.functions.CoralSqlUnnestOperator;
 import com.linkedin.coral.common.functions.Function;
 import com.linkedin.coral.common.functions.FunctionFieldReferenceOperator;
-import com.linkedin.coral.hive.hive2rel.functions.HiveExplodeOperator;
 import com.linkedin.coral.hive.hive2rel.functions.HiveFunctionResolver;
 import com.linkedin.coral.hive.hive2rel.functions.HiveJsonTupleOperator;
-import com.linkedin.coral.hive.hive2rel.functions.HivePosExplodeOperator;
 import com.linkedin.coral.hive.hive2rel.functions.HiveRLikeOperator;
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 import com.linkedin.coral.hive.hive2rel.functions.VersionedSqlUserDefinedFunction;
@@ -153,8 +152,7 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     checkState(aliasOperands.get(0) instanceof SqlCall);
     SqlCall tableFunctionCall = (SqlCall) aliasOperands.get(0);
 
-    if (tableFunctionCall.getOperator() instanceof HiveExplodeOperator
-        || tableFunctionCall.getOperator() instanceof HivePosExplodeOperator) {
+    if (tableFunctionCall.getOperator() instanceof CoralSqlUnnestOperator) {
       return visitLateralViewExplode(sqlNodes, aliasOperands, tableFunctionCall, isOuter);
     }
 
@@ -231,7 +229,8 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
       // array of [null] or map of (null, null) should be 3rd param to if function. With our type inference, calcite acts
       // smart and for unnest(array[null]) or unnest(map(null, null)) determines return type to be null
       SqlNode arrayOrMapOfNull;
-      if (operandCount == 3 || operator instanceof HivePosExplodeOperator) {
+      if (operandCount == 3
+          || (operator instanceof CoralSqlUnnestOperator && ((CoralSqlUnnestOperator) operator).withOrdinality)) {
         arrayOrMapOfNull = SqlStdOperatorTable.ARRAY_VALUE_CONSTRUCTOR.createCall(ZERO, SqlLiteral.createNull(ZERO));
       } else {
         arrayOrMapOfNull = SqlStdOperatorTable.MAP_VALUE_CONSTRUCTOR.createCall(ZERO, SqlLiteral.createNull(ZERO),
@@ -254,7 +253,8 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     asOperands.add(lateralCall);
 
     // For POSEXPLODE case, we need to change the order of 2 alias. i.e. `pos, val` -> `val, pos` to be aligned with calcite validation
-    if (operator instanceof HivePosExplodeOperator && operandCount == 4) {
+    if (operator instanceof CoralSqlUnnestOperator && ((CoralSqlUnnestOperator) operator).withOrdinality
+        && operandCount == 4) {
       asOperands.add(aliasOperands.get(1));
       asOperands.add(aliasOperands.get(3));
       asOperands.add(aliasOperands.get(2));

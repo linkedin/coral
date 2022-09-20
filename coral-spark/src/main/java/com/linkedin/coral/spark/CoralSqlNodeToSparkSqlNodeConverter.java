@@ -67,10 +67,17 @@ public class CoralSqlNodeToSparkSqlNodeConverter extends SqlShuttle {
     // It is transformed to :
     //        EXPLODE(table_with_struct_array.array_struct_column)
     // by extracting the column to explode and creating a new SqlCall
-    if (potentialIfCall instanceof SqlCall
-        && ((SqlCall) potentialIfCall).getOperator().getName().equalsIgnoreCase("if")) {
-      final SqlNode unnestColumn = ((SqlCall) potentialIfCall).getOperandList().get(1);
-      return sqlCall.getOperator().createCall(SqlParserPos.ZERO, unnestColumn);
+    if (potentialIfCall instanceof SqlCall && ((SqlCall) potentialIfCall).getOperator().getName().equalsIgnoreCase("if")
+        && ((SqlCall) potentialIfCall).operandCount() == 3
+        && ((SqlCall) potentialIfCall).operand(2) instanceof SqlCall) {
+
+      SqlCall arraySqlCall = ((SqlCall) potentialIfCall).operand(2);
+
+      if (arraySqlCall.getOperator().getName().equalsIgnoreCase("array")
+          && arraySqlCall.operand(0).toString().equalsIgnoreCase("null")) {
+        final SqlNode unnestColumn = ((SqlCall) potentialIfCall).getOperandList().get(1);
+        return sqlCall.getOperator().createCall(SqlParserPos.ZERO, unnestColumn);
+      }
     }
     return sqlCall;
   }

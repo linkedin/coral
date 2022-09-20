@@ -32,6 +32,18 @@ public class CoralSqlUnnestOperator extends SqlUnnestOperator {
   public static final String ARRAY_ELEMENT_COLUMN_NAME = "col";
   public static final String ARRAY_ELEMENT_POS_NAME = "pos";
 
+  /**
+   * This constructor is used when the datatype of the column to be expanded does not need to be persisted,
+   * such as when converting a SQL statement from the source SQL dialect to Coral's SqlNode representation.
+   */
+  public CoralSqlUnnestOperator(boolean withOrdinality) {
+    this(withOrdinality, null);
+  }
+
+  /**
+   * This constructor is used when the datatype of the column to be expanded needs to be persisted,
+   * such as when converting from the Coral RelNode representation to the Coral SqlNode representation.
+   */
   public CoralSqlUnnestOperator(boolean withOrdinality, RelDataType relDataType) {
     super(withOrdinality);
     _withOrdinality = withOrdinality;
