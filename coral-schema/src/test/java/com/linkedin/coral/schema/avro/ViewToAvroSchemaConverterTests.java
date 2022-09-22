@@ -1024,5 +1024,12 @@ public class ViewToAvroSchemaConverterTests {
     Assert.assertEquals(actualSchema.toString(true), TestUtils.loadSchema("testLowercaseSchema-expected.avsc"));
   }
 
+  @Test
+  public void testSelectWithoutBaseTable() {
+    final ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    final Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("SELECT 1 intCol");
+
+    Assert.assertEquals(actualSchema.toString(true), TestUtils.loadSchema("testSelectWithoutBaseTable-expected.avsc"));
+  }
   // TODO: add more unit tests
 }
