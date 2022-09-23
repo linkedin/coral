@@ -1,0 +1,13 @@
+{
+  "type" : "record",
+  "name" : "v",
+  "namespace" : "default.v",
+  "fields" : [ {
+    "name" : "col1",
+    "type" : [ "null", {
+      "type" : "array",
+      "items" : "string"
+    } ],
+    "doc" : "Field created in view by applying operator 'CASE' with argument(s): true, value with type VARCHAR(65535) ARRAY, value with type VARCHAR(65535) ARRAY"
+  } ]
+}

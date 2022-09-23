@@ -833,6 +833,16 @@ public class CoralSparkTest {
     assertEquals(expandedSql, targetSql);
   }
 
+  @Test
+  public void testRedundantCastRemovedFromCaseCall() {
+    final String sourceSql = "SELECT CASE WHEN TRUE THEN NULL ELSE split(b, ' ') END AS col1 FROM complex";
+    String expandedSql = getCoralSparkTranslatedSqlWithAliasFromCoralSchema(sourceSql);
+
+    String targetSql = "SELECT CASE WHEN TRUE THEN NULL ELSE split(b, ' ') END col1\n" +
+            "FROM default.complex";
+    assertEquals(expandedSql, targetSql);
+  }
+
   private static String getCoralSparkTranslatedSqlWithAliasFromCoralSchema(String db, String view) {
     RelNode relNode = TestUtils.toRelNode(db, view);
     Schema schema = TestUtils.getAvroSchemaForView(db, view, false);
