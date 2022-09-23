@@ -838,8 +838,7 @@ public class CoralSparkTest {
     final String sourceSql = "SELECT CASE WHEN TRUE THEN NULL ELSE split(b, ' ') END AS col1 FROM complex";
     String expandedSql = getCoralSparkTranslatedSqlWithAliasFromCoralSchema(sourceSql);
 
-    String targetSql = "SELECT CASE WHEN TRUE THEN NULL ELSE split(b, ' ') END col1\n" +
-            "FROM default.complex";
+    String targetSql = "SELECT CASE WHEN TRUE THEN NULL ELSE split(b, ' ') END col1\n" + "FROM default.complex";
     assertEquals(expandedSql, targetSql);
   }
 

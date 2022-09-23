@@ -200,11 +200,11 @@ class IRRelToSparkRelTransformer {
 
       RexCall updatedCall = (RexCall) super.visitCall(call);
 
-      RexNode convertToNewNode =
-          convertToZeroBasedArrayIndex(updatedCall).orElseGet(() -> convertToNamedStruct(updatedCall)
-              .orElseGet(() -> convertFuzzyUnionGenericProject(updatedCall).orElseGet(() -> convertDaliUDF(updatedCall)
-                  .orElseGet(() -> convertBuiltInUDF(updatedCall).orElseGet(() -> fallbackToHiveUdf(updatedCall)
-                      .orElseGet(() -> swapExtractUnionFunction(updatedCall).orElseGet(() -> removeCastToEnsureCorrectNullability(updatedCall).orElse(updatedCall))))))));
+      RexNode convertToNewNode = convertToZeroBasedArrayIndex(updatedCall).orElseGet(
+          () -> convertToNamedStruct(updatedCall).orElseGet(() -> convertFuzzyUnionGenericProject(updatedCall)
+              .orElseGet(() -> convertDaliUDF(updatedCall).orElseGet(() -> convertBuiltInUDF(updatedCall)
+                  .orElseGet(() -> fallbackToHiveUdf(updatedCall).orElseGet(() -> swapExtractUnionFunction(updatedCall)
+                      .orElseGet(() -> removeCastToEnsureCorrectNullability(updatedCall).orElse(updatedCall))))))));
 
       return convertToNewNode;
     }
@@ -380,7 +380,7 @@ class IRRelToSparkRelTransformer {
         RelDataType castType = call.getType();
         RelDataType originalType = call.getOperands().get(0).getType();
         if (castType.isNullable() && !originalType.isNullable()
-          && rexBuilder.getTypeFactory().createTypeWithNullability(originalType, true).equals(castType)) {
+            && rexBuilder.getTypeFactory().createTypeWithNullability(originalType, true).equals(castType)) {
           return Optional.of(rexBuilder.copy(call.getOperands().get(0)));
         }
       }

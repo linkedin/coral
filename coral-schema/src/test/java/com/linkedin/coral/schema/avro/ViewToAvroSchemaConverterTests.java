@@ -1026,14 +1026,15 @@ public class ViewToAvroSchemaConverterTests {
 
   @Test
   public void testCaseCallWithNullBranchAndComplexDataTypeBranch() {
-    String viewSql = "CREATE VIEW v AS SELECT CASE WHEN TRUE THEN NULL ELSE split(struct_col.string_field, ' ') END AS col1 FROM basecomplex";
+    String viewSql =
+        "CREATE VIEW v AS SELECT CASE WHEN TRUE THEN NULL ELSE split(struct_col.string_field, ' ') END AS col1 FROM basecomplex";
     TestUtils.executeCreateViewQuery("default", "v", viewSql);
 
     ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
     Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v");
 
     Assert.assertEquals(actualSchema.toString(true),
-            TestUtils.loadSchema("testCaseCallWithNullBranchAndComplexDataTypeBranch-expected.avsc"));
+        TestUtils.loadSchema("testCaseCallWithNullBranchAndComplexDataTypeBranch-expected.avsc"));
   }
 
   // TODO: add more unit tests
