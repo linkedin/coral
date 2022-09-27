@@ -364,14 +364,20 @@ class IRRelToSparkRelTransformer {
       return Optional.empty();
     }
 
-    // Calcite entails the nullability of an expression by casting it to the correct nullable type.
-    // However, for complex types like ARRAY<STRING NOT NULL> (element non-nullable, but top-level nullable),
-    // the translated SQL will still be `CAST(XXX) AS ARRAY<STRING>`. Since Spark treats a Cast target type
-    // as always nullable (both inner and outer), it will treat the SQL type as ARRAY<STRING>, this deviates
-    // from the nullability represented in RelNode/Coral-Schema.
-    // To make this work, we remove all the CAST expressions induced by nullability differences, and let Spark's
-    // SQL analyzer derive the nullability for the SQL itself, and as long as Coral-Schema can be an equal or looser
-    // with regard to the Spark analyzer schema, it should make Coral compatible with Spark.
+    /**
+     *  Calcite entails the nullability of an expression by casting it to the correct nullable type.
+     *  However, for complex types like ARRAY<STRING NOT NULL> (element non-nullable, but top-level nullable),
+     *  the translated SQL will be `CAST(XXX AS ARRAY<STRING>)`, which strip the nullable information.
+     *  Since Spark treats a cast target sql type name as always nullable (both inner and outer),
+     *  it will treat above cast call as type ARRAY<STRING:nullable>:nullable, this deviates
+     *  from the nullability represented in RelNode/Coral-Schema ARRAY<STRING:non-nullable>:nullable,
+     *  see {@link com.linkedin.coral.schema.avro.ViewToAvroSchemaConverterTests#testCaseCallWithNullBranchAndComplexDataTypeBranch()
+     *  testCastCallNullablility}
+     *
+     *  To make this work, we remove all the CAST expressions induced by nullability differences, and let Spark's
+     *  SQL analyzer derive the nullability for the SQL itself, and as long as Coral-Schema can be an equal or looser
+     *  with regard to the Spark analyzer schema, it should make Coral compatible with Spark.
+     */
     private Optional<RexNode> removeCastToEnsureCorrectNullability(RexCall call) {
       if (call.getOperator().equals(SqlStdOperatorTable.CAST)) {
         if (RexUtil.isNullLiteral(call, true)) {
