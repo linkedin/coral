@@ -428,8 +428,8 @@ public class Calcite2TrinoUDFConverter {
 
       // Trino doesn't allow casting varbinary/binary to varchar, we need to use the built-in function `from_utf8`
       // to replace the cast, i.e. CAST(binary AS VARCHAR) -> from_utf8(binary)
-      if (call.getType().getSqlTypeName() == VARCHAR && (leftOperand.getType().getSqlTypeName() == VARBINARY)
-          || leftOperand.getType().getSqlTypeName() == BINARY) {
+      if (call.getType().getSqlTypeName() == VARCHAR && (leftOperand.getType().getSqlTypeName() == VARBINARY
+          || leftOperand.getType().getSqlTypeName() == BINARY)) {
         SqlOperator fromUTF8 = createUDF("from_utf8", explicit(VARCHAR));
         return Optional.of(rexBuilder.makeCall(fromUTF8, leftOperand));
       }
