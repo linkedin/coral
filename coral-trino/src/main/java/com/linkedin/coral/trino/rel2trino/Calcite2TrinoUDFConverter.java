@@ -406,10 +406,6 @@ public class Calcite2TrinoUDFConverter {
       return Optional.of(rexBuilder.makeCast(typeFactory.createSqlType(TIMESTAMP, 3), rexBuilder.makeCall(op)));
     }
 
-    // Hive allows for casting of TIMESTAMP to DECIMAL, which converts it to unix time if the decimal format is valid
-    // Example: "SELECT cast(current_timestamp() AS decimal(10,0));" -> 1633112585
-    // Trino does not allow for such conversion, but we can achieve the same behavior by first calling "to_unixtime"
-    // on the TIMESTAMP and then casting it to DECIMAL after.
     private Optional<RexNode> visitCast(RexCall call) {
       final SqlOperator op = call.getOperator();
       if (op.getKind() != SqlKind.CAST) {
@@ -419,11 +415,23 @@ public class Calcite2TrinoUDFConverter {
       List<RexNode> convertedOperands = visitList(call.getOperands(), (boolean[]) null);
       RexNode leftOperand = convertedOperands.get(0);
 
+      // Hive allows for casting of TIMESTAMP to DECIMAL, which converts it to unix time if the decimal format is valid
+      // Example: "SELECT cast(current_timestamp() AS decimal(10,0));" -> 1633112585
+      // Trino does not allow for such conversion, but we can achieve the same behavior by first calling "to_unixtime"
+      // on the TIMESTAMP and then casting it to DECIMAL after.
       if (call.getType().getSqlTypeName() == DECIMAL && leftOperand.getType().getSqlTypeName() == TIMESTAMP) {
         SqlOperator trinoToUnixTime = createUDF("to_unixtime", explicit(DOUBLE));
         SqlOperator trinoWithTimeZone = createUDF("with_timezone", explicit(TIMESTAMP /* should be WITH TIME ZONE */));
         return Optional.of(rexBuilder.makeCast(call.getType(), rexBuilder.makeCall(trinoToUnixTime,
             rexBuilder.makeCall(trinoWithTimeZone, leftOperand, rexBuilder.makeLiteral("UTC")))));
+      }
+
+      // Trino doesn't allow casting varbinary/binary to varchar, we need to use the built-in function `from_utf8`
+      // to replace the cast, i.e. CAST(binary AS VARCHAR) -> from_utf8(binary)
+      if (call.getType().getSqlTypeName() == VARCHAR && (leftOperand.getType().getSqlTypeName() == VARBINARY)
+          || leftOperand.getType().getSqlTypeName() == BINARY) {
+        SqlOperator fromUTF8 = createUDF("from_utf8", explicit(VARCHAR));
+        return Optional.of(rexBuilder.makeCall(fromUTF8, leftOperand));
       }
 
       return Optional.empty();
