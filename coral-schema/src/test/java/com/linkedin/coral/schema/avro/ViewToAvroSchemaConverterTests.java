@@ -1037,5 +1037,18 @@ public class ViewToAvroSchemaConverterTests {
         TestUtils.loadSchema("testCaseCallWithNullBranchAndComplexDataTypeBranch-expected.avsc"));
   }
 
+  @Test
+  public void testUnionIntAndLongPromoteToLong() {
+    String viewSql =
+        "CREATE VIEW v AS SELECT t1.int_col AS f1 FROM baseprimitive t1 UNION ALL SELECT t2.long_col AS f1 FROM baseprimitive t2";
+    TestUtils.executeCreateViewQuery("default", "v", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v");
+
+    Assert.assertEquals(actualSchema.toString(true),
+        TestUtils.loadSchema("testUnionIntAndLongPromoteToLong-expected.avsc"));
+  }
+
   // TODO: add more unit tests
 }

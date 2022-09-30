@@ -585,6 +585,24 @@ class SchemaUtilities {
       if (ImmutableSet.of(FIXED, BYTES).equals(types)) {
         return Schema.create(BYTES);
       }
+      if (ImmutableSet.of(INT, LONG).equals(types)) {
+        return Schema.create(LONG);
+      }
+      if (ImmutableSet.of(INT, FLOAT).equals(types)) {
+        return Schema.create(FLOAT);
+      }
+      if (ImmutableSet.of(INT, DOUBLE).equals(types)) {
+        return Schema.create(DOUBLE);
+      }
+      if (ImmutableSet.of(LONG, FLOAT).equals(types)) {
+        return Schema.create(FLOAT);
+      }
+      if (ImmutableSet.of(LONG, DOUBLE).equals(types)) {
+        return Schema.create(DOUBLE);
+      }
+      if (ImmutableSet.of(FLOAT, DOUBLE).equals(types)) {
+        return Schema.create(DOUBLE);
+      }
     }
 
     throw new RuntimeException("Found two incompatible schemas for LogicalUnion operator. Left schema is: "
