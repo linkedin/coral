@@ -10,6 +10,14 @@
     {
       "name": "long_col",
       "type": "long"
+    },
+    {
+      "name": "float_col",
+      "type": "float"
+    },
+    {
+      "name": "double_col",
+      "type": "double"
     }
   ]
 }
