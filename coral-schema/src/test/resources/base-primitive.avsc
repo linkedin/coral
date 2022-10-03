@@ -1,0 +1,23 @@
+{
+  "type" : "record",
+  "name" : "BasePrimitive",
+  "namespace" : "coral.schema.avro.base.complex",
+  "fields" : [
+    {
+    "name" : "int_col",
+    "type" : "int"
+    },
+    {
+      "name": "long_col",
+      "type": "long"
+    },
+    {
+      "name": "float_col",
+      "type": "float"
+    },
+    {
+      "name": "double_col",
+      "type": "double"
+    }
+  ]
+}
