@@ -1053,27 +1053,27 @@ public class ViewToAvroSchemaConverterTests {
   @Test
   public void testUnionIntAndDoublePromoteToDouble() {
     String viewSql =
-            "CREATE VIEW v AS SELECT t1.int_col AS f1 FROM baseprimitive t1 UNION ALL SELECT t2.double_col AS f1 FROM baseprimitive t2";
+        "CREATE VIEW v AS SELECT t1.int_col AS f1 FROM baseprimitive t1 UNION ALL SELECT t2.double_col AS f1 FROM baseprimitive t2";
     TestUtils.executeCreateViewQuery("default", "v", viewSql);
 
     ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
     Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v");
 
     Assert.assertEquals(actualSchema.toString(true),
-            TestUtils.loadSchema("testUnionIntAndDoublePromoteToDouble-expected.avsc"));
+        TestUtils.loadSchema("testUnionIntAndDoublePromoteToDouble-expected.avsc"));
   }
 
   @Test
   public void testUnionFloatAndDoublePromoteToDouble() {
     String viewSql =
-            "CREATE VIEW v AS SELECT t1.double_col AS f1 FROM baseprimitive t1 UNION ALL SELECT t2.float_col AS f1 FROM baseprimitive t2";
+        "CREATE VIEW v AS SELECT t1.double_col AS f1 FROM baseprimitive t1 UNION ALL SELECT t2.float_col AS f1 FROM baseprimitive t2";
     TestUtils.executeCreateViewQuery("default", "v", viewSql);
 
     ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
     Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v");
 
     Assert.assertEquals(actualSchema.toString(true),
-            TestUtils.loadSchema("testUnionFloatAndDoublePromoteToDouble-expected.avsc"));
+        TestUtils.loadSchema("testUnionFloatAndDoublePromoteToDouble-expected.avsc"));
   }
 
   // TODO: add more unit tests
