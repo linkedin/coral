@@ -9,14 +9,15 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.databind.node.IntNode;
+import com.fasterxml.jackson.databind.node.TextNode;
+import com.linkedin.avroutil1.compatibility.AvroCompatibilityHelper;
+
 import org.apache.avro.Schema;
 import org.apache.hadoop.hive.serde2.avro.AvroSerDe;
 import org.apache.hadoop.hive.serde2.typeinfo.StructTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.node.IntNode;
-import org.codehaus.jackson.node.TextNode;
 import org.testng.annotations.Test;
 
 import com.linkedin.coral.com.google.common.base.Preconditions;
@@ -247,8 +248,7 @@ public class MergeHiveSchemaWithAvroTests {
   }
 
   private void assertSchema(Schema expected, Schema actual) {
-    assertEquals(expected, actual);
-    assertEquals(expected.toString(true), actual.toString(true));
+    assertEquals(actual.toString(true), expected.toString(true));
   }
 
   private Schema merge(StructTypeInfo typeInfo, Schema avro) {
@@ -289,7 +289,7 @@ public class MergeHiveSchemaWithAvroTests {
 
   private Schema.Field nullable(Schema.Field field) {
     Preconditions.checkArgument(!AvroSerdeUtils.isNullableType(field.schema()));
-    return field(field.name(), nullable(field.schema()), field.doc(), null, field.getProps());
+    return field(field.name(), nullable(field.schema()), field.doc(), null, field.getObjectProps());
   }
 
   private Schema nullable(Schema schema) {
@@ -300,16 +300,16 @@ public class MergeHiveSchemaWithAvroTests {
     return nullable(Schema.create(type));
   }
 
-  private Schema.Field field(String name, Schema schema, String doc, Object defaultValue, Map<String, String> props) {
-    Schema.Field field = new Schema.Field(name, schema, doc, (JsonNode) defaultValue);
+  private Schema.Field field(String name, Schema schema, String doc, Object defaultValue, Map<String, Object> props) {
+    Schema.Field field = AvroCompatibilityHelper.createSchemaField(name, schema, doc, defaultValue);
     if (props != null) {
       props.forEach(field::addProp);
     }
     return field;
   }
 
-  private Schema.Field field(String name, Schema schema, String doc, int defaultValue, Map<String, String> props) {
-    Schema.Field field = new Schema.Field(name, schema, doc, new IntNode(defaultValue));
+  private Schema.Field field(String name, Schema schema, String doc, int defaultValue, Map<String, Object> props) {
+    Schema.Field field = AvroCompatibilityHelper.createSchemaField(name, schema, doc, defaultValue);
     if (props != null) {
       props.forEach(field::addProp);
     }
@@ -317,7 +317,7 @@ public class MergeHiveSchemaWithAvroTests {
   }
 
   private Schema.Field required(String name, Schema schema, String doc, Object defaultValue,
-      Map<String, String> props) {
+      Map<String, Object> props) {
     return field(name, schema, doc, defaultValue, props);
   }
 
@@ -326,7 +326,7 @@ public class MergeHiveSchemaWithAvroTests {
   }
 
   private Schema.Field required(String name, Schema.Type type, String doc, Object defaultValue,
-      Map<String, String> props) {
+      Map<String, Object> props) {
     return required(name, Schema.create(type), doc, defaultValue, props);
   }
 
