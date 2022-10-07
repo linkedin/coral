@@ -566,6 +566,7 @@ class SchemaUtilities {
         case INT:
         case LONG:
         case STRING:
+        case UNION:
           return leftSchema;
         case FIXED:
           if (isSameNamespace(leftSchema, rightSchema, strictMode)) {
