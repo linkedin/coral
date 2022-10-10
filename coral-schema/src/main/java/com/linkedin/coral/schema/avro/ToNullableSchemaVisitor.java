@@ -10,9 +10,9 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.linkedin.avroutil1.compatibility.AvroCompatibilityHelper;
 
 import org.apache.avro.Schema;
-import org.codehaus.jackson.JsonNode;
 
 
 /**
@@ -36,7 +36,7 @@ public class ToNullableSchemaVisitor extends AvroSchemaVisitor<Schema> {
     nullableSchema.setFields(nullableFields);
     SchemaUtilities.replicateSchemaProps(record, nullableSchema);
 
-    return SchemaUtilities.makeNullable(nullableSchema);
+    return SchemaUtilities.makeNullable(nullableSchema, false);
   }
 
   @Override
@@ -61,13 +61,15 @@ public class ToNullableSchemaVisitor extends AvroSchemaVisitor<Schema> {
   }
 
   private Schema.Field nullableField(Schema.Field field, Schema schema) {
-    Schema.Field nullableField = new Schema.Field(field.name(), SchemaUtilities.makeNullable(schema), field.doc(),
-        field.defaultValue(), field.order());
+    final Object defaultValue = SchemaUtilities.defaultValue(field);
+    // While calling `makeNullable` method, if the default value is not null, we need to put null as the second option
+    // i.e. schema = int, defaultValue = 1, the resultant schema should be [int, null] rather than [null, int]
+    Schema.Field nullableField = AvroCompatibilityHelper.createSchemaField(field.name(),
+        SchemaUtilities.makeNullable(schema, defaultValue != null), field.doc(), defaultValue, field.order());
 
-    for (Map.Entry<String, JsonNode> prop : field.getJsonProps().entrySet()) {
+    for (Map.Entry<String, Object> prop : field.getObjectProps().entrySet()) {
       nullableField.addProp(prop.getKey(), prop.getValue());
     }
-
     return nullableField;
   }
 }

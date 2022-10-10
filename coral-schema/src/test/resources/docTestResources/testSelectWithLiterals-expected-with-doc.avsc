@@ -20,7 +20,6 @@
       "type" : "array",
       "items" : [ "null", "string" ]
     } ],
-    "doc" : "Sample array col.",
-    "default" : null
+    "doc" : "Sample array col."
   } ]
 }

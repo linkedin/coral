@@ -15,7 +15,8 @@
         "name" : "ID",
         "type" : [ "null", "int" ]
       } ]
-    } ]
+    } ],
+    "default" : null
   }, {
     "name" : "VALUE",
     "type" : [ "null", {
@@ -29,7 +30,8 @@
         "name" : "ID",
         "type" : [ "null", "int" ]
       } ]
-    } ]
+    } ],
+    "default" : null
   }, {
     "name" : "datepartition",
     "type" : [ "null", "string" ],

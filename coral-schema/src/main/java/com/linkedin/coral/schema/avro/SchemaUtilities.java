@@ -16,6 +16,7 @@ import javax.annotation.Nullable;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
+import com.linkedin.avroutil1.compatibility.AvroCompatibilityHelper;
 
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
@@ -36,7 +37,6 @@ import org.apache.hadoop.hive.serde2.typeinfo.StructTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
-import org.codehaus.jackson.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -164,10 +164,10 @@ class SchemaUtilities {
       if (!Strings.isNullOrEmpty(schemaStr)) {
         schemaStr = schemaStr.replaceAll("\n", "\\\\n");
         // Given schemas stored in `dali.row.schema` are all non-nullable, we need to convert them to be nullable to be compatible with Spark
-        schema = ToNullableSchemaVisitor.visit(new Schema.Parser().parse(schemaStr));
+        schema = ToNullableSchemaVisitor.visit(AvroCompatibilityHelper.parse(schemaStr));
       }
     } else {
-      schema = new Schema.Parser().parse(schemaStr);
+      schema = AvroCompatibilityHelper.parse(schemaStr);
     }
 
     if (schema != null) {
@@ -180,11 +180,18 @@ class SchemaUtilities {
     }
   }
 
+  public static Object defaultValue(Schema.Field field) {
+    if (AvroCompatibilityHelper.fieldHasDefault(field)) {
+      return AvroCompatibilityHelper.getGenericDefaultValue(field);
+    }
+    return null;
+  }
+
   static void appendField(@Nonnull Schema.Field field, @Nonnull SchemaBuilder.FieldAssembler<Schema> fieldAssembler) {
     Preconditions.checkNotNull(field);
     Preconditions.checkNotNull(fieldAssembler);
 
-    JsonNode defaultValue = field.defaultValue();
+    Object defaultValue = defaultValue(field);
 
     SchemaBuilder.GenericDefault genericDefault =
         fieldAssembler.name(field.name()).doc(field.doc()).type(field.schema());
@@ -258,7 +265,7 @@ class SchemaUtilities {
     Preconditions.checkNotNull(field);
     Preconditions.checkNotNull(fieldAssembler);
 
-    JsonNode defaultValue = field.defaultValue();
+    Object defaultValue = defaultValue(field);
 
     SchemaBuilder.GenericDefault genericDefault = fieldAssembler.name(fieldName).doc(field.doc()).type(field.schema());
     if (defaultValue != null) {
@@ -359,10 +366,10 @@ class SchemaUtilities {
     for (Schema.Field field : fieldList) {
       String fieldDoc = isPartCol ? "This is the partition column. "
           + "Partition columns, if present in the schema, should also be projected in the data." : field.doc();
-      Schema.Field clonedField =
-          new Schema.Field(field.name(), field.schema(), fieldDoc, field.defaultValue(), field.order());
+      Schema.Field clonedField = AvroCompatibilityHelper.createSchemaField(field.name(), field.schema(), fieldDoc,
+          defaultValue(field), field.order());
       // Copy field level properties, which could be critical for things like logical type.
-      for (Map.Entry<String, JsonNode> prop : field.getJsonProps().entrySet()) {
+      for (Map.Entry<String, Object> prop : field.getObjectProps().entrySet()) {
         clonedField.addProp(prop.getKey(), prop.getValue());
       }
       result.add(clonedField);
@@ -379,7 +386,7 @@ class SchemaUtilities {
   }
 
   static void replicateSchemaProps(Schema srcSchema, Schema targetSchema) {
-    for (Map.Entry<String, JsonNode> prop : srcSchema.getJsonProps().entrySet()) {
+    for (Map.Entry<String, Object> prop : srcSchema.getObjectProps().entrySet()) {
       if (targetSchema.getProp(prop.getKey()) == null) {
         targetSchema.addProp(prop.getKey(), prop.getValue());
       }
@@ -507,10 +514,15 @@ class SchemaUtilities {
     for (Schema.Field leftField : leftSchemaFields) {
       Schema.Field rightField = rightSchemaFieldsMap.get(leftField.name());
       Schema unionFieldSchema = getUnionFieldSchema(leftField.schema(), rightField.schema(), strictMode);
-      Schema.Field unionField = new Schema.Field(leftField.name(), unionFieldSchema, leftField.doc(),
-          leftField.defaultValue(), leftField.order());
+      final Object defaultValue = defaultValue(leftField);
+      // We need to reorder the union option if necessary
+      // i.e. defaultValue = 1, unionFieldSchema = [null, int], we need to reorder `unionFieldSchema` to be [int, null]
+      // otherwise, schema validation will fail and cause exception
+      final Schema reorderUnionFieldSchema = reorderOptionIfRequired(unionFieldSchema, defaultValue);
+      Schema.Field unionField = AvroCompatibilityHelper.createSchemaField(leftField.name(), reorderUnionFieldSchema,
+          leftField.doc(), defaultValue, leftField.order());
       leftField.aliases().forEach(unionField::addAlias);
-      leftField.getJsonProps().forEach(unionField::addProp);
+      leftField.getObjectProps().forEach(unionField::addProp);
       mergedSchemaFields.add(unionField);
     }
     Schema schema = Schema.createRecord(leftSchema.getName(), leftSchema.getDoc(), leftSchema.getNamespace(), false);
@@ -534,13 +546,17 @@ class SchemaUtilities {
     Schema.Type leftSchemaType = leftSchema.getType();
     Schema.Type rightSchemaType = rightSchema.getType();
     if (leftSchemaType == NULL) {
-      return makeNullable(rightSchema);
+      return makeNullable(rightSchema, false);
     }
     if (rightSchemaType == NULL) {
-      return makeNullable(leftSchema);
+      return makeNullable(leftSchema, false);
     }
     if (isNullableType(leftSchema) || isNullableType(rightSchema)) {
-      return makeNullable(getUnionFieldSchema(makeNonNullable(leftSchema), makeNonNullable(rightSchema), strictMode));
+      // If leftSchema and rightSchema are nullable union types with different order,
+      // we choose the order of the leftSchema.
+      // i.e. leftSchema = [int, null], rightSchema = [null, int], resultant schema is [int, null]
+      return makeNullable(getUnionFieldSchema(makeNonNullable(leftSchema), makeNonNullable(rightSchema), strictMode),
+          isNullSecond(leftSchema));
     }
 
     if (leftSchemaType == rightSchemaType) {
@@ -552,6 +568,7 @@ class SchemaUtilities {
         case INT:
         case LONG:
         case STRING:
+        case UNION:
           return leftSchema;
         case FIXED:
           if (isSameNamespace(leftSchema, rightSchema, strictMode)) {
@@ -617,7 +634,7 @@ class SchemaUtilities {
     }
   }
 
-  static Schema makeNullable(Schema schema) {
+  static Schema makeNullable(Schema schema, boolean nullAsSecond) {
     if (schema.getType() == NULL || isNullableType(schema)) {
       return schema;
     } else if (schema.getType() == UNION) {
@@ -631,8 +648,16 @@ class SchemaUtilities {
       types.addAll(schema.getTypes());
       return Schema.createUnion(types);
     } else {
-      return Schema.createUnion(Arrays.asList(Schema.create(Schema.Type.NULL), schema));
+      if (nullAsSecond) {
+        return Schema.createUnion(Arrays.asList(schema, Schema.create(Schema.Type.NULL)));
+      } else {
+        return Schema.createUnion(Arrays.asList(Schema.create(Schema.Type.NULL), schema));
+      }
     }
+  }
+
+  static boolean isNullSecond(Schema schema) {
+    return schema != null && isNullableType(schema) && schema.getTypes().get(1).getType().equals(Schema.Type.NULL);
   }
 
   static Schema discardNullFromUnionIfExist(Schema schema) {
@@ -678,7 +703,7 @@ class SchemaUtilities {
         break;
     }
 
-    JsonNode defaultValue = field.defaultValue();
+    Object defaultValue = defaultValue(field);
     SchemaBuilder.GenericDefault genericDefault = fieldAssembler.name(field.name()).doc(field.doc()).type(fieldSchema);
     if (defaultValue != null) {
       genericDefault.withDefault(defaultValue);
@@ -719,8 +744,8 @@ class SchemaUtilities {
         case UNION:
         case ARRAY:
           Schema newFieldSchema = setupNestedNamespace(field.schema(), nestedNamespace);
-          Schema.Field newField =
-              new Schema.Field(field.name(), newFieldSchema, field.doc(), field.defaultValue(), field.order());
+          Schema.Field newField = AvroCompatibilityHelper.createSchemaField(field.name(), newFieldSchema, field.doc(),
+              defaultValue(field), field.order());
           appendField(newField, fieldAssembler);
           break;
         case ENUM:
@@ -728,8 +753,8 @@ class SchemaUtilities {
           break;
         case RECORD:
           Schema recordSchemaWithNestedNamespace = setupNestedNamespaceForRecord(field.schema(), nestedNamespace);
-          Schema.Field newRecordFiled = new Schema.Field(field.name(), recordSchemaWithNestedNamespace, field.doc(),
-              field.defaultValue(), field.order());
+          Schema.Field newRecordFiled = AvroCompatibilityHelper.createSchemaField(field.name(),
+              recordSchemaWithNestedNamespace, field.doc(), defaultValue(field), field.order());
           appendField(newRecordFiled, fieldAssembler);
           break;
         default:
@@ -907,9 +932,10 @@ class SchemaUtilities {
   }
 
   static Schema.Field copyField(Schema.Field field, Schema newSchema) {
-    Schema.Field copy = new Schema.Field(field.name(), newSchema, field.doc(), field.defaultValue(), field.order());
+    Schema.Field copy = AvroCompatibilityHelper.createSchemaField(field.name(), newSchema, field.doc(),
+        defaultValue(field), field.order());
 
-    for (Map.Entry<String, JsonNode> prop : field.getJsonProps().entrySet()) {
+    for (Map.Entry<String, Object> prop : field.getObjectProps().entrySet()) {
       copy.addProp(prop.getKey(), prop.getValue());
     }
 
@@ -974,5 +1000,19 @@ class SchemaUtilities {
     List<TypeInfo> fieldTypeInfos =
         cols.stream().map(f -> TypeInfoUtils.getTypeInfoFromTypeString(f.getType())).collect(Collectors.toList());
     return (StructTypeInfo) TypeInfoFactory.getStructTypeInfo(fieldNames, fieldTypeInfos);
+  }
+
+  /**
+   * Reorders an option schema so that the type of the provided default value is the first type in the option schema
+   *
+   * e.g. If the schema is [null, int] and the default value is 1, the returned schema is [int, null]
+   * If the schema is not an option schema or if there is no default value, schema is returned as-is
+   */
+  static Schema reorderOptionIfRequired(Schema schema, Object defaultValue) {
+    if (isNullableType(schema) && defaultValue != null && schema.getTypes().get(0).getType() == Schema.Type.NULL) {
+      return Schema.createUnion(Arrays.asList(schema.getTypes().get(1), schema.getTypes().get(0)));
+    } else {
+      return schema;
+    }
   }
 }

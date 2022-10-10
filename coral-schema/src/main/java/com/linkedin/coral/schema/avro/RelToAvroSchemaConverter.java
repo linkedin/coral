@@ -232,6 +232,7 @@ public class RelToAvroSchemaConverter {
 
     @Override
     public RelNode visit(LogicalJoin logicalJoin) {
+      // TODO: Modify this method to avoid that 2 schema fields share the same name in Avro 1.10, and enable the tests for join
       RelNode relNode = super.visit(logicalJoin);
 
       Schema leftInputSchema = schemaMap.get(logicalJoin.getLeft());

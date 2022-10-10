@@ -17,3 +17,10 @@ dependencies {
   testCompile deps.'hadoop'.'hadoop-mapreduce-client-core'
   testCompile deps.'kryo'
 }
+
+// Needs to enforce using Avro 1.10 because Coral-Spark depends on Coral-Schema which uses Avro 1.10
+configurations.all {
+  resolutionStrategy {
+    force 'org.apache.avro:avro:1.10.2'
+  }
+}

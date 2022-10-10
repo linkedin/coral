@@ -184,10 +184,8 @@ public class TestUtils {
   private static void executeCreateTableWithPartitionFieldSchemaQuery(String dbName, String tableName,
       String fieldSchema) {
     executeQuery("DROP TABLE IF EXISTS " + dbName + "." + tableName);
-    executeQuery("CREATE EXTERNAL TABLE " + tableName + " (" + fieldSchema + ") "
-        + "PARTITIONED BY (datepartition string) " + "ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.avro.AvroSerDe' "
-        + "STORED AS " + "INPUTFORMAT 'org.apache.hadoop.hive.ql.io.avro.AvroContainerInputFormat' "
-        + "OUTPUTFORMAT 'org.apache.hadoop.hive.ql.io.avro.AvroContainerOutputFormat'");
+    executeQuery(
+        "CREATE EXTERNAL TABLE " + tableName + " (" + fieldSchema + ") " + "PARTITIONED BY (datepartition string)");
   }
 
   private static void executeCreateFunctionQuery(String dbName, List<String> viewNames, String functionName,

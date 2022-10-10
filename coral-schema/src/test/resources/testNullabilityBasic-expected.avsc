@@ -10,40 +10,34 @@
     "type" : [ "null", {
       "type" : "array",
       "items" : [ "null", "string" ]
-    } ],
-    "default" : null
+    } ]
   }, {
     "name" : "Map_Col",
     "type" : [ "null", {
       "type" : "map",
       "values" : [ "null", "string" ]
-    } ],
-    "default" : null
+    } ]
   }, {
     "name" : "Int_Field_1",
-    "type" : [ "null", "int" ],
-    "default" : null
+    "type" : [ "null", "int" ]
   }, {
     "name" : "Int_Field_2",
     "type" : "int"
   }, {
     "name" : "Double_Field_1",
-    "type" : [ "null", "double" ],
-    "default" : null
+    "type" : [ "null", "double" ]
   }, {
     "name" : "Double_Field_2",
     "type" : "double"
   }, {
     "name" : "Bool_Field_1",
-    "type" : [ "null", "boolean" ],
-    "default" : null
+    "type" : [ "null", "boolean" ]
   }, {
     "name" : "Bool_Field_2",
     "type" : "boolean"
   }, {
     "name" : "String_Field_1",
-    "type" : [ "null", "string" ],
-    "default" : null
+    "type" : [ "null", "string" ]
   }, {
     "name" : "String_Field_2",
     "type" : "string"
@@ -58,28 +52,23 @@
         "type" : "boolean"
       }, {
         "name" : "Int_Field",
-        "type" : [ "null", "int" ],
-        "default" : null
+        "type" : [ "null", "int" ]
       }, {
         "name" : "Bigint_Field",
         "type" : "long"
       }, {
         "name" : "Float_Field",
-        "type" : [ "null", "float" ],
-        "default" : null
+        "type" : [ "null", "float" ]
       }, {
         "name" : "Double_Field",
         "type" : "double"
       }, {
         "name" : "Date_String_Field",
-        "type" : [ "null", "string" ],
-        "default" : null
+        "type" : [ "null", "string" ]
       }, {
         "name" : "String_Field",
-        "type" : [ "null", "string" ],
-        "default" : null
+        "type" : [ "null", "string" ]
       } ]
-    } ],
-    "default" : null
+    } ]
   } ]
 }

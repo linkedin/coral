@@ -6,9 +6,11 @@
 package com.linkedin.coral.schema.avro;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.linkedin.avroutil1.compatibility.AvroCompatibilityHelper;
 
 import org.apache.avro.Schema;
 import org.apache.hadoop.hive.serde2.avro.AvroSerDe;
@@ -19,8 +21,6 @@ import org.apache.hadoop.hive.serde2.typeinfo.PrimitiveTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.StructTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.UnionTypeInfo;
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.node.JsonNodeFactory;
 
 import com.linkedin.coral.com.google.common.base.Preconditions;
 
@@ -58,7 +58,10 @@ class MergeHiveSchemaWithAvro extends HiveSchemaWithPartnerVisitor<Schema, Schem
     } else {
       result = SchemaUtilities.copyRecord(SchemaUtilities.extractIfOption(partner), fieldResults);
     }
-    return shouldResultBeOptional ? SchemaUtilities.makeNullable(result) : result;
+    // While calling `makeNullable`, we should respect the option order of `partner`
+    // i.e. if the schema of `partner` is [int, null], the resultant schema should also be [int, null] rather than [null, int]
+    return shouldResultBeOptional ? SchemaUtilities.makeNullable(result, SchemaUtilities.isNullSecond(partner))
+        : result;
   }
 
   @Override
@@ -67,32 +70,14 @@ class MergeHiveSchemaWithAvro extends HiveSchemaWithPartnerVisitor<Schema, Schem
     // in their field results if required
     if (partner == null) {
       // if there was no matching Avro field, use name form the Hive schema and set a null default
-      return new Schema.Field(SchemaUtilities.makeCompatibleName(name), fieldResult, null, null);
+      return AvroCompatibilityHelper.createSchemaField(SchemaUtilities.makeCompatibleName(name), fieldResult, null,
+          null);
     } else {
       // TODO: How to ensure that field default value is compatible with new field type generated from Hive?
       // Copy field type from the visitor result, copy everything else from the partner
       // Avro requires the default value to match the first type in the option, reorder option if required
-      Schema reordered = reorderOptionIfRequired(fieldResult, partner.defaultValue());
+      Schema reordered = SchemaUtilities.reorderOptionIfRequired(fieldResult, SchemaUtilities.defaultValue(partner));
       return SchemaUtilities.copyField(partner, reordered);
-    }
-  }
-
-  /**
-   * Reorders an option schema so that the type of the provided default value is the first type in the option schema
-   *
-   * e.g. If the schema is (NULL, INT) and the default value is 1, the returned schema is (INT, NULL)
-   * If the schema is not an option schema or if there is no default value, schema is returned as-is
-   */
-  private Schema reorderOptionIfRequired(Schema schema, JsonNode defaultValue) {
-    if (isNullableType(schema) && defaultValue != null) {
-      boolean isNullFirstOption = schema.getTypes().get(0).getType() == Schema.Type.NULL;
-      if (isNullFirstOption && defaultValue.isNull()) {
-        return schema;
-      } else {
-        return Schema.createUnion(Arrays.asList(schema.getTypes().get(1), schema.getTypes().get(0)));
-      }
-    } else {
-      return schema;
     }
   }
 
@@ -101,7 +86,8 @@ class MergeHiveSchemaWithAvro extends HiveSchemaWithPartnerVisitor<Schema, Schem
     // if there was no matching Avro list, or if matching Avro list was an option, return an optional list
     boolean shouldResultBeOptional = partner == null || isNullableType(partner);
     Schema result = Schema.createArray(elementResult);
-    return shouldResultBeOptional ? SchemaUtilities.makeNullable(result) : result;
+    return shouldResultBeOptional ? SchemaUtilities.makeNullable(result, SchemaUtilities.isNullSecond(partner))
+        : result;
   }
 
   @Override
@@ -111,7 +97,8 @@ class MergeHiveSchemaWithAvro extends HiveSchemaWithPartnerVisitor<Schema, Schem
     // if there was no matching Avro map, or if matching Avro map was an option, return an optional map
     boolean shouldResultBeOptional = partner == null || isNullableType(partner);
     Schema result = Schema.createMap(valueResult);
-    return shouldResultBeOptional ? SchemaUtilities.makeNullable(result) : result;
+    return shouldResultBeOptional ? SchemaUtilities.makeNullable(result, SchemaUtilities.isNullSecond(partner))
+        : result;
   }
 
   @Override
@@ -120,7 +107,8 @@ class MergeHiveSchemaWithAvro extends HiveSchemaWithPartnerVisitor<Schema, Schem
     Schema hivePrimitive = hivePrimitiveToAvro(primitive);
     // if there was no matching Avro primitive, use the Hive primitive
     Schema result = partner == null ? hivePrimitive : checkCompatibilityAndPromote(hivePrimitive, partner);
-    return shouldResultBeOptional ? SchemaUtilities.makeNullable(result) : result;
+    return shouldResultBeOptional ? SchemaUtilities.makeNullable(result, SchemaUtilities.isNullSecond(partner))
+        : result;
   }
 
   @Override

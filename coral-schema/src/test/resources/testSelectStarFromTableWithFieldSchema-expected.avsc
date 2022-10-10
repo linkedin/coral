@@ -4,22 +4,19 @@
   "namespace" : "default.v",
   "fields" : [ {
     "name" : "id",
-    "type" : [ "null", "int" ],
-    "default" : null
+    "type" : [ "null", "int" ]
   }, {
     "name" : "array_col",
     "type" : [ "null", {
       "type" : "array",
       "items" : [ "null", "string" ]
-    } ],
-    "default" : null
+    } ]
   }, {
     "name" : "map_col",
     "type" : [ "null", {
       "type" : "map",
       "values" : [ "null", "string" ]
-    } ],
-    "default" : null
+    } ]
   }, {
     "name" : "struct_col",
     "type" : [ "null", {
@@ -28,38 +25,29 @@
       "namespace" : "default.v.v",
       "fields" : [ {
         "name" : "bool_field",
-        "type" : [ "null", "boolean" ],
-        "default" : null
+        "type" : [ "null", "boolean" ]
       }, {
         "name" : "int_field",
-        "type" : [ "null", "int" ],
-        "default" : null
+        "type" : [ "null", "int" ]
       }, {
         "name" : "bigint_field",
-        "type" : [ "null", "long" ],
-        "default" : null
+        "type" : [ "null", "long" ]
       }, {
         "name" : "float_field",
-        "type" : [ "null", "float" ],
-        "default" : null
+        "type" : [ "null", "float" ]
       }, {
         "name" : "double_field",
-        "type" : [ "null", "double" ],
-        "default" : null
+        "type" : [ "null", "double" ]
       }, {
         "name" : "date_string_field",
-        "type" : [ "null", "string" ],
-        "default" : null
+        "type" : [ "null", "string" ]
       }, {
         "name" : "string_field",
-        "type" : [ "null", "string" ],
-        "default" : null
+        "type" : [ "null", "string" ]
       } ]
-    } ],
-    "default" : null
+    } ]
   }, {
     "name" : "datepartition",
-    "type" : [ "null", "string" ],
-    "default" : null
+    "type" : [ "null", "string" ]
   } ]
 }
