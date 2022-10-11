@@ -7,7 +7,6 @@ package com.linkedin.coral.schema.avro;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.linkedin.avroutil1.compatibility.AvroCompatibilityHelper;
@@ -67,9 +66,7 @@ public class ToNullableSchemaVisitor extends AvroSchemaVisitor<Schema> {
     Schema.Field nullableField = AvroCompatibilityHelper.createSchemaField(field.name(),
         SchemaUtilities.makeNullable(schema, defaultValue != null), field.doc(), defaultValue, field.order());
 
-    for (Map.Entry<String, Object> prop : field.getObjectProps().entrySet()) {
-      nullableField.addProp(prop.getKey(), prop.getValue());
-    }
+    SchemaUtilities.replicateFieldProps(field, nullableField);
     return nullableField;
   }
 }

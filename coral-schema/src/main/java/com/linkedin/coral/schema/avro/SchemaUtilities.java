@@ -369,9 +369,7 @@ class SchemaUtilities {
       Schema.Field clonedField = AvroCompatibilityHelper.createSchemaField(field.name(), field.schema(), fieldDoc,
           defaultValue(field), field.order());
       // Copy field level properties, which could be critical for things like logical type.
-      for (Map.Entry<String, Object> prop : field.getObjectProps().entrySet()) {
-        clonedField.addProp(prop.getKey(), prop.getValue());
-      }
+      replicateFieldProps(field, clonedField);
       result.add(clonedField);
     }
     return result;
@@ -385,11 +383,25 @@ class SchemaUtilities {
     return cloneFieldList(fieldList, false);
   }
 
-  static void replicateSchemaProps(Schema srcSchema, Schema targetSchema) {
-    for (Map.Entry<String, Object> prop : srcSchema.getObjectProps().entrySet()) {
-      if (targetSchema.getProp(prop.getKey()) == null) {
-        targetSchema.addProp(prop.getKey(), prop.getValue());
+  static void replicateFieldProps(Schema.Field srcField, Schema.Field targetField) {
+    final List<String> existingPropNames = AvroCompatibilityHelper.getAllPropNames(targetField);
+    for (String propName : AvroCompatibilityHelper.getAllPropNames(srcField)) {
+      if (existingPropNames.contains(propName)) {
+        continue;
       }
+      final String fieldPropAsJsonString = AvroCompatibilityHelper.getFieldPropAsJsonString(srcField, propName);
+      AvroCompatibilityHelper.setFieldPropFromJsonString(targetField, propName, fieldPropAsJsonString, false);
+    }
+  }
+
+  static void replicateSchemaProps(Schema srcSchema, Schema targetSchema) {
+    final List<String> existingPropNames = AvroCompatibilityHelper.getAllPropNames(targetSchema);
+    for (String propName : AvroCompatibilityHelper.getAllPropNames(srcSchema)) {
+      if (existingPropNames.contains(propName)) {
+        continue;
+      }
+      final String schemaPropAsJsonString = AvroCompatibilityHelper.getSchemaPropAsJsonString(srcSchema, propName);
+      AvroCompatibilityHelper.setSchemaPropFromJsonString(targetSchema, propName, schemaPropAsJsonString, false);
     }
   }
 
@@ -522,7 +534,7 @@ class SchemaUtilities {
       Schema.Field unionField = AvroCompatibilityHelper.createSchemaField(leftField.name(), reorderUnionFieldSchema,
           leftField.doc(), defaultValue, leftField.order());
       leftField.aliases().forEach(unionField::addAlias);
-      leftField.getObjectProps().forEach(unionField::addProp);
+      replicateFieldProps(leftField, unionField);
       mergedSchemaFields.add(unionField);
     }
     Schema schema = Schema.createRecord(leftSchema.getName(), leftSchema.getDoc(), leftSchema.getNamespace(), false);
@@ -934,11 +946,7 @@ class SchemaUtilities {
   static Schema.Field copyField(Schema.Field field, Schema newSchema) {
     Schema.Field copy = AvroCompatibilityHelper.createSchemaField(field.name(), newSchema, field.doc(),
         defaultValue(field), field.order());
-
-    for (Map.Entry<String, Object> prop : field.getObjectProps().entrySet()) {
-      copy.addProp(prop.getKey(), prop.getValue());
-    }
-
+    replicateFieldProps(field, copy);
     return copy;
   }
 
