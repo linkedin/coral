@@ -87,6 +87,8 @@ class MergeHiveSchemaWithAvro extends HiveSchemaWithPartnerVisitor<Schema, Schem
     // if there was no matching Avro list, or if matching Avro list was an option, return an optional list
     boolean shouldResultBeOptional = partner == null || isNullableType(partner);
     Schema result = Schema.createArray(elementResult);
+    // While calling `makeNullable`, we should respect the option order of `partner`
+    // i.e. if the schema of `partner` is [int, null], the resultant schema should also be [int, null] rather than [null, int]
     return shouldResultBeOptional ? SchemaUtilities.makeNullable(result, SchemaUtilities.isNullSecond(partner))
         : result;
   }
@@ -98,6 +100,8 @@ class MergeHiveSchemaWithAvro extends HiveSchemaWithPartnerVisitor<Schema, Schem
     // if there was no matching Avro map, or if matching Avro map was an option, return an optional map
     boolean shouldResultBeOptional = partner == null || isNullableType(partner);
     Schema result = Schema.createMap(valueResult);
+    // While calling `makeNullable`, we should respect the option order of `partner`
+    // i.e. if the schema of `partner` is [int, null], the resultant schema should also be [int, null] rather than [null, int]
     return shouldResultBeOptional ? SchemaUtilities.makeNullable(result, SchemaUtilities.isNullSecond(partner))
         : result;
   }
@@ -108,6 +112,8 @@ class MergeHiveSchemaWithAvro extends HiveSchemaWithPartnerVisitor<Schema, Schem
     Schema hivePrimitive = hivePrimitiveToAvro(primitive);
     // if there was no matching Avro primitive, use the Hive primitive
     Schema result = partner == null ? hivePrimitive : checkCompatibilityAndPromote(hivePrimitive, partner);
+    // While calling `makeNullable`, we should respect the option order of `partner`
+    // i.e. if the schema of `partner` is [int, null], the resultant schema should also be [int, null] rather than [null, int]
     return shouldResultBeOptional ? SchemaUtilities.makeNullable(result, SchemaUtilities.isNullSecond(partner))
         : result;
   }
