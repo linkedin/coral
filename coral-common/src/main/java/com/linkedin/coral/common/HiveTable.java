@@ -32,7 +32,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.metastore.MetaStoreUtils;
 import org.apache.hadoop.hive.metastore.TableType;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
-import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
 import org.apache.hadoop.hive.serde2.Deserializer;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
@@ -186,7 +185,7 @@ public class HiveTable implements ScannableTable {
   private Deserializer getDeserializerFromMetaStore() {
     try {
       return MetaStoreUtils.getDeserializer(new Configuration(false), hiveTable, false);
-    } catch (MetaException e) {
+    } catch (Throwable e) { // Catch Throwable here because it may throw Exception or Error
       throw new RuntimeException(e);
     }
   }

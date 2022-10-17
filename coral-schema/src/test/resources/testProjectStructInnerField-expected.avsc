@@ -10,8 +10,7 @@
     "type" : "boolean"
   }, {
     "name" : "Struct_Inner_Int_Col",
-    "type" : [ "null", "int" ],
-    "default" : null
+    "type" : [ "null", "int" ]
   }, {
     "name" : "Struct_Inner_Bigint_Col",
     "type" : "long"

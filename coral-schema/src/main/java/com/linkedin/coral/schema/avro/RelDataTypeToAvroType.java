@@ -11,6 +11,9 @@ import java.util.List;
 
 import javax.annotation.Nonnull;
 
+import com.linkedin.avroutil1.compatibility.AvroCompatibilityHelper;
+import com.linkedin.avroutil1.compatibility.Jackson1Utils;
+
 import org.apache.avro.Schema;
 import org.apache.calcite.rel.type.DynamicRecordType;
 import org.apache.calcite.rel.type.RelDataType;
@@ -111,8 +114,10 @@ class RelDataTypeToAvroType {
         JsonNodeFactory factory = JsonNodeFactory.instance;
         Schema decimalSchema = Schema.create(Schema.Type.BYTES);
         decimalSchema.addProp(AvroSerDe.AVRO_PROP_LOGICAL_TYPE, AvroSerDe.DECIMAL_TYPE_NAME);
-        decimalSchema.addProp(AvroSerDe.AVRO_PROP_PRECISION, factory.numberNode(relDataType.getPrecision()));
-        decimalSchema.addProp(AvroSerDe.AVRO_PROP_SCALE, factory.numberNode(relDataType.getScale()));
+        AvroCompatibilityHelper.setSchemaPropFromJsonString(decimalSchema, AvroSerDe.AVRO_PROP_PRECISION,
+            Jackson1Utils.toJsonString(factory.numberNode(relDataType.getPrecision())), false);
+        AvroCompatibilityHelper.setSchemaPropFromJsonString(decimalSchema, AvroSerDe.AVRO_PROP_SCALE,
+            Jackson1Utils.toJsonString(factory.numberNode(relDataType.getScale())), false);
         return decimalSchema;
       default:
         throw new UnsupportedOperationException(relDataType.getSqlTypeName() + " is not supported.");
@@ -139,7 +144,7 @@ class RelDataTypeToAvroType {
     for (RelDataTypeField relField : relRecord.getFieldList()) {
       final String comment = fieldComments != null && fieldComments.size() > relField.getIndex()
           ? fieldComments.get(relField.getIndex()) : null;
-      fields.add(new Schema.Field(toAvroQualifiedName(relField.getName()),
+      fields.add(AvroCompatibilityHelper.createSchemaField(toAvroQualifiedName(relField.getName()),
           relDataTypeToAvroType(relField.getType(), toAvroQualifiedName(relField.getName())), comment, null));
     }
 

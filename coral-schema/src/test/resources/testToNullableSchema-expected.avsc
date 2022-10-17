@@ -4,25 +4,30 @@
   "namespace" : "coral.schema.avro.base.complex.nonnullable",
   "fields" : [ {
     "name" : "Id",
-    "type" : [ "null", "int" ]
+    "type" : [ "null", "int" ],
+    "default" : null
   }, {
     "name" : "Nullable_Union_Col",
-    "type" : [ "null", "int", "string" ]
+    "type" : [ "null", "int", "string" ],
+    "default" : null
   }, {
     "name" : "Non_Nullable_Union_Col",
-    "type" : [ "null", "int", "string" ]
+    "type" : [ "null", "int", "string" ],
+    "default" : null
   }, {
     "name" : "Array_Col",
     "type" : [ "null", {
       "type" : "array",
       "items" : "string"
-    } ]
+    } ],
+    "default" : null
   }, {
     "name" : "Map_Col",
     "type" : [ "null", {
       "type" : "map",
       "values" : "string"
-    } ]
+    } ],
+    "default" : null
   }, {
     "name" : "Struct_Col",
     "type" : [ "null", {
@@ -31,25 +36,32 @@
       "namespace" : "coral.schema.avro.base.complex.nonnullable.basecomplexnonnullable",
       "fields" : [ {
         "name" : "Bool_Field",
-        "type" : [ "null", "boolean" ]
+        "type" : [ "null", "boolean" ],
+        "default" : null
       }, {
         "name" : "Int_Field",
-        "type" : [ "null", "int" ]
+        "type" : [ "null", "int" ],
+        "default" : null
       }, {
         "name" : "Bigint_Field",
-        "type" : [ "null", "long" ]
+        "type" : [ "null", "long" ],
+        "default" : null
       }, {
         "name" : "Float_Field",
-        "type" : [ "null", "float" ]
+        "type" : [ "null", "float" ],
+        "default" : null
       }, {
         "name" : "Double_Field",
-        "type" : [ "null", "double" ]
+        "type" : [ "null", "double" ],
+        "default" : null
       }, {
         "name" : "Date_String_Field",
-        "type" : [ "null", "string" ]
+        "type" : [ "null", "string" ],
+        "default" : null
       }, {
         "name" : "String_Field",
-        "type" : [ "null", "string" ]
+        "type" : [ "null", "string" ],
+        "default" : null
       }, {
         "name" : "Array_Col",
         "type" : [ "null", {
@@ -60,20 +72,25 @@
             "namespace" : "coral.schema.avro.base.complex.nonnullable.basecomplexnonnullable.basecomplexnonnullable",
             "fields" : [ {
               "name" : "key",
-              "type" : [ "null", "string" ]
+              "type" : [ "null", "string" ],
+              "default" : null
             }, {
               "name" : "value",
-              "type" : [ "null", "string" ]
+              "type" : [ "null", "string" ],
+              "default" : null
             } ]
           } ]
-        } ]
+        } ],
+        "default" : null
       }, {
         "name" : "Map_Col",
         "type" : [ "null", {
           "type" : "map",
           "values" : "string"
-        } ]
+        } ],
+        "default" : null
       } ]
-    } ]
+    } ],
+    "default" : null
   } ]
 }
