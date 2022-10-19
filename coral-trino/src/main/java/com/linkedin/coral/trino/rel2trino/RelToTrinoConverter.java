@@ -33,6 +33,7 @@ import org.apache.calcite.util.Util;
 
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import com.linkedin.coral.hive.hive2rel.rel.HiveUncollect;
+import com.linkedin.coral.transformers.CoralRelToSqlNodeConverter;
 import com.linkedin.coral.trino.rel2trino.functions.TrinoArrayTransformFunction;
 
 import static com.google.common.base.Preconditions.*;
@@ -76,8 +77,25 @@ public class RelToTrinoConverter extends RelToSqlConverter {
    * @return SQL string
    */
   public String convert(RelNode relNode) {
-    RelNode rel = convertRel(relNode, configs);
-    return convertToSqlNode(rel).accept(new TrinoSqlRewriter()).toSqlString(TrinoSqlDialect.INSTANCE).toString();
+    return convertDash(relNode);
+
+    //            RelNode rel = convertRel(relNode, configs);
+    //            SqlNode oldSqlNode =  convertToSqlNode(rel);
+    //            return oldSqlNode.accept(new TrinoSqlRewriter()).toSqlString(TrinoSqlDialect.INSTANCE).toString();
+  }
+
+  /**
+   * Temporary method to enable translations via CoralSqlNodeToTrinoSqlNodeConverter
+   */
+  public String convertDash(RelNode relNode) {
+    RelNode trinoRelNode = convertRel(relNode, configs);
+    SqlNode coralSqlNode = convertToCoralSqlNode(trinoRelNode);
+    System.out.println("New coralSqlNode for trino: " + coralSqlNode);
+
+    SqlNode trinoSqlNode = coralSqlNode.accept(new CoralSqlNodeToTrinoSqlNodeConverter());
+
+    SqlNode rewrittenTrinoSqlNode = trinoSqlNode.accept(new TrinoSqlRewriter());
+    return rewrittenTrinoSqlNode.toSqlString(TrinoSqlDialect.INSTANCE).toString();
   }
 
   /**
@@ -87,6 +105,15 @@ public class RelToTrinoConverter extends RelToSqlConverter {
    */
   public SqlNode convertToSqlNode(RelNode relNode) {
     return visitChild(0, relNode).asStatement();
+  }
+
+  /**
+   * Convert input relational algebra to CoralSqlNode
+   * @param relNode relation algebra
+   * @return CoralSqlNode representation for input
+   */
+  public SqlNode convertToCoralSqlNode(RelNode relNode) {
+    return new CoralRelToSqlNodeConverter().convert(relNode);
   }
 
   /**

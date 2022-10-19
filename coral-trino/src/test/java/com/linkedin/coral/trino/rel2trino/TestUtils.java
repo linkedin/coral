@@ -201,6 +201,8 @@ public class TestUtils {
     run(driver, "CREATE DATABASE IF NOT EXISTS test");
 
     run(driver, "CREATE TABLE IF NOT EXISTS test.tableA(a int, b struct<b1:string>)");
+    run(driver, "CREATE VIEW IF NOT EXISTS test.try_cast_view AS \n"
+        + "SELECT CASE WHEN a.b.b1 = a.a THEN TRUE ELSE FALSE END AS TESTCOL FROM test.tableA AS a WHERE a.b.b1 = 1");
     run(driver, "CREATE VIEW IF NOT EXISTS test.fuzzy_union_view AS \n"
         + "SELECT * from test.tableA union all SELECT * from test.tableA");
     run(driver, "CREATE VIEW IF NOT EXISTS test.fuzzy_union_view_with_more_than_two_tables AS \n"

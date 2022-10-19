@@ -140,11 +140,7 @@ public class CoralRelToSqlNodeConverter extends RelToSqlConverter {
 
     final Result rightResult = visitChild(1, e.getRight());
 
-    SqlNode rightSqlNode = rightResult.asFrom();
-
-    if (e.getRight() instanceof LogicalTableFunctionScan || e.getRight() instanceof Uncollect) {
-      rightSqlNode = generateRightChildForSqlJoinWithLateralViews(e, rightResult);
-    }
+    SqlNode rightSqlNode = generateRightChildForSqlJoinWithLateralViews(e, rightResult);
 
     SqlNode join = new SqlJoin(POS, leftResult.asFrom(), SqlLiteral.createBoolean(false, POS),
         JoinType.COMMA.symbol(POS), rightSqlNode, JoinConditionType.NONE.symbol(POS), null);
@@ -333,15 +329,21 @@ public class CoralRelToSqlNodeConverter extends RelToSqlConverter {
 
   private SqlNode generateRightChildForSqlJoinWithLateralViews(BiRel e, Result rightResult) {
     SqlNode rightSqlNode = rightResult.asFrom();
+    SqlNode lateralNode;
 
-    final SqlNode rightLateral = SqlStdOperatorTable.LATERAL.createCall(POS, rightSqlNode);
+    // Drop the AS operator from the rightSqlNode if it exists and append the LATERAL operator on the inner SqlNode.
+    if (rightSqlNode instanceof SqlCall && ((SqlCall) rightSqlNode).getOperator().kind == SqlKind.AS) {
+      lateralNode = SqlStdOperatorTable.LATERAL.createCall(POS, (SqlNode) ((SqlCall) rightSqlNode).operand(0));
+    } else {
+      lateralNode = SqlStdOperatorTable.LATERAL.createCall(POS, rightSqlNode);
+    }
 
-    // Append the alias to unnestCall by generating SqlCall with AS operator
+    // Append the alias to lateralNode by generating SqlCall with AS operator
     RelDataType relDataType = e.getRight().getRowType();
     String alias = rightResult.aliases.entrySet().stream().filter(entry -> relDataType.equals(entry.getValue()))
         .findFirst().map(Map.Entry::getKey).orElse("coralDefaultColumnAlias");
 
-    List<SqlNode> asOperands = createAsFullOperands(relDataType, rightLateral, alias);
+    List<SqlNode> asOperands = createAsFullOperands(relDataType, lateralNode, alias);
 
     return SqlStdOperatorTable.AS.createCall(POS, asOperands);
   }
