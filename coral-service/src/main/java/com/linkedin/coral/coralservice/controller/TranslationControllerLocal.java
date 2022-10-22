@@ -13,8 +13,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 
 import com.linkedin.coral.coralservice.utils.CoralProvider;
+import org.springframework.web.servlet.ModelAndView;
 
 import static com.linkedin.coral.coralservice.utils.CoralProvider.*;
 
@@ -34,6 +36,20 @@ public class TranslationControllerLocal extends TranslationController {
     } catch (Exception e) {
       e.printStackTrace();
     }
+  }
+
+  @RequestMapping("/")
+  public ModelAndView creation() {
+    final ModelAndView modelAndView = new ModelAndView();
+    modelAndView.setViewName("creation");
+    return modelAndView;
+  }
+
+  @RequestMapping( "/translation")
+  public ModelAndView translation() {
+    final ModelAndView modelAndView = new ModelAndView();
+    modelAndView.setViewName("translation");
+    return modelAndView;
   }
 
   @PostMapping("/api/catalog-ops/execute")
