@@ -14,9 +14,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.servlet.ModelAndView;
 
 import com.linkedin.coral.coralservice.utils.CoralProvider;
-import org.springframework.web.servlet.ModelAndView;
 
 import static com.linkedin.coral.coralservice.utils.CoralProvider.*;
 
@@ -45,7 +45,7 @@ public class TranslationControllerLocal extends TranslationController {
     return modelAndView;
   }
 
-  @RequestMapping( "/translation")
+  @RequestMapping("/translation")
   public ModelAndView translation() {
     final ModelAndView modelAndView = new ModelAndView();
     modelAndView.setViewName("translation");
