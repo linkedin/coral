@@ -1,17 +1,35 @@
 $(document).ready(function () {
-    $("#creation-sql-form").submit(function (event) {
-        event.preventDefault();
+    $("#btn-create").click(function (e) {
+        e.preventDefault();
         run_creation_sql();
     });
 
-    $("#translation-sql-form").submit(function (event) {
-        event.preventDefault();
+    $("#btn-translate").click(function (e) {
+        e.preventDefault();
         run_translation_sql();
     });
+
+    $("#btn-clear-create").click(function (e) {
+        e.preventDefault();
+        $("#statement").val("");
+        $("#creation-result").html("");
+    });
+
+    $("#btn-clear-translate").click(function (e) {
+        e.preventDefault();
+        $("#query").val("");
+        $("#translation-result").html("");
+    })
 });
 
 function run_creation_sql() {
-    var statement = $("#statement").val();
+    var statement = $("#statement").val().trim();
+    console.log(statement);
+    if (statement === "") {
+        const feedback = `<div class="alert alert-danger" role="alert">Creation SQL can't be empty</div>`;
+        $('#creation-result').html(feedback);
+        return;
+    }
     $.ajax({
         type: "POST",
         contentType: "application/json",
@@ -21,12 +39,7 @@ function run_creation_sql() {
         cache: false,
         timeout: 600000,
         complete: function (e) {
-            let feedback;
-            if (e.status === 200) {
-                feedback = "<div class=\"alert alert-success\" role=\"alert\">" + statement + " : " + e.responseText + "</div>";
-            } else {
-                feedback = "<div class=\"alert alert-danger\" role=\"alert\">" + statement + " : " + e.responseText + "</div>";
-            }
+            const feedback = `<div class="alert alert-${e.status === 200 ? "success" : "danger"}" role="alert">${e.status === 200 ? statement + ": " : ""}${get_message(e.responseText)}</div>`;
             $('#creation-result').html(feedback);
         }
     });
@@ -46,9 +59,17 @@ function run_translation_sql() {
         cache: false,
         timeout: 600000,
         complete: function (e) {
-            const feedback = `<div class="form-group"><label for="query">Translation Result</label>
-            <textarea disabled rows="5" class="form-control" id="translation-translation-result">${e.responseText}</textarea></div>`;
+            const feedback = `<div class="form-group"><textarea disabled rows="5" class="form-control" id="translated-sql">${get_message(e.responseText)}</textarea></div>`;
             $('#translation-result').html(feedback);
         }
     });
+}
+
+function get_message(responseText) {
+    try {
+        const json = JSON.parse(responseText);
+        return "message" in json ? json.message : responseText;
+    } catch (e) {
+        return responseText;
+    }
 }
