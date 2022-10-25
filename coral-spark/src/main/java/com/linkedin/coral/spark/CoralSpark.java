@@ -8,6 +8,7 @@ package com.linkedin.coral.spark;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.linkedin.coral.common.calcite.sql.SqlCreateTable;
 import org.apache.avro.Schema;
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.plan.RelOptUtil;
@@ -69,6 +70,24 @@ public class CoralSpark {
     List<SparkUDFInfo> sparkUDFInfos = sparkRelInfo.getSparkUDFInfoList();
     return new CoralSpark(baseTables, sparkUDFInfos, sparkSQL);
   }
+
+  public static String convert(SqlNode coralSqlNode){
+    SqlNode sparkSqlNode = coralSqlNode.accept(new CoralSqlNodeToSparkSqlNodeConverter());
+    SqlNode rewrittenSparkSqlNode = sparkSqlNode.accept(new SparkSqlRewriter());
+    return rewrittenSparkSqlNode.toSqlString(SparkSqlDialect.INSTANCE).getSql();
+  }
+
+  public static SqlNode convertRelNodeToCoralSqlNode(RelNode relNode, SqlNode sqlNode){
+    RelNode sparkRelNode = IRRelToSparkRelTransformer.transform(relNode).getSparkRelNode();
+    CoralRelToSqlNodeConverter rel2sql = new CoralRelToSqlNodeConverter();
+    SqlNode transformedSqlNode = rel2sql.convert(sparkRelNode);
+    if(sqlNode instanceof SqlCreateTable){
+      ((SqlCreateTable) sqlNode).setQuery(transformedSqlNode);
+      return sqlNode;
+    }
+    return transformedSqlNode;
+  }
+
 
   /**
    * Users use this function as the main API for getting CoralSpark instance.

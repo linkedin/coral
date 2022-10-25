@@ -12,7 +12,7 @@ import java.util.Objects;
 public class SqlCreateTable extends SqlCreate {
     public final SqlIdentifier name;
     public final @Nullable SqlNodeList columnList;
-    public final @Nullable SqlNode query;
+    public @Nullable SqlNode query;
 
     private static final SqlOperator OPERATOR =
             new SqlSpecialOperator("CREATE TABLE", SqlKind.CREATE_TABLE);
@@ -55,5 +55,9 @@ public class SqlCreateTable extends SqlCreate {
 
     public SqlNode getSelectQuery() {
         return query;
+    }
+
+    public void setQuery(SqlNode query) {
+        this.query = query;
     }
 }

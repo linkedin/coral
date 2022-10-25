@@ -617,18 +617,22 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
       ASTNode ast = (ASTNode) child;
       switch (ast.getType()){
         case HiveParser.TOK_TABNAME:
-          ctOptions.name = (SqlIdentifier) visitTabnameNode(node, ctx);
+          ctOptions.name = (SqlIdentifier) visitTabnameNode(ast, ctx);
+          break;
         case HiveParser.TOK_IFNOTEXISTS:
           ctOptions.ifNotExists = true;
+          break;
         case HiveParser.TOK_TABCOLLIST:
-          ctOptions.columnList = (SqlNodeList) visitColumnList(node, ctx);
+          ctOptions.columnList = (SqlNodeList) visitColumnList(ast, ctx);
+          break;
         case HiveParser.TOK_QUERY:
-          ctOptions.query = visitQueryNode(node, ctx);
+          ctOptions.query = visitQueryNode(ast, ctx);
+          break;
         default:
-          visit(node, ctx);
+          break;
       }
     }
-    return new SqlCreateTable(ZERO, false, ctOptions.ifNotExists, ctOptions.name, ctOptions.columnList, ctOptions.query);
+    return new SqlCreateTable(ZERO, false, ctOptions.ifNotExists != null ? ctOptions.ifNotExists : false, ctOptions.name, ctOptions.columnList, ctOptions.query);
   }
 
   @Override

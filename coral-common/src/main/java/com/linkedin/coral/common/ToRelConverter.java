@@ -13,6 +13,7 @@ import javax.annotation.Nonnull;
 
 import com.google.common.collect.ImmutableList;
 
+import com.linkedin.coral.common.calcite.sql.SqlCreateTable;
 import org.apache.calcite.config.CalciteConnectionConfig;
 import org.apache.calcite.config.CalciteConnectionConfigImpl;
 import org.apache.calcite.config.CalciteConnectionProperty;
@@ -118,7 +119,6 @@ public abstract class ToRelConverter {
   public RelNode convertSql(String sql) {
     return toRel(toSqlNode(sql));
   }
-
   /**
    * Similar to {@link #convertSql(String)} but converts hive view definition stored
    * in the hive metastore to corresponding {@link RelNode} implementation.
@@ -133,8 +133,7 @@ public abstract class ToRelConverter {
     return toRel(sqlNode);
   }
 
-  // TODO change back to protected once the relevant tests move to the common package
-  @VisibleForTesting
+//  @VisibleForTesting
   public SqlNode toSqlNode(String sql) {
     return toSqlNode(sql, null);
   }
@@ -161,10 +160,14 @@ public abstract class ToRelConverter {
     return toSqlNode(stringViewExpandedText, table);
   }
 
-  @VisibleForTesting
-  protected RelNode toRel(SqlNode sqlNode) {
+//  @VisibleForTesting
+  public RelNode toRel(SqlNode sqlNode) {
+    if(sqlNode instanceof SqlCreateTable){
+      sqlNode = ((SqlCreateTable) sqlNode).getSelectQuery();
+    }
     RelRoot root = getSqlToRelConverter().convertQuery(sqlNode, true, true);
-    return standardizeRel(root.rel);
+    RelNode relNode = standardizeRel(root.rel);
+    return relNode;
   }
 
   /**
