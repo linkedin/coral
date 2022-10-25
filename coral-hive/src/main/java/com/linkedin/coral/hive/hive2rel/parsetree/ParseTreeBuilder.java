@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
+import com.linkedin.coral.common.calcite.sql.SqlCreateTable;
 import org.apache.calcite.avatica.util.TimeUnit;
 import org.apache.calcite.sql.JoinConditionType;
 import org.apache.calcite.sql.JoinType;
@@ -39,6 +40,7 @@ import org.apache.calcite.sql.SqlWithItem;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.SqlTypeName;
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.metastore.api.Table;
 
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
@@ -609,6 +611,42 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
   }
 
   @Override
+  protected SqlNode visitCreateTable(ASTNode node, ParseContext ctx){
+    CreateTableOptions ctOptions = new CreateTableOptions();
+    for(Node child: node.getChildren()){
+      ASTNode ast = (ASTNode) child;
+      switch (ast.getType()){
+        case HiveParser.TOK_TABNAME:
+          ctOptions.name = (SqlIdentifier) visitTabnameNode(node, ctx);
+        case HiveParser.TOK_IFNOTEXISTS:
+          ctOptions.ifNotExists = true;
+        case HiveParser.TOK_TABCOLLIST:
+          ctOptions.columnList = (SqlNodeList) visitColumnList(node, ctx);
+        case HiveParser.TOK_QUERY:
+          ctOptions.query = visitQueryNode(node, ctx);
+        default:
+          visit(node, ctx);
+      }
+    }
+    return new SqlCreateTable(ZERO, false, ctOptions.ifNotExists, ctOptions.name, ctOptions.columnList, ctOptions.query);
+  }
+
+  @Override
+  protected SqlNode visitColumnList(ASTNode node, ParseContext ctx){
+    List<SqlNode> sqlNodeList = visitChildren(node, ctx);
+    return new SqlNodeList(sqlNodeList, ZERO);
+  }
+
+  @Override
+  protected SqlNode visitColumn(ASTNode node, ParseContext ctx) {
+    return visitChildren(node, ctx).get(0);
+  }
+
+  protected SqlNode visitIfNotExists(ASTNode node, ParseContext ctx) {
+    return SqlLiteral.createBoolean(true, ZERO);
+  }
+
+  @Override
   protected SqlNode visitTabRefNode(ASTNode node, ParseContext ctx) {
     List<SqlNode> sqlNodes = visitChildren(node, ctx);
     checkState(sqlNodes != null && !sqlNodes.isEmpty());
@@ -1058,5 +1096,12 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     Optional<Table> getHiveTable() {
       return hiveTable;
     }
+  }
+
+  class CreateTableOptions {
+    SqlIdentifier name;
+    SqlNodeList columnList;
+    SqlNode query;
+    Boolean ifNotExists;
   }
 }

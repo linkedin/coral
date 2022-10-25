@@ -302,10 +302,50 @@ public abstract class AbstractASTVisitor<R, C> {
       case HiveParser.KW_CURRENT:
         return visitCurrentRow(node, ctx);
 
+      case HiveParser.TOK_CREATETABLE:
+        return visitCreateTable(node, ctx);
+      case HiveParser.TOK_LIKETABLE:
+        return visitLikeTable(node, ctx);
+      case HiveParser.TOK_IFNOTEXISTS:
+        return visitIfNotExists(node, ctx);
+      case HiveParser.TOK_TABCOLLIST:
+        return visitColumnList(node, ctx);
+      case HiveParser.TOK_TABCOL:
+        return visitColumn(node, ctx);
+
       default:
         // return visitChildren(node, ctx);
         throw new UnhandledASTTokenException(node);
     }
+  }
+
+  protected R visitColumn(ASTNode node, C ctx) {
+    if(node.getChildren() != null){
+      return visitChildren(node, ctx).get(0);
+    }
+    return null;
+  }
+
+  protected R visitColumnList(ASTNode node, C ctx) {
+    return visitChildren(node, ctx).get(0);
+  }
+
+  protected R visitIfNotExists(ASTNode node, C ctx) {
+    if(node.getChildren() != null){
+      return visitChildren(node, ctx).get(0);
+    }
+    return null;
+  }
+
+  protected R visitLikeTable(ASTNode node, C ctx){
+    if(node.getChildren() != null){
+      return visitChildren(node, ctx).get(0);
+    }
+    return null;
+  }
+
+  protected R visitCreateTable(ASTNode node, C ctx){
+    return visitChildren(node, ctx).get(0);
   }
 
   protected R visitKeywordLiteral(ASTNode node, C ctx) {
