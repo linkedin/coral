@@ -5,7 +5,16 @@
  */
 package com.linkedin.coral.trino.rel2trino;
 
+import java.io.File;
+import java.io.IOException;
+
+import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.tools.FrameworkConfig;
+import org.apache.commons.io.FileUtils;
+import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.hive.metastore.api.MetaException;
+import org.apache.hadoop.hive.ql.metadata.HiveException;
+import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
@@ -25,11 +34,12 @@ import static org.testng.Assert.*;
 // This makes it easier to generate RelNodes for testing. The input sql is
 // in Calcite sql syntax (not Hive)
 // Disabled tests are failing tests
-@Test(enabled = false,
+@Test(
     description = "pending migration to hive tables and corresponding queries to use standardised CoralSqlNode and CoralRelNode representations in the translation path")
 public class RelToTrinoConverterTest {
 
   static FrameworkConfig config;
+  private HiveConf conf;
   static final SqlParser trinoParser = new SqlParser();
   static final String tableOne = TABLE_ONE.getTableName();
   static final String tableTwo = TABLE_TWO.getTableName();
@@ -37,9 +47,20 @@ public class RelToTrinoConverterTest {
   static final String tableFour = TABLE_FOUR.getTableName();
 
   @BeforeTest
+  public void beforeClass() throws IOException, HiveException, MetaException {
+    conf = TestUtils.loadResourceHiveConf();
+    TestUtils.initializeViews(conf);
+  }
+
+  @BeforeTest
   public static void beforeTest() {
     TestUtils.turnOffRelSimplification();
     config = TestUtils.createFrameworkConfig(TABLE_ONE, TABLE_TWO, TABLE_THREE, TABLE_FOUR);
+  }
+
+  @AfterTest
+  public void afterClass() throws IOException {
+    FileUtils.deleteDirectory(new File(conf.get(TestUtils.CORAL_TRINO_TEST_DIR)));
   }
 
   private void testConversion(String inputSql, String expectedSql) {
@@ -137,17 +158,17 @@ public class RelToTrinoConverterTest {
     testConversion(sql, expected);
   }
 
-  @Test(enabled = false)
+  @Test
   public void testConstantExpressions() {
     {
       String sql = "SELECT 1";
       String expected = formatSql("SELECT 1 FROM (VALUES  (0)) AS \"t\" (\"ZERO\")");
-      testConversion(sql, expected);
+      testHiveToTrinoConversion(sql, expected);
     }
     {
       String sql = "SELECT 5 + 2 * 10 / 4";
       String expected = formatSql("SELECT 5 + 2 * 10 / 4 FROM (VALUES  (0)) AS \"t\" (\"ZERO\")");
-      testConversion(sql, expected);
+      testHiveToTrinoConversion(sql, expected);
     }
   }
 
@@ -494,25 +515,35 @@ public class RelToTrinoConverterTest {
     testConversion(sql3, expectedSql3);
   }
 
-  @Test(enabled = false)
+  @Test
   public void testCurrentUser() {
     String sql = "SELECT current_user";
-    String expected = formatSql("SELECT CURRENT_USER AS \"CURRENT_USER\"\nFROM (VALUES  (0)) AS \"t\" (\"ZERO\")");
-    testConversion(sql, expected);
+    String expected = formatSql("SELECT CURRENT_USER AS \"current_user\"\nFROM (VALUES  (0)) AS \"t\" (\"ZERO\")");
+
+    testHiveToTrinoConversion(sql, expected);
   }
 
-  @Test(enabled = false)
+  @Test
   public void testCurrentTimestamp() {
     String sql = "SELECT current_timestamp";
-    String expected = formatSql(
-        "SELECT CAST(CURRENT_TIMESTAMP AS TIMESTAMP(3)) AS \"CURRENT_TIMESTAMP\"\nFROM (VALUES  (0)) AS \"t\" (\"ZERO\")");
-    testConversion(sql, expected);
+    String expected =
+        formatSql("SELECT CAST(CURRENT_TIMESTAMP AS TIMESTAMP(3))\nFROM (VALUES  (0)) AS \"t\" (\"ZERO\")");
+
+    testHiveToTrinoConversion(sql, expected);
   }
 
-  @Test(enabled = false)
+  @Test
   public void testCurrentDate() {
     String sql = "SELECT current_date";
-    String expected = formatSql("SELECT CURRENT_DATE AS \"CURRENT_DATE\"\nFROM (VALUES  (0)) AS \"t\" (\"ZERO\")");
-    testConversion(sql, expected);
+    String expected = formatSql("SELECT CURRENT_DATE\nFROM (VALUES  (0)) AS \"t\" (\"ZERO\")");
+
+    testHiveToTrinoConversion(sql, expected);
+  }
+
+  private void testHiveToTrinoConversion(String inputSql, String expectedSql) {
+    RelNode relNode = hiveToRelConverter.convertSql(inputSql);
+    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+    String expandedSql = relToTrinoConverter.convert(relNode);
+    assertEquals(expandedSql, expectedSql);
   }
 }
