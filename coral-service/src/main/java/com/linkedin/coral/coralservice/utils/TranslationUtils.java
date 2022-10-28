@@ -9,12 +9,11 @@ import org.apache.calcite.rel.RelNode;
 
 import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
 import com.linkedin.coral.spark.CoralSpark;
-<<<<<<< HEAD
 import com.linkedin.coral.trino.rel2trino.RelToTrinoConverter;
 import com.linkedin.coral.trino.trino2rel.TrinoToRelConverter;
-=======
 import org.apache.calcite.sql.SqlNode;
->>>>>>> 32f952c (Reafctor code to support create table)
+
+import java.util.function.Function;
 
 import static com.linkedin.coral.coralservice.utils.CoralProvider.*;
 
@@ -33,8 +32,14 @@ public class TranslationUtils {
   }
 
   public static String translateHiveToSpark(String query) {
+    RelNode relNode = hiveToRelConverter.convertSql(query);
+    CoralSpark coralSpark = CoralSpark.create(relNode);
+    return coralSpark.getSparkSql();
+  }
+
+  public static String translateHiveQueryToSparkSql(String query){
     SqlNode sqlNode = hiveToRelConverter.toSqlNode(query);
-    SqlNode coralSqlNode = CoralSpark.convertRelNodeToCoralSqlNode(hiveToRelConverter.toRel(sqlNode), sqlNode);
-    return CoralSpark.convert(coralSqlNode);
+    Function<SqlNode, RelNode> hiveSqlNodeToRelConverter = hiveToRelConverter::toRel;
+    return CoralSpark.create(sqlNode, hiveSqlNodeToRelConverter).getSparkSql();
   }
 }

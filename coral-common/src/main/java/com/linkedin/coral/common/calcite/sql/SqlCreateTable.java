@@ -1,7 +1,6 @@
 package com.linkedin.coral.common.calcite.sql;
 
 import com.linkedin.coral.javax.annotation.Nullable;
-import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.sql.*;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.util.ImmutableNullableList;
@@ -10,9 +9,9 @@ import java.util.List;
 import java.util.Objects;
 
 public class SqlCreateTable extends SqlCreate {
-    public final SqlIdentifier name;
-    public final @Nullable SqlNodeList columnList;
-    public @Nullable SqlNode query;
+    private final SqlIdentifier name;
+    private final @Nullable SqlNodeList columnList;
+    private @Nullable SqlNode query;
 
     private static final SqlOperator OPERATOR =
             new SqlSpecialOperator("CREATE TABLE", SqlKind.CREATE_TABLE);

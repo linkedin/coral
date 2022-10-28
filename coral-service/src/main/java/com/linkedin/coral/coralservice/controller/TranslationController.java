@@ -65,6 +65,7 @@ public class TranslationController implements ApplicationListener<ContextRefresh
           translatedSql = translateTrinoToSpark(query);
         }
       }
+<<<<<<< HEAD
       // From Hive
       else if (fromLanguage.equalsIgnoreCase("hive")) {
         // To Spark
@@ -75,6 +76,18 @@ public class TranslationController implements ApplicationListener<ContextRefresh
         else if (toLanguage.equalsIgnoreCase("trino")) {
           translatedSql = translateHiveToTrino(query);
         }
+=======
+    }
+    // From Hive
+    else if (fromLanguage.equalsIgnoreCase("hive")) {
+      // To Spark
+      if (toLanguage.equalsIgnoreCase("spark")) {
+        translatedSql = translateHiveQueryToSparkSql(query);
+      }
+      // To Trino
+      else if (toLanguage.equalsIgnoreCase("trino")) {
+        translatedSql = translateHiveToTrino(query);
+>>>>>>> c5df021 (Adding translation logic Coral Spark and adding node of interest logic)
       }
     } catch (Throwable t) {
       t.printStackTrace();
