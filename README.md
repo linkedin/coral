@@ -136,6 +136,8 @@ SELECT "name", "country", "area_code", "code", "datepartition"
 FROM "db1"."airport"
 ```
 
+You may also achieve above 5-7 via Coral-Service simple UI: http://localhost:8080 
+
 #### To run Coral Service using the **remote metastore**:
 4. Add your kerberos client keytab file to `coral-service/src/main/resources`
 5. Appropriately replace all instances of `SET_ME` in `coral-service/src/main/resources/hive.properties`

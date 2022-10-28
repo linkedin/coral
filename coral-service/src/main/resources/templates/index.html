@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Coral Service</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <link href="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+</head>
+
+<body>
+
+<style>
+    body {
+        background: -webkit-linear-gradient(left, #0072ff, #00c6ff);
+    }
+
+    .coral-form {
+        background: #fff;
+        margin-top: 6%;
+        margin-bottom: 5%;
+        width: 80%;
+        border-radius: 1rem;
+    }
+
+    .coral-form .form-control {
+        border-radius: 1rem;
+    }
+
+    .coral-logo {
+        text-align: center;
+    }
+
+    .coral-logo img {
+        border-radius: 2rem;
+        width: 12%;
+        margin-top: -3%;
+    }
+
+    .coral-form form {
+        padding: 12%;
+        margin-top: -12%;
+    }
+
+    .coral-form form .row {
+        margin-bottom: -7%;
+    }
+
+    .coral-form label {
+        text-align: center;
+        color: #0072ff;
+    }
+
+    .coral-form .btnSubmit {
+        width: 40%;
+        border: none;
+        border-radius: 1rem;
+        padding: 1.5%;
+        background: #00c6ff;
+        font-weight: 600;
+        color: #fff;
+        cursor: pointer;
+    }
+
+    .coral-form .btnClear {
+        width: 40%;
+        border: none;
+        border-radius: 1rem;
+        padding: 1.5%;
+        background: #fd4565;
+        font-weight: 600;
+        color: #fff;
+        cursor: pointer;
+    }
+
+    .alert {
+        padding-left: 12%;
+        padding-right: 12%;
+    }
+</style>
+
+<div class="container coral-form">
+    <div class="coral-logo">
+        <a href="https://github.com/linkedin/coral">
+            <img src="https://raw.githubusercontent.com/linkedin/coral/master/docs/coral-logo.jpg"
+                 alt="Coral"/>
+        </a>
+    </div>
+    <div id="creation-result" class="alert">
+    </div>
+    <form>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="statement">Create database/table/view in local mode</label>
+                    <textarea id="statement" class="form-control" placeholder="CREATE DATABASE/TABLE/VIEW"
+                              style="width: 100%; height: 160px;"></textarea>
+                </div>
+                <div class="form-group">
+                    <input type="submit" id="btn-create" class="btnSubmit" value="Create"/>
+                    <input type="submit" id="btn-clear-create" class="btnClear" value="Clear"/>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="query">Translate SQL</label>
+                    <textarea id="query" class="form-control" placeholder="SELECT * FROM db.tbl"
+                              style="width: 100%; height: 100px;"></textarea>
+                </div>
+                <div class="form-inline">
+                    <label for="from-language"> from &nbsp;</label>
+                    <select class="form-control" id="from-language">
+                        <option value="hive">Hive QL</option>
+                        <option value="trino">Trino SQL</option>
+                    </select>
+                    <label for="from-language"> &nbsp;to&nbsp; </label>
+                    <select class="form-control" id="to-language">
+                        <option value="trino">Trino SQL</option>
+                        <option value="spark">Spark SQL</option>
+                    </select>
+                </div>
+                <br>
+                <div class="form-group">
+                    <input type="submit" id="btn-translate" class="btnSubmit" value="Translate"/>
+                    <input type="submit" id="btn-clear-translate" class="btnClear" value="Clear"/>
+                </div>
+            </div>
+            <div id="translation-result" class="col-md-12"></div>
+        </div>
+    </form>
+</div>
+
+<script src="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<script type="text/javascript" src="js/main.js"></script>
+
+</body>
+</html>
