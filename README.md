@@ -130,8 +130,9 @@ curl --header "Content-Type: application/json" \
 ```
 The translation result is:
 ```
-Original query in hive: SELECT * FROM db1.airport
-Translated to trino:
+Original query in Hive QL:
+SELECT * FROM db1.airport
+Translated to Trino SQL:
 SELECT "name", "country", "area_code", "code", "datepartition"
 FROM "db1"."airport"
 ```
@@ -148,8 +149,8 @@ FROM "db1"."airport"
 ### Coral Service UI
 Apart from the CLI command above, you can also interact with Coral Service via a simple UI.
 
-After running `../gradlew bootRun` or `../gradlew bootRun --args='--spring.profiles.active=localMetastore'` in coral-service module, 
-the UI can be accessed by http://localhost:8080:
+After running `../gradlew bootRun` (for remote metastore mode) or `../gradlew bootRun --args='--spring.profiles.active=localMetastore'` (for local metastore mode)
+from coral-service module, the UI can be accessed from the browser. Use the URL http://localhost:8080: to run the UI on a local browser.
 <p align="center">
  <img src="docs/coral-service-ui/start.png" title="Coral Service UI">
 </p>
@@ -164,7 +165,7 @@ You can enter a SQL statement to create a database/table/view in the local metas
 </p>
 
 #### Translate SQL from source language to target language
-This feature is available with Coral Service in both local and remote metastore mode, it calls `/api/translations/translate` API above.
+This feature is available with Coral Service in both local and remote metastore modes, it calls `/api/translations/translate` API above.
 
 You can enter a SQL query and specify the source and target language to use Coral translation service:
 <p align="center">
