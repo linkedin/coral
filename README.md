@@ -30,7 +30,7 @@ and implementing query rewrite algorithms for data governance and query optimiza
 - Coral-Pig: Converts view logical plan to Pig-latin.
 - Coral-Schema: Derives Avro schema of view using view logical plan and input Avro schemas of base tables.
 - Coral-Spark-Plan: Converts Spark plan strings to equivalent logical plan (in progress).
-- Coral-Service: Service that exposes REST APIs that allow users to interact with Coral (see [Coral-as-a-Service](##Coral-as-a-Service) for more details).
+- Coral-Service: Service that exposes REST APIs that allow users to interact with Coral (see [Coral-as-a-Service](#Coral-as-a-Service) for more details).
 
 ## How to Build
 
@@ -92,49 +92,6 @@ cd coral-service
 4. Run
 ```bash  
 ../gradlew bootRun --args='--spring.profiles.active=localMetastore'  
-```  
-Example workflow using local metastore:
-
-5. Create a database called `db1` in local metastore using the /api/catalog-ops/execute endpoint
-
-```bash
-curl --header "Content-Type: application/json" \
-  --request POST \
-  --data "CREATE DATABASE IF NOT EXISTS db1" \
-  http://localhost:8080/api/catalog-ops/execute
-
-Creation successful
-```
-6. Create a table called `airport` within `db1` in local metastore using the /api/catalog-ops/execute endpoint
-
-```bash
-curl --header "Content-Type: application/json" \
-  --request POST \
-  --data "CREATE TABLE IF NOT EXISTS db1.airport(name string, country string, area_code int, code string, datepartition string)" \
-  http://localhost:8080/api/catalog-ops/execute
-
-Creation successful
-```
-
-7. Translate a query on `db1.airport` in local metastore using the /api/translations/translate endpoint
-
-```bash
-curl --header "Content-Type: application/json" \
-  --request POST \
-  --data '{
-    "fromLanguage":"hive", 
-    "toLanguage":"trino", 
-    "query":"SELECT * FROM db1.airport"
-  }' \
-  http://localhost:8080/api/translations/translate
-```
-The translation result is:
-```
-Original query in Hive QL:
-SELECT * FROM db1.airport
-Translated to Trino SQL:
-SELECT "name", "country", "area_code", "code", "datepartition"
-FROM "db1"."airport"
 ```
 
 #### To run Coral Service using the **remote metastore**:
@@ -144,13 +101,13 @@ FROM "db1"."airport"
 ```  
 ../gradlew bootRun  
 ```  
-7. Translate a query on existing table/view in remote metastore using the /translate endpoint
+
+Then you can interact with the service using your [browser](#coral-service-ui) or the [CLI](#coral-service-cli).
 
 ### Coral Service UI
-Apart from the CLI command above, you can also interact with Coral Service via a simple UI.
-
-After running `../gradlew bootRun` (for remote metastore mode) or `../gradlew bootRun --args='--spring.profiles.active=localMetastore'` (for local metastore mode)
-from coral-service module, the UI can be accessed from the browser. Use the URL http://localhost:8080 to run the UI on a local browser.
+After running `../gradlew bootRun --args='--spring.profiles.active=localMetastore'` (for local metastore mode) 
+or `../gradlew bootRun` (for remote metastore mode) from coral-service module, 
+the UI can be accessed from the browser. Use the URL http://localhost:8080 to run the UI on a local browser.
 <p align="center">
  <img src="docs/coral-service-ui/start.png" title="Coral Service UI">
 </p>
@@ -171,6 +128,54 @@ You can enter a SQL query and specify the source and target language to use Cora
 <p align="center">
  <img src="docs/coral-service-ui/translation.png" title="Coral Service Translation Feature">
 </p>
+
+### Coral Service CLI
+Apart from the UI above, you can also interact with the service using the CLI.
+
+Example workflow for local metastore mode:
+
+1. Create a database called `db1` in local metastore using the `/api/catalog-ops/execute` endpoint
+
+```bash
+curl --header "Content-Type: application/json" \
+  --request POST \
+  --data "CREATE DATABASE IF NOT EXISTS db1" \
+  http://localhost:8080/api/catalog-ops/execute
+
+Creation successful
+```
+2. Create a table called `airport` within `db1` in local metastore using the `/api/catalog-ops/execute` endpoint
+
+```bash
+curl --header "Content-Type: application/json" \
+  --request POST \
+  --data "CREATE TABLE IF NOT EXISTS db1.airport(name string, country string, area_code int, code string, datepartition string)" \
+  http://localhost:8080/api/catalog-ops/execute
+
+Creation successful
+```
+
+3. Translate a query on `db1.airport` in local metastore using the `/api/translations/translate` endpoint
+
+```bash
+curl --header "Content-Type: application/json" \
+  --request POST \
+  --data '{
+    "fromLanguage":"hive", 
+    "toLanguage":"trino", 
+    "query":"SELECT * FROM db1.airport"
+  }' \
+  http://localhost:8080/api/translations/translate
+```
+The translation result is:
+```
+Original query in Hive QL:
+SELECT * FROM db1.airport
+Translated to Trino SQL:
+SELECT "name", "country", "area_code", "code", "datepartition"
+FROM "db1"."airport"
+```
+
 
 ### Currently Supported Translation Flows
 1. Hive to Trino
