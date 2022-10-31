@@ -150,7 +150,7 @@ FROM "db1"."airport"
 Apart from the CLI command above, you can also interact with Coral Service via a simple UI.
 
 After running `../gradlew bootRun` (for remote metastore mode) or `../gradlew bootRun --args='--spring.profiles.active=localMetastore'` (for local metastore mode)
-from coral-service module, the UI can be accessed from the browser. Use the URL http://localhost:8080: to run the UI on a local browser.
+from coral-service module, the UI can be accessed from the browser. Use the URL http://localhost:8080 to run the UI on a local browser.
 <p align="center">
  <img src="docs/coral-service-ui/start.png" title="Coral Service UI">
 </p>
