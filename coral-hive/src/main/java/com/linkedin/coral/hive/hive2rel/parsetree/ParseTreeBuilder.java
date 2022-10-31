@@ -203,7 +203,7 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
   }
 
   private SqlNode visitLateralViewExplode(List<SqlNode> sqlNodes, List<SqlNode> aliasOperands,
-     SqlCall tableFunctionCall, boolean isOuter) {
+      SqlCall tableFunctionCall, boolean isOuter) {
     final int operandCount = aliasOperands.size();
     // explode array if operandCount == 3: LATERAL VIEW EXPLODE(op0) op1 AS op2
     // explode map if operandCount == 4: LATERAL VIEW EXPLODE(op0) op1 AS op2, op3
@@ -257,7 +257,7 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
 
     // For POSEXPLODE case, we need to change the order of 2 alias. i.e. `pos, val` -> `val, pos` to be aligned with calcite validation
     if (operator instanceof CoralSqlUnnestOperator && ((CoralSqlUnnestOperator) operator).withOrdinality
-            && operandCount == 4) {
+        && operandCount == 4) {
       asOperands.add(aliasOperands.get(1));
       asOperands.add(aliasOperands.get(3));
       asOperands.add(aliasOperands.get(2));
@@ -304,9 +304,9 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
               ImmutableList.of(jsonInput, jsonPath), null);
       // TODO Hive get_json_object returns a string, but currently is mapped in Trino to json_extract which returns a json. Once fixed, remove the CAST
       SqlCall castToString = SqlStdOperatorTable.CAST.createCall(ZERO, getJsonObjectCall,
-              // TODO This results in CAST to VARCHAR(65535), which may be too short, but there seems to be no way to avoid that.
-              //  even `new SqlDataTypeSpec(new SqlBasicTypeNameSpec(SqlTypeName.VARCHAR, Integer.MAX_VALUE - 1, ZERO), ZERO)` results in a limited VARCHAR precision.
-              createBasicTypeSpec(SqlTypeName.VARCHAR));
+          // TODO This results in CAST to VARCHAR(65535), which may be too short, but there seems to be no way to avoid that.
+          //  even `new SqlDataTypeSpec(new SqlBasicTypeNameSpec(SqlTypeName.VARCHAR, Integer.MAX_VALUE - 1, ZERO), ZERO)` results in a limited VARCHAR precision.
+          createBasicTypeSpec(SqlTypeName.VARCHAR));
       // TODO support jsonKey containing a quotation mark (") or backslash (\)
       SqlCall ifCondition =
           HiveRLikeOperator.RLIKE.createCall(ZERO, jsonKey, SqlLiteral.createCharString("^[^\\\"]*$", ZERO));
@@ -318,7 +318,7 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     }
 
     SqlNode select =
-            new SqlSelect(ZERO, null, new SqlNodeList(projections, ZERO), null, null, null, null, null, null, null, null);
+        new SqlSelect(ZERO, null, new SqlNodeList(projections, ZERO), null, null, null, null, null, null, null, null);
     SqlNode lateral = SqlStdOperatorTable.LATERAL.createCall(ZERO, select);
     SqlCall lateralAlias = SqlStdOperatorTable.AS.createCall(ZERO,
         ImmutableList.<SqlNode> builder().add(lateral).addAll(aliasOperands.subList(1, aliasOperands.size())).build());

@@ -160,8 +160,7 @@ public abstract class ToRelConverter {
 
   public RelNode toRel(SqlNode sqlNode) {
     RelRoot root = getSqlToRelConverter().convertQuery(sqlNode, true, true);
-    RelNode relNode = standardizeRel(root.rel);
-    return relNode;
+    return standardizeRel(root.rel);
   }
 
   /**
