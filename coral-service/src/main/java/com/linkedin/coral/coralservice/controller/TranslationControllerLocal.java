@@ -13,7 +13,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 
 import com.linkedin.coral.coralservice.utils.CoralProvider;
 
@@ -35,11 +34,6 @@ public class TranslationControllerLocal extends TranslationController {
     } catch (Exception e) {
       e.printStackTrace();
     }
-  }
-
-  @RequestMapping("/index")
-  public String index() {
-    return "index";
   }
 
   @PostMapping("/api/catalog-ops/execute")
