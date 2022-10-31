@@ -312,11 +312,52 @@ public abstract class AbstractASTVisitor<R, C> {
         return visitColumnList(node, ctx);
       case HiveParser.TOK_TABCOL:
         return visitColumn(node, ctx);
-
+      case HiveParser.TOK_FILEFORMAT_GENERIC:
+        return visitFileFormatGeneric(node, ctx);
+      case HiveParser.TOK_TABLEFILEFORMAT:
+        return visitTableFileFormat(node, ctx);
+      case HiveParser.TOK_TABLESERIALIZER:
+        return visitTableSerializer(node, ctx);
+      case HiveParser.TOK_SERDENAME:
+        return visitSerdeName(node, ctx);
+      case HiveParser.TOK_TABLEROWFORMAT:
+        return visitTableRowFormat(node, ctx);
+      case HiveParser.TOK_SERDEPROPS:
+        return visitSerdeProps(node, ctx);
+      case HiveParser.TOK_TABLEROWFORMATFIELD:
+        return visitTableRowFormatField(node, ctx);
       default:
         // return visitChildren(node, ctx);
         throw new UnhandledASTTokenException(node);
     }
+  }
+
+  protected R visitTableRowFormatField(ASTNode node, C ctx) {
+    return visitChildren(node, ctx).get(0);
+  }
+
+  protected R visitSerdeProps(ASTNode node, C ctx) {
+    return visitChildren(node, ctx).get(0);
+  }
+
+  protected R visitTableRowFormat(ASTNode node, C ctx) {
+    return visitChildren(node, ctx).get(0);
+  }
+
+  protected R visitSerdeName(ASTNode node, C ctx) {
+    return visitChildren(node, ctx).get(0);
+  }
+
+  protected R visitTableSerializer(ASTNode node, C ctx) {
+    return visitChildren(node, ctx).get(0);
+  }
+
+  protected R visitTableFileFormat(ASTNode node, C ctx) {
+    return visitChildren(node, ctx).get(0);
+  }
+
+  protected R visitFileFormatGeneric(ASTNode node, C ctx) {
+    return visitChildren(node, ctx).get(0);
   }
 
   protected R visitColumn(ASTNode node, C ctx) {
