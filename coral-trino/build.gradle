@@ -1,4 +1,5 @@
 dependencies {
+  compile deps.'gson'
   compile project(path: ':coral-hive')
   compile project(path: ':shading:coral-trino-parser', configuration: 'shadow')
 
