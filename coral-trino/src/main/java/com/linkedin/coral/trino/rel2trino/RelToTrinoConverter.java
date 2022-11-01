@@ -93,6 +93,7 @@ public class RelToTrinoConverter extends RelToSqlConverter {
     System.out.println("New coralSqlNode for trino: " + coralSqlNode);
 
     SqlNode trinoSqlNode = coralSqlNode.accept(new CoralSqlNodeToTrinoSqlNodeConverter());
+    System.out.println("New trinoSqlNode for trino: " + trinoSqlNode);
 
     SqlNode rewrittenTrinoSqlNode = trinoSqlNode.accept(new TrinoSqlRewriter());
     return rewrittenTrinoSqlNode.toSqlString(TrinoSqlDialect.INSTANCE).toString();
