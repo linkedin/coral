@@ -31,7 +31,6 @@ import org.apache.calcite.sql.*;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.SqlTypeName;
-import org.apache.calcite.sql.validate.SqlValidatorUtil;
 import org.apache.calcite.util.Util;
 
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
@@ -85,6 +84,9 @@ public class RelToTrinoConverter extends RelToSqlConverter {
     SqlNode sqlNodeWithUDFOperatorConverted = sqlNode.accept(new CoralToTrinoSqlCallConverter(configs));
     return sqlNodeWithUDFOperatorConverted.accept(new TrinoSqlRewriter()).toSqlString(TrinoSqlDialect.INSTANCE)
         .toString();
+//    SqlNode trinoSqlNode = convertToSqlNode(rel);
+//    SqlNode intermediateTrinoSqlNode = trinoSqlNode.accept(new IntermediateTrinoSqlNodeRewriter());
+//    return intermediateTrinoSqlNode.accept(new TrinoSqlRewriter()).toSqlString(TrinoSqlDialect.INSTANCE).toString();
   }
 
   /**
@@ -103,49 +105,6 @@ public class RelToTrinoConverter extends RelToSqlConverter {
    */
   public Result visit(Window window) {
     return null;
-  }
-
-  @Override
-  public Result visit(Project e) {
-    e.getVariablesSet();
-    Result x = visitChild(0, e.getInput());
-    parseCorrelTable(e, x);
-    if (isStar(e.getChildExps(), e.getInput().getRowType(), e.getRowType())) {
-      return x;
-    }
-
-    final Builder builder = x.builder(e, Clause.SELECT);
-    final List<SqlNode> selectList = new ArrayList<>();
-    for (RexNode ref : e.getChildExps()) {
-      SqlNode sqlExpr = builder.context.toSql(null, ref);
-      addSelect(selectList, sqlExpr, e.getRowType());
-    }
-
-    builder.setSelect(new SqlNodeList(selectList, POS));
-    return builder.result();
-  }
-
-  @Override
-  public void addSelect(List<SqlNode> selectList, SqlNode node, RelDataType rowType) {
-    // Override this method from parent class RelToSqlConverter to always add "as"
-    // when accessing nested struct.
-    // In parent class "as" is skipped for "select a.b as b", here we will keep the "a.b as b"
-    SqlNode selectNode = node;
-    final String name = rowType.getFieldNames().get(selectList.size());
-    final String alias = SqlValidatorUtil.getAlias(selectNode, -1);
-    final String lowerName = name.toLowerCase(Locale.ROOT);
-    final boolean nestedFieldAccess =
-        selectNode instanceof SqlIdentifier && ((SqlIdentifier) selectNode).names.size() > 1;
-    if (lowerName.startsWith("expr$")) {
-      ordinalMap.put(lowerName, selectNode);
-    } else if (alias == null || !alias.equals(name) || nestedFieldAccess) {
-      selectNode = as(selectNode, name);
-    }
-    selectList.add(selectNode);
-  }
-
-  private SqlCall as(SqlNode e, String alias) {
-    return SqlStdOperatorTable.AS.createCall(POS, e, new SqlIdentifier(alias, POS));
   }
 
   public Result visit(Uncollect e) {

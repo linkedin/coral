@@ -140,7 +140,7 @@ public class TrinoToRelConverterTest {
                 + "  LogicalCorrelate(correlation=[$cor0], joinType=[inner], requiredColumns=[{0}])\n"
                 + "    LogicalTableScan(table=[[hive, default, my_table]])\n" + "    HiveUncollect\n"
                 + "      LogicalProject(col=[$cor0.x])\n" + "        LogicalValues(tuples=[[{ 0 }]])\n",
-            "SELECT \"$cor0\".\"x\" AS \"x\", \"$cor0\".\"y\" AS \"y\", \"$cor0\".\"z\" AS \"z\", \"t0\".\"col\"\n"
+            "SELECT \"$cor0\".\"x\" AS \"x\", \"$cor0\".\"y\" AS \"y\", \"$cor0\".\"z\" AS \"z\", \"t0\".\"col\" AS \"col\"\n"
                 + "FROM \"default\".\"my_table\" AS \"$cor0\"\n"
                 + "CROSS JOIN UNNEST(\"$cor0\".\"x\") AS \"t0\" (\"col\")"))
         .add(new TrinoToRelTestDataProvider("select z from my_table cross join unnest(x) t(x_)",
@@ -165,7 +165,7 @@ public class TrinoToRelConverterTest {
                 + "    LogicalTableScan(table=[[hive, default, my_table]])\n"
                 + "    HiveUncollect(withOrdinality=[true])\n" + "      LogicalProject(col=[$cor0.x])\n"
                 + "        LogicalValues(tuples=[[{ 0 }]])\n",
-            "SELECT \"$cor0\".\"x\" AS \"x\", \"$cor0\".\"y\" AS \"y\", \"$cor0\".\"z\" AS \"z\", \"t0\".\"col\", \"t0\".\"ORDINALITY\" AS \"ORDINALITY\"\n"
+            "SELECT \"$cor0\".\"x\" AS \"x\", \"$cor0\".\"y\" AS \"y\", \"$cor0\".\"z\" AS \"z\", \"t0\".\"col\" AS \"col\", \"t0\".\"ORDINALITY\" AS \"ORDINALITY\"\n"
                 + "FROM \"default\".\"my_table\" AS \"$cor0\"\n"
                 + "CROSS JOIN UNNEST(\"$cor0\".\"x\") WITH ORDINALITY AS \"t0\" (\"col\", \"ORDINALITY\")"))
         .add(new TrinoToRelTestDataProvider("select z from my_table cross join unnest(x) with ordinality t(a, b)",
