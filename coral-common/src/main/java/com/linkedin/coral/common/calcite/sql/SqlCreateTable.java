@@ -8,32 +8,40 @@ import org.apache.calcite.util.ImmutableNullableList;
 import java.util.List;
 import java.util.Objects;
 
-public class SqlCreateTable extends SqlCreate {
+
+public class SqlCreateTable extends SqlCreate implements SqlCommand{
+    //name of the table to be created
     private final SqlIdentifier name;
+    // column details like column name, data type, etc. This may be null, like in case of CTAS
     private final @Nullable SqlNodeList columnList;
-    private @Nullable SqlNode query;
-    private final @Nullable SqlNode tableSerializer;
-    private final @Nullable SqlNodeList tableFileFormat;
-    private final @Nullable SqlCharStringLiteral tableRowFormat;
+    // select query node in case of "CREATE TABLE ... AS query"; else may be null
+    private @Nullable SqlNode selectQuery;
+    // specifying serde property
+    private final @Nullable SqlNode serDe;
+    // specifying file format such as Parquet, ORC, etc.
+    private final @Nullable SqlNodeList fileFormat;
+    // specifying delimiter fields for row format
+    private final @Nullable SqlCharStringLiteral rowFormat;
 
     private static final SqlOperator OPERATOR =
             new SqlSpecialOperator("CREATE TABLE", SqlKind.CREATE_TABLE);
 
     /** Creates a SqlCreateTable. */
     public SqlCreateTable(SqlParserPos pos, boolean replace, boolean ifNotExists,
-                          SqlIdentifier name, @Nullable SqlNodeList columnList, @Nullable SqlNode query, SqlNode tableSerializer, SqlNodeList tableFileFormat, SqlCharStringLiteral tableRowFormat) {
+                          SqlIdentifier name, @Nullable SqlNodeList columnList, @Nullable SqlNode selectQuery,
+                          @Nullable SqlNode serDe, @Nullable SqlNodeList fileFormat, @Nullable SqlCharStringLiteral rowFormat) {
         super(OPERATOR, pos, replace, ifNotExists);
         this.name = Objects.requireNonNull(name, "name");
-        this.columnList = columnList; // may be null, like in case of ctas
-        this.query = query; // for "CREATE TABLE ... AS query"; may be null
-        this.tableSerializer = tableSerializer;
-        this.tableFileFormat = tableFileFormat;
-        this.tableRowFormat = tableRowFormat;
+        this.columnList = columnList;
+        this.selectQuery = selectQuery;
+        this.serDe = serDe;
+        this.fileFormat = fileFormat;
+        this.rowFormat = rowFormat;
     }
 
     @SuppressWarnings("nullness")
     @Override public List<SqlNode> getOperandList() {
-        return ImmutableNullableList.of(name, columnList, query);
+        return ImmutableNullableList.of(name, columnList, selectQuery, serDe, fileFormat, rowFormat);
     }
 
     @Override public void unparse(SqlWriter writer, int leftPrec, int rightPrec) {
@@ -51,41 +59,43 @@ public class SqlCreateTable extends SqlCreate {
             }
             writer.endList(frame);
         }
-        if(tableSerializer != null){
+        if(serDe != null){
             writer.keyword("ROW FORMAT SERDE");
-            tableSerializer.unparse(writer, 0, 0);
+            serDe.unparse(writer, 0, 0);
             writer.newlineAndIndent();
         }
-        if(tableRowFormat != null){
+        if(rowFormat != null){
             writer.keyword("ROW FORMAT DELIMITED FIELDS TERMINATED BY");
-            tableRowFormat.unparse(writer, 0, 0);
+            rowFormat.unparse(writer, 0, 0);
             writer.newlineAndIndent();
         }
-        if(tableFileFormat != null){
-            if(tableFileFormat.size() == 1){
+        if(fileFormat != null){
+            if(fileFormat.size() == 1){
                 writer.keyword("STORED AS");
-                tableFileFormat.get(0).unparse(writer, 0, 0);
+                fileFormat.get(0).unparse(writer, 0, 0);
                 writer.newlineAndIndent();
             } else {
                 writer.keyword("STORED AS INPUTFORMAT");
-                tableFileFormat.get(0).unparse(writer, 0, 0);
+                fileFormat.get(0).unparse(writer, 0, 0);
                 writer.keyword("OUTPUTFORMAT");
-                tableFileFormat.get(1).unparse(writer, 0, 0);
+                fileFormat.get(1).unparse(writer, 0, 0);
                 writer.newlineAndIndent();
             }
         }
-        if (query != null) {
+        if (selectQuery != null) {
             writer.keyword("AS");
             writer.newlineAndIndent();
-            query.unparse(writer, 0, 0);
+            selectQuery.unparse(writer, 0, 0);
         }
     }
 
+    @Override
     public SqlNode getSelectQuery() {
-        return query;
+        return selectQuery;
     }
 
-    public void setQuery(SqlNode query) {
-        this.query = query;
+    @Override
+    public void setSelectQuery(SqlNode query) {
+        this.selectQuery = query;
     }
 }

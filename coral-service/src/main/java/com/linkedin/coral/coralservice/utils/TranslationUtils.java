@@ -32,12 +32,6 @@ public class TranslationUtils {
   }
 
   public static String translateHiveToSpark(String query) {
-    RelNode relNode = hiveToRelConverter.convertSql(query);
-    CoralSpark coralSpark = CoralSpark.create(relNode);
-    return coralSpark.getSparkSql();
-  }
-
-  public static String translateHiveQueryToSparkSql(String query){
     HiveToRelConverter hiveToRelConverter = new HiveToRelConverter(hiveMetastoreClient);
     SqlNode sqlNode = hiveToRelConverter.toSqlNode(query);
     Function<SqlNode, RelNode> hiveSqlNodeToRelConverter = hiveToRelConverter::toRel;

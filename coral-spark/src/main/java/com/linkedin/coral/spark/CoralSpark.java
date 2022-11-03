@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import com.linkedin.coral.common.calcite.sql.SqlCommand;
 import com.linkedin.coral.common.calcite.sql.SqlCreateTable;
 import org.apache.avro.Schema;
 import org.apache.calcite.plan.RelOptTable;
@@ -72,7 +73,7 @@ public class CoralSpark {
     List<SparkUDFInfo> sparkUDFInfos = sparkRelInfo.getSparkUDFInfoList();
     return new CoralSpark(baseTables, sparkUDFInfos, sparkSQL);
   }
-  
+
   /**
    * Users use this function as the main API for getting CoralSpark instance.
    * This should be used when user need to align the Coral-spark translated SQL
@@ -138,11 +139,11 @@ public class CoralSpark {
   public static CoralSpark create(SqlNode sqlNode, Function<SqlNode, RelNode> convertor){
     SparkRelInfo sparkRelInfo;
     //apply RelNode transformations for sqlNode eligible for transformation.
-    if(sqlNode instanceof SqlCreate) {
+    if(sqlNode instanceof SqlCommand) {
       SqlNode selectNode = ((SqlCreateTable) sqlNode).getSelectQuery();
       sparkRelInfo = IRRelToSparkRelTransformer.transform(convertor.apply(selectNode));
       selectNode = new CoralRelToSqlNodeConverter().convert(sparkRelInfo.getSparkRelNode());
-      ((SqlCreateTable) sqlNode).setQuery(selectNode);
+      ((SqlCreateTable) sqlNode).setSelectQuery(selectNode);
     } else {
       sparkRelInfo = IRRelToSparkRelTransformer.transform(convertor.apply(sqlNode));
       sqlNode = new CoralRelToSqlNodeConverter().convert(sparkRelInfo.getSparkRelNode());
