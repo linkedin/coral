@@ -197,20 +197,25 @@ public class ParseTreeBuilderTest {
         ImmutableList.of("SELECT 0L FROM foo", "SELECT 0 FROM `foo`"),
 
         //Basic CTAS query
-        ImmutableList.of("CREATE TABLE sample AS select * from tmp","CREATE TABLE `sample` AS select * from `tmp`"),
+        ImmutableList.of("CREATE TABLE sample AS select * from tmp", "CREATE TABLE `sample` AS select * from `tmp`"),
         //CTAS query with IF NOT EXISTS keyword
-        ImmutableList.of("CREATE TABLE IF NOT EXISTS sample AS SELECT * FROM tmp","CREATE TABLE IF NOT EXISTS `sample` AS select * from `tmp`"),
+        ImmutableList.of("CREATE TABLE IF NOT EXISTS sample AS SELECT * FROM tmp",
+            "CREATE TABLE IF NOT EXISTS `sample` AS select * from `tmp`"),
         //CTAS query with storage format
-        ImmutableList.of("CREATE TABLE sample STORED AS ORC AS SELECT * FROM tmp","CREATE TABLE `sample` STORED AS `ORC` AS select * from `tmp`"),
+        ImmutableList.of("CREATE TABLE sample STORED AS ORC AS SELECT * FROM tmp",
+            "CREATE TABLE `sample` STORED AS `ORC` AS select * from `tmp`"),
         //CTAS query with input and output formats
-        ImmutableList.of("CREATE TABLE sample STORED AS INPUTFORMAT 'com.ly.spark.example.serde.io.SerDeExampleInputFormat' OUTPUTFORMAT 'com.ly.spark.example.serde.io.SerDeExampleOutputFormat' AS SELECT * FROM tmp",
-                "CREATE TABLE `sample` STORED AS INPUTFORMAT 'com.ly.spark.example.serde.io.SerDeExampleInputFormat' OUTPUTFORMAT 'com.ly.spark.example.serde.io.SerDeExampleOutputFormat' AS SELECT * FROM `tmp`"),
+        ImmutableList.of(
+            "CREATE TABLE sample STORED AS INPUTFORMAT 'com.ly.spark.example.serde.io.SerDeExampleInputFormat' OUTPUTFORMAT 'com.ly.spark.example.serde.io.SerDeExampleOutputFormat' AS SELECT * FROM tmp",
+            "CREATE TABLE `sample` STORED AS INPUTFORMAT 'com.ly.spark.example.serde.io.SerDeExampleInputFormat' OUTPUTFORMAT 'com.ly.spark.example.serde.io.SerDeExampleOutputFormat' AS SELECT * FROM `tmp`"),
         //CTAS query with serde
-        ImmutableList.of("CREATE TABLE sample ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.avro.AvroSerDe' STORED AS INPUTFORMAT 'com.ly.spark.example.serde.io.SerDeExampleInputFormat' OUTPUTFORMAT 'com.ly.spark.example.serde.io.SerDeExampleOutputFormat' AS SELECT * FROM tmp",
-                "CREATE TABLE `sample` ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.avro.AvroSerDe' STORED AS INPUTFORMAT 'com.ly.spark.example.serde.io.SerDeExampleInputFormat' OUTPUTFORMAT 'com.ly.spark.example.serde.io.SerDeExampleOutputFormat' AS SELECT * FROM `tmp`"),
+        ImmutableList.of(
+            "CREATE TABLE sample ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.avro.AvroSerDe' STORED AS INPUTFORMAT 'com.ly.spark.example.serde.io.SerDeExampleInputFormat' OUTPUTFORMAT 'com.ly.spark.example.serde.io.SerDeExampleOutputFormat' AS SELECT * FROM tmp",
+            "CREATE TABLE `sample` ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.avro.AvroSerDe' STORED AS INPUTFORMAT 'com.ly.spark.example.serde.io.SerDeExampleInputFormat' OUTPUTFORMAT 'com.ly.spark.example.serde.io.SerDeExampleOutputFormat' AS SELECT * FROM `tmp`"),
         //CTAS query with wow format delimiter fields
-        ImmutableList.of("CREATE TABLE sample ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS INPUTFORMAT 'com.ly.spark.example.serde.io.SerDeExampleInputFormat' OUTPUTFORMAT 'com.ly.spark.example.serde.io.SerDeExampleOutputFormat' AS SELECT * FROM tmp",
-                "CREATE TABLE `sample` ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS INPUTFORMAT 'com.ly.spark.example.serde.io.SerDeExampleInputFormat' OUTPUTFORMAT 'com.ly.spark.example.serde.io.SerDeExampleOutputFormat' AS SELECT * FROM `tmp`"));
+        ImmutableList.of(
+            "CREATE TABLE sample ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS INPUTFORMAT 'com.ly.spark.example.serde.io.SerDeExampleInputFormat' OUTPUTFORMAT 'com.ly.spark.example.serde.io.SerDeExampleOutputFormat' AS SELECT * FROM tmp",
+            "CREATE TABLE `sample` ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS INPUTFORMAT 'com.ly.spark.example.serde.io.SerDeExampleInputFormat' OUTPUTFORMAT 'com.ly.spark.example.serde.io.SerDeExampleOutputFormat' AS SELECT * FROM `tmp`"));
 
     return convertAndValidateSql.stream().map(x -> new Object[] { x.get(0), x.get(1) }).iterator();
   }

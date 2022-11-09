@@ -6,15 +6,14 @@
 package com.linkedin.coral.hive.hive2rel.parsetree;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.Arrays;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
-import com.linkedin.coral.common.calcite.sql.SqlCreateTable;
 import org.apache.calcite.avatica.util.TimeUnit;
 import org.apache.calcite.sql.JoinConditionType;
 import org.apache.calcite.sql.JoinType;
@@ -22,6 +21,7 @@ import org.apache.calcite.sql.SqlAsOperator;
 import org.apache.calcite.sql.SqlBasicCall;
 import org.apache.calcite.sql.SqlBasicTypeNameSpec;
 import org.apache.calcite.sql.SqlCall;
+import org.apache.calcite.sql.SqlCharStringLiteral;
 import org.apache.calcite.sql.SqlDataTypeSpec;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlIntervalQualifier;
@@ -41,11 +41,11 @@ import org.apache.calcite.sql.SqlWithItem;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.SqlTypeName;
-import org.apache.calcite.sql.SqlCharStringLiteral;
 import org.apache.hadoop.hive.metastore.api.Table;
 
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import com.linkedin.coral.com.google.common.collect.Iterables;
+import com.linkedin.coral.common.calcite.sql.util.SqlDdlNodes;
 import com.linkedin.coral.common.functions.CoralSqlUnnestOperator;
 import com.linkedin.coral.common.functions.Function;
 import com.linkedin.coral.common.functions.FunctionFieldReferenceOperator;
@@ -612,11 +612,11 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
   }
 
   @Override
-  protected SqlNode visitCreateTable(ASTNode node, ParseContext ctx){
+  protected SqlNode visitCreateTable(ASTNode node, ParseContext ctx) {
     CreateTableOptions ctOptions = new CreateTableOptions();
-    for(Node child: node.getChildren()){
+    for (Node child : node.getChildren()) {
       ASTNode ast = (ASTNode) child;
-      switch (ast.getType()){
+      switch (ast.getType()) {
         case HiveParser.TOK_TABNAME:
           ctOptions.name = (SqlIdentifier) visitTabnameNode(ast, ctx);
           break;
@@ -645,12 +645,12 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
           break;
       }
     }
-    return new SqlCreateTable(ZERO, false, ctOptions.ifNotExists != null ? ctOptions.ifNotExists : false, ctOptions.name,
-            ctOptions.columnList, ctOptions.query, ctOptions.tableSerializer, ctOptions.tableFileFormat, ctOptions.tableRowFormat);
+    return SqlDdlNodes.createTable(ZERO, false, ctOptions.ifNotExists, ctOptions.name, ctOptions.columnList,
+        ctOptions.query, ctOptions.tableSerializer, ctOptions.tableFileFormat, ctOptions.tableRowFormat);
   }
 
   @Override
-  protected SqlNode visitColumnList(ASTNode node, ParseContext ctx){
+  protected SqlNode visitColumnList(ASTNode node, ParseContext ctx) {
     List<SqlNode> sqlNodeList = visitChildren(node, ctx);
     return new SqlNodeList(sqlNodeList, ZERO);
   }
@@ -666,7 +666,7 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
   }
 
   @Override
-  protected SqlNode visitTableRowFormat(ASTNode node, ParseContext ctx){
+  protected SqlNode visitTableRowFormat(ASTNode node, ParseContext ctx) {
     return visitChildren(node, ctx).get(0);
   }
 
@@ -1153,11 +1153,11 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     }
   }
 
-  class CreateTableOptions {
+  static class CreateTableOptions {
     SqlIdentifier name;
     SqlNodeList columnList;
     SqlNode query;
-    Boolean ifNotExists;
+    boolean ifNotExists;
     SqlNode tableSerializer;
     SqlNodeList tableFileFormat;
     SqlCharStringLiteral tableRowFormat;

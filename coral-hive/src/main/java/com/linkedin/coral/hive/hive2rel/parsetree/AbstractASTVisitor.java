@@ -333,35 +333,56 @@ public abstract class AbstractASTVisitor<R, C> {
   }
 
   protected R visitTableRowFormatField(ASTNode node, C ctx) {
-    return visitChildren(node, ctx).get(0);
+    if (node.getChildren() != null) {
+      return visitChildren(node, ctx).get(0);
+    }
+    return null;
   }
 
   protected R visitSerdeProps(ASTNode node, C ctx) {
-    return visitChildren(node, ctx).get(0);
+    if (node.getChildren() != null) {
+      return visitChildren(node, ctx).get(0);
+    }
+    return null;
   }
 
   protected R visitTableRowFormat(ASTNode node, C ctx) {
-    return visitChildren(node, ctx).get(0);
+    if (node.getChildren() != null) {
+      return visitChildren(node, ctx).get(0);
+    }
+    return null;
   }
 
   protected R visitSerdeName(ASTNode node, C ctx) {
-    return visitChildren(node, ctx).get(0);
+    if (node.getChildren() != null) {
+      return visitChildren(node, ctx).get(0);
+    }
+    return null;
   }
 
   protected R visitTableSerializer(ASTNode node, C ctx) {
-    return visitChildren(node, ctx).get(0);
+    if (node.getChildren() != null) {
+      return visitChildren(node, ctx).get(0);
+    }
+    return null;
   }
 
   protected R visitTableFileFormat(ASTNode node, C ctx) {
-    return visitChildren(node, ctx).get(0);
+    if (node.getChildren() != null) {
+      return visitChildren(node, ctx).get(0);
+    }
+    return null;
   }
 
   protected R visitFileFormatGeneric(ASTNode node, C ctx) {
-    return visitChildren(node, ctx).get(0);
+    if (node.getChildren() != null) {
+      return visitChildren(node, ctx).get(0);
+    }
+    return null;
   }
 
   protected R visitColumn(ASTNode node, C ctx) {
-    if(node.getChildren() != null){
+    if (node.getChildren() != null) {
       return visitChildren(node, ctx).get(0);
     }
     return null;
@@ -372,20 +393,20 @@ public abstract class AbstractASTVisitor<R, C> {
   }
 
   protected R visitIfNotExists(ASTNode node, C ctx) {
-    if(node.getChildren() != null){
+    if (node.getChildren() != null) {
       return visitChildren(node, ctx).get(0);
     }
     return null;
   }
 
-  protected R visitLikeTable(ASTNode node, C ctx){
-    if(node.getChildren() != null){
+  protected R visitLikeTable(ASTNode node, C ctx) {
+    if (node.getChildren() != null) {
       return visitChildren(node, ctx).get(0);
     }
     return null;
   }
 
-  protected R visitCreateTable(ASTNode node, C ctx){
+  protected R visitCreateTable(ASTNode node, C ctx) {
     return visitChildren(node, ctx).get(0);
   }
 

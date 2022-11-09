@@ -118,6 +118,7 @@ public abstract class ToRelConverter {
   public RelNode convertSql(String sql) {
     return toRel(toSqlNode(sql));
   }
+
   /**
    * Similar to {@link #convertSql(String)} but converts hive view definition stored
    * in the hive metastore to corresponding {@link RelNode} implementation.
@@ -160,6 +161,7 @@ public abstract class ToRelConverter {
 
   public RelNode toRel(SqlNode sqlNode) {
     RelRoot root = getSqlToRelConverter().convertQuery(sqlNode, true, true);
+
     return standardizeRel(root.rel);
   }
 

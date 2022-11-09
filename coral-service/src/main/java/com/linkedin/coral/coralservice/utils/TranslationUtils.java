@@ -6,14 +6,13 @@
 package com.linkedin.coral.coralservice.utils;
 
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.sql.SqlNode;
 
+import com.linkedin.coral.common.calcite.sql.SqlCommand;
 import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
 import com.linkedin.coral.spark.CoralSpark;
 import com.linkedin.coral.trino.rel2trino.RelToTrinoConverter;
 import com.linkedin.coral.trino.trino2rel.TrinoToRelConverter;
-import org.apache.calcite.sql.SqlNode;
-
-import java.util.function.Function;
 
 import static com.linkedin.coral.coralservice.utils.CoralProvider.*;
 
@@ -34,7 +33,19 @@ public class TranslationUtils {
   public static String translateHiveToSpark(String query) {
     HiveToRelConverter hiveToRelConverter = new HiveToRelConverter(hiveMetastoreClient);
     SqlNode sqlNode = hiveToRelConverter.toSqlNode(query);
-    Function<SqlNode, RelNode> hiveSqlNodeToRelConverter = hiveToRelConverter::toRel;
-    return CoralSpark.create(sqlNode, hiveSqlNodeToRelConverter).getSparkSql();
+    if (sqlNode instanceof SqlCommand) {
+      SqlNode selectNode = ((SqlCommand) sqlNode).getSelectQuery();
+      SqlNode selectSparkNode = convertHiveSqlNodeToCoralNode(hiveToRelConverter, selectNode);
+      ((SqlCommand) sqlNode).setSelectQuery(selectSparkNode);
+    } else {
+      sqlNode = convertHiveSqlNodeToCoralNode(hiveToRelConverter, sqlNode);
+    }
+    return CoralSpark.constructSparkSQL(sqlNode);
+  }
+
+  private static SqlNode convertHiveSqlNodeToCoralNode(HiveToRelConverter hiveToRelConverter, SqlNode sqlNode) {
+    RelNode relNode = hiveToRelConverter.toRel(sqlNode);
+    SqlNode coralSqlNode = CoralSpark.getCoralSqlNode(relNode);
+    return coralSqlNode;
   }
 }

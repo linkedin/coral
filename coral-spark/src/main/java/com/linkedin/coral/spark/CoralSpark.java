@@ -9,17 +9,16 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import com.linkedin.coral.common.calcite.sql.SqlCommand;
-import com.linkedin.coral.common.calcite.sql.SqlCreateTable;
 import org.apache.avro.Schema;
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.sql.SqlCreate;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlSelect;
 
+import com.linkedin.coral.common.calcite.sql.SqlCommand;
+import com.linkedin.coral.common.calcite.sql.SqlCreateTable;
 import com.linkedin.coral.spark.containers.SparkRelInfo;
 import com.linkedin.coral.spark.containers.SparkUDFInfo;
 import com.linkedin.coral.spark.dialect.SparkSqlDialect;
@@ -75,6 +74,22 @@ public class CoralSpark {
   }
 
   /**
+   * Users use this function to get CoralSqlNode from CoralRelNode
+   * This should be used when user need to get CoralSqlNode from CoralRelNode by applying
+   * spark specific transformations on CoralRelNode
+   * with Coral-schema output schema
+   *
+   * @return [[SqlNode]]
+   */
+  public static SqlNode getCoralSqlNode(RelNode irRelNode) {
+    SparkRelInfo sparkRelInfo = IRRelToSparkRelTransformer.transform(irRelNode);
+    RelNode sparkRelNode = sparkRelInfo.getSparkRelNode();
+    CoralRelToSqlNodeConverter rel2sql = new CoralRelToSqlNodeConverter();
+    SqlNode coralSqlNode = rel2sql.convert(sparkRelNode);
+    return coralSqlNode;
+  }
+
+  /**
    * Users use this function as the main API for getting CoralSpark instance.
    * This should be used when user need to align the Coral-spark translated SQL
    * with Coral-schema output schema
@@ -120,6 +135,24 @@ public class CoralSpark {
   }
 
   /**
+   * This function returns a completely expanded SQL statement in Spark SQL Dialect.
+   *
+   * A SQL statement is 'completely expanded' if it doesn't depend
+   * on (or selects from) Hive views, but instead, just on base tables.
+  
+   * Converts CoralSqlNode to Spark SQL
+   *
+   * @param sqlNode CoralSqlNode which will be translated to SparkSql
+   *
+   * @return SQL String in Spark SQL dialect which is 'completely expanded'
+   */
+  public static String constructSparkSQL(SqlNode sqlNode) {
+    SqlNode sparkSqlNode = sqlNode.accept(new CoralSqlNodeToSparkSqlNodeConverter());
+    SqlNode rewrittenSparkSqlNode = sparkSqlNode.accept(new SparkSqlRewriter());
+    return rewrittenSparkSqlNode.toSqlString(SparkSqlDialect.INSTANCE).getSql();
+  }
+
+  /**
    * Users use this function as the main API for getting CoralSpark instance.
    *
    * Internally Appropriate parts of Sql RelNode is converted to Spark RelNode, Spark RelNode is converted back
@@ -136,21 +169,22 @@ public class CoralSpark {
    *
    * @return [[CoralSparkInfo]]
    */
-  public static CoralSpark create(SqlNode sqlNode, Function<SqlNode, RelNode> convertor){
+  public static CoralSpark create(SqlNode sqlNode, Function<SqlNode, RelNode> convertor) {
     SparkRelInfo sparkRelInfo;
     //apply RelNode transformations for sqlNode eligible for transformation.
-    if(sqlNode instanceof SqlCommand) {
+    if (sqlNode instanceof SqlCommand) {
       SqlNode selectNode = ((SqlCreateTable) sqlNode).getSelectQuery();
       sparkRelInfo = IRRelToSparkRelTransformer.transform(convertor.apply(selectNode));
       selectNode = new CoralRelToSqlNodeConverter().convert(sparkRelInfo.getSparkRelNode());
       ((SqlCreateTable) sqlNode).setSelectQuery(selectNode);
     } else {
+
       sparkRelInfo = IRRelToSparkRelTransformer.transform(convertor.apply(sqlNode));
       sqlNode = new CoralRelToSqlNodeConverter().convert(sparkRelInfo.getSparkRelNode());
     }
     // sqlNode to sparkSQL
-    String sparkSQL = sqlNode.accept(new CoralSqlNodeToSparkSqlNodeConverter())
-            .accept(new SparkSqlRewriter()).toSqlString(SparkSqlDialect.INSTANCE).getSql();
+    String sparkSQL = sqlNode.accept(new CoralSqlNodeToSparkSqlNodeConverter()).accept(new SparkSqlRewriter())
+        .toSqlString(SparkSqlDialect.INSTANCE).getSql();
     List<String> baseTables = constructBaseTables(sparkRelInfo.getSparkRelNode());
     List<SparkUDFInfo> sparkUDFInfos = sparkRelInfo.getSparkUDFInfoList();
     return new CoralSpark(baseTables, sparkUDFInfos, sparkSQL);
