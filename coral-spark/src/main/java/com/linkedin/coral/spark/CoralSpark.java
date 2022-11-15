@@ -152,44 +152,6 @@ public class CoralSpark {
     return rewrittenSparkSqlNode.toSqlString(SparkSqlDialect.INSTANCE).getSql();
   }
 
-  /**
-   * Users use this function as the main API for getting CoralSpark instance.
-   *
-   * Internally Appropriate parts of Sql RelNode is converted to Spark RelNode, Spark RelNode is converted back
-   * to SqlNode and SqlNode to SparkSQL.
-   *
-   * It returns an instance of CoralSpark which contains
-   *  1) Spark SQL
-   *  2) Base tables
-   *  3) Spark UDF information objects, ie. List of {@link SparkUDFInfo}
-   *
-   * @param sqlNode CoralNode which will be translated to SparkSQL.
-   * @param convertor Functional Interface to convert SqlNode to appropriate RelNode
-   *
-   *
-   * @return [[CoralSparkInfo]]
-   */
-  public static CoralSpark create(SqlNode sqlNode, Function<SqlNode, RelNode> convertor) {
-    SparkRelInfo sparkRelInfo;
-    //apply RelNode transformations for sqlNode eligible for transformation.
-    if (sqlNode instanceof SqlCommand) {
-      SqlNode selectNode = ((SqlCreateTable) sqlNode).getSelectQuery();
-      sparkRelInfo = IRRelToSparkRelTransformer.transform(convertor.apply(selectNode));
-      selectNode = new CoralRelToSqlNodeConverter().convert(sparkRelInfo.getSparkRelNode());
-      ((SqlCreateTable) sqlNode).setSelectQuery(selectNode);
-    } else {
-
-      sparkRelInfo = IRRelToSparkRelTransformer.transform(convertor.apply(sqlNode));
-      sqlNode = new CoralRelToSqlNodeConverter().convert(sparkRelInfo.getSparkRelNode());
-    }
-    // sqlNode to sparkSQL
-    String sparkSQL = sqlNode.accept(new CoralSqlNodeToSparkSqlNodeConverter()).accept(new SparkSqlRewriter())
-        .toSqlString(SparkSqlDialect.INSTANCE).getSql();
-    List<String> baseTables = constructBaseTables(sparkRelInfo.getSparkRelNode());
-    List<SparkUDFInfo> sparkUDFInfos = sparkRelInfo.getSparkUDFInfoList();
-    return new CoralSpark(baseTables, sparkUDFInfos, sparkSQL);
-  }
-
   private static String constructSparkSQLWithExplicitAlias(RelNode sparkRelNode, List<String> aliases) {
     CoralRelToSqlNodeConverter rel2sql = new CoralRelToSqlNodeConverter();
     // Create temporary objects r and rewritten to make debugging easier
