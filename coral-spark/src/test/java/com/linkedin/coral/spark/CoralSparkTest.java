@@ -14,6 +14,7 @@ import java.util.List;
 import org.apache.avro.Schema;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.type.ReturnTypes;
 import org.apache.calcite.sql.type.SqlTypeFamily;
 import org.apache.calcite.sql.type.SqlTypeName;
@@ -26,6 +27,8 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
+import com.linkedin.coral.common.calcite.sql.SqlCommand;
+import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 import com.linkedin.coral.spark.containers.SparkUDFInfo;
 import com.linkedin.coral.spark.exceptions.UnsupportedUDFException;
@@ -703,6 +706,32 @@ public class CoralSparkTest {
   }
 
   @Test
+  public void testCreateTableAsSelectWithUnionExtractUDF() {
+    String query = "CREATE TABLE foo_bar as SELECT extract_union(foo) from union_table";
+    String targetSql = "CREATE TABLE foo_bar as SELECT coalesce_struct(foo) FROM default.union_table";
+    assertEquals(translateHiveToSpark(query).toLowerCase().replaceAll("\n", " "),
+        targetSql.toLowerCase().replaceAll("\n", " "));
+  }
+
+  @Test
+  public void testCreateTableAsSelect() {
+    String query = "CREATE TABLE foo_bar as SELECT CAST(a AS DECIMAL(10, 0)) casted_decimal FROM default.foo";
+    String targetSql = "CREATE TABLE foo_bar as SELECT CAST(a AS DECIMAL(10, 0)) casted_decimal FROM default.foo";
+    assertEquals(translateHiveToSpark(query).toLowerCase().replaceAll("\n", " "),
+        targetSql.toLowerCase().replaceAll("\n", " "));
+  }
+
+  @Test
+  public void testCreateTableAsSelectWithTableProperties() {
+    String query =
+        "CREATE TABLE sample ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS INPUTFORMAT 'com.ly.spark.example.serde.io.SerDeExampleInputFormat' OUTPUTFORMAT 'com.ly.spark.example.serde.io.SerDeExampleOutputFormat' AS SELECT * FROM default.foo";
+    String targetSql =
+        "CREATE TABLE sample ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS INPUTFORMAT 'com.ly.spark.example.serde.io.SerDeExampleInputFormat' OUTPUTFORMAT 'com.ly.spark.example.serde.io.SerDeExampleOutputFormat' AS SELECT * FROM default.foo";
+    assertEquals(translateHiveToSpark(query).toLowerCase().replaceAll("\n", " "),
+        targetSql.toLowerCase().replaceAll("\n", " "));
+  }
+
+  @Test
   public void testCastDecimalDefault() {
     RelNode relNode = TestUtils.toRelNode("SELECT CAST(a as DECIMAL) as casted_decimal FROM default.foo");
     String targetSql = "SELECT CAST(a AS DECIMAL(10, 0)) casted_decimal\n" + "FROM default.foo";
@@ -856,4 +885,22 @@ public class CoralSparkTest {
     return coralSpark.getSparkSql();
   }
 
+  private static SqlNode convertHiveSqlNodeToCoralNode(HiveToRelConverter hiveToRelConverter, SqlNode sqlNode) {
+    RelNode relNode = hiveToRelConverter.toRel(sqlNode);
+    SqlNode coralSqlNode = CoralSpark.getCoralSqlNode(relNode);
+    return coralSqlNode;
+  }
+
+  private static String translateHiveToSpark(String query) {
+    HiveToRelConverter hiveToRelConverter = TestUtils.hiveToRelConverter;
+    SqlNode sqlNode = hiveToRelConverter.toSqlNode(query);
+    if (sqlNode instanceof SqlCommand) {
+      SqlNode selectNode = ((SqlCommand) sqlNode).getSelectQuery();
+      SqlNode selectSparkNode = convertHiveSqlNodeToCoralNode(hiveToRelConverter, selectNode);
+      ((SqlCommand) sqlNode).setSelectQuery(selectSparkNode);
+    } else {
+      sqlNode = convertHiveSqlNodeToCoralNode(hiveToRelConverter, sqlNode);
+    }
+    return CoralSpark.constructSparkSQL(sqlNode);
+  }
 }

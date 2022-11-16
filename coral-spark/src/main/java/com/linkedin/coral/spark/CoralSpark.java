@@ -6,7 +6,6 @@
 package com.linkedin.coral.spark;
 
 import java.util.List;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.avro.Schema;
@@ -17,8 +16,6 @@ import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlSelect;
 
-import com.linkedin.coral.common.calcite.sql.SqlCommand;
-import com.linkedin.coral.common.calcite.sql.SqlCreateTable;
 import com.linkedin.coral.spark.containers.SparkRelInfo;
 import com.linkedin.coral.spark.containers.SparkUDFInfo;
 import com.linkedin.coral.spark.dialect.SparkSqlDialect;
