@@ -197,14 +197,16 @@ public class ViewToAvroSchemaConverter {
     } else {
       RelNode relNode = hiveToRelConverter.convertView(dbName, tableOrViewName);
       Schema schema = relToAvroSchemaConverter.convert(relNode, strictMode, forceLowercase);
-      if (forceLowercase) {
-        schema = ToLowercaseSchemaVisitor.visit(schema);
-      }
+
       Schema avroSchema = schema;
 
       // In flex mode, we assign a new set of namespace
       if (!strictMode) {
         avroSchema = SchemaUtilities.setupNameAndNamespace(schema, tableOrViewName, dbName + "." + tableOrViewName);
+      }
+
+      if (forceLowercase) {
+        avroSchema = ToLowercaseSchemaVisitor.visit(avroSchema);
       }
 
       return avroSchema;
