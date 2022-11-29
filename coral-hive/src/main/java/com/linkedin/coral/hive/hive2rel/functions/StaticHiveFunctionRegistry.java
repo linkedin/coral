@@ -429,11 +429,6 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
         STRING_STRING);
     createAddUserDefinedFunction("com.linkedin.dali.view.udf.entityhandles.PhoneNumberNormalizer",
         FunctionReturnTypes.STRING, STRING_STRING_STRING);
-    createAddUserDefinedFunction("com.linkedin.dali.views.feed.udf.GenerateDecoratedFeedUpdateData",
-        FunctionReturnTypes.arrayOfType(SqlTypeName.ANY),
-        family(SqlTypeFamily.STRING, SqlTypeFamily.MAP, SqlTypeFamily.MAP));
-    createAddUserDefinedFunction("com.linkedin.dali.views.feed.udf.UnifiedResultsToFeedUpdates",
-        FunctionReturnTypes.arrayOfType(SqlTypeName.ANY), family(SqlTypeFamily.ARRAY));
     createAddUserDefinedFunction("com.linkedin.dali.views.job.udf.GetUUID", FunctionReturnTypes.STRING, BINARY);
     createAddUserDefinedFunction("com.linkedin.dali.views.premium.udf.GetOrderUrn", FunctionReturnTypes.STRING,
         family(SqlTypeFamily.MAP, SqlTypeFamily.STRING));
