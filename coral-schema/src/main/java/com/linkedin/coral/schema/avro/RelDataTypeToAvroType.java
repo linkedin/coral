@@ -102,7 +102,6 @@ class RelDataTypeToAvroType {
       case CHAR:
         return Schema.create(Schema.Type.STRING);
       case BINARY:
-      case ANY:
         return Schema.create(Schema.Type.BYTES);
       case NULL:
         return Schema.create(Schema.Type.NULL);
