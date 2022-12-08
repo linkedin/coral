@@ -56,11 +56,13 @@ public class HiveToRelConverter extends ToRelConverter {
   public HiveToRelConverter(HiveMetastoreClient hiveMetastoreClient) {
     super(hiveMetastoreClient);
     this.parseTreeBuilder = new ParseTreeBuilder(functionResolver);
+    this.sqlValidator.setIdentifierExpansion(true);
   }
 
   public HiveToRelConverter(Map<String, Map<String, List<String>>> localMetaStore) {
     super(localMetaStore);
     this.parseTreeBuilder = new ParseTreeBuilder(functionResolver);
+    this.sqlValidator.setIdentifierExpansion(true);
   }
 
   @Override

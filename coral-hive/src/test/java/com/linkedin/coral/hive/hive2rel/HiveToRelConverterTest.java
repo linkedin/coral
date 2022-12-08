@@ -5,6 +5,7 @@
  */
 package com.linkedin.coral.hive.hive2rel;
 
+import com.linkedin.coral.transformers.CoralRelToSqlNodeConverter;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -251,6 +252,20 @@ public class HiveToRelConverterTest {
         + "    LogicalProject(m=[MAP('key1', 'value1')])\n" + "      LogicalValues(tuples=[[{ 0 }]])\n"
         + "    HiveUncollect\n" + "      LogicalProject(col=[$cor3.m])\n" + "        LogicalValues(tuples=[[{ 0 }]])\n";
     assertEquals(relString, expected);
+  }
+
+  @Test
+  public void testLateralViewExplode() {
+    String sql = "SELECT col FROM test.tableDing LATERAL VIEW explode(arr) arr_alias AS col";
+    RelNode rel = converter.convertSql(sql);
+    final CoralRelToSqlNodeConverter converter = new CoralRelToSqlNodeConverter();
+    final SqlNode sqlNode = converter.convert(rel);
+    String convertedSql = sqlNode.toString();
+    String expectedSql = "SELECT `$cor0`.`col`"
+    + "\nFROM `test`.`tableding` AS `$cor0`,"
+    + "\nLATERAL UNNEST (SELECT `$cor0`.`arr` AS `col`"
+    + "\nFROM (VALUES  (0)) AS `t` (`ZERO`)) AS `t0` (`col`) AS `t00`";
+    assertEquals(convertedSql, expectedSql);
   }
 
   @Test
