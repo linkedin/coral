@@ -1,0 +1,9 @@
+{
+  "type" : "record",
+  "name" : "v",
+  "namespace" : "default.v",
+  "fields" : [ {
+    "name" : "f1",
+    "type" : "long"
+  } ]
+}

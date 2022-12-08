@@ -9,14 +9,16 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.linkedin.avroutil1.compatibility.AvroCompatibilityHelper;
+import com.linkedin.avroutil1.compatibility.Jackson1Utils;
+
 import org.apache.avro.Schema;
+import org.apache.commons.collections.map.HashedMap;
 import org.apache.hadoop.hive.serde2.avro.AvroSerDe;
 import org.apache.hadoop.hive.serde2.typeinfo.StructTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
-import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.node.IntNode;
-import org.codehaus.jackson.node.TextNode;
 import org.testng.annotations.Test;
 
 import com.linkedin.coral.com.google.common.base.Preconditions;
@@ -105,7 +107,7 @@ public class MergeHiveSchemaWithAvroTests {
     String hive = "struct<fa:int,fb:struct<ga:int>>";
     Schema avro = struct("r1", field("fA", Schema.create(Schema.Type.INT), null, 1, null),
         field("fB", struct("r2", field("gA", Schema.create(Schema.Type.INT), null, 2, null)), null,
-            new TextNode("{\"gA\": 3}"), null));
+            ImmutableMap.of("gA", 3), null));
 
     assertSchema(avro, merge(hive, avro));
   }
@@ -160,7 +162,7 @@ public class MergeHiveSchemaWithAvroTests {
   }
 
   @Test
-  public void shouldReorderOptionalSchemaToMatchDefaultValue() {
+  public void makeNullableShouldRespectOptionOrderOfPartner() {
     String hive = "struct<fa:int,fb:struct<ga:int>,fc:int>";
     Schema avro = struct("r1",
         field("fA", Schema.createUnion(Arrays.asList(Schema.create(Schema.Type.INT), Schema.create(Schema.Type.NULL))),
@@ -168,9 +170,9 @@ public class MergeHiveSchemaWithAvroTests {
         field("fB",
             Schema.createUnion(Arrays.asList(struct("r2", field("gA", Schema.create(Schema.Type.INT), null, 2, null)),
                 Schema.create(Schema.Type.NULL))),
-            null, new TextNode("{\"gA\": 3}"), null),
-        field("fC", Schema.createUnion(Arrays.asList(Schema.create(Schema.Type.NULL), Schema.create(Schema.Type.INT))),
-            null, 1, null));
+            null, null, null),
+        field("fC", Schema.createUnion(Arrays.asList(Schema.create(Schema.Type.INT), Schema.create(Schema.Type.NULL))),
+            null, null, null));
 
     Schema expectedAvro = struct("r1",
         field("fA", Schema.createUnion(Arrays.asList(Schema.create(Schema.Type.INT), Schema.create(Schema.Type.NULL))),
@@ -178,9 +180,9 @@ public class MergeHiveSchemaWithAvroTests {
         field("fB",
             Schema.createUnion(Arrays.asList(struct("r2", field("gA", Schema.create(Schema.Type.INT), null, 2, null)),
                 Schema.create(Schema.Type.NULL))),
-            null, new TextNode("{\"gA\": 3}"), null),
+            null, null, null),
         field("fC", Schema.createUnion(Arrays.asList(Schema.create(Schema.Type.INT), Schema.create(Schema.Type.NULL))),
-            null, 1, null));
+            null, null, null));
 
     assertSchema(expectedAvro, merge(hive, avro));
   }
@@ -212,8 +214,10 @@ public class MergeHiveSchemaWithAvroTests {
 
     Schema decimalSchema = Schema.create(Schema.Type.BYTES);
     decimalSchema.addProp(AvroSerDe.AVRO_PROP_LOGICAL_TYPE, AvroSerDe.DECIMAL_TYPE_NAME);
-    decimalSchema.addProp(AvroSerDe.AVRO_PROP_PRECISION, new IntNode(4));
-    decimalSchema.addProp(AvroSerDe.AVRO_PROP_SCALE, new IntNode(2));
+    AvroCompatibilityHelper.setSchemaPropFromJsonString(decimalSchema, AvroSerDe.AVRO_PROP_PRECISION,
+        Jackson1Utils.toJsonString(new IntNode(4)), false);
+    AvroCompatibilityHelper.setSchemaPropFromJsonString(decimalSchema, AvroSerDe.AVRO_PROP_SCALE,
+        Jackson1Utils.toJsonString(new IntNode(2)), false);
 
     Schema expected =
         struct("r1", optional("fa", dateSchema), optional("fb", timestampSchema), optional("fc", decimalSchema));
@@ -247,8 +251,7 @@ public class MergeHiveSchemaWithAvroTests {
   }
 
   private void assertSchema(Schema expected, Schema actual) {
-    assertEquals(expected, actual);
-    assertEquals(expected.toString(true), actual.toString(true));
+    assertEquals(actual.toString(true), expected.toString(true));
   }
 
   private Schema merge(StructTypeInfo typeInfo, Schema avro) {
@@ -289,11 +292,14 @@ public class MergeHiveSchemaWithAvroTests {
 
   private Schema.Field nullable(Schema.Field field) {
     Preconditions.checkArgument(!AvroSerdeUtils.isNullableType(field.schema()));
-    return field(field.name(), nullable(field.schema()), field.doc(), null, field.getProps());
+    Map<String, String> props = new HashedMap();
+    AvroCompatibilityHelper.getAllPropNames(field)
+        .forEach(propName -> props.put(propName, AvroCompatibilityHelper.getFieldPropAsJsonString(field, propName)));
+    return field(field.name(), nullable(field.schema()), field.doc(), null, props);
   }
 
   private Schema nullable(Schema schema) {
-    return SchemaUtilities.makeNullable(schema);
+    return SchemaUtilities.makeNullable(schema, false);
   }
 
   private Schema nullable(Schema.Type type) {
@@ -301,17 +307,10 @@ public class MergeHiveSchemaWithAvroTests {
   }
 
   private Schema.Field field(String name, Schema schema, String doc, Object defaultValue, Map<String, String> props) {
-    Schema.Field field = new Schema.Field(name, schema, doc, (JsonNode) defaultValue);
+    Schema.Field field = AvroCompatibilityHelper.createSchemaField(name, schema, doc, defaultValue);
     if (props != null) {
-      props.forEach(field::addProp);
-    }
-    return field;
-  }
-
-  private Schema.Field field(String name, Schema schema, String doc, int defaultValue, Map<String, String> props) {
-    Schema.Field field = new Schema.Field(name, schema, doc, new IntNode(defaultValue));
-    if (props != null) {
-      props.forEach(field::addProp);
+      props.forEach((propName, propValueInJson) -> AvroCompatibilityHelper.setFieldPropFromJsonString(field, propName,
+          propValueInJson, false));
     }
     return field;
   }

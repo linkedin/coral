@@ -243,6 +243,15 @@ public class CoralSparkTest {
   }
 
   @Test
+  public void testLateralViewMapWithStructValue() {
+    RelNode relNode = TestUtils.toRelNode(String.join("\n", "", "SELECT a, t.ccol1, t.ccol2", "FROM fuzzy_union.tableH",
+        "LATERAL VIEW explode(tableH.b) t as ccol1, ccol2"));
+    String targetSql = "SELECT tableh.a, t0.ccol1, t0.ccol2\n"
+        + "FROM fuzzy_union.tableh LATERAL VIEW EXPLODE(tableh.b) t0 AS ccol1, ccol2";
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+  }
+
+  @Test
   public void testLateralViewMapOuter() {
     RelNode relNode = TestUtils.toRelNode(String.join("\n", "", "SELECT a, t.ccol1, t.ccol2", "FROM complex",
         "LATERAL VIEW OUTER explode(complex.m) t as ccol1, ccol2"));
@@ -821,6 +830,15 @@ public class CoralSparkTest {
     String expandedSql = getCoralSparkTranslatedSqlWithAliasFromCoralSchema(sourceSql);
 
     String targetSql = "SELECT *\n" + "FROM default.basecomplex";
+    assertEquals(expandedSql, targetSql);
+  }
+
+  @Test
+  public void testRedundantCastRemovedFromCaseCall() {
+    final String sourceSql = "SELECT CASE WHEN TRUE THEN NULL ELSE split(b, ' ') END AS col1 FROM complex";
+    String expandedSql = getCoralSparkTranslatedSqlWithAliasFromCoralSchema(sourceSql);
+
+    String targetSql = "SELECT CASE WHEN TRUE THEN NULL ELSE split(b, ' ') END col1\n" + "FROM default.complex";
     assertEquals(expandedSql, targetSql);
   }
 

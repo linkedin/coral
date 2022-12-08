@@ -24,9 +24,6 @@ import org.springframework.context.annotation.Configuration;
 import com.linkedin.coral.common.HiveMetastoreClient;
 import com.linkedin.coral.common.HiveMscAdapter;
 import com.linkedin.coral.coralservice.metastore.MetastoreProvider;
-import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
-import com.linkedin.coral.trino.rel2trino.RelToTrinoConverter;
-import com.linkedin.coral.trino.trino2rel.TrinoToRelConverter;
 
 import static com.linkedin.coral.coralservice.CoralServiceApplication.*;
 
@@ -38,12 +35,7 @@ import static com.linkedin.coral.coralservice.CoralServiceApplication.*;
 public class CoralProvider {
   //TODO: provide beans for fields
 
-  private static HiveMetastoreClient hiveMetastoreClient;
-
-  // Converters
-  public static HiveToRelConverter hiveToRelConverter;
-  public static TrinoToRelConverter trinoToRelConverter;
-  public static RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+  public static HiveMetastoreClient hiveMetastoreClient;
 
   // Local Metastore
   public static Driver driver;
@@ -53,8 +45,6 @@ public class CoralProvider {
   public static void initHiveMetastoreClient() throws Exception {
     // Connect to remote production Hive Metastore Client
     hiveMetastoreClient = MetastoreProvider.getMetastoreClient();
-    hiveToRelConverter = new HiveToRelConverter(hiveMetastoreClient);
-    trinoToRelConverter = new TrinoToRelConverter(hiveMetastoreClient);
   }
 
   public static void initLocalMetastore() throws IOException, HiveException, MetaException {
@@ -74,8 +64,6 @@ public class CoralProvider {
     driver = new Driver(conf);
 
     hiveMetastoreClient = new HiveMscAdapter(Hive.get(conf).getMSC());
-    hiveToRelConverter = new HiveToRelConverter(hiveMetastoreClient);
-    trinoToRelConverter = new TrinoToRelConverter(hiveMetastoreClient);
   }
 
   public static void run(Driver driver, String sql) {

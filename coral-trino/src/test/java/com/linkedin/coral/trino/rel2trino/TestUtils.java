@@ -364,6 +364,8 @@ public class TestUtils {
     run(driver, "CREATE TABLE test.duplicate_column_name_b (some_id string)");
     run(driver, "CREATE VIEW IF NOT EXISTS test.view_namesake_column_names AS \n"
         + "SELECT a.some_id FROM test.duplicate_column_name_a a LEFT JOIN ( SELECT trim(some_id) AS SOME_ID FROM test.duplicate_column_name_b) b ON a.some_id = b.some_id WHERE a.some_id != ''");
+
+    run(driver, "CREATE TABLE test.table_with_binary_column (b binary)");
   }
 
   public static RelNode convertView(String db, String view) {

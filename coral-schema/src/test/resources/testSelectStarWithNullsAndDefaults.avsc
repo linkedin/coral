@@ -7,22 +7,20 @@
     "type" : "int"
   }, {
     "name" : "Int_Field",
-    "type" : [ "null", "int" ],
+    "type" : [ "int", "null" ],
     "default" : 101
   }, {
     "name" : "Array_Col",
     "type" : [ "null", {
       "type" : "array",
       "items" : [ "null", "string" ]
-    } ],
-    "default" : null
+    } ]
   }, {
     "name" : "Map_Col",
     "type" : [ "null", {
       "type" : "map",
       "values" : [ "null", "string" ]
-    } ],
-    "default" : null
+    } ]
   }, {
     "name" : "Struct_Col",
     "type" : [ "null", {
@@ -34,8 +32,7 @@
         "type" : "boolean"
       }, {
         "name" : "Int_Field1",
-        "type" : [ "null", "int" ],
-        "default" : null
+        "type" : [ "null", "int" ]
       }, {
         "name" : "Int_Field2",
         "type" : [ "int", "null" ],
@@ -45,19 +42,16 @@
         "type" : "double"
       }, {
         "name" : "Date_String_Field",
-        "type" : [ "null", "string" ],
-        "default" : null
+        "type" : [ "null", "string" ]
       }, {
         "name" : "String_Field",
         "type" : [ "string", "null" ],
         "default" : ""
       } ]
-    } ],
-    "default" : null
+    } ]
   }, {
     "name" : "datepartition",
     "type" : [ "null", "string" ],
-    "doc" : "This is the partition column. Partition columns, if present in the schema, should also be projected in the data.",
-    "default" : null
+    "doc" : "This is the partition column. Partition columns, if present in the schema, should also be projected in the data."
   } ]
 }

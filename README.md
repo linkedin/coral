@@ -30,7 +30,7 @@ and implementing query rewrite algorithms for data governance and query optimiza
 - Coral-Pig: Converts view logical plan to Pig-latin.
 - Coral-Schema: Derives Avro schema of view using view logical plan and input Avro schemas of base tables.
 - Coral-Spark-Plan: Converts Spark plan strings to equivalent logical plan (in progress).
-- Coral-Service: Service that exposes REST APIs that allow users to interact with Coral (see [Coral-as-a-Service](##Coral-as-a-Service) for more details).
+- Coral-Service: Service that exposes REST APIs that allow users to interact with Coral (see [Coral-as-a-Service](#Coral-as-a-Service) for more details).
 
 ## How to Build
 
@@ -92,10 +92,49 @@ cd coral-service
 4. Run
 ```bash  
 ../gradlew bootRun --args='--spring.profiles.active=localMetastore'  
-```  
-Example workflow using local metastore:
+```
 
-5. Create a database called `db1` in local metastore using the /api/catalog-ops/execute endpoint
+#### To run Coral Service using the **remote metastore**:
+4. Add your kerberos client keytab file to `coral-service/src/main/resources`
+5. Appropriately replace all instances of `SET_ME` in `coral-service/src/main/resources/hive.properties`
+6. Run
+```  
+../gradlew bootRun  
+```  
+
+Then you can interact with the service using your [browser](#coral-service-ui) or the [CLI](#coral-service-cli).
+
+### Coral Service UI
+After running `../gradlew bootRun --args='--spring.profiles.active=localMetastore'` (for local metastore mode) 
+or `../gradlew bootRun` (for remote metastore mode) from coral-service module, 
+the UI can be accessed from the browser. Use the URL http://localhost:8080 to run the UI on a local browser.
+<p align="center">
+ <img src="docs/coral-service-ui/start.png" title="Coral Service UI">
+</p>
+
+The UI provides 2 features:
+#### Create a database/table/view in local metastore mode
+This feature is only available with Coral Service in local metastore mode, it calls `/api/catalog-ops/execute` API above.
+
+You can enter a SQL statement to create a database/table/view in the local metastore:
+<p align="center">
+ <img src="docs/coral-service-ui/creation.png" title="Coral Service Creation Feature">
+</p>
+
+#### Translate SQL from source language to target language
+This feature is available with Coral Service in both local and remote metastore modes, it calls `/api/translations/translate` API above.
+
+You can enter a SQL query and specify the source and target language to use Coral translation service:
+<p align="center">
+ <img src="docs/coral-service-ui/translation.png" title="Coral Service Translation Feature">
+</p>
+
+### Coral Service CLI
+Apart from the UI above, you can also interact with the service using the CLI.
+
+Example workflow for local metastore mode:
+
+1. Create a database called `db1` in local metastore using the `/api/catalog-ops/execute` endpoint
 
 ```bash
 curl --header "Content-Type: application/json" \
@@ -105,7 +144,7 @@ curl --header "Content-Type: application/json" \
 
 Creation successful
 ```
-6. Create a table called `airport` within `db1` in local metastore using the /api/catalog-ops/execute endpoint
+2. Create a table called `airport` within `db1` in local metastore using the `/api/catalog-ops/execute` endpoint
 
 ```bash
 curl --header "Content-Type: application/json" \
@@ -116,7 +155,7 @@ curl --header "Content-Type: application/json" \
 Creation successful
 ```
 
-7. Translate a query on `db1.airport` in local metastore using the /api/translations/translate endpoint
+3. Translate a query on `db1.airport` in local metastore using the `/api/translations/translate` endpoint
 
 ```bash
 curl --header "Content-Type: application/json" \
@@ -130,20 +169,13 @@ curl --header "Content-Type: application/json" \
 ```
 The translation result is:
 ```
-Original query in hive: SELECT * FROM db1.airport
-Translated to trino:
+Original query in Hive QL:
+SELECT * FROM db1.airport
+Translated to Trino SQL:
 SELECT "name", "country", "area_code", "code", "datepartition"
 FROM "db1"."airport"
 ```
 
-#### To run Coral Service using the **remote metastore**:
-4. Add your kerberos client keytab file to `coral-service/src/main/resources`
-5. Appropriately replace all instances of `SET_ME` in `coral-service/src/main/resources/hive.properties`
-6. Run
-```  
-../gradlew bootRun  
-```  
-7. Translate a query on existing table/view in remote metastore using the /translate endpoint
 
 ### Currently Supported Translation Flows
 1. Hive to Trino

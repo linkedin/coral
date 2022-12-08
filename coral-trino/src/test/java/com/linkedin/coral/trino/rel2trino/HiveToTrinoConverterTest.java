@@ -721,4 +721,24 @@ public class HiveToTrinoConverterTest {
     String expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
   }
+
+  @Test
+  public void testCastVarbinaryToVarchar() {
+    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+
+    RelNode relNode = hiveToRelConverter.convertSql("SELECT CAST(b AS STRING) FROM test.table_with_binary_column");
+    String targetSql = "SELECT \"from_utf8\"(\"b\")\n" + "FROM \"test\".\"table_with_binary_column\"";
+    String expandedSql = relToTrinoConverter.convert(relNode);
+    assertEquals(expandedSql, targetSql);
+  }
+
+  @Test
+  public void testCastVarbinaryToChar() {
+    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+
+    RelNode relNode = hiveToRelConverter.convertSql("SELECT CAST(b AS CHAR(255)) FROM test.table_with_binary_column");
+    String targetSql = "SELECT \"from_utf8\"(\"b\")\n" + "FROM \"test\".\"table_with_binary_column\"";
+    String expandedSql = relToTrinoConverter.convert(relNode);
+    assertEquals(expandedSql, targetSql);
+  }
 }

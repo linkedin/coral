@@ -30,6 +30,7 @@ import com.linkedin.coral.com.google.common.collect.HashMultimap;
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import com.linkedin.coral.com.google.common.collect.ImmutableMultimap;
 import com.linkedin.coral.com.google.common.collect.Multimap;
+import com.linkedin.coral.common.functions.CoralSqlUnnestOperator;
 import com.linkedin.coral.common.functions.Function;
 import com.linkedin.coral.common.functions.FunctionRegistry;
 import com.linkedin.coral.common.functions.FunctionReturnTypes;
@@ -428,11 +429,6 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
         STRING_STRING);
     createAddUserDefinedFunction("com.linkedin.dali.view.udf.entityhandles.PhoneNumberNormalizer",
         FunctionReturnTypes.STRING, STRING_STRING_STRING);
-    createAddUserDefinedFunction("com.linkedin.dali.views.feed.udf.GenerateDecoratedFeedUpdateData",
-        FunctionReturnTypes.arrayOfType(SqlTypeName.ANY),
-        family(SqlTypeFamily.STRING, SqlTypeFamily.MAP, SqlTypeFamily.MAP));
-    createAddUserDefinedFunction("com.linkedin.dali.views.feed.udf.UnifiedResultsToFeedUpdates",
-        FunctionReturnTypes.arrayOfType(SqlTypeName.ANY), family(SqlTypeFamily.ARRAY));
     createAddUserDefinedFunction("com.linkedin.dali.views.job.udf.GetUUID", FunctionReturnTypes.STRING, BINARY);
     createAddUserDefinedFunction("com.linkedin.dali.views.premium.udf.GetOrderUrn", FunctionReturnTypes.STRING,
         family(SqlTypeFamily.MAP, SqlTypeFamily.STRING));
@@ -527,13 +523,26 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
         FunctionReturnTypes.STRING, STRING);
     createAddUserDefinedFunction("com.linkedin.etg.business.common.udfs.MapD365OptionSet", FunctionReturnTypes.STRING,
         STRING_STRING_STRING);
-    createAddUserDefinedFunction("isb.GetProfileSections", FunctionReturnTypes.arrayOfType(SqlTypeName.ANY),
-        or(family(SqlTypeFamily.MAP, SqlTypeFamily.ARRAY), family(SqlTypeFamily.MAP)));
+
+    SqlReturnTypeInference getProfileSectionsReturnTypeInference = opBinding -> {
+      int numArgs = opBinding.getOperandCount();
+      Preconditions.checkState(numArgs == 2, "UDF isb.GetProfileSections must take 2 arguments.");
+      RelDataTypeFactory typeFactory = opBinding.getTypeFactory();
+      RelDataType retType = opBinding.getOperandType(0).getValueType();
+      return typeFactory.createArrayType(retType, -1);
+    };
+    createAddUserDefinedFunction("isb.GetProfileSections", getProfileSectionsReturnTypeInference,
+        family(SqlTypeFamily.MAP, SqlTypeFamily.ARRAY));
+
     createAddUserDefinedFunction("com.linkedin.recruiter.udf.GetEventOriginUDF", FunctionReturnTypes.STRING,
         or(STRING_STRING_STRING,
             family(SqlTypeFamily.STRING, SqlTypeFamily.STRING, SqlTypeFamily.STRING, SqlTypeFamily.STRING)));
     createAddUserDefinedFunction("com.linkedin.recruiter.udf.QueryRoutingTypeUDF", FunctionReturnTypes.STRING, STRING);
     createAddUserDefinedFunction("com.linkedin.recruiter.udf.SearchQueryUDF", FunctionReturnTypes.STRING, STRING);
+    createAddUserDefinedFunction("com.linkedin.snapshot.udf.ConstructSnapshotUrnUdf", FunctionReturnTypes.STRING,
+        family(SqlTypeFamily.NUMERIC, SqlTypeFamily.STRING));
+    createAddUserDefinedFunction("com.linkedin.snapshot.udf.SnapshotPurgeEligibleUdf", ReturnTypes.BOOLEAN,
+        family(SqlTypeFamily.NUMERIC, SqlTypeFamily.STRING));
 
     // The following UDFs are already defined using Transport UDF.
     // The class name is the corresponding Hive UDF.
@@ -581,6 +590,11 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
       return typeFactory.createArrayType(typeFactory.createMapType(typeFactory.createSqlType(SqlTypeName.VARCHAR),
           typeFactory.createSqlType(SqlTypeName.VARCHAR)), -1);
     }, or(ARRAY, STRING));
+    createAddUserDefinedFunction("com.linkedin.stdudfs.hive.daliudfs.UrnExtractorFunctionWrapper", opBinding -> {
+      RelDataTypeFactory typeFactory = opBinding.getTypeFactory();
+      return typeFactory.createArrayType(typeFactory.createMapType(typeFactory.createSqlType(SqlTypeName.VARCHAR),
+          typeFactory.createSqlType(SqlTypeName.VARCHAR)), -1);
+    }, or(ARRAY, STRING));
     createAddUserDefinedFunction("com.linkedin.udfs.standard.hive.ObfuscateMemberIdNumeric", BIGINT,
         family(SqlTypeFamily.ANY, SqlTypeFamily.STRING));
     createAddUserDefinedFunction("com.linkedin.udfs.standard.hive.ObfuscateMemberIdNumericInt", BIGINT,
@@ -610,8 +624,8 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
         STRING_STRING_STRING);
 
     // UDTFs
-    addFunctionEntry("explode", HiveExplodeOperator.EXPLODE);
-    addFunctionEntry("posexplode", HivePosExplodeOperator.POS_EXPLODE);
+    addFunctionEntry("explode", new CoralSqlUnnestOperator(false));
+    addFunctionEntry("posexplode", new CoralSqlUnnestOperator(true));
     addFunctionEntry("json_tuple", HiveJsonTupleOperator.JSON_TUPLE);
 
     // reflect functions

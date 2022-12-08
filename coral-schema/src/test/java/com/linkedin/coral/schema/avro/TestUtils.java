@@ -100,6 +100,7 @@ public class TestUtils {
     String baseNestedUnionSchema = loadSchema("base-nested-union.avsc");
     String baseComplexLowercase = loadSchema("base-complex-lowercase.avsc");
     String baseComplexNullableWithDefaults = loadSchema("base-complex-nullable-with-defaults.avsc");
+    String basePrimitive = loadSchema("base-primitive.avsc");
 
     executeCreateTableQuery("default", "basecomplex", baseComplexSchema);
     executeCreateTableQuery("default", "basecomplexunioncompatible", baseComplexUnionCompatible);
@@ -113,6 +114,7 @@ public class TestUtils {
     executeCreateTableQuery("default", "basecomplexuniontype", baseComplexUnionTypeSchema);
     executeCreateTableQuery("default", "basenestedunion", baseNestedUnionSchema);
     executeCreateTableQuery("default", "basecomplexlowercase", baseComplexLowercase);
+    executeCreateTableQuery("default", "baseprimitive", basePrimitive);
     executeCreateTableWithPartitionQuery("default", "basecasepreservation", baseCasePreservation);
     executeCreateTableWithPartitionFieldSchemaQuery("default", "basecomplexfieldschema", baseComplexFieldSchema);
     executeCreateTableWithPartitionQuery("default", "basenestedcomplex", baseNestedComplexSchema);
@@ -182,10 +184,11 @@ public class TestUtils {
   private static void executeCreateTableWithPartitionFieldSchemaQuery(String dbName, String tableName,
       String fieldSchema) {
     executeQuery("DROP TABLE IF EXISTS " + dbName + "." + tableName);
-    executeQuery("CREATE EXTERNAL TABLE " + tableName + " (" + fieldSchema + ") "
-        + "PARTITIONED BY (datepartition string) " + "ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.avro.AvroSerDe' "
-        + "STORED AS " + "INPUTFORMAT 'org.apache.hadoop.hive.ql.io.avro.AvroContainerInputFormat' "
-        + "OUTPUTFORMAT 'org.apache.hadoop.hive.ql.io.avro.AvroContainerOutputFormat'");
+    // Format is not specified as Avro because Avro 1.10 doesn't allow creating tables with field schema only.
+    // Without specifying the format, inputFormat is "org.apache.hadoop.mapred.TextInputFormat"
+    // and outputFormat is "org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat".
+    executeQuery(
+        "CREATE EXTERNAL TABLE " + tableName + " (" + fieldSchema + ") " + "PARTITIONED BY (datepartition string)");
   }
 
   private static void executeCreateFunctionQuery(String dbName, List<String> viewNames, String functionName,
