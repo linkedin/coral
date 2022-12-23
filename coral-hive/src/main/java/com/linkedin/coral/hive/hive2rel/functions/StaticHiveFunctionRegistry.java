@@ -521,6 +521,33 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
         family(SqlTypeFamily.STRING));
     createAddUserDefinedFunction("com.linkedin.orbit.emerger.coercerudfs.DynamicsLineOfBusinessCoercer",
         FunctionReturnTypes.STRING, STRING);
+    createAddUserDefinedFunction("com.linkedin.orbit.emerger.coercerudfs.GenerateId", FunctionReturnTypes.STRING,
+        new SqlOperandTypeChecker() {
+          @Override
+          public boolean checkOperandTypes(SqlCallBinding callBinding, boolean throwOnFailure) {
+            return true;
+          }
+
+          @Override
+          public SqlOperandCountRange getOperandCountRange() {
+            return SqlOperandCountRanges.from(1);
+          }
+
+          @Override
+          public String getAllowedSignatures(SqlOperator op, String opName) {
+            return opName + "(ANY, ...)";
+          }
+
+          @Override
+          public Consistency getConsistency() {
+            return Consistency.NONE;
+          }
+
+          @Override
+          public boolean isOptional(int i) {
+            return false;
+          }
+        });
     createAddUserDefinedFunction("com.linkedin.etg.business.common.udfs.MapD365OptionSet", FunctionReturnTypes.STRING,
         STRING_STRING_STRING);
 
