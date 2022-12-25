@@ -3,7 +3,7 @@
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
-package com.linkedin.coral.hive.hive2rel;
+package com.linkedin.coral.common;
 
 import java.util.Collection;
 import java.util.List;
@@ -20,25 +20,25 @@ import org.apache.calcite.sql.validate.SqlNameMatcher;
 import org.apache.calcite.util.Util;
 
 import com.linkedin.coral.common.functions.Function;
-import com.linkedin.coral.hive.hive2rel.functions.HiveFunctionResolver;
+import com.linkedin.coral.common.functions.FunctionResolver;
 
 
 /**
- * Class to resolve Dali function names in SQL definition based on
+ * Class to resolve Coral operator names in SQL definition based on
  * the mapping stored in table parameters in the metastore.
  */
-public class DaliOperatorTable implements SqlOperatorTable {
+public class CoralOperatorTable implements SqlOperatorTable {
   // TODO: support injection framework to inject same function resolver here and ParseTreeBuilder.
   // For now, we create another instance since the function registry is simple.
-  private final HiveFunctionResolver funcResolver;
+  private final FunctionResolver funcResolver;
 
-  public DaliOperatorTable(HiveFunctionResolver funcResolver) {
+  public CoralOperatorTable(FunctionResolver funcResolver) {
     this.funcResolver = funcResolver;
   }
 
   /**
-   * Resolves functions names to corresponding Calcite UDF. HiveFunctionResolver ensures that
-   * {@code sqlIdentifier} has function name or corresponding class name for Dali functions. All function registry
+   * Resolves operator names to corresponding Calcite operator. FunctionResolver ensures that
+   * {@code sqlIdentifier} has operator name or corresponding class name for Coral operator. All registry
    * lookups performed by this class are case-insensitive.
    *
    * Calcite invokes this function multiple times during analysis phase to validate SqlCall operators. This is

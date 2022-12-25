@@ -33,6 +33,7 @@ import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import com.linkedin.coral.common.HiveTable;
 import com.linkedin.coral.common.functions.Function;
 import com.linkedin.coral.common.functions.FunctionRegistry;
+import com.linkedin.coral.common.functions.FunctionResolver;
 import com.linkedin.coral.common.functions.UnknownSqlFunctionException;
 
 import static com.google.common.base.Preconditions.*;
@@ -43,14 +44,13 @@ import static org.apache.calcite.sql.type.OperandTypes.*;
 /**
  * Class to resolve hive function names in SQL to Function.
  */
-public class HiveFunctionResolver {
+public class HiveFunctionResolver extends FunctionResolver {
 
-  public final FunctionRegistry registry;
   private final ConcurrentHashMap<String, Function> dynamicFunctionRegistry;
   private final List<SqlOperator> operators;
 
   public HiveFunctionResolver(FunctionRegistry registry, ConcurrentHashMap<String, Function> dynamicRegistry) {
-    this.registry = registry;
+    super(registry);
     this.dynamicFunctionRegistry = dynamicRegistry;
     this.operators = new ArrayList<>(SqlStdOperatorTable.instance().getOperatorList());
     operators.add(HiveRLikeOperator.REGEXP);
@@ -142,6 +142,7 @@ public class HiveFunctionResolver {
    * @param functionName function name to resolve
    * @return list of matching Functions or empty list if there is no match
    */
+  @Override
   public Collection<Function> resolve(String functionName) {
     Collection<Function> staticLookup = registry.lookup(functionName);
     if (!staticLookup.isEmpty()) {

@@ -22,6 +22,7 @@ import org.apache.calcite.sql2rel.SqlRexConvertletTable;
 import org.apache.calcite.sql2rel.SqlToRelConverter;
 import org.apache.hadoop.hive.metastore.api.Table;
 
+import com.linkedin.coral.common.CoralOperatorTable;
 import com.linkedin.coral.common.HiveMetastoreClient;
 import com.linkedin.coral.common.ToRelConverter;
 import com.linkedin.coral.hive.hive2rel.functions.HiveFunctionResolver;
@@ -75,7 +76,7 @@ public class HiveToRelConverter extends ToRelConverter {
 
   @Override
   protected SqlOperatorTable getOperatorTable() {
-    return ChainedSqlOperatorTable.of(SqlStdOperatorTable.instance(), new DaliOperatorTable(functionResolver));
+    return ChainedSqlOperatorTable.of(SqlStdOperatorTable.instance(), new CoralOperatorTable(functionResolver));
   }
 
   @Override
