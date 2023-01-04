@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2022 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2023 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -12,7 +12,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.calcite.adapter.java.JavaTypeFactory;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.volcano.VolcanoPlanner;
-import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlOperatorTable;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
@@ -90,11 +89,6 @@ public class TrinoToRelConverter extends ToRelConverter {
     SqlNode parsedSqlNode = TrinoParserDriver.parse(trimmedSql).accept(parseTreeBuilder, parserVisitorContext);
     SqlNode convertedSqlNode = parsedSqlNode.accept(new Trino2CoralOperatorConverter());
     return convertedSqlNode;
-  }
-
-  @Override
-  protected RelNode standardizeRel(RelNode relNode) {
-    return relNode;
   }
 
   private static String trimParenthesis(String value) {

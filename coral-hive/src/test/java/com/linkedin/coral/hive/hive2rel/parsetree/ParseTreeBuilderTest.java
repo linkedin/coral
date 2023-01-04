@@ -84,8 +84,6 @@ public class ParseTreeBuilderTest {
         "SELECT SUM(c), COUNT(*) from foo",
         // ORDER BY
         "SELECT a, b from foo order by a DESC",
-        // complex types
-        "SELECT c[0], s.name from complex",
         // nested non-correlated subquery
         "SELECT a, b from (select x as a, y as b from bar) f",
         // subquery with IN clause
@@ -181,6 +179,9 @@ public class ParseTreeBuilderTest {
         ImmutableList.of(
             "SELECT key, value FROM (SELECT MAP('key1', 'value1') as m) tmp LATERAL VIEW EXPLODE(m) m_alias",
             "SELECT `key`, `value` FROM (SELECT MAP['key1', 'value1'] AS `m`) AS `tmp`, LATERAL(UNNEST(`m`)) AS `m_alias`"),
+
+        // should convert arr[i] in Hive SqlNode to arr[i + 1] in Coral SqlNode
+        ImmutableList.of("SELECT c[0], s.name from complex", "select `c`[1], `s`.`name` from `complex`"),
 
         // hive doesn't support casting as varbinary
         ImmutableList.of("SELECT cast(a as binary) FROM foo", "SELECT cast(`a` as binary) FROM `foo`"),
