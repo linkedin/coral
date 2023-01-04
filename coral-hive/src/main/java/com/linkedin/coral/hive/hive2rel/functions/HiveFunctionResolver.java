@@ -1,5 +1,5 @@
 /**
- * Copyright 2018-2022 LinkedIn Corporation. All rights reserved.
+ * Copyright 2018-2023 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -205,14 +205,15 @@ public class HiveFunctionResolver {
 
   private @Nonnull Collection<Function> resolveDaliFunctionDynamically(String functionName, String funcClassName,
       HiveTable hiveTable, int numOfOperands) {
-    Function Function = new Function(funcClassName,
+    Function function = new Function(funcClassName,
         new VersionedSqlUserDefinedFunction(
             new SqlUserDefinedFunction(new SqlIdentifier(funcClassName, ZERO),
                 new HiveGenericUDFReturnTypeInference(funcClassName, hiveTable.getDaliUdfDependencies()), null,
                 createSqlOperandTypeChecker(numOfOperands), null, null),
             hiveTable.getDaliUdfDependencies(), functionName));
-    dynamicFunctionRegistry.put(funcClassName, Function);
-    return ImmutableList.of(Function);
+    dynamicFunctionRegistry.put(funcClassName, function);
+    StaticHiveFunctionRegistry.FUNCTION_MAP.put(funcClassName.toLowerCase(), function);
+    return ImmutableList.of(function);
   }
 
   private @Nonnull Function unresolvedFunction(String functionName) {
