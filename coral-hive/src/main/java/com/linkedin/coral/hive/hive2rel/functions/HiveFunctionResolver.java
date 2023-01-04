@@ -205,6 +205,9 @@ public class HiveFunctionResolver {
 
   private @Nonnull Collection<Function> resolveDaliFunctionDynamically(String functionName, String funcClassName,
       HiveTable hiveTable, int numOfOperands) {
+    if (dynamicFunctionRegistry.contains(funcClassName)) {
+      return ImmutableList.of(dynamicFunctionRegistry.get(functionName));
+    }
     Function function = new Function(funcClassName,
         new VersionedSqlUserDefinedFunction(
             new SqlUserDefinedFunction(new SqlIdentifier(funcClassName, ZERO),
@@ -212,7 +215,6 @@ public class HiveFunctionResolver {
                 createSqlOperandTypeChecker(numOfOperands), null, null),
             hiveTable.getDaliUdfDependencies(), functionName));
     dynamicFunctionRegistry.put(funcClassName, function);
-    StaticHiveFunctionRegistry.FUNCTION_MAP.put(funcClassName.toLowerCase(), function);
     return ImmutableList.of(function);
   }
 
