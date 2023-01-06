@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2022 LinkedIn Corporation. All rights reserved.
+ * Copyright 2019-2023 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -597,6 +597,11 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
         family(
             ImmutableList.of(SqlTypeFamily.NUMERIC, SqlTypeFamily.STRING, SqlTypeFamily.STRING, SqlTypeFamily.STRING)));
     createAddUserDefinedFunction("com.linkedin.stdudfs.userinterfacelookup.hive.UserInterfaceLookup",
+        FunctionReturnTypes.STRING,
+        or(family(Collections.nCopies(8, SqlTypeFamily.STRING)),
+            family(SqlTypeFamily.STRING, SqlTypeFamily.STRING, SqlTypeFamily.STRING, SqlTypeFamily.STRING,
+                SqlTypeFamily.NUMERIC, SqlTypeFamily.STRING, SqlTypeFamily.STRING, SqlTypeFamily.STRING)));
+    createAddUserDefinedFunction("com.linkedin.stdudfs.userinterfacelookuptest.hive.UserInterfaceLookupTest",
         FunctionReturnTypes.STRING,
         or(family(Collections.nCopies(8, SqlTypeFamily.STRING)),
             family(SqlTypeFamily.STRING, SqlTypeFamily.STRING, SqlTypeFamily.STRING, SqlTypeFamily.STRING,
