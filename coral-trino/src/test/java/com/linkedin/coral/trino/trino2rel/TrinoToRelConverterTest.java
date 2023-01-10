@@ -69,23 +69,23 @@ public class TrinoToRelConverterTest {
         .add(ImmutableList.of("select * from foo",
             "LogicalProject(show=[$0], a=[$1], b=[$2], x=[$3], y=[$4])\n"
                 + "  LogicalTableScan(table=[[hive, default, foo]])\n",
-            "SELECT \"show\", \"a\", \"b\", \"x\", \"y\"\n" + "FROM \"default\".\"foo\""))
+            "SELECT *\n" + "FROM \"default\".\"foo\""))
         .add(ImmutableList.of("select * from foo /* end */",
             "LogicalProject(show=[$0], a=[$1], b=[$2], x=[$3], y=[$4])\n"
                 + "  LogicalTableScan(table=[[hive, default, foo]])\n",
-            "SELECT \"show\", \"a\", \"b\", \"x\", \"y\"\n" + "FROM \"default\".\"foo\""))
+            "SELECT *\n" + "FROM \"default\".\"foo\""))
         .add(ImmutableList.of("/* start */ select * from foo",
             "LogicalProject(show=[$0], a=[$1], b=[$2], x=[$3], y=[$4])\n"
                 + "  LogicalTableScan(table=[[hive, default, foo]])\n",
-            "SELECT \"show\", \"a\", \"b\", \"x\", \"y\"\n" + "FROM \"default\".\"foo\""))
+            "SELECT *\n" + "FROM \"default\".\"foo\""))
         .add(ImmutableList.of("/* start */ select * /* middle */ from foo /* end */",
             "LogicalProject(show=[$0], a=[$1], b=[$2], x=[$3], y=[$4])\n"
                 + "  LogicalTableScan(table=[[hive, default, foo]])\n",
-            "SELECT \"show\", \"a\", \"b\", \"x\", \"y\"\n" + "FROM \"default\".\"foo\""))
+            "SELECT *\n" + "FROM \"default\".\"foo\""))
         .add(ImmutableList.of("-- start \n select * -- junk -- hi\n from foo -- done",
             "LogicalProject(show=[$0], a=[$1], b=[$2], x=[$3], y=[$4])\n"
                 + "  LogicalTableScan(table=[[hive, default, foo]])\n",
-            "SELECT \"show\", \"a\", \"b\", \"x\", \"y\"\n" + "FROM \"default\".\"foo\""))
+            "SELECT *\n" + "FROM \"default\".\"foo\""))
         .add(ImmutableList.of("select * from foo a (v, w, x, y, z)",
             "LogicalProject(V=[$0], W=[$1], X=[$2], Y=[$3], Z=[$4])\n"
                 + "  LogicalTableScan(table=[[hive, default, foo]])\n",
@@ -131,7 +131,7 @@ public class TrinoToRelConverterTest {
         .add(ImmutableList.of("select x from unnest(array[1, 2, 3]) t(x)",
             "LogicalProject(X=[$0])\n" + "  HiveUncollect\n" + "    LogicalProject(col=[ARRAY(1, 2, 3)])\n"
                 + "      LogicalValues(tuples=[[{ 0 }]])\n",
-            "SELECT \"X\"\n" + "FROM UNNEST(ARRAY[1, 2, 3]) AS \"t0\" (\"X\")"))
+            "SELECT *\n" + "FROM UNNEST(ARRAY[1, 2, 3]) AS \"t0\" (\"X\")"))
         .add(ImmutableList.of("select * from my_table cross join unnest(x)",
             "LogicalProject(x=[$0], y=[$1], z=[$2], EXPR$0=[$3])\n"
                 + "  LogicalCorrelate(correlation=[$cor0], joinType=[inner], requiredColumns=[{0}])\n"
@@ -155,7 +155,7 @@ public class TrinoToRelConverterTest {
         .add(ImmutableList.of("select * from unnest(array[1, 2, 3]) with ordinality t(x, y)",
             "LogicalProject(X=[$0], Y=[$1])\n" + "  HiveUncollect(withOrdinality=[true])\n"
                 + "    LogicalProject(col=[ARRAY(1, 2, 3)])\n" + "      LogicalValues(tuples=[[{ 0 }]])\n",
-            "SELECT \"X\", \"Y\"\n" + "FROM UNNEST(ARRAY[1, 2, 3]) WITH ORDINALITY AS \"t0\" (\"X\", \"Y\")"))
+            "SELECT *\n" + "FROM UNNEST(ARRAY[1, 2, 3]) WITH ORDINALITY AS \"t0\" (\"X\", \"Y\")"))
         .add(ImmutableList.of("select * from my_table cross join unnest(x) with ordinality",
             "LogicalProject(x=[$0], y=[$1], z=[$2], EXPR$0=[$3], ORDINALITY=[$4])\n"
                 + "  LogicalCorrelate(correlation=[$cor0], joinType=[inner], requiredColumns=[{0}])\n"
@@ -188,16 +188,15 @@ public class TrinoToRelConverterTest {
             "SELECT \"a\" AS \"MY PRICE\"\n" + "FROM \"default\".\"foo\""))
         .add(ImmutableList.of("select * from a limit all",
             "LogicalProject(b=[$0], id=[$1], x=[$2])\n" + "  LogicalTableScan(table=[[hive, default, a]])\n",
-            "SELECT \"b\", \"id\", \"x\"\n" + "FROM \"default\".\"a\""))
+            "SELECT *\n" + "FROM \"default\".\"a\""))
         .add(ImmutableList.of("select * from a order by x limit all",
             "LogicalSort(sort0=[$2], dir0=[ASC-nulls-first])\n" + "  LogicalProject(b=[$0], id=[$1], x=[$2])\n"
                 + "    LogicalTableScan(table=[[hive, default, a]])\n",
-            "SELECT \"b\", \"id\", \"x\"\n" + "FROM \"default\".\"a\"\n" + "ORDER BY \"x\" NULLS FIRST"))
+            "SELECT *\n" + "FROM \"default\".\"a\"\n" + "ORDER BY \"x\" NULLS FIRST"))
         .add(ImmutableList.of("select * from a union select * from b", "LogicalUnion(all=[false])\n"
             + "  LogicalProject(b=[$0], id=[$1], x=[$2])\n" + "    LogicalTableScan(table=[[hive, default, a]])\n"
             + "  LogicalProject(foobar=[$0], id=[$1], y=[$2])\n" + "    LogicalTableScan(table=[[hive, default, b]])\n",
-            "SELECT \"b\", \"id\", \"x\"\n" + "FROM \"default\".\"a\"\n" + "UNION\n"
-                + "SELECT \"foobar\", \"id\", \"y\"\n" + "FROM \"default\".\"b\""))
+            "SELECT *\n" + "FROM \"default\".\"a\"\n" + "UNION\n" + "SELECT *\n" + "FROM \"default\".\"b\""))
         .add(ImmutableList.of("select strpos('foobar', 'b') as pos",
             "LogicalProject(POS=[instr('FOOBAR', 'B')])\n" + "  LogicalValues(tuples=[[{ 0 }]])\n",
             "SELECT \"strpos\"('FOOBAR', 'B') AS \"POS\"\n" + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")"))
@@ -230,12 +229,12 @@ public class TrinoToRelConverterTest {
   @Test(dataProvider = "support")
   public void testSupport(String trinoSql, String expectedRelString, String expectedSql) {
     RelNode relNode = trinoToRelConverter.convertSql(trinoSql);
-    assertEquals(relToStr(relNode), expectedRelString);
+    assertEquals(expectedRelString, relToStr(relNode));
 
     RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
     // Convert rel node back to Sql
     String expandedSql = relToTrinoConverter.convert(relNode);
-    assertEquals(expandedSql, expectedSql);
+    assertEquals(expectedSql, expandedSql);
   }
 
 }

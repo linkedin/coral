@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2022 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2023 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -103,6 +103,9 @@ public class RelToTrinoConverter extends RelToSqlConverter {
     e.getVariablesSet();
     Result x = visitChild(0, e.getInput());
     parseCorrelTable(e, x);
+    if (isStar(e.getChildExps(), e.getInput().getRowType(), e.getRowType())) {
+      return x;
+    }
 
     final Builder builder = x.builder(e, Clause.SELECT);
     final List<SqlNode> selectList = new ArrayList<>();
