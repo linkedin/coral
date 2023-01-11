@@ -1,23 +1,29 @@
 /**
- * Copyright 2022 LinkedIn Corporation. All rights reserved.
+ * Copyright 2022-2023 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
 package com.linkedin.coral.trino.rel2trino;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
+import org.apache.calcite.sql.SqlBasicTypeNameSpec;
 import org.apache.calcite.sql.SqlCall;
+import org.apache.calcite.sql.SqlDataTypeSpec;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlNodeList;
 import org.apache.calcite.sql.SqlSelect;
+import org.apache.calcite.sql.SqlTypeNameSpec;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
+import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.sql.util.SqlShuttle;
 import org.apache.calcite.sql.validate.SqlValidatorUtil;
 
 import static org.apache.calcite.rel.rel2sql.SqlImplementor.*;
+import static org.apache.calcite.sql.parser.SqlParserPos.*;
 
 
 /**
@@ -44,11 +50,29 @@ public class IntermediateTrinoSqlNodeRewriter extends SqlShuttle {
 
   public static SqlCall getTransformedSqlCall(SqlCall sqlCall) {
     switch (sqlCall.getOperator().kind) {
+      case EQUALS:
+        return getTransformedEqualsOperatorSqlCall(sqlCall);
       case SELECT:
         return getTransformedSqlSelectSqlCall(sqlCall);
       default:
         return sqlCall;
     }
+  }
+
+  // Append TryCast operator to both operands to cast each operand's data type to VARCHAR
+  private static SqlCall getTransformedEqualsOperatorSqlCall(SqlCall sqlCall) {
+    List<SqlNode> updatedOperands = new ArrayList<>();
+
+    final SqlTypeNameSpec varcharTypeNameSpec = new SqlBasicTypeNameSpec(SqlTypeName.VARCHAR, ZERO);
+    SqlDataTypeSpec varcharSqlDataTypeSpec = new SqlDataTypeSpec(varcharTypeNameSpec, ZERO);
+
+    for (SqlNode operand : sqlCall.getOperandList()) {
+      SqlNode newOperand = TrinoTryCastFunction.INSTANCE.createCall(POS,
+          new ArrayList<>(Arrays.asList(operand, varcharSqlDataTypeSpec)));
+      updatedOperands.add(newOperand);
+    }
+
+    return sqlCall.getOperator().createCall(POS, updatedOperands);
   }
 
   /**
