@@ -107,7 +107,7 @@ class RelDataTypeToAvroType {
         return Schema.create(Schema.Type.NULL);
       case TIMESTAMP:
         Schema schema = Schema.create(Schema.Type.LONG);
-        schema.addProp("logicalType", "timestamp");
+        schema.addProp("logicalType", "timestamp-millis");
         return schema;
       case DECIMAL:
         JsonNodeFactory factory = JsonNodeFactory.instance;
