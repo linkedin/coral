@@ -6,7 +6,7 @@
     "name" : "timestamp_field",
     "type" : [ "null", {
       "type" : "long",
-      "logicalType" : "timestamp"
+      "logicalType" : "timestamp-millis"
     } ],
     "default" : null
   } ]
