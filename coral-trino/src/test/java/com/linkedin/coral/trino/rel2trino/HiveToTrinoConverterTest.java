@@ -368,6 +368,16 @@ public class HiveToTrinoConverterTest {
   }
 
   @Test
+  public void testSelectNull() {
+    RelNode relNode = hiveToRelConverter.convertSql("SELECT NULL, NULL AS TMP");
+    String targetSql = "SELECT NULL, NULL AS \"TMP\"\n" + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
+
+    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+    String expandedSql = relToTrinoConverter.convert(relNode);
+    assertEquals(expandedSql, targetSql);
+  }
+
+  @Test
   public void testFromUnixTimeOneParameter() {
     RelNode relNode = hiveToRelConverter.convertSql("SELECT from_unixtime(10000)");
     String targetSql = "SELECT \"format_datetime\"(\"from_unixtime\"(10000), 'yyyy-MM-dd HH:mm:ss')\n"
