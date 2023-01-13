@@ -33,7 +33,7 @@ jobs:
           java-version: 1.8
 
       - name: 3. Perform build
-        run: ./gradlew build
+        run: ./gradlew -i build
 
       - name: 4. Perform release
         # Release job, only for pushes to the main development branch
