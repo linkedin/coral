@@ -46,12 +46,12 @@ public class ToNullableSchemaVisitor extends AvroSchemaVisitor<Schema> {
 
   @Override
   public Schema array(Schema array, Schema element) {
-    return Schema.createArray(element);
+    return Schema.createArray(SchemaUtilities.makeNullable(element, false));
   }
 
   @Override
   public Schema map(Schema map, Schema value) {
-    return Schema.createMap(value);
+    return Schema.createMap(SchemaUtilities.makeNullable(value, false));
   }
 
   @Override
