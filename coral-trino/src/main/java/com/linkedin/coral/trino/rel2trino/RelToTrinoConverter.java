@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2022 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2023 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -77,7 +77,9 @@ public class RelToTrinoConverter extends RelToSqlConverter {
    */
   public String convert(RelNode relNode) {
     RelNode rel = convertRel(relNode, configs);
-    return convertToSqlNode(rel).accept(new TrinoSqlRewriter()).toSqlString(TrinoSqlDialect.INSTANCE).toString();
+    SqlNode sqlNode = convertToSqlNode(rel);
+    SqlNode sqlNodeWithConvertedUDF = sqlNode.accept(new TrinoSqlUDFConverter(configs));
+    return sqlNodeWithConvertedUDF.accept(new TrinoSqlRewriter()).toSqlString(TrinoSqlDialect.INSTANCE).toString();
   }
 
   /**

@@ -248,13 +248,7 @@ public class Calcite2TrinoUDFConverter {
         }
       }
 
-      final UDFTransformer transformer = CalciteTrinoUDFMap.getUDFTransformer(operatorName, call.operands.size());
-      if (transformer != null && shouldTransformOperator(operatorName)) {
-        return adjustReturnTypeWithCast(rexBuilder,
-            super.visitCall((RexCall) transformer.transformCall(rexBuilder, call.getOperands())));
-      }
-
-      if (operatorName.startsWith("com.linkedin") && transformer == null) {
+      if (operatorName.startsWith("com.linkedin")) {
         return visitUnregisteredUDF(call);
       }
 
@@ -480,10 +474,6 @@ public class Calcite2TrinoUDFConverter {
       }
       results.add(rexBuilder.makeCall(SqlStdOperatorTable.ARRAY_VALUE_CONSTRUCTOR, values));
       return rexBuilder.makeCall(call.getOperator(), results);
-    }
-
-    private boolean shouldTransformOperator(String operatorName) {
-      return !("to_date".equalsIgnoreCase(operatorName) && configs.getOrDefault(AVOID_TRANSFORM_TO_DATE_UDF, false));
     }
 
     /**
