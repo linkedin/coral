@@ -3,10 +3,15 @@ apply from: "spark_itest.gradle"
 dependencies {
   compile project(':coral-hive')
   compile project(':coral-schema')
+  compile('org.apache.spark:spark-sql_2.13:3.2.0') {
+    exclude group: 'com.fasterxml.jackson', module: 'jackson-bom'
+    exclude group: 'org.apache.avro', module: 'avro-mapred'
+  }
 
 
   compileOnly deps.'spark'.'sql'
 
+  testCompile project(':coral-trino')
   testCompile(deps.'hive'.'hive-exec-core') {
     exclude group: 'org.apache.avro', module: 'avro-tools'
     // These exclusions are required to prevent duplicate classes since we include
