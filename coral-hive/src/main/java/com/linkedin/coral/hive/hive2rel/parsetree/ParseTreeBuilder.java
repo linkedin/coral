@@ -6,6 +6,7 @@
 package com.linkedin.coral.hive.hive2rel.parsetree;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -20,6 +21,7 @@ import org.apache.calcite.sql.SqlAsOperator;
 import org.apache.calcite.sql.SqlBasicCall;
 import org.apache.calcite.sql.SqlBasicTypeNameSpec;
 import org.apache.calcite.sql.SqlCall;
+import org.apache.calcite.sql.SqlCharStringLiteral;
 import org.apache.calcite.sql.SqlDataTypeSpec;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlIntervalQualifier;
@@ -43,6 +45,7 @@ import org.apache.hadoop.hive.metastore.api.Table;
 
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import com.linkedin.coral.com.google.common.collect.Iterables;
+import com.linkedin.coral.common.calcite.sql.util.SqlDdlNodes;
 import com.linkedin.coral.common.functions.CoralSqlUnnestOperator;
 import com.linkedin.coral.common.functions.Function;
 import com.linkedin.coral.common.functions.FunctionFieldReferenceOperator;
@@ -609,6 +612,96 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
   }
 
   @Override
+  protected SqlNode visitCreateTable(ASTNode node, ParseContext ctx) {
+    CreateTableOptions ctOptions = new CreateTableOptions();
+    for (Node child : node.getChildren()) {
+      ASTNode ast = (ASTNode) child;
+      switch (ast.getType()) {
+        case HiveParser.TOK_TABNAME:
+          ctOptions.name = (SqlIdentifier) visitTabnameNode(ast, ctx);
+          break;
+        case HiveParser.TOK_IFNOTEXISTS:
+          ctOptions.ifNotExists = true;
+          break;
+        case HiveParser.TOK_TABCOLLIST:
+          ctOptions.columnList = (SqlNodeList) visitColumnList(ast, ctx);
+          break;
+        case HiveParser.TOK_QUERY:
+          ctOptions.query = visitQueryNode(ast, ctx);
+          break;
+        case HiveParser.TOK_TABLESERIALIZER:
+          ctOptions.tableSerializer = visitTableSerializer(ast, ctx);
+          break;
+        case HiveParser.TOK_TABLEFILEFORMAT:
+          ctOptions.tableFileFormat = (SqlNodeList) visitTableFileFormat(ast, ctx);
+          break;
+        case HiveParser.TOK_FILEFORMAT_GENERIC:
+          ctOptions.tableFileFormat = (SqlNodeList) visitFileFormatGeneric(ast, ctx);
+          break;
+        case HiveParser.TOK_TABLEROWFORMAT:
+          ctOptions.tableRowFormat = (SqlCharStringLiteral) visitTableRowFormat(ast, ctx);
+          break;
+        default:
+          break;
+      }
+    }
+    return SqlDdlNodes.createTable(ZERO, false, ctOptions.ifNotExists, ctOptions.name, ctOptions.columnList,
+        ctOptions.query, ctOptions.tableSerializer, ctOptions.tableFileFormat, ctOptions.tableRowFormat);
+  }
+
+  @Override
+  protected SqlNode visitColumnList(ASTNode node, ParseContext ctx) {
+    List<SqlNode> sqlNodeList = visitChildren(node, ctx);
+    return new SqlNodeList(sqlNodeList, ZERO);
+  }
+
+  @Override
+  protected SqlNode visitColumn(ASTNode node, ParseContext ctx) {
+    return visitChildren(node, ctx).get(0);
+  }
+
+  @Override
+  protected SqlNode visitIfNotExists(ASTNode node, ParseContext ctx) {
+    return SqlLiteral.createBoolean(true, ZERO);
+  }
+
+  @Override
+  protected SqlNode visitTableRowFormat(ASTNode node, ParseContext ctx) {
+    return visitChildren(node, ctx).get(0);
+  }
+
+  @Override
+  protected SqlNode visitSerdeName(ASTNode node, ParseContext ctx) {
+    return visit((ASTNode) node.getChildren().get(0), ctx);
+  }
+
+  @Override
+  protected SqlNode visitTableSerializer(ASTNode node, ParseContext ctx) {
+    return visitChildren(node, ctx).get(0);
+  }
+
+  @Override
+  protected SqlNode visitTableFileFormat(ASTNode node, ParseContext ctx) {
+    List<SqlNode> sqlNodeList = visitChildren(node, ctx);
+    return new SqlNodeList(sqlNodeList, ZERO);
+  }
+
+  @Override
+  protected SqlNode visitFileFormatGeneric(ASTNode node, ParseContext ctx) {
+    return new SqlNodeList(Arrays.asList(visitChildren(node, ctx).get(0)), ZERO);
+  }
+
+  @Override
+  protected SqlNode visitSerdeProps(ASTNode node, ParseContext ctx) {
+    return visitChildren(node, ctx).get(0);
+  }
+
+  @Override
+  protected SqlNode visitTableRowFormatField(ASTNode node, ParseContext ctx) {
+    return visitChildren(node, ctx).get(0);
+  }
+
+  @Override
   protected SqlNode visitTabRefNode(ASTNode node, ParseContext ctx) {
     List<SqlNode> sqlNodes = visitChildren(node, ctx);
     checkState(sqlNodes != null && !sqlNodes.isEmpty());
@@ -1058,5 +1151,15 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     Optional<Table> getHiveTable() {
       return hiveTable;
     }
+  }
+
+  static class CreateTableOptions {
+    SqlIdentifier name;
+    SqlNodeList columnList;
+    SqlNode query;
+    boolean ifNotExists;
+    SqlNode tableSerializer;
+    SqlNodeList tableFileFormat;
+    SqlCharStringLiteral tableRowFormat;
   }
 }

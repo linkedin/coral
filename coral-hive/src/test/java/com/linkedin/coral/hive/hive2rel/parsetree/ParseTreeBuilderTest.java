@@ -147,6 +147,7 @@ public class ParseTreeBuilderTest {
         "SELECT LAST_VALUE(c) OVER (PARTITION BY a ORDER BY b ROWS BETWEEN 1 PRECEDING AND CURRENT ROW) AS min_c FROM foo",
         "SELECT STDDEV(c) OVER (PARTITION BY a ORDER BY b RANGE BETWEEN CURRENT ROW AND 1 FOLLOWING) AS min_c FROM foo",
         "SELECT VARIANCE(c) OVER (PARTITION BY a ORDER BY b ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS min_c FROM foo");
+
     // We wrap the SQL to be tested here rather than wrap each SQL statement in the its own array in the constant
     return convertSql.stream().map(x -> new Object[] { x }).iterator();
   }
@@ -193,7 +194,28 @@ public class ParseTreeBuilderTest {
             "SELECT CASE WHEN `a` THEN 10 WHEN `b` THEN 20 ELSE 30 END FROM `foo`"),
         ImmutableList.of("SELECT named_struct('abc', 123, 'def', 234.23) FROM foo",
             "SELECT `named_struct`('abc', 123, 'def', 234.23) FROM `foo`"),
-        ImmutableList.of("SELECT 0L FROM foo", "SELECT 0 FROM `foo`"));
+        ImmutableList.of("SELECT 0L FROM foo", "SELECT 0 FROM `foo`"),
+
+        //Basic CTAS query
+        ImmutableList.of("CREATE TABLE sample AS select * from tmp", "CREATE TABLE `sample` AS select * from `tmp`"),
+        //CTAS query with IF NOT EXISTS keyword
+        ImmutableList.of("CREATE TABLE IF NOT EXISTS sample AS SELECT * FROM tmp",
+            "CREATE TABLE IF NOT EXISTS `sample` AS select * from `tmp`"),
+        //CTAS query with storage format
+        ImmutableList.of("CREATE TABLE sample STORED AS ORC AS SELECT * FROM tmp",
+            "CREATE TABLE `sample` STORED AS `ORC` AS select * from `tmp`"),
+        //CTAS query with input and output formats
+        ImmutableList.of(
+            "CREATE TABLE sample STORED AS INPUTFORMAT 'com.ly.spark.example.serde.io.SerDeExampleInputFormat' OUTPUTFORMAT 'com.ly.spark.example.serde.io.SerDeExampleOutputFormat' AS SELECT * FROM tmp",
+            "CREATE TABLE `sample` STORED AS INPUTFORMAT 'com.ly.spark.example.serde.io.SerDeExampleInputFormat' OUTPUTFORMAT 'com.ly.spark.example.serde.io.SerDeExampleOutputFormat' AS SELECT * FROM `tmp`"),
+        //CTAS query with serde
+        ImmutableList.of(
+            "CREATE TABLE sample ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.avro.AvroSerDe' STORED AS INPUTFORMAT 'com.ly.spark.example.serde.io.SerDeExampleInputFormat' OUTPUTFORMAT 'com.ly.spark.example.serde.io.SerDeExampleOutputFormat' AS SELECT * FROM tmp",
+            "CREATE TABLE `sample` ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.avro.AvroSerDe' STORED AS INPUTFORMAT 'com.ly.spark.example.serde.io.SerDeExampleInputFormat' OUTPUTFORMAT 'com.ly.spark.example.serde.io.SerDeExampleOutputFormat' AS SELECT * FROM `tmp`"),
+        //CTAS query with wow format delimiter fields
+        ImmutableList.of(
+            "CREATE TABLE sample ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS INPUTFORMAT 'com.ly.spark.example.serde.io.SerDeExampleInputFormat' OUTPUTFORMAT 'com.ly.spark.example.serde.io.SerDeExampleOutputFormat' AS SELECT * FROM tmp",
+            "CREATE TABLE `sample` ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' STORED AS INPUTFORMAT 'com.ly.spark.example.serde.io.SerDeExampleInputFormat' OUTPUTFORMAT 'com.ly.spark.example.serde.io.SerDeExampleOutputFormat' AS SELECT * FROM `tmp`"));
 
     return convertAndValidateSql.stream().map(x -> new Object[] { x.get(0), x.get(1) }).iterator();
   }

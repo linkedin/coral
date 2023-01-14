@@ -133,8 +133,6 @@ public abstract class ToRelConverter {
     return toRel(sqlNode);
   }
 
-  // TODO change back to protected once the relevant tests move to the common package
-  @VisibleForTesting
   public SqlNode toSqlNode(String sql) {
     return toSqlNode(sql, null);
   }
@@ -161,9 +159,9 @@ public abstract class ToRelConverter {
     return toSqlNode(stringViewExpandedText, table);
   }
 
-  @VisibleForTesting
-  protected RelNode toRel(SqlNode sqlNode) {
+  public RelNode toRel(SqlNode sqlNode) {
     RelRoot root = getSqlToRelConverter().convertQuery(sqlNode, true, true);
+
     return standardizeRel(root.rel);
   }
 

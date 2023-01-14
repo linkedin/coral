@@ -24,9 +24,11 @@ import org.apache.hadoop.hive.metastore.api.Table;
 
 import com.linkedin.coral.common.HiveMetastoreClient;
 import com.linkedin.coral.common.ToRelConverter;
+import com.linkedin.coral.common.calcite.DdlSqlValidator;
 import com.linkedin.coral.hive.hive2rel.functions.HiveFunctionResolver;
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 import com.linkedin.coral.hive.hive2rel.parsetree.ParseTreeBuilder;
+import com.linkedin.coral.hive.hive2rel.validators.HiveDdlSqlValidator;
 
 import static com.linkedin.coral.hive.hive2rel.HiveSqlConformance.HIVE_SQL;
 
@@ -52,6 +54,7 @@ public class HiveToRelConverter extends ToRelConverter {
   // The validator must be reused
   SqlValidator sqlValidator = new HiveSqlValidator(getOperatorTable(), getCalciteCatalogReader(),
       ((JavaTypeFactory) getRelBuilder().getTypeFactory()), HIVE_SQL);
+  DdlSqlValidator ddlSqlValidator = new HiveDdlSqlValidator();
 
   public HiveToRelConverter(HiveMetastoreClient hiveMetastoreClient) {
     super(hiveMetastoreClient);
@@ -92,7 +95,9 @@ public class HiveToRelConverter extends ToRelConverter {
 
   @Override
   protected SqlNode toSqlNode(String sql, Table hiveView) {
-    return parseTreeBuilder.process(trimParenthesis(sql), hiveView);
+    SqlNode sqlNode = parseTreeBuilder.process(trimParenthesis(sql), hiveView);
+    ddlSqlValidator.validate(sqlNode);
+    return sqlNode;
   }
 
   @Override

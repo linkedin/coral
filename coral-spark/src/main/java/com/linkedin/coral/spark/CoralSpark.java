@@ -71,6 +71,22 @@ public class CoralSpark {
   }
 
   /**
+   * Users use this function to get CoralSqlNode from CoralRelNode
+   * This should be used when user need to get CoralSqlNode from CoralRelNode by applying
+   * spark specific transformations on CoralRelNode
+   * with Coral-schema output schema
+   *
+   * @return [[SqlNode]]
+   */
+  public static SqlNode getCoralSqlNode(RelNode irRelNode) {
+    SparkRelInfo sparkRelInfo = IRRelToSparkRelTransformer.transform(irRelNode);
+    RelNode sparkRelNode = sparkRelInfo.getSparkRelNode();
+    CoralRelToSqlNodeConverter rel2sql = new CoralRelToSqlNodeConverter();
+    SqlNode coralSqlNode = rel2sql.convert(sparkRelNode);
+    return coralSqlNode;
+  }
+
+  /**
    * Users use this function as the main API for getting CoralSpark instance.
    * This should be used when user need to align the Coral-spark translated SQL
    * with Coral-schema output schema
@@ -111,6 +127,24 @@ public class CoralSpark {
     CoralRelToSqlNodeConverter rel2sql = new CoralRelToSqlNodeConverter();
     SqlNode coralSqlNode = rel2sql.convert(sparkRelNode);
     SqlNode sparkSqlNode = coralSqlNode.accept(new CoralSqlNodeToSparkSqlNodeConverter());
+    SqlNode rewrittenSparkSqlNode = sparkSqlNode.accept(new SparkSqlRewriter());
+    return rewrittenSparkSqlNode.toSqlString(SparkSqlDialect.INSTANCE).getSql();
+  }
+
+  /**
+   * This function returns a completely expanded SQL statement in Spark SQL Dialect.
+   *
+   * A SQL statement is 'completely expanded' if it doesn't depend
+   * on (or selects from) Hive views, but instead, just on base tables.
+  
+   * Converts CoralSqlNode to Spark SQL
+   *
+   * @param sqlNode CoralSqlNode which will be translated to SparkSql
+   *
+   * @return SQL String in Spark SQL dialect which is 'completely expanded'
+   */
+  public static String constructSparkSQL(SqlNode sqlNode) {
+    SqlNode sparkSqlNode = sqlNode.accept(new CoralSqlNodeToSparkSqlNodeConverter());
     SqlNode rewrittenSparkSqlNode = sparkSqlNode.accept(new SparkSqlRewriter());
     return rewrittenSparkSqlNode.toSqlString(SparkSqlDialect.INSTANCE).getSql();
   }
