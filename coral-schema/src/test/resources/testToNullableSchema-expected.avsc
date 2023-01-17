@@ -18,14 +18,14 @@
     "name" : "Array_Col",
     "type" : [ "null", {
       "type" : "array",
-      "items" : "string"
+      "items" : [ "null", "string" ]
     } ],
     "default" : null
   }, {
     "name" : "Map_Col",
     "type" : [ "null", {
       "type" : "map",
-      "values" : "string"
+      "values" : [ "null", "string" ]
     } ],
     "default" : null
   }, {
@@ -86,7 +86,7 @@
         "name" : "Map_Col",
         "type" : [ "null", {
           "type" : "map",
-          "values" : "string"
+          "values" : [ "null", "string" ]
         } ],
         "default" : null
       } ]
