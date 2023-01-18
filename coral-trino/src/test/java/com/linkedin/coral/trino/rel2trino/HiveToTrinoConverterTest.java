@@ -368,7 +368,7 @@ public class HiveToTrinoConverterTest {
   }
 
   @Test
-  public void testSelectNull() {
+  public void testSelectNullFields() {
     RelNode relNode = hiveToRelConverter.convertSql("SELECT NULL, NULL AS TMP");
     String targetSql = "SELECT NULL, NULL AS \"TMP\"\n" + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
 
