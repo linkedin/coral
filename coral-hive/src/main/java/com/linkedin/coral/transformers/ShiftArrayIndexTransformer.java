@@ -16,22 +16,22 @@ import org.apache.calcite.sql.type.ArraySqlType;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.sql.validate.SqlValidator;
 
-import com.linkedin.coral.common.transformers.OperatorTransformer;
+import com.linkedin.coral.common.transformers.SqlCallTransformer;
 
 
 /**
  * Transformer to convert SqlCall from array[i] to array[i+1] to ensure array indexes start at 1.
  */
-public class OneBasedArrayIndexTransformer extends OperatorTransformer {
+public class ShiftArrayIndexTransformer extends SqlCallTransformer {
 
   private static final String ITEM_OPERATOR = "ITEM";
 
-  public OneBasedArrayIndexTransformer(SqlValidator sqlValidator) {
+  public ShiftArrayIndexTransformer(SqlValidator sqlValidator) {
     super(sqlValidator);
   }
 
   @Override
-  public boolean condition(SqlCall sqlCall) {
+  public boolean predicate(SqlCall sqlCall) {
     if (ITEM_OPERATOR.equalsIgnoreCase(sqlCall.getOperator().getName())) {
       final SqlNode columnNode = sqlCall.getOperandList().get(0);
       return getRelDataType(columnNode) instanceof ArraySqlType;

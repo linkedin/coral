@@ -19,27 +19,37 @@ import org.apache.calcite.sql.validate.SqlValidator;
 /**
  * Abstract class for generic transformations on SqlCalls
  */
-public abstract class OperatorTransformer {
+public abstract class SqlCallTransformer {
   private SqlValidator sqlValidator;
   private final List<SqlSelect> topSelectNodes = new ArrayList<>();
 
-  public OperatorTransformer() {
+  public SqlCallTransformer() {
 
   }
 
-  public OperatorTransformer(SqlValidator sqlValidator) {
+  public SqlCallTransformer(SqlValidator sqlValidator) {
     this.sqlValidator = sqlValidator;
   }
 
-  protected abstract boolean condition(SqlCall sqlCall);
+  /**
+   * Predicate of the transformer, it’s used to determine if the SqlCall should be transformed or not
+   */
+  protected abstract boolean predicate(SqlCall sqlCall);
 
+  /**
+   * Implementation of the transformation, returns the transformed SqlCall
+   */
   protected abstract SqlCall transform(SqlCall sqlCall);
 
+  /**
+   * Public entry of the transformer, it returns the result of transformed SqlCall if `condition(SqlCall)` returns true,
+   * otherwise returns the input SqlCall without any transformation
+   */
   public SqlCall apply(SqlCall sqlCall) {
     if (sqlCall instanceof SqlSelect) {
       this.topSelectNodes.add((SqlSelect) sqlCall);
     }
-    if (condition(sqlCall)) {
+    if (predicate(sqlCall)) {
       return transform(sqlCall);
     } else {
       return sqlCall;
@@ -47,20 +57,24 @@ public abstract class OperatorTransformer {
   }
 
   /**
-   * To get the RelDatatype of a SqlNode, we iterate through `topSelectNodes` in reverse chronological order,
+   * To get the RelDatatype of a SqlNode, we iterate through `topSelectNodes` from the latest visited to the oldest visited,
    * for each `topSelectNode`, we create a minimum dummy SqlSelect: SELECT `sqlNode` FROM `topSelectNode.getFrom()`
    * If the SqlValidator is able to validate the dummy SqlSelect, return the SqlNode's RelDataType directly.
    *
    * We can't just use the latest visited `topSelectNode` to construct the dummy SqlSelect because of
    * the following corner case:
+   *
+   * CREATE db.tbl(col1 array(int));
+   *
    * SELECT * FROM (
    *   SELECT col1 FROM db.tbl
    * ) LATERAL JOIN EXPLODE(col1) t AS a WHERE t.a = 0
-   * If we want to derive the datatype of `t.a`, the latest visited `topSelectNode` will be `SELECT * FROM db.tbl`,
+   *
+   * If we want to derive the datatype of `t.a`, the latest visited `topSelectNode` will be `SELECT col1 FROM db.tbl`,
    * however, `t.a` doesn't exist in `db.tbl`, so it would throw exception.
-   * Therefore, we need to store all the `topSelectNode` (both inner `SELECT * FROM db.tbl` and the whole SQL)
-   * in the `topSelectNodes` list and traverse them in reverse chronological order, return the datatype directly
-   * once the datatype can be derived without exception.
+   * Therefore, we need to store all the `topSelectNodes` (both inner `SELECT col1 FROM db.tbl` and the whole SQL)
+   * in the `topSelectNodes` list and traverse them from the latest visited to the oldest visited, return the datatype
+   * directly once it can be derived without exception.
    */
   protected RelDataType getRelDataType(SqlNode sqlNode) {
     if (sqlValidator == null) {
