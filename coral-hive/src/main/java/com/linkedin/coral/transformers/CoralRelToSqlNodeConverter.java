@@ -21,6 +21,7 @@ import org.apache.calcite.rel.core.Uncollect;
 import org.apache.calcite.rel.logical.LogicalTableFunctionScan;
 import org.apache.calcite.rel.rel2sql.RelToSqlConverter;
 import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexCorrelVariable;
 import org.apache.calcite.rex.RexFieldAccess;
@@ -35,7 +36,9 @@ import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlLateralOperator;
 import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlNode;
+import org.apache.calcite.sql.SqlNodeList;
 import org.apache.calcite.sql.SqlOperator;
+import org.apache.calcite.sql.SqlUtil;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.SqlTypeName;
@@ -73,6 +76,34 @@ public class CoralRelToSqlNodeConverter extends RelToSqlConverter {
         .withNullCollation(NullCollation.HIGH);
 
     return new SqlDialect(context);
+  }
+
+  // override is required to prevent select nodes such as SELECT CAST(NULL AS NULL)
+  @Override
+  public Result visit(Project e) {
+    e.getVariablesSet();
+    Result x = visitChild(0, e.getInput());
+    parseCorrelTable(e, x);
+    if (isStar(e.getChildExps(), e.getInput().getRowType(), e.getRowType())) {
+      return x;
+    }
+    final Builder builder = x.builder(e, Clause.SELECT);
+    final List<SqlNode> selectList = new ArrayList<>();
+    for (RexNode ref : e.getChildExps()) {
+      SqlNode sqlExpr = builder.context.toSql(null, ref);
+      RelDataTypeField targetField = e.getRowType().getFieldList().get(selectList.size());
+      if (SqlUtil.isNullLiteral(sqlExpr, false) && !targetField.toString().equalsIgnoreCase("NULL")) {
+        sqlExpr = castNullType(sqlExpr, e.getRowType().getFieldList().get(selectList.size()));
+      }
+      addSelect(selectList, sqlExpr, e.getRowType());
+    }
+
+    builder.setSelect(new SqlNodeList(selectList, POS));
+    return builder.result();
+  }
+
+  private SqlNode castNullType(SqlNode sqlNodeNull, RelDataTypeField field) {
+    return SqlStdOperatorTable.CAST.createCall(POS, sqlNodeNull, dialect.getCastSpec(field.getType()));
   }
 
   /**
