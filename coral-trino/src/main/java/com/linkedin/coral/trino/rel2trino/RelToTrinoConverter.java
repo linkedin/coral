@@ -107,8 +107,23 @@ public class RelToTrinoConverter extends RelToSqlConverter {
     return null;
   }
 
-  private SqlCall as(SqlNode e, String alias) {
-    return SqlStdOperatorTable.AS.createCall(POS, e, new SqlIdentifier(alias, POS));
+  // override is required to prevent select nodes such as SELECT CAST(NULL AS NULL)
+  @Override
+  public Result visit(Project e) {
+    e.getVariablesSet();
+    Result x = visitChild(0, e.getInput());
+    parseCorrelTable(e, x);
+    if (isStar(e.getChildExps(), e.getInput().getRowType(), e.getRowType())) {
+      return x;
+    }
+    final Builder builder = x.builder(e, Clause.SELECT);
+    final List<SqlNode> selectList = new ArrayList<>();
+    for (RexNode ref : e.getChildExps()) {
+      SqlNode sqlExpr = builder.context.toSql(null, ref);
+      addSelect(selectList, sqlExpr, e.getRowType());
+    }
+    builder.setSelect(new SqlNodeList(selectList, POS));
+    return builder.result();
   }
 
   public Result visit(Uncollect e) {

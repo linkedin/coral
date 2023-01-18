@@ -9,17 +9,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.calcite.sql.SqlBasicCall;
 import org.apache.calcite.sql.SqlBasicTypeNameSpec;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlDataTypeSpec;
 import org.apache.calcite.sql.SqlIdentifier;
-import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlNodeList;
 import org.apache.calcite.sql.SqlSelect;
 import org.apache.calcite.sql.SqlTypeNameSpec;
-import org.apache.calcite.sql.SqlUtil;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.sql.util.SqlShuttle;
@@ -53,8 +50,6 @@ public class IntermediateTrinoSqlNodeRewriter extends SqlShuttle {
 
   public static SqlCall getTransformedSqlCall(SqlCall sqlCall) {
     switch (sqlCall.getOperator().kind) {
-      case AS:
-        return getTransformedAsSqlCall(sqlCall);
       case EQUALS:
         return getTransformedEqualsOperatorSqlCall(sqlCall);
       case SELECT:
@@ -62,19 +57,6 @@ public class IntermediateTrinoSqlNodeRewriter extends SqlShuttle {
       default:
         return sqlCall;
     }
-  }
-
-  private static SqlCall getTransformedAsSqlCall(SqlCall sqlCall) {
-    // This transformation aims to remove redundant CAST operator on NULL values
-    if (sqlCall.operandCount() == 2 && (sqlCall.operand(0) instanceof SqlBasicCall)
-        && isNullToNullCastPresent(sqlCall.operand(0))) {
-      SqlLiteral nullLiteral = SqlLiteral.createNull(ZERO);
-      List<SqlNode> newAsSqlCallOperands = new ArrayList<>();
-      newAsSqlCallOperands.add(nullLiteral);
-      newAsSqlCallOperands.add(sqlCall.operand(1));
-      return SqlStdOperatorTable.AS.createCall(ZERO, newAsSqlCallOperands);
-    }
-    return sqlCall;
   }
 
   // Append TryCast operator to both operands to cast each operand's data type to VARCHAR
@@ -112,9 +94,6 @@ public class IntermediateTrinoSqlNodeRewriter extends SqlShuttle {
         // In parent class "as" is skipped for "select a.b as b", here we will keep the "a.b as b"
         if (nestedFieldAccess) {
           selectNode = SqlStdOperatorTable.AS.createCall(POS, selectNode, new SqlIdentifier(name, POS));
-        } else if (selectNode instanceof SqlBasicCall && isNullToNullCastPresent((SqlBasicCall) selectNode)) {
-          // Simplify CAST(NULL AS NULL) type selectNode to NULL
-          selectNode = SqlLiteral.createNull(POS);
         }
         modifiedSelectList.add(selectNode);
       }
@@ -122,14 +101,4 @@ public class IntermediateTrinoSqlNodeRewriter extends SqlShuttle {
     }
     return sqlCall;
   }
-
-  private static boolean isNullToNullCastPresent(SqlBasicCall sqlBasicCall) {
-    if (sqlBasicCall.getOperator().getName().equalsIgnoreCase("CAST") && sqlBasicCall.operandCount() == 2) {
-      final SqlNode left = sqlBasicCall.operand(0);
-      final SqlNode right = sqlBasicCall.operand(1);
-      return SqlUtil.isNullLiteral(left, false) && right.toString().equalsIgnoreCase("NULL");
-    }
-    return false;
-  }
-
 }
