@@ -6,7 +6,8 @@
 package com.linkedin.coral.common.transformers;
 
 import java.util.Arrays;
-import java.util.List;
+
+import com.google.common.collect.ImmutableList;
 
 import org.apache.calcite.sql.SqlCall;
 
@@ -15,26 +16,23 @@ import org.apache.calcite.sql.SqlCall;
  * Container for SqlCallTransformer
  */
 public class SqlCallTransformers {
-  private final List<SqlCallTransformer> operatorTransformers;
+  private final ImmutableList<SqlCallTransformer> sqlCallTransformers;
 
-  SqlCallTransformers(List<SqlCallTransformer> operatorTransformers) {
-    this.operatorTransformers = operatorTransformers;
+  SqlCallTransformers(ImmutableList<SqlCallTransformer> sqlCallTransformers) {
+    this.sqlCallTransformers = sqlCallTransformers;
   }
 
-  public static SqlCallTransformers of(SqlCallTransformer... operatorTransformers) {
-    return new SqlCallTransformers(Arrays.asList(operatorTransformers));
+  public static SqlCallTransformers of(SqlCallTransformer... sqlCallTransformers) {
+    return new SqlCallTransformers(
+        ImmutableList.<SqlCallTransformer> builder().addAll(Arrays.asList(sqlCallTransformers)).build());
   }
 
-  public static SqlCallTransformers of(List<SqlCallTransformer> operatorTransformers) {
-    return new SqlCallTransformers(operatorTransformers);
-  }
-
-  public void register(SqlCallTransformer operatorTransformer) {
-    operatorTransformers.add(operatorTransformer);
+  public static SqlCallTransformers of(ImmutableList<SqlCallTransformer> sqlCallTransformers) {
+    return new SqlCallTransformers(sqlCallTransformers);
   }
 
   public SqlCall apply(SqlCall sqlCall) {
-    for (SqlCallTransformer sqlCallTransformer : operatorTransformers) {
+    for (SqlCallTransformer sqlCallTransformer : sqlCallTransformers) {
       sqlCall = sqlCallTransformer.apply(sqlCall);
     }
     return sqlCall;

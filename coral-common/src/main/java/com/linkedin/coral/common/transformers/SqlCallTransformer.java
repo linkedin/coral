@@ -76,8 +76,9 @@ public abstract class SqlCallTransformer {
    * in the `topSelectNodes` list and traverse them from the latest visited to the oldest visited, return the datatype
    * directly once it can be derived without exception.
    *
-   * Note: This implementation is subject to change. Ideally, it should not assume that the parent SqlSelect is visited
-   * before determining the datatype of the child SqlNode.
+   * Note: This implementation assumes that the parent SqlSelect is visited before determining the datatype of the child
+   * SqlNode, which is typically achieved by traversing the SqlNode tree using SqlShuttle.
+   * The implementation might be updated to not rely on this assumption for determining the datatype of the child SqlNode.
    */
   protected RelDataType getRelDataType(SqlNode sqlNode) {
     if (sqlValidator == null) {
