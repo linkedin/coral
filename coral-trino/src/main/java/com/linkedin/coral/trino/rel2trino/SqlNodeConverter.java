@@ -27,19 +27,16 @@ import static org.apache.calcite.sql.parser.SqlParserPos.*;
 
 
 /**
- * IntermediateTrinoSqlNodeRewriter rewrites the TrinoSqlNode representation. It transforms the sqlCalls
- * in the TrinoSqlNode to be compatible with Trino engine in a backward compatible manner.
- *
- * This is achieved by visiting the TrinoSqlNode AST in a pre-order traversal manner and
- * transforming each SqlNode (SqlCall), wherever required.
+ * SqlNodeConverter transforms the sqlNodes
+ * in the input SqlNode representation to be compatible with Trino engine.
  * The transformation may involve change in operator, reordering the operands
- * or even re-constructing the SqlCall.
+ * or even re-constructing the SqlNode.
  *
  * NOTE: This is a temporary class which hosts certain transformations which were previously done in RelToTrinoConverter.
  * This class will be refactored once standardized CoralIR is integrated in the CoralRelNode to trino SQL translation path.
  */
-public class IntermediateTrinoSqlNodeRewriter extends SqlShuttle {
-  public IntermediateTrinoSqlNodeRewriter() {
+public class SqlNodeConverter extends SqlShuttle {
+  public SqlNodeConverter() {
   }
 
   @Override
@@ -48,10 +45,15 @@ public class IntermediateTrinoSqlNodeRewriter extends SqlShuttle {
     return super.visit(transformedSqlCall);
   }
 
-  public static SqlCall getTransformedSqlCall(SqlCall sqlCall) {
+  private static SqlCall getTransformedSqlCall(SqlCall sqlCall) {
     switch (sqlCall.getOperator().kind) {
       case EQUALS:
-        return getTransformedEqualsOperatorSqlCall(sqlCall);
+      case GREATER_THAN:
+      case GREATER_THAN_OR_EQUAL:
+      case LESS_THAN:
+      case LESS_THAN_OR_EQUAL:
+      case NOT_EQUALS:
+        return castOperandsToVarchar(sqlCall);
       case SELECT:
         return getTransformedSqlSelectSqlCall(sqlCall);
       default:
@@ -59,8 +61,13 @@ public class IntermediateTrinoSqlNodeRewriter extends SqlShuttle {
     }
   }
 
-  // Append TryCast operator to both operands to cast each operand's data type to VARCHAR
-  private static SqlCall getTransformedEqualsOperatorSqlCall(SqlCall sqlCall) {
+  /**
+   * Coral IR generates a SqlNode representation where operands of a relational operator may not be compatible.
+   * This transformation appends TRY_CAST operator to both operands and casts each operand's data type to VARCHAR to ensure operand inter-compatibility.
+   * @param sqlCall sqlCall input SqlCall
+   * @return transformed SqlCall
+   */
+  private static SqlCall castOperandsToVarchar(SqlCall sqlCall) {
     List<SqlNode> updatedOperands = new ArrayList<>();
 
     final SqlTypeNameSpec varcharTypeNameSpec = new SqlBasicTypeNameSpec(SqlTypeName.VARCHAR, ZERO);
@@ -77,7 +84,7 @@ public class IntermediateTrinoSqlNodeRewriter extends SqlShuttle {
 
   /**
    * Input SqlCall to this method will access nested fields as is, such as SELECT a.b, a.c.
-   * The below transformations appends an AS operator on nested fields and updated the SqlCall to: SELECT a.b AS b, a.c AS c
+   * The below transformation appends an AS operator on nested fields and updates the SqlCall to: SELECT a.b AS b, a.c AS c
    * @param sqlCall input SqlCall
    * @return transformed SqlCall
    */
@@ -90,8 +97,8 @@ public class IntermediateTrinoSqlNodeRewriter extends SqlShuttle {
         final boolean nestedFieldAccess =
             selectNode instanceof SqlIdentifier && ((SqlIdentifier) selectNode).names.size() > 1;
 
-        // always add "AS" when accessing nested fields.
-        // In parent class "as" is skipped for "select a.b as b", here we will keep the "a.b as b"
+        // Always add "AS" when accessing nested fields.
+        // In parent class "AS" clause is skipped for "SELECT a.b AS b". Here we will keep the "a.b AS b"
         if (nestedFieldAccess) {
           selectNode = SqlStdOperatorTable.AS.createCall(POS, selectNode, new SqlIdentifier(name, POS));
         }

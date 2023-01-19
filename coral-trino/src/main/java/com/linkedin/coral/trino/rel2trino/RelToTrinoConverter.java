@@ -84,9 +84,8 @@ public class RelToTrinoConverter extends RelToSqlConverter {
     SqlNode sqlNodeWithUDFOperatorConverted = sqlNode.accept(new CoralToTrinoSqlCallConverter(configs));
     return sqlNodeWithUDFOperatorConverted.accept(new TrinoSqlRewriter()).toSqlString(TrinoSqlDialect.INSTANCE)
         .toString();
-//    SqlNode trinoSqlNode = convertToSqlNode(rel);
-//    SqlNode intermediateTrinoSqlNode = trinoSqlNode.accept(new IntermediateTrinoSqlNodeRewriter());
-//    return intermediateTrinoSqlNode.accept(new TrinoSqlRewriter()).toSqlString(TrinoSqlDialect.INSTANCE).toString();
+//    SqlNode transformedSqlNode = sqlNode.accept(new SqlNodeConverter());
+//    return transformedSqlNode.accept(new TrinoSqlRewriter()).toSqlString(TrinoSqlDialect.INSTANCE).toString();
   }
 
   /**
@@ -107,7 +106,14 @@ public class RelToTrinoConverter extends RelToSqlConverter {
     return null;
   }
 
-  // override is required to prevent select nodes such as SELECT CAST(NULL AS NULL)
+  /**
+   * A Project RelNode represents a relational operator that projects a subset of columns from an input relational expression.
+   * When projecting a NULL column, super's implementation casts this column to the derived data type to ensure that the column can be interpreted correctly.
+   * If the derived data type is NULL, super's implementation casts the NULL column to a NULL data type.
+   * This override prevents appending NULL cast on a NULL column.
+   * @param e Project RelNode.
+   * @return Result of converting the RelNode to a SqlNode.
+   */
   @Override
   public Result visit(Project e) {
     e.getVariablesSet();
@@ -121,6 +127,7 @@ public class RelToTrinoConverter extends RelToSqlConverter {
     for (RexNode ref : e.getChildExps()) {
       SqlNode sqlExpr = builder.context.toSql(null, ref);
 
+      // Append the CAST operator when the derived data type is NON-NULL.
       RelDataTypeField targetField = e.getRowType().getFieldList().get(selectList.size());
       if (SqlUtil.isNullLiteral(sqlExpr, false) && !targetField.getValue().getSqlTypeName().equals(SqlTypeName.NULL)) {
         sqlExpr = SqlStdOperatorTable.CAST.createCall(POS, sqlExpr, dialect.getCastSpec(targetField.getType()));

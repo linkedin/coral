@@ -117,7 +117,7 @@ public class HiveToTrinoConverterTest {
 
         { "test", "view_with_outer_explode_string_array", "SELECT \"$cor0\".\"a\" AS \"a\", \"t0\".\"c\" AS \"c\"\n"
             + "FROM \"test\".\"table_with_string_array\" AS \"$cor0\"\n"
-            + "CROSS JOIN UNNEST(\"if\"(\"$cor0\".\"b\" IS NOT NULL AND CAST(CARDINALITY(\"$cor0\".\"b\") AS INTEGER) > 0, \"$cor0\".\"b\", ARRAY[NULL])) AS \"t0\" (\"c\")" },
+            + "CROSS JOIN UNNEST(\"if\"(\"$cor0\".\"b\" IS NOT NULL AND TRY_CAST(CAST(CARDINALITY(\"$cor0\".\"b\") AS INTEGER) AS VARCHAR) > TRY_CAST(0 AS VARCHAR), \"$cor0\".\"b\", ARRAY[NULL])) AS \"t0\" (\"c\")" },
 
         { "test", "view_with_explode_struct_array", "SELECT \"$cor0\".\"a\" AS \"a\", \"t0\".\"c\" AS \"c\"\n"
             + "FROM \"test\".\"table_with_struct_array\" AS \"$cor0\"\n"
@@ -133,7 +133,7 @@ public class HiveToTrinoConverterTest {
 
         { "test", "view_with_outer_explode_map", "SELECT \"$cor0\".\"a\" AS \"a\", \"t0\".\"c\" AS \"c\", \"t0\".\"d\" AS \"d\"\n"
             + "FROM \"test\".\"table_with_map\" AS \"$cor0\"\n"
-            + "CROSS JOIN UNNEST(\"if\"(\"$cor0\".\"b\" IS NOT NULL AND CAST(CARDINALITY(\"$cor0\".\"b\") AS INTEGER) > 0, \"$cor0\".\"b\", MAP (ARRAY[NULL], ARRAY[NULL]))) AS \"t0\" (\"c\", \"d\")" },
+            + "CROSS JOIN UNNEST(\"if\"(\"$cor0\".\"b\" IS NOT NULL AND TRY_CAST(CAST(CARDINALITY(\"$cor0\".\"b\") AS INTEGER) AS VARCHAR) > TRY_CAST(0 AS VARCHAR), \"$cor0\".\"b\", MAP (ARRAY[NULL], ARRAY[NULL]))) AS \"t0\" (\"c\", \"d\")" },
 
         { "test", "map_array_view", "SELECT MAP (ARRAY['key1', 'key2'], ARRAY['value1', 'value2']) AS \"simple_map_col\", MAP (ARRAY['key1', 'key2'], ARRAY[MAP (ARRAY['a', 'c'], ARRAY['b', 'd']), MAP (ARRAY['a', 'c'], ARRAY['b', 'd'])]) AS \"nested_map_col\"\n"
             + "FROM \"test\".\"tablea\" AS \"tablea\"" },
@@ -299,7 +299,7 @@ public class HiveToTrinoConverterTest {
         "SELECT col FROM (SELECT ARRAY('a1', 'a2') as a) tmp LATERAL VIEW OUTER POSEXPLODE(a) a_alias AS pos, col");
     String targetSql = "SELECT \"t2\".\"col\" AS \"col\"\n" + "FROM (SELECT ARRAY['a1', 'a2'] AS \"a\"\n"
         + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")) AS \"$cor4\"\n"
-        + "CROSS JOIN UNNEST(\"if\"(\"$cor4\".\"a\" IS NOT NULL AND CAST(CARDINALITY(\"$cor4\".\"a\") AS INTEGER) > 0, \"$cor4\".\"a\", ARRAY[NULL])) WITH ORDINALITY AS \"t2\" (\"col\", \"pos\")";
+        + "CROSS JOIN UNNEST(\"if\"(\"$cor4\".\"a\" IS NOT NULL AND TRY_CAST(CAST(CARDINALITY(\"$cor4\".\"a\") AS INTEGER) AS VARCHAR) > TRY_CAST(0 AS VARCHAR), \"$cor4\".\"a\", ARRAY[NULL])) WITH ORDINALITY AS \"t2\" (\"col\", \"pos\")";
 
     RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
     String expandedSql = relToTrinoConverter.convert(relNode);
@@ -324,7 +324,7 @@ public class HiveToTrinoConverterTest {
     RelNode relNode = hiveToRelConverter.convertView("test", "view_with_outer_explode_struct_array");
     String targetSql = "SELECT \"$cor9\".\"a\" AS \"a\", \"t0\".\"c\" AS \"c\"\n"
         + "FROM \"test\".\"table_with_struct_array\" AS \"$cor9\"\n"
-        + "CROSS JOIN UNNEST(\"if\"(\"$cor9\".\"b\" IS NOT NULL AND CAST(CARDINALITY(\"$cor9\".\"b\") AS INTEGER) > 0, \"$cor9\".\"b\", ARRAY[NULL])) AS \"t0\" (\"c\")";
+        + "CROSS JOIN UNNEST(\"if\"(\"$cor9\".\"b\" IS NOT NULL AND TRY_CAST(CAST(CARDINALITY(\"$cor9\".\"b\") AS INTEGER) AS VARCHAR) > TRY_CAST(0 AS VARCHAR), \"$cor9\".\"b\", ARRAY[NULL])) AS \"t0\" (\"c\")";
 
     RelToTrinoConverter relToTrinoConverter =
         new RelToTrinoConverter(ImmutableMap.of(SUPPORT_LEGACY_UNNEST_ARRAY_OF_STRUCT, true));
@@ -372,6 +372,18 @@ public class HiveToTrinoConverterTest {
     RelNode relNode = hiveToRelConverter.convertSql("SELECT NULL, NULL AS TMP, CAST(NULL AS BINARY)");
     String targetSql =
         "SELECT NULL, NULL AS \"TMP\", CAST(NULL AS VARBINARY)\n" + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
+
+    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+    String expandedSql = relToTrinoConverter.convert(relNode);
+    assertEquals(expandedSql, targetSql);
+  }
+
+  @Test
+  public void testRelationalOperators() {
+    RelNode relNode = hiveToRelConverter.convertSql("SELECT 1 > 2 AS col1, 2 <= 3 AS col2 WHERE 3=3");
+    String targetSql =
+        "SELECT TRY_CAST(1 AS VARCHAR) > TRY_CAST(2 AS VARCHAR) AS \"col1\", TRY_CAST(2 AS VARCHAR) <= TRY_CAST(3 AS VARCHAR) AS \"col2\"\n"
+            + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")\n" + "WHERE TRY_CAST(3 AS VARCHAR) = TRY_CAST(3 AS VARCHAR)";
 
     RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
     String expandedSql = relToTrinoConverter.convert(relNode);
