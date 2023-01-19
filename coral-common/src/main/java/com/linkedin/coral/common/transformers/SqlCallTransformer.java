@@ -82,7 +82,7 @@ public abstract class SqlCallTransformer {
    */
   protected RelDataType getRelDataType(SqlNode sqlNode) {
     if (sqlValidator == null) {
-      throw new RuntimeException("Please provide sqlValidator to get the RelDataType of a SqlNode!");
+      throw new RuntimeException("SqlValidator does not exist to derive the RelDataType for SqlNode " + sqlNode);
     }
     for (int i = topSelectNodes.size() - 1; i >= 0; --i) {
       final SqlSelect topSelectNode = topSelectNodes.get(i);
