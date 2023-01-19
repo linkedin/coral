@@ -12,7 +12,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.calcite.adapter.java.JavaTypeFactory;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.volcano.VolcanoPlanner;
-import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlOperatorTable;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
@@ -22,6 +21,7 @@ import org.apache.calcite.sql2rel.SqlRexConvertletTable;
 import org.apache.calcite.sql2rel.SqlToRelConverter;
 import org.apache.hadoop.hive.metastore.api.Table;
 
+import com.linkedin.coral.common.FuzzyUnionSqlRewriter;
 import com.linkedin.coral.common.HiveMetastoreClient;
 import com.linkedin.coral.common.ToRelConverter;
 import com.linkedin.coral.hive.hive2rel.functions.HiveFunctionResolver;
@@ -92,12 +92,11 @@ public class HiveToRelConverter extends ToRelConverter {
 
   @Override
   protected SqlNode toSqlNode(String sql, Table hiveView) {
-    return parseTreeBuilder.process(trimParenthesis(sql), hiveView);
-  }
-
-  @Override
-  protected RelNode standardizeRel(RelNode relNode) {
-    return new HiveRelConverter().convert(relNode);
+    final SqlNode sqlNode = parseTreeBuilder.process(trimParenthesis(sql), hiveView);
+    if (hiveView != null) {
+      sqlNode.accept(new FuzzyUnionSqlRewriter(hiveView.getTableName(), this));
+    }
+    return sqlNode.accept(new HiveSqlNodeToCoralSqlNodeConverter(getSqlValidator()));
   }
 
   private static String trimParenthesis(String value) {

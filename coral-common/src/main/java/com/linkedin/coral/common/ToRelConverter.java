@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2022 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2023 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -65,14 +65,6 @@ public abstract class ToRelConverter {
 
   protected abstract SqlNode toSqlNode(String sql, org.apache.hadoop.hive.metastore.api.Table hiveView);
 
-  /**
-   * Apply series of transforms to convert Hive relnode to
-   * standardized intermediate representation.
-   * @param relNode calcite relnode representing hive query
-   * @return standard representation of input query as relnode
-   */
-  protected abstract RelNode standardizeRel(RelNode relNode);
-
   protected ToRelConverter(@Nonnull HiveMetastoreClient hiveMetastoreClient) {
     checkNotNull(hiveMetastoreClient);
     this.hiveMetastoreClient = hiveMetastoreClient;
@@ -129,7 +121,6 @@ public abstract class ToRelConverter {
    */
   public RelNode convertView(String hiveDbName, String hiveViewName) {
     SqlNode sqlNode = processView(hiveDbName, hiveViewName);
-    sqlNode.accept(new FuzzyUnionSqlRewriter(hiveViewName, this));
     return toRel(sqlNode);
   }
 
@@ -164,7 +155,7 @@ public abstract class ToRelConverter {
   @VisibleForTesting
   protected RelNode toRel(SqlNode sqlNode) {
     RelRoot root = getSqlToRelConverter().convertQuery(sqlNode, true, true);
-    return standardizeRel(root.rel);
+    return root.rel;
   }
 
   /**
