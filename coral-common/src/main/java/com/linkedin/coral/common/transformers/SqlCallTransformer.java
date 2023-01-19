@@ -42,7 +42,7 @@ public abstract class SqlCallTransformer {
   protected abstract SqlCall transform(SqlCall sqlCall);
 
   /**
-   * Public entry of the transformer, it returns the result of transformed SqlCall if `condition(SqlCall)` returns true,
+   * Public entry of the transformer, it returns the result of transformed SqlCall if `predicate(SqlCall)` returns true,
    * otherwise returns the input SqlCall without any transformation
    */
   public SqlCall apply(SqlCall sqlCall) {
@@ -75,6 +75,9 @@ public abstract class SqlCallTransformer {
    * Therefore, we need to store all the `topSelectNodes` (both inner `SELECT col1 FROM db.tbl` and the whole SQL)
    * in the `topSelectNodes` list and traverse them from the latest visited to the oldest visited, return the datatype
    * directly once it can be derived without exception.
+   *
+   * Note: This implementation is subject to change. Ideally, it should not assume that the parent SqlSelect is visited
+   * before determining the datatype of the child SqlNode.
    */
   protected RelDataType getRelDataType(SqlNode sqlNode) {
     if (sqlValidator == null) {
