@@ -5,6 +5,7 @@ def versions = [
   'hadoop': '2.7.0',
   'hive': '1.2.2',
   'ivy': '2.4.0',
+  'jetbrains': '16.0.2',
   'jline': '0.9.94',
   'kryo': '2.22',
   'linkedin-calcite-core': '1.21.0.152',
@@ -29,6 +30,7 @@ ext.deps = [
     'hive-exec-core': "org.apache.hive:hive-exec:${versions['hive']}:core"
   ],
   'ivy': "org.apache.ivy:ivy:${versions['ivy']}",
+  'jetbrains': "org.jetbrains:annotations:${versions['jetbrains']}",
   'jline': "jline:jline:${versions['jline']}",
   'kryo': "com.esotericsoftware.kryo:kryo:${versions['kryo']}",
   'linkedin-calcite-core': "com.linkedin.calcite:calcite-core:${versions['linkedin-calcite-core']}",
