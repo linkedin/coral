@@ -103,10 +103,6 @@ public class CoralRelToSqlNodeConverter extends RelToSqlConverter {
     return builder.result();
   }
 
-  private SqlNode castNullType(SqlNode sqlNodeNull, RelDataTypeField field) {
-    return SqlStdOperatorTable.CAST.createCall(POS, sqlNodeNull, dialect.getCastSpec(field.getType()));
-  }
-
   /**
    * TableScan RelNode represents a relational operator that returns the contents of a table.
    * Super's implementation generates a table namespace with the catalog, schema, and table name.

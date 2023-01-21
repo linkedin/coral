@@ -74,14 +74,19 @@ public class CoralSqlNodeToTrinoSqlNodeConverter extends SqlShuttle {
       case UNNEST:
         return getTransformedUnnestSqlCall(sqlCall);
       case EQUALS:
-        return getTransformedEqualsOperatorSqlCall(sqlCall);
+      case GREATER_THAN:
+      case GREATER_THAN_OR_EQUAL:
+      case LESS_THAN:
+      case LESS_THAN_OR_EQUAL:
+      case NOT_EQUALS:
+        return castOperandsToVarchar(sqlCall);
       default:
         return sqlCall;
     }
   }
 
   // Append TryCast operator to both operands to cast each operand's data type to VARCHAR
-  private static SqlCall getTransformedEqualsOperatorSqlCall(SqlCall sqlCall) {
+  private static SqlCall castOperandsToVarchar(SqlCall sqlCall) {
     List<SqlNode> updatedOperands = new ArrayList<>();
 
     final SqlTypeNameSpec varcharTypeNameSpec = new SqlBasicTypeNameSpec(SqlTypeName.VARCHAR, ZERO);

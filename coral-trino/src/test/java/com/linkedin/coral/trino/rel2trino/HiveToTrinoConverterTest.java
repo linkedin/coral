@@ -106,7 +106,7 @@ public class HiveToTrinoConverterTest {
 
         { "test", "view_with_outer_explode_string_array", "SELECT \"table_with_string_array\".\"a\" AS \"a\", \"t0\".\"c\" AS \"c\"\n"
             + "FROM \"test\".\"table_with_string_array\"\n"
-            + "CROSS JOIN UNNEST(\"if\"(\"table_with_string_array\".\"b\" IS NOT NULL AND CAST(CARDINALITY(\"table_with_string_array\".\"b\") AS INTEGER) > 0, \"table_with_string_array\".\"b\", ARRAY[NULL])) AS \"t0\" (\"c\")" },
+            + "CROSS JOIN UNNEST(\"if\"(\"table_with_string_array\".\"b\" IS NOT NULL AND TRY_CAST(CAST(CARDINALITY(\"table_with_string_array\".\"b\") AS INTEGER) AS VARCHAR) > TRY_CAST(0 AS VARCHAR), \"table_with_string_array\".\"b\", ARRAY[NULL])) AS \"t0\" (\"c\")" },
 
         { "test", "view_with_explode_struct_array", "SELECT \"table_with_struct_array\".\"a\" AS \"a\", \"t0\".\"c\" AS \"c\"\n"
             + "FROM \"test\".\"table_with_struct_array\"\n"
@@ -122,7 +122,7 @@ public class HiveToTrinoConverterTest {
 
         { "test", "view_with_outer_explode_map", "SELECT \"table_with_map\".\"a\" AS \"a\", \"t0\".\"c\" AS \"c\", \"t0\".\"d\" AS \"d\"\n"
             + "FROM \"test\".\"table_with_map\"\n"
-            + "CROSS JOIN UNNEST(\"if\"(\"table_with_map\".\"b\" IS NOT NULL AND CAST(CARDINALITY(\"table_with_map\".\"b\") AS INTEGER) > 0, \"table_with_map\".\"b\", MAP (ARRAY[NULL], ARRAY[NULL]))) AS \"t0\" (\"c\", \"d\")" },
+            + "CROSS JOIN UNNEST(\"if\"(\"table_with_map\".\"b\" IS NOT NULL AND TRY_CAST(CAST(CARDINALITY(\"table_with_map\".\"b\") AS INTEGER) AS VARCHAR) > TRY_CAST(0 AS VARCHAR), \"table_with_map\".\"b\", MAP (ARRAY[NULL], ARRAY[NULL]))) AS \"t0\" (\"c\", \"d\")" },
 
         { "test", "map_array_view", "SELECT MAP (ARRAY['key1', 'key2'], ARRAY['value1', 'value2']) AS \"simple_map_col\", "
             + "MAP (ARRAY['key1', 'key2'], ARRAY[MAP (ARRAY['a', 'c'], ARRAY['b', 'd']), MAP (ARRAY['a', 'c'], ARRAY['b', 'd'])]) AS \"nested_map_col\"\nFROM \"test\".\"tablea\"" },
@@ -187,7 +187,7 @@ public class HiveToTrinoConverterTest {
             + "FROM \"test\".\"duplicate_column_name_a\"\n"
             + "LEFT JOIN (SELECT TRIM(\"some_id\") AS \"SOME_ID\", CAST(TRIM(\"some_id\") AS VARCHAR(65536)) AS \"$f1\"\n"
             + "FROM \"test\".\"duplicate_column_name_b\") AS \"t\" ON TRY_CAST(\"duplicate_column_name_a\".\"some_id\" AS VARCHAR) = TRY_CAST(\"t\".\"$f1\" AS VARCHAR)) AS \"t0\"\n"
-            + "WHERE \"t0\".\"some_id\" <> ''" } };
+            + "WHERE TRY_CAST(\"t0\".\"some_id\" AS VARCHAR) <> TRY_CAST('' AS VARCHAR)" } };
   }
 
   @Test
@@ -301,8 +301,7 @@ public class HiveToTrinoConverterTest {
         "SELECT col FROM (SELECT ARRAY('a1', 'a2') as a) tmp LATERAL VIEW OUTER POSEXPLODE(a) a_alias AS pos, col");
     String targetSql = "SELECT \"t2\".\"col\" AS \"col\"\n" + "FROM (SELECT ARRAY['a1', 'a2'] AS \"a\"\n"
         + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")) AS \"t0\"\n"
-        + "CROSS JOIN UNNEST(\"if\"(\"t0\".\"a\" IS NOT NULL AND CAST(CARDINALITY(\"t0\".\"a\") AS INTEGER) > 0, \"t0\".\"a\", ARRAY[NULL])) WITH ORDINALITY AS \"t2\" (\"col\", \"pos\")";
-
+        + "CROSS JOIN UNNEST(\"if\"(\"t0\".\"a\" IS NOT NULL AND TRY_CAST(CAST(CARDINALITY(\"t0\".\"a\") AS INTEGER) AS VARCHAR) > TRY_CAST(0 AS VARCHAR), \"t0\".\"a\", ARRAY[NULL])) WITH ORDINALITY AS \"t2\" (\"col\", \"pos\")";
     RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
     String expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
