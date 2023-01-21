@@ -248,7 +248,7 @@ public class TrinoToRelConverterTest {
             "SELECT \"X\", \"Y\"\n" + "FROM UNNEST(ARRAY[1, 2, 3]) WITH ORDINALITY AS \"t0\" (\"X\", \"Y\")"))
         .add(new TrinoToRelTestDataProvider(
             "SELECT * from default.table_with_struct_arr cross join unnest(struct.b) AS t(b1col, b2col)", null, null))
-        .build().stream().map(x -> new Object[] { x.get(0), x.get(1), x.get(2) }).iterator();
+        .build().stream().map(x -> new Object[] { x.trinoSql, x.expectedRelString, x.expectedSql }).iterator();
   }
 
   @Test(dataProvider = "Unsupported", enabled = false,
