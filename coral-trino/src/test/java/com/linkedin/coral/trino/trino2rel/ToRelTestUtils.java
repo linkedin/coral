@@ -58,6 +58,7 @@ public class ToRelTestUtils {
     run(driver, "CREATE TABLE IF NOT EXISTS default.my_table(x array<int>, y array<array<int>>, z int)");
     run(driver, "CREATE TABLE IF NOT EXISTS default.a(b int, id int, x int)");
     run(driver, "CREATE TABLE IF NOT EXISTS default.b(foobar int, id int, y int)");
+    run(driver, "CREATE TABLE IF NOT EXISTS default.table_with_struct_arr(a int, b array<struct<b1:string, b2:int>>)");
   }
 
   public static HiveConf loadResourceHiveConf() {

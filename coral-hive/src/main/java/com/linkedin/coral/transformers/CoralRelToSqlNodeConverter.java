@@ -21,6 +21,7 @@ import org.apache.calcite.rel.core.Uncollect;
 import org.apache.calcite.rel.logical.LogicalTableFunctionScan;
 import org.apache.calcite.rel.rel2sql.RelToSqlConverter;
 import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexCorrelVariable;
 import org.apache.calcite.rex.RexFieldAccess;
@@ -35,7 +36,9 @@ import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlLateralOperator;
 import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlNode;
+import org.apache.calcite.sql.SqlNodeList;
 import org.apache.calcite.sql.SqlOperator;
+import org.apache.calcite.sql.SqlUtil;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.SqlTypeName;
@@ -73,6 +76,31 @@ public class CoralRelToSqlNodeConverter extends RelToSqlConverter {
         .withNullCollation(NullCollation.HIGH);
 
     return new SqlDialect(context);
+  }
+
+  // override is required to prevent select nodes such as SELECT CAST(NULL AS NULL)
+  @Override
+  public Result visit(Project e) {
+    e.getVariablesSet();
+    Result x = visitChild(0, e.getInput());
+    parseCorrelTable(e, x);
+    if (isStar(e.getChildExps(), e.getInput().getRowType(), e.getRowType())) {
+      return x;
+    }
+    final Builder builder = x.builder(e, Clause.SELECT);
+    final List<SqlNode> selectList = new ArrayList<>();
+    for (RexNode ref : e.getChildExps()) {
+      SqlNode sqlExpr = builder.context.toSql(null, ref);
+
+      RelDataTypeField targetField = e.getRowType().getFieldList().get(selectList.size());
+      if (SqlUtil.isNullLiteral(sqlExpr, false) && !targetField.getValue().getSqlTypeName().equals(SqlTypeName.NULL)) {
+        sqlExpr = SqlStdOperatorTable.CAST.createCall(POS, sqlExpr, dialect.getCastSpec(targetField.getType()));
+      }
+
+      addSelect(selectList, sqlExpr, e.getRowType());
+    }
+    builder.setSelect(new SqlNodeList(selectList, POS));
+    return builder.result();
   }
 
   /**
@@ -140,11 +168,7 @@ public class CoralRelToSqlNodeConverter extends RelToSqlConverter {
 
     final Result rightResult = visitChild(1, e.getRight());
 
-    SqlNode rightSqlNode = rightResult.asFrom();
-
-    if (e.getRight() instanceof LogicalTableFunctionScan || e.getRight() instanceof Uncollect) {
-      rightSqlNode = generateRightChildForSqlJoinWithLateralViews(e, rightResult);
-    }
+    SqlNode rightSqlNode = generateRightChildForSqlJoinWithLateralViews(e, rightResult);
 
     SqlNode join = new SqlJoin(POS, leftResult.asFrom(), SqlLiteral.createBoolean(false, POS),
         JoinType.COMMA.symbol(POS), rightSqlNode, JoinConditionType.NONE.symbol(POS), null);
@@ -333,15 +357,21 @@ public class CoralRelToSqlNodeConverter extends RelToSqlConverter {
 
   private SqlNode generateRightChildForSqlJoinWithLateralViews(BiRel e, Result rightResult) {
     SqlNode rightSqlNode = rightResult.asFrom();
+    SqlNode lateralNode;
 
-    final SqlNode rightLateral = SqlStdOperatorTable.LATERAL.createCall(POS, rightSqlNode);
+    // Drop the AS operator from the rightSqlNode if it exists and append the LATERAL operator on the inner SqlNode.
+    if (rightSqlNode instanceof SqlCall && ((SqlCall) rightSqlNode).getOperator().kind == SqlKind.AS) {
+      lateralNode = SqlStdOperatorTable.LATERAL.createCall(POS, (SqlNode) ((SqlCall) rightSqlNode).operand(0));
+    } else {
+      lateralNode = SqlStdOperatorTable.LATERAL.createCall(POS, rightSqlNode);
+    }
 
-    // Append the alias to unnestCall by generating SqlCall with AS operator
+    // Append the alias to lateralNode by generating SqlCall with AS operator
     RelDataType relDataType = e.getRight().getRowType();
     String alias = rightResult.aliases.entrySet().stream().filter(entry -> relDataType.equals(entry.getValue()))
         .findFirst().map(Map.Entry::getKey).orElse("coralDefaultColumnAlias");
 
-    List<SqlNode> asOperands = createAsFullOperands(relDataType, rightLateral, alias);
+    List<SqlNode> asOperands = createAsFullOperands(relDataType, lateralNode, alias);
 
     return SqlStdOperatorTable.AS.createCall(POS, asOperands);
   }

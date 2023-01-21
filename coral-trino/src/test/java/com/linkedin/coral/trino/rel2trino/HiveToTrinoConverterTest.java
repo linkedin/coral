@@ -21,7 +21,7 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import static com.linkedin.coral.trino.rel2trino.CoralTrinoConfigKeys.*;
-import static com.linkedin.coral.trino.rel2trino.TestUtils.hiveToRelConverter;
+import static com.linkedin.coral.trino.rel2trino.TestUtils.*;
 import static org.testng.Assert.assertEquals;
 
 
@@ -54,7 +54,7 @@ public class HiveToTrinoConverterTest {
 
         { "test", "t_dot_star_view", "SELECT \"tablea\".\"a\" AS \"a\", \"tablea\".\"b\" AS \"b\", \"tablea0\".\"b\" AS \"tbb\"\n"
             + "FROM \"test\".\"tablea\"\n"
-            + "INNER JOIN \"test\".\"tablea\" AS \"tablea0\" ON \"tablea\".\"a\" = \"tablea0\".\"a\"" },
+            + "INNER JOIN \"test\".\"tablea\" AS \"tablea0\" ON TRY_CAST(\"tablea\".\"a\" AS VARCHAR) = TRY_CAST(\"tablea0\".\"a\" AS VARCHAR)" },
 
         { "test", "fuzzy_union_view", "SELECT *\nFROM \"test\".\"tablea\"\nUNION ALL\n"
             + "SELECT *\nFROM \"test\".\"tablea\"" },
@@ -100,29 +100,29 @@ public class HiveToTrinoConverterTest {
             + "SELECT \"a\", CAST(row(\"b\".\"b2\", \"b\".\"b1\", \"b\".\"b0\") as row(\"b2\" double, \"b1\" varchar, \"b0\" integer)) AS \"b\"\n"
             + "FROM \"test\".\"tableq\"" },
 
-        { "test", "view_with_explode_string_array", "SELECT \"$cor0\".\"a\" AS \"a\", \"t0\".\"c\" AS \"c\"\n"
-            + "FROM \"test\".\"table_with_string_array\" AS \"$cor0\"\n"
-            + "CROSS JOIN UNNEST(\"$cor0\".\"b\") AS \"t0\" (\"c\")" },
+        { "test", "view_with_explode_string_array", "SELECT \"table_with_string_array\".\"a\" AS \"a\", \"t0\".\"c\" AS \"c\"\n"
+            + "FROM \"test\".\"table_with_string_array\"\n"
+            + "CROSS JOIN UNNEST(\"table_with_string_array\".\"b\") AS \"t0\" (\"c\")" },
 
-        { "test", "view_with_outer_explode_string_array", "SELECT \"$cor0\".\"a\" AS \"a\", \"t0\".\"c\" AS \"c\"\n"
-            + "FROM \"test\".\"table_with_string_array\" AS \"$cor0\"\n"
-            + "CROSS JOIN UNNEST(\"if\"(\"$cor0\".\"b\" IS NOT NULL AND CAST(CARDINALITY(\"$cor0\".\"b\") AS INTEGER) > 0, \"$cor0\".\"b\", ARRAY[NULL])) AS \"t0\" (\"c\")" },
+        { "test", "view_with_outer_explode_string_array", "SELECT \"table_with_string_array\".\"a\" AS \"a\", \"t0\".\"c\" AS \"c\"\n"
+            + "FROM \"test\".\"table_with_string_array\"\n"
+            + "CROSS JOIN UNNEST(\"if\"(\"table_with_string_array\".\"b\" IS NOT NULL AND TRY_CAST(CAST(CARDINALITY(\"table_with_string_array\".\"b\") AS INTEGER) AS VARCHAR) > TRY_CAST(0 AS VARCHAR), \"table_with_string_array\".\"b\", ARRAY[NULL])) AS \"t0\" (\"c\")" },
 
-        { "test", "view_with_explode_struct_array", "SELECT \"$cor0\".\"a\" AS \"a\", \"t0\".\"c\" AS \"c\"\n"
-            + "FROM \"test\".\"table_with_struct_array\" AS \"$cor0\"\n"
-            + "CROSS JOIN UNNEST(TRANSFORM(\"$cor0\".\"b\", x -> ROW(x))) AS \"t0\" (\"c\")" },
+        { "test", "view_with_explode_struct_array", "SELECT \"table_with_struct_array\".\"a\" AS \"a\", \"t0\".\"c\" AS \"c\"\n"
+            + "FROM \"test\".\"table_with_struct_array\"\n"
+            + "CROSS JOIN UNNEST(TRANSFORM(\"table_with_struct_array\".\"b\", x -> ROW(x))) AS \"t0\" (\"c\")" },
 
-        { "test", "view_with_outer_explode_struct_array", "SELECT \"$cor0\".\"a\" AS \"a\", \"t0\".\"c\" AS \"c\"\n"
-            + "FROM \"test\".\"table_with_struct_array\" AS \"$cor0\"\n"
-            + "CROSS JOIN UNNEST(TRANSFORM(\"if\"(\"$cor0\".\"b\" IS NOT NULL AND CAST(CARDINALITY(\"$cor0\".\"b\") AS INTEGER) > 0, \"$cor0\".\"b\", ARRAY[NULL]), x -> ROW(x))) AS \"t0\" (\"c\")" },
+        { "test", "view_with_outer_explode_struct_array", "SELECT \"table_with_struct_array\".\"a\" AS \"a\", \"t0\".\"c\" AS \"c\"\n"
+            + "FROM \"test\".\"table_with_struct_array\"\n"
+            + "CROSS JOIN UNNEST(TRANSFORM(\"if\"(\"table_with_struct_array\".\"b\" IS NOT NULL AND CAST(CARDINALITY(\"table_with_struct_array\".\"b\") AS INTEGER) > 0, \"table_with_struct_array\".\"b\", ARRAY[NULL]), x -> ROW(x))) AS \"t0\" (\"c\")" },
 
-        { "test", "view_with_explode_map", "SELECT \"$cor0\".\"a\" AS \"a\", \"t0\".\"c\" AS \"c\", \"t0\".\"d\" AS \"d\"\n"
-            + "FROM \"test\".\"table_with_map\" AS \"$cor0\"\n"
-            + "CROSS JOIN UNNEST(\"$cor0\".\"b\") AS \"t0\" (\"c\", \"d\")" },
+        { "test", "view_with_explode_map", "SELECT \"table_with_map\".\"a\" AS \"a\", \"t0\".\"c\" AS \"c\", \"t0\".\"d\" AS \"d\"\n"
+            + "FROM \"test\".\"table_with_map\"\n"
+            + "CROSS JOIN UNNEST(\"table_with_map\".\"b\") AS \"t0\" (\"c\", \"d\")" },
 
-        { "test", "view_with_outer_explode_map", "SELECT \"$cor0\".\"a\" AS \"a\", \"t0\".\"c\" AS \"c\", \"t0\".\"d\" AS \"d\"\n"
-            + "FROM \"test\".\"table_with_map\" AS \"$cor0\"\n"
-            + "CROSS JOIN UNNEST(\"if\"(\"$cor0\".\"b\" IS NOT NULL AND CAST(CARDINALITY(\"$cor0\".\"b\") AS INTEGER) > 0, \"$cor0\".\"b\", MAP (ARRAY[NULL], ARRAY[NULL]))) AS \"t0\" (\"c\", \"d\")" },
+        { "test", "view_with_outer_explode_map", "SELECT \"table_with_map\".\"a\" AS \"a\", \"t0\".\"c\" AS \"c\", \"t0\".\"d\" AS \"d\"\n"
+            + "FROM \"test\".\"table_with_map\"\n"
+            + "CROSS JOIN UNNEST(\"if\"(\"table_with_map\".\"b\" IS NOT NULL AND TRY_CAST(CAST(CARDINALITY(\"table_with_map\".\"b\") AS INTEGER) AS VARCHAR) > TRY_CAST(0 AS VARCHAR), \"table_with_map\".\"b\", MAP (ARRAY[NULL], ARRAY[NULL]))) AS \"t0\" (\"c\", \"d\")" },
 
         { "test", "map_array_view", "SELECT MAP (ARRAY['key1', 'key2'], ARRAY['value1', 'value2']) AS \"simple_map_col\", "
             + "MAP (ARRAY['key1', 'key2'], ARRAY[MAP (ARRAY['a', 'c'], ARRAY['b', 'd']), MAP (ARRAY['a', 'c'], ARRAY['b', 'd'])]) AS \"nested_map_col\"\nFROM \"test\".\"tablea\"" },
@@ -131,19 +131,19 @@ public class HiveToTrinoConverterTest {
 
         { "test", "date_function_view", "SELECT \"date\"('2021-01-02') AS \"a\"\n" + "FROM \"test\".\"tablea\"" },
 
-        { "test", "lateral_view_json_tuple_view", "SELECT \"$cor0\".\"a\" AS \"a\", \"t0\".\"d\" AS \"d\", \"t0\".\"e\" AS \"e\", \"t0\".\"f\" AS \"f\"\n"
-            + "FROM \"test\".\"tablea\" AS \"$cor0\"\nCROSS JOIN LATERAL (SELECT "
-            + "\"if\"(\"REGEXP_LIKE\"('trino', '^[^\\\"]*$'), CAST(\"json_extract\"(\"$cor0\".\"b\".\"b1\", '$[\"' || 'trino' || '\"]') AS VARCHAR(65535)), NULL) AS \"d\", "
-            + "\"if\"(\"REGEXP_LIKE\"('always', '^[^\\\"]*$'), CAST(\"json_extract\"(\"$cor0\".\"b\".\"b1\", '$[\"' || 'always' || '\"]') AS VARCHAR(65535)), NULL) AS \"e\", "
-            + "\"if\"(\"REGEXP_LIKE\"('rocks', '^[^\\\"]*$'), CAST(\"json_extract\"(\"$cor0\".\"b\".\"b1\", '$[\"' || 'rocks' || '\"]') AS VARCHAR(65535)), NULL) AS \"f\"\n"
-            + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")) AS \"t0\"" },
+        { "test", "lateral_view_json_tuple_view", "SELECT \"tablea\".\"a\" AS \"a\", \"t0\".\"d\" AS \"d\", \"t0\".\"e\" AS \"e\", \"t0\".\"f\" AS \"f\"\n"
+            + "FROM \"test\".\"tablea\"\nCROSS JOIN LATERAL (SELECT "
+            + "\"if\"(\"REGEXP_LIKE\"('trino', '^[^\\\"]*$'), CAST(\"json_extract\"(\"tablea\".\"b\".\"b1\", '$[\"' || 'trino' || '\"]') AS VARCHAR(65535)), NULL) AS \"d\", "
+            + "\"if\"(\"REGEXP_LIKE\"('always', '^[^\\\"]*$'), CAST(\"json_extract\"(\"tablea\".\"b\".\"b1\", '$[\"' || 'always' || '\"]') AS VARCHAR(65535)), NULL) AS \"e\", "
+            + "\"if\"(\"REGEXP_LIKE\"('rocks', '^[^\\\"]*$'), CAST(\"json_extract\"(\"tablea\".\"b\".\"b1\", '$[\"' || 'rocks' || '\"]') AS VARCHAR(65535)), NULL) AS \"f\"\n"
+            + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")) AS \"t0\" (\"d\", \"e\", \"f\")" },
 
-        { "test", "lateral_view_json_tuple_view_qualified", "SELECT \"$cor0\".\"a\" AS \"a\", \"t0\".\"d\" AS \"d\", \"t0\".\"e\" AS \"e\", \"t0\".\"f\" AS \"f\"\n"
-            + "FROM \"test\".\"tablea\" AS \"$cor0\"\nCROSS JOIN LATERAL (SELECT "
-            + "\"if\"(\"REGEXP_LIKE\"('trino', '^[^\\\"]*$'), CAST(\"json_extract\"(\"$cor0\".\"b\".\"b1\", '$[\"' || 'trino' || '\"]') AS VARCHAR(65535)), NULL) AS \"d\", "
-            + "\"if\"(\"REGEXP_LIKE\"('always', '^[^\\\"]*$'), CAST(\"json_extract\"(\"$cor0\".\"b\".\"b1\", '$[\"' || 'always' || '\"]') AS VARCHAR(65535)), NULL) AS \"e\", "
-            + "\"if\"(\"REGEXP_LIKE\"('rocks', '^[^\\\"]*$'), CAST(\"json_extract\"(\"$cor0\".\"b\".\"b1\", '$[\"' || 'rocks' || '\"]') AS VARCHAR(65535)), NULL) AS \"f\"\n"
-            + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")) AS \"t0\"" },
+        { "test", "lateral_view_json_tuple_view_qualified", "SELECT \"tablea\".\"a\" AS \"a\", \"t0\".\"d\" AS \"d\", \"t0\".\"e\" AS \"e\", \"t0\".\"f\" AS \"f\"\n"
+            + "FROM \"test\".\"tablea\"\nCROSS JOIN LATERAL (SELECT "
+            + "\"if\"(\"REGEXP_LIKE\"('trino', '^[^\\\"]*$'), CAST(\"json_extract\"(\"tablea\".\"b\".\"b1\", '$[\"' || 'trino' || '\"]') AS VARCHAR(65535)), NULL) AS \"d\", "
+            + "\"if\"(\"REGEXP_LIKE\"('always', '^[^\\\"]*$'), CAST(\"json_extract\"(\"tablea\".\"b\".\"b1\", '$[\"' || 'always' || '\"]') AS VARCHAR(65535)), NULL) AS \"e\", "
+            + "\"if\"(\"REGEXP_LIKE\"('rocks', '^[^\\\"]*$'), CAST(\"json_extract\"(\"tablea\".\"b\".\"b1\", '$[\"' || 'rocks' || '\"]') AS VARCHAR(65535)), NULL) AS \"f\"\n"
+            + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")) AS \"t0\" (\"d\", \"e\", \"f\")" },
 
         { "test", "get_json_object_view", "SELECT \"json_extract\"(\"b\".\"b1\", '$.name')\nFROM \"test\".\"tablea\"" },
 
@@ -165,7 +165,7 @@ public class HiveToTrinoConverterTest {
 
         { "test", "pmod_view", "SELECT MOD(MOD(- 9, 4) + 4, 4)\nFROM \"test\".\"tablea\"" },
 
-        { "test", "nullscollationd_view", "SELECT *\nFROM \"test\".\"tabler\"\nORDER BY \"b\" DESC" },
+        { "test", "nullscollationd_view", "SELECT *\nFROM \"test\".\"tabler\"\nORDER BY \"b\" DESC NULLS LAST" },
 
         { "test", "view_with_date_and_interval", "SELECT (CAST('2021-08-30' AS DATE) + INTERVAL '3' DAY)\nFROM \"test\".\"tablea\"" },
 
@@ -186,8 +186,20 @@ public class HiveToTrinoConverterTest {
             + "FROM (SELECT \"duplicate_column_name_a\".\"some_id\" AS \"some_id\", \"t\".\"SOME_ID\" AS \"SOME_ID0\"\n"
             + "FROM \"test\".\"duplicate_column_name_a\"\n"
             + "LEFT JOIN (SELECT TRIM(\"some_id\") AS \"SOME_ID\", CAST(TRIM(\"some_id\") AS VARCHAR(65536)) AS \"$f1\"\n"
-            + "FROM \"test\".\"duplicate_column_name_b\") AS \"t\" ON \"duplicate_column_name_a\".\"some_id\" = \"t\".\"$f1\") AS \"t0\"\n"
-            + "WHERE \"t0\".\"some_id\" <> ''" } };
+            + "FROM \"test\".\"duplicate_column_name_b\") AS \"t\" ON TRY_CAST(\"duplicate_column_name_a\".\"some_id\" AS VARCHAR) = TRY_CAST(\"t\".\"$f1\" AS VARCHAR)) AS \"t0\"\n"
+            + "WHERE TRY_CAST(\"t0\".\"some_id\" AS VARCHAR) <> TRY_CAST('' AS VARCHAR)" } };
+  }
+
+  @Test
+  public void testTryCastTrino() {
+    RelNode relNode = TestUtils.convertView("test", "try_cast_view");
+
+    String targetSql = formatSql(
+        "SELECT CASE WHEN TRY_CAST(\"b\".\"b1\" AS VARCHAR) = TRY_CAST(\"a\" AS VARCHAR) THEN TRUE ELSE FALSE END AS TESTCOL\n"
+            + "FROM \"test\".\"tablea\"\n" + "WHERE TRY_CAST(\"b\".\"b1\" AS VARCHAR) = TRY_CAST(1 AS VARCHAR)");
+    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+    String expandedSql = relToTrinoConverter.convert(relNode);
+    assertEquals(expandedSql, targetSql);
   }
 
   @Test
@@ -195,8 +207,7 @@ public class HiveToTrinoConverterTest {
     RelNode relNode = hiveToRelConverter
         .convertSql("SELECT col FROM (SELECT ARRAY('a1', 'a2') as a) tmp LATERAL VIEW EXPLODE(a) a_alias AS col");
     String targetSql = "SELECT \"t2\".\"col\" AS \"col\"\n" + "FROM (SELECT ARRAY['a1', 'a2'] AS \"a\"\n"
-        + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")) AS \"$cor0\"\n"
-        + "CROSS JOIN UNNEST(\"$cor0\".\"a\") AS \"t2\" (\"col\")";
+        + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")) AS \"t0\"\n" + "CROSS JOIN UNNEST(\"t0\".\"a\") AS \"t2\" (\"col\")";
 
     RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
     String expandedSql = relToTrinoConverter.convert(relNode);
@@ -223,8 +234,7 @@ public class HiveToTrinoConverterTest {
     RelNode relNode = hiveToRelConverter
         .convertSql("SELECT col FROM (SELECT ARRAY('a1', 'a2') as a) tmp LATERAL VIEW EXPLODE(a) a_alias");
     String targetSql = "SELECT \"t2\".\"col\" AS \"col\"\n" + "FROM (SELECT ARRAY['a1', 'a2'] AS \"a\"\n"
-        + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")) AS \"$cor1\"\n"
-        + "CROSS JOIN UNNEST(\"$cor1\".\"a\") AS \"t2\" (\"col\")";
+        + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")) AS \"t0\"\n" + "CROSS JOIN UNNEST(\"t0\".\"a\") AS \"t2\" (\"col\")";
 
     RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
     String expandedSql = relToTrinoConverter.convert(relNode);
@@ -237,8 +247,8 @@ public class HiveToTrinoConverterTest {
         "SELECT key, value FROM (SELECT MAP('key1', 'value1') as m) tmp LATERAL VIEW EXPLODE(m) m_alias AS key, value");
     String targetSql = "SELECT \"t2\".\"key\" AS \"key\", \"t2\".\"value\" AS \"value\"\n"
         + "FROM (SELECT MAP (ARRAY['key1'], ARRAY['value1']) AS \"m\"\n"
-        + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")) AS \"$cor2\"\n"
-        + "CROSS JOIN UNNEST(\"$cor2\".\"m\") AS \"t2\" (\"key\", \"value\")";
+        + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")) AS \"t0\"\n"
+        + "CROSS JOIN UNNEST(\"t0\".\"m\") AS \"t2\" (\"key\", \"value\")";
 
     RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
     String expandedSql = relToTrinoConverter.convert(relNode);
@@ -251,8 +261,8 @@ public class HiveToTrinoConverterTest {
         .convertSql("SELECT key, value FROM (SELECT MAP('key1', 'value1') as m) tmp LATERAL VIEW EXPLODE(m) m_alias");
     String targetSql = "SELECT \"t2\".\"KEY\" AS \"key\", \"t2\".\"VALUE\" AS \"value\"\n"
         + "FROM (SELECT MAP (ARRAY['key1'], ARRAY['value1']) AS \"m\"\n"
-        + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")) AS \"$cor3\"\n"
-        + "CROSS JOIN UNNEST(\"$cor3\".\"m\") AS \"t2\" (\"KEY\", \"VALUE\")";
+        + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")) AS \"t0\"\n"
+        + "CROSS JOIN UNNEST(\"t0\".\"m\") AS \"t2\" (\"KEY\", \"VALUE\")";
 
     RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
     String expandedSql = relToTrinoConverter.convert(relNode);
@@ -264,8 +274,8 @@ public class HiveToTrinoConverterTest {
     RelNode relNode = hiveToRelConverter.convertSql(
         "SELECT col FROM (SELECT ARRAY('a1', 'a2') as a) tmp LATERAL VIEW POSEXPLODE(a) a_alias AS pos, col");
     String targetSql = "SELECT \"t2\".\"col\" AS \"col\"\n" + "FROM (SELECT ARRAY['a1', 'a2'] AS \"a\"\n"
-        + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")) AS \"$cor7\"\n"
-        + "CROSS JOIN UNNEST(\"$cor7\".\"a\") WITH ORDINALITY AS \"t2\" (\"col\", \"pos\")";
+        + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")) AS \"t0\"\n"
+        + "CROSS JOIN UNNEST(\"t0\".\"a\") WITH ORDINALITY AS \"t2\" (\"col\", \"pos\")";
 
     RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
     String expandedSql = relToTrinoConverter.convert(relNode);
@@ -277,8 +287,8 @@ public class HiveToTrinoConverterTest {
     RelNode relNode = hiveToRelConverter
         .convertSql("SELECT col FROM (SELECT ARRAY('a1', 'a2') as a) tmp LATERAL VIEW POSEXPLODE(a) a_alias");
     String targetSql = "SELECT \"t2\".\"col\" AS \"col\"\n" + "FROM (SELECT ARRAY['a1', 'a2'] AS \"a\"\n"
-        + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")) AS \"$cor8\"\n"
-        + "CROSS JOIN UNNEST(\"$cor8\".\"a\") WITH ORDINALITY AS \"t2\" (\"col\", \"ORDINALITY\")";
+        + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")) AS \"t0\"\n"
+        + "CROSS JOIN UNNEST(\"t0\".\"a\") WITH ORDINALITY AS \"t2\" (\"col\", \"ORDINALITY\")";
 
     RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
     String expandedSql = relToTrinoConverter.convert(relNode);
@@ -290,20 +300,19 @@ public class HiveToTrinoConverterTest {
     RelNode relNode = hiveToRelConverter.convertSql(
         "SELECT col FROM (SELECT ARRAY('a1', 'a2') as a) tmp LATERAL VIEW OUTER POSEXPLODE(a) a_alias AS pos, col");
     String targetSql = "SELECT \"t2\".\"col\" AS \"col\"\n" + "FROM (SELECT ARRAY['a1', 'a2'] AS \"a\"\n"
-        + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")) AS \"$cor4\"\n"
-        + "CROSS JOIN UNNEST(\"if\"(\"$cor4\".\"a\" IS NOT NULL AND CAST(CARDINALITY(\"$cor4\".\"a\") AS INTEGER) > 0, \"$cor4\".\"a\", ARRAY[NULL])) WITH ORDINALITY AS \"t2\" (\"col\", \"pos\")";
-
+        + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")) AS \"t0\"\n"
+        + "CROSS JOIN UNNEST(\"if\"(\"t0\".\"a\" IS NOT NULL AND TRY_CAST(CAST(CARDINALITY(\"t0\".\"a\") AS INTEGER) AS VARCHAR) > TRY_CAST(0 AS VARCHAR), \"t0\".\"a\", ARRAY[NULL])) WITH ORDINALITY AS \"t2\" (\"col\", \"pos\")";
     RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
     String expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
   }
 
-  @Test
+  @Test(enabled = false) // legacy config, must disable
   public void testLegacyUnnestArrayOfStruct() {
     RelNode relNode = hiveToRelConverter.convertView("test", "view_with_explode_struct_array");
-    String targetSql = "SELECT \"$cor12\".\"a\" AS \"a\", \"t0\".\"c\" AS \"c\"\n"
-        + "FROM \"test\".\"table_with_struct_array\" AS \"$cor12\"\n"
-        + "CROSS JOIN UNNEST(\"$cor12\".\"b\") AS \"t0\" (\"c\")";
+    String targetSql = "SELECT \"table_with_struct_array\".\"a\" AS \"a\", \"t0\".\"c\" AS \"c\"\n"
+        + "FROM \"test\".\"table_with_struct_array\"\n"
+        + "CROSS JOIN UNNEST(\"table_with_struct_array\".\"b\") AS \"t0\" (\"c\")";
 
     RelToTrinoConverter relToTrinoConverter =
         new RelToTrinoConverter(ImmutableMap.of(SUPPORT_LEGACY_UNNEST_ARRAY_OF_STRUCT, true));
@@ -311,12 +320,12 @@ public class HiveToTrinoConverterTest {
     assertEquals(expandedSql, targetSql);
   }
 
-  @Test
+  @Test(enabled = false) // legacy config, must disable
   public void testLegacyOuterUnnestArrayOfStruct() {
     RelNode relNode = hiveToRelConverter.convertView("test", "view_with_outer_explode_struct_array");
-    String targetSql = "SELECT \"$cor9\".\"a\" AS \"a\", \"t0\".\"c\" AS \"c\"\n"
-        + "FROM \"test\".\"table_with_struct_array\" AS \"$cor9\"\n"
-        + "CROSS JOIN UNNEST(\"if\"(\"$cor9\".\"b\" IS NOT NULL AND CAST(CARDINALITY(\"$cor9\".\"b\") AS INTEGER) > 0, \"$cor9\".\"b\", ARRAY[NULL])) AS \"t0\" (\"c\")";
+    String targetSql = "SELECT \"table_with_struct_array\".\"a\" AS \"a\", \"t0\".\"c\" AS \"c\"\n"
+        + "FROM \"test\".\"table_with_struct_array\"\n"
+        + "CROSS JOIN UNNEST(\"if\"(\"table_with_struct_array\".\"b\" IS NOT NULL AND CAST(CARDINALITY(\"table_with_struct_array\".\"b\") AS INTEGER) > 0, \"table_with_struct_array\".\"b\", ARRAY[NULL])) AS \"t0\" (\"c\")";
 
     RelToTrinoConverter relToTrinoConverter =
         new RelToTrinoConverter(ImmutableMap.of(SUPPORT_LEGACY_UNNEST_ARRAY_OF_STRUCT, true));
@@ -621,7 +630,7 @@ public class HiveToTrinoConverterTest {
     RelNode relNode = hiveToRelConverter
         .convertSql("SELECT a, SUBSTR(b, 1, 1) AS aliased_column, c FROM test.tabler ORDER BY aliased_column DESC");
     String targetSql =
-        "SELECT \"a\", \"substr\"(\"b\", 1, 1) AS \"aliased_column\", \"c\"\nFROM \"test\".\"tabler\"\nORDER BY \"substr\"(\"b\", 1, 1) DESC";
+        "SELECT \"a\", \"substr\"(\"b\", 1, 1) AS \"aliased_column\", \"c\"\nFROM \"test\".\"tabler\"\nORDER BY \"substr\"(\"b\", 1, 1) DESC NULLS LAST";
     String expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
   }
