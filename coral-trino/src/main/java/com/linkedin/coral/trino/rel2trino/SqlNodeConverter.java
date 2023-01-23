@@ -62,8 +62,8 @@ public class SqlNodeConverter extends SqlShuttle {
   }
 
   /**
-   * Coral IR generates a SqlNode representation where operands of a relational operator may not be compatible.
-   * This transformation appends TRY_CAST operator to both operands and casts each operand's data type to VARCHAR to ensure operand inter-compatibility.
+   * Coral IR allows implicit casting to VARCHAR from other data types such as INTs, etc. However, Trino requires explicit casting.
+   * This transformation appends TRY_CAST operator to both operands and casts each operand's data type to VARCHAR to ensure operand inter-compatibility for Trino.
    * @param sqlCall sqlCall input SqlCall
    * @return transformed SqlCall
    */
