@@ -248,13 +248,7 @@ public class Calcite2TrinoUDFConverter {
         }
       }
 
-      final UDFTransformer transformer = CalciteTrinoUDFMap.getUDFTransformer(operatorName, call.operands.size());
-      if (transformer != null && shouldTransformOperator(operatorName)) {
-        return adjustReturnTypeWithCast(rexBuilder,
-            super.visitCall((RexCall) transformer.transformCall(rexBuilder, call.getOperands())));
-      }
-
-      if (operatorName.startsWith("com.linkedin") && transformer == null) {
+      if (operatorName.startsWith("com.linkedin")) {
         return visitUnregisteredUDF(call);
       }
 
@@ -482,10 +476,6 @@ public class Calcite2TrinoUDFConverter {
       return rexBuilder.makeCall(call.getOperator(), results);
     }
 
-    private boolean shouldTransformOperator(String operatorName) {
-      return !("to_date".equalsIgnoreCase(operatorName) && configs.getOrDefault(AVOID_TRANSFORM_TO_DATE_UDF, false));
-    }
-
     /**
      * This method is to cast the converted call to the same return type in Hive with certain version.
      * e.g. `datediff` in Hive returns int type, but the corresponding function `date_diff` in Trino returns bigint type
@@ -497,13 +487,14 @@ public class Calcite2TrinoUDFConverter {
       }
       final String lowercaseOperatorName = ((RexCall) call).getOperator().getName().toLowerCase(Locale.ROOT);
       final ImmutableMap<String, RelDataType> operatorsToAdjust =
-          ImmutableMap.of("date_diff", typeFactory.createSqlType(INTEGER), "cardinality",
+          ImmutableMap.of("datediff", typeFactory.createSqlType(INTEGER), "cardinality",
               typeFactory.createSqlType(INTEGER), "ceil", typeFactory.createSqlType(BIGINT), "ceiling",
               typeFactory.createSqlType(BIGINT), "floor", typeFactory.createSqlType(BIGINT));
       if (operatorsToAdjust.containsKey(lowercaseOperatorName)) {
         return rexBuilder.makeCast(operatorsToAdjust.get(lowercaseOperatorName), call);
       }
-      if (configs.getOrDefault(CAST_DATEADD_TO_STRING, false) && lowercaseOperatorName.equals("date_add")) {
+      if ((configs.getOrDefault(CAST_DATEADD_TO_STRING, false) && lowercaseOperatorName.equals("date_add"))
+          || (configs.getOrDefault(CAST_DATESUB_TO_STRING, false) && lowercaseOperatorName.equals("date_sub"))) {
         return rexBuilder.makeCast(typeFactory.createSqlType(VARCHAR), call);
       }
       return call;

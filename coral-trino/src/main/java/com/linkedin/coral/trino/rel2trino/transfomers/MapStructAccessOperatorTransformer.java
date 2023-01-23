@@ -1,0 +1,52 @@
+/**
+ * Copyright 2023 LinkedIn Corporation. All rights reserved.
+ * Licensed under the BSD-2 Clause license.
+ * See LICENSE in the project root for license information.
+ */
+package com.linkedin.coral.trino.rel2trino.transfomers;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.apache.calcite.sql.SqlCall;
+import org.apache.calcite.sql.SqlIdentifier;
+
+import com.linkedin.coral.com.google.common.collect.ImmutableList;
+import com.linkedin.coral.common.transformers.SqlCallTransformer;
+
+
+/**
+ * This class is an ad-hoc SqlCallTransformer which converts the map struct access operator "[]" defined
+ * from Calcite in a SqlIdentifier into a UDF operator of "element_at",
+ * e.g. from "col"["field"] to element_at("col", "field")
+ */
+public class MapStructAccessOperatorTransformer extends SqlCallTransformer {
+  private static final String AS_OPERATOR_NAME = "AS";
+  private static final Pattern PATTERN = Pattern.compile("\\\".+\\\"\\[\\\".+\\\"\\]");
+  private static final String ELEMENT_AT = "element_at(%s, %s)";
+
+  @Override
+  protected boolean predicate(SqlCall sqlCall) {
+    if (AS_OPERATOR_NAME.equals(sqlCall.getOperator().getName())) {
+      if (sqlCall.getOperandList().get(0) instanceof SqlIdentifier) {
+        SqlIdentifier sqlIdentifier = (SqlIdentifier) sqlCall.getOperandList().get(0);
+        if (sqlIdentifier.names.size() == 2) {
+          Matcher matcher = PATTERN.matcher(sqlIdentifier.names.get(0));
+          if (matcher.find()) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  }
+
+  @Override
+  protected SqlCall transform(SqlCall sqlCall) {
+    SqlIdentifier sqlIdentifier = (SqlIdentifier) sqlCall.getOperandList().get(0);
+    String[] names = sqlIdentifier.names.get(0).split("\\[");
+    String newName = String.format(ELEMENT_AT, names[0], names[1].substring(0, names[1].length() - 1));
+    sqlIdentifier.names = ImmutableList.of(newName, sqlIdentifier.names.get(1));
+    return sqlCall;
+  }
+}

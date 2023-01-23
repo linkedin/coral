@@ -77,7 +77,10 @@ public class RelToTrinoConverter extends RelToSqlConverter {
    */
   public String convert(RelNode relNode) {
     RelNode rel = convertRel(relNode, configs);
-    return convertToSqlNode(rel).accept(new TrinoSqlRewriter()).toSqlString(TrinoSqlDialect.INSTANCE).toString();
+    SqlNode sqlNode = convertToSqlNode(rel);
+    SqlNode sqlNodeWithUDFOperatorConverted = sqlNode.accept(new TrinoSqlUDFConverter(configs));
+    return sqlNodeWithUDFOperatorConverted.accept(new TrinoSqlRewriter()).toSqlString(TrinoSqlDialect.INSTANCE)
+        .toString();
   }
 
   /**
