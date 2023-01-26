@@ -534,8 +534,7 @@ public class HiveToTrinoConverterTest {
 
   @Test
   public void testTypeCastForDataAddFunction() {
-    RelToTrinoConverter relToTrinoConverter =
-        new RelToTrinoConverter(ImmutableMap.of(CAST_DATEADD_TO_STRING, true, CAST_DATESUB_TO_STRING, true));
+    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter(ImmutableMap.of(CAST_DATEADD_TO_STRING, true));
 
     RelNode relNode = hiveToRelConverter.convertSql(
         "SELECT date_add('2021-08-20', 1), date_add('2021-08-20 00:00:00', 1), date_sub('2021-08-20', 1), date_sub('2021-08-20 00:00:00', 1)");

@@ -31,10 +31,4 @@ public class CoralTrinoConfigKeys {
    * Similar to {@link CoralTrinoConfigKeys#AVOID_TRANSFORM_TO_DATE_UDF}, `date_add` should return `string` type at LinkedIn, so we need to add the `cast` for it
    */
   public static final String CAST_DATEADD_TO_STRING = "CAST_DATE_ADD_TO_STRING";
-
-  /**
-   * Similar to {@link CoralTrinoConfigKeys#AVOID_TRANSFORM_TO_DATE_UDF}, `date_sub` should return `string` type at LinkedIn, so we need to add the `cast` for it
-   */
-  public static final String CAST_DATESUB_TO_STRING = "CAST_DATE_SUB_TO_STRING";
-
 }

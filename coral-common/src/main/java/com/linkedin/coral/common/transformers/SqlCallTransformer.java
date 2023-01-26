@@ -32,9 +32,9 @@ public abstract class SqlCallTransformer {
   }
 
   /**
-   * Predicate of the transformer, it’s used to determine if the SqlCall should be transformed or not
+   * Condition of the transformer, it’s used to determine if the SqlCall should be transformed or not
    */
-  protected abstract boolean predicate(SqlCall sqlCall);
+  protected abstract boolean condition(SqlCall sqlCall);
 
   /**
    * Implementation of the transformation, returns the transformed SqlCall
@@ -49,7 +49,7 @@ public abstract class SqlCallTransformer {
     if (sqlCall instanceof SqlSelect) {
       this.topSelectNodes.add((SqlSelect) sqlCall);
     }
-    if (predicate(sqlCall)) {
+    if (condition(sqlCall)) {
       return transform(sqlCall);
     } else {
       return sqlCall;

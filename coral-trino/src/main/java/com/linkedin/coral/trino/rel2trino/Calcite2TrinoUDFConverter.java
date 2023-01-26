@@ -493,8 +493,8 @@ public class Calcite2TrinoUDFConverter {
       if (operatorsToAdjust.containsKey(lowercaseOperatorName)) {
         return rexBuilder.makeCast(operatorsToAdjust.get(lowercaseOperatorName), call);
       }
-      if ((configs.getOrDefault(CAST_DATEADD_TO_STRING, false) && lowercaseOperatorName.equals("date_add"))
-          || (configs.getOrDefault(CAST_DATESUB_TO_STRING, false) && lowercaseOperatorName.equals("date_sub"))) {
+      if (configs.getOrDefault(CAST_DATEADD_TO_STRING, false)
+          && (lowercaseOperatorName.equals("date_add") || lowercaseOperatorName.equals("date_sub"))) {
         return rexBuilder.makeCast(typeFactory.createSqlType(VARCHAR), call);
       }
       return call;

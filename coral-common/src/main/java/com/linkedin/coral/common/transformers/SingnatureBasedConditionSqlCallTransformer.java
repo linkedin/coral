@@ -41,9 +41,11 @@ import static com.linkedin.coral.common.calcite.CalciteUtil.*;
 
 
 /**
- * This class is the base class which transforms UDF operator with the rules defined as JSON string on SqlNode layer
+ * This class is a subclass of SqlCallTransformer which transforms a function operator on SqlNode layer
+ * if the signature of the operator to be transformed, including both the name and the number of operands,
+ * matches the target values in the condition function.
  */
-public class StandardUDFOperatorTransformer extends SqlCallTransformer {
+public final class SingnatureBasedConditionSqlCallTransformer extends SqlCallTransformer {
   private static final Map<String, SqlOperator> OP_MAP = new HashMap<>();
 
   // Operators allowed in the transformation
@@ -93,7 +95,7 @@ public class StandardUDFOperatorTransformer extends SqlCallTransformer {
   public JsonObject resultTransformer;
   public List<JsonObject> operatorTransformers;
 
-  public StandardUDFOperatorTransformer(@Nonnull String fromOperatorName, int numOperands,
+  public SingnatureBasedConditionSqlCallTransformer(@Nonnull String fromOperatorName, int numOperands,
       @Nonnull SqlOperator targetOperator, @Nullable String operandTransformers, @Nullable String resultTransformer,
       @Nullable String operatorTransformers) {
     this.fromOperatorName = fromOperatorName;
@@ -111,7 +113,7 @@ public class StandardUDFOperatorTransformer extends SqlCallTransformer {
   }
 
   @Override
-  protected boolean predicate(SqlCall sqlCall) {
+  protected boolean condition(SqlCall sqlCall) {
     return fromOperatorName.equalsIgnoreCase(sqlCall.getOperator().getName())
         && sqlCall.getOperandList().size() == numOperands;
   }

@@ -31,7 +31,7 @@ public class ShiftArrayIndexTransformer extends SqlCallTransformer {
   }
 
   @Override
-  public boolean predicate(SqlCall sqlCall) {
+  public boolean condition(SqlCall sqlCall) {
     if (ITEM_OPERATOR.equalsIgnoreCase(sqlCall.getOperator().getName())) {
       final SqlNode columnNode = sqlCall.getOperandList().get(0);
       return getRelDataType(columnNode) instanceof ArraySqlType;

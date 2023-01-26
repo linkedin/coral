@@ -11,15 +11,12 @@ import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.util.SqlShuttle;
 
-import static com.linkedin.coral.trino.rel2trino.CoralTrinoConfigKeys.*;
-
 
 /**
- * This class extends the class of SqlShuttle and calls CalciteTrinoUDFOperatorTransformers to traverse
- * the hierarchy and converts UDF operator in all SqlCalls if it is required
+ * This class extends the class of SqlShuttle and calls CalciteTrinoUDFOperatorTransformerUtil to get a list of SqlCallTransformers
+ * to traverse the hierarchy and converts UDF operator in all SqlCalls if it is required
  */
 public class TrinoSqlUDFConverter extends SqlShuttle {
-  private static final String TO_DATE_OPERATOR_NAME = "to_date";
   private final Map<String, Boolean> configs;
   public TrinoSqlUDFConverter(Map<String, Boolean> configs) {
     this.configs = configs;
@@ -27,17 +24,7 @@ public class TrinoSqlUDFConverter extends SqlShuttle {
 
   @Override
   public SqlNode visit(SqlCall call) {
-    if (shouldTransformOperator(call.getOperator().getName())) {
-      CalciteTrinoUDFOperatorTransformers operatorTransformers = CalciteTrinoUDFOperatorTransformers.getInstance();
-      SqlCall transformedCall = operatorTransformers.apply(call);
-      return super.visit(transformedCall);
-    } else {
-      return super.visit(call);
-    }
-  }
-
-  private boolean shouldTransformOperator(String operatorName) {
-    return !(TO_DATE_OPERATOR_NAME.equalsIgnoreCase(operatorName)
-        && configs.getOrDefault(AVOID_TRANSFORM_TO_DATE_UDF, false));
+    SqlCall transformedCall = CoralToTrinoSqlCallTransformersUtil.getTransformers(configs).apply(call);
+    return super.visit(transformedCall);
   }
 }

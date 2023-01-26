@@ -22,19 +22,17 @@ import com.linkedin.coral.common.transformers.SqlCallTransformer;
  */
 public class MapStructAccessOperatorTransformer extends SqlCallTransformer {
   private static final String AS_OPERATOR_NAME = "AS";
-  private static final Pattern PATTERN = Pattern.compile("\\\".+\\\"\\[\\\".+\\\"\\]");
+  private static final Pattern MAP_STRUCT_ACCESS_PATTERN = Pattern.compile("\\\".+\\\"\\[\\\".+\\\"\\]");
   private static final String ELEMENT_AT = "element_at(%s, %s)";
 
   @Override
-  protected boolean predicate(SqlCall sqlCall) {
-    if (AS_OPERATOR_NAME.equals(sqlCall.getOperator().getName())) {
+  protected boolean condition(SqlCall sqlCall) {
+    if (AS_OPERATOR_NAME.equalsIgnoreCase(sqlCall.getOperator().getName())) {
       if (sqlCall.getOperandList().get(0) instanceof SqlIdentifier) {
         SqlIdentifier sqlIdentifier = (SqlIdentifier) sqlCall.getOperandList().get(0);
         if (sqlIdentifier.names.size() == 2) {
-          Matcher matcher = PATTERN.matcher(sqlIdentifier.names.get(0));
-          if (matcher.find()) {
-            return true;
-          }
+          Matcher matcher = MAP_STRUCT_ACCESS_PATTERN.matcher(sqlIdentifier.names.get(0));
+          return matcher.find();
         }
       }
     }
