@@ -21,7 +21,7 @@ import com.linkedin.coral.com.google.common.base.CaseFormat;
 import com.linkedin.coral.com.google.common.base.Converter;
 import com.linkedin.coral.com.google.common.collect.ImmutableMultimap;
 import com.linkedin.coral.common.functions.Function;
-import com.linkedin.coral.common.transformers.SingnatureBasedConditionSqlCallTransformer;
+import com.linkedin.coral.common.transformers.SignatureBasedConditionSqlCallTransformer;
 import com.linkedin.coral.common.transformers.SqlCallTransformer;
 import com.linkedin.coral.common.transformers.SqlCallTransformers;
 import com.linkedin.coral.hive.hive2rel.functions.HiveRLikeOperator;
@@ -241,7 +241,7 @@ public final class CoralToTrinoSqlCallTransformersUtil {
   private static SqlCallTransformer createSignatureBasedConditionSqlCallTransformer(SqlOperator calciteOp,
       int numOperands, SqlOperator trinoOp, String operandTransformer, String resultTransformer,
       String operatorTransformer) {
-    return new SingnatureBasedConditionSqlCallTransformer(calciteOp.getName(), numOperands, trinoOp, operandTransformer,
+    return new SignatureBasedConditionSqlCallTransformer(calciteOp.getName(), numOperands, trinoOp, operandTransformer,
         resultTransformer, operatorTransformer);
   }
 }

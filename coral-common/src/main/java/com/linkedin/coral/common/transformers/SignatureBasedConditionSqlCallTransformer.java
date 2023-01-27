@@ -45,7 +45,7 @@ import static com.linkedin.coral.common.calcite.CalciteUtil.*;
  * if the signature of the operator to be transformed, including both the name and the number of operands,
  * matches the target values in the condition function.
  */
-public final class SingnatureBasedConditionSqlCallTransformer extends SqlCallTransformer {
+public class SignatureBasedConditionSqlCallTransformer extends SqlCallTransformer {
   private static final Map<String, SqlOperator> OP_MAP = new HashMap<>();
 
   // Operators allowed in the transformation
@@ -95,7 +95,7 @@ public final class SingnatureBasedConditionSqlCallTransformer extends SqlCallTra
   public JsonObject resultTransformer;
   public List<JsonObject> operatorTransformers;
 
-  public SingnatureBasedConditionSqlCallTransformer(@Nonnull String fromOperatorName, int numOperands,
+  public SignatureBasedConditionSqlCallTransformer(@Nonnull String fromOperatorName, int numOperands,
       @Nonnull SqlOperator targetOperator, @Nullable String operandTransformers, @Nullable String resultTransformer,
       @Nullable String operatorTransformers) {
     this.fromOperatorName = fromOperatorName;
