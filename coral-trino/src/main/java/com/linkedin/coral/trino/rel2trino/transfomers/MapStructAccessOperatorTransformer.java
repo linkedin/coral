@@ -18,7 +18,7 @@ import com.linkedin.coral.common.transformers.SqlCallTransformer;
 /**
  * This class is an ad-hoc SqlCallTransformer which converts the map struct access operator "[]" defined
  * from Calcite in a SqlIdentifier into a UDF operator of "element_at",
- * e.g. from "col"["field"] to element_at("col", "field")
+ * e.g. from col["field"] to element_at(col, "field")
  */
 public class MapStructAccessOperatorTransformer extends SqlCallTransformer {
   private static final String AS_OPERATOR_NAME = "AS";

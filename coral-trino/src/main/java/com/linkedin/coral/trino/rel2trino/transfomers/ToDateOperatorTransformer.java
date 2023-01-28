@@ -22,13 +22,17 @@ import com.linkedin.coral.common.functions.FunctionReturnTypes;
 import com.linkedin.coral.common.transformers.SqlCallTransformer;
 
 import static com.linkedin.coral.common.calcite.CalciteUtil.*;
+import static com.linkedin.coral.trino.rel2trino.utils.TrinoSqlCallTransformerUtil.*;
 
 
 /**
  *  This class implements the transformation from the operation of "to_date"
+ *  for example, "to_date('2023-01-01')" is transformed into "date(CAST('2023-01-01') AS TIMESTAMP)"
  */
 public class ToDateOperatorTransformer extends SqlCallTransformer {
   private static final String FROM_OPERATOR_NAME = "to_date";
+
+  private static final String TO_OPERATOR_NAME = "date";
   private static final int NUM_OPERANDS = 1;
   private static final SqlOperator TIMESTAMP_OPERATOR =
       new SqlUserDefinedFunction(new SqlIdentifier("timestamp", SqlParserPos.ZERO), FunctionReturnTypes.TIMESTAMP, null,
@@ -44,12 +48,12 @@ public class ToDateOperatorTransformer extends SqlCallTransformer {
           writer.endFunCall(frame);
         }
       };
-  private final SqlOperator trinoOperator;
+  private static final SqlOperator TRINO_OPERATOR =
+      createSqlUDF(TO_OPERATOR_NAME, hiveToCoralSqlOperator(FROM_OPERATOR_NAME).getReturnTypeInference());
 
   private final boolean avoidTransformToDateUDF;
 
-  public ToDateOperatorTransformer(SqlOperator trinoOperator, boolean avoidTransformToDateUDF) {
-    this.trinoOperator = trinoOperator;
+  public ToDateOperatorTransformer(boolean avoidTransformToDateUDF) {
     this.avoidTransformToDateUDF = avoidTransformToDateUDF;
   }
 
@@ -65,6 +69,6 @@ public class ToDateOperatorTransformer extends SqlCallTransformer {
     List<SqlNode> newOperands = new ArrayList<>();
     SqlNode timestampSqlCall = createCall(TIMESTAMP_OPERATOR, sourceOperands, SqlParserPos.ZERO);
     newOperands.add(timestampSqlCall);
-    return createCall(trinoOperator, newOperands, SqlParserPos.ZERO);
+    return createCall(TRINO_OPERATOR, newOperands, SqlParserPos.ZERO);
   }
 }

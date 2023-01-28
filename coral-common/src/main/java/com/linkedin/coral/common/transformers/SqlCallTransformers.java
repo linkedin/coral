@@ -15,10 +15,10 @@ import org.apache.calcite.sql.SqlCall;
 /**
  * Container for SqlCallTransformer
  */
-public class SqlCallTransformers {
+public final class SqlCallTransformers {
   private final ImmutableList<SqlCallTransformer> sqlCallTransformers;
 
-  public SqlCallTransformers(ImmutableList<SqlCallTransformer> sqlCallTransformers) {
+  SqlCallTransformers(ImmutableList<SqlCallTransformer> sqlCallTransformers) {
     this.sqlCallTransformers = sqlCallTransformers;
   }
 

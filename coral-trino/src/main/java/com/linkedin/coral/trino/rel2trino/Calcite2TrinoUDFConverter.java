@@ -55,9 +55,9 @@ import com.linkedin.coral.com.google.common.collect.Multimap;
 import com.linkedin.coral.common.functions.FunctionReturnTypes;
 import com.linkedin.coral.common.functions.GenericProjectFunction;
 import com.linkedin.coral.trino.rel2trino.functions.GenericProjectToTrinoConverter;
+import com.linkedin.coral.trino.rel2trino.utils.TrinoSqlCallTransformerUtil;
 
 import static com.linkedin.coral.trino.rel2trino.CoralTrinoConfigKeys.*;
-import static com.linkedin.coral.trino.rel2trino.UDFMapUtils.createUDF;
 import static org.apache.calcite.sql.fun.SqlStdOperatorTable.MULTIPLY;
 import static org.apache.calcite.sql.type.ReturnTypes.explicit;
 import static org.apache.calcite.sql.type.SqlTypeName.*;
@@ -295,8 +295,10 @@ public class Calcite2TrinoUDFConverter {
 
     private Optional<RexNode> visitCollectListOrSetFunction(RexCall call) {
       List<RexNode> convertedOperands = visitList(call.getOperands(), (boolean[]) null);
-      final SqlOperator arrayAgg = createUDF("array_agg", FunctionReturnTypes.ARRAY_OF_ARG0_TYPE);
-      final SqlOperator arrayDistinct = createUDF("array_distinct", ReturnTypes.ARG0_NULLABLE);
+      final SqlOperator arrayAgg =
+          TrinoSqlCallTransformerUtil.createSqlUDF("array_agg", FunctionReturnTypes.ARRAY_OF_ARG0_TYPE);
+      final SqlOperator arrayDistinct =
+          TrinoSqlCallTransformerUtil.createSqlUDF("array_distinct", ReturnTypes.ARG0_NULLABLE);
       final String operatorName = call.getOperator().getName();
       if (operatorName.equalsIgnoreCase("collect_list")) {
         return Optional.of(rexBuilder.makeCall(arrayAgg, convertedOperands));
@@ -307,8 +309,9 @@ public class Calcite2TrinoUDFConverter {
 
     private Optional<RexNode> visitFromUnixtime(RexCall call) {
       List<RexNode> convertedOperands = visitList(call.getOperands(), (boolean[]) null);
-      SqlOperator formatDatetime = createUDF("format_datetime", FunctionReturnTypes.STRING);
-      SqlOperator fromUnixtime = createUDF("from_unixtime", explicit(TIMESTAMP));
+      SqlOperator formatDatetime =
+          TrinoSqlCallTransformerUtil.createSqlUDF("format_datetime", FunctionReturnTypes.STRING);
+      SqlOperator fromUnixtime = TrinoSqlCallTransformerUtil.createSqlUDF("from_unixtime", explicit(TIMESTAMP));
       if (convertedOperands.size() == 1) {
         return Optional
             .of(rexBuilder.makeCall(formatDatetime, rexBuilder.makeCall(fromUnixtime, call.getOperands().get(0)),
@@ -332,13 +335,17 @@ public class Calcite2TrinoUDFConverter {
       // In below definitions we should use `TIMESTATMP WITH TIME ZONE`. As calcite is lacking
       // this type we use `TIMESTAMP` instead. It does not have any practical implications as result syntax tree
       // is not type-checked, and only used for generating output SQL for a view query.
-      SqlOperator trinoAtTimeZone = createUDF("at_timezone", explicit(TIMESTAMP /* should be WITH TIME ZONE */));
-      SqlOperator trinoWithTimeZone = createUDF("with_timezone", explicit(TIMESTAMP /* should be WITH TIME ZONE */));
-      SqlOperator trinoToUnixTime = createUDF("to_unixtime", explicit(DOUBLE));
-      SqlOperator trinoFromUnixtimeNanos =
-          createUDF("from_unixtime_nanos", explicit(TIMESTAMP /* should be WITH TIME ZONE */));
-      SqlOperator trinoFromUnixTime = createUDF("from_unixtime", explicit(TIMESTAMP /* should be WITH TIME ZONE */));
-      SqlOperator trinoCanonicalizeHiveTimezoneId = createUDF("$canonicalize_hive_timezone_id", explicit(VARCHAR));
+      SqlOperator trinoAtTimeZone =
+          TrinoSqlCallTransformerUtil.createSqlUDF("at_timezone", explicit(TIMESTAMP /* should be WITH TIME ZONE */));
+      SqlOperator trinoWithTimeZone =
+          TrinoSqlCallTransformerUtil.createSqlUDF("with_timezone", explicit(TIMESTAMP /* should be WITH TIME ZONE */));
+      SqlOperator trinoToUnixTime = TrinoSqlCallTransformerUtil.createSqlUDF("to_unixtime", explicit(DOUBLE));
+      SqlOperator trinoFromUnixtimeNanos = TrinoSqlCallTransformerUtil.createSqlUDF("from_unixtime_nanos",
+          explicit(TIMESTAMP /* should be WITH TIME ZONE */));
+      SqlOperator trinoFromUnixTime =
+          TrinoSqlCallTransformerUtil.createSqlUDF("from_unixtime", explicit(TIMESTAMP /* should be WITH TIME ZONE */));
+      SqlOperator trinoCanonicalizeHiveTimezoneId =
+          TrinoSqlCallTransformerUtil.createSqlUDF("$canonicalize_hive_timezone_id", explicit(VARCHAR));
 
       RelDataType bigintType = typeFactory.createSqlType(BIGINT);
       RelDataType doubleType = typeFactory.createSqlType(DOUBLE);
@@ -414,8 +421,9 @@ public class Calcite2TrinoUDFConverter {
       // Trino does not allow for such conversion, but we can achieve the same behavior by first calling "to_unixtime"
       // on the TIMESTAMP and then casting it to DECIMAL after.
       if (call.getType().getSqlTypeName() == DECIMAL && leftOperand.getType().getSqlTypeName() == TIMESTAMP) {
-        SqlOperator trinoToUnixTime = createUDF("to_unixtime", explicit(DOUBLE));
-        SqlOperator trinoWithTimeZone = createUDF("with_timezone", explicit(TIMESTAMP /* should be WITH TIME ZONE */));
+        SqlOperator trinoToUnixTime = TrinoSqlCallTransformerUtil.createSqlUDF("to_unixtime", explicit(DOUBLE));
+        SqlOperator trinoWithTimeZone = TrinoSqlCallTransformerUtil.createSqlUDF("with_timezone",
+            explicit(TIMESTAMP /* should be WITH TIME ZONE */));
         return Optional.of(rexBuilder.makeCast(call.getType(), rexBuilder.makeCall(trinoToUnixTime,
             rexBuilder.makeCall(trinoWithTimeZone, leftOperand, rexBuilder.makeLiteral("UTC")))));
       }
@@ -425,7 +433,7 @@ public class Calcite2TrinoUDFConverter {
       if ((call.getType().getSqlTypeName() == VARCHAR || call.getType().getSqlTypeName() == CHAR)
           && (leftOperand.getType().getSqlTypeName() == VARBINARY
               || leftOperand.getType().getSqlTypeName() == BINARY)) {
-        SqlOperator fromUTF8 = createUDF("from_utf8", explicit(VARCHAR));
+        SqlOperator fromUTF8 = TrinoSqlCallTransformerUtil.createSqlUDF("from_utf8", explicit(VARCHAR));
         return Optional.of(rexBuilder.makeCall(fromUTF8, leftOperand));
       }
 
