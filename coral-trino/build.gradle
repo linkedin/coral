@@ -13,4 +13,5 @@ dependencies {
 
   testCompile deps.'hadoop'.'hadoop-mapreduce-client-common'
   testCompile deps.'kryo'
+  testImplementation deps.'jetbrains'
 }
