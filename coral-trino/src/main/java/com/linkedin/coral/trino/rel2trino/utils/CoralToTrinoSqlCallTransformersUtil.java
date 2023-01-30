@@ -19,8 +19,17 @@ import com.linkedin.coral.common.transformers.SqlCallTransformer;
 import com.linkedin.coral.common.transformers.SqlCallTransformers;
 import com.linkedin.coral.hive.hive2rel.functions.HiveRLikeOperator;
 import com.linkedin.coral.trino.rel2trino.functions.TrinoElementAtFunction;
+import com.linkedin.coral.trino.rel2trino.transfomers.DateAddOperatorTransformer;
+import com.linkedin.coral.trino.rel2trino.transfomers.DateDiffOperatorTransformer;
+import com.linkedin.coral.trino.rel2trino.transfomers.DateSubOperatorTransformer;
+import com.linkedin.coral.trino.rel2trino.transfomers.DecodeOperatorTransformer;
 import com.linkedin.coral.trino.rel2trino.transfomers.MapStructAccessOperatorTransformer;
+import com.linkedin.coral.trino.rel2trino.transfomers.ModOperatorTransformer;
+import com.linkedin.coral.trino.rel2trino.transfomers.RandomIntegerOperatorWithTwoOperandsTransformer;
+import com.linkedin.coral.trino.rel2trino.transfomers.RandomOperatorWithOneOperandTransformer;
+import com.linkedin.coral.trino.rel2trino.transfomers.RegexpExtractOperatorTransformer;
 import com.linkedin.coral.trino.rel2trino.transfomers.ToDateOperatorTransformer;
+import com.linkedin.coral.trino.rel2trino.transfomers.TruncateOperatorTransformer;
 
 import static com.linkedin.coral.trino.rel2trino.CoralTrinoConfigKeys.*;
 import static com.linkedin.coral.trino.rel2trino.utils.TrinoSqlCallTransformerUtil.*;
@@ -52,23 +61,17 @@ public final class CoralToTrinoSqlCallTransformersUtil {
     DEFAULT_SQL_CALL_TRANSFORMER_LIST
         .add(createSignatureBasedConditionSqlCallTransformer(hiveToCoralSqlOperator("nvl"), 2, "coalesce"));
     // Array and map functions
-    DEFAULT_SQL_CALL_TRANSFORMER_LIST.add(createSignatureBasedConditionSqlCallTransformer(SqlStdOperatorTable.ITEM, 2,
-        TrinoElementAtFunction.INSTANCE, null, null, null));
+    DEFAULT_SQL_CALL_TRANSFORMER_LIST.add(
+        createSignatureBasedConditionSqlCallTransformer(SqlStdOperatorTable.ITEM, 2, TrinoElementAtFunction.INSTANCE));
 
     // Math Functions
     DEFAULT_SQL_CALL_TRANSFORMER_LIST
         .add(createSignatureBasedConditionSqlCallTransformer(SqlStdOperatorTable.RAND, 0, "RANDOM"));
-    DEFAULT_SQL_CALL_TRANSFORMER_LIST
-        .add(createSignatureBasedConditionSqlCallTransformer(SqlStdOperatorTable.RAND, 1, "RANDOM", "[]", null, null));
+    DEFAULT_SQL_CALL_TRANSFORMER_LIST.add(new RandomOperatorWithOneOperandTransformer());
     DEFAULT_SQL_CALL_TRANSFORMER_LIST
         .add(createSignatureBasedConditionSqlCallTransformer(SqlStdOperatorTable.RAND_INTEGER, 1, "RANDOM"));
-    DEFAULT_SQL_CALL_TRANSFORMER_LIST.add(createSignatureBasedConditionSqlCallTransformer(
-        SqlStdOperatorTable.RAND_INTEGER, 2, "RANDOM", "[{\"input\":2}]", null, null));
-    DEFAULT_SQL_CALL_TRANSFORMER_LIST
-        .add(createSignatureBasedConditionSqlCallTransformer(SqlStdOperatorTable.TRUNCATE, 2, "TRUNCATE",
-            "[{\"op\":\"*\",\"operands\":[{\"input\":1},{\"op\":\"^\",\"operands\":[{\"value\":10},{\"input\":2}]}]}]",
-            "{\"op\":\"/\",\"operands\":[{\"input\":0},{\"op\":\"^\",\"operands\":[{\"value\":10},{\"input\":2}]}]}",
-            null));
+    DEFAULT_SQL_CALL_TRANSFORMER_LIST.add(new RandomIntegerOperatorWithTwoOperandsTransformer());
+    DEFAULT_SQL_CALL_TRANSFORMER_LIST.add(new TruncateOperatorTransformer());
 
     // String Functions
     DEFAULT_SQL_CALL_TRANSFORMER_LIST
@@ -85,10 +88,7 @@ public final class CoralToTrinoSqlCallTransformersUtil {
         createSignatureBasedConditionSqlCallTransformer(hiveToCoralSqlOperator("get_json_object"), 2, "json_extract"));
 
     // map various hive functions
-    DEFAULT_SQL_CALL_TRANSFORMER_LIST.add(createSignatureBasedConditionSqlCallTransformer(
-        hiveToCoralSqlOperator("pmod"), 2, "mod",
-        "[{\"op\":\"+\",\"operands\":[{\"op\":\"%\",\"operands\":[{\"input\":1},{\"input\":2}]},{\"input\":2}]},{\"input\":2}]",
-        null, null));
+    DEFAULT_SQL_CALL_TRANSFORMER_LIST.add(new ModOperatorTransformer());
     DEFAULT_SQL_CALL_TRANSFORMER_LIST
         .add(createSignatureBasedConditionSqlCallTransformer(hiveToCoralSqlOperator("base64"), 1, "to_base64"));
     DEFAULT_SQL_CALL_TRANSFORMER_LIST
@@ -99,31 +99,13 @@ public final class CoralToTrinoSqlCallTransformersUtil {
         .add(createSignatureBasedConditionSqlCallTransformer(hiveToCoralSqlOperator("unhex"), 1, "from_hex"));
     DEFAULT_SQL_CALL_TRANSFORMER_LIST
         .add(createSignatureBasedConditionSqlCallTransformer(hiveToCoralSqlOperator("array_contains"), 2, "contains"));
-    DEFAULT_SQL_CALL_TRANSFORMER_LIST.add(
-        createSignatureBasedConditionSqlCallTransformer(hiveToCoralSqlOperator("regexp_extract"), 3, "regexp_extract",
-            "[{\"input\": 1}, {\"op\": \"hive_pattern_to_trino\", \"operands\":[{\"input\": 2}]}, {\"input\": 3}]",
-            null, null));
+    DEFAULT_SQL_CALL_TRANSFORMER_LIST.add(new RegexpExtractOperatorTransformer());
     DEFAULT_SQL_CALL_TRANSFORMER_LIST
         .add(createSignatureBasedConditionSqlCallTransformer(hiveToCoralSqlOperator("instr"), 2, "strpos"));
-    DEFAULT_SQL_CALL_TRANSFORMER_LIST
-        .add(createSignatureBasedConditionSqlCallTransformer(hiveToCoralSqlOperator("decode"), 2,
-            "[{\"regex\":\"(?i)('utf-8')\", \"input\":2, \"name\":\"from_utf8\"}]", "[{\"input\":1}]", null, null));
-
-    DEFAULT_SQL_CALL_TRANSFORMER_LIST
-        .add(createSignatureBasedConditionSqlCallTransformer(hiveToCoralSqlOperator("date_add"), 2, "date_add",
-            "[{\"value\": 'day'}, {\"input\": 2},  "
-                + "{\"op\": \"date\", \"operands\":[{\"op\": \"timestamp\", \"operands\":[{\"input\": 1}]}]}]",
-            null, null));
-    DEFAULT_SQL_CALL_TRANSFORMER_LIST
-        .add(createSignatureBasedConditionSqlCallTransformer(hiveToCoralSqlOperator("date_sub"), 2, "date_add",
-            "[{\"value\": 'day'}, " + "{\"op\": \"*\", \"operands\":[{\"input\": 2}, {\"value\": -1}]}, "
-                + "{\"op\": \"date\", \"operands\":[{\"op\": \"timestamp\", \"operands\":[{\"input\": 1}]}]}]",
-            null, null));
-    DEFAULT_SQL_CALL_TRANSFORMER_LIST.add(createSignatureBasedConditionSqlCallTransformer(
-        hiveToCoralSqlOperator("datediff"), 2, "date_diff",
-        "[{\"value\": 'day'}, {\"op\": \"date\", \"operands\":[{\"op\": \"timestamp\", \"operands\":[{\"input\": 2}]}]}, "
-            + "{\"op\": \"date\", \"operands\":[{\"op\": \"timestamp\", \"operands\":[{\"input\": 1}]}]}]",
-        null, null));
+    DEFAULT_SQL_CALL_TRANSFORMER_LIST.add(new DecodeOperatorTransformer());
+    DEFAULT_SQL_CALL_TRANSFORMER_LIST.add(new DateAddOperatorTransformer());
+    DEFAULT_SQL_CALL_TRANSFORMER_LIST.add(new DateSubOperatorTransformer());
+    DEFAULT_SQL_CALL_TRANSFORMER_LIST.add(new DateDiffOperatorTransformer());
   }
 
   private static void addLinkedInFunctionTransformers() {
