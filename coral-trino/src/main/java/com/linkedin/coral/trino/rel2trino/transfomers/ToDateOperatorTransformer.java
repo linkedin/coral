@@ -20,9 +20,9 @@ import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
 import com.linkedin.coral.com.google.common.base.Preconditions;
 import com.linkedin.coral.common.functions.FunctionReturnTypes;
 import com.linkedin.coral.common.transformers.SqlCallTransformer;
+import com.linkedin.coral.trino.rel2trino.utils.CoralToTrinoSqlCallTransformersUtil;
 
 import static com.linkedin.coral.common.calcite.CalciteUtil.*;
-import static com.linkedin.coral.trino.rel2trino.utils.TrinoSqlCallTransformerUtil.*;
 
 
 /**
@@ -48,8 +48,8 @@ public class ToDateOperatorTransformer extends SqlCallTransformer {
           writer.endFunCall(frame);
         }
       };
-  private static final SqlOperator TRINO_OPERATOR =
-      createSqlUDF(TO_OPERATOR_NAME, hiveToCoralSqlOperator(FROM_OPERATOR_NAME).getReturnTypeInference());
+  private static final SqlOperator TRINO_OPERATOR = createSqlUDF(TO_OPERATOR_NAME,
+      CoralToTrinoSqlCallTransformersUtil.hiveToCoralSqlOperator(FROM_OPERATOR_NAME).getReturnTypeInference(), true);
 
   private final boolean avoidTransformToDateUDF;
 

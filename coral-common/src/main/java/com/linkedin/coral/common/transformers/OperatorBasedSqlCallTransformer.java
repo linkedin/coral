@@ -30,8 +30,6 @@ import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.OperandTypes;
 import org.apache.calcite.sql.type.ReturnTypes;
-import org.apache.calcite.sql.type.SqlOperandTypeChecker;
-import org.apache.calcite.sql.type.SqlReturnTypeInference;
 import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
 
 import com.linkedin.coral.com.google.common.base.Preconditions;
@@ -45,7 +43,7 @@ import static com.linkedin.coral.common.calcite.CalciteUtil.*;
  * if the signature of the operator to be transformed, including both the name and the number of operands,
  * matches the target values in the condition function.
  */
-public class SignatureBasedConditionSqlCallTransformer extends SqlCallTransformer {
+public class OperatorBasedSqlCallTransformer extends SqlCallTransformer {
   private static final Map<String, SqlOperator> OP_MAP = new HashMap<>();
 
   // Operators allowed in the transformation
@@ -95,7 +93,7 @@ public class SignatureBasedConditionSqlCallTransformer extends SqlCallTransforme
   public JsonObject resultTransformer;
   public List<JsonObject> operatorTransformers;
 
-  public SignatureBasedConditionSqlCallTransformer(@Nonnull String fromOperatorName, int numOperands,
+  public OperatorBasedSqlCallTransformer(@Nonnull String fromOperatorName, int numOperands,
       @Nonnull SqlOperator targetOperator, @Nullable String operandTransformers, @Nullable String resultTransformer,
       @Nullable String operatorTransformers) {
     this.fromOperatorName = fromOperatorName;
@@ -110,6 +108,17 @@ public class SignatureBasedConditionSqlCallTransformer extends SqlCallTransforme
     if (operatorTransformers != null) {
       this.operatorTransformers = parseJsonObjectsFromString(operatorTransformers);
     }
+  }
+
+  public OperatorBasedSqlCallTransformer(@Nonnull SqlOperator coralOp, int numOperands, @Nonnull String trinoFuncName) {
+    this(coralOp.getName(), numOperands, createSqlUDF(trinoFuncName, coralOp.getReturnTypeInference(), true), null,
+        null, null);
+  }
+
+  public OperatorBasedSqlCallTransformer(@Nonnull SqlOperator coralOp, int numOperands, @Nonnull String trinoFuncName,
+      @Nullable String operandTransformers, @Nullable String resultTransformer, @Nullable String operatorTransformers) {
+    this(coralOp.getName(), numOperands, createSqlUDF(trinoFuncName, coralOp.getReturnTypeInference(), true),
+        operandTransformers, resultTransformer, operatorTransformers);
   }
 
   @Override
@@ -235,7 +244,7 @@ public class SignatureBasedConditionSqlCallTransformer extends SqlCallTransforme
       String matcher = operatorTransformer.get(REGEX).getAsString();
 
       if (Pattern.matches(matcher, sourceOperands.get(index).toString())) {
-        return createOperator(functionName, operator.getReturnTypeInference(), null);
+        return createSqlUDF(functionName, operator.getReturnTypeInference(), false);
       }
     }
     return operator;
@@ -252,11 +261,5 @@ public class SignatureBasedConditionSqlCallTransformer extends SqlCallTransforme
       objects.add(object.getAsJsonObject());
     }
     return objects;
-  }
-
-  public static SqlOperator createOperator(String functionName, SqlReturnTypeInference returnTypeInference,
-      SqlOperandTypeChecker operandTypeChecker) {
-    return new SqlUserDefinedFunction(new SqlIdentifier(functionName, SqlParserPos.ZERO), returnTypeInference, null,
-        operandTypeChecker, null, null);
   }
 }
