@@ -14,17 +14,17 @@ import org.apache.calcite.sql.SqlNodeList;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.parser.SqlParserPos;
 
-import com.linkedin.coral.common.transformers.SignatureBasedConditionSqlCallTransformer;
+import com.linkedin.coral.common.transformers.OperatorBasedSqlCallTransformer;
 
 import static com.linkedin.coral.common.calcite.CalciteUtil.*;
-import static com.linkedin.coral.trino.rel2trino.utils.TrinoSqlCallTransformerUtil.*;
+import static com.linkedin.coral.trino.rel2trino.utils.CoralToTrinoSqlCallTransformersUtil.*;
 
 
 /**
  * This class transforms a Coral SqlCall of "datediff" operator with 2 operands into a Trino SqlCall of an operator
  * named "date_diff"
  */
-public class DateDiffOperatorTransformer extends SignatureBasedConditionSqlCallTransformer {
+public class DateDiffOperatorTransformer extends OperatorBasedSqlCallTransformer {
   private static final String FROM_OPERATOR_NAME = "datediff";
   private static final int OPERAND_NUM = 2;
   private static final SqlOperator TARGET_OPERATOR =

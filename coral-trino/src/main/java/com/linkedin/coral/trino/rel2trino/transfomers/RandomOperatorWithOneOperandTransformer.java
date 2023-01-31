@@ -12,17 +12,16 @@ import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParserPos;
 
-import com.linkedin.coral.common.transformers.SignatureBasedConditionSqlCallTransformer;
+import com.linkedin.coral.common.transformers.OperatorBasedSqlCallTransformer;
 
 import static com.linkedin.coral.common.calcite.CalciteUtil.*;
-import static com.linkedin.coral.trino.rel2trino.utils.TrinoSqlCallTransformerUtil.*;
 
 
 /**
  * This class transforms a Coral SqlCall of "RAND" operator with 1 operand into a Trino SqlCall of an operator
  * named "RANDOM"
  */
-public class RandomOperatorWithOneOperandTransformer extends SignatureBasedConditionSqlCallTransformer {
+public class RandomOperatorWithOneOperandTransformer extends OperatorBasedSqlCallTransformer {
   private static final String FROM_OPERATOR_NAME = "RAND";
   private static final int OPERAND_NUM = 1;
   private static final SqlOperator TARGET_OPERATOR =

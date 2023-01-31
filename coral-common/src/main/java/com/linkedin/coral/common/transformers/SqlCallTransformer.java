@@ -8,18 +8,48 @@ package com.linkedin.coral.common.transformers;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.common.base.Preconditions;
+
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.sql.SqlCall;
+import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlNodeList;
+import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.SqlSelect;
+import org.apache.calcite.sql.SqlWriter;
+import org.apache.calcite.sql.parser.SqlParserPos;
+import org.apache.calcite.sql.type.OperandTypes;
+import org.apache.calcite.sql.type.ReturnTypes;
+import org.apache.calcite.sql.type.SqlReturnTypeInference;
+import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
 import org.apache.calcite.sql.validate.SqlValidator;
+
+import com.linkedin.coral.common.functions.FunctionReturnTypes;
 
 
 /**
  * Abstract class for generic transformations on SqlCalls
  */
 public abstract class SqlCallTransformer {
+  public static final SqlOperator TIMESTAMP_OPERATOR =
+      new SqlUserDefinedFunction(new SqlIdentifier("timestamp", SqlParserPos.ZERO), FunctionReturnTypes.TIMESTAMP, null,
+          OperandTypes.STRING, null, null) {
+        @Override
+        public void unparse(SqlWriter writer, SqlCall call, int leftPrec, int rightPrec) {
+          // for timestamp operator, we need to construct `CAST(x AS TIMESTAMP)`
+          Preconditions.checkState(call.operandCount() == 1);
+          final SqlWriter.Frame frame = writer.startFunCall("CAST");
+          call.operand(0).unparse(writer, 0, 0);
+          writer.sep("AS");
+          writer.literal("TIMESTAMP");
+          writer.endFunCall(frame);
+        }
+      };
+
+  public static final SqlOperator DATE_OPERATOR = new SqlUserDefinedFunction(
+      new SqlIdentifier("date", SqlParserPos.ZERO), ReturnTypes.DATE, null, OperandTypes.STRING, null, null);
+
   private SqlValidator sqlValidator;
   private final List<SqlSelect> topSelectNodes = new ArrayList<>();
 
@@ -95,5 +125,11 @@ public abstract class SqlCallTransformer {
       }
     }
     throw new RuntimeException("Failed to derive the RelDataType for SqlNode " + sqlNode);
+  }
+
+  public static SqlOperator createSqlUDF(String functionName, SqlReturnTypeInference typeInference) {
+    SqlIdentifier sqlIdentifier = new SqlIdentifier(
+        com.linkedin.coral.com.google.common.collect.ImmutableList.of(functionName), SqlParserPos.ZERO);
+    return new SqlUserDefinedFunction(sqlIdentifier, typeInference, null, null, null, null);
   }
 }

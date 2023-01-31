@@ -15,17 +15,17 @@ import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParserPos;
 
-import com.linkedin.coral.common.transformers.SignatureBasedConditionSqlCallTransformer;
+import com.linkedin.coral.common.transformers.OperatorBasedSqlCallTransformer;
 
 import static com.linkedin.coral.common.calcite.CalciteUtil.*;
-import static com.linkedin.coral.trino.rel2trino.utils.TrinoSqlCallTransformerUtil.*;
+import static com.linkedin.coral.trino.rel2trino.utils.CoralToTrinoSqlCallTransformersUtil.*;
 
 
 /**
  * This class transforms a Coral SqlCall of "date_sub" operator with 2 operands into a Trino SqlCall of an operator
  * named "date_add"
  */
-public class DateSubOperatorTransformer extends SignatureBasedConditionSqlCallTransformer {
+public class DateSubOperatorTransformer extends OperatorBasedSqlCallTransformer {
   private static final String FROM_OPERATOR_NAME = "date_sub";
   private static final int OPERAND_NUM = 2;
   private static final SqlOperator TARGET_OPERATOR =

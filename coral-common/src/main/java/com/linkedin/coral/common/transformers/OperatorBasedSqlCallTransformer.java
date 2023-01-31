@@ -19,16 +19,20 @@ import static com.linkedin.coral.common.calcite.CalciteUtil.*;
  * if the signature of the operator to be transformed, including both the name and the number of operands,
  * matches the target values in the condition function.
  */
-public class SignatureBasedConditionSqlCallTransformer extends SqlCallTransformer {
-  private final String fromOperatorName;
-  private final int numOperands;
-  private final SqlOperator targetOperator;
+public class OperatorBasedSqlCallTransformer extends SqlCallTransformer {
+  public final String fromOperatorName;
+  public final int numOperands;
+  public final SqlOperator targetOperator;
 
-  public SignatureBasedConditionSqlCallTransformer(@Nonnull String fromOperatorName, int numOperands,
+  public OperatorBasedSqlCallTransformer(@Nonnull String fromOperatorName, int numOperands,
       @Nonnull SqlOperator targetOperator) {
     this.fromOperatorName = fromOperatorName;
     this.numOperands = numOperands;
     this.targetOperator = targetOperator;
+  }
+
+  public OperatorBasedSqlCallTransformer(@Nonnull SqlOperator coralOp, int numOperands, @Nonnull String trinoFuncName) {
+    this(coralOp.getName(), numOperands, createSqlUDF(trinoFuncName, coralOp.getReturnTypeInference()));
   }
 
   @Override
@@ -41,4 +45,5 @@ public class SignatureBasedConditionSqlCallTransformer extends SqlCallTransforme
   protected SqlCall transform(SqlCall sqlCall) {
     return createCall(targetOperator, sqlCall.getOperandList(), SqlParserPos.ZERO);
   }
+
 }

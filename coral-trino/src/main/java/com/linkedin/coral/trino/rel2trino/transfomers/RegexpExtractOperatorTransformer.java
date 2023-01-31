@@ -18,16 +18,16 @@ import org.apache.calcite.sql.type.OperandTypes;
 import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
 
 import com.linkedin.coral.common.functions.FunctionReturnTypes;
-import com.linkedin.coral.common.transformers.SignatureBasedConditionSqlCallTransformer;
+import com.linkedin.coral.common.transformers.OperatorBasedSqlCallTransformer;
 
-import static com.linkedin.coral.trino.rel2trino.utils.TrinoSqlCallTransformerUtil.*;
+import static com.linkedin.coral.trino.rel2trino.utils.CoralToTrinoSqlCallTransformersUtil.*;
 
 
 /**
  * This class transforms a Coral SqlCall of "regexp_extract" operator with 3 operands into a Trino SqlCall of an operator
  * named "regexp_extract"
  */
-public class RegexpExtractOperatorTransformer extends SignatureBasedConditionSqlCallTransformer {
+public class RegexpExtractOperatorTransformer extends OperatorBasedSqlCallTransformer {
   private static final String FROM_OPERATOR_NAME = "regexp_extract";
   private static final int OPERAND_NUM = 3;
   private static final SqlOperator TARGET_OPERATOR =

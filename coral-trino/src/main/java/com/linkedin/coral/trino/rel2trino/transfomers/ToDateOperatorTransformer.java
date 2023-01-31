@@ -9,20 +9,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.calcite.sql.SqlCall;
-import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlOperator;
-import org.apache.calcite.sql.SqlWriter;
 import org.apache.calcite.sql.parser.SqlParserPos;
-import org.apache.calcite.sql.type.OperandTypes;
-import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
 
-import com.linkedin.coral.com.google.common.base.Preconditions;
-import com.linkedin.coral.common.functions.FunctionReturnTypes;
 import com.linkedin.coral.common.transformers.SqlCallTransformer;
+import com.linkedin.coral.trino.rel2trino.utils.CoralToTrinoSqlCallTransformersUtil;
 
 import static com.linkedin.coral.common.calcite.CalciteUtil.*;
-import static com.linkedin.coral.trino.rel2trino.utils.TrinoSqlCallTransformerUtil.*;
 
 
 /**
@@ -31,25 +25,10 @@ import static com.linkedin.coral.trino.rel2trino.utils.TrinoSqlCallTransformerUt
  */
 public class ToDateOperatorTransformer extends SqlCallTransformer {
   private static final String FROM_OPERATOR_NAME = "to_date";
-
   private static final String TO_OPERATOR_NAME = "date";
   private static final int NUM_OPERANDS = 1;
-  private static final SqlOperator TIMESTAMP_OPERATOR =
-      new SqlUserDefinedFunction(new SqlIdentifier("timestamp", SqlParserPos.ZERO), FunctionReturnTypes.TIMESTAMP, null,
-          OperandTypes.STRING, null, null) {
-        @Override
-        public void unparse(SqlWriter writer, SqlCall call, int leftPrec, int rightPrec) {
-          // for timestamp operator, we need to construct `CAST(x AS TIMESTAMP)`
-          Preconditions.checkState(call.operandCount() == 1);
-          final SqlWriter.Frame frame = writer.startFunCall("CAST");
-          call.operand(0).unparse(writer, 0, 0);
-          writer.sep("AS");
-          writer.literal("TIMESTAMP");
-          writer.endFunCall(frame);
-        }
-      };
-  private static final SqlOperator TRINO_OPERATOR =
-      createSqlUDF(TO_OPERATOR_NAME, hiveToCoralSqlOperator(FROM_OPERATOR_NAME).getReturnTypeInference());
+  private static final SqlOperator TRINO_OPERATOR = createSqlUDF(TO_OPERATOR_NAME,
+      CoralToTrinoSqlCallTransformersUtil.hiveToCoralSqlOperator(FROM_OPERATOR_NAME).getReturnTypeInference());
 
   private final boolean avoidTransformToDateUDF;
 

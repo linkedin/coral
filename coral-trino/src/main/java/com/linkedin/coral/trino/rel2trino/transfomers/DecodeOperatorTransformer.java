@@ -14,16 +14,16 @@ import org.apache.calcite.sql.SqlNodeList;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.parser.SqlParserPos;
 
-import com.linkedin.coral.common.transformers.SignatureBasedConditionSqlCallTransformer;
+import com.linkedin.coral.common.transformers.OperatorBasedSqlCallTransformer;
 
-import static com.linkedin.coral.trino.rel2trino.utils.TrinoSqlCallTransformerUtil.*;
+import static com.linkedin.coral.trino.rel2trino.utils.CoralToTrinoSqlCallTransformersUtil.*;
 
 
 /**
  * This class transforms a Coral SqlCall of "decode" operator with 2 operands into a Trino SqlCall of an operator
  * named "[{\"regex\":\"(?i)('utf-8')\", \"input\":2, \"name\":\"from_utf8\"}]"
  */
-public class DecodeOperatorTransformer extends SignatureBasedConditionSqlCallTransformer {
+public class DecodeOperatorTransformer extends OperatorBasedSqlCallTransformer {
   private static final String FROM_OPERATOR_NAME = "decode";
   private static final int OPERAND_NUM = 2;
   private static final SqlOperator TARGET_OPERATOR =

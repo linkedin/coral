@@ -16,16 +16,14 @@ import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParserPos;
 
-import com.linkedin.coral.common.transformers.SignatureBasedConditionSqlCallTransformer;
-
-import static com.linkedin.coral.trino.rel2trino.utils.TrinoSqlCallTransformerUtil.*;
+import com.linkedin.coral.common.transformers.OperatorBasedSqlCallTransformer;
 
 
 /**
  * This class transforms a Coral SqlCall of "TRUNCATE" operator with 2 operands into a Trino SqlCall of an operator
  * named "TRUNCATE"
  */
-public class TruncateOperatorTransformer extends SignatureBasedConditionSqlCallTransformer {
+public class TruncateOperatorTransformer extends OperatorBasedSqlCallTransformer {
   private static final String FROM_OPERATOR_NAME = "TRUNCATE";
   private static final int OPERAND_NUM = 2;
   private static final SqlOperator TARGET_OPERATOR =

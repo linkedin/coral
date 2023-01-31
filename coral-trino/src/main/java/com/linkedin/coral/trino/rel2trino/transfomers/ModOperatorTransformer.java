@@ -15,16 +15,16 @@ import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParserPos;
 
-import com.linkedin.coral.common.transformers.SignatureBasedConditionSqlCallTransformer;
+import com.linkedin.coral.common.transformers.OperatorBasedSqlCallTransformer;
 
-import static com.linkedin.coral.trino.rel2trino.utils.TrinoSqlCallTransformerUtil.*;
+import static com.linkedin.coral.trino.rel2trino.utils.CoralToTrinoSqlCallTransformersUtil.*;
 
 
 /**
  * This class transforms a Coral SqlCall of "pmod" operator with 2 operands into a Trino SqlCall of an operator
  * named "mod"
  */
-public class ModOperatorTransformer extends SignatureBasedConditionSqlCallTransformer {
+public class ModOperatorTransformer extends OperatorBasedSqlCallTransformer {
   private static final String FROM_OPERATOR_NAME = "pmod";
   private static final int OPERAND_NUM = 2;
   private static final SqlOperator TARGET_OPERATOR =

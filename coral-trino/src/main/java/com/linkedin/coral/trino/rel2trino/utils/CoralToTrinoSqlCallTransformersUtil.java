@@ -6,6 +6,7 @@
 package com.linkedin.coral.trino.rel2trino.utils;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -13,11 +14,18 @@ import java.util.Set;
 
 import com.google.common.collect.ImmutableList;
 
+import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 
+import com.linkedin.coral.com.google.common.base.CaseFormat;
+import com.linkedin.coral.com.google.common.base.Converter;
+import com.linkedin.coral.com.google.common.collect.ImmutableMultimap;
+import com.linkedin.coral.common.functions.Function;
+import com.linkedin.coral.common.transformers.OperatorBasedSqlCallTransformer;
 import com.linkedin.coral.common.transformers.SqlCallTransformer;
 import com.linkedin.coral.common.transformers.SqlCallTransformers;
 import com.linkedin.coral.hive.hive2rel.functions.HiveRLikeOperator;
+import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 import com.linkedin.coral.trino.rel2trino.functions.TrinoElementAtFunction;
 import com.linkedin.coral.trino.rel2trino.transfomers.DateAddOperatorTransformer;
 import com.linkedin.coral.trino.rel2trino.transfomers.DateDiffOperatorTransformer;
@@ -32,7 +40,6 @@ import com.linkedin.coral.trino.rel2trino.transfomers.ToDateOperatorTransformer;
 import com.linkedin.coral.trino.rel2trino.transfomers.TruncateOperatorTransformer;
 
 import static com.linkedin.coral.trino.rel2trino.CoralTrinoConfigKeys.*;
-import static com.linkedin.coral.trino.rel2trino.utils.TrinoSqlCallTransformerUtil.*;
 
 
 /**
@@ -40,6 +47,8 @@ import static com.linkedin.coral.trino.rel2trino.utils.TrinoSqlCallTransformerUt
  * from Coral to Trino on SqlNode layer
  */
 public final class CoralToTrinoSqlCallTransformersUtil {
+
+  private static final StaticHiveFunctionRegistry HIVE_FUNCTION_REGISTRY = new StaticHiveFunctionRegistry();
   private static List<SqlCallTransformer> DEFAULT_SQL_CALL_TRANSFORMER_LIST;
 
   static {
@@ -56,52 +65,57 @@ public final class CoralToTrinoSqlCallTransformersUtil {
     return SqlCallTransformers.of(ImmutableList.copyOf(sqlCallTransformerList));
   }
 
+  public static SqlOperator hiveToCoralSqlOperator(String functionName) {
+    Collection<Function> lookup = HIVE_FUNCTION_REGISTRY.lookup(functionName);
+    // TODO: provide overloaded function resolution
+    return lookup.iterator().next().getSqlOperator();
+  }
+
   private static void addCommonSignatureBasedConditionTransformers() {
     // conditional functions
     DEFAULT_SQL_CALL_TRANSFORMER_LIST
-        .add(createSignatureBasedConditionSqlCallTransformer(hiveToCoralSqlOperator("nvl"), 2, "coalesce"));
+        .add(new OperatorBasedSqlCallTransformer(hiveToCoralSqlOperator("nvl"), 2, "coalesce"));
     // Array and map functions
     DEFAULT_SQL_CALL_TRANSFORMER_LIST.add(
-        createSignatureBasedConditionSqlCallTransformer(SqlStdOperatorTable.ITEM, 2, TrinoElementAtFunction.INSTANCE));
+        new OperatorBasedSqlCallTransformer(SqlStdOperatorTable.ITEM.getName(), 2, TrinoElementAtFunction.INSTANCE));
 
     // Math Functions
-    DEFAULT_SQL_CALL_TRANSFORMER_LIST
-        .add(createSignatureBasedConditionSqlCallTransformer(SqlStdOperatorTable.RAND, 0, "RANDOM"));
+    DEFAULT_SQL_CALL_TRANSFORMER_LIST.add(new OperatorBasedSqlCallTransformer(SqlStdOperatorTable.RAND, 0, "RANDOM"));
     DEFAULT_SQL_CALL_TRANSFORMER_LIST.add(new RandomOperatorWithOneOperandTransformer());
     DEFAULT_SQL_CALL_TRANSFORMER_LIST
-        .add(createSignatureBasedConditionSqlCallTransformer(SqlStdOperatorTable.RAND_INTEGER, 1, "RANDOM"));
+        .add(new OperatorBasedSqlCallTransformer(SqlStdOperatorTable.RAND_INTEGER, 1, "RANDOM"));
     DEFAULT_SQL_CALL_TRANSFORMER_LIST.add(new RandomIntegerOperatorWithTwoOperandsTransformer());
     DEFAULT_SQL_CALL_TRANSFORMER_LIST.add(new TruncateOperatorTransformer());
 
     // String Functions
     DEFAULT_SQL_CALL_TRANSFORMER_LIST
-        .add(createSignatureBasedConditionSqlCallTransformer(SqlStdOperatorTable.SUBSTRING, 2, "SUBSTR"));
+        .add(new OperatorBasedSqlCallTransformer(SqlStdOperatorTable.SUBSTRING, 2, "SUBSTR"));
     DEFAULT_SQL_CALL_TRANSFORMER_LIST
-        .add(createSignatureBasedConditionSqlCallTransformer(SqlStdOperatorTable.SUBSTRING, 3, "SUBSTR"));
+        .add(new OperatorBasedSqlCallTransformer(SqlStdOperatorTable.SUBSTRING, 3, "SUBSTR"));
     DEFAULT_SQL_CALL_TRANSFORMER_LIST
-        .add(createSignatureBasedConditionSqlCallTransformer(HiveRLikeOperator.RLIKE, 2, "REGEXP_LIKE"));
+        .add(new OperatorBasedSqlCallTransformer(HiveRLikeOperator.RLIKE, 2, "REGEXP_LIKE"));
     DEFAULT_SQL_CALL_TRANSFORMER_LIST
-        .add(createSignatureBasedConditionSqlCallTransformer(HiveRLikeOperator.REGEXP, 2, "REGEXP_LIKE"));
+        .add(new OperatorBasedSqlCallTransformer(HiveRLikeOperator.REGEXP, 2, "REGEXP_LIKE"));
 
     // JSON Functions
-    DEFAULT_SQL_CALL_TRANSFORMER_LIST.add(
-        createSignatureBasedConditionSqlCallTransformer(hiveToCoralSqlOperator("get_json_object"), 2, "json_extract"));
+    DEFAULT_SQL_CALL_TRANSFORMER_LIST
+        .add(new OperatorBasedSqlCallTransformer(hiveToCoralSqlOperator("get_json_object"), 2, "json_extract"));
 
     // map various hive functions
     DEFAULT_SQL_CALL_TRANSFORMER_LIST.add(new ModOperatorTransformer());
     DEFAULT_SQL_CALL_TRANSFORMER_LIST
-        .add(createSignatureBasedConditionSqlCallTransformer(hiveToCoralSqlOperator("base64"), 1, "to_base64"));
+        .add(new OperatorBasedSqlCallTransformer(hiveToCoralSqlOperator("base64"), 1, "to_base64"));
     DEFAULT_SQL_CALL_TRANSFORMER_LIST
-        .add(createSignatureBasedConditionSqlCallTransformer(hiveToCoralSqlOperator("unbase64"), 1, "from_base64"));
+        .add(new OperatorBasedSqlCallTransformer(hiveToCoralSqlOperator("unbase64"), 1, "from_base64"));
     DEFAULT_SQL_CALL_TRANSFORMER_LIST
-        .add(createSignatureBasedConditionSqlCallTransformer(hiveToCoralSqlOperator("hex"), 1, "to_hex"));
+        .add(new OperatorBasedSqlCallTransformer(hiveToCoralSqlOperator("hex"), 1, "to_hex"));
     DEFAULT_SQL_CALL_TRANSFORMER_LIST
-        .add(createSignatureBasedConditionSqlCallTransformer(hiveToCoralSqlOperator("unhex"), 1, "from_hex"));
+        .add(new OperatorBasedSqlCallTransformer(hiveToCoralSqlOperator("unhex"), 1, "from_hex"));
     DEFAULT_SQL_CALL_TRANSFORMER_LIST
-        .add(createSignatureBasedConditionSqlCallTransformer(hiveToCoralSqlOperator("array_contains"), 2, "contains"));
+        .add(new OperatorBasedSqlCallTransformer(hiveToCoralSqlOperator("array_contains"), 2, "contains"));
     DEFAULT_SQL_CALL_TRANSFORMER_LIST.add(new RegexpExtractOperatorTransformer());
     DEFAULT_SQL_CALL_TRANSFORMER_LIST
-        .add(createSignatureBasedConditionSqlCallTransformer(hiveToCoralSqlOperator("instr"), 2, "strpos"));
+        .add(new OperatorBasedSqlCallTransformer(hiveToCoralSqlOperator("instr"), 2, "strpos"));
     DEFAULT_SQL_CALL_TRANSFORMER_LIST.add(new DecodeOperatorTransformer());
     DEFAULT_SQL_CALL_TRANSFORMER_LIST.add(new DateAddOperatorTransformer());
     DEFAULT_SQL_CALL_TRANSFORMER_LIST.add(new DateSubOperatorTransformer());
@@ -137,12 +151,40 @@ public final class CoralToTrinoSqlCallTransformersUtil {
 
   private static void addLinkedInFunctionTransformer(String linkedInFuncName, int numOperands, String trinoFuncName,
       Set<String> linkedInFunctionSignatureSet) {
-    DEFAULT_SQL_CALL_TRANSFORMER_LIST.add(createSignatureBasedConditionSqlCallTransformer(
+    DEFAULT_SQL_CALL_TRANSFORMER_LIST.add(new OperatorBasedSqlCallTransformer(
         linkedInFunctionToCoralSqlOperator(linkedInFuncName), numOperands, trinoFuncName));
     linkedInFunctionSignatureSet.add(linkedInFuncName + "_" + numOperands);
   }
 
   private static void addAdHocTransformers() {
     DEFAULT_SQL_CALL_TRANSFORMER_LIST.add(new MapStructAccessOperatorTransformer());
+  }
+
+  private static SqlOperator linkedInFunctionToCoralSqlOperator(String className) {
+    return HIVE_FUNCTION_REGISTRY.lookup(className).iterator().next().getSqlOperator();
+  }
+
+  private static void addLinkedInFunctionTransformerFromHiveRegistry(List<SqlCallTransformer> sqlCallTransformerList,
+      Set<String> linkedInFunctionSignatureSet) {
+    ImmutableMultimap<String, Function> registry = HIVE_FUNCTION_REGISTRY.getRegistry();
+    Converter<String, String> caseConverter = CaseFormat.UPPER_CAMEL.converterTo(CaseFormat.LOWER_UNDERSCORE);
+    for (Map.Entry<String, Function> entry : registry.entries()) {
+      // we cannot use entry.getKey() as function name directly, because keys are all lowercase, which will
+      // fail to be converted to lowercase with underscore correctly
+      final String hiveFunctionName = entry.getValue().getFunctionName();
+      if (!hiveFunctionName.startsWith("com.linkedin")) {
+        continue;
+      }
+      String[] nameSplit = hiveFunctionName.split("\\.");
+      // filter above guarantees we've at least 2 entries
+      String className = nameSplit[nameSplit.length - 1];
+      String funcName = caseConverter.convert(className);
+      SqlOperator op = entry.getValue().getSqlOperator();
+      for (int i = op.getOperandCountRange().getMin(); i <= op.getOperandCountRange().getMax(); i++) {
+        if (!linkedInFunctionSignatureSet.contains(hiveFunctionName + "_" + i)) {
+          sqlCallTransformerList.add(new OperatorBasedSqlCallTransformer(op, i, funcName));
+        }
+      }
+    }
   }
 }
