@@ -111,13 +111,13 @@ public class OperatorBasedSqlCallTransformer extends SqlCallTransformer {
   }
 
   public OperatorBasedSqlCallTransformer(@Nonnull SqlOperator coralOp, int numOperands, @Nonnull String trinoFuncName) {
-    this(coralOp.getName(), numOperands, createSqlUDF(trinoFuncName, coralOp.getReturnTypeInference(), true), null,
-        null, null);
+    this(coralOp.getName(), numOperands, createSqlUDF(trinoFuncName, coralOp.getReturnTypeInference()), null, null,
+        null);
   }
 
   public OperatorBasedSqlCallTransformer(@Nonnull SqlOperator coralOp, int numOperands, @Nonnull String trinoFuncName,
       @Nullable String operandTransformers, @Nullable String resultTransformer, @Nullable String operatorTransformers) {
-    this(coralOp.getName(), numOperands, createSqlUDF(trinoFuncName, coralOp.getReturnTypeInference(), true),
+    this(coralOp.getName(), numOperands, createSqlUDF(trinoFuncName, coralOp.getReturnTypeInference()),
         operandTransformers, resultTransformer, operatorTransformers);
   }
 
@@ -244,7 +244,7 @@ public class OperatorBasedSqlCallTransformer extends SqlCallTransformer {
       String matcher = operatorTransformer.get(REGEX).getAsString();
 
       if (Pattern.matches(matcher, sourceOperands.get(index).toString())) {
-        return createSqlUDF(functionName, operator.getReturnTypeInference(), false);
+        return createSqlUDF(functionName, operator.getReturnTypeInference());
       }
     }
     return operator;

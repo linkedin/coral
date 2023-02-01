@@ -11,8 +11,6 @@ import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.util.SqlShuttle;
 
-import com.linkedin.coral.trino.rel2trino.utils.CoralToTrinoSqlCallTransformersUtil;
-
 
 /**
  * This class extends the class of SqlShuttle and calls CalciteTrinoUDFOperatorTransformerUtil to get a list of SqlCallTransformers
@@ -26,7 +24,7 @@ public class CoralToTrinoSqlCallConverter extends SqlShuttle {
 
   @Override
   public SqlNode visit(SqlCall call) {
-    SqlCall transformedCall = CoralToTrinoSqlCallTransformersUtil.getTransformers(configs).apply(call);
+    SqlCall transformedCall = CoralToTrinoSqlCallTransformers.getTransformers(configs).apply(call);
     return super.visit(transformedCall);
   }
 }

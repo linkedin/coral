@@ -10,14 +10,9 @@ import java.util.List;
 
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.sql.SqlCall;
-import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlNodeList;
-import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.SqlSelect;
-import org.apache.calcite.sql.parser.SqlParserPos;
-import org.apache.calcite.sql.type.SqlReturnTypeInference;
-import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
 import org.apache.calcite.sql.validate.SqlValidator;
 
 
@@ -100,14 +95,5 @@ public abstract class SqlCallTransformer {
       }
     }
     throw new RuntimeException("Failed to derive the RelDataType for SqlNode " + sqlNode);
-  }
-
-  public static SqlOperator createSqlUDF(String functionName, SqlReturnTypeInference typeInference,
-      boolean initSqlIdentifierWithFunctionNameList) {
-    SqlIdentifier sqlIdentifier = initSqlIdentifierWithFunctionNameList
-        ? new SqlIdentifier(com.linkedin.coral.com.google.common.collect.ImmutableList.of(functionName),
-            SqlParserPos.ZERO)
-        : new SqlIdentifier(functionName, SqlParserPos.ZERO);
-    return new SqlUserDefinedFunction(sqlIdentifier, typeInference, null, null, null, null);
   }
 }

@@ -20,14 +20,14 @@ import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
 import com.linkedin.coral.com.google.common.base.Preconditions;
 import com.linkedin.coral.common.functions.FunctionReturnTypes;
 import com.linkedin.coral.common.transformers.SqlCallTransformer;
-import com.linkedin.coral.trino.rel2trino.utils.CoralToTrinoSqlCallTransformersUtil;
+import com.linkedin.coral.trino.rel2trino.CoralToTrinoSqlCallTransformers;
 
 import static com.linkedin.coral.common.calcite.CalciteUtil.*;
 
 
 /**
  *  This class implements the transformation from the operation of "to_date"
- *  for example, "to_date('2023-01-01')" is transformed into "date(CAST('2023-01-01') AS TIMESTAMP)"
+ *  for example, "to_date('2023-01-01')" is transformed into "date(CAST('2023-01-01' AS TIMESTAMP))"
  */
 public class ToDateOperatorTransformer extends SqlCallTransformer {
   private static final String FROM_OPERATOR_NAME = "to_date";
@@ -49,7 +49,7 @@ public class ToDateOperatorTransformer extends SqlCallTransformer {
         }
       };
   private static final SqlOperator TRINO_OPERATOR = createSqlUDF(TO_OPERATOR_NAME,
-      CoralToTrinoSqlCallTransformersUtil.hiveToCoralSqlOperator(FROM_OPERATOR_NAME).getReturnTypeInference(), true);
+      CoralToTrinoSqlCallTransformers.hiveToCoralSqlOperator(FROM_OPERATOR_NAME).getReturnTypeInference());
 
   private final boolean avoidTransformToDateUDF;
 

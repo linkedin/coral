@@ -3,7 +3,7 @@
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
-package com.linkedin.coral.trino.rel2trino.utils;
+package com.linkedin.coral.trino.rel2trino;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -34,13 +34,13 @@ import static com.linkedin.coral.trino.rel2trino.CoralTrinoConfigKeys.*;
 
 
 /**
- * This utility class initialize a list of SqlCallTransformer which convert the function operators defined in SqlCalls
+ * This class initialize a list of SqlCallTransformer which convert the function operators defined in SqlCalls
  * from Coral to Trino on SqlNode layer
  */
-public final class CoralToTrinoSqlCallTransformersUtil {
+public final class CoralToTrinoSqlCallTransformers {
 
   private static final StaticHiveFunctionRegistry HIVE_FUNCTION_REGISTRY = new StaticHiveFunctionRegistry();
-  private static List<SqlCallTransformer> DEFAULT_SQL_CALL_TRANSFORMER_LIST;
+  private static final List<SqlCallTransformer> DEFAULT_SQL_CALL_TRANSFORMER_LIST;
 
   static {
     DEFAULT_SQL_CALL_TRANSFORMER_LIST = new ArrayList<>();
@@ -197,7 +197,7 @@ public final class CoralToTrinoSqlCallTransformersUtil {
       String funcName = caseConverter.convert(className);
       SqlOperator op = entry.getValue().getSqlOperator();
       for (int i = op.getOperandCountRange().getMin(); i <= op.getOperandCountRange().getMax(); i++) {
-        if (!linkedInFunctionSignatureSet.contains(hiveFunctionName + "_" + i)) {
+        if (!linkedInFunctionSignatureSet.contains(hiveFunctionName.toLowerCase() + "_" + i)) {
           sqlCallTransformerList.add(new OperatorBasedSqlCallTransformer(op, i, funcName));
         }
       }
