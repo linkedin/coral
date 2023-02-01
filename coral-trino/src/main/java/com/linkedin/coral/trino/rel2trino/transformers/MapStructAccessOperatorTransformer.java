@@ -3,7 +3,7 @@
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
-package com.linkedin.coral.trino.rel2trino.transfomers;
+package com.linkedin.coral.trino.rel2trino.transformers;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

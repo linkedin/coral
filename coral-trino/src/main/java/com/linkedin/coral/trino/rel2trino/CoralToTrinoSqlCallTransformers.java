@@ -27,8 +27,8 @@ import com.linkedin.coral.common.transformers.SqlCallTransformers;
 import com.linkedin.coral.hive.hive2rel.functions.HiveRLikeOperator;
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 import com.linkedin.coral.trino.rel2trino.functions.TrinoElementAtFunction;
-import com.linkedin.coral.trino.rel2trino.transfomers.MapStructAccessOperatorTransformer;
-import com.linkedin.coral.trino.rel2trino.transfomers.ToDateOperatorTransformer;
+import com.linkedin.coral.trino.rel2trino.transformers.MapStructAccessOperatorTransformer;
+import com.linkedin.coral.trino.rel2trino.transformers.ToDateOperatorTransformer;
 
 import static com.linkedin.coral.trino.rel2trino.CoralTrinoConfigKeys.*;
 
