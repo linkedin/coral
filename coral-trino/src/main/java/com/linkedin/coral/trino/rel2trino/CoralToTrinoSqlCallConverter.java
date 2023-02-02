@@ -150,7 +150,7 @@ public class CoralToTrinoSqlCallConverter extends SqlShuttle {
       SqlOperator op = entry.getValue().getSqlOperator();
       for (int i = op.getOperandCountRange().getMin(); i <= op.getOperandCountRange().getMax(); i++) {
         if (!linkedInFunctionSignatureSet.contains(hiveFunctionName.toLowerCase() + "_" + i)) {
-          sqlCallTransformerList.add(new OperatorBasedSqlCallTransformer(op, i, funcName));
+          sqlCallTransformerList.add(new LinkedInOperatorBasedSqlCallTransformer(op, i, funcName));
         }
       }
     }

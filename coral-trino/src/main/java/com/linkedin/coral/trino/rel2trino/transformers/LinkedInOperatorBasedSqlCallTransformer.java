@@ -9,6 +9,7 @@ import javax.annotation.Nonnull;
 
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlNodeList;
+import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.parser.SqlParserPos;
 
 import com.linkedin.coral.common.transformers.OperatorBasedSqlCallTransformer;
@@ -26,6 +27,11 @@ public class LinkedInOperatorBasedSqlCallTransformer extends OperatorBasedSqlCal
       @Nonnull String targetOpName) {
     super(HIVE_FUNCTION_REGISTRY.lookup(linkedInFuncName).iterator().next().getSqlOperator(), numOperands,
         targetOpName);
+  }
+
+  public LinkedInOperatorBasedSqlCallTransformer(@Nonnull SqlOperator fromOperator, int numOperands,
+      @Nonnull String targetOpName) {
+    super(fromOperator, numOperands, targetOpName);
   }
 
   @Override
