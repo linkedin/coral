@@ -128,7 +128,7 @@ public class CalciteUtil {
     return s;
   }
 
-  public static SqlOperator createSqlUDF(String functionName, SqlReturnTypeInference typeInference) {
+  public static SqlOperator createSqlOperatorOfFunction(String functionName, SqlReturnTypeInference typeInference) {
     SqlIdentifier sqlIdentifier = new SqlIdentifier(ImmutableList.of(functionName), SqlParserPos.ZERO);
     return new SqlUserDefinedFunction(sqlIdentifier, typeInference, null, null, null, null);
   }

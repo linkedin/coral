@@ -295,8 +295,8 @@ public class Calcite2TrinoUDFConverter {
 
     private Optional<RexNode> visitCollectListOrSetFunction(RexCall call) {
       List<RexNode> convertedOperands = visitList(call.getOperands(), (boolean[]) null);
-      final SqlOperator arrayAgg = createSqlUDF("array_agg", FunctionReturnTypes.ARRAY_OF_ARG0_TYPE);
-      final SqlOperator arrayDistinct = createSqlUDF("array_distinct", ReturnTypes.ARG0_NULLABLE);
+      final SqlOperator arrayAgg = createSqlOperatorOfFunction("array_agg", FunctionReturnTypes.ARRAY_OF_ARG0_TYPE);
+      final SqlOperator arrayDistinct = createSqlOperatorOfFunction("array_distinct", ReturnTypes.ARG0_NULLABLE);
       final String operatorName = call.getOperator().getName();
       if (operatorName.equalsIgnoreCase("collect_list")) {
         return Optional.of(rexBuilder.makeCall(arrayAgg, convertedOperands));
@@ -307,8 +307,8 @@ public class Calcite2TrinoUDFConverter {
 
     private Optional<RexNode> visitFromUnixtime(RexCall call) {
       List<RexNode> convertedOperands = visitList(call.getOperands(), (boolean[]) null);
-      SqlOperator formatDatetime = createSqlUDF("format_datetime", FunctionReturnTypes.STRING);
-      SqlOperator fromUnixtime = createSqlUDF("from_unixtime", explicit(TIMESTAMP));
+      SqlOperator formatDatetime = createSqlOperatorOfFunction("format_datetime", FunctionReturnTypes.STRING);
+      SqlOperator fromUnixtime = createSqlOperatorOfFunction("from_unixtime", explicit(TIMESTAMP));
       if (convertedOperands.size() == 1) {
         return Optional
             .of(rexBuilder.makeCall(formatDatetime, rexBuilder.makeCall(fromUnixtime, call.getOperands().get(0)),
@@ -332,13 +332,17 @@ public class Calcite2TrinoUDFConverter {
       // In below definitions we should use `TIMESTATMP WITH TIME ZONE`. As calcite is lacking
       // this type we use `TIMESTAMP` instead. It does not have any practical implications as result syntax tree
       // is not type-checked, and only used for generating output SQL for a view query.
-      SqlOperator trinoAtTimeZone = createSqlUDF("at_timezone", explicit(TIMESTAMP /* should be WITH TIME ZONE */));
-      SqlOperator trinoWithTimeZone = createSqlUDF("with_timezone", explicit(TIMESTAMP /* should be WITH TIME ZONE */));
-      SqlOperator trinoToUnixTime = createSqlUDF("to_unixtime", explicit(DOUBLE));
+      SqlOperator trinoAtTimeZone =
+          createSqlOperatorOfFunction("at_timezone", explicit(TIMESTAMP /* should be WITH TIME ZONE */));
+      SqlOperator trinoWithTimeZone =
+          createSqlOperatorOfFunction("with_timezone", explicit(TIMESTAMP /* should be WITH TIME ZONE */));
+      SqlOperator trinoToUnixTime = createSqlOperatorOfFunction("to_unixtime", explicit(DOUBLE));
       SqlOperator trinoFromUnixtimeNanos =
-          createSqlUDF("from_unixtime_nanos", explicit(TIMESTAMP /* should be WITH TIME ZONE */));
-      SqlOperator trinoFromUnixTime = createSqlUDF("from_unixtime", explicit(TIMESTAMP /* should be WITH TIME ZONE */));
-      SqlOperator trinoCanonicalizeHiveTimezoneId = createSqlUDF("$canonicalize_hive_timezone_id", explicit(VARCHAR));
+          createSqlOperatorOfFunction("from_unixtime_nanos", explicit(TIMESTAMP /* should be WITH TIME ZONE */));
+      SqlOperator trinoFromUnixTime =
+          createSqlOperatorOfFunction("from_unixtime", explicit(TIMESTAMP /* should be WITH TIME ZONE */));
+      SqlOperator trinoCanonicalizeHiveTimezoneId =
+          createSqlOperatorOfFunction("$canonicalize_hive_timezone_id", explicit(VARCHAR));
 
       RelDataType bigintType = typeFactory.createSqlType(BIGINT);
       RelDataType doubleType = typeFactory.createSqlType(DOUBLE);
@@ -414,9 +418,9 @@ public class Calcite2TrinoUDFConverter {
       // Trino does not allow for such conversion, but we can achieve the same behavior by first calling "to_unixtime"
       // on the TIMESTAMP and then casting it to DECIMAL after.
       if (call.getType().getSqlTypeName() == DECIMAL && leftOperand.getType().getSqlTypeName() == TIMESTAMP) {
-        SqlOperator trinoToUnixTime = createSqlUDF("to_unixtime", explicit(DOUBLE));
+        SqlOperator trinoToUnixTime = createSqlOperatorOfFunction("to_unixtime", explicit(DOUBLE));
         SqlOperator trinoWithTimeZone =
-            createSqlUDF("with_timezone", explicit(TIMESTAMP /* should be WITH TIME ZONE */));
+            createSqlOperatorOfFunction("with_timezone", explicit(TIMESTAMP /* should be WITH TIME ZONE */));
         return Optional.of(rexBuilder.makeCast(call.getType(), rexBuilder.makeCall(trinoToUnixTime,
             rexBuilder.makeCall(trinoWithTimeZone, leftOperand, rexBuilder.makeLiteral("UTC")))));
       }
@@ -426,7 +430,7 @@ public class Calcite2TrinoUDFConverter {
       if ((call.getType().getSqlTypeName() == VARCHAR || call.getType().getSqlTypeName() == CHAR)
           && (leftOperand.getType().getSqlTypeName() == VARBINARY
               || leftOperand.getType().getSqlTypeName() == BINARY)) {
-        SqlOperator fromUTF8 = createSqlUDF("from_utf8", explicit(VARCHAR));
+        SqlOperator fromUTF8 = createSqlOperatorOfFunction("from_utf8", explicit(VARCHAR));
         return Optional.of(rexBuilder.makeCall(fromUTF8, leftOperand));
       }
 
