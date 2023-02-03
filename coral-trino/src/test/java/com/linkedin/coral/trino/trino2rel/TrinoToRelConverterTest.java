@@ -247,10 +247,10 @@ public class TrinoToRelConverterTest {
 
   @Test(dataProvider = "support")
   public void testSupport(String trinoSql, String expectedRelString, String expectedSql) {
-    RelNode relNode = trinoToRelConverter.convertSql(trinoSql);
+    RelNode relNode = getTrinoToRelConverter().convertSql(trinoSql);
     assertEquals(expectedRelString, relToStr(relNode));
 
-    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+    RelToTrinoConverter relToTrinoConverter = getRelToTrinoConverter();
     // Convert rel node back to Sql
     String expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expectedSql, expandedSql);

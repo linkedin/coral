@@ -69,7 +69,7 @@ public class HiveToRelConverter extends ToRelConverter {
   }
 
   @Override
-  protected SqlValidator getSqlValidator() {
+  public SqlValidator getSqlValidator() {
     return sqlValidator;
   }
 

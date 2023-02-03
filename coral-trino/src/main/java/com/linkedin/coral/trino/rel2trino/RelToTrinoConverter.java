@@ -35,6 +35,7 @@ import org.apache.calcite.util.Util;
 
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import com.linkedin.coral.common.functions.FunctionFieldReferenceOperator;
+import com.linkedin.coral.common.HiveMetastoreClient;
 import com.linkedin.coral.hive.hive2rel.rel.HiveUncollect;
 import com.linkedin.coral.trino.rel2trino.functions.TrinoArrayTransformFunction;
 
@@ -59,18 +60,30 @@ public class RelToTrinoConverter extends RelToSqlConverter {
    * For uses outside LinkedIn, just ignore this configuration.
    */
   private Map<String, Boolean> configs = new HashMap<>();
+  private HiveMetastoreClient _hiveMetastoreClient;
 
-  /**
-   * Creates a RelToTrinoConverter.
-   */
+  @Deprecated
   public RelToTrinoConverter() {
     super(TrinoSqlDialect.INSTANCE);
   }
 
+  @Deprecated
   public RelToTrinoConverter(Map<String, Boolean> configs) {
     super(TrinoSqlDialect.INSTANCE);
     checkNotNull(configs);
     this.configs = configs;
+  }
+
+  public RelToTrinoConverter(HiveMetastoreClient mscClient) {
+    super(TrinoSqlDialect.INSTANCE);
+    _hiveMetastoreClient = mscClient;
+  }
+
+  public RelToTrinoConverter(HiveMetastoreClient mscClient, Map<String, Boolean> configs) {
+    super(TrinoSqlDialect.INSTANCE);
+    checkNotNull(configs);
+    this.configs = configs;
+    _hiveMetastoreClient = mscClient;
   }
 
   /**
@@ -84,7 +97,7 @@ public class RelToTrinoConverter extends RelToSqlConverter {
     SqlNode sqlNodeWithUDFOperatorConverted = sqlNode.accept(new CoralToTrinoSqlCallConverter(configs));
     return sqlNodeWithUDFOperatorConverted.accept(new TrinoSqlRewriter()).toSqlString(TrinoSqlDialect.INSTANCE)
         .toString();
-//    SqlNode transformedSqlNode = sqlNode.accept(new SqlNodeConverter());
+//    SqlNode transformedSqlNode = sqlNode.accept(new SqlNodeConverter(_hiveMetastoreClient));
 //    return transformedSqlNode.accept(new TrinoSqlRewriter()).toSqlString(TrinoSqlDialect.INSTANCE).toString();
   }
 

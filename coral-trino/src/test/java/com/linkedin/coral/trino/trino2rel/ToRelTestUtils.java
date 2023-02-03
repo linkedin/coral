@@ -21,13 +21,13 @@ import org.apache.hadoop.hive.ql.processors.CommandProcessorResponse;
 import org.apache.hadoop.hive.ql.session.SessionState;
 
 import com.linkedin.coral.common.HiveMscAdapter;
+import com.linkedin.coral.trino.rel2trino.RelToTrinoConverter;
 
 
 public class ToRelTestUtils {
   public static final String CORAL_FROM_TRINO_TEST_DIR = "coral.trino.test.dir";
 
   private static HiveMscAdapter hiveMetastoreClient;
-  public static TrinoToRelConverter trinoToRelConverter;
 
   static void run(Driver driver, String sql) {
     while (true) {
@@ -43,6 +43,14 @@ public class ToRelTestUtils {
     }
   }
 
+  public static TrinoToRelConverter getTrinoToRelConverter() {
+    return new TrinoToRelConverter(hiveMetastoreClient);
+  }
+
+  public static RelToTrinoConverter getRelToTrinoConverter() {
+    return new RelToTrinoConverter(hiveMetastoreClient);
+  }
+
   public static void initializeViews(HiveConf conf) throws HiveException, MetaException, IOException {
     String testDir = conf.get(CORAL_FROM_TRINO_TEST_DIR);
     System.out.println("Test Workspace: " + testDir);
@@ -50,7 +58,6 @@ public class ToRelTestUtils {
     SessionState.start(conf);
     Driver driver = new Driver(conf);
     hiveMetastoreClient = new HiveMscAdapter(Hive.get(conf).getMSC());
-    trinoToRelConverter = new TrinoToRelConverter(hiveMetastoreClient);
 
     // Views and tables used in TrinoToTrinoConverterTest
     run(driver, "CREATE DATABASE IF NOT EXISTS default");
