@@ -62,4 +62,3 @@ public class HiveToTrinoConverter {
     return relToTrinoConverter.convert(rel);
   }
 }
-
