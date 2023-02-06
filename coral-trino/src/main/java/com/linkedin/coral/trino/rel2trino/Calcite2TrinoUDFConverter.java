@@ -48,16 +48,14 @@ import org.apache.calcite.sql.type.SqlReturnTypeInference;
 import org.apache.calcite.sql.type.SqlTypeFamily;
 import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
 
-import com.linkedin.coral.com.google.common.base.CaseFormat;
-import com.linkedin.coral.com.google.common.base.Converter;
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import com.linkedin.coral.com.google.common.collect.ImmutableMultimap;
 import com.linkedin.coral.com.google.common.collect.Multimap;
 import com.linkedin.coral.common.functions.FunctionReturnTypes;
 import com.linkedin.coral.common.functions.GenericProjectFunction;
 import com.linkedin.coral.trino.rel2trino.functions.GenericProjectToTrinoConverter;
+import com.linkedin.coral.trino.rel2trino.functions.TrinoElementAtFunction;
 
-import static com.linkedin.coral.common.calcite.CalciteUtil.*;
 import static com.linkedin.coral.trino.rel2trino.CoralTrinoConfigKeys.*;
 import static org.apache.calcite.sql.fun.SqlStdOperatorTable.MULTIPLY;
 import static org.apache.calcite.sql.type.ReturnTypes.explicit;
@@ -200,6 +198,17 @@ public class Calcite2TrinoUDFConverter {
 
       final String operatorName = call.getOperator().getName();
 
+      if (operatorName.equalsIgnoreCase("item") && call.getOperands().size() == 2) {
+        return super.visitCall((RexCall) rexBuilder.makeCall(TrinoElementAtFunction.INSTANCE, call.getOperands()));
+      }
+
+      if ((operatorName.equalsIgnoreCase("regexp") || operatorName.equalsIgnoreCase("rlike"))
+          && call.getOperands().size() == 2) {
+        return super.visitCall((RexCall) rexBuilder.makeCall(
+            createSqlOperatorOfFunction("REGEXP_LIKE", call.getOperator().getReturnTypeInference()),
+            call.getOperands()));
+      }
+
       if (operatorName.equalsIgnoreCase("from_utc_timestamp")) {
         Optional<RexNode> modifiedCall = visitFromUtcTimestampCall(call);
         if (modifiedCall.isPresent()) {
@@ -249,10 +258,6 @@ public class Calcite2TrinoUDFConverter {
         }
       }
 
-      if (operatorName.startsWith("com.linkedin")) {
-        return visitUnregisteredUDF(call);
-      }
-
       RexCall modifiedCall = adjustInconsistentTypesToEqualityOperator(call);
       return adjustReturnTypeWithCast(rexBuilder, super.visitCall(modifiedCall));
     }
@@ -273,25 +278,6 @@ public class Calcite2TrinoUDFConverter {
         }
       }
       return Optional.of(rexBuilder.makeCall(op, castOperands));
-    }
-
-    private RexNode visitUnregisteredUDF(RexCall call) {
-      // If the UDF is not registered in `CalciteTrinoUDFMap#UDF_MAP`, we convert the name to lowercase-underscore format to increase
-      // the possibility of successful query, because the tradition of registered Trino UDF name is lowercase-underscore format
-      // i.e. com.linkedin.jemslookup.udf.hive.UrnArrayToIdStringConverter -> urn_array_to_id_string_converter
-
-      final List<RexNode> convertedOperands = visitList(call.getOperands(), (boolean[]) null);
-      final Converter<String, String> caseConverter = CaseFormat.UPPER_CAMEL.converterTo(CaseFormat.LOWER_UNDERSCORE);
-
-      final SqlOperator operator = call.getOperator();
-      final String operatorName = operator.getName();
-      final String[] nameSplit = operatorName.split("\\.");
-      final String className = nameSplit[nameSplit.length - 1];
-      final String convertedFunctionName = caseConverter.convert(className);
-      final SqlUserDefinedFunction convertedFunctionOperator =
-          new SqlUserDefinedFunction(new SqlIdentifier(convertedFunctionName, SqlParserPos.ZERO),
-              operator.getReturnTypeInference(), null, operator.getOperandTypeChecker(), null, null);
-      return rexBuilder.makeCall(call.getType(), convertedFunctionOperator, convertedOperands);
     }
 
     private Optional<RexNode> visitCollectListOrSetFunction(RexCall call) {

@@ -22,15 +22,15 @@ public class GenericCoralRegistryOperatorRenameSqlCallTransformer extends SqlCal
 
   @Override
   protected boolean condition(SqlCall sqlCall) {
-    String operatorName = sqlCall.getOperator().getName();
-    return HIVE_FUNCTION_REGISTRY.getRegistry().containsKey(operatorName) && operatorName.startsWith("com.linkedin");
+    return sqlCall.getOperator().getName().startsWith("com.linkedin");
   }
 
   @Override
   protected SqlCall transform(SqlCall sqlCall) {
     Converter<String, String> caseConverter = CaseFormat.UPPER_CAMEL.converterTo(CaseFormat.LOWER_UNDERSCORE);
-    SqlOperator sourceOp =
-        HIVE_FUNCTION_REGISTRY.lookup(sqlCall.getOperator().getName()).iterator().next().getSqlOperator();
+    SqlOperator sourceOp = HIVE_FUNCTION_REGISTRY.getRegistry().containsKey(sqlCall.getOperator().getName())
+        ? HIVE_FUNCTION_REGISTRY.lookup(sqlCall.getOperator().getName()).iterator().next().getSqlOperator()
+        : sqlCall.getOperator();
     String[] nameSplit = sourceOp.getName().split("\\.");
     String targetName = caseConverter.convert(nameSplit[nameSplit.length - 1]);
     SqlOperator targetOp = createSqlOperatorOfFunction(targetName, sourceOp.getReturnTypeInference());
