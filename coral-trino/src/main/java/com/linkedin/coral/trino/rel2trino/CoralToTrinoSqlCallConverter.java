@@ -27,8 +27,9 @@ import static com.linkedin.coral.trino.rel2trino.CoralTrinoConfigKeys.*;
 
 
 /**
- * This class extends the class of SqlShuttle and initialize a SqlCallTransformers which containing a list of SqlCallTransformers
- * to traverse the hierarchy of a SqlCall and converts the functions from Coral operator to Trino operator if it is required
+ * This class extends the class of {@link org.apache.calcite.sql.util.SqlShuttle} and initialize a {@link com.linkedin.coral.common.transformers.SqlCallTransformers}
+ * which containing a list of {@link com.linkedin.coral.common.transformers.SqlCallTransformer} to traverse the hierarchy of a {@link org.apache.calcite.sql.SqlCall}
+ * and converts the functions from Coral operator to Trino operator if it is required
  */
 public class CoralToTrinoSqlCallConverter extends SqlShuttle {
   private static final StaticHiveFunctionRegistry HIVE_FUNCTION_REGISTRY = new StaticHiveFunctionRegistry();
