@@ -20,6 +20,7 @@ import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
 import com.linkedin.coral.com.google.common.base.Preconditions;
 import com.linkedin.coral.common.functions.FunctionReturnTypes;
 import com.linkedin.coral.common.transformers.SqlCallTransformer;
+import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 
 import static com.linkedin.coral.common.calcite.CalciteUtil.*;
 import static com.linkedin.coral.trino.rel2trino.CoralToTrinoSqlCallConverter.*;
@@ -30,6 +31,7 @@ import static com.linkedin.coral.trino.rel2trino.CoralToTrinoSqlCallConverter.*;
  *  for example, "to_date('2023-01-01')" is transformed into "date(CAST('2023-01-01' AS TIMESTAMP))"
  */
 public class ToDateOperatorTransformer extends SqlCallTransformer {
+  private static final StaticHiveFunctionRegistry HIVE_FUNCTION_REGISTRY = new StaticHiveFunctionRegistry();
   private static final String FROM_OPERATOR_NAME = "to_date";
 
   private static final String TO_OPERATOR_NAME = "date";
@@ -48,8 +50,6 @@ public class ToDateOperatorTransformer extends SqlCallTransformer {
           writer.endFunCall(frame);
         }
       };
-  private static final SqlOperator TRINO_OPERATOR = createSqlOperatorOfFunction(TO_OPERATOR_NAME,
-      HIVE_FUNCTION_REGISTRY.lookup(FROM_OPERATOR_NAME).iterator().next().getSqlOperator().getReturnTypeInference());
 
   private final boolean avoidTransformToDateUDF;
 
@@ -69,6 +69,8 @@ public class ToDateOperatorTransformer extends SqlCallTransformer {
     List<SqlNode> newOperands = new ArrayList<>();
     SqlNode timestampSqlCall = createCall(TIMESTAMP_OPERATOR, sourceOperands, SqlParserPos.ZERO);
     newOperands.add(timestampSqlCall);
-    return createCall(TRINO_OPERATOR, newOperands, SqlParserPos.ZERO);
+    return createCall(createSqlOperatorOfFunction(TO_OPERATOR_NAME,
+        HIVE_FUNCTION_REGISTRY.lookup(FROM_OPERATOR_NAME).iterator().next().getSqlOperator().getReturnTypeInference()),
+        newOperands, SqlParserPos.ZERO);
   }
 }

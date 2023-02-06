@@ -44,6 +44,7 @@ import org.apache.calcite.sql.fun.SqlMapValueConstructor;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.ReturnTypes;
+import org.apache.calcite.sql.type.SqlReturnTypeInference;
 import org.apache.calcite.sql.type.SqlTypeFamily;
 import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
 
@@ -504,5 +505,11 @@ public class Calcite2TrinoUDFConverter {
       }
       return call;
     }
+  }
+
+  private static SqlOperator createSqlOperatorOfFunction(String functionName, SqlReturnTypeInference typeInference) {
+    SqlIdentifier sqlIdentifier =
+        new SqlIdentifier(com.google.common.collect.ImmutableList.of(functionName), SqlParserPos.ZERO);
+    return new SqlUserDefinedFunction(sqlIdentifier, typeInference, null, null, null, null);
   }
 }

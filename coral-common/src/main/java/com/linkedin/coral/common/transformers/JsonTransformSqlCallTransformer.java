@@ -43,7 +43,7 @@ import static com.linkedin.coral.common.calcite.CalciteUtil.*;
  * if the signature of the operator to be transformed, including both the name and the number of operands,
  * matches the target values in the condition function.
  */
-public class OperatorBasedSqlCallTransformer extends SqlCallTransformer {
+public class JsonTransformSqlCallTransformer extends SourceOperatorMatchSqlCallTransformer {
   private static final Map<String, SqlOperator> OP_MAP = new HashMap<>();
 
   // Operators allowed in the transformation
@@ -86,19 +86,20 @@ public class OperatorBasedSqlCallTransformer extends SqlCallTransformer {
   public static final String REGEX = "regex";
   public static final String NAME = "name";
 
-  public final String fromOperatorName;
-  public final int numOperands;
-  public final SqlOperator targetOperator;
+  private final SqlOperator targetOperator;
   public List<JsonObject> operandTransformers;
   public JsonObject resultTransformer;
   public List<JsonObject> operatorTransformers;
 
-  public OperatorBasedSqlCallTransformer(@Nonnull String fromOperatorName, int numOperands,
-      @Nonnull SqlOperator targetOperator, @Nullable String operandTransformers, @Nullable String resultTransformer,
-      @Nullable String operatorTransformers) {
-    this.fromOperatorName = fromOperatorName;
-    this.numOperands = numOperands;
+  public JsonTransformSqlCallTransformer(@Nonnull String fromOperatorName, int numOperands,
+      @Nonnull SqlOperator targetOperator) {
+    super(fromOperatorName, numOperands);
     this.targetOperator = targetOperator;
+  }
+
+  public JsonTransformSqlCallTransformer(@Nonnull SqlOperator coralOp, int numOperands, @Nonnull String targetOpName,
+      @Nullable String operandTransformers, @Nullable String resultTransformer, @Nullable String operatorTransformers) {
+    this(coralOp.getName(), numOperands, createSqlOperatorOfFunction(targetOpName, coralOp.getReturnTypeInference()));
     if (operandTransformers != null) {
       this.operandTransformers = parseJsonObjectsFromString(operandTransformers);
     }
@@ -110,24 +111,9 @@ public class OperatorBasedSqlCallTransformer extends SqlCallTransformer {
     }
   }
 
-  public OperatorBasedSqlCallTransformer(@Nonnull SqlOperator coralOp, int numOperands, @Nonnull String targetOpName) {
-    this(coralOp.getName(), numOperands, createSqlOperatorOfFunction(targetOpName, coralOp.getReturnTypeInference()),
-        null, null, null);
-  }
-
-  public OperatorBasedSqlCallTransformer(@Nonnull SqlOperator coralOp, int numOperands, @Nonnull String targetOpName,
-      @Nullable String operandTransformers, @Nullable String resultTransformer, @Nullable String operatorTransformers) {
-    this(coralOp.getName(), numOperands, createSqlOperatorOfFunction(targetOpName, coralOp.getReturnTypeInference()),
-        operandTransformers, resultTransformer, operatorTransformers);
-  }
-
-  public SqlOperator getTargetOperator() {
-    return targetOperator;
-  }
-
   @Override
   protected boolean condition(SqlCall sqlCall) {
-    return fromOperatorName.equalsIgnoreCase(sqlCall.getOperator().getName())
+    return sourceOpName.equalsIgnoreCase(sqlCall.getOperator().getName())
         && sqlCall.getOperandList().size() == numOperands;
   }
 
@@ -139,7 +125,7 @@ public class OperatorBasedSqlCallTransformer extends SqlCallTransformer {
       String operands = sourceOperands.stream().map(SqlNode::toString).collect(Collectors.joining(","));
       throw new IllegalArgumentException(
           String.format("An equivalent operator in the target IR was not found for the function call: %s(%s)",
-              fromOperatorName, operands));
+              sourceOpName, operands));
     }
     final List<SqlNode> newOperands = transformOperands(sourceOperands);
     final SqlCall newCall = createCall(newTargetOperator, newOperands, SqlParserPos.ZERO);

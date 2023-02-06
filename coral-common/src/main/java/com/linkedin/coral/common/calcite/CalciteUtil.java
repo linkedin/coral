@@ -7,16 +7,12 @@ package com.linkedin.coral.common.calcite;
 
 import java.util.*;
 
-import com.google.common.collect.ImmutableList;
-
 import org.apache.calcite.avatica.util.Casing;
 import org.apache.calcite.sql.*;
 import org.apache.calcite.sql.parser.SqlParseException;
 import org.apache.calcite.sql.parser.SqlParser;
 import org.apache.calcite.sql.parser.SqlParserPos;
-import org.apache.calcite.sql.type.SqlReturnTypeInference;
 import org.apache.calcite.sql.validate.SqlConformanceEnum;
-import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -126,10 +122,5 @@ public class CalciteUtil {
     s = s.replaceAll("(^|[^\"]\\b)time(\\b[^']|$)", "$1\"time\"$2");
     s = s.replaceAll("(^|\\W)rank($|\\W)", "$1\"rank\"$2");
     return s;
-  }
-
-  public static SqlOperator createSqlOperatorOfFunction(String functionName, SqlReturnTypeInference typeInference) {
-    SqlIdentifier sqlIdentifier = new SqlIdentifier(ImmutableList.of(functionName), SqlParserPos.ZERO);
-    return new SqlUserDefinedFunction(sqlIdentifier, typeInference, null, null, null, null);
   }
 }
