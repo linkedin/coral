@@ -6,6 +6,7 @@
 package com.linkedin.coral.spark;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.avro.Schema;
@@ -16,6 +17,7 @@ import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlSelect;
 
+import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import com.linkedin.coral.spark.containers.SparkRelInfo;
 import com.linkedin.coral.spark.containers.SparkUDFInfo;
 import com.linkedin.coral.spark.dialect.SparkSqlDialect;
@@ -63,11 +65,11 @@ public class CoralSpark {
    */
   public static CoralSpark create(RelNode irRelNode) {
     SparkRelInfo sparkRelInfo = IRRelToSparkRelTransformer.transform(irRelNode);
+    Set<SparkUDFInfo> sparkUDFInfos = sparkRelInfo.getSparkUDFInfos();
     RelNode sparkRelNode = sparkRelInfo.getSparkRelNode();
-    String sparkSQL = constructSparkSQL(sparkRelNode);
+    String sparkSQL = constructSparkSQL(sparkRelNode, sparkUDFInfos);
     List<String> baseTables = constructBaseTables(sparkRelNode);
-    List<SparkUDFInfo> sparkUDFInfos = sparkRelInfo.getSparkUDFInfoList();
-    return new CoralSpark(baseTables, sparkUDFInfos, sparkSQL);
+    return new CoralSpark(baseTables, ImmutableList.copyOf(sparkUDFInfos), sparkSQL);
   }
 
   /**
@@ -86,11 +88,11 @@ public class CoralSpark {
 
   private static CoralSpark createWithAlias(RelNode irRelNode, List<String> aliases) {
     SparkRelInfo sparkRelInfo = IRRelToSparkRelTransformer.transform(irRelNode);
+    Set<SparkUDFInfo> sparkUDFInfos = sparkRelInfo.getSparkUDFInfos();
     RelNode sparkRelNode = sparkRelInfo.getSparkRelNode();
-    String sparkSQL = constructSparkSQLWithExplicitAlias(sparkRelNode, aliases);
+    String sparkSQL = constructSparkSQLWithExplicitAlias(sparkRelNode, aliases, sparkUDFInfos);
     List<String> baseTables = constructBaseTables(sparkRelNode);
-    List<SparkUDFInfo> sparkUDFInfos = sparkRelInfo.getSparkUDFInfoList();
-    return new CoralSpark(baseTables, sparkUDFInfos, sparkSQL);
+    return new CoralSpark(baseTables, ImmutableList.copyOf(sparkUDFInfos), sparkSQL);
   }
 
   /**
@@ -105,21 +107,25 @@ public class CoralSpark {
    *
    * @param sparkRelNode A Spark compatible RelNode
    *
+   * @param sparkUDFInfos A set of Spark UDF information objects
    * @return SQL String in Spark SQL dialect which is 'completely expanded'
    */
-  private static String constructSparkSQL(RelNode sparkRelNode) {
+  private static String constructSparkSQL(RelNode sparkRelNode, Set<SparkUDFInfo> sparkUDFInfos) {
     CoralRelToSqlNodeConverter rel2sql = new CoralRelToSqlNodeConverter();
     SqlNode coralSqlNode = rel2sql.convert(sparkRelNode);
-    SqlNode sparkSqlNode = coralSqlNode.accept(new CoralSqlNodeToSparkSqlNodeConverter());
+    SqlNode sparkSqlNode = coralSqlNode.accept(new CoralSqlNodeToSparkSqlNodeConverter())
+        .accept(new CoralToSparkSqlCallConverter(sparkUDFInfos));
     SqlNode rewrittenSparkSqlNode = sparkSqlNode.accept(new SparkSqlRewriter());
     return rewrittenSparkSqlNode.toSqlString(SparkSqlDialect.INSTANCE).getSql();
   }
 
-  private static String constructSparkSQLWithExplicitAlias(RelNode sparkRelNode, List<String> aliases) {
+  private static String constructSparkSQLWithExplicitAlias(RelNode sparkRelNode, List<String> aliases,
+      Set<SparkUDFInfo> sparkUDFInfos) {
     CoralRelToSqlNodeConverter rel2sql = new CoralRelToSqlNodeConverter();
     // Create temporary objects r and rewritten to make debugging easier
     SqlNode coralSqlNode = rel2sql.convert(sparkRelNode);
-    SqlNode sparkSqlNode = coralSqlNode.accept(new CoralSqlNodeToSparkSqlNodeConverter());
+    SqlNode sparkSqlNode = coralSqlNode.accept(new CoralSqlNodeToSparkSqlNodeConverter())
+        .accept(new CoralToSparkSqlCallConverter(sparkUDFInfos));
 
     SqlNode rewritten = sparkSqlNode.accept(new SparkSqlRewriter());
     // Use a second pass visit to add explicit alias names,

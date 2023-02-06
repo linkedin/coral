@@ -6,6 +6,7 @@
 package com.linkedin.coral.transformers;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -25,6 +26,7 @@ import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexCorrelVariable;
 import org.apache.calcite.rex.RexFieldAccess;
 import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.rex.RexProgram;
 import org.apache.calcite.sql.JoinConditionType;
 import org.apache.calcite.sql.JoinType;
 import org.apache.calcite.sql.SqlCall;
@@ -43,6 +45,7 @@ import org.apache.calcite.sql.type.SqlTypeName;
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import com.linkedin.coral.com.google.common.collect.ImmutableMap;
 import com.linkedin.coral.common.functions.CoralSqlUnnestOperator;
+import com.linkedin.coral.common.functions.FunctionFieldReferenceOperator;
 
 
 /**
@@ -344,5 +347,42 @@ public class CoralRelToSqlNodeConverter extends RelToSqlConverter {
     List<SqlNode> asOperands = createAsFullOperands(relDataType, rightLateral, alias);
 
     return SqlStdOperatorTable.AS.createCall(POS, asOperands);
+  }
+
+  /**
+   * Override this method to handle the conversion for RelNode `f(x).y.z` where `f` is an UDF, which
+   * returns a struct containing field `y`, `y` is also a struct containing field `z`.
+   *
+   * Calcite will convert this RelNode to a SqlIdentifier directly (check
+   * {@link org.apache.calcite.rel.rel2sql.SqlImplementor.Context#toSql(RexProgram, RexNode)}),
+   * which is not aligned with our expectation since we want to apply transformations on `f(x)` with
+   * {@link com.linkedin.coral.common.transformers.SqlCallTransformer}. Therefore, we override this
+   * method to convert `f(x)` to SqlCall, `.` to {@link com.linkedin.coral.common.functions.FunctionFieldReferenceOperator#DOT}
+   * and `y.z` to SqlIdentifier.
+   */
+  @Override
+  public Context aliasContext(Map<String, RelDataType> aliases, boolean qualified) {
+    return new AliasContext(INSTANCE, aliases, qualified) {
+      @Override
+      public SqlNode toSql(RexProgram program, RexNode rex) {
+        if (rex.getKind() == SqlKind.FIELD_ACCESS) {
+          final List<String> accessNames = new ArrayList<>();
+          RexNode referencedExpr = rex;
+          // Use the loop to get the top-level struct (`f(x)` in the example above),
+          // and store the accessed field names ([`z`, `y`] in the example above, needs to be reversed)
+          while (referencedExpr.getKind() == SqlKind.FIELD_ACCESS) {
+            accessNames.add(((RexFieldAccess) referencedExpr).getField().getName());
+            referencedExpr = ((RexFieldAccess) referencedExpr).getReferenceExpr();
+          }
+          if (referencedExpr.getKind() == SqlKind.OTHER_FUNCTION) {
+            SqlNode functionCall = toSql(program, referencedExpr);
+            Collections.reverse(accessNames);
+            return FunctionFieldReferenceOperator.DOT.createCall(SqlParserPos.ZERO, functionCall,
+                new SqlIdentifier(String.join(".", accessNames), POS));
+          }
+        }
+        return super.toSql(program, rex);
+      }
+    };
   }
 }
