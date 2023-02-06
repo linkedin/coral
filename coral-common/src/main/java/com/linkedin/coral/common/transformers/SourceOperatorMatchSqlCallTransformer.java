@@ -5,8 +5,6 @@
  */
 package com.linkedin.coral.common.transformers;
 
-import javax.annotation.Nonnull;
-
 import org.apache.calcite.sql.SqlCall;
 
 import static com.linkedin.coral.common.calcite.CalciteUtil.*;
@@ -21,7 +19,7 @@ public abstract class SourceOperatorMatchSqlCallTransformer extends SqlCallTrans
   protected final String sourceOpName;
   protected final int numOperands;
 
-  public SourceOperatorMatchSqlCallTransformer(@Nonnull String sourceOpName, int numOperands) {
+  public SourceOperatorMatchSqlCallTransformer(String sourceOpName, int numOperands) {
     this.sourceOpName = sourceOpName;
     this.numOperands = numOperands;
   }

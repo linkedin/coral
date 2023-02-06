@@ -12,9 +12,6 @@ import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -91,14 +88,13 @@ public class JsonTransformSqlCallTransformer extends SourceOperatorMatchSqlCallT
   public JsonObject resultTransformer;
   public List<JsonObject> operatorTransformers;
 
-  public JsonTransformSqlCallTransformer(@Nonnull String fromOperatorName, int numOperands,
-      @Nonnull SqlOperator targetOperator) {
+  public JsonTransformSqlCallTransformer(String fromOperatorName, int numOperands, SqlOperator targetOperator) {
     super(fromOperatorName, numOperands);
     this.targetOperator = targetOperator;
   }
 
-  public JsonTransformSqlCallTransformer(@Nonnull SqlOperator coralOp, int numOperands, @Nonnull String targetOpName,
-      @Nullable String operandTransformers, @Nullable String resultTransformer, @Nullable String operatorTransformers) {
+  public JsonTransformSqlCallTransformer(SqlOperator coralOp, int numOperands, String targetOpName,
+      String operandTransformers, String resultTransformer, String operatorTransformers) {
     this(coralOp.getName(), numOperands, createSqlOperatorOfFunction(targetOpName, coralOp.getReturnTypeInference()));
     if (operandTransformers != null) {
       this.operandTransformers = parseJsonObjectsFromString(operandTransformers);

@@ -5,8 +5,6 @@
  */
 package com.linkedin.coral.trino.rel2trino.transformers;
 
-import javax.annotation.Nonnull;
-
 import com.linkedin.coral.common.transformers.OperatorRenameSqlCallTransformer;
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 
@@ -18,8 +16,7 @@ import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 public class CoralRegistryOperatorRenameSqlCallTransformer extends OperatorRenameSqlCallTransformer {
   private static final StaticHiveFunctionRegistry HIVE_FUNCTION_REGISTRY = new StaticHiveFunctionRegistry();
 
-  public CoralRegistryOperatorRenameSqlCallTransformer(@Nonnull String sourceOpName, int numOperands,
-      @Nonnull String targetOpName) {
+  public CoralRegistryOperatorRenameSqlCallTransformer(String sourceOpName, int numOperands, String targetOpName) {
     super(HIVE_FUNCTION_REGISTRY.lookup(sourceOpName).iterator().next().getSqlOperator(), numOperands, targetOpName);
   }
 }
