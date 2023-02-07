@@ -44,8 +44,13 @@ public class TranslationControllerLocal extends TranslationController {
           .body("Only queries starting with \"CREATE DATABASE|TABLE|VIEW\" are accepted.\n");
     }
 
-    SessionState.start(conf);
-    run(driver, statement);
+    try {
+      SessionState.start(conf);
+      run(driver, statement);
+    } catch (Throwable t) {
+      final Throwable cause = t.getCause();
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(cause == null ? t.getMessage() : cause.getMessage());
+    }
 
     return ResponseEntity.status(HttpStatus.OK).body("Creation successful\n");
   }
