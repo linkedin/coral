@@ -9,6 +9,7 @@ import java.util.Collection;
 import java.util.Map;
 
 import org.apache.calcite.sql.SqlCall;
+import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
@@ -18,9 +19,11 @@ import com.linkedin.coral.common.functions.Function;
 import com.linkedin.coral.common.transformers.JsonTransformSqlCallTransformer;
 import com.linkedin.coral.common.transformers.OperatorRenameSqlCallTransformer;
 import com.linkedin.coral.common.transformers.SqlCallTransformers;
+import com.linkedin.coral.common.transformers.SqlIdentifierTransformers;
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 import com.linkedin.coral.trino.rel2trino.transformers.CoralRegistryOperatorRenameSqlCallTransformer;
 import com.linkedin.coral.trino.rel2trino.transformers.GenericCoralRegistryOperatorRenameSqlCallTransformer;
+import com.linkedin.coral.trino.rel2trino.transformers.GenericCoralRegistryOperatorRenameSqlIdentifierTransformer;
 import com.linkedin.coral.trino.rel2trino.transformers.ToDateOperatorTransformer;
 
 import static com.linkedin.coral.trino.rel2trino.CoralTrinoConfigKeys.*;
@@ -34,7 +37,7 @@ import static com.linkedin.coral.trino.rel2trino.CoralTrinoConfigKeys.*;
 public class CoralToTrinoSqlCallConverter extends SqlShuttle {
   private static final StaticHiveFunctionRegistry HIVE_FUNCTION_REGISTRY = new StaticHiveFunctionRegistry();
   private final SqlCallTransformers sqlCallTransformers;
-
+  private final SqlIdentifierTransformers sqlIdentifierTransformers;
   public CoralToTrinoSqlCallConverter(Map<String, Boolean> configs) {
     this.sqlCallTransformers = SqlCallTransformers.of(
         // conditional functions
@@ -100,6 +103,9 @@ public class CoralToTrinoSqlCallConverter extends SqlShuttle {
         new CoralRegistryOperatorRenameSqlCallTransformer(
             "com.linkedin.stdudfs.hive.daliudfs.UrnExtractorFunctionWrapper", 1, "urn_extractor"),
         new GenericCoralRegistryOperatorRenameSqlCallTransformer());
+
+    this.sqlIdentifierTransformers =
+        SqlIdentifierTransformers.of(new GenericCoralRegistryOperatorRenameSqlIdentifierTransformer());
   }
 
   private SqlOperator hiveToCoralSqlOperator(String functionName) {
@@ -111,5 +117,11 @@ public class CoralToTrinoSqlCallConverter extends SqlShuttle {
   public SqlNode visit(SqlCall call) {
     SqlCall transformedCall = sqlCallTransformers.apply(call);
     return super.visit(transformedCall);
+  }
+
+  @Override
+  public SqlNode visit(SqlIdentifier sqlIdentifier) {
+    SqlIdentifier transformedIdentifier = sqlIdentifierTransformers.apply(sqlIdentifier);
+    return super.visit(transformedIdentifier);
   }
 }
