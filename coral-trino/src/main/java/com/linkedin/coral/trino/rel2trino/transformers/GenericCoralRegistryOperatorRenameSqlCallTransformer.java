@@ -16,6 +16,11 @@ import com.linkedin.coral.common.transformers.SqlCallTransformer;
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 
 
+/**
+ * This is a subclass of {@link SqlCallTransformer}. It transforms any LinkedIn specific Coral operator
+ * to Trino operator which are not handled by {@link CoralRegistryOperatorRenameSqlCallTransformer}.
+ * e.g. from "com.linkedin.dali.udf.IsTestMemberId"("id") to "is_test_member_id("id")
+ */
 public class GenericCoralRegistryOperatorRenameSqlCallTransformer extends SqlCallTransformer {
 
   private static final StaticHiveFunctionRegistry HIVE_FUNCTION_REGISTRY = new StaticHiveFunctionRegistry();

@@ -305,11 +305,14 @@ public class RelToTrinoConverter extends RelToSqlConverter {
             accessNames.add(((RexFieldAccess) referencedExpr).getField().getName());
             referencedExpr = ((RexFieldAccess) referencedExpr).getReferenceExpr();
           }
-          if (referencedExpr.getKind() == SqlKind.OTHER_FUNCTION) {
+          if (referencedExpr.getKind() == SqlKind.OTHER_FUNCTION || referencedExpr.getKind() == SqlKind.CAST) {
             SqlNode functionCall = toSql(program, referencedExpr);
             Collections.reverse(accessNames);
-            return FunctionFieldReferenceOperator.DOT.createCall(SqlParserPos.ZERO, functionCall,
-                new SqlIdentifier(String.join(".", accessNames), POS));
+            for (String accessName : accessNames) {
+              functionCall = FunctionFieldReferenceOperator.DOT.createCall(SqlParserPos.ZERO, functionCall,
+                  new SqlIdentifier(accessName, POS));
+            }
+            return functionCall;
           }
         }
         return super.toSql(program, rex);
