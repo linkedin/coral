@@ -350,7 +350,7 @@ public class CoralRelToSqlNodeConverter extends RelToSqlConverter {
   }
 
   /**
-   * Override this method to handle the conversion for RelNode `f(x).y.z` where `f` is an UDF, which
+   * Override this method to handle the conversion for RelNode `f(x).y.z` where `f` is an operator, which
    * returns a struct containing field `y`, `y` is also a struct containing field `z`.
    *
    * Calcite will convert this RelNode to a SqlIdentifier directly (check
@@ -358,7 +358,6 @@ public class CoralRelToSqlNodeConverter extends RelToSqlConverter {
    * which is not aligned with our expectation since we want to apply transformations on `f(x)` with
    * {@link com.linkedin.coral.common.transformers.SqlCallTransformer}. Therefore, we override this
    * method to convert `f(x)` to SqlCall, `.` to {@link com.linkedin.coral.common.functions.FunctionFieldReferenceOperator#DOT}
-   * and `y.z` to SqlIdentifier.
    */
   @Override
   public Context aliasContext(Map<String, RelDataType> aliases, boolean qualified) {
@@ -374,11 +373,14 @@ public class CoralRelToSqlNodeConverter extends RelToSqlConverter {
             accessNames.add(((RexFieldAccess) referencedExpr).getField().getName());
             referencedExpr = ((RexFieldAccess) referencedExpr).getReferenceExpr();
           }
-          if (referencedExpr.getKind() == SqlKind.OTHER_FUNCTION) {
+          if (referencedExpr.getKind() == SqlKind.OTHER_FUNCTION || referencedExpr.getKind() == SqlKind.CAST) {
             SqlNode functionCall = toSql(program, referencedExpr);
             Collections.reverse(accessNames);
-            return FunctionFieldReferenceOperator.DOT.createCall(SqlParserPos.ZERO, functionCall,
-                new SqlIdentifier(String.join(".", accessNames), POS));
+            for (String accessName : accessNames) {
+              functionCall = FunctionFieldReferenceOperator.DOT.createCall(SqlParserPos.ZERO, functionCall,
+                  new SqlIdentifier(accessName, POS));
+            }
+            return functionCall;
           }
         }
         return super.toSql(program, rex);
