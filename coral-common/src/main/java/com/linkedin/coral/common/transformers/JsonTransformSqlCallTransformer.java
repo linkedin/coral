@@ -36,9 +36,8 @@ import static com.linkedin.coral.common.calcite.CalciteUtil.*;
 
 
 /**
- * This class is a subclass of SqlCallTransformer which transforms a function operator on SqlNode layer
- * if the signature of the operator to be transformed, including both the name and the number of operands,
- * matches the target values in the condition function.
+ * This class is a subclass of {@link SourceOperatorMatchSqlCallTransformer} which transforms the parts (e.g. name, operator and operands)
+ * of the target operator according to multiple rules defined in JSON format respectively.
  */
 public class JsonTransformSqlCallTransformer extends SourceOperatorMatchSqlCallTransformer {
   private static final Map<String, SqlOperator> OP_MAP = new HashMap<>();
@@ -95,7 +94,7 @@ public class JsonTransformSqlCallTransformer extends SourceOperatorMatchSqlCallT
 
   public JsonTransformSqlCallTransformer(SqlOperator coralOp, int numOperands, String targetOpName,
       String operandTransformers, String resultTransformer, String operatorTransformers) {
-    this(coralOp.getName(), numOperands, createSqlOperatorOfFunction(targetOpName, coralOp.getReturnTypeInference()));
+    this(coralOp.getName(), numOperands, createSqlOperator(targetOpName, coralOp.getReturnTypeInference()));
     if (operandTransformers != null) {
       this.operandTransformers = parseJsonObjectsFromString(operandTransformers);
     }
@@ -230,7 +229,7 @@ public class JsonTransformSqlCallTransformer extends SourceOperatorMatchSqlCallT
       String matcher = operatorTransformer.get(REGEX).getAsString();
 
       if (Pattern.matches(matcher, sourceOperands.get(index).toString())) {
-        return createSqlOperatorOfFunction(functionName, operator.getReturnTypeInference());
+        return createSqlOperator(functionName, operator.getReturnTypeInference());
       }
     }
     return operator;

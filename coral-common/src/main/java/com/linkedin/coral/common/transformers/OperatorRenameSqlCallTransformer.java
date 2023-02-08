@@ -11,6 +11,10 @@ import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.parser.SqlParserPos;
 
 
+/**
+ * This class is a subclass of {@link SourceOperatorMatchSqlCallTransformer} which transform the operator name
+ * from the name of the source operator to the name of the target operator
+ */
 public class OperatorRenameSqlCallTransformer extends SourceOperatorMatchSqlCallTransformer {
   private SqlOperator sourceOperator;
   private String targetOpName;
@@ -23,7 +27,7 @@ public class OperatorRenameSqlCallTransformer extends SourceOperatorMatchSqlCall
 
   @Override
   protected SqlCall transform(SqlCall sqlCall) {
-    return createSqlOperatorOfFunction(targetOpName, sourceOperator.getReturnTypeInference())
+    return createSqlOperator(targetOpName, sourceOperator.getReturnTypeInference())
         .createCall(new SqlNodeList(sqlCall.getOperandList(), SqlParserPos.ZERO));
   }
 }

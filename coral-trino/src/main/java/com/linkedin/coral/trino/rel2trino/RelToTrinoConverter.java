@@ -287,9 +287,9 @@ public class RelToTrinoConverter extends RelToSqlConverter {
       /**
        * This function is overriden to handle the conversion of {@Link org.apache.calcite.rex.RexFieldAccess} like `F(X1..Xn).Y`
        * where `F` is a Coral function which is required to be converted into a Trino function by a specific SqlCallTransformer.
-       * {@link com.linkedin.coral.common.transformers.SqlCallTransformer} only converts the function
-       * defined in a SqlCall, however, RexFieldAccess is converted into a SqlIdentifier by default
-       * in Calcite referring to {@link org.apache.calcite.rel.rel2sql.SqlImplementor.Context#toSql(RexProgram, RexNode)}).
+       * {@link SqlCallTransformer} only converts the function defined in a {@link SqlCall}, however,RexFieldAccess is converted
+       * into a SqlIdentifier by default in Calcite referring to
+       * {@link org.apache.calcite.rel.rel2sql.SqlImplementor.Context#toSql(RexProgram, RexNode)}
        * Therefore RexFieldAccess is converted into a SqlCall instead in this function.
        * @param program Required only if {@code rex} contains {@link RexLocalRef}
        * @param rex Expression to convert
@@ -305,7 +305,7 @@ public class RelToTrinoConverter extends RelToSqlConverter {
             accessNames.add(((RexFieldAccess) referencedExpr).getField().getName());
             referencedExpr = ((RexFieldAccess) referencedExpr).getReferenceExpr();
           }
-          if (referencedExpr.getKind() == SqlKind.OTHER_FUNCTION || referencedExpr.getKind() == SqlKind.CAST) {
+          if (referencedExpr.getKind() == SqlKind.OTHER_FUNCTION) {
             SqlNode functionCall = toSql(program, referencedExpr);
             Collections.reverse(accessNames);
             for (String accessName : accessNames) {

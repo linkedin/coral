@@ -104,7 +104,10 @@ public abstract class SqlCallTransformer {
     throw new RuntimeException("Failed to derive the RelDataType for SqlNode " + sqlNode);
   }
 
-  protected static SqlOperator createSqlOperatorOfFunction(String functionName, SqlReturnTypeInference typeInference) {
+  /**
+   * This function creates a SqlOperator for a function with the function name and return type inference.
+   */
+  protected static SqlOperator createSqlOperator(String functionName, SqlReturnTypeInference typeInference) {
     SqlIdentifier sqlIdentifier = new SqlIdentifier(ImmutableList.of(functionName), SqlParserPos.ZERO);
     return new SqlUserDefinedFunction(sqlIdentifier, typeInference, null, null, null, null);
   }

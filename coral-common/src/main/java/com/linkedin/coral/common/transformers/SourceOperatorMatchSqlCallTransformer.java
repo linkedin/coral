@@ -11,7 +11,7 @@ import static com.linkedin.coral.common.calcite.CalciteUtil.*;
 
 
 /**
- * This class is a subclass of SqlCallTransformer which transforms a function operator on SqlNode layer
+ * This class is a subclass of {@link SqlCallTransformer} which transforms a function operator on SqlNode layer
  * if the signature of the operator to be transformed, including both the name and the number of operands,
  * matches the target values in the condition function.
  */

@@ -69,7 +69,7 @@ public class ToDateOperatorTransformer extends SqlCallTransformer {
     List<SqlNode> newOperands = new ArrayList<>();
     SqlNode timestampSqlCall = createCall(TIMESTAMP_OPERATOR, sourceOperands, SqlParserPos.ZERO);
     newOperands.add(timestampSqlCall);
-    return createCall(createSqlOperatorOfFunction(TO_OPERATOR_NAME,
+    return createCall(createSqlOperator(TO_OPERATOR_NAME,
         HIVE_FUNCTION_REGISTRY.lookup(FROM_OPERATOR_NAME).iterator().next().getSqlOperator().getReturnTypeInference()),
         newOperands, SqlParserPos.ZERO);
   }

@@ -38,7 +38,7 @@ public class GenericCoralRegistryOperatorRenameSqlCallTransformer extends SqlCal
         : sqlCall.getOperator();
     String[] nameSplit = sourceOp.getName().split("\\.");
     String targetName = caseConverter.convert(nameSplit[nameSplit.length - 1]);
-    SqlOperator targetOp = createSqlOperatorOfFunction(targetName, sourceOp.getReturnTypeInference());
+    SqlOperator targetOp = createSqlOperator(targetName, sourceOp.getReturnTypeInference());
     return targetOp.createCall(new SqlNodeList(sqlCall.getOperandList(), SqlParserPos.ZERO));
   }
 }
