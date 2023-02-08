@@ -47,6 +47,19 @@ public class HiveToTrinoConverterTest {
     assertEquals(expandedSql, expectedSql);
   }
 
+  //  @Test
+  //  public void testViewsTmp() {
+  //    String database = "test";
+  //    String view = "aastha_test_view";
+  //    String expectedSql =
+  //        "SELECT \"a\", CAST(row(\"b\".\"b1\", cast(row(\"b\".\"b2\".\"b3\", cast(row(\"b\".\"b2\".\"b4\".\"b5\") as row(\"b5\" varchar))) as row(\"b3\" varchar, \"b4\" row(\"b5\" varchar)))) as row(\"b1\" varchar, \"b2\" row(\"b3\" varchar, \"b4\" row(\"b5\" varchar)))) AS \"b\"\n"
+  //            + "FROM \"test\".\"tablel\"\n" + "UNION ALL\n" + "SELECT *\n" + "FROM \"test\".\"tablem\"";
+  //    RelNode relNode = TestUtils.getHiveToRelConverter().convertView(database, view);
+  //    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
+  //    String expandedSql = relToTrinoConverter.convert(relNode);
+  //    assertEquals(expandedSql, expectedSql);
+  //  }
+
   @DataProvider(name = "viewTestCases")
   public Object[][] viewTestCasesProvider() {
     return new Object[][] {

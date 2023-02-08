@@ -352,6 +352,9 @@ public class TestUtils {
     run(driver, "CREATE VIEW IF NOT EXISTS test.t_dot_star_view AS \n"
         + "SELECT ta.*, tb.b as tbb FROM test.tableA as ta JOIN test.tableA as tb ON ta.a = tb.a");
 
+    //    run(driver, "CREATE VIEW IF NOT EXISTS test.aastha_test_view AS \n"
+    //        + "SELECT * from (SELECT t1.a as tmp FROM (SELECT * from test.tableA UNION ALL SELECT * FROM test.tableA) AS t1) AS t2 where tmp = 3");
+
     run(driver, "CREATE TABLE IF NOT EXISTS test.table_ints_strings( a int, b int, c string, d string)");
 
     run(driver, "CREATE VIEW IF NOT EXISTS test.greatest_view AS \n"

@@ -153,7 +153,7 @@ public abstract class ToRelConverter {
   }
 
   @VisibleForTesting
-  protected RelNode toRel(SqlNode sqlNode) {
+  public RelNode toRel(SqlNode sqlNode) {
     RelRoot root = getSqlToRelConverter().convertQuery(sqlNode, true, true);
     return root.rel;
   }

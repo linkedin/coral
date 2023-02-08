@@ -43,7 +43,7 @@ public class SqlNodeConverter extends SqlShuttle {
   public SqlNodeConverter(HiveMetastoreClient mscClient) {
     SqlValidator sqlValidator = new HiveToRelConverter(mscClient).getSqlValidator();
     operatorTransformerList =
-        SqlCallTransformers.of(new IdentityTransformer(), new RelationalOperatorTransformer(sqlValidator));
+        SqlCallTransformers.of(new IdentityTransformer(), new RelationalOperatorTransformer(sqlValidator, mscClient));
   }
 
   @Override

@@ -18,7 +18,7 @@ import com.linkedin.coral.common.transformers.SqlCallTransformer;
 public class IdentityTransformer extends SqlCallTransformer {
 
   @Override
-  protected boolean predicate(SqlCall sqlCall) {
+  protected boolean condition(SqlCall sqlCall) {
     return sqlCall.getOperator().kind == SqlKind.SELECT;
   }
 

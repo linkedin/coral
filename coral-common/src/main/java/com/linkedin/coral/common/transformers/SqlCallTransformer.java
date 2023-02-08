@@ -6,6 +6,7 @@
 package com.linkedin.coral.common.transformers;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.ImmutableList;
@@ -54,6 +55,19 @@ public abstract class SqlCallTransformer {
    */
   public SqlCall apply(SqlCall sqlCall) {
     if (sqlCall instanceof SqlSelect) {
+
+      List<String> names = new ArrayList<>();
+      names.add("*");
+      List<SqlParserPos> sqlParserPos = Collections.nCopies(names.size(), SqlParserPos.ZERO);
+      SqlNode star = SqlIdentifier.star(names, SqlParserPos.ZERO, sqlParserPos);
+
+      if (((SqlSelect) sqlCall).getSelectList() == null) {
+        //      if (((SqlSelect) sqlCall).getSelectList().size() == 1
+        //          && ((SqlSelect) sqlCall).getSelectList().get(0).toString().equalsIgnoreCase("*")) {
+
+        ((SqlSelect) sqlCall).setSelectList(SqlNodeList.of(star));
+      }
+
       this.topSelectNodes.add((SqlSelect) sqlCall);
     }
     if (condition(sqlCall)) {
@@ -101,6 +115,16 @@ public abstract class SqlCallTransformer {
       } catch (Throwable ignored) {
       }
     }
+
+    try {
+      final SqlSelect dummySqlSelect = new SqlSelect(topSelectNodes.get(0).getParserPosition(), null,
+          SqlNodeList.of(sqlNode), topSelectNodes.get(0), null, null, null, null, null, null, null);
+      sqlValidator.validate(dummySqlSelect);
+      return sqlValidator.getValidatedNodeType(sqlNode);
+    } catch (Exception ignored) {
+
+    }
+
     throw new RuntimeException("Failed to derive the RelDataType for SqlNode " + sqlNode);
   }
 
@@ -110,5 +134,9 @@ public abstract class SqlCallTransformer {
   protected static SqlOperator createSqlOperator(String functionName, SqlReturnTypeInference typeInference) {
     SqlIdentifier sqlIdentifier = new SqlIdentifier(ImmutableList.of(functionName), SqlParserPos.ZERO);
     return new SqlUserDefinedFunction(sqlIdentifier, typeInference, null, null, null, null);
+  }
+
+  public SqlSelect getTopSelectNode() {
+    return topSelectNodes.get(0);
   }
 }
