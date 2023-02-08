@@ -7,6 +7,7 @@ package com.linkedin.coral.trino.rel2trino;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -22,8 +23,10 @@ import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rel.type.RelDataTypeFieldImpl;
 import org.apache.calcite.rel.type.RelRecordType;
 import org.apache.calcite.rex.RexCall;
+import org.apache.calcite.rex.RexFieldAccess;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.rex.RexProgram;
 import org.apache.calcite.sql.*;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParserPos;
@@ -32,6 +35,7 @@ import org.apache.calcite.sql.validate.SqlValidatorUtil;
 import org.apache.calcite.util.Util;
 
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
+import com.linkedin.coral.common.functions.FunctionFieldReferenceOperator;
 import com.linkedin.coral.hive.hive2rel.rel.HiveUncollect;
 import com.linkedin.coral.trino.rel2trino.functions.TrinoArrayTransformFunction;
 
@@ -77,7 +81,10 @@ public class RelToTrinoConverter extends RelToSqlConverter {
    */
   public String convert(RelNode relNode) {
     RelNode rel = convertRel(relNode, configs);
-    return convertToSqlNode(rel).accept(new TrinoSqlRewriter()).toSqlString(TrinoSqlDialect.INSTANCE).toString();
+    SqlNode sqlNode = convertToSqlNode(rel);
+    SqlNode sqlNodeWithUDFOperatorConverted = sqlNode.accept(new CoralToTrinoSqlCallConverter(configs));
+    return sqlNodeWithUDFOperatorConverted.accept(new TrinoSqlRewriter()).toSqlString(TrinoSqlDialect.INSTANCE)
+        .toString();
   }
 
   /**
@@ -277,6 +284,40 @@ public class RelToTrinoConverter extends RelToSqlConverter {
   public Context aliasContext(Map<String, RelDataType> aliases, boolean qualified) {
     // easier to keep inner class for accessing 'aliases' and 'qualified' variables as closure
     return new AliasContext(TrinoSqlDialect.INSTANCE, aliases, qualified) {
+      /**
+       * This function is overriden to handle the conversion of {@Link org.apache.calcite.rex.RexFieldAccess} like `F(X1..Xn).Y`
+       * where `F` is a Coral function which is required to be converted into a Trino function by a specific SqlCallTransformer.
+       * {@link SqlCallTransformer} only converts the function defined in a {@link SqlCall}, however,RexFieldAccess is converted
+       * into a SqlIdentifier by default in Calcite referring to
+       * {@link org.apache.calcite.rel.rel2sql.SqlImplementor.Context#toSql(RexProgram, RexNode)}
+       * Therefore RexFieldAccess is converted into a SqlCall instead in this function.
+       * @param program Required only if {@code rex} contains {@link RexLocalRef}
+       * @param rex Expression to convert
+       * @return SqlNode
+       */
+      @Override
+      public SqlNode toSql(RexProgram program, RexNode rex) {
+        if (rex.getKind() == SqlKind.FIELD_ACCESS) {
+          final List<String> accessNames = new ArrayList<>();
+          RexNode referencedExpr = rex;
+
+          while (referencedExpr.getKind() == SqlKind.FIELD_ACCESS) {
+            accessNames.add(((RexFieldAccess) referencedExpr).getField().getName());
+            referencedExpr = ((RexFieldAccess) referencedExpr).getReferenceExpr();
+          }
+          if (referencedExpr.getKind() == SqlKind.OTHER_FUNCTION) {
+            SqlNode functionCall = toSql(program, referencedExpr);
+            Collections.reverse(accessNames);
+            for (String accessName : accessNames) {
+              functionCall = FunctionFieldReferenceOperator.DOT.createCall(SqlParserPos.ZERO, functionCall,
+                  new SqlIdentifier(accessName, POS));
+            }
+            return functionCall;
+          }
+        }
+        return super.toSql(program, rex);
+      }
+
       @Override
       public SqlNode field(int ordinal) {
         for (Map.Entry<String, RelDataType> alias : aliases.entrySet()) {

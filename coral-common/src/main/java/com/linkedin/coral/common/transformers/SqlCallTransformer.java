@@ -8,11 +8,18 @@ package com.linkedin.coral.common.transformers;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.common.collect.ImmutableList;
+
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.sql.SqlCall;
+import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlNodeList;
+import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.SqlSelect;
+import org.apache.calcite.sql.parser.SqlParserPos;
+import org.apache.calcite.sql.type.SqlReturnTypeInference;
+import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
 import org.apache.calcite.sql.validate.SqlValidator;
 
 
@@ -32,9 +39,9 @@ public abstract class SqlCallTransformer {
   }
 
   /**
-   * Predicate of the transformer, it’s used to determine if the SqlCall should be transformed or not
+   * Condition of the transformer, it’s used to determine if the SqlCall should be transformed or not
    */
-  protected abstract boolean predicate(SqlCall sqlCall);
+  protected abstract boolean condition(SqlCall sqlCall);
 
   /**
    * Implementation of the transformation, returns the transformed SqlCall
@@ -49,7 +56,7 @@ public abstract class SqlCallTransformer {
     if (sqlCall instanceof SqlSelect) {
       this.topSelectNodes.add((SqlSelect) sqlCall);
     }
-    if (predicate(sqlCall)) {
+    if (condition(sqlCall)) {
       return transform(sqlCall);
     } else {
       return sqlCall;
@@ -95,5 +102,13 @@ public abstract class SqlCallTransformer {
       }
     }
     throw new RuntimeException("Failed to derive the RelDataType for SqlNode " + sqlNode);
+  }
+
+  /**
+   * This function creates a {@link SqlOperator} for a function with the function name and return type inference.
+   */
+  protected static SqlOperator createSqlOperator(String functionName, SqlReturnTypeInference typeInference) {
+    SqlIdentifier sqlIdentifier = new SqlIdentifier(ImmutableList.of(functionName), SqlParserPos.ZERO);
+    return new SqlUserDefinedFunction(sqlIdentifier, typeInference, null, null, null, null);
   }
 }
