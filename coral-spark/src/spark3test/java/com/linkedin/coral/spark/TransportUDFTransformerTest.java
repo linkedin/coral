@@ -11,27 +11,27 @@ import org.apache.spark.sql.SparkSession;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import com.linkedin.coral.spark.transformers.TransportableUDFTransformer;
+import com.linkedin.coral.spark.transformers.TransportUDFTransformer;
 
 
-public class TransportableUDFTransformerTest {
-  final TransportableUDFTransformer transportableUDFTransformer = new TransportableUDFTransformer(
+public class TransportUDFTransformerTest {
+  final TransportUDFTransformer _transportUDFTransformer = new TransportUDFTransformer(
       "com.linkedin.coral.hive.hive2rel.CoralTestUDF", "com.linkedin.coral.spark.CoralTestUDF",
       "ivy://com.linkedin.coral.spark.CoralTestUDF", null, new HashSet<>());
 
   @Test
   public void testScalaVersionWithSparkSession() {
-    SparkSession ss = SparkSession.builder().appName(TransportableUDFTransformerTest.class.getSimpleName())
+    SparkSession ss = SparkSession.builder().appName(TransportUDFTransformerTest.class.getSimpleName())
         .master("local[1]").enableHiveSupport().getOrCreate();
-    Assert.assertEquals(transportableUDFTransformer.getScalaVersionOfSpark(),
-        TransportableUDFTransformer.ScalaVersion.SCALA_2_12);
+    Assert.assertEquals(_transportUDFTransformer.getScalaVersionOfSpark(),
+        TransportUDFTransformer.ScalaVersion.SCALA_2_12);
     ss.close();
   }
 
   @Test
   public void testDefaultScalaVersion() {
     // If SparkSession is not active, getScalaVersion should return Scala2.11
-    Assert.assertEquals(transportableUDFTransformer.getScalaVersionOfSpark(),
-        TransportableUDFTransformer.ScalaVersion.SCALA_2_11);
+    Assert.assertEquals(_transportUDFTransformer.getScalaVersionOfSpark(),
+        TransportUDFTransformer.ScalaVersion.SCALA_2_11);
   }
 }

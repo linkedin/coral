@@ -46,6 +46,8 @@ public class SparkSqlRewriter extends SqlShuttle {
    *   is translated to
    *  SELECT named_struct(.....)
    *
+   *  Check `CoralSparkTest#testAvoidCastToRow` for unit test and a more complex example.
+   *
    *  Also replaces:
    *
    *  CAST(NULL AS NULL)
@@ -70,15 +72,14 @@ public class SparkSqlRewriter extends SqlShuttle {
   private boolean containsSqlRowTypeSpec(SqlDataTypeSpec sqlDataTypeSpec) {
     if (sqlDataTypeSpec instanceof SqlRowTypeSpec) {
       return true;
-    }
-    if (sqlDataTypeSpec instanceof SqlArrayTypeSpec) {
+    } else if (sqlDataTypeSpec instanceof SqlArrayTypeSpec) {
       return containsSqlRowTypeSpec(((SqlArrayTypeSpec) sqlDataTypeSpec).getElementTypeSpec());
-    }
-    if (sqlDataTypeSpec instanceof SqlMapTypeSpec) {
+    } else if (sqlDataTypeSpec instanceof SqlMapTypeSpec) {
       return containsSqlRowTypeSpec(((SqlMapTypeSpec) sqlDataTypeSpec).getKeyTypeSpec())
           || containsSqlRowTypeSpec(((SqlMapTypeSpec) sqlDataTypeSpec).getValueTypeSpec());
+    } else {
+      return false;
     }
-    return false;
   }
 
   /**

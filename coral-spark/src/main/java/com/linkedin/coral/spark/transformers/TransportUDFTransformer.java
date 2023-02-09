@@ -22,10 +22,10 @@ import com.linkedin.coral.spark.exceptions.UnsupportedUDFException;
 
 
 /**
- * This transformer transforms legacy Hive UDFs to an equivalent Transportable UDF.
- * Check `CoralSparkTest#testTransportableUDFTransformer()` for example.
+ * This transformer transforms legacy Hive UDFs to an equivalent registered Transport UDF.
+ * Check `CoralSparkTest#testTransportUDFTransformer()` for example.
  */
-public class TransportableUDFTransformer extends SqlCallTransformer {
+public class TransportUDFTransformer extends SqlCallTransformer {
   private final String hiveUDFClassName;
   private final String sparkUDFClassName;
   private final String artifactoryUrlSpark211;
@@ -33,7 +33,7 @@ public class TransportableUDFTransformer extends SqlCallTransformer {
   private final Set<SparkUDFInfo> sparkUDFInfos;
   private ScalaVersion scalaVersion;
 
-  public TransportableUDFTransformer(String hiveUDFClassName, String sparkUDFClassName, String artifactoryUrlSpark211,
+  public TransportUDFTransformer(String hiveUDFClassName, String sparkUDFClassName, String artifactoryUrlSpark211,
       String artifactoryUrlSpark212, Set<SparkUDFInfo> sparkUDFInfos) {
     this.hiveUDFClassName = hiveUDFClassName;
     this.sparkUDFClassName = sparkUDFClassName;
@@ -42,7 +42,7 @@ public class TransportableUDFTransformer extends SqlCallTransformer {
     this.sparkUDFInfos = sparkUDFInfos;
   }
 
-  private static final Logger LOG = LoggerFactory.getLogger(TransportableUDFTransformer.class);
+  private static final Logger LOG = LoggerFactory.getLogger(TransportUDFTransformer.class);
   public static final String DALI_UDFS_IVY_URL_SPARK_2_11 =
       "ivy://com.linkedin.standard-udfs-dali-udfs:standard-udfs-dali-udfs:2.0.3?classifier=spark_2.11";
   public static final String DALI_UDFS_IVY_URL_SPARK_2_12 =
@@ -56,7 +56,8 @@ public class TransportableUDFTransformer extends SqlCallTransformer {
   @Override
   protected boolean condition(SqlCall sqlCall) {
     scalaVersion = getScalaVersionOfSpark();
-    if (!hiveUDFClassName.equalsIgnoreCase(sqlCall.getOperator().getName())) {
+    if (!(sqlCall.getOperator() instanceof VersionedSqlUserDefinedFunction)
+        || !hiveUDFClassName.equalsIgnoreCase(sqlCall.getOperator().getName())) {
       return false;
     }
     if (scalaVersion == ScalaVersion.SCALA_2_11 && artifactoryUrlSpark211 != null
@@ -72,23 +73,26 @@ public class TransportableUDFTransformer extends SqlCallTransformer {
   @Override
   protected SqlCall transform(SqlCall sqlCall) {
     final VersionedSqlUserDefinedFunction operator = (VersionedSqlUserDefinedFunction) sqlCall.getOperator();
-    final String functionName = operator.getViewDependentFunctionName();
-    sparkUDFInfos.add(new SparkUDFInfo(sparkUDFClassName, functionName,
+    final String viewDependentFunctionName = operator.getViewDependentFunctionName();
+    sparkUDFInfos.add(new SparkUDFInfo(sparkUDFClassName, viewDependentFunctionName,
         Collections.singletonList(
             URI.create(scalaVersion == ScalaVersion.SCALA_2_11 ? artifactoryUrlSpark211 : artifactoryUrlSpark212)),
         SparkUDFInfo.UDFTYPE.TRANSPORTABLE_UDF));
-    final SqlOperator convertedFunction = createSqlOperatorOfFunction(functionName, operator.getReturnTypeInference());
+    final SqlOperator convertedFunction =
+        createSqlOperator(viewDependentFunctionName, operator.getReturnTypeInference());
     return convertedFunction.createCall(sqlCall.getParserPosition(), sqlCall.getOperandList());
   }
 
   public ScalaVersion getScalaVersionOfSpark() {
     try {
       String sparkVersion = SparkSession.active().version();
-      if (sparkVersion.matches("2\\.[\\d\\.]*"))
+      if (sparkVersion.matches("2\\.[\\d\\.]*")) {
         return ScalaVersion.SCALA_2_11;
-      if (sparkVersion.matches("3\\.[\\d\\.]*"))
+      } else if (sparkVersion.matches("3\\.[\\d\\.]*")) {
         return ScalaVersion.SCALA_2_12;
-      throw new IllegalStateException(String.format("Unsupported Spark Version %s", sparkVersion));
+      } else {
+        throw new IllegalStateException(String.format("Unsupported Spark Version %s", sparkVersion));
+      }
     } catch (IllegalStateException | NoClassDefFoundError ex) {
       LOG.warn("Couldn't determine Spark version, falling back to scala_2.11: {}", ex.getMessage());
       return ScalaVersion.SCALA_2_11;

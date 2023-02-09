@@ -350,14 +350,17 @@ public class CoralRelToSqlNodeConverter extends RelToSqlConverter {
   }
 
   /**
-   * Override this method to handle the conversion for RelNode `f(x).y.z` where `f` is an operator, which
-   * returns a struct containing field `y`, `y` is also a struct containing field `z`.
+   * Override this method to handle the conversion for {@link RexFieldAccess} `f(x).y.z` where `f` is an operator,
+   * which returns a struct containing field `y`, `y` is also a struct containing field `z`.
    *
-   * Calcite will convert this RelNode to a SqlIdentifier directly (check
+   * Calcite will convert this RelNode to a {@link SqlIdentifier} directly (check
    * {@link org.apache.calcite.rel.rel2sql.SqlImplementor.Context#toSql(RexProgram, RexNode)}),
    * which is not aligned with our expectation since we want to apply transformations on `f(x)` with
    * {@link com.linkedin.coral.common.transformers.SqlCallTransformer}. Therefore, we override this
-   * method to convert `f(x)` to SqlCall, `.` to {@link com.linkedin.coral.common.functions.FunctionFieldReferenceOperator#DOT}
+   * method to convert `f(x)` to {@link SqlCall}, `.` to {@link com.linkedin.coral.common.functions.FunctionFieldReferenceOperator#DOT},
+   * so `f(x).y.z` will be converted to `(f(x).y).z`.
+   *
+   * Check `CoralSparkTest#testConvertFieldAccessOnFunctionCall` for unit test and example.
    */
   @Override
   public Context aliasContext(Map<String, RelDataType> aliases, boolean qualified) {
@@ -373,7 +376,8 @@ public class CoralRelToSqlNodeConverter extends RelToSqlConverter {
             accessNames.add(((RexFieldAccess) referencedExpr).getField().getName());
             referencedExpr = ((RexFieldAccess) referencedExpr).getReferenceExpr();
           }
-          if (referencedExpr.getKind() == SqlKind.OTHER_FUNCTION || referencedExpr.getKind() == SqlKind.CAST) {
+          final SqlKind sqlKind = referencedExpr.getKind();
+          if (sqlKind == SqlKind.OTHER_FUNCTION || sqlKind == SqlKind.CAST || sqlKind == SqlKind.ROW) {
             SqlNode functionCall = toSql(program, referencedExpr);
             Collections.reverse(accessNames);
             for (String accessName : accessNames) {

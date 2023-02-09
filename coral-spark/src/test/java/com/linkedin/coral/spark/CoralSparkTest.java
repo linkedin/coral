@@ -101,9 +101,9 @@ public class CoralSparkTest {
   }
 
   @Test
-  public void testTransportableUDFTransformer() {
-    // Dali view foo_dali_udf contains a UDF defined with TransportableUDFTransformer.
-    // The actual values are determined by the parameter values of TransportableUDFTransformer.
+  public void testTransportUDFTransformer() {
+    // Dali view foo_dali_udf contains a UDF defined with TransportUDFTransformer.
+    // The actual values are determined by the parameter values of TransportUDFTransformer.
     RelNode relNode = TestUtils.toRelNode("default", "foo_dali_udf");
     CoralSpark coralSpark = CoralSpark.create(relNode);
     List<SparkUDFInfo> udfJars = coralSpark.getSparkUDFInfoList();
@@ -115,7 +115,7 @@ public class CoralSparkTest {
     String udfFunctionName = udfJars.get(0).getFunctionName();
     String targetFunctionName = "default_foo_dali_udf_LessThanHundred";
     assertEquals(udfFunctionName, targetFunctionName);
-    // check if CoralSpark can fetch artifactory url defined in TransportableUDFTransformer
+    // check if CoralSpark can fetch artifactory url defined in TransportUDFTransformer
     List<String> listOfUriStrings = convertToListOfUriStrings(udfJars.get(0).getArtifactoryUrls());
     String targetArtifactoryUrl = "ivy://com.linkedin.coral.spark.CoralTestUDF?classifier=spark_2.11";
     assertTrue(listOfUriStrings.contains(targetArtifactoryUrl));
@@ -129,8 +129,8 @@ public class CoralSparkTest {
   }
 
   @Test
-  public void testFallBackToHiveUDFTransformer() {
-    // Dali view foo_dali_udf2 contains a UDF not defined with OperatorBasedSqlCallTransformer or TransportableUDFTransformer.
+  public void testFallBackToLinkedInHiveUDFTransformer() {
+    // Dali view foo_dali_udf2 contains a UDF not defined with OperatorBasedSqlCallTransformer or TransportUDFTransformer.
     // We need to fall back to the udf initially defined in HiveFunctionRegistry.
     // Then the function Name comes from Hive metastore in the format dbName_viewName_funcBaseName.
     RelNode relNode = TestUtils.toRelNode("default", "foo_dali_udf2");
@@ -165,7 +165,7 @@ public class CoralSparkTest {
 
   @Test
   public void testTwoFunctionsWithDependencies() {
-    // Dali view foo_dali_udf3 contains 2 UDFs.  One UDF is defined with TransportableUDFTransformer.  The other one is not.
+    // Dali view foo_dali_udf3 contains 2 UDFs.  One UDF is defined with TransportUDFTransformer.  The other one is not.
     // We need to fall back the second one to the udf initially defined in HiveFunctionRegistry.
     RelNode relNode = TestUtils.toRelNode("default", "foo_dali_udf3");
     CoralSpark coralSpark = CoralSpark.create(relNode);
@@ -835,6 +835,22 @@ public class CoralSparkTest {
 
     String targetSql = "SELECT CASE WHEN TRUE THEN NULL ELSE split(b, ' ') END col1\n" + "FROM default.complex";
     assertEquals(expandedSql, targetSql);
+  }
+
+  @Test
+  public void testConvertFieldAccessOnFunctionCall() {
+    RelNode relNode = TestUtils.toRelNode("SELECT named_struct('a', named_struct('b', 1)).a.b");
+
+    String targetSql = "SELECT (named_struct('a', named_struct('b', 1)).a).b\n" + "FROM (VALUES  (0)) t (ZERO)";
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+  }
+
+  @Test
+  public void testAvoidCastToRow() {
+    RelNode relNode = TestUtils.toRelNode("SELECT named_struct('a', array(named_struct('b', 1)))");
+
+    String targetSql = "SELECT named_struct('a', ARRAY (named_struct('b', 1)))\n" + "FROM (VALUES  (0)) t (ZERO)";
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
   }
 
   private static String getCoralSparkTranslatedSqlWithAliasFromCoralSchema(String db, String view) {

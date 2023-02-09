@@ -23,14 +23,14 @@ import com.linkedin.coral.spark.exceptions.UnsupportedUDFException;
 
 
 /**
- * After failing to transform UDF with {@link TransportableUDFTransformer},
+ * After failing to transform UDF with {@link TransportUDFTransformer},
  * we use this transformer to fall back to the original Hive UDF defined in
  * {@link com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry}.
  * This is reasonable since Spark understands and has ability to run Hive UDF.
- * Check `CoralSparkTest#testFallBackToHiveUDFTransformer()` for an example.
+ * Check `CoralSparkTest#testFallBackToLinkedInHiveUDFTransformer()` for an example.
  */
-public class FallBackToHiveUDFTransformer extends SqlCallTransformer {
-  private static final Logger LOG = LoggerFactory.getLogger(FallBackToHiveUDFTransformer.class);
+public class FallBackToLinkedInHiveUDFTransformer extends SqlCallTransformer {
+  private static final Logger LOG = LoggerFactory.getLogger(FallBackToLinkedInHiveUDFTransformer.class);
 
   /**
    * Some LinkedIn UDFs get registered correctly in a SparkSession, and hence a DataFrame is successfully
@@ -46,33 +46,35 @@ public class FallBackToHiveUDFTransformer extends SqlCallTransformer {
           "com.linkedin.coral.hive.hive2rel.CoralTestUnsupportedUDF");
   private final Set<SparkUDFInfo> sparkUDFInfos;
 
-  public FallBackToHiveUDFTransformer(Set<SparkUDFInfo> sparkUDFInfos) {
+  public FallBackToLinkedInHiveUDFTransformer(Set<SparkUDFInfo> sparkUDFInfos) {
     this.sparkUDFInfos = sparkUDFInfos;
   }
 
   @Override
   protected boolean condition(SqlCall sqlCall) {
-    final String functionClassName = sqlCall.getOperator().getName();
-    if (UNSUPPORTED_HIVE_UDFS.contains(functionClassName)) {
-      throw new UnsupportedUDFException(functionClassName);
-    }
-    return functionClassName.contains(".") && !functionClassName.equals(".");
+    final SqlOperator operator = sqlCall.getOperator();
+    final String operatorName = operator.getName();
+    return operator instanceof VersionedSqlUserDefinedFunction && operatorName.contains(".")
+        && !operatorName.equals(".");
   }
 
   @Override
   protected SqlCall transform(SqlCall sqlCall) {
     final VersionedSqlUserDefinedFunction operator = (VersionedSqlUserDefinedFunction) sqlCall.getOperator();
-    final String functionClassName = operator.getName();
-    final String expandedFunctionName = operator.getViewDependentFunctionName();
+    final String operatorName = operator.getName();
+    if (UNSUPPORTED_HIVE_UDFS.contains(operatorName)) {
+      throw new UnsupportedUDFException(operatorName);
+    }
+    final String viewDependentFunctionName = operator.getViewDependentFunctionName();
     final List<String> dependencies = operator.getIvyDependencies();
     List<URI> listOfUris = dependencies.stream().map(URI::create).collect(Collectors.toList());
-    LOG.info("Function: {} is not a Builtin UDF or Transportable UDF. We fall back to its Hive "
-        + "function with ivy dependency: {}", functionClassName, String.join(",", dependencies));
+    LOG.info("Function: {} is not a Builtin UDF or Transport UDF. We fall back to its Hive "
+        + "function with ivy dependency: {}", operatorName, String.join(",", dependencies));
     final SparkUDFInfo sparkUDFInfo =
-        new SparkUDFInfo(functionClassName, expandedFunctionName, listOfUris, SparkUDFInfo.UDFTYPE.HIVE_CUSTOM_UDF);
+        new SparkUDFInfo(operatorName, viewDependentFunctionName, listOfUris, SparkUDFInfo.UDFTYPE.HIVE_CUSTOM_UDF);
     sparkUDFInfos.add(sparkUDFInfo);
     final SqlOperator convertedFunction =
-        createSqlOperatorOfFunction(expandedFunctionName, operator.getReturnTypeInference());
+        createSqlOperator(viewDependentFunctionName, operator.getReturnTypeInference());
     return convertedFunction.createCall(sqlCall.getParserPosition(), sqlCall.getOperandList());
   }
 }
