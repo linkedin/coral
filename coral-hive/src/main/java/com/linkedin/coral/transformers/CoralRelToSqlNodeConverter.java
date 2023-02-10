@@ -359,7 +359,7 @@ public class CoralRelToSqlNodeConverter extends RelToSqlConverter {
    * method to convert `f(x)` to {@link SqlCall} and `.` to {@link com.linkedin.coral.common.functions.FunctionFieldReferenceOperator#DOT}.
    *
    * With this override, the converted CoralSqlNode matches the previous SqlNode handed over to Calcite for validation and conversion
-   * in {@link com.linkedin.coral.hive.hive2rel.HiveSqlToRelConverter#convertQuery(SqlNode, boolean, boolean)}.
+   * in `HiveSqlToRelConverter#convertQuery`.
    *
    * Check `CoralSparkTest#testConvertFieldAccessOnFunctionCall` for a more complex example with nested field access.
    */
