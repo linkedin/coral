@@ -18,13 +18,10 @@ import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlTypeNameSpec;
 import org.apache.calcite.sql.type.SqlTypeFamily;
 import org.apache.calcite.sql.validate.SqlValidator;
-import org.apache.calcite.sql.validate.SqlValidatorScope;
 
 import com.linkedin.coral.com.google.common.collect.ImmutableMultimap;
 import com.linkedin.coral.com.google.common.collect.Multimap;
-import com.linkedin.coral.common.HiveMetastoreClient;
 import com.linkedin.coral.common.transformers.SqlCallTransformer;
-import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
 import com.linkedin.coral.trino.rel2trino.TrinoTryCastFunction;
 
 import static org.apache.calcite.rel.rel2sql.SqlImplementor.*;
@@ -45,13 +42,9 @@ public class RelationalOperatorTransformer extends SqlCallTransformer {
           .putAll(SqlTypeFamily.NUMERIC, SqlTypeFamily.DATE, SqlTypeFamily.TIME, SqlTypeFamily.TIMESTAMP)
           .putAll(SqlTypeFamily.BOOLEAN, SqlTypeFamily.NUMERIC)
           .putAll(SqlTypeFamily.BINARY, SqlTypeFamily.CHARACTER, SqlTypeFamily.NUMERIC).build();
-  private final HiveToRelConverter _hiveToRelConverter;
-  private final HiveMetastoreClient _hiveMetastoreClient;
 
-  public RelationalOperatorTransformer(SqlValidator sqlValidator, HiveMetastoreClient mscClient) {
+  public RelationalOperatorTransformer(SqlValidator sqlValidator) {
     super(sqlValidator);
-    _hiveToRelConverter = new HiveToRelConverter(mscClient);
-    _hiveMetastoreClient = mscClient;
   }
 
   @Override
@@ -84,9 +77,7 @@ public class RelationalOperatorTransformer extends SqlCallTransformer {
       return sqlCall;
     }
 
-    RelDataType leftType = deriveRelDataType(leftOperand);
-    //    RelDataType leftType = getRelDataType(leftOperand);
-
+    RelDataType leftType = getRelDataType(leftOperand);
     RelDataType rightType = getRelDataType(rightOperand);
 
     // Determine if the left operand requires casting to the data type of the right operand.
@@ -115,21 +106,5 @@ public class RelationalOperatorTransformer extends SqlCallTransformer {
   private SqlDataTypeSpec getSqlDataTypeSpecForCasting(RelDataType relDataType) {
     final SqlTypeNameSpec typeNameSpec = new SqlBasicTypeNameSpec(relDataType.getSqlTypeName(), ZERO);
     return new SqlDataTypeSpec(typeNameSpec, ZERO);
-  }
-
-  private RelDataType deriveRelDataType(SqlNode operand) {
-    //    return getRelDataType(operand);
-    RelDataType type = null;
-    try {
-      type = getRelDataType(operand);
-    } catch (Exception e) {
-      HiveToRelConverter hiveToRelConverter = new HiveToRelConverter(_hiveMetastoreClient);
-      hiveToRelConverter.toRel(getTopSelectNode());
-
-      SqlValidator _validator = hiveToRelConverter.getSqlValidator();
-      SqlValidatorScope topLevelScope = _validator.getSelectScope(getTopSelectNode());
-      type = _validator.deriveType(topLevelScope, operand);
-    }
-    return type;
   }
 }

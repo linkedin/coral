@@ -50,21 +50,17 @@ public abstract class SqlCallTransformer {
   protected abstract SqlCall transform(SqlCall sqlCall);
 
   /**
-   * Public entry of the transformer, it returns the result of transformed SqlCall if `predicate(SqlCall)` returns true,
+   * Public entry of the transformer, it returns the result of transformed SqlCall if `condition(SqlCall)` returns true,
    * otherwise returns the input SqlCall without any transformation
    */
   public SqlCall apply(SqlCall sqlCall) {
     if (sqlCall instanceof SqlSelect) {
-
-      List<String> names = new ArrayList<>();
-      names.add("*");
-      List<SqlParserPos> sqlParserPos = Collections.nCopies(names.size(), SqlParserPos.ZERO);
-      SqlNode star = SqlIdentifier.star(names, SqlParserPos.ZERO, sqlParserPos);
-
+      // Updates selectList to correctly handle t.* type SqlSelect sqlNodes for accurate data type derivation
       if (((SqlSelect) sqlCall).getSelectList() == null) {
-        //      if (((SqlSelect) sqlCall).getSelectList().size() == 1
-        //          && ((SqlSelect) sqlCall).getSelectList().get(0).toString().equalsIgnoreCase("*")) {
-
+        List<String> names = new ArrayList<>();
+        names.add("*");
+        List<SqlParserPos> sqlParserPos = Collections.nCopies(names.size(), SqlParserPos.ZERO);
+        SqlNode star = SqlIdentifier.star(names, SqlParserPos.ZERO, sqlParserPos);
         ((SqlSelect) sqlCall).setSelectList(SqlNodeList.of(star));
       }
 
@@ -115,7 +111,10 @@ public abstract class SqlCallTransformer {
       } catch (Throwable ignored) {
       }
     }
-
+    // Additional attempt to derive data type of the input sqlNode by validating the topSelectNode, especially in cases
+    // where the input is defined as an alias in topSelectNode's selectList.
+    // (e.g. topSelectNode: Select a AS tmp FROM foo where tmp > 5).
+    // Previous attempts would try validating dummySqlNode: SELECT tmp FROM foo WHERE tmp > 5, and fail.
     try {
       final SqlSelect dummySqlSelect = new SqlSelect(topSelectNodes.get(0).getParserPosition(), null,
           SqlNodeList.of(sqlNode), topSelectNodes.get(0), null, null, null, null, null, null, null);
@@ -134,9 +133,5 @@ public abstract class SqlCallTransformer {
   protected static SqlOperator createSqlOperator(String functionName, SqlReturnTypeInference typeInference) {
     SqlIdentifier sqlIdentifier = new SqlIdentifier(ImmutableList.of(functionName), SqlParserPos.ZERO);
     return new SqlUserDefinedFunction(sqlIdentifier, typeInference, null, null, null, null);
-  }
-
-  public SqlSelect getTopSelectNode() {
-    return topSelectNodes.get(0);
   }
 }

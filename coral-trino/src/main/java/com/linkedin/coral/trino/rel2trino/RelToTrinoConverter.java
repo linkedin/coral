@@ -34,14 +34,16 @@ import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.util.Util;
 
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
-import com.linkedin.coral.common.functions.FunctionFieldReferenceOperator;
 import com.linkedin.coral.common.HiveMetastoreClient;
+import com.linkedin.coral.common.functions.FunctionFieldReferenceOperator;
 import com.linkedin.coral.hive.hive2rel.rel.HiveUncollect;
 import com.linkedin.coral.trino.rel2trino.functions.TrinoArrayTransformFunction;
 
 import static com.google.common.base.Preconditions.*;
 import static com.linkedin.coral.trino.rel2trino.Calcite2TrinoUDFConverter.convertRel;
 import static com.linkedin.coral.trino.rel2trino.CoralTrinoConfigKeys.*;
+import static org.apache.calcite.sql.fun.SqlStdOperatorTable.*;
+import static org.apache.calcite.sql.parser.SqlParserPos.*;
 
 
 public class RelToTrinoConverter extends RelToSqlConverter {
@@ -94,11 +96,11 @@ public class RelToTrinoConverter extends RelToSqlConverter {
   public String convert(RelNode relNode) {
     RelNode rel = convertRel(relNode, configs);
     SqlNode sqlNode = convertToSqlNode(rel);
-    SqlNode sqlNodeWithUDFOperatorConverted = sqlNode.accept(new CoralToTrinoSqlCallConverter(configs));
+    SqlNode transformedSqlNode = sqlNode.accept(new SqlNodeConverter(_hiveMetastoreClient));
+
+    SqlNode sqlNodeWithUDFOperatorConverted = transformedSqlNode.accept(new CoralToTrinoSqlCallConverter(configs));
     return sqlNodeWithUDFOperatorConverted.accept(new TrinoSqlRewriter()).toSqlString(TrinoSqlDialect.INSTANCE)
         .toString();
-//    SqlNode transformedSqlNode = sqlNode.accept(new SqlNodeConverter(_hiveMetastoreClient));
-//    return transformedSqlNode.accept(new TrinoSqlRewriter()).toSqlString(TrinoSqlDialect.INSTANCE).toString();
   }
 
   /**
@@ -351,7 +353,11 @@ public class RelToTrinoConverter extends RelToSqlConverter {
             RelDataTypeField field = fields.get(ordinal);
             final SqlNode mappedSqlNode = ordinalMap.get(field.getName().toLowerCase(Locale.ROOT));
             if (mappedSqlNode != null) {
-              return ensureAliasedNode(alias.getKey(), mappedSqlNode);
+              return mappedSqlNode;
+            }
+            // For fields with data type struct, append the table alias to ensure proper type derivation
+            if (field.getType().isStruct()) {
+              return new SqlIdentifier(ImmutableList.of(alias.getKey(), field.getName()), POS);
             }
             return new SqlIdentifier(
                 !qualified ? ImmutableList.of(field.getName()) : ImmutableList.of(alias.getKey(), field.getName()),
