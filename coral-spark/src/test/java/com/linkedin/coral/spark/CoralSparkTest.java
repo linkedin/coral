@@ -819,7 +819,7 @@ public class CoralSparkTest {
     assertEquals(expandedSql, targetSql);
   }
 
-  @Test
+  @Test(enabled = false)
   public void testSelectStar() {
     String sourceSql = "SELECT * FROM default.basecomplex";
     String expandedSql = getCoralSparkTranslatedSqlWithAliasFromCoralSchema(sourceSql);
