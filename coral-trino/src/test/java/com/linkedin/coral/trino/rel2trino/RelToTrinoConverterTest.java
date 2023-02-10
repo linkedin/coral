@@ -249,7 +249,7 @@ public class RelToTrinoConverterTest {
   public void testUnnestConstant() {
     final String sql = "" + "SELECT c1 + 2\n" + "FROM UNNEST(ARRAY[(1, 1),(2, 2), (3, 3)]) as t(c1, c2)";
 
-    final String expected = "" + "SELECT \"t0\".\"col_0\" + 2\n"
+    final String expected = "" + "SELECT \"col_0\" + 2\n"
         + "FROM UNNEST(ARRAY[ROW(1, 1), ROW(2, 2), ROW(3, 3)]) AS \"t0\" (\"col_0\", \"col_1\")";
     testConversion(sql, expected);
   }

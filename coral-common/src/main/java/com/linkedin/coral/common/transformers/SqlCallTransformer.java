@@ -6,6 +6,7 @@
 package com.linkedin.coral.common.transformers;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.ImmutableList;
@@ -49,11 +50,19 @@ public abstract class SqlCallTransformer {
   protected abstract SqlCall transform(SqlCall sqlCall);
 
   /**
-   * Public entry of the transformer, it returns the result of transformed SqlCall if `predicate(SqlCall)` returns true,
+   * Public entry of the transformer, it returns the result of transformed SqlCall if `condition(SqlCall)` returns true,
    * otherwise returns the input SqlCall without any transformation
    */
   public SqlCall apply(SqlCall sqlCall) {
     if (sqlCall instanceof SqlSelect) {
+      // Updates selectList to correctly handle t.* type SqlSelect sqlNodes for accurate data type derivation
+      if (((SqlSelect) sqlCall).getSelectList() == null) {
+        List<String> names = new ArrayList<>();
+        names.add("*");
+        List<SqlParserPos> sqlParserPos = Collections.nCopies(names.size(), SqlParserPos.ZERO);
+        SqlNode star = SqlIdentifier.star(names, SqlParserPos.ZERO, sqlParserPos);
+        ((SqlSelect) sqlCall).setSelectList(SqlNodeList.of(star));
+      }
       this.topSelectNodes.add((SqlSelect) sqlCall);
     }
     if (condition(sqlCall)) {
@@ -100,6 +109,18 @@ public abstract class SqlCallTransformer {
         return sqlValidator.getValidatedNodeType(dummySqlSelect).getFieldList().get(0).getType();
       } catch (Throwable ignored) {
       }
+    }
+    // Additional attempt to derive data type of the input sqlNode by validating the topSelectNode, especially in cases
+    // where the input is defined as an alias in topSelectNode's selectList.
+    // (e.g. topSelectNode: Select a AS tmp FROM foo where tmp > 5).
+    // Previous attempts would try validating dummySqlNode: SELECT tmp FROM foo WHERE tmp > 5, and fail.
+    try {
+      final SqlSelect dummySqlSelect = new SqlSelect(topSelectNodes.get(0).getParserPosition(), null,
+          SqlNodeList.of(sqlNode), topSelectNodes.get(0), null, null, null, null, null, null, null);
+      sqlValidator.validate(dummySqlSelect);
+      return sqlValidator.getValidatedNodeType(sqlNode);
+    } catch (Exception ignored) {
+
     }
     throw new RuntimeException("Failed to derive the RelDataType for SqlNode " + sqlNode);
   }

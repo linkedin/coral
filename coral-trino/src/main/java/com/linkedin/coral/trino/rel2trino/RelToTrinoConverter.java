@@ -326,7 +326,11 @@ public class RelToTrinoConverter extends RelToSqlConverter {
             RelDataTypeField field = fields.get(ordinal);
             final SqlNode mappedSqlNode = ordinalMap.get(field.getName().toLowerCase(Locale.ROOT));
             if (mappedSqlNode != null) {
-              return ensureAliasedNode(alias.getKey(), mappedSqlNode);
+              return mappedSqlNode;
+            }
+            // For fields with data type struct, append the table alias to ensure proper type derivation
+            if (field.getType().isStruct()) {
+              return new SqlIdentifier(ImmutableList.of(alias.getKey(), field.getName()), POS);
             }
             return new SqlIdentifier(
                 !qualified ? ImmutableList.of(field.getName()) : ImmutableList.of(alias.getKey(), field.getName()),

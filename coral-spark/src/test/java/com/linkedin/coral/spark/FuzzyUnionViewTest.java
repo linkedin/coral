@@ -86,7 +86,7 @@ public class FuzzyUnionViewTest {
     String expandedSql = coralSpark.getSparkSql();
 
     String expectedSql = "SELECT *\n" + "FROM fuzzy_union.tableb\n" + "UNION ALL\n"
-        + "SELECT a, generic_project(b, 'struct<b1:string>') b\n" + "FROM fuzzy_union.tablec";
+        + "SELECT a, generic_project(tablec.b, 'struct<b1:string>') b\n" + "FROM fuzzy_union.tablec";
 
     assertEquals(expandedSql, expectedSql);
   }
@@ -119,8 +119,8 @@ public class FuzzyUnionViewTest {
     CoralSpark coralSpark = CoralSpark.create(relNode);
     String expandedSql = coralSpark.getSparkSql();
 
-    String expectedSql = "SELECT a, generic_project(b, 'struct<b1:string>') b\n" + "FROM fuzzy_union.tablef\n"
-        + "UNION ALL\n" + "SELECT a, generic_project(b, 'struct<b1:string>') b\n" + "FROM fuzzy_union.tableg";
+    String expectedSql = "SELECT a, generic_project(tablef.b, 'struct<b1:string>') b\n" + "FROM fuzzy_union.tablef\n"
+        + "UNION ALL\n" + "SELECT a, generic_project(tableg.b, 'struct<b1:string>') b\n" + "FROM fuzzy_union.tableg";
 
     assertEquals(expandedSql, expectedSql);
   }
@@ -133,10 +133,10 @@ public class FuzzyUnionViewTest {
     CoralSpark coralSpark = CoralSpark.create(relNode);
     String expandedSql = coralSpark.getSparkSql();
 
-    String expectedSql =
-        "SELECT *\n" + "FROM (SELECT a, generic_project(b, 'struct<b1:string>') b\n" + "FROM fuzzy_union.tablef\n"
-            + "UNION ALL\n" + "SELECT a, generic_project(b, 'struct<b1:string>') b\n" + "FROM fuzzy_union.tableg)\n"
-            + "UNION ALL\n" + "SELECT a, generic_project(b, 'struct<b1:string>') b\n" + "FROM fuzzy_union.tablef";
+    String expectedSql = "SELECT *\n" + "FROM (SELECT a, generic_project(tablef.b, 'struct<b1:string>') b\n"
+        + "FROM fuzzy_union.tablef\n" + "UNION ALL\n" + "SELECT a, generic_project(tableg.b, 'struct<b1:string>') b\n"
+        + "FROM fuzzy_union.tableg)\n" + "UNION ALL\n" + "SELECT a, generic_project(tablef0.b, 'struct<b1:string>') b\n"
+        + "FROM fuzzy_union.tablef";
 
     assertEquals(expandedSql, expectedSql);
   }
@@ -178,7 +178,7 @@ public class FuzzyUnionViewTest {
     String expandedSql = coralSpark.getSparkSql();
 
     String expectedSql =
-        "SELECT a, generic_project(b, 'struct<b1:string,b2:struct<b3:string,b4:struct<b5:string>>>') b\n"
+        "SELECT a, generic_project(tablel.b, 'struct<b1:string,b2:struct<b3:string,b4:struct<b5:string>>>') b\n"
             + "FROM fuzzy_union.tablel\n" + "UNION ALL\n" + "SELECT *\n" + "FROM fuzzy_union.tablem";
 
     assertEquals(expandedSql, expectedSql);
@@ -193,7 +193,7 @@ public class FuzzyUnionViewTest {
     String expandedSql = coralSpark.getSparkSql();
 
     String expectedSql = "SELECT *\n" + "FROM fuzzy_union.tablen\n" + "UNION ALL\n"
-        + "SELECT a, generic_project(b, 'struct<b2:double,b1:string,b0:int>') b\n" + "FROM fuzzy_union.tableo";
+        + "SELECT a, generic_project(tableo.b, 'struct<b2:double,b1:string,b0:int>') b\n" + "FROM fuzzy_union.tableo";
 
     assertEquals(expandedSql, expectedSql);
   }

@@ -401,16 +401,16 @@ public class CoralSparkTest {
   @Test
   public void testUnionExtractUDF() {
     RelNode relNode = TestUtils.toRelNode("SELECT extract_union(foo) from union_table");
-    String targetSql = String.join("\n", "SELECT coalesce_struct(foo)", "FROM default.union_table");
+    String targetSql = String.join("\n", "SELECT coalesce_struct(union_table.foo)", "FROM default.union_table");
     assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
 
     RelNode relNode1 = TestUtils.toRelNode("SELECT extract_union(foo, 2) from union_table");
-    String targetSql1 = String.join("\n", "SELECT coalesce_struct(foo, 3)", "FROM default.union_table");
+    String targetSql1 = String.join("\n", "SELECT coalesce_struct(union_table.foo, 3)", "FROM default.union_table");
     assertEquals(CoralSpark.create(relNode1).getSparkSql(), targetSql1);
 
     // Nested union case
     RelNode relNode2 = TestUtils.toRelNode("SELECT extract_union(a) from nested_union");
-    String targetSql2 = String.join("\n", "SELECT coalesce_struct(a)", "FROM default.nested_union");
+    String targetSql2 = String.join("\n", "SELECT coalesce_struct(nested_union.a)", "FROM default.nested_union");
     assertEquals(CoralSpark.create(relNode2).getSparkSql(), targetSql2);
   }
 
@@ -750,7 +750,7 @@ public class CoralSparkTest {
     String sourceSql = "SELECT complex.s.name as name FROM default.complex";
     String expandedSql = getCoralSparkTranslatedSqlWithAliasFromCoralSchema(sourceSql);
 
-    String targetSql = "SELECT s.name name\n" + "FROM default.complex";
+    String targetSql = "SELECT complex.s.name name\n" + "FROM default.complex";
     assertEquals(expandedSql, targetSql);
   }
 
@@ -759,7 +759,7 @@ public class CoralSparkTest {
     String sourceSql = "SELECT LOWER(complex.s.name) FROM default.complex";
     String expandedSql = getCoralSparkTranslatedSqlWithAliasFromCoralSchema(sourceSql);
 
-    String targetSql = "SELECT LOWER(s.name) EXPR_0\n" + "FROM default.complex";
+    String targetSql = "SELECT LOWER(complex.s.name) EXPR_0\n" + "FROM default.complex";
     assertEquals(expandedSql, targetSql);
   }
 
@@ -786,7 +786,7 @@ public class CoralSparkTest {
     String sourceSql = "SELECT basecomplex.Struct_Col.String_Field FROM default.basecomplex";
     String expandedSql = getCoralSparkTranslatedSqlWithAliasFromCoralSchema(sourceSql);
 
-    String targetSql = "SELECT struct_col.string_field String_Field\n" + "FROM default.basecomplex";
+    String targetSql = "SELECT basecomplex.struct_col.string_field String_Field\n" + "FROM default.basecomplex";
     assertEquals(expandedSql, targetSql);
   }
 
