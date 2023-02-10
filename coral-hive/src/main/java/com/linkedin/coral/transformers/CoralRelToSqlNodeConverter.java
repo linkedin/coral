@@ -350,17 +350,18 @@ public class CoralRelToSqlNodeConverter extends RelToSqlConverter {
   }
 
   /**
-   * Override this method to handle the conversion for {@link RexFieldAccess} `f(x).y.z` where `f` is an operator,
-   * which returns a struct containing field `y`, `y` is also a struct containing field `z`.
+   * Override this method to handle the conversion for {@link RexFieldAccess} `f(x).y` where `f` is an operator,
+   * which returns a struct containing field `y`.
    *
-   * Calcite will convert this RelNode to a {@link SqlIdentifier} directly (check
-   * {@link org.apache.calcite.rel.rel2sql.SqlImplementor.Context#toSql(RexProgram, RexNode)}),
-   * which is not aligned with our expectation since we want to apply transformations on `f(x)` with
+   * Calcite converts it to a {@link SqlIdentifier} with {@link SqlIdentifier#names} as ["f(x)", "y"] where "f(x)" and "y" are String,
+   * which is opaque and not aligned with our expectation, since we want to apply transformations on `f(x)` with
    * {@link com.linkedin.coral.common.transformers.SqlCallTransformer}. Therefore, we override this
-   * method to convert `f(x)` to {@link SqlCall}, `.` to {@link com.linkedin.coral.common.functions.FunctionFieldReferenceOperator#DOT},
-   * so `f(x).y.z` will be converted to `(f(x).y).z`.
+   * method to convert `f(x)` to {@link SqlCall} and `.` to {@link com.linkedin.coral.common.functions.FunctionFieldReferenceOperator#DOT}.
    *
-   * Check `CoralSparkTest#testConvertFieldAccessOnFunctionCall` for unit test and example.
+   * With this override, the converted CoralSqlNode matches the previous SqlNode handed over to Calcite for validation and conversion
+   * in {@link com.linkedin.coral.hive.hive2rel.HiveSqlToRelConverter#convertQuery(SqlNode, boolean, boolean)}.
+   *
+   * Check `CoralSparkTest#testConvertFieldAccessOnFunctionCall` for a more complex example with nested field access.
    */
   @Override
   public Context aliasContext(Map<String, RelDataType> aliases, boolean qualified) {
@@ -371,7 +372,7 @@ public class CoralRelToSqlNodeConverter extends RelToSqlConverter {
           final List<String> accessNames = new ArrayList<>();
           RexNode referencedExpr = rex;
           // Use the loop to get the top-level struct (`f(x)` in the example above),
-          // and store the accessed field names ([`z`, `y`] in the example above, needs to be reversed)
+          // and store the accessed field names ([`y`] in the example above)
           while (referencedExpr.getKind() == SqlKind.FIELD_ACCESS) {
             accessNames.add(((RexFieldAccess) referencedExpr).getField().getName());
             referencedExpr = ((RexFieldAccess) referencedExpr).getReferenceExpr();
