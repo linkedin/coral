@@ -12,7 +12,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelShuttle;
@@ -34,7 +33,12 @@ import org.apache.calcite.rel.logical.LogicalValues;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rel.type.RelRecordType;
-import org.apache.calcite.rex.*;
+import org.apache.calcite.rex.RexBuilder;
+import org.apache.calcite.rex.RexCall;
+import org.apache.calcite.rex.RexLiteral;
+import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.rex.RexShuttle;
+import org.apache.calcite.rex.RexUtil;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOperator;
@@ -44,18 +48,14 @@ import org.apache.calcite.sql.type.ArraySqlType;
 import org.apache.calcite.sql.type.SqlReturnTypeInference;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import com.linkedin.coral.com.google.common.collect.Lists;
 import com.linkedin.coral.common.functions.GenericProjectFunction;
 import com.linkedin.coral.hive.hive2rel.functions.CoalesceStructUtility;
 import com.linkedin.coral.hive.hive2rel.functions.HiveNamedStructFunction;
-import com.linkedin.coral.hive.hive2rel.functions.VersionedSqlUserDefinedFunction;
 import com.linkedin.coral.spark.containers.SparkRelInfo;
 import com.linkedin.coral.spark.containers.SparkUDFInfo;
-import com.linkedin.coral.spark.exceptions.UnsupportedUDFException;
 import com.linkedin.coral.spark.utils.RelDataTypeToHiveTypeStringConverter;
 
 
@@ -163,7 +163,7 @@ class IRRelToSparkRelTransformer {
         return new SparkRexConverter(node.getCluster().getRexBuilder(), sparkUDFInfos);
       }
     };
-    return new SparkRelInfo(calciteNode.accept(converter), new ArrayList<>(sparkUDFInfos));
+    return new SparkRelInfo(calciteNode.accept(converter), sparkUDFInfos);
   }
 
   /**
@@ -176,7 +176,6 @@ class IRRelToSparkRelTransformer {
   private static class SparkRexConverter extends RexShuttle {
     private final RexBuilder rexBuilder;
     private final Set<SparkUDFInfo> sparkUDFInfos;
-    private static final Logger LOG = LoggerFactory.getLogger(SparkRexConverter.class);
 
     SparkRexConverter(RexBuilder rexBuilder, Set<SparkUDFInfo> sparkUDFInfos) {
       this.sparkUDFInfos = sparkUDFInfos;
@@ -200,67 +199,12 @@ class IRRelToSparkRelTransformer {
 
       RexCall updatedCall = (RexCall) super.visitCall(call);
 
-      RexNode convertToNewNode = convertToZeroBasedArrayIndex(updatedCall).orElseGet(
-          () -> convertToNamedStruct(updatedCall).orElseGet(() -> convertFuzzyUnionGenericProject(updatedCall)
-              .orElseGet(() -> convertDaliUDF(updatedCall).orElseGet(() -> convertBuiltInUDF(updatedCall)
-                  .orElseGet(() -> fallbackToHiveUdf(updatedCall).orElseGet(() -> swapExtractUnionFunction(updatedCall)
-                      .orElseGet(() -> removeCastToEnsureCorrectNullability(updatedCall).orElse(updatedCall))))))));
+      RexNode convertToNewNode =
+          convertToZeroBasedArrayIndex(updatedCall).orElseGet(() -> convertToNamedStruct(updatedCall).orElseGet(
+              () -> convertFuzzyUnionGenericProject(updatedCall).orElseGet(() -> swapExtractUnionFunction(updatedCall)
+                  .orElseGet(() -> removeCastToEnsureCorrectNullability(updatedCall).orElse(updatedCall)))));
 
       return convertToNewNode;
-    }
-
-    private Optional<RexNode> convertDaliUDF(RexCall call) {
-      Optional<SparkUDFInfo> sparkUDFInfo = TransportableUDFMap.lookup(call.getOperator().getName());
-      if (sparkUDFInfo.isPresent()) {
-        // Function name from the map lookup is always null since it must be retrieved from the enclosing SqlOperator
-        String functionName = ((VersionedSqlUserDefinedFunction) call.getOperator()).getViewDependentFunctionName();
-        SparkUDFInfo value = sparkUDFInfo.get();
-        sparkUDFInfos
-            .add(new SparkUDFInfo(value.getClassName(), functionName, value.getArtifactoryUrls(), value.getUdfType()));
-        return Optional.of(rexBuilder.makeCall(createUDF(functionName, call.getOperator().getReturnTypeInference()),
-            call.getOperands()));
-      } else {
-        return Optional.empty();
-      }
-    }
-
-    private Optional<RexNode> convertBuiltInUDF(RexCall call) {
-      return BuiltinUDFMap.lookup(call.getOperator().getName()).map(name -> rexBuilder
-          .makeCall(createUDF(name, call.getOperator().getReturnTypeInference()), call.getOperands()));
-    }
-
-    /**
-     * After failing to find the function name in BuiltinUDFMap and TransportableUDFMap,
-     * we call this function to fall back to the original Hive UDF defined in HiveFunctionRegistry.
-     * This is reasonable since Spark understands and has ability to run Hive UDF.
-     */
-    private Optional<RexNode> fallbackToHiveUdf(RexCall call) {
-      SqlOperator sqlOp = call.getOperator();
-      String functionClassName = sqlOp.getName();
-
-      Optional<SparkUDFInfo> sparkUDFInfo = Optional.empty();
-      if (functionClassName.indexOf('.') >= 0) {
-        if (UnsupportedHiveUDFsInSpark.contains(functionClassName)) {
-          throw new UnsupportedUDFException(functionClassName);
-        } else {
-          // We get SparkUDFInfo object for Dali UDF only which has '.' in the function class name.
-          // We do not need to handle the keyword built-in functions.
-          VersionedSqlUserDefinedFunction daliUdf = (VersionedSqlUserDefinedFunction) sqlOp;
-          String expandedFuncName = daliUdf.getViewDependentFunctionName();
-          // need to provide UDF dependency with ivy coordinates
-          List<String> dependencies = daliUdf.getIvyDependencies();
-          List<URI> listOfUris = dependencies.stream().map(URI::create).collect(Collectors.toList());
-          sparkUDFInfo = Optional.of(
-              new SparkUDFInfo(functionClassName, expandedFuncName, listOfUris, SparkUDFInfo.UDFTYPE.HIVE_CUSTOM_UDF));
-          LOG.info("Function: {} is not a Builtin UDF or Transportable UDF.  We fall back to its Hive "
-              + "function with ivy dependency: {}", functionClassName, String.join(",", dependencies));
-        }
-      }
-
-      sparkUDFInfo.ifPresent(sparkUDFInfos::add);
-
-      return sparkUDFInfo.map(sparkUDFInfo1 -> rexBuilder.makeCall(
-          createUDF(sparkUDFInfo1.getFunctionName(), call.getOperator().getReturnTypeInference()), call.getOperands()));
     }
 
     // Coral RelNode Stores array indexes as +1, this fixes the behavior on spark side

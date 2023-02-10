@@ -6,6 +6,7 @@
 package com.linkedin.coral.transformers;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -25,6 +26,7 @@ import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexCorrelVariable;
 import org.apache.calcite.rex.RexFieldAccess;
 import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.rex.RexProgram;
 import org.apache.calcite.sql.JoinConditionType;
 import org.apache.calcite.sql.JoinType;
 import org.apache.calcite.sql.SqlCall;
@@ -43,6 +45,7 @@ import org.apache.calcite.sql.type.SqlTypeName;
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import com.linkedin.coral.com.google.common.collect.ImmutableMap;
 import com.linkedin.coral.common.functions.CoralSqlUnnestOperator;
+import com.linkedin.coral.common.functions.FunctionFieldReferenceOperator;
 
 
 /**
@@ -344,5 +347,49 @@ public class CoralRelToSqlNodeConverter extends RelToSqlConverter {
     List<SqlNode> asOperands = createAsFullOperands(relDataType, rightLateral, alias);
 
     return SqlStdOperatorTable.AS.createCall(POS, asOperands);
+  }
+
+  /**
+   * Override this method to handle the conversion for {@link RexFieldAccess} `f(x).y` where `f` is an operator,
+   * which returns a struct containing field `y`.
+   *
+   * Calcite converts it to a {@link SqlIdentifier} with {@link SqlIdentifier#names} as ["f(x)", "y"] where "f(x)" and "y" are String,
+   * which is opaque and not aligned with our expectation, since we want to apply transformations on `f(x)` with
+   * {@link com.linkedin.coral.common.transformers.SqlCallTransformer}. Therefore, we override this
+   * method to convert `f(x)` to {@link SqlCall} and `.` to {@link com.linkedin.coral.common.functions.FunctionFieldReferenceOperator#DOT}.
+   *
+   * With this override, the converted CoralSqlNode matches the previous SqlNode handed over to Calcite for validation and conversion
+   * in `HiveSqlToRelConverter#convertQuery`.
+   *
+   * Check `CoralSparkTest#testConvertFieldAccessOnFunctionCall` for a more complex example with nested field access.
+   */
+  @Override
+  public Context aliasContext(Map<String, RelDataType> aliases, boolean qualified) {
+    return new AliasContext(INSTANCE, aliases, qualified) {
+      @Override
+      public SqlNode toSql(RexProgram program, RexNode rex) {
+        if (rex.getKind() == SqlKind.FIELD_ACCESS) {
+          final List<String> accessNames = new ArrayList<>();
+          RexNode referencedExpr = rex;
+          // Use the loop to get the top-level struct (`f(x)` in the example above),
+          // and store the accessed field names ([`y`] in the example above)
+          while (referencedExpr.getKind() == SqlKind.FIELD_ACCESS) {
+            accessNames.add(((RexFieldAccess) referencedExpr).getField().getName());
+            referencedExpr = ((RexFieldAccess) referencedExpr).getReferenceExpr();
+          }
+          final SqlKind sqlKind = referencedExpr.getKind();
+          if (sqlKind == SqlKind.OTHER_FUNCTION || sqlKind == SqlKind.CAST || sqlKind == SqlKind.ROW) {
+            SqlNode functionCall = toSql(program, referencedExpr);
+            Collections.reverse(accessNames);
+            for (String accessName : accessNames) {
+              functionCall = FunctionFieldReferenceOperator.DOT.createCall(SqlParserPos.ZERO, functionCall,
+                  new SqlIdentifier(accessName, POS));
+            }
+            return functionCall;
+          }
+        }
+        return super.toSql(program, rex);
+      }
+    };
   }
 }

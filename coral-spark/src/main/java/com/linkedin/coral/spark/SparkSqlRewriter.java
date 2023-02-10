@@ -1,5 +1,5 @@
 /**
- * Copyright 2018-2022 LinkedIn Corporation. All rights reserved.
+ * Copyright 2018-2023 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -12,6 +12,7 @@ import org.apache.calcite.sql.SqlDataTypeSpec;
 import org.apache.calcite.sql.SqlIntervalLiteral;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlLiteral;
+import org.apache.calcite.sql.SqlMapTypeSpec;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlRowTypeSpec;
 import org.apache.calcite.sql.SqlTypeNameSpec;
@@ -37,14 +38,15 @@ import com.linkedin.coral.spark.dialect.SparkSqlDialect;
 public class SparkSqlRewriter extends SqlShuttle {
 
   /**
-   *  Spark SQL doesn't support CASTING the named_struct function to a row/struct.
-   *  Sushant suggests that we remove this behavior here.
+   *  Spark SQL doesn't support CASTING to a row/struct.
    *
    *  For example:
    *
    *  SELECT CAST(named_struct(.....) to ROW)
    *   is translated to
    *  SELECT named_struct(.....)
+   *
+   *  Check `CoralSparkTest#testAvoidCastToRow` for unit test and a more complex example.
    *
    *  Also replaces:
    *
@@ -54,15 +56,30 @@ public class SparkSqlRewriter extends SqlShuttle {
    */
   @Override
   public SqlNode visit(SqlCall call) {
-    // Spark SQL doesn't support CASTING the named_struct function TO A ROW.
-    // Keeping the expression inside CAST operator seems sufficient.
-    if (call.getOperator().getKind() == SqlKind.CAST && call.getOperandList().get(1) instanceof SqlRowTypeSpec) {
+    if (call.getOperator().getKind() == SqlKind.CAST
+        && containsSqlRowTypeSpec((SqlDataTypeSpec) call.getOperandList().get(1))) {
       return call.getOperandList().get(0).accept(this);
     } else if (call.getOperator().getKind() == SqlKind.CAST && SqlUtil.isNull(call.getOperandList().get(0)) && call
         .getOperandList().get(1).toSqlString(SparkSqlDialect.INSTANCE).getSql().equals(SqlTypeName.NULL.getName())) {
       return call.getOperandList().get(0);
     }
     return super.visit(call);
+  }
+
+  /**
+   * Check if the SqlDataTypeSpec contains `ROW`
+   */
+  private boolean containsSqlRowTypeSpec(SqlDataTypeSpec sqlDataTypeSpec) {
+    if (sqlDataTypeSpec instanceof SqlRowTypeSpec) {
+      return true;
+    } else if (sqlDataTypeSpec instanceof SqlArrayTypeSpec) {
+      return containsSqlRowTypeSpec(((SqlArrayTypeSpec) sqlDataTypeSpec).getElementTypeSpec());
+    } else if (sqlDataTypeSpec instanceof SqlMapTypeSpec) {
+      return containsSqlRowTypeSpec(((SqlMapTypeSpec) sqlDataTypeSpec).getKeyTypeSpec())
+          || containsSqlRowTypeSpec(((SqlMapTypeSpec) sqlDataTypeSpec).getValueTypeSpec());
+    } else {
+      return false;
+    }
   }
 
   /**
