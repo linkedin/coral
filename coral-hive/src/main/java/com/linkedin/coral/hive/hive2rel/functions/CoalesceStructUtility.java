@@ -1,5 +1,5 @@
 /**
- * Copyright 2018-2022 LinkedIn Corporation. All rights reserved.
+ * Copyright 2018-2023 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -22,7 +22,7 @@ import org.apache.calcite.sql.type.SqlTypeTransforms;
 
 /**
  * A utility class to coalesce the {@link RelDataType} of struct between Trino's representation and
- * hive's extract_union UDF's representation on exploded union.
+ * Hive/Spark's extract_union UDF's representation on exploded union.
  *
  */
 public class CoalesceStructUtility {
