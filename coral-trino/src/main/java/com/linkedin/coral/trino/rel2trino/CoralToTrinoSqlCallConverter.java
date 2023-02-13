@@ -15,13 +15,21 @@ import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.util.SqlShuttle;
 
 import com.linkedin.coral.common.functions.Function;
-import com.linkedin.coral.common.transformers.JsonTransformSqlCallTransformer;
 import com.linkedin.coral.common.transformers.OperatorRenameSqlCallTransformer;
 import com.linkedin.coral.common.transformers.SqlCallTransformers;
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 import com.linkedin.coral.trino.rel2trino.transformers.CoralRegistryOperatorRenameSqlCallTransformer;
+import com.linkedin.coral.trino.rel2trino.transformers.DateAddOperatorTransformer;
+import com.linkedin.coral.trino.rel2trino.transformers.DateDiffOperatorTransformer;
+import com.linkedin.coral.trino.rel2trino.transformers.DateSubOperatorTransformer;
+import com.linkedin.coral.trino.rel2trino.transformers.DecodeOperatorTransformer;
 import com.linkedin.coral.trino.rel2trino.transformers.GenericCoralRegistryOperatorRenameSqlCallTransformer;
+import com.linkedin.coral.trino.rel2trino.transformers.ModOperatorTransformer;
+import com.linkedin.coral.trino.rel2trino.transformers.RandomIntegerOperatorWithTwoOperandsTransformer;
+import com.linkedin.coral.trino.rel2trino.transformers.RandomOperatorWithOneOperandTransformer;
+import com.linkedin.coral.trino.rel2trino.transformers.RegexpExtractOperatorTransformer;
 import com.linkedin.coral.trino.rel2trino.transformers.ToDateOperatorTransformer;
+import com.linkedin.coral.trino.rel2trino.transformers.TruncateOperatorTransformer;
 
 import static com.linkedin.coral.trino.rel2trino.CoralTrinoConfigKeys.*;
 
@@ -43,45 +51,22 @@ public class CoralToTrinoSqlCallConverter extends SqlShuttle {
         new OperatorRenameSqlCallTransformer(SqlStdOperatorTable.SUBSTRING, 3, "SUBSTR"),
         // math functions
         new OperatorRenameSqlCallTransformer(SqlStdOperatorTable.RAND, 0, "RANDOM"),
-        new JsonTransformSqlCallTransformer(SqlStdOperatorTable.RAND, 1, "RANDOM", "[]", null, null),
+        new RandomOperatorWithOneOperandTransformer(),
         new OperatorRenameSqlCallTransformer(SqlStdOperatorTable.RAND_INTEGER, 1, "RANDOM"),
-        new JsonTransformSqlCallTransformer(SqlStdOperatorTable.RAND_INTEGER, 2, "RANDOM", "[{\"input\":2}]", null,
-            null),
-        new JsonTransformSqlCallTransformer(SqlStdOperatorTable.TRUNCATE, 2, "TRUNCATE",
-            "[{\"op\":\"*\",\"operands\":[{\"input\":1},{\"op\":\"^\",\"operands\":[{\"value\":10},{\"input\":2}]}]}]",
-            "{\"op\":\"/\",\"operands\":[{\"input\":0},{\"op\":\"^\",\"operands\":[{\"value\":10},{\"input\":2}]}]}",
-            null),
+        new RandomIntegerOperatorWithTwoOperandsTransformer(), new TruncateOperatorTransformer(),
         // string functions
         new OperatorRenameSqlCallTransformer(SqlStdOperatorTable.SUBSTRING, 2, "SUBSTR"),
         // JSON functions
         new CoralRegistryOperatorRenameSqlCallTransformer("get_json_object", 2, "json_extract"),
         // map various hive functions
-        new JsonTransformSqlCallTransformer(hiveToCoralSqlOperator("pmod"), 2, "mod",
-            "[{\"op\":\"+\",\"operands\":[{\"op\":\"%\",\"operands\":[{\"input\":1},{\"input\":2}]},{\"input\":2}]},{\"input\":2}]",
-            null, null),
-        new CoralRegistryOperatorRenameSqlCallTransformer("base64", 1, "to_base64"),
+        new ModOperatorTransformer(), new CoralRegistryOperatorRenameSqlCallTransformer("base64", 1, "to_base64"),
         new CoralRegistryOperatorRenameSqlCallTransformer("unbase64", 1, "from_base64"),
         new CoralRegistryOperatorRenameSqlCallTransformer("hex", 1, "to_hex"),
         new CoralRegistryOperatorRenameSqlCallTransformer("unhex", 1, "from_hex"),
         new CoralRegistryOperatorRenameSqlCallTransformer("array_contains", 2, "contains"),
-        new JsonTransformSqlCallTransformer(hiveToCoralSqlOperator("regexp_extract"), 3, "regexp_extract",
-            "[{\"input\": 1}, {\"op\": \"hive_pattern_to_trino\", \"operands\":[{\"input\": 2}]}, {\"input\": 3}]",
-            null, null),
-        new CoralRegistryOperatorRenameSqlCallTransformer("instr", 2, "strpos"),
-        new JsonTransformSqlCallTransformer(hiveToCoralSqlOperator("decode"), 2,
-            "[{\"regex\":\"(?i)('utf-8')\", \"input\":2, \"name\":\"from_utf8\"}]", "[{\"input\":1}]", null, null),
-        new JsonTransformSqlCallTransformer(hiveToCoralSqlOperator("date_add"), 2, "date_add",
-            "[{\"value\": 'day'}, {\"input\": 2},  "
-                + "{\"op\": \"date\", \"operands\":[{\"op\": \"timestamp\", \"operands\":[{\"input\": 1}]}]}]",
-            null, null),
-        new JsonTransformSqlCallTransformer(hiveToCoralSqlOperator("date_sub"), 2, "date_add",
-            "[{\"value\": 'day'}, " + "{\"op\": \"*\", \"operands\":[{\"input\": 2}, {\"value\": -1}]}, "
-                + "{\"op\": \"date\", \"operands\":[{\"op\": \"timestamp\", \"operands\":[{\"input\": 1}]}]}]",
-            null, null),
-        new JsonTransformSqlCallTransformer(hiveToCoralSqlOperator("datediff"), 2, "date_diff",
-            "[{\"value\": 'day'}, {\"op\": \"date\", \"operands\":[{\"op\": \"timestamp\", \"operands\":[{\"input\": 2}]}]}, "
-                + "{\"op\": \"date\", \"operands\":[{\"op\": \"timestamp\", \"operands\":[{\"input\": 1}]}]}]",
-            null, null),
+        new RegexpExtractOperatorTransformer(), new CoralRegistryOperatorRenameSqlCallTransformer("instr", 2, "strpos"),
+        new DecodeOperatorTransformer(), new DateAddOperatorTransformer(), new DateSubOperatorTransformer(),
+        new DateDiffOperatorTransformer(),
         new ToDateOperatorTransformer(configs.getOrDefault(AVOID_TRANSFORM_TO_DATE_UDF, false)),
 
         // LinkedIn specific functions
@@ -102,7 +87,7 @@ public class CoralToTrinoSqlCallConverter extends SqlShuttle {
         new GenericCoralRegistryOperatorRenameSqlCallTransformer());
   }
 
-  private SqlOperator hiveToCoralSqlOperator(String functionName) {
+  public static SqlOperator hiveToCoralSqlOperator(String functionName) {
     Collection<Function> lookup = HIVE_FUNCTION_REGISTRY.lookup(functionName);
     return lookup.iterator().next().getSqlOperator();
   }
