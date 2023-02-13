@@ -21,7 +21,7 @@ import com.linkedin.coral.hive.hive2rel.functions.HiveNamedStructFunction;
 
 
 /**
- * This transformer transforms `CAST(ROW: RECORD_TYPE)` to `named_struct` in Spark.
+ * This transformer transforms Coral IR function `CAST(ROW: RECORD_TYPE)` to Spark compatible function `named_struct`.
  * For example, the SqlCall `CAST(ROW(123, 'xyz') AS ROW(`abc` INTEGER, `def` CHAR(3) CHARACTER SET `ISO-8859-1`))`
  * will be transformed to `named_struct('abc', 123, 'def', 'xyz')`
  */
