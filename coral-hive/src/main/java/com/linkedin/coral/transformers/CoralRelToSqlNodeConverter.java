@@ -352,22 +352,26 @@ public class CoralRelToSqlNodeConverter extends RelToSqlConverter {
   }
 
   /**
-   * Override this method to handle the conversion for {@link RexFieldAccess} `f(x).y` where `f` is an operator,
-   * which returns a struct containing field `y`.
-   *
-   * Calcite converts it to a {@link SqlIdentifier} with {@link SqlIdentifier#names} as ["f(x)", "y"] where "f(x)" and "y" are String,
-   * which is opaque and not aligned with our expectation, since we want to apply transformations on `f(x)` with
-   * {@link com.linkedin.coral.common.transformers.SqlCallTransformer}. Therefore, we override this
-   * method to convert `f(x)` to {@link SqlCall} and `.` to {@link com.linkedin.coral.common.functions.FunctionFieldReferenceOperator#DOT}.
-   *
-   * With this override, the converted CoralSqlNode matches the previous SqlNode handed over to Calcite for validation and conversion
-   * in `HiveSqlToRelConverter#convertQuery`.
-   *
-   * Check `CoralSparkTest#testConvertFieldAccessOnFunctionCall` for a more complex example with nested field access.
+   * AliasContext is responsible for managing table aliases and their corresponding field data types during the conversion from
+   * RelNode to SqlNode representation.
    */
   @Override
   public Context aliasContext(Map<String, RelDataType> aliases, boolean qualified) {
     return new AliasContext(INSTANCE, aliases, qualified) {
+      /**
+       * Override this method to handle the conversion for {@link RexFieldAccess} `f(x).y` where `f` is an operator,
+       * which returns a struct containing field `y`.
+       *
+       * Calcite converts it to a {@link SqlIdentifier} with {@link SqlIdentifier#names} as ["f(x)", "y"] where "f(x)" and "y" are String,
+       * which is opaque and not aligned with our expectation, since we want to apply transformations on `f(x)` with
+       * {@link com.linkedin.coral.common.transformers.SqlCallTransformer}. Therefore, we override this
+       * method to convert `f(x)` to {@link SqlCall} and `.` to {@link com.linkedin.coral.common.functions.FunctionFieldReferenceOperator#DOT}.
+       *
+       * With this override, the converted CoralSqlNode matches the previous SqlNode handed over to Calcite for validation and conversion
+       * in `HiveSqlToRelConverter#convertQuery`.
+       *
+       * Check `CoralSparkTest#testConvertFieldAccessOnFunctionCall` for a more complex example with nested field access.
+       */
       @Override
       public SqlNode toSql(RexProgram program, RexNode rex) {
         if (rex.getKind() == SqlKind.FIELD_ACCESS) {
@@ -393,6 +397,13 @@ public class CoralRelToSqlNodeConverter extends RelToSqlConverter {
         return super.toSql(program, rex);
       }
 
+      /**
+       * This method derives the SqlNode representation of a field by its ordinal position.
+       * By default, the parent implementation does not qualify the field with its table alias in the SqlNode representation.
+       * Overriding this method to append the table alias to struct type fields in SqlNode representation for proper data type derivation.
+       * @param ordinal Field's ordinal position in the map of table aliases to ordered lists of field data types.
+       * @return SqlNode representation of the field
+       */
       @Override
       public SqlNode field(int ordinal) {
         for (Map.Entry<String, RelDataType> alias : aliases.entrySet()) {

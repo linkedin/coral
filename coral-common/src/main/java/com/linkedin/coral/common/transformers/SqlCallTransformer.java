@@ -55,7 +55,10 @@ public abstract class SqlCallTransformer {
    */
   public SqlCall apply(SqlCall sqlCall) {
     if (sqlCall instanceof SqlSelect) {
-      // Updates selectList to correctly handle t.* type SqlSelect sqlNodes for accurate data type derivation
+      // Updates selectList to correctly represent 'SELECT * FROM T' type SqlSelect sqlNodes for accurate data type derivation.
+      // For SqlSelect SqlCalls which select all the columns from the underlying data source and use wildcard star for representation,
+      // SelectList is set to NULL by {@link com.linkedin.coral.transformers.CoralRelToSqlNodeConverter} and
+      // needs to be updated to ensure type derivation.
       if (((SqlSelect) sqlCall).getSelectList() == null) {
         List<String> names = new ArrayList<>();
         names.add("*");
