@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2022 LinkedIn Corporation. All rights reserved.
+ * Copyright 2019-2023 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -24,6 +24,7 @@ import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.sql.util.SqlShuttle;
 
 import com.linkedin.coral.common.functions.GenericProjectFunction;
+import com.linkedin.coral.common.utils.RelDataTypeToHiveTypeStringConverter;
 
 
 /**
@@ -67,7 +68,7 @@ import com.linkedin.coral.common.functions.GenericProjectFunction;
  *   SELECT *
  *   FROM a
  *   UNION ALL
- *   SELECT view_c.f, generic_project(view_c.f1, 'view_c.f1') as f1
+ *   SELECT view_c.f, generic_project(view_c.f1, 'view_c.f1', hive_type_string) as f1
  *   FROM (
  *     SELECT * from b
  *   ) as view_c
@@ -75,6 +76,8 @@ import com.linkedin.coral.common.functions.GenericProjectFunction;
  * The expected schema will be inserted as the return type of the generic_project SQL function.
  * The first parameter will be a reference to the column to be fixed.
  * The second parameter will be a string literal containing the name of the column.
+ * The third parameter will be the corresponding Hive type string converted from the expected schema,
+ * check {@link RelDataTypeToHiveTypeStringConverter#convertRelDataType(RelDataType)} for more info.
  *
  * It is up to the coral modules for a specific engine (spark/trino) to resolve the schema of b.f1.
  */
@@ -112,9 +115,11 @@ public class FuzzyUnionSqlRewriter extends SqlShuttle {
    * @param expectedType The expected data type
    */
   private SqlNode createGenericProject(String columnName, RelDataType expectedType) {
-    SqlNode[] genericProjectOperands = new SqlNode[2];
+    SqlNode[] genericProjectOperands = new SqlNode[3];
     genericProjectOperands[0] = new SqlIdentifier(ImmutableList.of(tableName, columnName), SqlParserPos.ZERO);
     genericProjectOperands[1] = SqlLiteral.createCharString(columnName, SqlParserPos.ZERO);
+    final String expectedHiveTypeString = RelDataTypeToHiveTypeStringConverter.convertRelDataType(expectedType);
+    genericProjectOperands[2] = SqlLiteral.createCharString(expectedHiveTypeString, SqlParserPos.ZERO);
     SqlBasicCall genericProjectCall =
         new SqlBasicCall(new GenericProjectFunction(expectedType), genericProjectOperands, SqlParserPos.ZERO);
     SqlNode[] castAsColumnOperands = new SqlNode[2];

@@ -23,6 +23,8 @@ import org.apache.calcite.sql.type.MapSqlType;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.testng.annotations.Test;
 
+import com.linkedin.coral.common.utils.RelDataTypeToHiveTypeStringConverter;
+
 import static org.testng.Assert.*;
 
 
