@@ -31,29 +31,19 @@ import org.apache.calcite.rel.logical.LogicalSort;
 import org.apache.calcite.rel.logical.LogicalUnion;
 import org.apache.calcite.rel.logical.LogicalValues;
 import org.apache.calcite.rel.type.RelDataType;
-import org.apache.calcite.rel.type.RelDataTypeField;
-import org.apache.calcite.rel.type.RelRecordType;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexShuttle;
 import org.apache.calcite.rex.RexUtil;
-import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlKind;
-import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
-import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.ArraySqlType;
-import org.apache.calcite.sql.type.SqlReturnTypeInference;
 import org.apache.calcite.sql.type.SqlTypeName;
-import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
 
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
-import com.linkedin.coral.com.google.common.collect.Lists;
 import com.linkedin.coral.common.functions.GenericProjectFunction;
-import com.linkedin.coral.hive.hive2rel.functions.CoalesceStructUtility;
-import com.linkedin.coral.hive.hive2rel.functions.HiveNamedStructFunction;
 import com.linkedin.coral.spark.containers.SparkRelInfo;
 import com.linkedin.coral.spark.containers.SparkUDFInfo;
 import com.linkedin.coral.spark.utils.RelDataTypeToHiveTypeStringConverter;
@@ -200,9 +190,8 @@ class IRRelToSparkRelTransformer {
       RexCall updatedCall = (RexCall) super.visitCall(call);
 
       RexNode convertToNewNode =
-          convertToZeroBasedArrayIndex(updatedCall).orElseGet(() -> convertToNamedStruct(updatedCall).orElseGet(
-              () -> convertFuzzyUnionGenericProject(updatedCall).orElseGet(() -> swapExtractUnionFunction(updatedCall)
-                  .orElseGet(() -> removeCastToEnsureCorrectNullability(updatedCall).orElse(updatedCall)))));
+          convertToZeroBasedArrayIndex(updatedCall).orElseGet(() -> convertFuzzyUnionGenericProject(updatedCall)
+              .orElseGet(() -> removeCastToEnsureCorrectNullability(updatedCall).orElse(updatedCall)));
 
       return convertToNewNode;
     }
@@ -222,25 +211,6 @@ class IRRelToSparkRelTransformer {
                 rexBuilder.makeCall(SqlStdOperatorTable.MINUS, itemRef, rexBuilder.makeExactLiteral(BigDecimal.ONE));
             return Optional.of(rexBuilder.makeCall(call.op, columnRef, zeroBasedIndex));
           }
-        }
-      }
-      return Optional.empty();
-    }
-
-    // Convert CAST(ROW: RECORD_TYPE) to named_struct
-    private Optional<RexNode> convertToNamedStruct(RexCall call) {
-      if (call.getOperator().equals(SqlStdOperatorTable.CAST)) {
-        RexNode operand = call.getOperands().get(0);
-        if (operand instanceof RexCall && ((RexCall) operand).getOperator().equals(SqlStdOperatorTable.ROW)) {
-          RelRecordType recordType = (RelRecordType) call.getType();
-          List<RexNode> rowOperands = ((RexCall) operand).getOperands();
-          List<RexNode> newOperands = new ArrayList<>(recordType.getFieldCount() * 2);
-          for (int i = 0; i < recordType.getFieldCount(); i += 1) {
-            RelDataTypeField dataTypeField = recordType.getFieldList().get(i);
-            newOperands.add(rexBuilder.makeLiteral(dataTypeField.getKey()));
-            newOperands.add(rexBuilder.makeCast(dataTypeField.getType(), rowOperands.get(i)));
-          }
-          return Optional.of(rexBuilder.makeCall(call.getType(), new HiveNamedStructFunction(), newOperands));
         }
       }
       return Optional.empty();
@@ -266,44 +236,6 @@ class IRRelToSparkRelTransformer {
 
         return Optional
             .of(rexBuilder.makeCall(expectedRelDataType, new GenericProjectFunction(expectedRelDataType), newOperands));
-      }
-      return Optional.empty();
-    }
-
-    /**
-     * Instead of leaving extract_union visible to (Hive)Spark, since we adopted the new exploded struct schema(
-     * a.k.a struct_tr) that is different from extract_union's output (a.k.a struct_ex) to interpret union in Coral IR,
-     * we need to swap the reference of "extract_union" to a new UDF that is coalescing the difference between
-     * struct_tr and struct_ex.
-     *
-     * See com.linkedin.coral.common.functions.FunctionReturnTypes#COALESCE_STRUCT_FUNCTION_RETURN_STRATEGY
-     * and its comments for more details.
-     *
-     * @param call the original extract_union function call.
-     * @return A new {@link RexNode} replacing the original extract_union call.
-     */
-    private Optional<RexNode> swapExtractUnionFunction(RexCall call) {
-      if (call.getOperator().getName().equalsIgnoreCase("extract_union")) {
-        // Only when there's a necessity to register coalesce_struct UDF
-        sparkUDFInfos.add(new SparkUDFInfo("com.linkedin.coalescestruct.GenericUDFCoalesceStruct", "coalesce_struct",
-            ImmutableList.of(URI.create("ivy://com.linkedin.coalesce-struct:coalesce-struct-impl:+")),
-            SparkUDFInfo.UDFTYPE.HIVE_CUSTOM_UDF));
-
-        // one arg case: extract_union(field_name)
-        if (call.getOperands().size() == 1) {
-          return Optional.of(rexBuilder.makeCall(
-              createUDF("coalesce_struct", CoalesceStructUtility.COALESCE_STRUCT_FUNCTION_RETURN_STRATEGY),
-              call.getOperands()));
-        }
-        // two arg case: extract_union(field_name, ordinal)
-        else if (call.getOperands().size() == 2) {
-          int ordinal = ((RexLiteral) call.getOperands().get(1)).getValueAs(Integer.class) + 1;
-          List<RexNode> operandsCopy = Lists.newArrayList(call.getOperands());
-          operandsCopy.set(1, rexBuilder.makeExactLiteral(new BigDecimal(ordinal)));
-          return Optional.of(rexBuilder.makeCall(
-              createUDF("coalesce_struct", CoalesceStructUtility.COALESCE_STRUCT_FUNCTION_RETURN_STRATEGY),
-              operandsCopy));
-        }
       }
       return Optional.empty();
     }
@@ -335,11 +267,6 @@ class IRRelToSparkRelTransformer {
         }
       }
       return Optional.empty();
-    }
-
-    private static SqlOperator createUDF(String udfName, SqlReturnTypeInference typeInference) {
-      return new SqlUserDefinedFunction(new SqlIdentifier(ImmutableList.of(udfName), SqlParserPos.ZERO), typeInference,
-          null, null, null, null);
     }
   }
 }
