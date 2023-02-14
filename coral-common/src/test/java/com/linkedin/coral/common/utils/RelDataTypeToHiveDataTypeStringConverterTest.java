@@ -3,7 +3,7 @@
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
-package com.linkedin.coral.spark.utils;
+package com.linkedin.coral.common.utils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,8 +22,6 @@ import org.apache.calcite.sql.type.BasicSqlType;
 import org.apache.calcite.sql.type.MapSqlType;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.testng.annotations.Test;
-
-import com.linkedin.coral.common.utils.RelDataTypeToHiveTypeStringConverter;
 
 import static org.testng.Assert.*;
 
