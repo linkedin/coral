@@ -6,10 +6,7 @@
 package com.linkedin.coral.spark;
 
 import java.math.BigDecimal;
-import java.net.URI;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -42,11 +39,8 @@ import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.type.ArraySqlType;
 import org.apache.calcite.sql.type.SqlTypeName;
 
-import com.linkedin.coral.com.google.common.collect.ImmutableList;
-import com.linkedin.coral.common.functions.GenericProjectFunction;
 import com.linkedin.coral.spark.containers.SparkRelInfo;
 import com.linkedin.coral.spark.containers.SparkUDFInfo;
-import com.linkedin.coral.spark.utils.RelDataTypeToHiveTypeStringConverter;
 
 
 /**
@@ -189,9 +183,8 @@ class IRRelToSparkRelTransformer {
 
       RexCall updatedCall = (RexCall) super.visitCall(call);
 
-      RexNode convertToNewNode =
-          convertToZeroBasedArrayIndex(updatedCall).orElseGet(() -> convertFuzzyUnionGenericProject(updatedCall)
-              .orElseGet(() -> removeCastToEnsureCorrectNullability(updatedCall).orElse(updatedCall)));
+      RexNode convertToNewNode = convertToZeroBasedArrayIndex(updatedCall)
+          .orElseGet(() -> removeCastToEnsureCorrectNullability(updatedCall).orElse(updatedCall));
 
       return convertToNewNode;
     }
@@ -212,30 +205,6 @@ class IRRelToSparkRelTransformer {
             return Optional.of(rexBuilder.makeCall(call.op, columnRef, zeroBasedIndex));
           }
         }
-      }
-      return Optional.empty();
-    }
-
-    /**
-     * Add the schema to GenericProject in Fuzzy Union
-     * @param call a given RexCall
-     * @return RexCall that resolves FuzzyUnion if its operator is GenericProject; otherwise, return empty
-     */
-    private Optional<RexNode> convertFuzzyUnionGenericProject(RexCall call) {
-      if (call.getOperator() instanceof GenericProjectFunction) {
-        // Register generic_project UDF
-        sparkUDFInfos.add(new SparkUDFInfo("com.linkedin.genericprojectudf.GenericProject", "generic_project",
-            ImmutableList.of(URI.create("ivy://com.linkedin.GenericProject:GenericProject-impl:+")),
-            SparkUDFInfo.UDFTYPE.HIVE_CUSTOM_UDF));
-        RelDataType expectedRelDataType = call.getType();
-        String expectedRelDataTypeString = RelDataTypeToHiveTypeStringConverter.convertRelDataType(expectedRelDataType);
-
-        List<RexNode> newOperands = new ArrayList<>();
-        newOperands.add(call.getOperands().get(0));
-        newOperands.add(rexBuilder.makeLiteral(expectedRelDataTypeString));
-
-        return Optional
-            .of(rexBuilder.makeCall(expectedRelDataType, new GenericProjectFunction(expectedRelDataType), newOperands));
       }
       return Optional.empty();
     }

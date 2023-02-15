@@ -18,6 +18,7 @@ import com.linkedin.coral.spark.containers.SparkUDFInfo;
 import com.linkedin.coral.spark.transformers.CastToNamedStructTransformer;
 import com.linkedin.coral.spark.transformers.ExtractUnionFunctionTransformer;
 import com.linkedin.coral.spark.transformers.FallBackToLinkedInHiveUDFTransformer;
+import com.linkedin.coral.spark.transformers.FuzzyUnionGenericProjectTransformer;
 import com.linkedin.coral.spark.transformers.TransportUDFTransformer;
 
 import static com.linkedin.coral.spark.transformers.TransportUDFTransformer.*;
@@ -161,7 +162,10 @@ public class CoralToSparkSqlCallConverter extends SqlShuttle {
         new CastToNamedStructTransformer(),
 
         // Transform `extract_union` to `coalesce_struct`
-        new ExtractUnionFunctionTransformer(sparkUDFInfos));
+        new ExtractUnionFunctionTransformer(sparkUDFInfos),
+
+        // Transform `generic_project` function
+        new FuzzyUnionGenericProjectTransformer(sparkUDFInfos));
   }
 
   @Override

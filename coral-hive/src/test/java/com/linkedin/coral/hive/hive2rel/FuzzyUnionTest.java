@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2022 LinkedIn Corporation. All rights reserved.
+ * Copyright 2019-2023 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -94,8 +94,9 @@ public class FuzzyUnionTest {
     String view = "union_view_single_branch_evolved";
     SqlNode node = getFuzzyUnionView(database, view);
 
-    String expectedSql = "" + "SELECT *\n" + "FROM \"hive\".\"fuzzy_union\".\"tableb\"\n" + "UNION ALL\n"
-        + "SELECT \"a\", \"generic_project\"(\"b\", 'b') AS \"b\"\n" + "FROM \"hive\".\"fuzzy_union\".\"tablec\"";
+    String expectedSql = "SELECT *\n" + "FROM \"hive\".\"fuzzy_union\".\"tableb\"\n" + "UNION ALL\n"
+        + "SELECT \"a\", \"generic_project\"(\"b\", 'b', 'struct<b1:string>') AS \"b\"\n"
+        + "FROM \"hive\".\"fuzzy_union\".\"tablec\"";
 
     converter.getSqlValidator().validate(node);
     String expandedSql = nodeToStr(node);
@@ -122,9 +123,10 @@ public class FuzzyUnionTest {
     String view = "union_view_double_branch_evolved_different";
     SqlNode node = getFuzzyUnionView(database, view);
 
-    String expectedSql = "" + "SELECT \"a\", \"generic_project\"(\"b\", 'b') AS \"b\"\n"
+    String expectedSql = "SELECT \"a\", \"generic_project\"(\"b\", 'b', 'struct<b1:string>') AS \"b\"\n"
         + "FROM \"hive\".\"fuzzy_union\".\"tablef\"\n" + "UNION ALL\n"
-        + "SELECT \"a\", \"generic_project\"(\"b\", 'b') AS \"b\"\n" + "FROM \"hive\".\"fuzzy_union\".\"tableg\"";
+        + "SELECT \"a\", \"generic_project\"(\"b\", 'b', 'struct<b1:string>') AS \"b\"\n"
+        + "FROM \"hive\".\"fuzzy_union\".\"tableg\"";
 
     converter.getSqlValidator().validate(node);
     String expandedSql = nodeToStr(node);
@@ -137,11 +139,13 @@ public class FuzzyUnionTest {
     String view = "union_view_more_than_two_branches_evolved";
     SqlNode node = getFuzzyUnionView(database, view);
 
-    String expectedSql = "" + "SELECT *\n" + "FROM (SELECT \"a\", \"generic_project\"(\"b\", 'b') AS \"b\"\n"
-        + "FROM \"hive\".\"fuzzy_union\".\"tablef\"\n" + "UNION ALL\n"
-        + "SELECT \"a\", \"generic_project\"(\"b\", 'b') AS \"b\"\n"
-        + "FROM \"hive\".\"fuzzy_union\".\"tableg\") AS \"t\"\n" + "UNION ALL\n"
-        + "SELECT \"a\", \"generic_project\"(\"b\", 'b') AS \"b\"\n" + "FROM \"hive\".\"fuzzy_union\".\"tablef\"";
+    String expectedSql =
+        "SELECT *\n" + "FROM (SELECT \"a\", \"generic_project\"(\"b\", 'b', 'struct<b1:string>') AS \"b\"\n"
+            + "FROM \"hive\".\"fuzzy_union\".\"tablef\"\n" + "UNION ALL\n"
+            + "SELECT \"a\", \"generic_project\"(\"b\", 'b', 'struct<b1:string>') AS \"b\"\n"
+            + "FROM \"hive\".\"fuzzy_union\".\"tableg\") AS \"t\"\n" + "UNION ALL\n"
+            + "SELECT \"a\", \"generic_project\"(\"b\", 'b', 'struct<b1:string>') AS \"b\"\n"
+            + "FROM \"hive\".\"fuzzy_union\".\"tablef\"";
 
     converter.getSqlValidator().validate(node);
     String expandedSql = nodeToStr(node);
@@ -154,9 +158,9 @@ public class FuzzyUnionTest {
     String view = "union_view_map_with_struct_value_evolved";
     SqlNode node = getFuzzyUnionView(database, view);
 
-    String expectedSql =
-        "" + "SELECT \"a\", \"generic_project\"(\"b\", 'b') AS \"b\"\n" + "FROM \"hive\".\"fuzzy_union\".\"tableh\"\n"
-            + "UNION ALL\n" + "SELECT *\n" + "FROM \"hive\".\"fuzzy_union\".\"tablei\"";
+    String expectedSql = "SELECT \"a\", \"generic_project\"(\"b\", 'b', 'map<string,struct<b1:string>>') AS \"b\"\n"
+        + "FROM \"hive\".\"fuzzy_union\".\"tableh\"\n" + "UNION ALL\n" + "SELECT *\n"
+        + "FROM \"hive\".\"fuzzy_union\".\"tablei\"";
 
     converter.getSqlValidator().validate(node);
     String expandedSql = nodeToStr(node);
@@ -169,9 +173,9 @@ public class FuzzyUnionTest {
     String view = "union_view_array_with_struct_value_evolved";
     SqlNode node = getFuzzyUnionView(database, view);
 
-    String expectedSql =
-        "" + "SELECT \"a\", \"generic_project\"(\"b\", 'b') AS \"b\"\n" + "FROM \"hive\".\"fuzzy_union\".\"tablej\"\n"
-            + "UNION ALL\n" + "SELECT *\n" + "FROM \"hive\".\"fuzzy_union\".\"tablek\"";
+    String expectedSql = "SELECT \"a\", \"generic_project\"(\"b\", 'b', 'array<struct<b1:string>>') AS \"b\"\n"
+        + "FROM \"hive\".\"fuzzy_union\".\"tablej\"\n" + "UNION ALL\n" + "SELECT *\n"
+        + "FROM \"hive\".\"fuzzy_union\".\"tablek\"";
 
     converter.getSqlValidator().validate(node);
     String expandedSql = nodeToStr(node);
@@ -185,8 +189,9 @@ public class FuzzyUnionTest {
     SqlNode node = getFuzzyUnionView(database, view);
 
     String expectedSql =
-        "" + "SELECT \"a\", \"generic_project\"(\"b\", 'b') AS \"b\"\n" + "FROM \"hive\".\"fuzzy_union\".\"tablel\"\n"
-            + "UNION ALL\n" + "SELECT *\n" + "FROM \"hive\".\"fuzzy_union\".\"tablem\"";
+        "SELECT \"a\", \"generic_project\"(\"b\", 'b', 'struct<b1:string,b2:struct<b3:string,b4:struct<b5:string>>>') AS \"b\"\n"
+            + "FROM \"hive\".\"fuzzy_union\".\"tablel\"\n" + "UNION ALL\n" + "SELECT *\n"
+            + "FROM \"hive\".\"fuzzy_union\".\"tablem\"";
 
     converter.getSqlValidator().validate(node);
     String expandedSql = nodeToStr(node);
@@ -199,8 +204,9 @@ public class FuzzyUnionTest {
     String view = "union_view_same_schema_evolution_with_different_ordering";
     SqlNode node = getFuzzyUnionView(database, view);
 
-    String expectedSql = "" + "SELECT *\n" + "FROM \"hive\".\"fuzzy_union\".\"tablen\"\n" + "UNION ALL\n"
-        + "SELECT \"a\", \"generic_project\"(\"b\", 'b') AS \"b\"\n" + "FROM \"hive\".\"fuzzy_union\".\"tableo\"";
+    String expectedSql = "SELECT *\n" + "FROM \"hive\".\"fuzzy_union\".\"tablen\"\n" + "UNION ALL\n"
+        + "SELECT \"a\", \"generic_project\"(\"b\", 'b', 'struct<b2:double,b1:string,b0:int>') AS \"b\"\n"
+        + "FROM \"hive\".\"fuzzy_union\".\"tableo\"";
 
     converter.getSqlValidator().validate(node);
     String expandedSql = nodeToStr(node);
@@ -213,9 +219,9 @@ public class FuzzyUnionTest {
     String view = "union_view_with_base_table_change";
     SqlNode node = getFuzzyUnionView(database, view);
 
-    String expectedSql = "SELECT \"a\", \"generic_project\"(\"b\", 'b') AS \"b\"\n" + "FROM (SELECT *\n"
-        + "FROM \"hive\".\"fuzzy_union\".\"tablep\"\n" + "UNION ALL\n"
-        + "SELECT \"a\", \"generic_project\"(\"b\", 'b') AS \"b\"\n"
+    String expectedSql = "SELECT \"a\", \"generic_project\"(\"b\", 'b', 'struct<b1:string>') AS \"b\"\n"
+        + "FROM (SELECT *\n" + "FROM \"hive\".\"fuzzy_union\".\"tablep\"\n" + "UNION ALL\n"
+        + "SELECT \"a\", \"generic_project\"(\"b\", 'b', 'struct<b2:double,b1:string,b0:int>') AS \"b\"\n"
         + "FROM \"hive\".\"fuzzy_union\".\"tableq\") AS \"t0\"\n" + "UNION ALL\n" + "SELECT *\n" + "FROM (SELECT *\n"
         + "FROM \"hive\".\"fuzzy_union\".\"tabler\"\n" + "UNION ALL\n" + "SELECT *\n"
         + "FROM \"hive\".\"fuzzy_union\".\"tables\") AS \"t\"";
@@ -232,7 +238,7 @@ public class FuzzyUnionTest {
     SqlNode node = getFuzzyUnionView(database, view);
 
     String expectedSql = "SELECT \"a\"\n" + "FROM (SELECT *\n" + "FROM \"hive\".\"fuzzy_union\".\"tableb\"\n"
-        + "UNION ALL\n" + "SELECT \"a\", \"generic_project\"(\"b\", 'b') AS \"b\"\n"
+        + "UNION ALL\n" + "SELECT \"a\", \"generic_project\"(\"b\", 'b', 'struct<b1:string>') AS \"b\"\n"
         + "FROM \"hive\".\"fuzzy_union\".\"tablec\") AS \"t0\"\n" + "UNION ALL\n" + "SELECT \"a\"\n"
         + "FROM \"hive\".\"fuzzy_union\".\"tableb\"";
 
