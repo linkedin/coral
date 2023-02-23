@@ -1,5 +1,5 @@
 /**
- * Copyright 2021-2022 LinkedIn Corporation. All rights reserved.
+ * Copyright 2021-2023 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -54,7 +54,7 @@ import static org.apache.calcite.rel.core.RelFactories.DEFAULT_VALUES_FACTORY;
  */
 public class HiveRelBuilder extends RelBuilder {
 
-  private HiveRelBuilder(Context context, RelOptCluster cluster, RelOptSchema relOptSchema) {
+  protected HiveRelBuilder(Context context, RelOptCluster cluster, RelOptSchema relOptSchema) {
     super(context, cluster, relOptSchema);
   }
 
@@ -126,5 +126,4 @@ public class HiveRelBuilder extends RelBuilder {
 
     return project(fields(), newFieldNames, true);
   }
-
 }

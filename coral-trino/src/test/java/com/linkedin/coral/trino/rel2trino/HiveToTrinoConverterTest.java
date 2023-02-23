@@ -769,7 +769,7 @@ public class HiveToTrinoConverterTest {
   public void testRlikeTransformation() {
     RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
 
-    RelNode relNode = hiveToRelConverter.convertSql("SELECT '1' NOT RLIKE '^1$'");
+    RelNode relNode = TestUtils.getHiveToRelConverter().convertSql("SELECT '1' NOT RLIKE '^1$'");
     String targetSql = "SELECT NOT \"REGEXP_LIKE\"('1', '^1$')\n" + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
     String expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
@@ -779,9 +779,19 @@ public class HiveToTrinoConverterTest {
   public void testRegexpTransformation() {
     RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
 
-    RelNode relNode = hiveToRelConverter.convertSql("SELECT '1' NOT REGEXP '^1$'");
+    RelNode relNode = TestUtils.getHiveToRelConverter().convertSql("SELECT '1' NOT REGEXP '^1$'");
     String targetSql = "SELECT NOT \"REGEXP_LIKE\"('1', '^1$')\n" + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
     String expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
+  }
+
+  public void testSqlSelectAliasAppenderTransformer() {
+    //test.tableA(a int, b struct<b1:string>
+    RelNode relNode = TestUtils.getHiveToRelConverter().convertSql("SELECT tableA.b.b1 FROM test.tableA where a > 5");
+    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
+    String expandedSql = relToTrinoConverter.convert(relNode);
+
+    String expected = "SELECT \"b\".\"b1\" AS \"b1\"\n" + "FROM \"test\".\"tablea\"\n" + "WHERE \"a\" > 5";
+    assertEquals(expandedSql, expected);
   }
 }

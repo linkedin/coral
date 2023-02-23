@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 import com.google.common.collect.ImmutableMap;
@@ -31,7 +30,6 @@ import org.apache.calcite.sql.*;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.SqlTypeName;
-import org.apache.calcite.util.Util;
 
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import com.linkedin.coral.common.HiveMetastoreClient;
@@ -343,45 +341,6 @@ public class RelToTrinoConverter extends RelToSqlConverter {
           }
         }
         return super.toSql(program, rex);
-      }
-
-      @Override
-      public SqlNode field(int ordinal) {
-        for (Map.Entry<String, RelDataType> alias : aliases.entrySet()) {
-          final List<RelDataTypeField> fields = alias.getValue().getFieldList();
-          if (ordinal < fields.size()) {
-            RelDataTypeField field = fields.get(ordinal);
-            final SqlNode mappedSqlNode = ordinalMap.get(field.getName().toLowerCase(Locale.ROOT));
-            if (mappedSqlNode != null) {
-              return mappedSqlNode;
-            }
-            // For fields with data type struct, append the table alias to ensure proper type derivation
-            if (field.getType().isStruct()) {
-              return new SqlIdentifier(ImmutableList.of(alias.getKey(), field.getName()), POS);
-            }
-            return new SqlIdentifier(
-                !qualified ? ImmutableList.of(field.getName()) : ImmutableList.of(alias.getKey(), field.getName()),
-                POS);
-          }
-          ordinal -= fields.size();
-        }
-        throw new AssertionError("field ordinal " + ordinal + " out of range " + aliases);
-      }
-
-      protected SqlNode ensureAliasedNode(String alias, SqlNode id) {
-        if (!(id instanceof SqlIdentifier)) {
-          return id;
-        }
-        ImmutableList<String> names = ((SqlIdentifier) id).names;
-        if (names.size() > 1) {
-          return id;
-        }
-        return new SqlIdentifier(ImmutableList.of(alias, Util.last(names)), POS);
-      }
-
-      private RexNode stripCastFromString(RexNode node) {
-        // DO NOT strip
-        return node;
       }
     };
   }

@@ -21,7 +21,7 @@ import org.apache.calcite.sql.validate.SqlValidatorUtil;
 
 import com.linkedin.coral.common.HiveMetastoreClient;
 import com.linkedin.coral.common.transformers.SqlCallTransformers;
-import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
+import com.linkedin.coral.ir.CoralSqlNodeToRelConverter;
 import com.linkedin.coral.trino.rel2trino.transformers.IdentityTransformer;
 import com.linkedin.coral.trino.rel2trino.transformers.RelationalOperatorTransformer;
 
@@ -41,7 +41,7 @@ public class SqlNodeConverter extends SqlShuttle {
   private final SqlCallTransformers operatorTransformerList;
 
   public SqlNodeConverter(HiveMetastoreClient mscClient) {
-    SqlValidator sqlValidator = new HiveToRelConverter(mscClient).getSqlValidator();
+    SqlValidator sqlValidator = new CoralSqlNodeToRelConverter(mscClient).getSqlValidator();
     operatorTransformerList =
         SqlCallTransformers.of(new IdentityTransformer(), new RelationalOperatorTransformer(sqlValidator));
   }
