@@ -22,11 +22,13 @@ def get_context_modules() -> Dict[str, Dict[str, Any]]:
         "requests": get_requests_module_context(),
     }
 ```
-3. Add this package to your dbt project by creating or modifying `packages.yml`.
+3. Add this package to your dbt project by creating or modifying `packages.yml` and run `dbt deps` to install the package.
 
 ```
 packages:
   - git: "https://github.com/linkedin/coral.git"
     revision: master
-    subdirectory: coral-dbt
+    subdirectory: coral-dbt/src/main/resources
 ```
+
+4. Follow the instructions in the main project README to start up Coral Service.

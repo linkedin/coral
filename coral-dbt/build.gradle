@@ -1,0 +1,8 @@
+apply plugin: "com.diffplug.spotless"
+
+spotless {
+  sql {
+    target 'src/main/resources/macros/coral_macros/**/**/*.sql'
+    licenseHeaderFile(rootProject.file("gradle/license/LICENSE_HEADER"), "\\{% ")
+  }
+}

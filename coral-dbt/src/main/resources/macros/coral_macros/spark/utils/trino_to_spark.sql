@@ -1,3 +1,8 @@
+/**
+ * Copyright 2023 LinkedIn Corporation. All rights reserved.
+ * Licensed under the BSD-2 Clause license.
+ * See LICENSE in the project root for license information.
+ */
 {% macro spark__trino_to_spark(sql) -%}
 
     {% set requests = modules.requests %}
