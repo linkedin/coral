@@ -132,7 +132,10 @@ public class CoralSpark {
     // only do this when it's not a select star case,
     // since for select star we don't need to add any explicit aliases
     if (rewritten.getKind() == SqlKind.SELECT && ((SqlSelect) rewritten).getSelectList() != null) {
-      rewritten = rewritten.accept(new AddExplicitAlias(aliases));
+      if (!(((SqlSelect) rewritten).getSelectList().size() == 1
+          && ((SqlSelect) rewritten).getSelectList().get(0).toString().equalsIgnoreCase("*"))) {
+        rewritten = rewritten.accept(new AddExplicitAlias(aliases));
+      }
     }
     return rewritten.toSqlString(SparkSqlDialect.INSTANCE).getSql();
   }
