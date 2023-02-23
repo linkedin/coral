@@ -69,7 +69,7 @@ public class RelDataTypeToHiveTypeStringConverter {
       case BOOLEAN:
         return "boolean";
       case CHAR:
-        return "char";
+        return String.format("char(%d)", relDataType.getPrecision());
       case VARCHAR:
         return "string";
       case DATE:
