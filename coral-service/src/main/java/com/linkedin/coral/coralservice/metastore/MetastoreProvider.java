@@ -1,10 +1,11 @@
 /**
- * Copyright 2022 LinkedIn Corporation. All rights reserved.
+ * Copyright 2022-2023 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
 package com.linkedin.coral.coralservice.metastore;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
@@ -43,10 +44,18 @@ public class MetastoreProvider {
   private static final String DEFAULT_METASTORE_AUTHENTICATION = "SIMPLE";
   private static final String KERBEROS_AUTHENTICATION = "kerberos";
 
-  public static HiveMetastoreClient getMetastoreClient() throws Exception {
-    final InputStream hiveConfStream = CoralProvider.class.getClassLoader().getResourceAsStream("hive.properties");
+  public static HiveMetastoreClient getMetastoreClient(String hiveProps) throws Exception {
+    InputStream hivePropsStream = null;
+    if (hiveProps.trim().isEmpty()) {
+      hivePropsStream = CoralProvider.class.getClassLoader().getResourceAsStream("hive.properties");
+    } else {
+      hivePropsStream = new FileInputStream(hiveProps);
+    }
     final Properties props = new Properties();
-    props.load(hiveConfStream);
+    props.load(hivePropsStream);
+    if (hivePropsStream != null) {
+      hivePropsStream.close();
+    }
     return new HiveMscAdapter(MetastoreProvider.getRemoteMetastoreClient(props));
   }
 
