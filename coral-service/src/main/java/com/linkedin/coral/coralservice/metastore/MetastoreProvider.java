@@ -44,12 +44,12 @@ public class MetastoreProvider {
   private static final String DEFAULT_METASTORE_AUTHENTICATION = "SIMPLE";
   private static final String KERBEROS_AUTHENTICATION = "kerberos";
 
-  public static HiveMetastoreClient getMetastoreClient(String hiveProps) throws Exception {
+  public static HiveMetastoreClient getMetastoreClient(String hivePropsLocation) throws Exception {
     InputStream hivePropsStream = null;
-    if (hiveProps.trim().isEmpty()) {
+    if (hivePropsLocation.trim().isEmpty()) {
       hivePropsStream = CoralProvider.class.getClassLoader().getResourceAsStream("hive.properties");
     } else {
-      hivePropsStream = new FileInputStream(hiveProps);
+      hivePropsStream = new FileInputStream(hivePropsLocation);
     }
     final Properties props = new Properties();
     props.load(hivePropsStream);

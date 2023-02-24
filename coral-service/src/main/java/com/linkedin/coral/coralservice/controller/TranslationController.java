@@ -31,8 +31,8 @@ import static com.linkedin.coral.coralservice.utils.TranslationUtils.*;
 @Service
 @Profile({ "remoteMetastore", "default" })
 public class TranslationController implements ApplicationListener<ContextRefreshedEvent> {
-  @Value("${hiveProps:}")
-  private String hiveProps;
+  @Value("${hivePropsLocation:}")
+  private String hivePropsLocation;
 
   private final static ImmutableMap<String, String> LANGUAGE_MAP =
       ImmutableMap.of("hive", "Hive QL", "trino", "Trino SQL", "spark", "Spark SQL");
@@ -41,7 +41,7 @@ public class TranslationController implements ApplicationListener<ContextRefresh
   public void onApplicationEvent(ContextRefreshedEvent event) {
     // runs after the Spring context has been initialized
     try {
-      initHiveMetastoreClient(hiveProps);
+      initHiveMetastoreClient(hivePropsLocation);
     } catch (Exception e) {
       e.printStackTrace();
     }
