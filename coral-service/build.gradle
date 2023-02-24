@@ -4,6 +4,7 @@ plugins {
   id 'java'
 }
 
+// Ref: https://docs.gradle.org/current/userguide/upgrading_version_6.html?_ga=2.55190571.1487781572.1677273009-780026602.1675378719#publishing_spring_boot_applications
 configurations {
   [apiElements, runtimeElements].each {
     it.outgoing.artifacts.removeIf { it.buildDependencies.getDependencies(null).contains(jar) }
