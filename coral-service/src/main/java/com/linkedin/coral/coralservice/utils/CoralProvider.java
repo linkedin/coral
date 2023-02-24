@@ -42,9 +42,9 @@ public class CoralProvider {
   public static HiveConf conf;
   public static final String CORAL_SERVICE_DIR = "coral.service.test.dir";
 
-  public static void initHiveMetastoreClient() throws Exception {
+  public static void initHiveMetastoreClient(String hivePropsLocation) throws Exception {
     // Connect to remote production Hive Metastore Client
-    hiveMetastoreClient = MetastoreProvider.getMetastoreClient();
+    hiveMetastoreClient = MetastoreProvider.getMetastoreClient(hivePropsLocation);
   }
 
   public static void initLocalMetastore() throws IOException, HiveException, MetaException {
