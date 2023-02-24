@@ -101,7 +101,10 @@ cd coral-service
 ```  
 ../gradlew bootRun  
 ```  
-
+You can also specify a custom location of `hive.properties` file through `--hivePropsLocation` as follows
+```
+ ./gradlew bootRun --args='--hivePropsLocation=/tmp/hive.properties'
+```
 Then you can interact with the service using your [browser](#coral-service-ui) or the [CLI](#coral-service-cli).
 
 ### Coral Service UI
