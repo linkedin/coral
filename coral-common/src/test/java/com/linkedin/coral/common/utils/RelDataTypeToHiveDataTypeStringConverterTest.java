@@ -170,7 +170,7 @@ public class RelDataTypeToHiveDataTypeStringConverterTest {
 
   @Test
   public void testCharRelDataType() {
-    String expectedHiveDataTypeSchemaString = "char(16)";
+    String expectedHiveDataTypeSchemaString = "string";
 
     BasicSqlType charSqlType = new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.CHAR, 16);
 
