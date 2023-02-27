@@ -75,7 +75,12 @@ public class CoralRelToSqlNodeConverter extends RelToSqlConverter {
     SqlDialect.Context context = SqlDialect.EMPTY_CONTEXT.withDatabaseProduct(SqlDialect.DatabaseProduct.HIVE)
         .withNullCollation(NullCollation.HIGH);
 
-    return new SqlDialect(context);
+    return new SqlDialect(context) {
+      @Override
+      public boolean requireCastOnString() {
+        return true;
+      }
+    };
   }
 
   /**
