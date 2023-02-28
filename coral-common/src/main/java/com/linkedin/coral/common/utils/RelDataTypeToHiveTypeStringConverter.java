@@ -69,7 +69,6 @@ public class RelDataTypeToHiveTypeStringConverter {
       case BOOLEAN:
         return "boolean";
       case CHAR:
-        return "char";
       case VARCHAR:
         return "string";
       case DATE:
