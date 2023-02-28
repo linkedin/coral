@@ -83,6 +83,7 @@ public class CoralRelToSqlNodeConverter extends RelToSqlConverter {
          * which might cause translation quality issue.
          * For example, without explicit `CAST`, Spark will cast the `number_string` to {@link Integer} implicitly,
          * but if the value of the number_string is greater than {@link Integer.MAX_VALUE}, the result of the condition is wrong.
+         * Note: Changing the default value to `true` only preserves the existing `CAST` and doesn't introduce new `CAST`.
          *
          * Check `CoralSparkTest#testCastOnString` for an example.
          */
