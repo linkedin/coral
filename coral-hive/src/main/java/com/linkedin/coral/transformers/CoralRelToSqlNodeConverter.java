@@ -75,7 +75,21 @@ public class CoralRelToSqlNodeConverter extends RelToSqlConverter {
     SqlDialect.Context context = SqlDialect.EMPTY_CONTEXT.withDatabaseProduct(SqlDialect.DatabaseProduct.HIVE)
         .withNullCollation(NullCollation.HIGH);
 
-    return new SqlDialect(context);
+    return new SqlDialect(context) {
+      @Override
+      public boolean requireCastOnString() {
+        /**
+         * The default value is `false`, then Coral will drop `CAST` for RexNode like `CAST(number_string AS BIGINT) > 0`,
+         * which might cause translation quality issue.
+         * For example, without explicit `CAST`, Spark will cast the `number_string` to {@link Integer} implicitly,
+         * but if the value of the number_string is greater than {@link Integer.MAX_VALUE}, the result of the condition is wrong.
+         * Note: Changing the default value to `true` only preserves the existing `CAST` and doesn't introduce new `CAST`.
+         *
+         * Check `CoralSparkTest#testCastOnString` for an example.
+         */
+        return true;
+      }
+    };
   }
 
   /**
