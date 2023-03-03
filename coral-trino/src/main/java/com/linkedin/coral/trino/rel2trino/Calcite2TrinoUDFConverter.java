@@ -54,7 +54,6 @@ import com.linkedin.coral.com.google.common.collect.Multimap;
 import com.linkedin.coral.common.functions.FunctionReturnTypes;
 import com.linkedin.coral.common.functions.GenericProjectFunction;
 import com.linkedin.coral.trino.rel2trino.functions.GenericProjectToTrinoConverter;
-import com.linkedin.coral.trino.rel2trino.functions.TrinoElementAtFunction;
 
 import static com.linkedin.coral.trino.rel2trino.CoralTrinoConfigKeys.*;
 import static org.apache.calcite.sql.fun.SqlStdOperatorTable.MULTIPLY;
@@ -197,10 +196,6 @@ public class Calcite2TrinoUDFConverter {
       }
 
       final String operatorName = call.getOperator().getName();
-
-      if (operatorName.equalsIgnoreCase("item") && call.getOperands().size() == 2) {
-        return super.visitCall((RexCall) rexBuilder.makeCall(TrinoElementAtFunction.INSTANCE, call.getOperands()));
-      }
 
       if ((operatorName.equalsIgnoreCase("regexp") || operatorName.equalsIgnoreCase("rlike"))
           && call.getOperands().size() == 2) {
