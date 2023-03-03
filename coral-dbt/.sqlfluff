@@ -1,0 +1,6 @@
+[sqlfluff]
+templater = jinja
+sql_file_exts = .sql
+
+[sqlfluff:templater:jinja]
+apply_dbt_builtins = true

@@ -1,0 +1,6 @@
+name: 'coral_dbt'
+
+config-version: 2
+version: '0.1.0'
+
+macro-paths: ["macros"]
