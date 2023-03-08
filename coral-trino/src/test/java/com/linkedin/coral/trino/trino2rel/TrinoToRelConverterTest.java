@@ -69,65 +69,68 @@ public class TrinoToRelConverterTest {
         .add(new TrinoToRelTestDataProvider("select * from foo",
             "LogicalProject(show=[$0], a=[$1], b=[$2], x=[$3], y=[$4])\n"
                 + "  LogicalTableScan(table=[[hive, default, foo]])\n",
-            "SELECT *\n" + "FROM \"default\".\"foo\""))
+            "SELECT *\n" + "FROM \"default\".\"foo\" AS \"foo\""))
         .add(new TrinoToRelTestDataProvider("select * from foo /* end */",
             "LogicalProject(show=[$0], a=[$1], b=[$2], x=[$3], y=[$4])\n"
                 + "  LogicalTableScan(table=[[hive, default, foo]])\n",
-            "SELECT *\n" + "FROM \"default\".\"foo\""))
+            "SELECT *\n" + "FROM \"default\".\"foo\" AS \"foo\""))
         .add(new TrinoToRelTestDataProvider("/* start */ select * from foo",
             "LogicalProject(show=[$0], a=[$1], b=[$2], x=[$3], y=[$4])\n"
                 + "  LogicalTableScan(table=[[hive, default, foo]])\n",
-            "SELECT *\n" + "FROM \"default\".\"foo\""))
+            "SELECT *\n" + "FROM \"default\".\"foo\" AS \"foo\""))
         .add(new TrinoToRelTestDataProvider("/* start */ select * /* middle */ from foo /* end */",
             "LogicalProject(show=[$0], a=[$1], b=[$2], x=[$3], y=[$4])\n"
                 + "  LogicalTableScan(table=[[hive, default, foo]])\n",
-            "SELECT *\n" + "FROM \"default\".\"foo\""))
+            "SELECT *\n" + "FROM \"default\".\"foo\" AS \"foo\""))
         .add(new TrinoToRelTestDataProvider("-- start \n select * -- junk -- hi\n from foo -- done",
             "LogicalProject(show=[$0], a=[$1], b=[$2], x=[$3], y=[$4])\n"
                 + "  LogicalTableScan(table=[[hive, default, foo]])\n",
-            "SELECT *\n" + "FROM \"default\".\"foo\""))
+            "SELECT *\n" + "FROM \"default\".\"foo\" AS \"foo\""))
         .add(new TrinoToRelTestDataProvider("select * from foo a (v, w, x, y, z)",
             "LogicalProject(V=[$0], W=[$1], X=[$2], Y=[$3], Z=[$4])\n"
                 + "  LogicalTableScan(table=[[hive, default, foo]])\n",
-            "SELECT \"show\" AS \"V\", \"a\" AS \"W\", \"b\" AS \"X\", \"x\" AS \"Y\", \"y\" AS \"Z\"\n"
-                + "FROM \"default\".\"foo\""))
+            "SELECT \"foo\".\"show\" AS \"V\", \"foo\".\"a\" AS \"W\", \"foo\".\"b\" AS \"X\", \"foo\".\"x\" AS \"Y\", \"foo\".\"y\" AS \"Z\"\n"
+                + "FROM \"default\".\"foo\" AS \"foo\""))
         .add(new TrinoToRelTestDataProvider("select *, 123, * from foo",
             "LogicalProject(show=[$0], a=[$1], b=[$2], x=[$3], y=[$4], EXPR$5=[123], show0=[$0], a0=[$1], b0=[$2], x0=[$3], y0=[$4])\n"
                 + "  LogicalTableScan(table=[[hive, default, foo]])\n",
-            "SELECT \"show\", \"a\", \"b\", \"x\", \"y\", 123, \"show\" AS \"show0\", \"a\" AS \"a0\", \"b\" AS \"b0\", \"x\" AS \"x0\", \"y\" AS \"y0\"\n"
-                + "FROM \"default\".\"foo\""))
+            "SELECT \"foo\".\"show\" AS \"show\", \"foo\".\"a\" AS \"a\", \"foo\".\"b\" AS \"b\", \"foo\".\"x\" AS \"x\", \"foo\".\"y\" AS \"y\", 123, \"foo\".\"show\" AS \"show0\", \"foo\".\"a\" AS \"a0\", \"foo\".\"b\" AS \"b0\", \"foo\".\"x\" AS \"x0\", \"foo\".\"y\" AS \"y0\"\n"
+                + "FROM \"default\".\"foo\" AS \"foo\""))
         .add(new TrinoToRelTestDataProvider("select show from foo",
             "LogicalProject(SHOW=[$0])\n" + "  LogicalTableScan(table=[[hive, default, foo]])\n",
-            "SELECT \"show\" AS \"SHOW\"\n" + "FROM \"default\".\"foo\""))
+            "SELECT \"foo\".\"show\" AS \"SHOW\"\n" + "FROM \"default\".\"foo\" AS \"foo\""))
         .add(new TrinoToRelTestDataProvider("select extract(day from x), extract(dow from x) from foo",
             "LogicalProject(EXPR$0=[EXTRACT(FLAG(DAY), $3)], EXPR$1=[EXTRACT(FLAG(DOW), $3)])\n"
                 + "  LogicalTableScan(table=[[hive, default, foo]])\n",
-            "SELECT EXTRACT(DAY FROM \"x\"), EXTRACT(DOW FROM \"x\")\n" + "FROM \"default\".\"foo\""))
+            "SELECT EXTRACT(DAY FROM \"foo\".\"x\"), EXTRACT(DOW FROM \"foo\".\"x\")\n"
+                + "FROM \"default\".\"foo\" AS \"foo\""))
         .add(new TrinoToRelTestDataProvider("select 1 + 13 || '15' from foo",
             "LogicalProject(EXPR$0=[concat(+(1, 13), '15')])\n" + "  LogicalTableScan(table=[[hive, default, foo]])\n",
-            "SELECT \"concat\"(CAST(1 + 13 AS VARCHAR(65535)), '15')\n" + "FROM \"default\".\"foo\""))
+            "SELECT \"concat\"(CAST(1 + 13 AS VARCHAR(65535)), '15')\n" + "FROM \"default\".\"foo\" AS \"foo\""))
         .add(new TrinoToRelTestDataProvider("select x is distinct from y from foo where a is not distinct from b",
             "LogicalProject(EXPR$0=[AND(OR(IS NOT NULL($3), IS NOT NULL($4)), IS NOT TRUE(=($3, $4)))])\n"
                 + "  LogicalFilter(condition=[NOT(AND(OR(IS NOT NULL($1), IS NOT NULL($2)), IS NOT TRUE(=($1, $2))))])\n"
                 + "    LogicalTableScan(table=[[hive, default, foo]])\n",
-            "SELECT (\"x\" IS NOT NULL OR \"y\" IS NOT NULL) AND \"x\" = \"y\" IS NOT TRUE\n"
-                + "FROM \"default\".\"foo\"\n"
-                + "WHERE NOT ((\"a\" IS NOT NULL OR \"b\" IS NOT NULL) AND \"a\" = \"b\" IS NOT TRUE)"))
+            "SELECT (\"foo\".\"x\" IS NOT NULL OR \"foo\".\"y\" IS NOT NULL) AND \"foo\".\"x\" = \"foo\".\"y\" IS NOT TRUE\n"
+                + "FROM \"default\".\"foo\" AS \"foo\"\n"
+                + "WHERE NOT ((\"foo\".\"a\" IS NOT NULL OR \"foo\".\"b\" IS NOT NULL) AND \"foo\".\"a\" = \"foo\".\"b\" IS NOT TRUE)"))
         .add(new TrinoToRelTestDataProvider("select x[1] from my_table",
             "LogicalProject(EXPR$0=[ITEM($0, 1)])\n" + "  LogicalTableScan(table=[[hive, default, my_table]])\n",
-            "SELECT element_at(\"x\", 1)\n" + "FROM \"default\".\"my_table\""))
+            "SELECT element_at(\"my_table\".\"x\", 1)\n" + "FROM \"default\".\"my_table\" AS \"my_table\""))
         .add(new TrinoToRelTestDataProvider("select y[1][2] from my_table",
             "LogicalProject(EXPR$0=[ITEM(ITEM($1, 1), 2)])\n"
                 + "  LogicalTableScan(table=[[hive, default, my_table]])\n",
-            "SELECT element_at(element_at(\"y\", 1), 2)\n" + "FROM \"default\".\"my_table\""))
+            "SELECT element_at(element_at(\"my_table\".\"y\", 1), 2)\n"
+                + "FROM \"default\".\"my_table\" AS \"my_table\""))
         .add(new TrinoToRelTestDataProvider("select x[cast(10 * sin(z) as bigint)] from my_table",
             "LogicalProject(EXPR$0=[ITEM($0, CAST(*(10, SIN($2))):BIGINT)])\n"
                 + "  LogicalTableScan(table=[[hive, default, my_table]])\n",
-            "SELECT element_at(\"x\", CAST(10 * SIN(\"z\") AS BIGINT))\n" + "FROM \"default\".\"my_table\""))
+            "SELECT element_at(\"my_table\".\"x\", CAST(10 * SIN(\"my_table\".\"z\") AS BIGINT))\n"
+                + "FROM \"default\".\"my_table\" AS \"my_table\""))
         .add(new TrinoToRelTestDataProvider("select * from unnest(array[1, 2, 3])",
             "LogicalProject(EXPR$0=[$0])\n" + "  HiveUncollect\n" + "    LogicalProject(col=[ARRAY(1, 2, 3)])\n"
                 + "      LogicalValues(tuples=[[{ 0 }]])\n",
-            "SELECT \"col\"\n" + "FROM UNNEST(ARRAY[1, 2, 3]) AS \"t0\" (\"col\")"))
+            "SELECT \"t0\".\"col\"\n" + "FROM UNNEST(ARRAY[1, 2, 3]) AS \"t0\" (\"col\")"))
         .add(new TrinoToRelTestDataProvider("select x from unnest(array[1, 2, 3]) t(x)",
             "LogicalProject(X=[$0])\n" + "  HiveUncollect\n" + "    LogicalProject(col=[ARRAY(1, 2, 3)])\n"
                 + "      LogicalValues(tuples=[[{ 0 }]])\n",
@@ -150,7 +153,7 @@ public class TrinoToRelConverterTest {
         .add(new TrinoToRelTestDataProvider("select * from unnest(array[1, 2, 3]) with ordinality",
             "LogicalProject(EXPR$0=[$0], ORDINALITY=[$1])\n" + "  HiveUncollect(withOrdinality=[true])\n"
                 + "    LogicalProject(col=[ARRAY(1, 2, 3)])\n" + "      LogicalValues(tuples=[[{ 0 }]])\n",
-            "SELECT \"col\", \"ORDINALITY\"\n"
+            "SELECT \"t0\".\"col\", \"t0\".\"ORDINALITY\" AS \"ORDINALITY\"\n"
                 + "FROM UNNEST(ARRAY[1, 2, 3]) WITH ORDINALITY AS \"t0\" (\"col\", \"ORDINALITY\")"))
         .add(new TrinoToRelTestDataProvider("select * from unnest(array[1, 2, 3]) with ordinality t(x, y)",
             "LogicalProject(X=[$0], Y=[$1])\n" + "  HiveUncollect(withOrdinality=[true])\n"
@@ -178,25 +181,27 @@ public class TrinoToRelConverterTest {
             "LogicalProject(ID=[COALESCE($0, $1)])\n" + "  LogicalJoin(condition=[=($0, $1)], joinType=[inner])\n"
                 + "    LogicalProject(EXPR$0=[123])\n" + "      LogicalTableScan(table=[[hive, default, foo]])\n"
                 + "    LogicalProject(EXPR$0=[999])\n" + "      LogicalTableScan(table=[[hive, default, foo]])\n",
-            "SELECT COALESCE(999, 999) AS \"ID\"\n" + "FROM (SELECT 123\n" + "FROM \"default\".\"foo\") AS \"t\"\n"
-                + "INNER JOIN (SELECT 999\n" + "FROM \"default\".\"foo\") AS \"t0\" ON 999 = 999"))
+            "SELECT COALESCE(999, 999) AS \"ID\"\n" + "FROM (SELECT 123\n"
+                + "FROM \"default\".\"foo\" AS \"foo\") AS \"t\"\n" + "INNER JOIN (SELECT 999\n"
+                + "FROM \"default\".\"foo\" AS \"foo0\") AS \"t0\" ON 999 = 999"))
         .add(new TrinoToRelTestDataProvider("select cast('123' as bigint)",
             "LogicalProject(EXPR$0=[CAST('123'):BIGINT])\n" + "  LogicalValues(tuples=[[{ 0 }]])\n",
             "SELECT CAST('123' AS BIGINT)\n" + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")"))
         .add(new TrinoToRelTestDataProvider("select a \"my price\" from \"foo\" \"ORDERS\"",
             "LogicalProject(MY PRICE=[$1])\n" + "  LogicalTableScan(table=[[hive, default, foo]])\n",
-            "SELECT \"a\" AS \"MY PRICE\"\n" + "FROM \"default\".\"foo\""))
+            "SELECT \"foo\".\"a\" AS \"MY PRICE\"\n" + "FROM \"default\".\"foo\" AS \"foo\""))
         .add(new TrinoToRelTestDataProvider("select * from a limit all",
             "LogicalProject(b=[$0], id=[$1], x=[$2])\n" + "  LogicalTableScan(table=[[hive, default, a]])\n",
-            "SELECT *\n" + "FROM \"default\".\"a\""))
+            "SELECT *\n" + "FROM \"default\".\"a\" AS \"a\""))
         .add(new TrinoToRelTestDataProvider("select * from a order by x limit all",
             "LogicalSort(sort0=[$2], dir0=[ASC-nulls-first])\n" + "  LogicalProject(b=[$0], id=[$1], x=[$2])\n"
                 + "    LogicalTableScan(table=[[hive, default, a]])\n",
-            "SELECT *\n" + "FROM \"default\".\"a\"\n" + "ORDER BY \"x\" NULLS FIRST"))
+            "SELECT *\n" + "FROM \"default\".\"a\" AS \"a\"\n" + "ORDER BY \"a\".\"x\" NULLS FIRST"))
         .add(new TrinoToRelTestDataProvider("select * from a union select * from b", "LogicalUnion(all=[false])\n"
             + "  LogicalProject(b=[$0], id=[$1], x=[$2])\n" + "    LogicalTableScan(table=[[hive, default, a]])\n"
             + "  LogicalProject(foobar=[$0], id=[$1], y=[$2])\n" + "    LogicalTableScan(table=[[hive, default, b]])\n",
-            "SELECT *\n" + "FROM \"default\".\"a\"\n" + "UNION\n" + "SELECT *\n" + "FROM \"default\".\"b\""))
+            "SELECT *\n" + "FROM \"default\".\"a\" AS \"a\"\n" + "UNION\n" + "SELECT *\n"
+                + "FROM \"default\".\"b\" AS \"b\""))
         .add(new TrinoToRelTestDataProvider("select strpos('foobar', 'b') as pos",
             "LogicalProject(POS=[instr('FOOBAR', 'B')])\n" + "  LogicalValues(tuples=[[{ 0 }]])\n",
             "SELECT \"strpos\"('FOOBAR', 'B') AS \"POS\"\n" + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")"))

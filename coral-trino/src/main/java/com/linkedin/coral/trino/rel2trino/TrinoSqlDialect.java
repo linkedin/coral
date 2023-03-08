@@ -30,6 +30,15 @@ public class TrinoSqlDialect extends SqlDialect {
     return false;
   }
 
+  /**
+   * Override this method so that there will be explicit and correct table alias for selected fields, which is necessary for
+   * data type derivation on SqlNodes
+   */
+  @Override
+  public boolean hasImplicitTableAlias() {
+    return false;
+  }
+
   public void unparseOffsetFetch(SqlWriter writer, SqlNode offset, SqlNode fetch) {
     unparseFetchUsingLimit(writer, offset, fetch);
   }

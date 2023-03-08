@@ -19,6 +19,7 @@ import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rel.core.Uncollect;
+import org.apache.calcite.rel.core.Values;
 import org.apache.calcite.rel.logical.LogicalTableFunctionScan;
 import org.apache.calcite.rel.rel2sql.RelToSqlConverter;
 import org.apache.calcite.rel.type.RelDataType;
@@ -89,6 +90,15 @@ public class CoralRelToSqlNodeConverter extends RelToSqlConverter {
          */
         return true;
       }
+
+      /**
+       * Override this method so that there will be explicit and correct table alias for selected fields, which is necessary for
+       * data type derivation on SqlNodes
+       */
+      @Override
+      public boolean hasImplicitTableAlias() {
+        return false;
+      }
     };
   }
 
@@ -150,12 +160,12 @@ public class CoralRelToSqlNodeConverter extends RelToSqlConverter {
    */
   @Override
   public Result visit(Correlate e) {
-    final Result leftResult = visitChild(0, e.getLeft());
+    final Result leftResult = visitChild(0, e.getLeft()).resetAlias();
 
     // Add context specifying correlationId has same context as its left child
     correlTableMap.put(e.getCorrelationId(), leftResult.qualifiedContext());
 
-    final Result rightResult = visitChild(1, e.getRight());
+    final Result rightResult = visitChild(1, e.getRight()).resetAlias();
 
     SqlNode rightSqlNode = rightResult.asFrom();
 
@@ -346,6 +356,27 @@ public class CoralRelToSqlNodeConverter extends RelToSqlConverter {
     // "AS" to be added to the generated SQL statement and make it invalid.
     return new Result(unnestCall, ImmutableList.of(Clause.FROM), null, e.getRowType(),
         ImmutableMap.of(projectResult.neededAlias, e.getRowType()));
+  }
+
+  /**
+   * Override this method to avoid the duplicated alias for {@link org.apache.calcite.rel.logical.LogicalValues}.
+   * So that for the input SQL like `SELECT 1`, the translated SQL will be like:
+   *
+   * SELECT 1
+   * FROM (VALUES  (0)) t (ZERO)
+   *
+   * Without this override, the translated SQL contains duplicated alias `t`:
+   *
+   * SELECT 1
+   * FROM (VALUES  (0)) t (ZERO) t
+   *
+   * which is wrong.
+   */
+  @Override
+  public Result visit(Values e) {
+    final Result originalResult = super.visit(e);
+    return new Result(originalResult.node, originalResult.clauses, null, originalResult.neededType,
+        originalResult.aliases);
   }
 
   private SqlNode generateRightChildForSqlJoinWithLateralViews(BiRel e, Result rightResult) {
