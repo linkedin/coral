@@ -14,13 +14,15 @@
 
 --   Ex.
 --     sql: SELECT * FROM db.t1 UNION SELECT * FROM db.t2
---     differential_sql: SELECT * FROM db_t1_delta UNION SELECT * FROM db_t2_delta
 --     table_names: ['db.t1', 'db.t2']
+--
+--     differential_sql: SELECT * FROM db_t1_delta UNION SELECT * FROM db_t2_delta
 --     mod_table_names: ['db_t1_delta', 'db_t2_delta']
-  {% set coral_resp = coral_dbt.get_coral_delta(sql) %}
+  {% set tbl_names = config.require('table_names') %}
+
+  {% set coral_resp = coral_dbt.get_coral_delta(sql, tbl_names) %}
   {% set differential_sql = coral_resp['mod_query'] %}
-  {% set table_names = coral_resp['tbl_names'] %}
-  {% set mod_table_names = coral_resp['mod_tbl_names'] %}
+  {% set mod_tbl_names = coral_resp['mod_tbl_names'] %}
 
 --     Separate lines by \n delimiter
   {% set spark_sql = '' %}
