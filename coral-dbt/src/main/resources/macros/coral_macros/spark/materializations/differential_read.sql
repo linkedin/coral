@@ -27,18 +27,21 @@
 --     Separate lines by \n delimiter
   {% set spark_sql = '' %}
 
---     Hard-coded for now, will need to find way to get these efficiently
-  {% set start_snapshot_id = ['1', '1'] %}
-  {% set end_snapshot_id = ['2', '2'] %}
-
 --     Incremental read of each target table
   {% set ns = namespace(generated_sql='') %}
-  {% for tbl in table_names %}
-    {% set create_df_code =
-        'val df = spark.read.format("iceberg").option("start-snapshot-id", "' ~ start_snapshot_id[loop.index0] ~ '").option("end-snapshot-id", "' ~ end_snapshot_id[loop.index0] ~ '").load("' ~ tbl ~ '")\n'
-        ~ 'df.createOrReplaceTempView("' ~ mod_table_names[loop.index0] ~ '")\n'
+  {% for tbl in tbl_names %}
+    {% set get_snapshot_id_code =
+        'val snapshot_df = spark.read.format("iceberg").load("' ~ tbl ~ '.snapshots")\n'
+        ~ 'snapshot_df.createOrReplaceTempView("snapshot_temp_tbl")\n'
+        ~ 'val snap_ids = spark.sql("SELECT snapshot_id FROM snapshot_temp_tbl ORDER BY committed_at DESC LIMIT 2")\n'
+        ~ 'val start_snapshot_id = snap_ids.collect()(1)(0).toString\n'
+        ~ 'val end_snapshot_id = snap_ids.collect()(0)(0).toString\n'
     %}
-    {% set ns.generated_sql = ns.generated_sql ~ create_df_code %}
+    {% set create_df_code =
+        'val df = spark.read.format("iceberg").option("start-snapshot-id", start_snapshot_id).option("end-snapshot-id", end_snapshot_id).load("' ~ tbl ~ '")\n'
+        ~ 'df.createOrReplaceTempView("' ~ mod_tbl_names[loop.index0] ~ '")\n'
+    %}
+    {% set ns.generated_sql = ns.generated_sql ~ get_snapshot_id_code ~ create_df_code %}
   {% endfor %}
   {% set spark_sql = spark_sql ~ ns.generated_sql %}
 
