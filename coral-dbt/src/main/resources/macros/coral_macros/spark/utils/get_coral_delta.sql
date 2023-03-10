@@ -6,7 +6,7 @@
 {% macro spark__get_coral_delta(sql, tbl_names) -%}
 
     {% set requests = modules.requests %}
-    {% set url = 'http://localhost:8080/api/differential/execute' %}
+    {% set url = coral_dbt.get_coral_url() ~ '/api/differential/execute' %}
     {% set request_data = {
         "query": sql,
         "tblNames": tbl_names,
