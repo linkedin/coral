@@ -56,7 +56,6 @@
     'query_resp.write.mode("append").saveAsTable("' ~ output_table ~ '")\n'
   %}
   {% set spark_sql = spark_sql ~ write_to_tbl_sql %}
-  {{ print("[DIFF_READ_DEBUG] Insert into table:\n" ~ spark_sql) }}
 
 --     Execute spark sql
   {% call statement('main') -%}

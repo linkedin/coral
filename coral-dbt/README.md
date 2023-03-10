@@ -36,4 +36,27 @@ packages:
 ```
 query-comment:
 ```
-5. Follow the instructions in the main project README to start up Coral Service.
+5. Follow the instructions in the main project README to start up Coral Service. Currently, the url will default to [http://localhost:8080](http://localhost:8080). To modify this, you can either:
+   * Add `coral_url` as a variable in your `dbt_project.yaml` as follows:
+   ```
+    vars:
+      coral_url: <your_coral_url>
+    ```
+   * Or, clone the package (and change `packages.yml` to point to your package version) and modify the `default_coral_url` in `default/utils/configs.sql`
+   ```
+    {% set default_coral_url = <your_coral_url> %}
+    ```
+
+## Additional Setup
+### Differential Read
+In your models, specify the table names in your query with the `table_names` config. An example model using `differential_read` materialization will look as follows:
+```
+{{
+  config(
+    materialized='differential_read',
+    table_names=['db.t1', 'db.t2'],
+  )
+}}
+
+SELECT * FROM db.t1 UNION SELECT * FROM db.t2
+```
