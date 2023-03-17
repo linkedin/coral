@@ -6,7 +6,6 @@
 package com.linkedin.coral.schema.avro;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import javax.annotation.Nonnull;
@@ -79,10 +78,7 @@ class RelDataTypeToAvroType {
 
   private static Schema relDataTypeToAvroType(RelDataType relDataType, String recordName) {
     final Schema avroSchema = relDataTypeToAvroTypeNonNullable(relDataType, recordName);
-    if (relDataType.isNullable() && avroSchema.getType() != Schema.Type.NULL) {
-      return Schema.createUnion(Arrays.asList(Schema.create(Schema.Type.NULL), avroSchema));
-    }
-    return avroSchema;
+    return SchemaUtilities.makeNullable(avroSchema, false);
   }
 
   private static Schema basicSqlTypeToAvroType(BasicSqlType relDataType) {
