@@ -1,6 +1,7 @@
 def modules = [
   'coral-common',
   'coral-dbt',
+  'coral-differential',
   'coral-hive',
   'coral-pig',
   'coral-spark',
