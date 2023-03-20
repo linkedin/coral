@@ -264,7 +264,7 @@ public class RelToTrinoConverter extends RelToSqlConverter {
   public Result visit(Correlate e) {
     final Result leftResult = visitChild(0, e.getLeft()).resetAlias(e.getCorrelVariable(), e.getLeft().getRowType());
     parseCorrelTable(e, leftResult);
-    final Result rightResult = visitChild(1, e.getRight());
+    final Result rightResult = visitChild(1, e.getRight()).resetAlias();
     SqlNode rightLateral = rightResult.node;
     if (rightLateral.getKind() != SqlKind.AS) {
       // LATERAL is only needed in Trino if it's not an AS node.
@@ -278,6 +278,27 @@ public class RelToTrinoConverter extends RelToSqlConverter {
     final SqlNode join = new SqlJoin(POS, leftResult.asFrom(), SqlLiteral.createBoolean(false, POS),
         JoinType.CROSS.symbol(POS), rightLateral, JoinConditionType.NONE.symbol(POS), null);
     return result(join, leftResult, rightResult);
+  }
+
+  /**
+   * Override this method to avoid the duplicated alias for {@link org.apache.calcite.rel.logical.LogicalValues}.
+   * So that for the input SQL like `SELECT 1`, the translated SQL will be like:
+   *
+   * SELECT 1
+   * FROM (VALUES  (0)) t (ZERO)
+   *
+   * Without this override, the translated SQL contains duplicated alias `t`:
+   *
+   * SELECT 1
+   * FROM (VALUES  (0)) t (ZERO) t
+   *
+   * which is wrong.
+   */
+  @Override
+  public Result visit(Values e) {
+    final Result originalResult = super.visit(e);
+    return new Result(originalResult.node, originalResult.clauses, null, originalResult.neededType,
+        originalResult.aliases);
   }
 
   @Override
