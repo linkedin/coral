@@ -360,6 +360,8 @@ public class CoralRelToSqlNodeConverter extends RelToSqlConverter {
 
   /**
    * Override this method to avoid the duplicated alias for {@link org.apache.calcite.rel.logical.LogicalValues}.
+   * The original {@link org.apache.calcite.rel.rel2sql.SqlImplementor.Result#neededAlias} is `t`, we override
+   * it to be `null`.
    * So that for the input SQL like `SELECT 1`, the translated SQL will be like:
    *
    * SELECT 1
@@ -371,6 +373,8 @@ public class CoralRelToSqlNodeConverter extends RelToSqlConverter {
    * FROM (VALUES  (0)) t (ZERO) t
    *
    * which is wrong.
+   *
+   * TODO: Identify and backport the fix from apache-calcite to linkedin-calcite since the duplicated alias issue only happens in linkedin-calcite
    */
   @Override
   public Result visit(Values e) {
