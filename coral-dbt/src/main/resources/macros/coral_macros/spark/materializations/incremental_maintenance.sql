@@ -3,8 +3,9 @@
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
-{% materialization differential_read, adapter = 'spark' %}
+{% materialization incremental_maintenance, adapter = 'spark' %}
 
+--     Grab target table to write results to
   {%- set identifier = model['alias'] -%}
   {%- set target_relation = api.Relation.create(identifier=identifier,
                                                 schema=schema,
@@ -12,22 +13,23 @@
                                                 type='table') -%}
   {% set output_table = target_relation.include(database=false) %}
 
---   Ex.
---     sql: SELECT * FROM db.t1 UNION SELECT * FROM db.t2
---     table_names: ['db.t1', 'db.t2']
+--     Ex.
+--       sql: SELECT * FROM db.t1 UNION SELECT * FROM db.t2
+--       tbl_names: ['db.t1', 'db.t2']
 --
---     differential_sql: SELECT * FROM db_t1_delta UNION SELECT * FROM db_t2_delta
---     mod_table_names: ['db_t1_delta', 'db_t2_delta']
+--       incremental_maintenance_sql: SELECT * FROM db_t1_delta UNION SELECT * FROM db_t2_delta
+--       modified_tbl_names: ['db_t1_delta', 'db_t2_delta']
   {% set tbl_names = config.require('table_names') %}
 
-  {% set coral_resp = coral_dbt.get_coral_delta(sql, tbl_names) %}
-  {% set differential_sql = coral_resp['mod_query'] %}
-  {% set mod_tbl_names = coral_resp['mod_tbl_names'] %}
+  {% set coral_response = coral_dbt.get_coral_incremental_response(sql, tbl_names) %}
+  {% set incremental_maintenance_sql = coral_response['modified_query'] %}
+  {% set modified_tbl_names = coral_response['modified_tbl_names'] %}
 
---     Separate lines by \n delimiter
+--     Compiled lines of spark sql code to be executed, separated by \n delimiter
   {% set spark_sql = '' %}
 
---     Incremental read of each target table
+--     Generate Iceberg incremental table scan code for each target table, which is saved
+--     to a namespace variable to persist beyond the loop
   {% set ns = namespace(generated_sql='') %}
   {% for tbl in tbl_names %}
     {% set get_snapshot_id_code =
@@ -39,21 +41,21 @@
     %}
     {% set create_df_code =
         'val df = spark.read.format("iceberg").option("start-snapshot-id", start_snapshot_id).option("end-snapshot-id", end_snapshot_id).load("' ~ tbl ~ '")\n'
-        ~ 'df.createOrReplaceTempView("' ~ mod_tbl_names[loop.index0] ~ '")\n'
+        ~ 'df.createOrReplaceTempView("' ~ modified_tbl_names[loop.index0] ~ '")\n'
     %}
     {% set ns.generated_sql = ns.generated_sql ~ get_snapshot_id_code ~ create_df_code %}
   {% endfor %}
   {% set spark_sql = spark_sql ~ ns.generated_sql %}
 
---     Execute differential sql on dataframes created from incremental read
-  {% set diff_to_spark_sql =
-    'val query_resp = spark.sql("' ~ differential_sql.strip() ~ '")\n'
+--     Generate code to execute the incremental query based on incremental table scans generated above
+  {% set incremental_to_spark_sql =
+    'val query_response = spark.sql("' ~ incremental_maintenance_sql.strip() ~ '")\n'
   %}
-  {% set spark_sql = spark_sql ~ diff_to_spark_sql %}
+  {% set spark_sql = spark_sql ~ incremental_to_spark_sql %}
 
---     Insert differential output into table
+--     Insert incremental output into table
   {% set write_to_tbl_sql =
-    'query_resp.write.mode("append").saveAsTable("' ~ output_table ~ '")\n'
+    'query_response.write.mode("append").saveAsTable("' ~ output_table ~ '")\n'
   %}
   {% set spark_sql = spark_sql ~ write_to_tbl_sql %}
 

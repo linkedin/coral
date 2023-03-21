@@ -48,12 +48,12 @@ query-comment:
     ```
 
 ## Additional Setup
-### Differential Read
-In your models, specify the table names in your query with the `table_names` config. An example model using `differential_read` materialization will look as follows:
+### Incremental Maintenance
+In your models, specify the names of the tables your query depends on with the `table_names` config. An example model using `incremental_maintenance` materialization will look as follows:
 ```
 {{
   config(
-    materialized='differential_read',
+    materialized='incremental_maintenance',
     table_names=['db.t1', 'db.t2'],
   )
 }}

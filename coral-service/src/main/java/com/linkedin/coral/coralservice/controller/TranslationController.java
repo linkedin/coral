@@ -22,8 +22,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.linkedin.coral.coralservice.entity.DifferentialRequestBody;
-import com.linkedin.coral.coralservice.entity.DifferentialResponseBody;
+import com.linkedin.coral.coralservice.entity.IncrementalRequestBody;
+import com.linkedin.coral.coralservice.entity.IncrementalResponseBody;
 import com.linkedin.coral.coralservice.entity.TranslateRequestBody;
 
 import static com.linkedin.coral.coralservice.utils.CoralProvider.*;
@@ -103,35 +103,35 @@ public class TranslationController implements ApplicationListener<ContextRefresh
     return ResponseEntity.status(HttpStatus.OK).body(message);
   }
 
-  @PostMapping("/api/differential/execute")
-  public ResponseEntity getDifferentialInfo(@RequestBody DifferentialRequestBody differentialRequestBody)
+  @PostMapping("/api/incremental/execute")
+  public ResponseEntity getIncrementalInfo(@RequestBody IncrementalRequestBody incrementalRequestBody)
       throws JSONException {
-    final String query = differentialRequestBody.getQuery();
-    final List<String> tblNames = differentialRequestBody.getTblNames();
+    final String query = incrementalRequestBody.getQuery();
+    final List<String> tblNames = incrementalRequestBody.getTblNames();
 
     // Response will contain modified query and modified table names
-    DifferentialResponseBody differentialResponseBody = new DifferentialResponseBody();
+    IncrementalResponseBody incrementalResponseBody = new IncrementalResponseBody();
     String modifiedQuery = query;
     for (String tblName : tblNames) {
       /* Generate modified table names
          Table name: db.t1
          Modified table name: db_t1_delta
         */
-      String modTblName = tblName.replace('.', '_') + "_delta";
-      differentialResponseBody.addModTblName(modTblName);
+      String modifiedTblName = tblName.replace('.', '_') + "_delta";
+      incrementalResponseBody.addModifiedTblName(modifiedTblName);
 
       /* TODO: Replace temporary dummy logic for creating modified query
          Original query: SELECT * FROM db.t1
          Modified query: SELECT * FROM db_t1_delta
        */
-      modifiedQuery = modifiedQuery.replaceAll(tblName, modTblName);
+      modifiedQuery = modifiedQuery.replaceAll(tblName, modifiedTblName);
     }
-    differentialResponseBody.setModQuery(modifiedQuery);
+    incrementalResponseBody.setModifiedQuery(modifiedQuery);
 
     // Create JSON object from response body
     JSONObject response = new JSONObject();
-    response.put("mod_query", differentialResponseBody.getModQuery());
-    response.put("mod_tbl_names", differentialResponseBody.getModTblNames());
+    response.put("modified_query", incrementalResponseBody.getModifiedQuery());
+    response.put("modified_tbl_names", incrementalResponseBody.getModifiedTblNames());
 
     String message = response.toString();
     return ResponseEntity.status(HttpStatus.OK).body(message);

@@ -8,7 +8,7 @@ package com.linkedin.coral.coralservice.entity;
 import java.util.List;
 
 
-public class DifferentialRequestBody {
+public class IncrementalRequestBody {
   private String query;
   private List<String> tblNames;
 
