@@ -10,13 +10,13 @@ import java.util.List;
 
 public class IncrementalRequestBody {
   private String query;
-  private List<String> tblNames;
+  private List<String> tableNames;
 
   public String getQuery() {
     return query;
   }
 
-  public List<String> getTblNames() {
-    return tblNames;
+  public List<String> getTableNames() {
+    return tableNames;
   }
 }

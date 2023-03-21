@@ -11,11 +11,11 @@ import java.util.List;
 
 public class IncrementalResponseBody {
   private String modifiedQuery;
-  private List<String> modifiedTblNames;
+  private List<String> modifiedTableNames;
 
   public IncrementalResponseBody() {
     modifiedQuery = "";
-    modifiedTblNames = new ArrayList<>();
+    modifiedTableNames = new ArrayList<>();
   }
 
   public String getModifiedQuery() {
@@ -26,15 +26,15 @@ public class IncrementalResponseBody {
     this.modifiedQuery = modifiedQuery;
   }
 
-  public List<String> getModifiedTblNames() {
-    return modifiedTblNames;
+  public List<String> getModifiedTableNames() {
+    return modifiedTableNames;
   }
 
-  public void setModifiedTblNames(List<String> modifiedTblNames) {
-    this.modifiedTblNames = modifiedTblNames;
+  public void setModifiedTableNames(List<String> modifiedTableNames) {
+    this.modifiedTableNames = modifiedTableNames;
   }
 
-  public void addModifiedTblName(String modifiedTblName) {
-    modifiedTblNames.add(modifiedTblName);
+  public void addModifiedTableName(String modifiedTableName) {
+    modifiedTableNames.add(modifiedTableName);
   }
 }

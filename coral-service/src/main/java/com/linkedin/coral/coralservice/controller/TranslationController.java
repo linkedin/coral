@@ -107,31 +107,31 @@ public class TranslationController implements ApplicationListener<ContextRefresh
   public ResponseEntity getIncrementalInfo(@RequestBody IncrementalRequestBody incrementalRequestBody)
       throws JSONException {
     final String query = incrementalRequestBody.getQuery();
-    final List<String> tblNames = incrementalRequestBody.getTblNames();
+    final List<String> tableNames = incrementalRequestBody.getTableNames();
 
     // Response will contain modified query and modified table names
     IncrementalResponseBody incrementalResponseBody = new IncrementalResponseBody();
     String modifiedQuery = query;
-    for (String tblName : tblNames) {
+    for (String tableName : tableNames) {
       /* Generate modified table names
          Table name: db.t1
          Modified table name: db_t1_delta
         */
-      String modifiedTblName = tblName.replace('.', '_') + "_delta";
-      incrementalResponseBody.addModifiedTblName(modifiedTblName);
+      String modifiedTableName = tableName.replace('.', '_') + "_delta";
+      incrementalResponseBody.addModifiedTableName(modifiedTableName);
 
       /* TODO: Replace temporary dummy logic for creating modified query
          Original query: SELECT * FROM db.t1
          Modified query: SELECT * FROM db_t1_delta
        */
-      modifiedQuery = modifiedQuery.replaceAll(tblName, modifiedTblName);
+      modifiedQuery = modifiedQuery.replaceAll(tableName, modifiedTableName);
     }
     incrementalResponseBody.setModifiedQuery(modifiedQuery);
 
     // Create JSON object from response body
     JSONObject response = new JSONObject();
     response.put("modified_query", incrementalResponseBody.getModifiedQuery());
-    response.put("modified_tbl_names", incrementalResponseBody.getModifiedTblNames());
+    response.put("modified_table_names", incrementalResponseBody.getModifiedTableNames());
 
     String message = response.toString();
     return ResponseEntity.status(HttpStatus.OK).body(message);
