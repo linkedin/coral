@@ -3,7 +3,7 @@
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
-package com.linkedin.coral.differential;
+package com.linkedin.coral.incremental;
 
 import java.util.List;
 
@@ -18,17 +18,17 @@ import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import com.linkedin.coral.spark.dialect.SparkSqlDialect;
 
 
-public class RelToDiffSqlConverter extends RelToSqlConverter {
+public class RelToIncrementalSqlConverter extends RelToSqlConverter {
 
   /**
-   * Creates a RelToDiffSqlConvert with dialect set to Spark.
+   * Creates a RelToIncrementalSqlConvert with dialect set to Spark.
    */
-  public RelToDiffSqlConverter() {
+  public RelToIncrementalSqlConverter() {
     super(SparkSqlDialect.INSTANCE);
   }
 
   public String convert(RelNode relNode) {
-    RelNode modifiedRelNode = RelDifferentialTransformer.convertRelDifferential(relNode);
+    RelNode modifiedRelNode = RelIncrementalTransformer.convertRelIncremental(relNode);
     SqlNode sqlNode = visitChild(0, modifiedRelNode).asStatement();
     return sqlNode.toSqlString(SparkSqlDialect.INSTANCE).getSql();
   }

@@ -7,17 +7,17 @@ package com.linkedin.coral.coralservice.utils;
 
 import org.apache.calcite.rel.RelNode;
 
-import com.linkedin.coral.differential.RelToDiffSqlConverter;
 import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
+import com.linkedin.coral.incremental.RelToIncrementalSqlConverter;
 
 import static com.linkedin.coral.coralservice.utils.CoralProvider.*;
 
 
-public class DifferentialUtils {
+public class IncrementalUtils {
 
   public static String getModifiedQueryFromUserSql(String query) {
     RelNode originalNode = new HiveToRelConverter(hiveMetastoreClient).convertSql(query);
-    String modifiedQuery = new RelToDiffSqlConverter().convert(originalNode);
+    String modifiedQuery = new RelToIncrementalSqlConverter().convert(originalNode);
     return modifiedQuery;
   }
 

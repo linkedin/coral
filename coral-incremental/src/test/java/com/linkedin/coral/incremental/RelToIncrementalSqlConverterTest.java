@@ -3,7 +3,7 @@
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
-package com.linkedin.coral.differential;
+package com.linkedin.coral.incremental;
 
 import java.io.File;
 import java.io.IOException;
@@ -21,12 +21,12 @@ import org.testng.annotations.Test;
 
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 
-import static com.linkedin.coral.differential.TestUtils.*;
+import static com.linkedin.coral.incremental.TestUtils.*;
 import static org.apache.calcite.sql.type.OperandTypes.*;
 import static org.testng.Assert.*;
 
 
-public class RelToDiffSqlConverterTest {
+public class RelToIncrementalSqlConverterTest {
 
   private HiveConf conf;
 
@@ -45,11 +45,11 @@ public class RelToDiffSqlConverterTest {
 
   @AfterTest
   public void afterClass() throws IOException {
-    FileUtils.deleteDirectory(new File(conf.get(TestUtils.CORAL_DIFFERENTIAL_TEST_DIR)));
+    FileUtils.deleteDirectory(new File(conf.get(CORAL_INCREMENTAL_TEST_DIR)));
   }
 
-  public String getDifferentialModification(String sql) {
-    RelToDiffSqlConverter converter = new RelToDiffSqlConverter();
+  public String getIncrementalModification(String sql) {
+    RelToIncrementalSqlConverter converter = new RelToIncrementalSqlConverter();
     RelNode originalRelNode = hiveToRelConverter.convertSql(sql);
     return converter.convert(originalRelNode);
   }
@@ -58,6 +58,6 @@ public class RelToDiffSqlConverterTest {
   public void testSimpleSelectAll() {
     String sql = "SELECT * FROM test.foo";
     String expectedSql = "SELECT *\nFROM test.foo_delta";
-    assertEquals(getDifferentialModification(sql), expectedSql);
+    assertEquals(getIncrementalModification(sql), expectedSql);
   }
 }

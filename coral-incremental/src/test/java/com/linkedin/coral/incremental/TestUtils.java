@@ -3,7 +3,7 @@
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
-package com.linkedin.coral.differential;
+package com.linkedin.coral.incremental;
 
 import java.io.File;
 import java.io.IOException;
@@ -26,7 +26,7 @@ import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
 
 public class TestUtils {
 
-  public static final String CORAL_DIFFERENTIAL_TEST_DIR = "coral.differential.test.dir";
+  public static final String CORAL_INCREMENTAL_TEST_DIR = "coral.incremental.test.dir";
 
   private static HiveMscAdapter hiveMetastoreClient;
   public static HiveToRelConverter hiveToRelConverter;
@@ -46,7 +46,7 @@ public class TestUtils {
   }
 
   public static void initializeViews(HiveConf conf) throws HiveException, MetaException, IOException {
-    String testDir = conf.get(CORAL_DIFFERENTIAL_TEST_DIR);
+    String testDir = conf.get(CORAL_INCREMENTAL_TEST_DIR);
     System.out.println("Test Workspace: " + testDir);
     FileUtils.deleteDirectory(new File(testDir));
     SessionState.start(conf);
@@ -64,12 +64,12 @@ public class TestUtils {
   public static HiveConf loadResourceHiveConf() {
     InputStream hiveConfStream = TestUtils.class.getClassLoader().getResourceAsStream("hive.xml");
     HiveConf hiveConf = new HiveConf();
-    hiveConf.set(CORAL_DIFFERENTIAL_TEST_DIR,
-        System.getProperty("java.io.tmpdir") + "/coral/differential/" + UUID.randomUUID().toString());
+    hiveConf.set(CORAL_INCREMENTAL_TEST_DIR,
+        System.getProperty("java.io.tmpdir") + "/coral/incremental/" + UUID.randomUUID().toString());
     hiveConf.addResource(hiveConfStream);
-    hiveConf.set("mapreduce.framework.name", "local-differential");
-    hiveConf.set("_hive.hdfs.session.path", "/tmp/coral/differential");
-    hiveConf.set("_hive.local.session.path", "/tmp/coral/differential");
+    hiveConf.set("mapreduce.framework.name", "local-incremental");
+    hiveConf.set("_hive.hdfs.session.path", "/tmp/coral/incremental");
+    hiveConf.set("_hive.local.session.path", "/tmp/coral/incremental");
     return hiveConf;
   }
 

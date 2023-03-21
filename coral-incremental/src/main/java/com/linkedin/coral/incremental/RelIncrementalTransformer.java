@@ -3,7 +3,7 @@
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
-package com.linkedin.coral.differential;
+package com.linkedin.coral.incremental;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,12 +17,12 @@ import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rel.logical.LogicalTableScan;
 
 
-public class RelDifferentialTransformer {
+public class RelIncrementalTransformer {
 
-  private RelDifferentialTransformer() {
+  private RelIncrementalTransformer() {
   }
 
-  public static RelNode convertRelDifferential(RelNode originalNode) {
+  public static RelNode convertRelIncremental(RelNode originalNode) {
     RelShuttle converter = new RelShuttleImpl() {
       @Override
       public RelNode visit(TableScan scan) {
