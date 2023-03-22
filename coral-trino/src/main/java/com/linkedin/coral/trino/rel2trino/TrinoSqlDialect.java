@@ -31,8 +31,24 @@ public class TrinoSqlDialect extends SqlDialect {
   }
 
   /**
-   * Override this method so that there will be explicit and correct table alias for selected fields, which is necessary for
-   * data type derivation on SqlNodes
+   * Override this method so that there will be explicit table alias for selected fields, which is necessary for
+   * data type derivation on SqlNodes.
+   *
+   * For the following input SQL:
+   * CREATE TABLE default.complex(s struct(name:string, age:int))
+   * SELECT tbl.str.a FROM db.tbl
+   *
+   * With this override, the converted SqlNode is:
+   * SELECT `complex`.`s`.`name` AS `name`
+   * FROM `default`.`complex` AS `complex`
+   *
+   * Without this override, the converted SqlNode is:
+   * SELECT `s`.`name` AS `name`
+   * FROM `default`.`complex`
+   *
+   * Without this override, if we want to get the data type of SqlNode `s`.`name`, validation will fail because
+   * Calcite uses {@link org.apache.calcite.rel.type.StructKind#FULLY_QUALIFIED} for standard SQL and it expects
+   * each field to be referenced explicitly. Therefore, we need to generate `complex`.`s`.`name` with this override.
    */
   @Override
   public boolean hasImplicitTableAlias() {
