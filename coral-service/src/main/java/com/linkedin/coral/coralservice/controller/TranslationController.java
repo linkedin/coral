@@ -103,35 +103,35 @@ public class TranslationController implements ApplicationListener<ContextRefresh
     return ResponseEntity.status(HttpStatus.OK).body(message);
   }
 
-  @PostMapping("/api/incremental/execute")
+  @PostMapping("/api/incremental/rewrite")
   public ResponseEntity getIncrementalInfo(@RequestBody IncrementalRequestBody incrementalRequestBody)
       throws JSONException {
     final String query = incrementalRequestBody.getQuery();
     final List<String> tableNames = incrementalRequestBody.getTableNames();
 
-    // Response will contain modified query and modified table names
+    // Response will contain incremental query and incremental table names
     IncrementalResponseBody incrementalResponseBody = new IncrementalResponseBody();
-    String modifiedQuery = query;
+    String incrementalQuery = query;
     for (String tableName : tableNames) {
-      /* Generate modified table names
+      /* Generate incremental table names
          Table name: db.t1
-         Modified table name: db_t1_delta
+         Incremental table name: db_t1_delta
         */
-      String modifiedTableName = tableName.replace('.', '_') + "_delta";
-      incrementalResponseBody.addModifiedTableName(modifiedTableName);
+      String incrementalTableName = tableName.replace('.', '_') + "_delta";
+      incrementalResponseBody.addIncrementalTableName(incrementalTableName);
 
-      /* TODO: Replace temporary dummy logic for creating modified query
+      /* TODO: Replace temporary dummy logic for creating incremental query
          Original query: SELECT * FROM db.t1
-         Modified query: SELECT * FROM db_t1_delta
+         Incremental query: SELECT * FROM db_t1_delta
        */
-      modifiedQuery = modifiedQuery.replaceAll(tableName, modifiedTableName);
+      incrementalQuery = incrementalQuery.replaceAll(tableName, incrementalTableName);
     }
-    incrementalResponseBody.setModifiedQuery(modifiedQuery);
+    incrementalResponseBody.setIncrementalQuery(incrementalQuery);
 
     // Create JSON object from response body
     JSONObject response = new JSONObject();
-    response.put("modified_query", incrementalResponseBody.getModifiedQuery());
-    response.put("modified_table_names", incrementalResponseBody.getModifiedTableNames());
+    response.put("incremental_maintenance_sql", incrementalResponseBody.getIncrementalQuery());
+    response.put("incremental_table_names", incrementalResponseBody.getIncrementalTableNames());
 
     String message = response.toString();
     return ResponseEntity.status(HttpStatus.OK).body(message);

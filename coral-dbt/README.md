@@ -49,7 +49,7 @@ query-comment:
 
 ## Additional Setup
 ### Incremental Maintenance
-In your models, specify the names of the tables your query depends on with the `table_names` config. An example model using `incremental_maintenance` materialization will look as follows:
+In your models, specify the names of the tables your query depends on with the `table_names` config. An example model looks as follows:
 ```
 {{
   config(

@@ -18,18 +18,18 @@
 --       table_names: ['db.t1', 'db.t2']
 --
 --       incremental_maintenance_sql: SELECT * FROM db_t1_delta UNION SELECT * FROM db_t2_delta
---       modified_table_names: ['db_t1_delta', 'db_t2_delta']
+--       incremental_table_names: ['db_t1_delta', 'db_t2_delta']
   {% set table_names = config.require('table_names') %}
 
   {% set coral_response = coral_dbt.get_coral_incremental_response(sql, table_names) %}
-  {% set incremental_maintenance_sql = coral_response['modified_query'] %}
-  {% set modified_table_names = coral_response['modified_table_names'] %}
+  {% set incremental_maintenance_sql = coral_response['incremental_maintenance_sql'] %}
+  {% set incremental_table_names = coral_response['incremental_table_names'] %}
 
 --     Compiled lines of spark sql code to be executed, separated by \n delimiter
   {% set spark_sql = '' %}
 
---     Generate Iceberg incremental table scan code for each target table, which is saved
---     to a namespace variable to persist beyond the loop
+--     Generate Iceberg incremental table scan code for each target table
+--     Namespace variable used to persist changes beyond loop scope
   {% set ns = namespace(generated_sql='') %}
   {% for source_table in table_names %}
     {% set get_snapshot_id_code =
@@ -41,7 +41,7 @@
     %}
     {% set create_df_code =
         'val df = spark.read.format("iceberg").option("start-snapshot-id", start_snapshot_id).option("end-snapshot-id", end_snapshot_id).load("' ~ source_table ~ '")\n'
-        ~ 'df.createOrReplaceTempView("' ~ modified_table_names[loop.index0] ~ '")\n'
+        ~ 'df.createOrReplaceTempView("' ~ incremental_table_names[loop.index0] ~ '")\n'
     %}
     {% set ns.generated_sql = ns.generated_sql ~ get_snapshot_id_code ~ create_df_code %}
   {% endfor %}

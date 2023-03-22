@@ -10,31 +10,31 @@ import java.util.List;
 
 
 public class IncrementalResponseBody {
-  private String modifiedQuery;
-  private List<String> modifiedTableNames;
+  private String incrementalQuery;
+  private List<String> incrementalTableNames;
 
   public IncrementalResponseBody() {
-    modifiedQuery = "";
-    modifiedTableNames = new ArrayList<>();
+    incrementalQuery = "";
+    incrementalTableNames = new ArrayList<>();
   }
 
-  public String getModifiedQuery() {
-    return modifiedQuery;
+  public String getIncrementalQuery() {
+    return incrementalQuery;
   }
 
-  public void setModifiedQuery(String modifiedQuery) {
-    this.modifiedQuery = modifiedQuery;
+  public void setIncrementalQuery(String incrementalQuery) {
+    this.incrementalQuery = incrementalQuery;
   }
 
-  public List<String> getModifiedTableNames() {
-    return modifiedTableNames;
+  public List<String> getIncrementalTableNames() {
+    return incrementalTableNames;
   }
 
-  public void setModifiedTableNames(List<String> modifiedTableNames) {
-    this.modifiedTableNames = modifiedTableNames;
+  public void setIncrementalTableNames(List<String> incrementalTableNames) {
+    this.incrementalTableNames = incrementalTableNames;
   }
 
-  public void addModifiedTableName(String modifiedTableName) {
-    modifiedTableNames.add(modifiedTableName);
+  public void addIncrementalTableName(String incrementalTableName) {
+    incrementalTableNames.add(incrementalTableName);
   }
 }
