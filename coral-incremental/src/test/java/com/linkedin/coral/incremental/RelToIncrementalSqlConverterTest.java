@@ -60,4 +60,18 @@ public class RelToIncrementalSqlConverterTest {
     String expectedSql = "SELECT *\nFROM test.foo_delta";
     assertEquals(getIncrementalModification(sql), expectedSql);
   }
+
+  @Test
+  public void testJoinInput() {
+    // Not a test, currently used for debugger runs only
+    String sql =
+        "SELECT * FROM test.bar1 JOIN test.bar2 ON test.bar1.x = test.bar2.x WHERE test.bar1.x + test.bar2.x = 0";
+  }
+
+  @Test
+  public void testJoinOutput() {
+    // Not a test, currently used for debugger runs only
+    String sql =
+        "SELECT * FROM test.bar1 INNER JOIN test.bar2 ON test.bar1.x = test.bar2.x UNION ALL SELECT * FROM test.bar1 INNER JOIN test.bar2 ON test.bar1.x = test.bar2.x UNION ALL SELECT * FROM test.bar1 INNER JOIN test.bar2 ON test.bar1.x = test.bar2.x";
+  }
 }
