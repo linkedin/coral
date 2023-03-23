@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.calcite.config.NullCollation;
-import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.BiRel;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Correlate;
@@ -70,7 +69,6 @@ public class CoralRelToSqlNodeConverter extends RelToSqlConverter {
    * @return Result of converting the RelNode to a SqlNode.
    */
   public SqlNode convert(RelNode coralRelNode) {
-    final String string = RelOptUtil.toString(coralRelNode);
     return visitChild(0, coralRelNode).asStatement();
   }
 
