@@ -38,22 +38,22 @@ public class TrinoSqlDialect extends SqlDialect {
    * CREATE TABLE default.complex(s struct(name:string, age:int));
    * SELECT split(complex.s.name, ' ') name_array
    * FROM default.complex
-   * WHERE complex.s.age > 10;
+   * WHERE complex.s.age = 25;
    *
    * The input RelNode is:
    * LogicalProject(name_array=[split($0.name, ' ')])
-   *   LogicalFilter(condition=[>($0.age, 10)])
+   *   LogicalFilter(condition=[=($0.age, 25)])
    *     LogicalTableScan(table=[[hive, default, complex]])
    *
    * With this override, the converted SqlNode is:
    * SELECT `split`(`complex`.`s`.`name`, ' ') AS `name_array`
    * FROM `default`.`complex` AS `complex`
-   * WHERE `complex`.`s`.`age` > 10
+   * WHERE `complex`.`s`.`age` = 25
    *
    * Without this override, the converted SqlNode is:
    * SELECT `split`(`s`.`name`, ' ') AS `name_array`
    * FROM `default`.`complex`
-   * WHERE `s`.`age` > 10
+   * WHERE `s`.`age` = 25
    *
    * Without this override, if we want to get the data type of a struct field like `s`.`name`, validation will fail
    * because Calcite uses {@link org.apache.calcite.rel.type.StructKind#FULLY_QUALIFIED} for standard SQL and it
