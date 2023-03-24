@@ -1,24 +1,22 @@
 <!--
 Thank you for submitting a pull request! Here are some suggestions to help you:
-
   1. If you're new to this, kindly review our contributor guidelines at https://github.com/linkedin/coral/blob/master/CONTRIBUTING.md.
   2. Make sure you've added or executed the relevant tests for your PR.
-  3. For unfinished PRs, include '[WIP]' in the title, e.g., '[WIP] Your PR title ...'.
+  3. For unfinished PRs, include '[WIP]' in the title, e.g., '[WIP] Your PR title'.
   4. Keep the PR description up-to-date to reflect any changes.
-  5. Craft a PR title that summarizes the proposal. If it pertains to a specific module, mention the module name, e.g., '[Coral-Hive] Your PR title ...'.
+  5. Craft a PR title that summarizes the proposal. If it pertains to a specific module, mention the module name, e.g., '[Coral-Hive] Your PR title'.
   6. If possible, provide a brief example to help reproduce the issue, which can expedite the review process.
 -->
 
 ### What modifications are proposed in this pull request, and why are they necessary?
 <!--
-Kindly explain the proposed changes in this section. The goal is to outline the modifications and how this PR addresses the issue.
-Also, clarify the reasons for these changes. For example,
+Kindly explain the proposed changes in this section. The goal is to outline the modifications and how this PR addresses the issue. Also, clarify the reasons for these changes. For example,
   1. If a new API is proposed, explain the intended use case.
   2. If a bug is being fixed, describe why it's a bug.
   3. If design documentation is available, please include the link.
 -->
 
-### Does this PR introduce _any_ user-facing change?
+### Does this PR introduce **any** user-facing change?
 <!--
 Keep in mind that user-facing changes include all aspects, such as API modifications and documentation updates.
 If yes, clarify the previous behavior and the changes proposed by this PR - provide a description and/or an example to demonstrate the difference in behavior, if possible.
