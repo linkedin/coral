@@ -6,9 +6,10 @@ Thank you for submitting a pull request! Here are some suggestions to help you:
   4. Keep the PR description up-to-date to reflect any changes.
   5. Craft a PR title that summarizes the proposal. If it pertains to a specific module, mention the module name, e.g., '[Coral-Hive] Your PR title'.
   6. If possible, provide a brief example to help reproduce the issue, which can expedite the review process.
+  7. Make sure that the command './gradlew clean build' passes. Resolve any formatting errors by running './gradlew spotlessApply'.
 -->
 
-### What modifications are proposed in this pull request, and why are they necessary?
+### What changes are proposed in this pull request, and why are they necessary?
 <!--
 Kindly explain the proposed changes in this section. The goal is to outline the modifications and how this PR addresses the issue. Also, clarify the reasons for these changes. For example,
   1. If a new API is proposed, explain the intended use case.
