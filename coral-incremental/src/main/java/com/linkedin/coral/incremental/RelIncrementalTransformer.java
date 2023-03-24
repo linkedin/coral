@@ -8,6 +8,8 @@ package com.linkedin.coral.incremental;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.prepare.RelOptTableImpl;
@@ -15,9 +17,13 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelShuttle;
 import org.apache.calcite.rel.RelShuttleImpl;
 import org.apache.calcite.rel.core.TableScan;
+import org.apache.calcite.rel.logical.LogicalFilter;
 import org.apache.calcite.rel.logical.LogicalJoin;
+import org.apache.calcite.rel.logical.LogicalProject;
 import org.apache.calcite.rel.logical.LogicalTableScan;
 import org.apache.calcite.rel.logical.LogicalUnion;
+import org.apache.calcite.rex.RexBuilder;
+import org.apache.calcite.rex.RexNode;
 
 
 public class RelIncrementalTransformer {
@@ -45,45 +51,57 @@ public class RelIncrementalTransformer {
         RelNode incrementalLeft = transformToIncremental(left);
         RelNode incrementalRight = transformToIncremental(right);
 
-        // TODO: Figure out what to pass into projects when creating LogicalProject
-        LogicalJoin j1 =
-            LogicalJoin.create(left, incrementalRight, join.getCondition(), join.getVariablesSet(), join.getJoinType());
-        //        LogicalProject p1 = LogicalProject.create(j1, null, join.getRowType());
+        RexBuilder rexBuilder = join.getCluster().getRexBuilder();
 
-        LogicalJoin j2 =
-            LogicalJoin.create(incrementalLeft, right, join.getCondition(), join.getVariablesSet(), join.getJoinType());
-        //        LogicalProject p2 = LogicalProject.create(j2, null, join.getRowType());
-
-        LogicalJoin j3 = LogicalJoin.create(incrementalLeft, incrementalRight, join.getCondition(),
-            join.getVariablesSet(), join.getJoinType());
-        //        LogicalProject p3 = LogicalProject.create(j3, null, join.getRowType());
+        LogicalProject p1 = createProjectOverJoin(join, left, incrementalRight, rexBuilder);
+        LogicalProject p2 = createProjectOverJoin(join, incrementalLeft, right, rexBuilder);
+        LogicalProject p3 = createProjectOverJoin(join, incrementalLeft, incrementalRight, rexBuilder);
 
         LogicalUnion unionAllJoins =
-            LogicalUnion.create(Arrays.asList(LogicalUnion.create(Arrays.asList(j1, j2), true), j3), true);
+            LogicalUnion.create(Arrays.asList(LogicalUnion.create(Arrays.asList(p1, p2), true), p3), true);
         return unionAllJoins;
       }
     };
     return originalNode.accept(converter);
   }
 
+  private static LogicalProject createProjectOverJoin(LogicalJoin join, RelNode left, RelNode right,
+      RexBuilder rexBuilder) {
+    LogicalJoin incrementalJoin =
+        LogicalJoin.create(left, right, join.getCondition(), join.getVariablesSet(), join.getJoinType());
+    ArrayList<RexNode> projects = new ArrayList<>();
+    ArrayList<String> names = new ArrayList<>();
+    IntStream.range(0, incrementalJoin.getRowType().getFieldList().size()).forEach(i -> {
+      projects.add(rexBuilder.makeInputRef(incrementalJoin, i));
+      names.add(incrementalJoin.getRowType().getFieldNames().get(i));
+    });
+    return LogicalProject.create(incrementalJoin, projects, names);
+  }
+
   private static RelNode transformToIncremental(RelNode target) {
-    // Loop until we hit a TableScan to transform
-    RelNode tempTarget = target;
-    while (tempTarget.getTable() == null) {
-      // TODO: Check if we hit a join first, if so, stop and return since we have handled everything below already
-      tempTarget = tempTarget.getInput(0); // TODO: Check logic (right now only fetching left-most child)
+    // Recurse until we hit a TableScan to transform
+    if (target instanceof TableScan) {
+      return convertRelIncremental(target);
+    } else {
+      List<RelNode> children = target.getInputs();
+      List<RelNode> transformedChildren =
+          children.stream().map(child -> convertRelIncremental(child)).collect(Collectors.toList());
+
+      // Construct target with transformed children nodes
+      // TODO: Add other types
+      if (target instanceof LogicalFilter) {
+        return LogicalFilter.create(transformedChildren.get(0), ((LogicalFilter) target).getCondition());
+      } else if (target instanceof LogicalProject) {
+        return LogicalProject.create(transformedChildren.get(0), ((LogicalProject) target).getProjects(),
+            target.getRowType());
+      } else if (target instanceof LogicalJoin) {
+        return LogicalJoin.create(transformedChildren.get(0), transformedChildren.get(1),
+            ((LogicalJoin) target).getCondition(), target.getVariablesSet(), ((LogicalJoin) target).getJoinType());
+      } else if (target instanceof LogicalUnion) {
+        return LogicalUnion.create(transformedChildren, ((LogicalUnion) target).all);
+      }
     }
-    // Transform the base table once we hit the TableScan layer
-    RelOptTable originalTable = target.getTable();
-    List<String> modifiedNames = new ArrayList<>(originalTable.getQualifiedName());
-    String deltaTableName = modifiedNames.remove(modifiedNames.size() - 1) + "_delta";
-    modifiedNames.add(deltaTableName);
-    RelOptTable modifiedTable =
-        RelOptTableImpl.create(originalTable.getRelOptSchema(), originalTable.getRowType(), modifiedNames, null);
-    RelNode modifiedTableScan = LogicalTableScan.create(target.getCluster(), modifiedTable);
-    // TODO: Rebuild the target node with new modified TableScan -> possible to reset this scan instead or use RelShuttle?
-    // TODO: Change return
-    return modifiedTableScan;
+    return target;
   }
 
 }

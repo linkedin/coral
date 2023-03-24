@@ -5,42 +5,19 @@
  */
 package com.linkedin.coral.incremental;
 
-import java.util.List;
-
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rel.core.TableScan;
-import org.apache.calcite.rel.rel2sql.RelToSqlConverter;
-import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlNode;
-import org.apache.calcite.sql.parser.SqlParserPos;
 
-import com.linkedin.coral.com.google.common.collect.ImmutableList;
-import com.linkedin.coral.spark.dialect.SparkSqlDialect;
+import com.linkedin.coral.transformers.CoralRelToSqlNodeConverter;
 
 
-public class RelToIncrementalSqlConverter extends RelToSqlConverter {
-
-  /**
-   * Creates a RelToIncrementalSqlConvert with dialect set to Spark.
-   */
-  public RelToIncrementalSqlConverter() {
-    super(SparkSqlDialect.INSTANCE);
-  }
+public class RelToIncrementalSqlConverter {
 
   public String convert(RelNode relNode) {
     RelNode modifiedRelNode = RelIncrementalTransformer.convertRelIncremental(relNode);
-    SqlNode sqlNode = visitChild(0, modifiedRelNode).asStatement();
-    return sqlNode.toSqlString(SparkSqlDialect.INSTANCE).getSql();
-  }
-
-  @Override
-  public Result visit(TableScan e) {
-    List<String> qualifiedName = e.getTable().getQualifiedName();
-    if (qualifiedName.size() > 2) {
-      qualifiedName = qualifiedName.subList(qualifiedName.size() - 2, qualifiedName.size()); // take last two entries
-    }
-    final SqlIdentifier identifier = new SqlIdentifier(qualifiedName, SqlParserPos.ZERO);
-    return result(identifier, ImmutableList.of(Clause.FROM), e, null);
+    CoralRelToSqlNodeConverter converter = new CoralRelToSqlNodeConverter();
+    SqlNode sqlNode = converter.convert(modifiedRelNode);
+    return sqlNode.toSqlString(converter.INSTANCE).getSql();
   }
 
 }

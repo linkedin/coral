@@ -9,8 +9,6 @@ import java.io.File;
 import java.io.IOException;
 
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.sql.type.ReturnTypes;
-import org.apache.calcite.sql.type.SqlTypeFamily;
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.MetaException;
@@ -18,8 +16,6 @@ import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-
-import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 
 import static com.linkedin.coral.incremental.TestUtils.*;
 import static org.apache.calcite.sql.type.OperandTypes.*;
@@ -34,13 +30,6 @@ public class RelToIncrementalSqlConverterTest {
   public void beforeClass() throws HiveException, MetaException, IOException {
     conf = TestUtils.loadResourceHiveConf();
     TestUtils.initializeViews(conf);
-
-    StaticHiveFunctionRegistry.createAddUserDefinedFunction("com.linkedin.coral.hive.hive2rel.CoralTestUDF",
-        ReturnTypes.BOOLEAN, family(SqlTypeFamily.INTEGER));
-    StaticHiveFunctionRegistry.createAddUserDefinedFunction("com.linkedin.coral.hive.hive2rel.CoralTestUDF2",
-        ReturnTypes.BOOLEAN, family(SqlTypeFamily.INTEGER));
-    StaticHiveFunctionRegistry.createAddUserDefinedFunction("com.linkedin.coral.hive.hive2rel.CoralTestUdfSquare",
-        ReturnTypes.INTEGER, family(SqlTypeFamily.INTEGER));
   }
 
   @AfterTest
@@ -51,6 +40,7 @@ public class RelToIncrementalSqlConverterTest {
   public String getIncrementalModification(String sql) {
     RelToIncrementalSqlConverter converter = new RelToIncrementalSqlConverter();
     RelNode originalRelNode = hiveToRelConverter.convertSql(sql);
+    String temp = converter.convert(originalRelNode);
     return converter.convert(originalRelNode);
   }
 
@@ -64,8 +54,23 @@ public class RelToIncrementalSqlConverterTest {
   @Test
   public void testJoinInput() {
     // Not a test, currently used for debugger runs only
+    String sql = "SELECT * FROM test.bar1 JOIN test.bar2 ON test.bar1.x = test.bar2.x";
+    getIncrementalModification(sql);
+  }
+
+  @Test
+  public void testFilterInput() {
+    // Not a test, currently used for debugger runs only
+    String sql = "SELECT * FROM test.bar1 JOIN test.bar2 ON test.bar1.x = test.bar2.x WHERE test.bar1.x > 10";
+    getIncrementalModification(sql);
+  }
+
+  @Test
+  public void testFilterNestedInput() {
+    // Not a test, currently used for debugger runs only
     String sql =
-        "SELECT * FROM test.bar1 JOIN test.bar2 ON test.bar1.x = test.bar2.x WHERE test.bar1.x + test.bar2.x = 0";
+        "WITH tmp AS (SELECT * from test.bar1 WHERE test.bar1.x > 10), tmp2 AS (SELECT * from test.bar2) SELECT * FROM tmp JOIN tmp2 ON tmp.x = tmp2.x";
+    getIncrementalModification(sql);
   }
 
   @Test
@@ -73,5 +78,6 @@ public class RelToIncrementalSqlConverterTest {
     // Not a test, currently used for debugger runs only
     String sql =
         "SELECT * FROM test.bar1 INNER JOIN test.bar2 ON test.bar1.x = test.bar2.x UNION ALL SELECT * FROM test.bar1 INNER JOIN test.bar2 ON test.bar1.x = test.bar2.x UNION ALL SELECT * FROM test.bar1 INNER JOIN test.bar2 ON test.bar1.x = test.bar2.x";
+    getIncrementalModification(sql);
   }
 }

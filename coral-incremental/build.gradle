@@ -1,6 +1,5 @@
 dependencies {
   compile project(':coral-hive')
-  compile project(':coral-spark')
 
   testCompile(deps.'hive'.'hive-exec-core') {
     exclude group: 'org.apache.avro', module: 'avro-tools'
