@@ -1,5 +1,5 @@
 /**
- * Copyright 2018-2021 LinkedIn Corporation. All rights reserved.
+ * Copyright 2018-2023 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -31,7 +31,7 @@ public class HiveRLikeOperator extends SqlSpecialOperator {
    * @param negated Whether this is 'NOT LIKE'
    */
   public HiveRLikeOperator(String name, boolean negated) {
-    super(name, SqlKind.LIKE, 32, false, ReturnTypes.BOOLEAN_NULLABLE, InferTypes.FIRST_KNOWN,
+    super(name, SqlKind.OTHER_FUNCTION, 32, false, ReturnTypes.BOOLEAN_NULLABLE, InferTypes.FIRST_KNOWN,
         OperandTypes.STRING_SAME_SAME);
     this.negated = negated;
   }

@@ -20,6 +20,7 @@ import com.linkedin.coral.common.transformers.JsonTransformSqlCallTransformer;
 import com.linkedin.coral.common.transformers.OperatorRenameSqlCallTransformer;
 import com.linkedin.coral.common.transformers.SourceOperatorMatchSqlCallTransformer;
 import com.linkedin.coral.common.transformers.SqlCallTransformers;
+import com.linkedin.coral.hive.hive2rel.functions.HiveRLikeOperator;
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 import com.linkedin.coral.trino.rel2trino.functions.TrinoElementAtFunction;
 import com.linkedin.coral.trino.rel2trino.transformers.CollectListOrSetFunctionTransformer;
@@ -77,6 +78,8 @@ public class CoralToTrinoSqlCallConverter extends SqlShuttle {
         new JsonTransformSqlCallTransformer(hiveToCoralSqlOperator("regexp_extract"), 3, "regexp_extract",
             "[{\"input\": 1}, {\"op\": \"hive_pattern_to_trino\", \"operands\":[{\"input\": 2}]}, {\"input\": 3}]",
             null, null),
+        new OperatorRenameSqlCallTransformer(HiveRLikeOperator.REGEXP, 2, "REGEXP_LIKE"),
+        new OperatorRenameSqlCallTransformer(HiveRLikeOperator.RLIKE, 2, "REGEXP_LIKE"),
         new CoralRegistryOperatorRenameSqlCallTransformer("instr", 2, "strpos"),
         new JsonTransformSqlCallTransformer(hiveToCoralSqlOperator("decode"), 2,
             "[{\"regex\":\"(?i)('utf-8')\", \"input\":2, \"name\":\"from_utf8\"}]", "[{\"input\":1}]", null, null),

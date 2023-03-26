@@ -184,13 +184,6 @@ public class Calcite2TrinoUDFConverter {
 
       final String operatorName = call.getOperator().getName();
 
-      if ((operatorName.equalsIgnoreCase("regexp") || operatorName.equalsIgnoreCase("rlike"))
-          && call.getOperands().size() == 2) {
-        return super.visitCall((RexCall) rexBuilder.makeCall(
-            createSqlOperatorOfFunction("REGEXP_LIKE", call.getOperator().getReturnTypeInference()),
-            call.getOperands()));
-      }
-
       if (operatorName.equalsIgnoreCase("from_utc_timestamp")) {
         Optional<RexNode> modifiedCall = visitFromUtcTimestampCall(call);
         if (modifiedCall.isPresent()) {
