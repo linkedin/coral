@@ -5,8 +5,12 @@
  */
 package com.linkedin.coral.coralservice.controller;
 
+import java.util.List;
+
 import com.google.common.collect.ImmutableMap;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Profile;
@@ -18,6 +22,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.linkedin.coral.coralservice.entity.IncrementalRequestBody;
+import com.linkedin.coral.coralservice.entity.IncrementalResponseBody;
 import com.linkedin.coral.coralservice.entity.TranslateRequestBody;
 
 import static com.linkedin.coral.coralservice.utils.CoralProvider.*;
@@ -94,6 +100,40 @@ public class TranslationController implements ApplicationListener<ContextRefresh
       message = "Original query in " + LANGUAGE_MAP.get(fromLanguage) + ":\n" + query + "\n" + "Translated to "
           + LANGUAGE_MAP.get(toLanguage) + ":\n" + translatedSql + "\n";
     }
+    return ResponseEntity.status(HttpStatus.OK).body(message);
+  }
+
+  @PostMapping("/api/incremental/rewrite")
+  public ResponseEntity getIncrementalInfo(@RequestBody IncrementalRequestBody incrementalRequestBody)
+      throws JSONException {
+    final String query = incrementalRequestBody.getQuery();
+    final List<String> tableNames = incrementalRequestBody.getTableNames();
+
+    // Response will contain incremental query and incremental table names
+    IncrementalResponseBody incrementalResponseBody = new IncrementalResponseBody();
+    String incrementalQuery = query;
+    for (String tableName : tableNames) {
+      /* Generate incremental table names
+         Table name: db.t1
+         Incremental table name: db_t1_delta
+        */
+      String incrementalTableName = tableName.replace('.', '_') + "_delta";
+      incrementalResponseBody.addIncrementalTableName(incrementalTableName);
+
+      /* TODO: Replace temporary dummy logic for creating incremental query
+         Original query: SELECT * FROM db.t1
+         Incremental query: SELECT * FROM db_t1_delta
+       */
+      incrementalQuery = incrementalQuery.replaceAll(tableName, incrementalTableName);
+    }
+    incrementalResponseBody.setIncrementalQuery(incrementalQuery);
+
+    // Create JSON object from response body
+    JSONObject response = new JSONObject();
+    response.put("incremental_maintenance_sql", incrementalResponseBody.getIncrementalQuery());
+    response.put("incremental_table_names", incrementalResponseBody.getIncrementalTableNames());
+
+    String message = response.toString();
     return ResponseEntity.status(HttpStatus.OK).body(message);
   }
 }
