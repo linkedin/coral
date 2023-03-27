@@ -118,10 +118,10 @@ public class CoralRelToSqlNodeConverter extends RelToSqlConverter {
        *
        * Without this override, if we want to get the data type of a struct field like `s`.`name`, validation will fail
        * because Calcite uses {@link org.apache.calcite.rel.type.StructKind#FULLY_QUALIFIED} for standard SQL and it
-       * expects each struct field to be referenced explicitly with table alias in the method
+       * expects each field inside the struct to be referenced explicitly with table alias in the method
        * {@link org.apache.calcite.sql.validate.DelegatingScope#fullyQualify(SqlIdentifier)}.
        * Therefore, we need to generate `complex`.`s`.`name` with this override, which will also affect other non-struct
-       * fields, but it won't affect the SQL correctness.
+       * fields and add table alias in `FROM` clause, but it won't affect the SQL correctness.
        */
       @Override
       public boolean hasImplicitTableAlias() {
