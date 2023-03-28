@@ -1,7 +1,7 @@
 <!--
 Thank you for submitting a pull request! Here are some suggestions to help you:
-  1. If you're new to this, kindly review our contributor guidelines at https://github.com/linkedin/coral/blob/master/CONTRIBUTING.md.
-  2. Make sure you've added or executed the relevant tests for your PR.
+  1. If you are new to this, kindly review our contributor guidelines at https://github.com/linkedin/coral/blob/master/CONTRIBUTING.md.
+  2. Make sure you have added and executed the relevant tests for your PR.
   3. For unfinished PRs, include '[WIP]' in the title, e.g., '[WIP] Your PR title'.
   4. Keep the PR description up-to-date to reflect any changes.
   5. Craft a PR title that summarizes the proposal. If it pertains to a specific module, mention the module name, e.g., '[Coral-Hive] Your PR title'.
@@ -13,7 +13,7 @@ Thank you for submitting a pull request! Here are some suggestions to help you:
 <!--
 Kindly explain the proposed changes in this section. The goal is to outline the modifications and how this PR addresses the issue. Also, clarify the reasons for these changes. For example,
   1. If a new API is proposed, explain the intended use case.
-  2. If a bug is being fixed, describe why it's a bug.
+  2. If a bug is being fixed, describe why it is a bug.
   3. If design documentation is available, please include the link.
 -->
 
