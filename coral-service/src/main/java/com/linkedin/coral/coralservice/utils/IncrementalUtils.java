@@ -15,10 +15,10 @@ import static com.linkedin.coral.coralservice.utils.CoralProvider.*;
 
 public class IncrementalUtils {
 
-  public static String getModifiedQueryFromUserSql(String query) {
+  public static String getIncrementalQueryFromUserSql(String query) {
     RelNode originalNode = new HiveToRelConverter(hiveMetastoreClient).convertSql(query);
-    String modifiedQuery = new RelToIncrementalSqlConverter().convert(originalNode);
-    return modifiedQuery;
+    String incrementalQuery = new RelToIncrementalSqlConverter().convert(originalNode);
+    return incrementalQuery;
   }
 
 }

@@ -27,6 +27,7 @@ import com.linkedin.coral.coralservice.entity.IncrementalResponseBody;
 import com.linkedin.coral.coralservice.entity.TranslateRequestBody;
 
 import static com.linkedin.coral.coralservice.utils.CoralProvider.*;
+import static com.linkedin.coral.coralservice.utils.IncrementalUtils.*;
 import static com.linkedin.coral.coralservice.utils.TranslationUtils.*;
 
 
@@ -111,26 +112,29 @@ public class TranslationController implements ApplicationListener<ContextRefresh
 
     // Response will contain incremental query and incremental table names
     IncrementalResponseBody incrementalResponseBody = new IncrementalResponseBody();
-    String incrementalQuery = query;
+    String incrementalQuery = getIncrementalQueryFromUserSql(query);
     for (String tableName : tableNames) {
-      /* Generate incremental table names
+      /* Generate temp view and incremental table names
          Table name: db.t1
+         Temp view name: db_t1
          Incremental table name: db_t1_delta
         */
-      String incrementalTableName = tableName.replace('.', '_') + "_delta";
+      String tempViewName = tableName.replace('.', '_');
+      String incrementalTableName = tempViewName + "_delta";
+      incrementalResponseBody.addTempViewTableName(tempViewName);
       incrementalResponseBody.addIncrementalTableName(incrementalTableName);
 
-      /* TODO: Replace temporary dummy logic for creating incremental query
-         Original query: SELECT * FROM db.t1
-         Incremental query: SELECT * FROM db_t1_delta
-       */
-      incrementalQuery = incrementalQuery.replaceAll(tableName, incrementalTableName);
+      // Replace the table names in the incremental query with temp view compatible names
+      incrementalQuery = incrementalQuery.replaceAll(tableName, tempViewName);
     }
+    // Replace newlines with spaces for compatibility with code generation
+    incrementalQuery = incrementalQuery.replace('\n', ' ');
     incrementalResponseBody.setIncrementalQuery(incrementalQuery);
 
     // Create JSON object from response body
     JSONObject response = new JSONObject();
     response.put("incremental_maintenance_sql", incrementalResponseBody.getIncrementalQuery());
+    response.put("temp_view_table_names", incrementalResponseBody.getTempViewTableNames());
     response.put("incremental_table_names", incrementalResponseBody.getIncrementalTableNames());
 
     String message = response.toString();

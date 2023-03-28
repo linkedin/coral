@@ -18,11 +18,15 @@
 --       table_names: ['db.t1', 'db.t2']
 --
 --       incremental_maintenance_sql: SELECT * FROM db_t1_delta UNION SELECT * FROM db_t2_delta
+--       temp_view_table_names: ['db_t1', 'db_t2']
 --       incremental_table_names: ['db_t1_delta', 'db_t2_delta']
+--
+--     More complex examples can be found in RelToIncrementalSqlConverterTest.java
   {% set table_names = config.require('table_names') %}
 
   {% set coral_response = coral_dbt.get_coral_incremental_response(sql, table_names) %}
   {% set incremental_maintenance_sql = coral_response['incremental_maintenance_sql'] %}
+  {% set temp_view_table_names = coral_response['temp_view_table_names'] %}
   {% set incremental_table_names = coral_response['incremental_table_names'] %}
 
 --     Compiled lines of spark sql code to be executed, separated by \n delimiter
@@ -39,11 +43,17 @@
         ~ 'val start_snapshot_id = snap_ids.collect()(1)(0).toString\n'
         ~ 'val end_snapshot_id = snap_ids.collect()(0)(0).toString\n'
     %}
-    {% set create_df_code =
+--     Time travel to get original table before additions
+    {% set create_original_df_code =
+        'val df = spark.read.format("iceberg").option("snapshot-id", start_snapshot_id).load("' ~ source_table ~ '")\n'
+        ~ 'df.createOrReplaceTempView("' ~ temp_view_table_names[loop.index0] ~ '")\n'
+    %}
+--     Grab additions to table
+    {% set create_delta_df_code =
         'val df = spark.read.format("iceberg").option("start-snapshot-id", start_snapshot_id).option("end-snapshot-id", end_snapshot_id).load("' ~ source_table ~ '")\n'
         ~ 'df.createOrReplaceTempView("' ~ incremental_table_names[loop.index0] ~ '")\n'
     %}
-    {% set ns.generated_sql = ns.generated_sql ~ get_snapshot_id_code ~ create_df_code %}
+    {% set ns.generated_sql = ns.generated_sql ~ get_snapshot_id_code ~ create_original_df_code ~ create_delta_df_code %}
   {% endfor %}
   {% set spark_sql = spark_sql ~ ns.generated_sql %}
 

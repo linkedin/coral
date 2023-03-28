@@ -11,10 +11,12 @@ import java.util.List;
 
 public class IncrementalResponseBody {
   private String incrementalQuery;
+  private List<String> tempViewTableNames;
   private List<String> incrementalTableNames;
 
   public IncrementalResponseBody() {
     incrementalQuery = "";
+    tempViewTableNames = new ArrayList<>();
     incrementalTableNames = new ArrayList<>();
   }
 
@@ -24,6 +26,18 @@ public class IncrementalResponseBody {
 
   public void setIncrementalQuery(String incrementalQuery) {
     this.incrementalQuery = incrementalQuery;
+  }
+
+  public List<String> getTempViewTableNames() {
+    return tempViewTableNames;
+  }
+
+  public void setTempViewTableNames(List<String> tempViewTableNames) {
+    this.tempViewTableNames = tempViewTableNames;
+  }
+
+  public void addTempViewTableName(String tempViewTableName) {
+    tempViewTableNames.add(tempViewTableName);
   }
 
   public List<String> getIncrementalTableNames() {

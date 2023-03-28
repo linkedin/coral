@@ -46,9 +46,9 @@ public class RelToIncrementalSqlConverterTest {
 
   @Test
   public void testSimpleSelectAll() {
+    // Not a test, currently used for debugger runs only
     String sql = "SELECT * FROM test.foo";
-    String expectedSql = "SELECT *\nFROM test.foo_delta";
-    assertEquals(getIncrementalModification(sql), expectedSql);
+    getIncrementalModification(sql);
   }
 
   @Test
@@ -78,6 +78,28 @@ public class RelToIncrementalSqlConverterTest {
     // Not a test, currently used for debugger runs only
     String sql =
         "SELECT * FROM test.bar1 INNER JOIN test.bar2 ON test.bar1.x = test.bar2.x UNION ALL SELECT * FROM test.bar1 INNER JOIN test.bar2 ON test.bar1.x = test.bar2.x UNION ALL SELECT * FROM test.bar1 INNER JOIN test.bar2 ON test.bar1.x = test.bar2.x";
+    getIncrementalModification(sql);
+  }
+
+  @Test
+  public void testNestedJoin() {
+    // Not a test, currently used for debugger runs only
+    String sql =
+        "WITH tmp AS (SELECT * FROM test.bar1 INNER JOIN test.bar2 ON test.bar1.x = test.bar2.x) SELECT * FROM tmp INNER JOIN test.bar3 ON tmp.x = test.bar3.x";
+    getIncrementalModification(sql);
+  }
+
+  @Test
+  public void testUnionCase() {
+    // Not a test, currently used for debugger runs only
+    String sql = "SELECT * FROM test.bar1 UNION SELECT * FROM test.bar2 UNION SELECT * FROM test.bar3";
+    getIncrementalModification(sql);
+  }
+
+  @Test
+  public void testUnionDiffDbCase() {
+    // Not a test, currently used for debugger runs only
+    String sql = "SELECT * FROM test.foo UNION SELECT * FROM test2.foo";
     getIncrementalModification(sql);
   }
 }

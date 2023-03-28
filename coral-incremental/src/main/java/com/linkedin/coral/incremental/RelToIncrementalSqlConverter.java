@@ -14,9 +14,9 @@ import com.linkedin.coral.transformers.CoralRelToSqlNodeConverter;
 public class RelToIncrementalSqlConverter {
 
   public String convert(RelNode relNode) {
-    RelNode modifiedRelNode = RelIncrementalTransformer.convertRelIncremental(relNode);
+    RelNode incrementalRelNode = RelIncrementalTransformer.convertRelIncremental(relNode);
     CoralRelToSqlNodeConverter converter = new CoralRelToSqlNodeConverter();
-    SqlNode sqlNode = converter.convert(modifiedRelNode);
+    SqlNode sqlNode = converter.convert(incrementalRelNode);
     return sqlNode.toSqlString(converter.INSTANCE).getSql();
   }
 

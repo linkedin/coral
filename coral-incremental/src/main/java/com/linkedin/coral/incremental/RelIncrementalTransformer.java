@@ -17,6 +17,7 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelShuttle;
 import org.apache.calcite.rel.RelShuttleImpl;
 import org.apache.calcite.rel.core.TableScan;
+import org.apache.calcite.rel.logical.LogicalAggregate;
 import org.apache.calcite.rel.logical.LogicalFilter;
 import org.apache.calcite.rel.logical.LogicalJoin;
 import org.apache.calcite.rel.logical.LogicalProject;
@@ -36,12 +37,12 @@ public class RelIncrementalTransformer {
       @Override
       public RelNode visit(TableScan scan) {
         RelOptTable originalTable = scan.getTable();
-        List<String> modifiedNames = new ArrayList<>(originalTable.getQualifiedName());
-        String deltaTableName = modifiedNames.remove(modifiedNames.size() - 1) + "_delta";
-        modifiedNames.add(deltaTableName);
-        RelOptTable modifiedTable =
-            RelOptTableImpl.create(originalTable.getRelOptSchema(), originalTable.getRowType(), modifiedNames, null);
-        return LogicalTableScan.create(scan.getCluster(), modifiedTable);
+        List<String> incrementalNames = new ArrayList<>(originalTable.getQualifiedName());
+        String deltaTableName = incrementalNames.remove(incrementalNames.size() - 1) + "_delta";
+        incrementalNames.add(deltaTableName);
+        RelOptTable incrementalTable =
+            RelOptTableImpl.create(originalTable.getRelOptSchema(), originalTable.getRowType(), incrementalNames, null);
+        return LogicalTableScan.create(scan.getCluster(), incrementalTable);
       }
 
       @Override
@@ -99,6 +100,9 @@ public class RelIncrementalTransformer {
             ((LogicalJoin) target).getCondition(), target.getVariablesSet(), ((LogicalJoin) target).getJoinType());
       } else if (target instanceof LogicalUnion) {
         return LogicalUnion.create(transformedChildren, ((LogicalUnion) target).all);
+      } else if (target instanceof LogicalAggregate) {
+        return LogicalAggregate.create(transformedChildren.get(0), ((LogicalAggregate) target).getGroupSet(),
+            ((LogicalAggregate) target).getGroupSets(), ((LogicalAggregate) target).getAggCallList());
       }
     }
     return target;
