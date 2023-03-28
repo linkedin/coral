@@ -17,13 +17,6 @@ Kindly explain the proposed changes in this section. The goal is to outline the 
   3. If design documentation is available, please include the link.
 -->
 
-### Does this PR introduce _any_ user-facing change?
-<!--
-Keep in mind that user-facing changes include all aspects, such as API modifications and documentation updates.
-If yes, clarify the previous behavior and the changes proposed by this PR - provide a description and/or an example to demonstrate the difference in behavior, if possible.
-If no, write 'No'.
--->
-
 ### How was this patch tested?
 <!--
 Please describe all the tests conducted.
