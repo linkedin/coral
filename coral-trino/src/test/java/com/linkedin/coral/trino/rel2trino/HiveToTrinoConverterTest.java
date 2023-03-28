@@ -771,8 +771,9 @@ public class HiveToTrinoConverterTest {
     assertEquals(expandedSql, targetSql);
   }
 
+    @Test
   public void testSqlSelectAliasAppenderTransformer() {
-    //test.tableA(a int, b struct<b1:string>
+    // test.tableA(a int, b struct<b1:string>
     RelNode relNode = TestUtils.getHiveToRelConverter().convertSql("SELECT tableA.b.b1 FROM test.tableA where a > 5");
     RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
     String expandedSql = relToTrinoConverter.convert(relNode);

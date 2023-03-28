@@ -14,6 +14,7 @@ import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.SqlReturnTypeInference;
+import org.apache.calcite.sql.util.SqlShuttle;
 import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
 
 import com.linkedin.coral.common.utils.TypeDerivationUtil;
@@ -42,6 +43,11 @@ public abstract class SqlCallTransformer {
    * Implementation of the transformation, returns the transformed SqlCall
    */
   protected abstract SqlCall transform(SqlCall sqlCall);
+
+  protected void setupTopSqlSelectNodes(SqlCall sqlCall) {
+    sqlCall.accept(new SqlSelectModifier());
+    topSelectNodes.add((SqlSelect) sqlCall);
+  }
 
   /**
    * Public entry of the transformer, it returns the result of transformed SqlCall if `condition(SqlCall)` returns true,
@@ -73,5 +79,22 @@ public abstract class SqlCallTransformer {
   protected static SqlOperator createSqlOperator(String functionName, SqlReturnTypeInference typeInference) {
     SqlIdentifier sqlIdentifier = new SqlIdentifier(ImmutableList.of(functionName), SqlParserPos.ZERO);
     return new SqlUserDefinedFunction(sqlIdentifier, typeInference, null, null, null, null);
+  }
+
+  static class SqlSelectModifier extends SqlShuttle {
+    @Override
+    public SqlNode visit(SqlCall sqlCall) {
+      if (sqlCall instanceof SqlSelect) {
+        // Updates selectList to correctly handle t.* type SqlSelect sqlNodes for accurate data type derivation
+        if (((SqlSelect) sqlCall).getSelectList() == null) {
+          List<String> names = new ArrayList<>();
+          names.add("*");
+          List<SqlParserPos> sqlParserPos = Collections.nCopies(names.size(), SqlParserPos.ZERO);
+          SqlNode star = SqlIdentifier.star(names, SqlParserPos.ZERO, sqlParserPos);
+          ((SqlSelect) sqlCall).setSelectList(SqlNodeList.of(star));
+        }
+      }
+      return super.visit(sqlCall);
+    }
   }
 }
