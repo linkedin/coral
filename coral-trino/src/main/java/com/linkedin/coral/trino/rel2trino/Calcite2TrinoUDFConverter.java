@@ -45,12 +45,9 @@ import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.ReturnTypes;
 import org.apache.calcite.sql.type.SqlReturnTypeInference;
-import org.apache.calcite.sql.type.SqlTypeFamily;
 import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
 
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
-import com.linkedin.coral.com.google.common.collect.ImmutableMultimap;
-import com.linkedin.coral.com.google.common.collect.Multimap;
 import com.linkedin.coral.common.functions.FunctionReturnTypes;
 import com.linkedin.coral.common.functions.GenericProjectFunction;
 import com.linkedin.coral.trino.rel2trino.functions.GenericProjectToTrinoConverter;
@@ -164,20 +161,11 @@ public class Calcite2TrinoUDFConverter {
     private final RelNode node;
     private final Map<String, Boolean> configs;
 
-    // SUPPORTED_TYPE_CAST_MAP is a static mapping that maps a SqlTypeFamily key to its set of
-    // type-castable SqlTypeFamilies.
-    private static final Multimap<SqlTypeFamily, SqlTypeFamily> SUPPORTED_TYPE_CAST_MAP;
-
     public TrinoRexConverter(RelNode node, Map<String, Boolean> configs) {
       this.rexBuilder = node.getCluster().getRexBuilder();
       this.typeFactory = node.getCluster().getTypeFactory();
       this.configs = configs;
       this.node = node;
-    }
-
-    static {
-      SUPPORTED_TYPE_CAST_MAP = ImmutableMultimap.<SqlTypeFamily, SqlTypeFamily> builder()
-          .putAll(SqlTypeFamily.CHARACTER, SqlTypeFamily.NUMERIC, SqlTypeFamily.BOOLEAN).build();
     }
 
     @Override
@@ -253,8 +241,7 @@ public class Calcite2TrinoUDFConverter {
         }
       }
 
-      RexCall modifiedCall = adjustInconsistentTypesToEqualityOperator(call);
-      return adjustReturnTypeWithCast(rexBuilder, super.visitCall(modifiedCall));
+      return adjustReturnTypeWithCast(rexBuilder, super.visitCall(call));
     }
 
     private Optional<RexNode> visitConcat(RexCall call) {
@@ -417,32 +404,6 @@ public class Calcite2TrinoUDFConverter {
       }
 
       return Optional.empty();
-    }
-
-    // [CORAL-18] Hive is inconsistent and allows everything to be string so we make
-    // this adjustment for common case. Ideally, we should use Rel collation to
-    // check if this is HiveCollation before applying such rules but we don't use
-    // Collation here.
-    private RexCall adjustInconsistentTypesToEqualityOperator(RexCall call) {
-      final SqlOperator op = call.getOperator();
-      if (op.getKind() != SqlKind.EQUALS) {
-        return call;
-      }
-
-      RexNode leftOperand = call.getOperands().get(0);
-      final RexNode rightOperand = call.getOperands().get(1);
-
-      if (leftOperand.getKind() == SqlKind.CAST) {
-        leftOperand = ((RexCall) leftOperand).getOperands().get(0);
-      }
-
-      if (SUPPORTED_TYPE_CAST_MAP.containsEntry(leftOperand.getType().getSqlTypeName().getFamily(),
-          rightOperand.getType().getSqlTypeName().getFamily())) {
-        final RexNode tryCastNode =
-            rexBuilder.makeCall(rightOperand.getType(), TrinoTryCastFunction.INSTANCE, ImmutableList.of(leftOperand));
-        return (RexCall) rexBuilder.makeCall(op, tryCastNode, rightOperand);
-      }
-      return call;
     }
 
     private RexNode convertMapValueConstructor(RexBuilder rexBuilder, RexCall call) {
