@@ -31,28 +31,29 @@ public class TrinoSqlDialect extends SqlDialect {
   }
 
   /**
-   * Override this method so that there will be explicit table alias for all the fields, which is necessary for
+   * Override this method so that so that table alias is prepended to all field references (e.g., "table.column"
+   * or "table.struct.filed" instead of "column" or "struct.field"), which is necessary for
    * data type derivation on struct fields.
    *
    * For the following input SQL:
-   * CREATE TABLE default.complex(s struct(name:string, age:int));
-   * SELECT split(complex.s.name, ' ') name_array
-   * FROM default.complex
-   * WHERE complex.s.age = 25;
+   * CREATE TABLE db.tbl(s struct(name:string, age:int));
+   * SELECT split(tbl.s.name, ' ') name_array
+   * FROM db.tbl
+   * WHERE tbl.s.age = 25;
    *
    * The input RelNode is:
    * LogicalProject(name_array=[split($0.name, ' ')])
    *   LogicalFilter(condition=[=($0.age, 25)])
-   *     LogicalTableScan(table=[[hive, default, complex]])
+   *     LogicalTableScan(table=[[hive, db, tbl]])
    *
-   * With this override, the converted SqlNode is:
-   * SELECT `split`(`complex`.`s`.`name`, ' ') AS `name_array`
-   * FROM `default`.`complex` AS `complex`
-   * WHERE `complex`.`s`.`age` = 25
+   * With this override, the generated SqlNode is:
+   * SELECT `split`(`tbl`.`s`.`name`, ' ') AS `name_array`
+   * FROM `db`.`tbl` AS `tbl`
+   * WHERE `tbl`.`s`.`age` = 25
    *
-   * Without this override, the converted SqlNode is:
+   * Without this override, the generated SqlNode is:
    * SELECT `split`(`s`.`name`, ' ') AS `name_array`
-   * FROM `default`.`complex`
+   * FROM `db`.`tbl`
    * WHERE `s`.`age` = 25
    *
    * Without this override, if we want to get the data type of a struct field like `s`.`name`, validation will fail
