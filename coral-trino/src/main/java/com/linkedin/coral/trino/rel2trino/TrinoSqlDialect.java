@@ -109,6 +109,10 @@ public class TrinoSqlDialect extends SqlDialect {
     writer.endList(frame);
   }
 
+  public boolean requireCastOnString() {
+    return true;
+  }
+
   private void unparseMapValueConstructor(SqlWriter writer, SqlCall call, int leftPrec, int rightPrec) {
     writer.keyword(call.getOperator().getName()); // "MAP"
     final SqlWriter.Frame frame = writer.startList("(", ")"); // not "[" and "]"

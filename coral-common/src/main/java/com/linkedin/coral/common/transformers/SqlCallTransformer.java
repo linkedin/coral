@@ -30,7 +30,7 @@ import org.apache.calcite.sql.validate.SqlValidator;
  */
 public abstract class SqlCallTransformer {
   private SqlValidator sqlValidator;
-  private final List<SqlSelect> topSelectNodes = new ArrayList<>();
+  protected static final List<SqlSelect> topSelectNodes = new ArrayList<>();
 
   public SqlCallTransformer() {
 
@@ -50,14 +50,19 @@ public abstract class SqlCallTransformer {
    */
   protected abstract SqlCall transform(SqlCall sqlCall);
 
+  protected void setupTopSqlSelectNodes(SqlCall sqlCall) {
+    sqlCall.accept(new SqlSelectModifier());
+    topSelectNodes.add((SqlSelect) sqlCall);
+  }
+
   /**
    * Public entry of the transformer, it returns the result of transformed SqlCall if `condition(SqlCall)` returns true,
    * otherwise returns the input SqlCall without any transformation
    */
   public SqlCall apply(SqlCall sqlCall) {
-    if (sqlCall instanceof SqlSelect) {
-      this.topSelectNodes.add((SqlSelect) sqlCall.accept(new SqlSelectModifier()));
-    }
+    //    if (sqlCall instanceof SqlSelect) {
+    //      topSelectNodes.add((SqlSelect) sqlCall.accept(new SqlSelectModifier()));
+    //    }
     if (condition(sqlCall)) {
       return transform(sqlCall);
     } else {

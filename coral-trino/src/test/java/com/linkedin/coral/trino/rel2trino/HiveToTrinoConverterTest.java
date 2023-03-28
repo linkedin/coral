@@ -760,7 +760,8 @@ public class HiveToTrinoConverterTest {
 
     RelNode relNode =
         TestUtils.getHiveToRelConverter().convertSql("SELECT CAST(b AS CHAR(255)) FROM test.table_with_binary_column");
-    String targetSql = "SELECT \"from_utf8\"(\"b\")\n" + "FROM \"test\".\"table_with_binary_column\"";
+    String targetSql = "SELECT \"from_utf8\"(\"table_with_binary_column\".\"b\")\n"
+        + "FROM \"test\".\"table_with_binary_column\" AS \"table_with_binary_column\"";
     String expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
   }
@@ -791,7 +792,8 @@ public class HiveToTrinoConverterTest {
     RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
     String expandedSql = relToTrinoConverter.convert(relNode);
 
-    String expected = "SELECT \"b\".\"b1\" AS \"b1\"\n" + "FROM \"test\".\"tablea\"\n" + "WHERE \"a\" > 5";
+    String expected = "SELECT \"tablea\".\"b\".\"b1\" AS \"b1\"\n" + "FROM \"test\".\"tablea\" AS \"tablea\"\n"
+        + "WHERE \"tablea\".\"a\" > 5";
     assertEquals(expandedSql, expected);
   }
 }

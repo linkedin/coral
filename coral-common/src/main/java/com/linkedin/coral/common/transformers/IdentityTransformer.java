@@ -3,12 +3,10 @@
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
-package com.linkedin.coral.trino.rel2trino.transformers;
+package com.linkedin.coral.common.transformers;
 
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlKind;
-
-import com.linkedin.coral.common.transformers.SqlCallTransformer;
 
 
 /**
@@ -24,6 +22,7 @@ public class IdentityTransformer extends SqlCallTransformer {
 
   @Override
   protected SqlCall transform(SqlCall sqlCall) {
+    setupTopSqlSelectNodes(sqlCall);
     return sqlCall;
   }
 }

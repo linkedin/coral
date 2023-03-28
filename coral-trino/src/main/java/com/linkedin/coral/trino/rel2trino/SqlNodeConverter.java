@@ -20,10 +20,9 @@ import org.apache.calcite.sql.validate.SqlValidator;
 import org.apache.calcite.sql.validate.SqlValidatorUtil;
 
 import com.linkedin.coral.common.HiveMetastoreClient;
+import com.linkedin.coral.common.transformers.IdentityTransformer;
 import com.linkedin.coral.common.transformers.SqlCallTransformers;
-import com.linkedin.coral.ir.CoralSqlNodeToRelConverter;
-import com.linkedin.coral.trino.rel2trino.transformers.IdentityTransformer;
-import com.linkedin.coral.trino.rel2trino.transformers.RelationalOperatorTransformer;
+import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
 
 import static org.apache.calcite.rel.rel2sql.SqlImplementor.*;
 
@@ -41,9 +40,8 @@ public class SqlNodeConverter extends SqlShuttle {
   private final SqlCallTransformers operatorTransformerList;
 
   public SqlNodeConverter(HiveMetastoreClient mscClient) {
-    SqlValidator sqlValidator = new CoralSqlNodeToRelConverter(mscClient).getSqlValidator();
-    operatorTransformerList =
-        SqlCallTransformers.of(new IdentityTransformer(), new RelationalOperatorTransformer(sqlValidator));
+    SqlValidator sqlValidator = new HiveToRelConverter(mscClient).getSqlValidator();
+    operatorTransformerList = SqlCallTransformers.of(new IdentityTransformer());
   }
 
   @Override
@@ -76,7 +74,7 @@ public class SqlNodeConverter extends SqlShuttle {
             selectNode instanceof SqlIdentifier && ((SqlIdentifier) selectNode).names.size() > 1;
 
         // Always add "AS" when accessing nested fields.
-        // In parent class "AS" clause is skipped for "SELECT a.b AS b". Here we will keep the "a.b AS b"
+        // CoralSqlNode does not contain "AS" clause for "SELECT a.b AS b". Here we will introduce the "a.b AS b"
         if (nestedFieldAccess) {
           selectNode = SqlStdOperatorTable.AS.createCall(POS, selectNode, new SqlIdentifier(name, POS));
         }
