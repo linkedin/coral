@@ -50,10 +50,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public abstract class ToRelConverter {
 
   private final HiveMetastoreClient hiveMetastoreClient;
-  final FrameworkConfig config;
+  private final FrameworkConfig config;
   private final SqlRexConvertletTable convertletTable = getConvertletTable();
   private CalciteCatalogReader catalogReader;
-  RelBuilder relBuilder;
+  private RelBuilder relBuilder;
 
   protected abstract SqlRexConvertletTable getConvertletTable();
 
@@ -153,7 +153,7 @@ public abstract class ToRelConverter {
   }
 
   @VisibleForTesting
-  public RelNode toRel(SqlNode sqlNode) {
+  protected RelNode toRel(SqlNode sqlNode) {
     RelRoot root = getSqlToRelConverter().convertQuery(sqlNode, true, true);
     return root.rel;
   }

@@ -91,7 +91,6 @@ public abstract class SqlCallTransformer {
     if (sqlValidator == null) {
       throw new RuntimeException("SqlValidator does not exist to derive the RelDataType for SqlNode " + sqlNode);
     }
-    Throwable firstIssue = null;
     for (int i = topSelectNodes.size() - 1; i >= 0; --i) {
       final SqlSelect topSelectNode = topSelectNodes.get(i);
       final SqlSelect dummySqlSelect = new SqlSelect(topSelectNode.getParserPosition(), null, SqlNodeList.of(sqlNode),

@@ -31,7 +31,7 @@ public class HiveToTrinoConverter {
     checkNotNull(mscClient);
     checkNotNull(configs);
     HiveToRelConverter hiveToRelConverter = new HiveToRelConverter(mscClient);
-    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter(configs);
     return new HiveToTrinoConverter(hiveToRelConverter, relToTrinoConverter);
   }
 
