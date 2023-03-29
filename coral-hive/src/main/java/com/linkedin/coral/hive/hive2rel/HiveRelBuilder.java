@@ -54,7 +54,7 @@ import static org.apache.calcite.rel.core.RelFactories.DEFAULT_VALUES_FACTORY;
  */
 public class HiveRelBuilder extends RelBuilder {
 
-  protected HiveRelBuilder(Context context, RelOptCluster cluster, RelOptSchema relOptSchema) {
+  private HiveRelBuilder(Context context, RelOptCluster cluster, RelOptSchema relOptSchema) {
     super(context, cluster, relOptSchema);
   }
 

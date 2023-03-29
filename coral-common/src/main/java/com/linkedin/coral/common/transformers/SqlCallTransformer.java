@@ -6,7 +6,6 @@
 package com.linkedin.coral.common.transformers;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.ImmutableList;
@@ -20,7 +19,6 @@ import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.SqlSelect;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.SqlReturnTypeInference;
-import org.apache.calcite.sql.util.SqlShuttle;
 import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
 import org.apache.calcite.sql.validate.SqlValidator;
 
@@ -30,7 +28,7 @@ import org.apache.calcite.sql.validate.SqlValidator;
  */
 public abstract class SqlCallTransformer {
   private SqlValidator sqlValidator;
-  protected static final List<SqlSelect> topSelectNodes = new ArrayList<>();
+  private final List<SqlSelect> topSelectNodes = new ArrayList<>();
 
   public SqlCallTransformer() {
 
@@ -50,19 +48,14 @@ public abstract class SqlCallTransformer {
    */
   protected abstract SqlCall transform(SqlCall sqlCall);
 
-  protected void setupTopSqlSelectNodes(SqlCall sqlCall) {
-    sqlCall.accept(new SqlSelectModifier());
-    topSelectNodes.add((SqlSelect) sqlCall);
-  }
-
   /**
    * Public entry of the transformer, it returns the result of transformed SqlCall if `condition(SqlCall)` returns true,
    * otherwise returns the input SqlCall without any transformation
    */
   public SqlCall apply(SqlCall sqlCall) {
-    //    if (sqlCall instanceof SqlSelect) {
-    //      topSelectNodes.add((SqlSelect) sqlCall.accept(new SqlSelectModifier()));
-    //    }
+    if (sqlCall instanceof SqlSelect) {
+      this.topSelectNodes.add((SqlSelect) sqlCall);
+    }
     if (condition(sqlCall)) {
       return transform(sqlCall);
     } else {
@@ -106,26 +99,10 @@ public abstract class SqlCallTransformer {
       try {
         sqlValidator.validate(dummySqlSelect);
         return sqlValidator.getValidatedNodeType(dummySqlSelect).getFieldList().get(0).getType();
-      } catch (Throwable throwable) {
-        if (firstIssue == null) {
-          firstIssue = throwable;
-        }
+      } catch (Throwable ignored) {
       }
     }
-    // Additional attempt to derive data type of the input sqlNode by validating the topSelectNode, especially in cases
-    // where the input is defined as an alias in topSelectNode's selectList.
-    // (e.g. topSelectNode: Select a AS tmp FROM foo where tmp > 5).
-    // Previous attempts would try validating dummySqlNode: SELECT tmp FROM foo WHERE tmp > 5, and fail.
-    try {
-      final SqlSelect dummySqlSelect = new SqlSelect(topSelectNodes.get(0).getParserPosition(), null,
-          SqlNodeList.of(sqlNode), topSelectNodes.get(0), null, null, null, null, null, null, null);
-      sqlValidator.validate(dummySqlSelect);
-      return sqlValidator.getValidatedNodeType(sqlNode);
-    } catch (Throwable ignored) {
-    }
-
-    assert firstIssue != null;
-    throw new RuntimeException(firstIssue.getMessage(), firstIssue.getCause());
+    throw new RuntimeException("Failed to derive the RelDataType for SqlNode " + sqlNode);
   }
 
   /**
@@ -134,22 +111,5 @@ public abstract class SqlCallTransformer {
   protected static SqlOperator createSqlOperator(String functionName, SqlReturnTypeInference typeInference) {
     SqlIdentifier sqlIdentifier = new SqlIdentifier(ImmutableList.of(functionName), SqlParserPos.ZERO);
     return new SqlUserDefinedFunction(sqlIdentifier, typeInference, null, null, null, null);
-  }
-
-  static class SqlSelectModifier extends SqlShuttle {
-    @Override
-    public SqlNode visit(SqlCall sqlCall) {
-      if (sqlCall instanceof SqlSelect) {
-        // Updates selectList to correctly handle t.* type SqlSelect sqlNodes for accurate data type derivation
-        if (((SqlSelect) sqlCall).getSelectList() == null) {
-          List<String> names = new ArrayList<>();
-          names.add("*");
-          List<SqlParserPos> sqlParserPos = Collections.nCopies(names.size(), SqlParserPos.ZERO);
-          SqlNode star = SqlIdentifier.star(names, SqlParserPos.ZERO, sqlParserPos);
-          ((SqlSelect) sqlCall).setSelectList(SqlNodeList.of(star));
-        }
-      }
-      return super.visit(sqlCall);
-    }
   }
 }

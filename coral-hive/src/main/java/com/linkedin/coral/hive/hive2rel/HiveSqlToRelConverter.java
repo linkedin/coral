@@ -42,9 +42,9 @@ import com.linkedin.coral.hive.hive2rel.rel.HiveUncollect;
  * Class to convert Hive SQL to Calcite RelNode. This class
  * specializes the functionality provided by {@link SqlToRelConverter}.
  */
-public class HiveSqlToRelConverter extends SqlToRelConverter {
+class HiveSqlToRelConverter extends SqlToRelConverter {
 
-  public HiveSqlToRelConverter(RelOptTable.ViewExpander viewExpander, SqlValidator validator,
+  HiveSqlToRelConverter(RelOptTable.ViewExpander viewExpander, SqlValidator validator,
       Prepare.CatalogReader catalogReader, RelOptCluster cluster, SqlRexConvertletTable convertletTable,
       Config config) {
     super(viewExpander, validator, catalogReader, cluster, convertletTable, config);

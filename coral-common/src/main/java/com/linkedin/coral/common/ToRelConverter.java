@@ -50,10 +50,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public abstract class ToRelConverter {
 
   private final HiveMetastoreClient hiveMetastoreClient;
-  protected final FrameworkConfig config;
+  final FrameworkConfig config;
   private final SqlRexConvertletTable convertletTable = getConvertletTable();
   private CalciteCatalogReader catalogReader;
-  protected RelBuilder relBuilder;
+  RelBuilder relBuilder;
 
   protected abstract SqlRexConvertletTable getConvertletTable();
 

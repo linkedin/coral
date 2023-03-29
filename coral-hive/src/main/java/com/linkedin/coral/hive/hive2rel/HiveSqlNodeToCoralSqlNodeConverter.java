@@ -10,7 +10,6 @@ import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.util.SqlShuttle;
 import org.apache.calcite.sql.validate.SqlValidator;
 
-import com.linkedin.coral.common.transformers.IdentityTransformer;
 import com.linkedin.coral.common.transformers.SqlCallTransformers;
 import com.linkedin.coral.transformers.ShiftArrayIndexTransformer;
 
@@ -22,8 +21,7 @@ public class HiveSqlNodeToCoralSqlNodeConverter extends SqlShuttle {
   private final SqlCallTransformers operatorTransformerList;
 
   public HiveSqlNodeToCoralSqlNodeConverter(SqlValidator sqlValidator) {
-    operatorTransformerList =
-        SqlCallTransformers.of(new IdentityTransformer(), new ShiftArrayIndexTransformer(sqlValidator));
+    operatorTransformerList = SqlCallTransformers.of(new ShiftArrayIndexTransformer(sqlValidator));
   }
 
   @Override

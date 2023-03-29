@@ -48,7 +48,7 @@ public class ToRelTestUtils {
   }
 
   public static RelToTrinoConverter getRelToTrinoConverter() {
-    return new RelToTrinoConverter(hiveMetastoreClient);
+    return new RelToTrinoConverter();
   }
 
   public static void initializeViews(HiveConf conf) throws HiveException, MetaException, IOException {
