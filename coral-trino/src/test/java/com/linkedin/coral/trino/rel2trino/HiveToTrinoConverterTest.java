@@ -715,6 +715,19 @@ public class HiveToTrinoConverterTest {
   }
 
   @Test
+  public void testConcatWithUnionAndStar() {
+    RelNode relNode = TestUtils.getHiveToRelConverter().convertSql(
+        "SELECT * from test.tableA union all SELECT * from test.tableB where concat(current_date(), '|', tableB.a) = 'invalid'");
+    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
+    String expandedSql = relToTrinoConverter.convert(relNode);
+
+    String expected = "SELECT *\n" + "FROM \"test\".\"tablea\" AS \"tablea\"\n" + "UNION ALL\n" + "SELECT *\n"
+        + "FROM \"test\".\"tableb\" AS \"tableb\"\n"
+        + "WHERE \"concat\"(CAST(CURRENT_DATE AS VARCHAR(65535)), '|', CAST(\"tableb\".\"a\" AS VARCHAR(65535))) = 'invalid'";
+    assertEquals(expandedSql, expected);
+  }
+
+  @Test
   public void testConcatFunction() {
     RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
 

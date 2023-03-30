@@ -20,9 +20,10 @@ import org.apache.calcite.sql.validate.SqlValidator;
 import org.apache.calcite.sql.validate.SqlValidatorUtil;
 
 import com.linkedin.coral.common.HiveMetastoreClient;
-import com.linkedin.coral.common.transformers.IdentityTransformer;
 import com.linkedin.coral.common.transformers.SqlCallTransformers;
+import com.linkedin.coral.common.utils.TypeDerivationUtil;
 import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
+import com.linkedin.coral.trino.rel2trino.transformers.ConcatOperatorTransformer;
 
 import static org.apache.calcite.rel.rel2sql.SqlImplementor.*;
 
@@ -31,17 +32,18 @@ import static org.apache.calcite.rel.rel2sql.SqlImplementor.*;
  * SqlNodeConverter transforms the sqlNodes
  * in the input SqlNode representation to be compatible with Trino engine.
  * The transformation may involve change in operator, reordering the operands
- * or even re-constructing the SqlNode.
+ * or even re-constructing the SqlNode. All the transformations performed as part of this shuttle require data type derivation in some manner.
  *
  * NOTE: This is a temporary class which hosts certain transformations which were previously done in RelToTrinoConverter.
- * This class will be refactored once standardized CoralIR is integrated in the CoralRelNode to trino SQL translation path.
+ * This class may be refactored once standardized CoralIR is integrated in the CoralRelNode to trino SQL translation path.
  */
 public class SqlNodeConverter extends SqlShuttle {
   private final SqlCallTransformers operatorTransformerList;
 
-  public SqlNodeConverter(HiveMetastoreClient mscClient) {
+  public SqlNodeConverter(HiveMetastoreClient mscClient, SqlNode topSqlNode) {
     SqlValidator sqlValidator = new HiveToRelConverter(mscClient).getSqlValidator();
-    operatorTransformerList = SqlCallTransformers.of(new IdentityTransformer());
+    TypeDerivationUtil typeDerivationUtil = new TypeDerivationUtil(sqlValidator, topSqlNode);
+    operatorTransformerList = SqlCallTransformers.of(new ConcatOperatorTransformer(typeDerivationUtil));
   }
 
   @Override
