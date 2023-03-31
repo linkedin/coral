@@ -106,9 +106,13 @@ public class RelToTrinoConverter extends RelToSqlConverter {
 
   /**
    * A Project RelNode represents a relational operator that projects a subset of columns from an input relational expression.
-   * When projecting a NULL column, super's implementation casts this column to the derived data type to ensure that the column can be interpreted correctly.
-   * If the derived data type is NULL, super's implementation casts the NULL column to a NULL data type.
-   * This override prevents appending NULL cast on a NULL column.
+   * When projecting a NULL field, super's implementation casts this column to the derived data type to ensure that the column can be interpreted correctly.
+   * If the derived data type is NULL, super's implementation casts the NULL field to a NULL data type explicitly.
+   * This method override is intended to avoid adding a NULL cast to a NULL column.
+   *
+   * By default, super's implementation would generate SqlSelect statement of the form: SELECT CAST(NULL AS NULL) FROM foo.
+   * However, the overriden implementation generates a modified SqlSelect statement that omits the CAST: SELECT NULL FROM foo.
+   *
    * @param e Project RelNode.
    * @return Result of converting the RelNode to a SqlNode.
    */

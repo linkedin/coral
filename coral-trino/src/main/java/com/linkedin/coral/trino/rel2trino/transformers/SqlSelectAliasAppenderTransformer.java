@@ -24,8 +24,9 @@ import static org.apache.calcite.rel.rel2sql.SqlImplementor.*;
 
 /**
  * This transformer operates on SqlSelect type sqlCalls. It appends an alias to all the projected fields with fully qualified names.
+ * For Example: It modifies a SqlSelect sqlCall statement of the form: "SELECT foo.a FROM foo" to "SELECT foo.a AS a FROM foo".
  */
-public class SqlSelectListTransformer extends SqlCallTransformer {
+public class SqlSelectAliasAppenderTransformer extends SqlCallTransformer {
 
   @Override
   protected boolean condition(SqlCall sqlCall) {
