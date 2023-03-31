@@ -3,10 +3,9 @@
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
-{% macro spark__get_coral_incremental_response(sql, table_names) -%}
+{% macro spark__get_coral_incremental_response(sql, url, table_names) -%}
 
     {% set requests = modules.requests %}
-    {% set url = coral_dbt.get_coral_url() ~ '/api/incremental/rewrite' %}
     {% set request_data = {
         "query": sql,
         "tableNames": table_names,

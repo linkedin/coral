@@ -3,11 +3,11 @@
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
-{% macro get_coral_incremental_response(sql, table_names) %}
-  {{ return(adapter.dispatch('get_coral_incremental_response', macro_namespace = 'coral_dbt')(sql, table_names)) }}
+{% macro get_coral_incremental_response(sql, url, table_names) %}
+  {{ return(adapter.dispatch('get_coral_incremental_response', macro_namespace = 'coral_dbt')(sql, url, table_names)) }}
 {% endmacro %}
 
 
-{% macro default__get_coral_incremental_response(sql, table_names) -%}
+{% macro default__get_coral_incremental_response(sql, url, table_names) -%}
     {{ exceptions.raise_compiler_error("macro get_coral_incremental_response not implemented for adapters other than Spark") }}
 {%- endmacro %}

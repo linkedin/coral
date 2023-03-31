@@ -1,0 +1,16 @@
+val snapshot_df = spark.read.format("iceberg").load("foo.snapshots")
+snapshot_df.createOrReplaceTempView("snapshot_temp_table")
+val snap_ids = spark.sql("SELECT snapshot_id FROM snapshot_temp_table ORDER BY committed_at DESC LIMIT 2")
+val start_snapshot_id = snap_ids.collect()(1)(0).toString
+val end_snapshot_id = snap_ids.collect()(0)(0).toString
+val df = spark.read.format("iceberg").option("start-snapshot-id", start_snapshot_id).option("end-snapshot-id", end_snapshot_id).load("foo")
+df.createOrReplaceTempView("foo_delta")
+val snapshot_df = spark.read.format("iceberg").load("bar.snapshots")
+snapshot_df.createOrReplaceTempView("snapshot_temp_table")
+val snap_ids = spark.sql("SELECT snapshot_id FROM snapshot_temp_table ORDER BY committed_at DESC LIMIT 2")
+val start_snapshot_id = snap_ids.collect()(1)(0).toString
+val end_snapshot_id = snap_ids.collect()(0)(0).toString
+val df = spark.read.format("iceberg").option("start-snapshot-id", start_snapshot_id).option("end-snapshot-id", end_snapshot_id).load("bar")
+df.createOrReplaceTempView("bar_delta")
+val query_response = spark.sql("SELECT * FROM foo_delta INNER JOIN bar_delta ON foo_delta.x = bar_delta.x")
+query_response.write.mode("append").saveAsTable("join_output")
