@@ -6,7 +6,7 @@
 {% macro spark__trino_to_spark(sql) -%}
 
     {% set requests = modules.requests %}
-    {% set url = 'http://localhost:8080/api/translations/translate' %}
+    {% set url = coral_dbt.get_coral_url() ~ '/api/translations/translate' %}
     {% set request_data = {
         "fromLanguage": "trino",
         "toLanguage": "spark",

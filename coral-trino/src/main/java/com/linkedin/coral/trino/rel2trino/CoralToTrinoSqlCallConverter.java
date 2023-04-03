@@ -22,6 +22,7 @@ import com.linkedin.coral.common.transformers.SourceOperatorMatchSqlCallTransfor
 import com.linkedin.coral.common.transformers.SqlCallTransformers;
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 import com.linkedin.coral.trino.rel2trino.functions.TrinoElementAtFunction;
+import com.linkedin.coral.trino.rel2trino.transformers.CollectListOrSetFunctionTransformer;
 import com.linkedin.coral.trino.rel2trino.transformers.CoralRegistryOperatorRenameSqlCallTransformer;
 import com.linkedin.coral.trino.rel2trino.transformers.GenericCoralRegistryOperatorRenameSqlCallTransformer;
 import com.linkedin.coral.trino.rel2trino.transformers.ToDateOperatorTransformer;
@@ -49,7 +50,7 @@ public class CoralToTrinoSqlCallConverter extends SqlShuttle {
           protected SqlCall transform(SqlCall sqlCall) {
             return TrinoElementAtFunction.INSTANCE.createCall(SqlParserPos.ZERO, sqlCall.getOperandList());
           }
-        },
+        }, new CollectListOrSetFunctionTransformer(),
         // math functions
         new OperatorRenameSqlCallTransformer(SqlStdOperatorTable.RAND, 0, "RANDOM"),
         new JsonTransformSqlCallTransformer(SqlStdOperatorTable.RAND, 1, "RANDOM", "[]", null, null),
