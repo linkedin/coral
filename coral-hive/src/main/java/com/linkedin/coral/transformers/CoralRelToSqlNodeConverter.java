@@ -92,8 +92,37 @@ public class CoralRelToSqlNodeConverter extends RelToSqlConverter {
       }
 
       /**
-       * Override this method so that there will be explicit and correct table alias for selected fields, which is necessary for
-       * data type derivation on SqlNodes
+       * Override this method so that so that table alias is prepended to all field references (e.g., "table.column"
+       * or "table.struct.filed" instead of "column" or "struct.field"), which is necessary for
+       * data type derivation on struct fields.
+       *
+       * For the following input SQL:
+       * CREATE TABLE db.tbl(s struct(name:string, age:int));
+       * SELECT split(tbl.s.name, ' ') name_array
+       * FROM db.tbl
+       * WHERE tbl.s.age = 25;
+       *
+       * The input RelNode is:
+       * LogicalProject(name_array=[split($0.name, ' ')])
+       *   LogicalFilter(condition=[=($0.age, 25)])
+       *     LogicalTableScan(table=[[hive, db, tbl]])
+       *
+       * With this override, the generated SqlNode is:
+       * SELECT `split`(`tbl`.`s`.`name`, ' ') AS `name_array`
+       * FROM `db`.`tbl` AS `tbl`
+       * WHERE `tbl`.`s`.`age` = 25
+       *
+       * Without this override, the generated SqlNode is:
+       * SELECT `split`(`s`.`name`, ' ') AS `name_array`
+       * FROM `db`.`tbl`
+       * WHERE `s`.`age` = 25
+       *
+       * Without this override, if we want to get the data type of a struct field like `s`.`name`, validation will fail
+       * because Calcite uses {@link org.apache.calcite.rel.type.StructKind#FULLY_QUALIFIED} for standard SQL and it
+       * expects each field inside the struct to be referenced explicitly with table alias in the method
+       * {@link org.apache.calcite.sql.validate.DelegatingScope#fullyQualify(SqlIdentifier)}.
+       * Therefore, we need to generate `complex`.`s`.`name` with this override, which will also affect other non-struct
+       * fields and add table alias in `FROM` clause, but it won't affect the SQL correctness.
        */
       @Override
       public boolean hasImplicitTableAlias() {
