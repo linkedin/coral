@@ -28,7 +28,9 @@ dependencies {
   implementation project(':coral-trino')
   implementation project(':coral-spark')
 
-  implementation 'org.apache.hive:hive-exec:1.2.2:core'
+  implementation('org.apache.hive:hive-exec:1.2.2:core') {
+    exclude group: 'org.apache.calcite', module: 'calcite-core'
+  }
   implementation 'org.apache.hadoop:hadoop-mapreduce-client-core:2.7.0'
   implementation 'org.springframework.boot:spring-boot-starter-web'
   implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
