@@ -22,6 +22,7 @@ def get_context_modules() -> Dict[str, Dict[str, Any]]:
         "requests": get_requests_module_context(),
     }
 ```
+
 3. Add this package to your dbt project by creating or modifying `packages.yml` and run `dbt deps` to install the package.
 
 ```
@@ -31,4 +32,31 @@ packages:
     subdirectory: coral-dbt/src/main/resources
 ```
 
-4. Follow the instructions in the main project README to start up Coral Service.
+4. Modify your `dbt_project.yaml` by adding the following line. (The absence of anything after the colon is intentional.)
+```
+query-comment:
+```
+5. Follow the instructions in the main project README to start up Coral Service. Currently, the url will default to [http://localhost:8080](http://localhost:8080). To modify this, you can either:
+   * Add `coral_url` as a variable in your `dbt_project.yaml` as follows:
+   ```
+    vars:
+      coral_url: <your_coral_url>
+    ```
+   * Or, clone the package (and change `packages.yml` to point to your package version) and modify the `default_coral_url` in `default/utils/configs.sql`
+   ```
+    {% set default_coral_url = <your_coral_url> %}
+    ```
+
+## Additional Setup
+### Incremental Maintenance
+In your models, specify the names of the tables your query depends on with the `table_names` config. An example model looks as follows:
+```
+{{
+  config(
+    materialized='incremental_maintenance',
+    table_names=['db.t1', 'db.t2'],
+  )
+}}
+
+SELECT * FROM db.t1 UNION SELECT * FROM db.t2
+```

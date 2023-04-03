@@ -438,22 +438,22 @@ public class RelToTrinoConverterTest {
   }
 
   @Test
-  public void testTryCastIntTrino() {
+  public void testAddCastForInt() {
     String sql =
         "SELECT CASE WHEN a.scol= 0 THEN TRUE ELSE FALSE END AS testcol FROM " + tableOne + " a WHERE a.scol = 1";
     String expectedSql =
-        "SELECT CASE WHEN TRY_CAST(\"tableOne\".\"scol\" AS INTEGER) = 0 THEN TRUE ELSE FALSE END AS \"TESTCOL\"\n"
-            + "FROM \"tableOne\" AS \"tableOne\"\n" + "WHERE TRY_CAST(\"tableOne\".\"scol\" AS INTEGER) = 1";
+        "SELECT CASE WHEN CAST(\"tableOne\".\"scol\" AS INTEGER) = 0 THEN TRUE ELSE FALSE END AS \"TESTCOL\"\n"
+            + "FROM \"tableOne\" AS \"tableOne\"\n" + "WHERE CAST(\"tableOne\".\"scol\" AS INTEGER) = 1";
     testConversion(sql, expectedSql);
   }
 
   @Test
-  public void testTryCastBooleanTrino() {
+  public void testAddCastForBoolean() {
     String sql = "SELECT CASE WHEN a.scol= TRUE THEN TRUE ELSE FALSE END AS testcol FROM " + tableOne
         + " a WHERE a.scol = FALSE";
     String expectedSql =
-        "SELECT CASE WHEN TRY_CAST(\"tableOne\".\"scol\" AS BOOLEAN) = TRUE THEN TRUE ELSE FALSE END AS \"TESTCOL\"\n"
-            + "FROM \"tableOne\" AS \"tableOne\"\n" + "WHERE TRY_CAST(\"tableOne\".\"scol\" AS BOOLEAN) = FALSE";
+        "SELECT CASE WHEN CAST(\"tableOne\".\"scol\" AS BOOLEAN) = TRUE THEN TRUE ELSE FALSE END AS \"TESTCOL\"\n"
+            + "FROM \"tableOne\" AS \"tableOne\"\n" + "WHERE CAST(\"tableOne\".\"scol\" AS BOOLEAN) = FALSE";
     testConversion(sql, expectedSql);
   }
 
