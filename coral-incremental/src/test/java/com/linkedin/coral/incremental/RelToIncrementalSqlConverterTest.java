@@ -40,66 +40,80 @@ public class RelToIncrementalSqlConverterTest {
   public String getIncrementalModification(String sql) {
     RelToIncrementalSqlConverter converter = new RelToIncrementalSqlConverter();
     RelNode originalRelNode = hiveToRelConverter.convertSql(sql);
-    String temp = converter.convert(originalRelNode);
     return converter.convert(originalRelNode);
   }
 
   @Test
   public void testSimpleSelectAll() {
-    // Not a test, currently used for debugger runs only
     String sql = "SELECT * FROM test.foo";
-    getIncrementalModification(sql);
+    String expected = "SELECT *\n" + "FROM test.foo_delta AS foo_delta";
+    assertEquals(getIncrementalModification(sql), expected);
   }
 
   @Test
-  public void testJoinInput() {
-    // Not a test, currently used for debugger runs only
+  public void testSimpleJoin() {
     String sql = "SELECT * FROM test.bar1 JOIN test.bar2 ON test.bar1.x = test.bar2.x";
-    getIncrementalModification(sql);
+    String expected = "SELECT *\n" + "FROM (SELECT *\n" + "FROM test.bar1 AS bar1\n"
+        + "INNER JOIN test.bar2_delta AS bar2_delta ON bar1.x = bar2_delta.x\n" + "UNION ALL\n" + "SELECT *\n"
+        + "FROM test.bar1_delta AS bar1_delta\n" + "INNER JOIN test.bar2 AS bar2 ON bar1_delta.x = bar2.x) AS t\n"
+        + "UNION ALL\n" + "SELECT *\n" + "FROM test.bar1_delta AS bar1_delta0\n"
+        + "INNER JOIN test.bar2_delta AS bar2_delta0 ON bar1_delta0.x = bar2_delta0.x";
+    assertEquals(getIncrementalModification(sql), expected);
   }
 
   @Test
-  public void testFilterInput() {
-    // Not a test, currently used for debugger runs only
+  public void testJoinWithFilter() {
     String sql = "SELECT * FROM test.bar1 JOIN test.bar2 ON test.bar1.x = test.bar2.x WHERE test.bar1.x > 10";
-    getIncrementalModification(sql);
+    String expected = "SELECT *\n" + "FROM (SELECT *\n" + "FROM (SELECT *\n" + "FROM test.bar1 AS bar1\n"
+        + "INNER JOIN test.bar2_delta AS bar2_delta ON bar1.x = bar2_delta.x\n" + "UNION ALL\n" + "SELECT *\n"
+        + "FROM test.bar1_delta AS bar1_delta\n" + "INNER JOIN test.bar2 AS bar2 ON bar1_delta.x = bar2.x) AS t\n"
+        + "UNION ALL\n" + "SELECT *\n" + "FROM test.bar1_delta AS bar1_delta0\n"
+        + "INNER JOIN test.bar2_delta AS bar2_delta0 ON bar1_delta0.x = bar2_delta0.x) AS t0\n" + "WHERE t0.x > 10";
+    assertEquals(getIncrementalModification(sql), expected);
   }
 
   @Test
-  public void testFilterNestedInput() {
-    // Not a test, currently used for debugger runs only
+  public void testJoinWithNestedFilter() {
     String sql =
         "WITH tmp AS (SELECT * from test.bar1 WHERE test.bar1.x > 10), tmp2 AS (SELECT * from test.bar2) SELECT * FROM tmp JOIN tmp2 ON tmp.x = tmp2.x";
-    getIncrementalModification(sql);
-  }
-
-  @Test
-  public void testJoinOutput() {
-    // Not a test, currently used for debugger runs only
-    String sql =
-        "SELECT * FROM test.bar1 INNER JOIN test.bar2 ON test.bar1.x = test.bar2.x UNION ALL SELECT * FROM test.bar1 INNER JOIN test.bar2 ON test.bar1.x = test.bar2.x UNION ALL SELECT * FROM test.bar1 INNER JOIN test.bar2 ON test.bar1.x = test.bar2.x";
-    getIncrementalModification(sql);
+    String expected = "SELECT *\n" + "FROM (SELECT *\n" + "FROM (SELECT *\n" + "FROM test.bar1 AS bar1\n"
+        + "WHERE bar1.x > 10) AS t\n" + "INNER JOIN test.bar2_delta AS bar2_delta ON t.x = bar2_delta.x\n"
+        + "UNION ALL\n" + "SELECT *\n" + "FROM (SELECT *\n" + "FROM test.bar1_delta AS bar1_delta\n"
+        + "WHERE bar1_delta.x > 10) AS t0\n" + "INNER JOIN test.bar2 AS bar2 ON t0.x = bar2.x) AS t1\n" + "UNION ALL\n"
+        + "SELECT *\n" + "FROM (SELECT *\n" + "FROM test.bar1_delta AS bar1_delta0\n"
+        + "WHERE bar1_delta0.x > 10) AS t2\n" + "INNER JOIN test.bar2_delta AS bar2_delta0 ON t2.x = bar2_delta0.x";
+    assertEquals(getIncrementalModification(sql), expected);
   }
 
   @Test
   public void testNestedJoin() {
-    // Not a test, currently used for debugger runs only
     String sql =
         "WITH tmp AS (SELECT * FROM test.bar1 INNER JOIN test.bar2 ON test.bar1.x = test.bar2.x) SELECT * FROM tmp INNER JOIN test.bar3 ON tmp.x = test.bar3.x";
-    getIncrementalModification(sql);
+    String expected = "SELECT *\n" + "FROM (SELECT *\n" + "FROM test.bar1 AS bar1\n"
+        + "INNER JOIN test.bar2 AS bar2 ON bar1.x = bar2.x\n"
+        + "INNER JOIN test.bar3_delta AS bar3_delta ON bar1.x = bar3_delta.x\n" + "UNION ALL\n" + "SELECT *\n"
+        + "FROM (SELECT *\n" + "FROM (SELECT *\n" + "FROM test.bar1 AS bar10\n"
+        + "INNER JOIN test.bar2_delta AS bar2_delta ON bar10.x = bar2_delta.x\n" + "UNION ALL\n" + "SELECT *\n"
+        + "FROM test.bar1_delta AS bar1_delta\n" + "INNER JOIN test.bar2 AS bar20 ON bar1_delta.x = bar20.x) AS t\n"
+        + "UNION ALL\n" + "SELECT *\n" + "FROM test.bar1_delta AS bar1_delta0\n"
+        + "INNER JOIN test.bar2_delta AS bar2_delta0 ON bar1_delta0.x = bar2_delta0.x) AS t0\n"
+        + "INNER JOIN test.bar3 AS bar3 ON t0.x = bar3.x) AS t1\n" + "UNION ALL\n" + "SELECT *\n" + "FROM (SELECT *\n"
+        + "FROM (SELECT *\n" + "FROM test.bar1 AS bar11\n"
+        + "INNER JOIN test.bar2_delta AS bar2_delta1 ON bar11.x = bar2_delta1.x\n" + "UNION ALL\n" + "SELECT *\n"
+        + "FROM test.bar1_delta AS bar1_delta1\n" + "INNER JOIN test.bar2 AS bar21 ON bar1_delta1.x = bar21.x) AS t2\n"
+        + "UNION ALL\n" + "SELECT *\n" + "FROM test.bar1_delta AS bar1_delta2\n"
+        + "INNER JOIN test.bar2_delta AS bar2_delta2 ON bar1_delta2.x = bar2_delta2.x) AS t3\n"
+        + "INNER JOIN test.bar3_delta AS bar3_delta0 ON t3.x = bar3_delta0.x";
+    assertEquals(getIncrementalModification(sql), expected);
   }
 
   @Test
-  public void testUnionCase() {
-    // Not a test, currently used for debugger runs only
+  public void testUnion() {
     String sql = "SELECT * FROM test.bar1 UNION SELECT * FROM test.bar2 UNION SELECT * FROM test.bar3";
-    getIncrementalModification(sql);
-  }
-
-  @Test
-  public void testUnionDiffDbCase() {
-    // Not a test, currently used for debugger runs only
-    String sql = "SELECT * FROM test.foo UNION SELECT * FROM test2.foo";
-    getIncrementalModification(sql);
+    String expected =
+        "SELECT t1.x, t1.y\n" + "FROM (SELECT t.x, t.y\n" + "FROM (SELECT *\n" + "FROM test.bar1_delta AS bar1_delta\n"
+            + "UNION ALL\n" + "SELECT *\n" + "FROM test.bar2_delta AS bar2_delta) AS t\n" + "GROUP BY t.x, t.y\n"
+            + "UNION ALL\n" + "SELECT *\n" + "FROM test.bar3_delta AS bar3_delta) AS t1\n" + "GROUP BY t1.x, t1.y";
+    assertEquals(getIncrementalModification(sql), expected);
   }
 }
