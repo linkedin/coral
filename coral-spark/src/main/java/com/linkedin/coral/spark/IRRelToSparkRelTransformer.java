@@ -27,13 +27,11 @@ import org.apache.calcite.rel.logical.LogicalProject;
 import org.apache.calcite.rel.logical.LogicalSort;
 import org.apache.calcite.rel.logical.LogicalUnion;
 import org.apache.calcite.rel.logical.LogicalValues;
-import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexShuttle;
-import org.apache.calcite.rex.RexUtil;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.type.ArraySqlType;
@@ -183,10 +181,7 @@ class IRRelToSparkRelTransformer {
 
       RexCall updatedCall = (RexCall) super.visitCall(call);
 
-      RexNode convertToNewNode = convertToZeroBasedArrayIndex(updatedCall)
-          .orElseGet(() -> removeCastToEnsureCorrectNullability(updatedCall).orElse(updatedCall));
-
-      return convertToNewNode;
+      return convertToZeroBasedArrayIndex(updatedCall).orElse(updatedCall);
     }
 
     // Coral RelNode Stores array indexes as +1, this fixes the behavior on spark side
@@ -204,35 +199,6 @@ class IRRelToSparkRelTransformer {
                 rexBuilder.makeCall(SqlStdOperatorTable.MINUS, itemRef, rexBuilder.makeExactLiteral(BigDecimal.ONE));
             return Optional.of(rexBuilder.makeCall(call.op, columnRef, zeroBasedIndex));
           }
-        }
-      }
-      return Optional.empty();
-    }
-
-    /**
-     *  Calcite entails the nullability of an expression by casting it to the correct nullable type.
-     *  However, for complex types like ARRAY<STRING NOT NULL> (element non-nullable, but top-level nullable),
-     *  the translated SQL will be `CAST(XXX AS ARRAY<STRING>)`, which strip the nullable information.
-     *  Since Spark treats a cast target sql type name as always nullable (both inner and outer),
-     *  it will treat above cast call as type ARRAY<STRING:nullable>:nullable, this deviates
-     *  from the nullability represented in RelNode/Coral-Schema ARRAY<STRING:non-nullable>:nullable,
-     *  see {@link com.linkedin.coral.schema.avro.ViewToAvroSchemaConverterTests#testCaseCallWithNullBranchAndComplexDataTypeBranch()
-     *  testCastCallNullablility}
-     *
-     *  To make this work, we remove all the CAST expressions induced by nullability differences, and let Spark's
-     *  SQL analyzer derive the nullability for the SQL itself, and as long as Coral-Schema can be an equal or looser
-     *  with regard to the Spark analyzer schema, it should make Coral compatible with Spark.
-     */
-    private Optional<RexNode> removeCastToEnsureCorrectNullability(RexCall call) {
-      if (call.getOperator().equals(SqlStdOperatorTable.CAST)) {
-        if (RexUtil.isNullLiteral(call, true)) {
-          return Optional.of(rexBuilder.makeNullLiteral(call.getType()));
-        }
-        RelDataType castType = call.getType();
-        RelDataType originalType = call.getOperands().get(0).getType();
-        if (castType.isNullable() && !originalType.isNullable()
-            && rexBuilder.getTypeFactory().createTypeWithNullability(originalType, true).equals(castType)) {
-          return Optional.of(rexBuilder.copy(call.getOperands().get(0)));
         }
       }
       return Optional.empty();

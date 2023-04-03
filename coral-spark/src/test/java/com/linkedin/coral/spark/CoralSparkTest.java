@@ -830,16 +830,6 @@ public class CoralSparkTest {
   }
 
   @Test
-  public void testRedundantCastRemovedFromCaseCall() {
-    final String sourceSql = "SELECT CASE WHEN TRUE THEN NULL ELSE split(b, ' ') END AS col1 FROM complex";
-    String expandedSql = getCoralSparkTranslatedSqlWithAliasFromCoralSchema(sourceSql);
-
-    String targetSql =
-        "SELECT CASE WHEN TRUE THEN NULL ELSE split(complex.b, ' ') END col1\n" + "FROM default.complex complex";
-    assertEquals(expandedSql, targetSql);
-  }
-
-  @Test
   public void testConvertFieldAccessOnFunctionCall() {
     RelNode relNode = TestUtils.toRelNode("SELECT named_struct('a', named_struct('b', 1)).a.b");
 
