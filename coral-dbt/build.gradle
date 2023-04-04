@@ -5,4 +5,40 @@ spotless {
     target 'src/main/resources/macros/coral_macros/**/**/*.sql'
     licenseHeaderFile(rootProject.file("gradle/license/LICENSE_HEADER"), "\\{% ")
   }
+  python {
+    target 'src/main/resources/tests/*.py'
+    licenseHeaderFile(rootProject.file("gradle/license/PYTHON_LICENSE_HEADER"), "import")
+  }
 }
+
+task runCoralDbtTests {
+  def processBuilder = new ProcessBuilder([
+    'python3',
+    'test_incremental.py'
+  ])
+  processBuilder.directory(file('src/main/resources/tests'))
+
+  // Start the subprocess and redirect the output to the console
+  def process = processBuilder.start()
+  def reader = new BufferedReader(new InputStreamReader(process.getInputStream()))
+  def line
+  while ((line = reader.readLine()) != null) {
+    println(line)
+  }
+
+  // Wait for the subprocess to finish and trigger a failure on AssertionErrors
+  process.waitFor()
+  def errorStream = process.getErrorStream()
+  def buffReader = new BufferedReader(new InputStreamReader(errorStream))
+  def stringBuilder = new StringBuilder()
+  def newLine
+  while ((newLine = buffReader.readLine()) != null) {
+    stringBuilder.append(newLine)
+  }
+  def errorOutput = stringBuilder.toString()
+  if (errorOutput.contains("AssertionError")) {
+    throw new GradleException(errorOutput)
+  }
+}
+
+build.dependsOn 'runCoralDbtTests'
