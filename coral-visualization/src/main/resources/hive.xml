@@ -1,0 +1,33 @@
+<!--
+
+    Copyright 2019 LinkedIn Corporation. All rights reserved.
+    Licensed under the BSD-2 Clause license.
+    See LICENSE in the project root for license information.
+
+-->
+<configuration>
+  <property>
+    <name>hive.exec.scratchdir</name>
+    <value>${coral.hive.test.dir}/hive-scratch-dir</value>
+  </property>
+  <property>
+    <name>hive.metastore.warehouse.dir</name>
+    <value>${coral.hive.test.dir}/warehouse</value>
+  </property>
+  <property>
+    <name>javax.jdo.option.ConnectionDriverName</name>
+    <value>org.apache.derby.jdbc.EmbeddedDriver</value>
+  </property>
+  <property>
+    <name>javax.jdo.option.ConnectionURL</name>
+    <value>jdbc:derby:;databaseName=${coral.hive.test.dir}/metastore.db;create=true</value>
+  </property>
+  <property>
+    <name>hive.metastore.schema.verification</name>
+    <value>false</value>
+  </property>
+  <property>
+    <name>datanucleus.schema.autoCreateTables</name>
+    <value>true</value>
+  </property>
+</configuration>

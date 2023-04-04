@@ -1,6 +1,7 @@
 def versions = [
   'antlr': '3.4',
   'avro-utl': '0.2.117',
+  'graph-vis': '0.18.1',
   'gson': '2.9.0',
   'hadoop': '2.7.0',
   'hive': '1.2.2',
@@ -19,6 +20,7 @@ ext.deps = [
   'antlr': "org.antlr:antlr:${versions['antlr']}",
   'antlr-runtime': "org.antlr:antlr-runtime:${versions['antlr']}",
   'avroCompatHelper': "com.linkedin.avroutil1:helper-all:${versions['avro-utl']}",
+  'graph-vis': "guru.nidi:graphviz-java:${versions['graph-vis']}",
   'gson': "com.google.code.gson:gson:${versions['gson']}",
   'hadoop': [
     'hadoop-common': "org.apache.hadoop:hadoop-common:${versions['hadoop']}",

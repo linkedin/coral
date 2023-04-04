@@ -1,0 +1,13 @@
+dependencies {
+  compile project(path: ':coral-hive')
+  compile (deps.'graph-vis')
+  compile (deps.'hive'.'hive-exec-core') {
+    exclude group: 'org.apache.avro', module: 'avro-tools'
+    // These exclusions are required to prevent duplicate classes since we include
+    // shaded jar above
+    exclude group: 'org.apache.calcite', module: 'calcite-core'
+    exclude group: 'org.apache.calcite', module: 'calcite-avatica'
+  }
+  compile deps.'hadoop'.'hadoop-mapreduce-client-core'
+  compile deps.'kryo'
+}
