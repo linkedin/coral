@@ -1,11 +1,13 @@
+/**
+ * Copyright 2023 LinkedIn Corporation. All rights reserved.
+ * Licensed under the BSD-2 Clause license.
+ * See LICENSE in the project root for license information.
+ */
 package com.linkedin.coral.vis;
 
-import guru.nidi.graphviz.attribute.Label;
-import guru.nidi.graphviz.model.Link;
-import guru.nidi.graphviz.model.LinkTarget;
-import guru.nidi.graphviz.model.Node;
 import java.util.ArrayList;
 import java.util.List;
+
 import org.apache.calcite.sql.SqlBasicCall;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlDataTypeSpec;
@@ -19,7 +21,13 @@ import org.apache.calcite.sql.SqlNodeList;
 import org.apache.calcite.sql.SqlSelect;
 import org.apache.calcite.sql.util.SqlVisitor;
 
+import guru.nidi.graphviz.attribute.Label;
+import guru.nidi.graphviz.model.Link;
+import guru.nidi.graphviz.model.LinkTarget;
+import guru.nidi.graphviz.model.Node;
+
 import static guru.nidi.graphviz.model.Factory.*;
+
 
 public class CoralSqlNodeVisualisationVisitor implements SqlVisitor<Node> {
   @Override

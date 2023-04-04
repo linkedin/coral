@@ -1,21 +1,29 @@
+/**
+ * Copyright 2023 LinkedIn Corporation. All rights reserved.
+ * Licensed under the BSD-2 Clause license.
+ * See LICENSE in the project root for license information.
+ */
 package com.linkedin.coral.vis;
+
+import java.io.File;
+import java.io.InputStream;
+import java.util.UUID;
+
+import org.apache.calcite.sql.util.SqlVisitor;
+import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.hive.metastore.api.MetaException;
+import org.apache.hadoop.hive.ql.metadata.Hive;
+import org.apache.hadoop.hive.ql.metadata.HiveException;
 
 import com.linkedin.coral.common.HiveMscAdapter;
 import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
+
 import guru.nidi.graphviz.attribute.Font;
 import guru.nidi.graphviz.engine.Format;
 import guru.nidi.graphviz.engine.Graphviz;
 import guru.nidi.graphviz.model.Factory;
 import guru.nidi.graphviz.model.Graph;
 import guru.nidi.graphviz.model.Node;
-import java.io.File;
-import java.io.InputStream;
-import java.util.UUID;
-import org.apache.calcite.sql.util.SqlVisitor;
-import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.metastore.api.MetaException;
-import org.apache.hadoop.hive.ql.metadata.Hive;
-import org.apache.hadoop.hive.ql.metadata.HiveException;
 
 
 public class CoraIlRVisualizationUtil {
@@ -28,7 +36,7 @@ public class CoraIlRVisualizationUtil {
     this.outputDirectory = outputDirectory;
   }
 
-  public static CoraIlRVisualizationUtil create(File outputDirectory)  {
+  public static CoraIlRVisualizationUtil create(File outputDirectory) {
     HiveMscAdapter mscAdapter = createMscAdapter();
     HiveToRelConverter converter = new HiveToRelConverter(mscAdapter);
     return new CoraIlRVisualizationUtil(converter, outputDirectory);
@@ -37,7 +45,8 @@ public class CoraIlRVisualizationUtil {
   public void visualizeCoralSqlNodeToFile(String sql, String fileName) {
     SqlVisitor<Node> sqlVisitor = new CoralSqlNodeVisualisationVisitor();
     Node node = converter.toSqlNode(sql).accept(sqlVisitor);
-    Graph graph = Factory.graph("test").directed().nodeAttr().with(Font.size(10)).linkAttr().with(Font.size(10)).with(node);
+    Graph graph =
+        Factory.graph("test").directed().nodeAttr().with(Font.size(10)).linkAttr().with(Font.size(10)).with(node);
     File outputFile = new File(outputDirectory, fileName);
     try {
       Graphviz.fromGraph(graph).width(1000).render(Format.PNG).toFile(outputFile);
