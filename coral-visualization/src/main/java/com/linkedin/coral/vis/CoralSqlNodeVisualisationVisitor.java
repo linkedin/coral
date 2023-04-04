@@ -5,11 +5,10 @@
  */
 package com.linkedin.coral.vis;
 
-import guru.nidi.graphviz.model.Factory;
 import java.util.ArrayList;
 import java.util.List;
-
 import java.util.UUID;
+
 import org.apache.calcite.sql.SqlBasicCall;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlDataTypeSpec;
@@ -24,6 +23,7 @@ import org.apache.calcite.sql.SqlSelect;
 import org.apache.calcite.sql.util.SqlVisitor;
 
 import guru.nidi.graphviz.attribute.Label;
+import guru.nidi.graphviz.model.Factory;
 import guru.nidi.graphviz.model.Link;
 import guru.nidi.graphviz.model.LinkTarget;
 import guru.nidi.graphviz.model.Node;
