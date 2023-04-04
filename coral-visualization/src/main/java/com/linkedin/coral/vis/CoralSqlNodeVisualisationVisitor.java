@@ -5,9 +5,11 @@
  */
 package com.linkedin.coral.vis;
 
+import guru.nidi.graphviz.model.Factory;
 import java.util.ArrayList;
 import java.util.List;
 
+import java.util.UUID;
 import org.apache.calcite.sql.SqlBasicCall;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlDataTypeSpec;
@@ -97,7 +99,7 @@ public class CoralSqlNodeVisualisationVisitor implements SqlVisitor<Node> {
 
   @Override
   public Node visit(SqlDataTypeSpec type) {
-    return node("null");
+    return node("TBD");
   }
 
   @Override
@@ -112,5 +114,9 @@ public class CoralSqlNodeVisualisationVisitor implements SqlVisitor<Node> {
 
   private Link edge(SqlNode target, String label) {
     return to(target.accept(this)).with(Label.of(label));
+  }
+
+  private static Node node(String label) {
+    return Factory.node(UUID.randomUUID().toString()).with(Label.of(label));
   }
 }
