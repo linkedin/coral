@@ -13,20 +13,20 @@ URL = 'http://localhost:8080/api/incremental/rewrite'
 
 class TestUtils:
     @staticmethod
-    def construct_incremental_code_generation_test(name):
+    def construct_generate_incremental_code_test(name):
         output_table = name + '_output'
         expected_file = open(SEEDS_DIR + 'test_' + name + '_expected.txt', 'r')
-        expected_incremental_sql = expected_file.read()
+        expected_incremental_spark_scala = expected_file.read()
         expected_file.close()
 
         return({
             'output_table': output_table,
-            'expected_incremental_sql': expected_incremental_sql,
+            'expected_incremental_spark_scala': expected_incremental_spark_scala,
         })
 
     @staticmethod
-    def test_incremental_code_generation(coral_response, table_names, output_table):
-        with open('incremental_code_generation.j2') as f:
+    def test_generate_incremental_code(coral_response, table_names, output_table):
+        with open('generate_incremental_code.j2') as f:
             template = Template(f.read())
 
         context = {'coral_response': coral_response, 'table_names': table_names, 'output_table': output_table}
@@ -40,8 +40,8 @@ class TestIncremental(unittest.TestCase):
     @classmethod
     def setUpClass(self):
         subprocess.run(["chmod", "+x", "./setup_test.sh"])
-        subprocess.run(["./setup_test.sh", "../macros/coral_macros/spark/utils/incremental_code_generation.sql",
-                        "incremental_code_generation.j2"])
+        subprocess.run(["./setup_test.sh", "../macros/coral_macros/spark/utils/generate_incremental_code.sql",
+                        "generate_incremental_code.j2"])
 
     def test_simple_select_all(self):
         name = "simple_select_all"
@@ -49,10 +49,10 @@ class TestIncremental(unittest.TestCase):
         mocked_coral_response = {
             "incremental_maintenance_sql": "SELECT * FROM default.foo_delta AS foo_delta",
             "incremental_table_names": ["foo_delta"],
-            "temp_view_table_names": ["foo"]
+            "underscore_delimited_table_names": ["foo"]
         }
-        test_vars = TestUtils.construct_incremental_code_generation_test(name)
-        self.assertEqual(TestUtils.test_incremental_code_generation(mocked_coral_response, table_names, test_vars['output_table']).strip(), test_vars['expected_incremental_sql'].strip())
+        test_vars = TestUtils.construct_generate_incremental_code_test(name)
+        self.assertEqual(TestUtils.test_generate_incremental_code(mocked_coral_response, table_names, test_vars['output_table']).strip(), test_vars['expected_incremental_spark_scala'].strip())
 
     def test_join(self):
         name = "join"
@@ -64,16 +64,16 @@ class TestIncremental(unittest.TestCase):
                                            + "UNION ALL\n" + "SELECT *\n" + "FROM default.bar1_delta AS bar1_delta0\n"
                                            + "INNER JOIN default.bar2_delta AS bar2_delta0 ON bar1_delta0.x = bar2_delta0.x",
             "incremental_table_names": ["bar1_delta", "bar2_delta"],
-            "temp_view_table_names": ["bar1", "bar2"]
+            "underscore_delimited_table_names": ["bar1", "bar2"]
         }
-        test_vars = TestUtils.construct_incremental_code_generation_test(name)
-        self.assertEqual(TestUtils.test_incremental_code_generation(mocked_coral_response, table_names, test_vars['output_table']).strip(), test_vars['expected_incremental_sql'].strip())
+        test_vars = TestUtils.construct_generate_incremental_code_test(name)
+        self.assertEqual(TestUtils.test_generate_incremental_code(mocked_coral_response, table_names, test_vars['output_table']).strip(), test_vars['expected_incremental_spark_scala'].strip())
 
     @classmethod
     def tearDownClass(self):
         subprocess.run(["chmod", "+x", "./cleanup_test.sh"])
-        subprocess.run(["./cleanup_test.sh", "incremental_code_generation.j2"])
-        subprocess.run(["./cleanup_test.sh", "incremental_code_generation.j2-e"])
+        subprocess.run(["./cleanup_test.sh", "generate_incremental_code.j2"])
+        subprocess.run(["./cleanup_test.sh", "generate_incremental_code.j2-e"])
 
 if __name__ == '__main__':
     unittest.main()

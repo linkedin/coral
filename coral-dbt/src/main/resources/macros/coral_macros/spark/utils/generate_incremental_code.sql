@@ -3,7 +3,7 @@
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
-{% macro spark__incremental_code_generation(coral_response, table_names, output_table) -%}
+{% macro spark__generate_incremental_code(coral_response, table_names, output_table) -%}
 
 --     Compiled lines of spark scala code to be executed, separated by \n delimiter
   {% set spark_scala = '' %}

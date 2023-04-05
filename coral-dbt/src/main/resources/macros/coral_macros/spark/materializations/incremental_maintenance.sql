@@ -22,10 +22,11 @@
 --       coral_response['incremental_table_names']: ['db_t1_delta', 'db_t2_delta']
   {% set table_names = config.require('table_names') %}
   {% set coral_incremental_url = coral_dbt.get_coral_url() ~ '/api/incremental/rewrite' %}
-  {% set coral_response = coral_dbt.get_coral_incremental_response(sql, coral_incremental_url, table_names) %}
+  {% set sql_dialect = 'spark' %}
+  {% set coral_response = coral_dbt.get_coral_incremental_response(sql, coral_incremental_url, table_names, sql_dialect) %}
 
 --     Generate spark scala for incremental maintenance logic
-  {% set spark_scala = coral_dbt.incremental_code_generation(coral_response, table_names, output_table) %}
+  {% set spark_scala = coral_dbt.generate_incremental_code(coral_response, table_names, output_table) %}
 
 --     Execute spark scala
   {% call statement('main') -%}

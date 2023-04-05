@@ -18,25 +18,20 @@ task runCoralDbtTests {
   ])
   processBuilder.directory(file('src/main/resources/tests'))
 
-  // Start the subprocess and redirect the output to the console
+  // Start the subprocess and wait for it to finish
   def process = processBuilder.start()
-  def reader = new BufferedReader(new InputStreamReader(process.getInputStream()))
-  def line
-  while ((line = reader.readLine()) != null) {
-    println(line)
-  }
-
-  // Wait for the subprocess to finish and trigger a failure on AssertionErrors
   process.waitFor()
+
+  // Collect errors and throw exception on non-zero exit code
   def errorStream = process.getErrorStream()
   def buffReader = new BufferedReader(new InputStreamReader(errorStream))
   def stringBuilder = new StringBuilder()
   def newLine
   while ((newLine = buffReader.readLine()) != null) {
-    stringBuilder.append(newLine)
+    stringBuilder.append(newLine + "\n")
   }
   def errorOutput = stringBuilder.toString()
-  if (errorOutput.contains("AssertionError")) {
+  if (process.exitValue() != 0) {
     throw new GradleException(errorOutput)
   }
 }
