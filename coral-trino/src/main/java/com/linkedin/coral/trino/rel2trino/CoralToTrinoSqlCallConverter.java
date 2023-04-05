@@ -25,6 +25,7 @@ import com.linkedin.coral.trino.rel2trino.functions.TrinoElementAtFunction;
 import com.linkedin.coral.trino.rel2trino.transformers.CollectListOrSetFunctionTransformer;
 import com.linkedin.coral.trino.rel2trino.transformers.CoralRegistryOperatorRenameSqlCallTransformer;
 import com.linkedin.coral.trino.rel2trino.transformers.GenericCoralRegistryOperatorRenameSqlCallTransformer;
+import com.linkedin.coral.trino.rel2trino.transformers.MapValueConstructorTransformer;
 import com.linkedin.coral.trino.rel2trino.transformers.ToDateOperatorTransformer;
 
 import static com.linkedin.coral.trino.rel2trino.CoralTrinoConfigKeys.*;
@@ -44,6 +45,7 @@ public class CoralToTrinoSqlCallConverter extends SqlShuttle {
         // conditional functions
         new CoralRegistryOperatorRenameSqlCallTransformer("nvl", 2, "coalesce"),
         // array and map functions
+        new MapValueConstructorTransformer(),
         new OperatorRenameSqlCallTransformer(SqlStdOperatorTable.SUBSTRING, 3, "SUBSTR"),
         new SourceOperatorMatchSqlCallTransformer("item", 2) {
           @Override
