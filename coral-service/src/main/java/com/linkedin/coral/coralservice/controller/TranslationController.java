@@ -114,18 +114,18 @@ public class TranslationController implements ApplicationListener<ContextRefresh
     IncrementalResponseBody incrementalResponseBody = new IncrementalResponseBody();
     String incrementalQuery = getIncrementalQueryFromUserSql(query);
     for (String tableName : tableNames) {
-      /* Generate temp view and incremental table names
+      /* Generate underscore delimited and incremental table names
          Table name: db.t1
-         Temp view name: db_t1
+         Underscore delimited name: db_t1
          Incremental table name: db_t1_delta
         */
-      String tempViewName = tableName.replace('.', '_');
-      String incrementalTableName = tempViewName + "_delta";
-      incrementalResponseBody.addTempViewTableName(tempViewName);
+      String underscoreDelimitedName = tableName.replace('.', '_');
+      String incrementalTableName = underscoreDelimitedName + "_delta";
+      incrementalResponseBody.addUnderscoreDelimitedTableName(underscoreDelimitedName);
       incrementalResponseBody.addIncrementalTableName(incrementalTableName);
 
       // Replace the table names in the incremental query with temp view compatible names
-      incrementalQuery = incrementalQuery.replaceAll(tableName, tempViewName);
+      incrementalQuery = incrementalQuery.replaceAll(tableName, underscoreDelimitedName);
     }
     // Replace newlines with spaces for compatibility with code generation
     incrementalQuery = incrementalQuery.replace('\n', ' ');
@@ -134,7 +134,7 @@ public class TranslationController implements ApplicationListener<ContextRefresh
     // Create JSON object from response body
     JSONObject response = new JSONObject();
     response.put("incremental_maintenance_sql", incrementalResponseBody.getIncrementalQuery());
-    response.put("temp_view_table_names", incrementalResponseBody.getTempViewTableNames());
+    response.put("underscore_delimited_table_names", incrementalResponseBody.getUnderscoreDelimitedTableNames());
     response.put("incremental_table_names", incrementalResponseBody.getIncrementalTableNames());
 
     String message = response.toString();

@@ -18,15 +18,13 @@
 --       table_names: ['db.t1', 'db.t2']
 --
 --       incremental_maintenance_sql: SELECT * FROM db_t1_delta UNION SELECT * FROM db_t2_delta
---       temp_view_table_names: ['db_t1', 'db_t2']
+--       underscore_delimited_table_names: ['db_t1', 'db_t2']
 --       incremental_table_names: ['db_t1_delta', 'db_t2_delta']
---
---     More complex examples can be found in RelToIncrementalSqlConverterTest.java
   {% set table_names = config.require('table_names') %}
 
   {% set coral_response = coral_dbt.get_coral_incremental_response(sql, table_names) %}
   {% set incremental_maintenance_sql = coral_response['incremental_maintenance_sql'] %}
-  {% set temp_view_table_names = coral_response['temp_view_table_names'] %}
+  {% set underscore_delimited_table_names = coral_response['underscore_delimited_table_names'] %}
   {% set incremental_table_names = coral_response['incremental_table_names'] %}
 
 --     Compiled lines of spark sql code to be executed, separated by \n delimiter
@@ -36,7 +34,7 @@
 --     Namespace variable used to persist changes beyond loop scope
   {% set ns = namespace(generated_sql='') %}
   {% for source_table in table_names %}
-    {% set get_snapshot_id_code =
+    {% set snapshot_id_retrieval_code =
         'val snapshot_df = spark.read.format("iceberg").load("' ~ source_table ~ '.snapshots")\n'
         ~ 'snapshot_df.createOrReplaceTempView("snapshot_temp_table")\n'
         ~ 'val snap_ids = spark.sql("SELECT snapshot_id FROM snapshot_temp_table ORDER BY committed_at DESC LIMIT 2")\n'
@@ -44,16 +42,16 @@
         ~ 'val end_snapshot_id = snap_ids.collect()(0)(0).toString\n'
     %}
 --     Time travel to get original table before additions
-    {% set create_original_df_code =
+    {% set original_df_creation_code =
         'val df = spark.read.format("iceberg").option("snapshot-id", start_snapshot_id).load("' ~ source_table ~ '")\n'
-        ~ 'df.createOrReplaceTempView("' ~ temp_view_table_names[loop.index0] ~ '")\n'
+        ~ 'df.createOrReplaceTempView("' ~ underscore_delimited_table_names[loop.index0] ~ '")\n'
     %}
 --     Grab additions to table
-    {% set create_delta_df_code =
+    {% set delta_df_creation_code =
         'val df = spark.read.format("iceberg").option("start-snapshot-id", start_snapshot_id).option("end-snapshot-id", end_snapshot_id).load("' ~ source_table ~ '")\n'
         ~ 'df.createOrReplaceTempView("' ~ incremental_table_names[loop.index0] ~ '")\n'
     %}
-    {% set ns.generated_sql = ns.generated_sql ~ get_snapshot_id_code ~ create_original_df_code ~ create_delta_df_code %}
+    {% set ns.generated_sql = ns.generated_sql ~ snapshot_id_retrieval_code ~ original_df_creation_code ~ delta_df_creation_code %}
   {% endfor %}
   {% set spark_sql = spark_sql ~ ns.generated_sql %}
 
@@ -64,10 +62,10 @@
   {% set spark_sql = spark_sql ~ incremental_to_spark_sql %}
 
 --     Insert incremental output into table
-  {% set write_to_table_sql =
+  {% set table_update_sql =
     'query_response.write.mode("append").saveAsTable("' ~ output_table ~ '")\n'
   %}
-  {% set spark_sql = spark_sql ~ write_to_table_sql %}
+  {% set spark_sql = spark_sql ~ table_update_sql %}
 
 --     Execute spark sql
   {% call statement('main') -%}

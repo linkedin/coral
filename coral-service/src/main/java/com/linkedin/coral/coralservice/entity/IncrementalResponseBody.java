@@ -11,12 +11,12 @@ import java.util.List;
 
 public class IncrementalResponseBody {
   private String incrementalQuery;
-  private List<String> tempViewTableNames;
+  private List<String> underscoreDelimitedTableNames;
   private List<String> incrementalTableNames;
 
   public IncrementalResponseBody() {
     incrementalQuery = "";
-    tempViewTableNames = new ArrayList<>();
+    underscoreDelimitedTableNames = new ArrayList<>();
     incrementalTableNames = new ArrayList<>();
   }
 
@@ -28,16 +28,16 @@ public class IncrementalResponseBody {
     this.incrementalQuery = incrementalQuery;
   }
 
-  public List<String> getTempViewTableNames() {
-    return tempViewTableNames;
+  public List<String> getUnderscoreDelimitedTableNames() {
+    return underscoreDelimitedTableNames;
   }
 
-  public void setTempViewTableNames(List<String> tempViewTableNames) {
-    this.tempViewTableNames = tempViewTableNames;
+  public void setUnderscoreDelimitedTableNames(List<String> underscoreDelimitedTableNames) {
+    this.underscoreDelimitedTableNames = underscoreDelimitedTableNames;
   }
 
-  public void addTempViewTableName(String tempViewTableName) {
-    tempViewTableNames.add(tempViewTableName);
+  public void addUnderscoreDelimitedTableName(String underscoreDelimitedTableName) {
+    underscoreDelimitedTableNames.add(underscoreDelimitedTableName);
   }
 
   public List<String> getIncrementalTableNames() {

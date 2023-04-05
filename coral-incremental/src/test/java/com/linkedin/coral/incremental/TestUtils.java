@@ -55,14 +55,11 @@ public class TestUtils {
     hiveToRelConverter = new HiveToRelConverter(hiveMetastoreClient);
 
     run(driver, "CREATE DATABASE IF NOT EXISTS test");
-    run(driver, "CREATE DATABASE IF NOT EXISTS test2");
 
     run(driver, "CREATE TABLE IF NOT EXISTS test.foo(a int, b varchar(30), c double)");
     run(driver, "CREATE TABLE IF NOT EXISTS test.bar1(x int, y double)");
     run(driver, "CREATE TABLE IF NOT EXISTS test.bar2(x int, y double)");
     run(driver, "CREATE TABLE IF NOT EXISTS test.bar3(x int, y double)");
-
-    run(driver, "CREATE TABLE IF NOT EXISTS test2.foo(a int, b varchar(30), c double)");
   }
 
   public static HiveConf loadResourceHiveConf() {

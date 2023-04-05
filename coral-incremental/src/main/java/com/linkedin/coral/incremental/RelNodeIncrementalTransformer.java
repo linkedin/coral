@@ -27,9 +27,9 @@ import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexNode;
 
 
-public class RelIncrementalTransformer {
+public class RelNodeIncrementalTransformer {
 
-  private RelIncrementalTransformer() {
+  private RelNodeIncrementalTransformer() {
   }
 
   public static RelNode convertRelIncremental(RelNode originalNode) {
@@ -49,8 +49,8 @@ public class RelIncrementalTransformer {
       public RelNode visit(LogicalJoin join) {
         RelNode left = join.getLeft();
         RelNode right = join.getRight();
-        RelNode incrementalLeft = transformToIncremental(left);
-        RelNode incrementalRight = transformToIncremental(right);
+        RelNode incrementalLeft = convertRelIncremental(left);
+        RelNode incrementalRight = convertRelIncremental(right);
 
         RexBuilder rexBuilder = join.getCluster().getRexBuilder();
 
@@ -61,6 +61,33 @@ public class RelIncrementalTransformer {
         LogicalUnion unionAllJoins =
             LogicalUnion.create(Arrays.asList(LogicalUnion.create(Arrays.asList(p1, p2), true), p3), true);
         return unionAllJoins;
+      }
+
+      @Override
+      public RelNode visit(LogicalFilter filter) {
+        RelNode transformedChild = convertRelIncremental(filter.getInput());
+        return LogicalFilter.create(transformedChild, filter.getCondition());
+      }
+
+      @Override
+      public RelNode visit(LogicalProject project) {
+        RelNode transformedChild = convertRelIncremental(project.getInput());
+        return LogicalProject.create(transformedChild, project.getProjects(), project.getRowType());
+      }
+
+      @Override
+      public RelNode visit(LogicalUnion union) {
+        List<RelNode> children = union.getInputs();
+        List<RelNode> transformedChildren =
+            children.stream().map(child -> convertRelIncremental(child)).collect(Collectors.toList());
+        return LogicalUnion.create(transformedChildren, union.all);
+      }
+
+      @Override
+      public RelNode visit(LogicalAggregate aggregate) {
+        RelNode transformedChild = convertRelIncremental(aggregate.getInput());
+        return LogicalAggregate.create(transformedChild, aggregate.getGroupSet(), aggregate.getGroupSets(),
+            aggregate.getAggCallList());
       }
     };
     return originalNode.accept(converter);
@@ -77,35 +104,6 @@ public class RelIncrementalTransformer {
       names.add(incrementalJoin.getRowType().getFieldNames().get(i));
     });
     return LogicalProject.create(incrementalJoin, projects, names);
-  }
-
-  private static RelNode transformToIncremental(RelNode target) {
-    // Recurse until we hit a TableScan to transform
-    if (target instanceof TableScan) {
-      return convertRelIncremental(target);
-    } else {
-      List<RelNode> children = target.getInputs();
-      List<RelNode> transformedChildren =
-          children.stream().map(child -> convertRelIncremental(child)).collect(Collectors.toList());
-
-      // Construct target with transformed children nodes
-      // TODO: Add other types
-      if (target instanceof LogicalFilter) {
-        return LogicalFilter.create(transformedChildren.get(0), ((LogicalFilter) target).getCondition());
-      } else if (target instanceof LogicalProject) {
-        return LogicalProject.create(transformedChildren.get(0), ((LogicalProject) target).getProjects(),
-            target.getRowType());
-      } else if (target instanceof LogicalJoin) {
-        return LogicalJoin.create(transformedChildren.get(0), transformedChildren.get(1),
-            ((LogicalJoin) target).getCondition(), target.getVariablesSet(), ((LogicalJoin) target).getJoinType());
-      } else if (target instanceof LogicalUnion) {
-        return LogicalUnion.create(transformedChildren, ((LogicalUnion) target).all);
-      } else if (target instanceof LogicalAggregate) {
-        return LogicalAggregate.create(transformedChildren.get(0), ((LogicalAggregate) target).getGroupSet(),
-            ((LogicalAggregate) target).getGroupSets(), ((LogicalAggregate) target).getAggCallList());
-      }
-    }
-    return target;
   }
 
 }
