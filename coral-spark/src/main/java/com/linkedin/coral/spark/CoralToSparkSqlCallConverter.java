@@ -170,6 +170,7 @@ public class CoralToSparkSqlCallConverter extends SqlShuttle {
 
   @Override
   public SqlNode visit(SqlCall call) {
-    return sqlCallTransformers.apply((SqlCall) super.visit(call));
+    final SqlCall transformedSqlCall = sqlCallTransformers.apply(call);
+    return super.visit(transformedSqlCall);
   }
 }
