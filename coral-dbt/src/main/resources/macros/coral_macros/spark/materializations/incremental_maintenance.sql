@@ -28,7 +28,7 @@
   {% set incremental_table_names = coral_response['incremental_table_names'] %}
 
 --     Compiled lines of spark sql code to be executed, separated by \n delimiter
-  {% set spark_sql = '' %}
+  {% set spark_scala = '' %}
 
 --     Generate Iceberg incremental table scan code for each target table
 --     Namespace variable used to persist changes beyond loop scope
@@ -53,24 +53,24 @@
     %}
     {% set ns.generated_sql = ns.generated_sql ~ snapshot_id_retrieval_code ~ original_df_creation_code ~ delta_df_creation_code %}
   {% endfor %}
-  {% set spark_sql = spark_sql ~ ns.generated_sql %}
+  {% set spark_scala = spark_scala ~ ns.generated_sql %}
 
 --     Generate code to execute the incremental query based on incremental table scans generated above
-  {% set incremental_to_spark_sql =
+  {% set incremental_to_spark_scala =
     'val query_response = spark.sql("' ~ incremental_maintenance_sql.strip() ~ '")\n'
   %}
-  {% set spark_sql = spark_sql ~ incremental_to_spark_sql %}
+  {% set spark_scala = spark_scala ~ incremental_to_spark_scala %}
 
 --     Insert incremental output into table
   {% set table_update_sql =
     'query_response.write.mode("append").saveAsTable("' ~ output_table ~ '")\n'
   %}
-  {% set spark_sql = spark_sql ~ table_update_sql %}
+  {% set spark_scala = spark_scala ~ table_update_sql %}
 
 --     Execute spark sql
   {% call statement('main') -%}
     $$spark$$
-    {{ spark_sql }}
+    {{ spark_scala }}
   {%- endcall %}
 
 --     Will persist tables via scala and not add to cache
