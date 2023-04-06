@@ -24,12 +24,11 @@ import static com.linkedin.coral.trino.rel2trino.CoralTrinoConfigKeys.*;
 
 
 /**
- * This class adjusts the return types of certain functions to ensure compatibility with Trino.
- * It casts the result of the transformed call to the same return type as in Hive for certain versions.
+ * This transformer casts the result of some Trino functions to the same return type as in Hive.
  *
  * Example:
- *  DATEDIFF function in Hive returns int type, but the corresponding function DATE_DIFF in Trino
- *  returns bigint type. To ensure compatibility, a CAST is added to convert the result to the int type.
+ *  "DATEDIFF" function in Hive returns int type, but the corresponding function "DATE_DIFF" in Trino
+ *  returns bigint type. To ensure compatibility, a "CAST" is added to convert the result to the int type.
  */
 public class ReturnTypeAdjustmentTransformer extends SqlCallTransformer {
 
