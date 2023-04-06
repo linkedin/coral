@@ -28,6 +28,7 @@ import com.linkedin.coral.trino.rel2trino.transformers.CoralRegistryOperatorRena
 import com.linkedin.coral.trino.rel2trino.transformers.CurrentTimestampTransformer;
 import com.linkedin.coral.trino.rel2trino.transformers.GenericCoralRegistryOperatorRenameSqlCallTransformer;
 import com.linkedin.coral.trino.rel2trino.transformers.MapValueConstructorTransformer;
+import com.linkedin.coral.trino.rel2trino.transformers.ReturnTypeAdjustmentTransformer;
 import com.linkedin.coral.trino.rel2trino.transformers.ToDateOperatorTransformer;
 
 import static com.linkedin.coral.trino.rel2trino.CoralTrinoConfigKeys.*;
@@ -116,7 +117,9 @@ public class CoralToTrinoSqlCallConverter extends SqlShuttle {
             "com.linkedin.stdudfs.urnextractor.hive.UrnExtractorFunctionWrapper", 1, "urn_extractor"),
         new CoralRegistryOperatorRenameSqlCallTransformer(
             "com.linkedin.stdudfs.hive.daliudfs.UrnExtractorFunctionWrapper", 1, "urn_extractor"),
-        new GenericCoralRegistryOperatorRenameSqlCallTransformer());
+        new GenericCoralRegistryOperatorRenameSqlCallTransformer(),
+
+        new ReturnTypeAdjustmentTransformer(configs));
   }
 
   private SqlOperator hiveToCoralSqlOperator(String functionName) {
