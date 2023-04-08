@@ -31,7 +31,7 @@ import guru.nidi.graphviz.model.Node;
 import static guru.nidi.graphviz.model.Factory.*;
 
 
-public class CoralSqlNodeVisualisationVisitor implements SqlVisitor<Node> {
+public class SqlNodeVisualizationVisitor implements SqlVisitor<Node> {
   @Override
   public Node visit(SqlLiteral literal) {
     return node(literal.toString());

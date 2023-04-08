@@ -29,8 +29,10 @@ and implementing query rewrite algorithms for data governance and query optimiza
 - Coral-Spark: Converts view logical plan to Spark SQL.
 - Coral-Pig: Converts view logical plan to Pig-latin.
 - Coral-Schema: Derives Avro schema of view using view logical plan and input Avro schemas of base tables.
-- Coral-Spark-Plan: Converts Spark plan strings to equivalent logical plan (in progress).
+- Coral-Spark-Plan [WIP]: Converts Spark plan strings to equivalent logical plan.
+- Coral-Visualization [WIP]: Visualizes Coral SqlNode and RelNode trees and renders them to an output file.
 - Coral-Service: Service that exposes REST APIs that allow users to interact with Coral (see [Coral-as-a-Service](#Coral-as-a-Service) for more details).
+
 
 ## How to Build
 
