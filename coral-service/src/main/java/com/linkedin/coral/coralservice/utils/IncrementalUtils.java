@@ -16,7 +16,7 @@ import static com.linkedin.coral.coralservice.utils.CoralProvider.*;
 
 public class IncrementalUtils {
 
-  public static String getIncrementalQueryFromUserSql(String query) {
+  public static String getSparkIncrementalQueryFromUserSql(String query) {
     RelNode originalNode = new HiveToRelConverter(hiveMetastoreClient).convertSql(query);
     RelNode incrementalRelNode = RelNodeIncrementalTransformer.convertRelIncremental(originalNode);
     CoralSpark coralSpark = CoralSpark.create(incrementalRelNode);

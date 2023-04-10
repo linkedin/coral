@@ -109,35 +109,50 @@ public class TranslationController implements ApplicationListener<ContextRefresh
       throws JSONException {
     final String query = incrementalRequestBody.getQuery();
     final List<String> tableNames = incrementalRequestBody.getTableNames();
+    final String language = incrementalRequestBody.getLanguage();
 
     // Response will contain incremental query and incremental table names
     IncrementalResponseBody incrementalResponseBody = new IncrementalResponseBody();
-    String incrementalQuery = getIncrementalQueryFromUserSql(query);
-    for (String tableName : tableNames) {
-      /* Generate underscore delimited and incremental table names
-         Table name: db.t1
-         Underscore delimited name: db_t1
-         Incremental table name: db_t1_delta
-        */
-      String underscoreDelimitedName = tableName.replace('.', '_');
-      String incrementalTableName = underscoreDelimitedName + "_delta";
-      incrementalResponseBody.addUnderscoreDelimitedTableName(underscoreDelimitedName);
-      incrementalResponseBody.addIncrementalTableName(incrementalTableName);
+    incrementalResponseBody.setIncrementalQuery(null);
+    try {
+      if (language.equalsIgnoreCase("spark")) {
+        String incrementalQuery = getSparkIncrementalQueryFromUserSql(query);
+        for (String tableName : tableNames) {
+          /* Generate underscore delimited and incremental table names
+           Table name: db.t1
+           Underscore delimited name: db_t1
+           Incremental table name: db_t1_delta
+          */
+          String underscoreDelimitedName = tableName.replace('.', '_');
+          String incrementalTableName = underscoreDelimitedName + "_delta";
+          incrementalResponseBody.addUnderscoreDelimitedTableName(underscoreDelimitedName);
+          incrementalResponseBody.addIncrementalTableName(incrementalTableName);
 
-      // Replace the table names in the incremental query with temp view compatible names
-      incrementalQuery = incrementalQuery.replaceAll(tableName, underscoreDelimitedName);
+          // Replace the table names in the incremental query with temp view compatible names
+          incrementalQuery = incrementalQuery.replaceAll(tableName, underscoreDelimitedName);
+        }
+        // Replace newlines with spaces for compatibility with code generation
+        incrementalQuery = incrementalQuery.replace('\n', ' ');
+        incrementalResponseBody.setIncrementalQuery(incrementalQuery);
+      }
+    } catch (Throwable t) {
+      t.printStackTrace();
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(t.getMessage());
     }
-    // Replace newlines with spaces for compatibility with code generation
-    incrementalQuery = incrementalQuery.replace('\n', ' ');
-    incrementalResponseBody.setIncrementalQuery(incrementalQuery);
 
-    // Create JSON object from response body
-    JSONObject response = new JSONObject();
-    response.put("incremental_maintenance_sql", incrementalResponseBody.getIncrementalQuery());
-    response.put("underscore_delimited_table_names", incrementalResponseBody.getUnderscoreDelimitedTableNames());
-    response.put("incremental_table_names", incrementalResponseBody.getIncrementalTableNames());
+    String message;
+    if (incrementalResponseBody.getIncrementalQuery() == null) {
+      message = "Incremental rewrite functionality is not currently supported for " + LANGUAGE_MAP.get(language)
+          + ". At the moment, there is support for: Spark.";
+    } else {
+      // Create JSON object from response body
+      JSONObject response = new JSONObject();
+      response.put("incremental_maintenance_sql", incrementalResponseBody.getIncrementalQuery());
+      response.put("underscore_delimited_table_names", incrementalResponseBody.getUnderscoreDelimitedTableNames());
+      response.put("incremental_table_names", incrementalResponseBody.getIncrementalTableNames());
 
-    String message = response.toString();
+      message = response.toString();
+    }
     return ResponseEntity.status(HttpStatus.OK).body(message);
   }
 }

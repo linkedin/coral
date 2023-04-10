@@ -28,6 +28,7 @@ and implementing query rewrite algorithms for data governance and query optimiza
 - Coral-Trino: Converts view logical plan to Trino (formerly PrestoSQL) SQL, and vice versa.
 - Coral-Spark: Converts view logical plan to Spark SQL.
 - Coral-Pig: Converts view logical plan to Pig-latin.
+- Coral-Incremental [WIP]: Derives an incremental query from input SQL for incremental view maintenance.
 - Coral-Schema: Derives Avro schema of view using view logical plan and input Avro schemas of base tables.
 - Coral-Spark-Plan: Converts Spark plan strings to equivalent logical plan (in progress).
 - Coral-Service: Service that exposes REST APIs that allow users to interact with Coral (see [Coral-as-a-Service](#Coral-as-a-Service) for more details).

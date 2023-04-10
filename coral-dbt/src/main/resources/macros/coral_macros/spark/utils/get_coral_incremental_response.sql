@@ -10,6 +10,7 @@
     {% set request_data = {
         "query": sql,
         "tableNames": table_names,
+        "language": "spark",
     } %}
     {% set response = requests.post(url, json=request_data) %}
 
