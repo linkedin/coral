@@ -1,0 +1,12 @@
+dependencies {
+  compile project(':coral-hive')
+
+  testCompile(deps.'hive'.'hive-exec-core') {
+    // This exclusion is required to prevent duplicate classes since we include
+    // shaded 'calcite-core' transitively
+    exclude group: 'org.apache.calcite', module: 'calcite-core'
+  }
+
+  testCompile deps.'hadoop'.'hadoop-mapreduce-client-core'
+  testCompile deps.'kryo'
+}
