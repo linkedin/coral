@@ -4,7 +4,6 @@
 # See LICENSE in the project root for license information.
 #
 import subprocess
-import requests
 import unittest
 from jinja2 import Template
 

@@ -34,6 +34,7 @@ task runCoralDbtTests {
   if (process.exitValue() != 0) {
     throw new GradleException(errorOutput)
   }
+  println(errorOutput)
 }
 
 build.dependsOn 'runCoralDbtTests'
