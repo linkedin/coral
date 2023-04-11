@@ -1078,5 +1078,25 @@ public class ViewToAvroSchemaConverterTests {
         TestUtils.loadSchema("testUnionFloatAndDoublePromoteToDouble-expected.avsc"));
   }
 
+  @Test
+  public void testNestedViewSchemaEvolutionWithBaseTableSchemaChange() {
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "base_table_schema_change_view2");
+
+    Assert.assertEquals(actualSchema.toString(true),
+        TestUtils.loadSchema("testNestedViewSchemaEvolutionWithBaseTableSchemaChange-expected.avsc"));
+  }
+
+  @Test
+  public void testSelectEmptyMap() {
+    String viewSql = "CREATE VIEW v AS SELECT MAP() AS m FROM baseprimitive";
+    TestUtils.executeCreateViewQuery("default", "v", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v");
+
+    Assert.assertEquals(actualSchema.toString(true), TestUtils.loadSchema("testSelectEmptyMap-expected.avsc"));
+  }
+
   // TODO: add more unit tests
 }

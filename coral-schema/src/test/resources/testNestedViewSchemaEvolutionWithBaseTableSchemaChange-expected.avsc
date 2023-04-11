@@ -1,0 +1,35 @@
+{
+  "type" : "record",
+  "name" : "base_table_schema_change_view2",
+  "namespace" : "default.base_table_schema_change_view2",
+  "fields" : [ {
+    "name" : "Id",
+    "type" : "string"
+  }, {
+    "name" : "Array_Col",
+    "type" : [ "null", {
+      "type" : "array",
+      "items" : [ "null", "string" ]
+    } ]
+  }, {
+    "name" : "Map_Col",
+    "type" : [ "null", {
+      "type" : "map",
+      "values" : [ "null", "string" ]
+    } ]
+  }, {
+    "name" : "Struct_Col",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "Struct_col",
+      "namespace" : "default.base_table_schema_change_view2.base_table_schema_change_view2",
+      "fields" : [ {
+        "name" : "Bool_Field",
+        "type" : "boolean"
+      }, {
+        "name" : "Int_Field",
+        "type" : [ "null", "int" ]
+      } ]
+    } ]
+  } ]
+}

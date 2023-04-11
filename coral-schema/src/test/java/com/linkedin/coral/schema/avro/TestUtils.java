@@ -85,6 +85,7 @@ public class TestUtils {
 
   private static void initializeTables() {
     String baseComplexSchema = loadSchema("base-complex.avsc");
+    String baseComplexSchemaChange = loadSchema("base-complex-schema-change.avsc");
     String baseComplexUnionCompatible = loadSchema("base-complex-union-compatible.avsc");
     String baseEnumSchema = loadSchema("base-enum.avsc");
     String baseBytes = loadSchema("base-bytes.avsc");
@@ -138,6 +139,11 @@ public class TestUtils {
 
     executeQuery("DROP TABLE IF EXISTS basedecimal");
     executeQuery("CREATE TABLE IF NOT EXISTS basedecimal(decimal_col decimal(2,1))");
+
+    executeCreateTableQuery("default", "basecomplexschemachange", baseComplexSchema);
+    executeQuery("CREATE VIEW base_table_schema_change_view1 AS SELECT * FROM basecomplexschemachange");
+    executeQuery("CREATE VIEW base_table_schema_change_view2 AS SELECT * FROM base_table_schema_change_view1");
+    executeCreateTableQuery("default", "basecomplexschemachange", baseComplexSchemaChange);
   }
 
   private static void initializeUdfs() {

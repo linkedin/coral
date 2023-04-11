@@ -1,0 +1,39 @@
+{
+  "type" : "record",
+  "name" : "basecomplex",
+  "namespace" : "coral.schema.avro.base.complex",
+  "fields" : [ {
+    "name" : "Id",
+    "type" : "string"
+  }, {
+    "name" : "Array_Col",
+    "type" : [ "null", {
+      "type" : "array",
+      "items" : [ "null", "string" ]
+    } ],
+    "default" : null
+  }, {
+    "name" : "Map_Col",
+    "type" : [ "null", {
+      "type" : "map",
+      "values" : [ "null", "string" ]
+    } ],
+    "default" : null
+  }, {
+    "name" : "Struct_Col",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "Struct_col",
+      "namespace" : "coral.schema.avro.base.complex.basecomplex",
+      "fields" : [ {
+        "name" : "Bool_Field",
+        "type" : "boolean"
+      }, {
+        "name" : "Int_Field",
+        "type" : [ "null", "int" ],
+        "default" : null
+      } ]
+    } ],
+    "default" : null
+  } ]
+}
