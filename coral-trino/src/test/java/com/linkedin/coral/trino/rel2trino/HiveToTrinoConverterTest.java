@@ -331,7 +331,7 @@ public class HiveToTrinoConverterTest {
   }
 
   @Test
-  public void testAvoidTransformToDate() throws MetaException {
+  public void testAvoidTransformToDate() {
     RelNode relNode = TestUtils.getHiveToRelConverter()
         .convertSql("SELECT to_date(substr('2021-08-20', 1, 10)), to_date('2021-08-20')" + "FROM test.tableA");
     String targetSql = "SELECT \"to_date\"(\"substr\"('2021-08-20', 1, 10)), \"to_date\"('2021-08-20')\n"
