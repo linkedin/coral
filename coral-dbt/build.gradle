@@ -12,18 +12,29 @@ spotless {
 }
 
 task runCoralDbtTests {
-  def processBuilder = new ProcessBuilder([
-    'python3',
-    'test_incremental.py'
+  // Install Python dependencies
+  def installModulesProcessBuilder = new ProcessBuilder([
+    'pip',
+    'install',
+    '-r',
+    'requirements.txt'
   ])
-  processBuilder.directory(file('src/main/resources/tests'))
+  installModulesProcessBuilder.directory(file('src/main/resources/tests'))
+  def installModulesProcess = installModulesProcessBuilder.start()
+  installModulesProcess.waitFor()
 
-  // Start the subprocess and wait for it to finish
-  def process = processBuilder.start()
-  process.waitFor()
+  // Run tests
+  def runTestsProcessBuilder = new ProcessBuilder([
+    'python3',
+    'test_incremental.py',
+    '-v'
+  ])
+  runTestsProcessBuilder.directory(file('src/main/resources/tests'))
+  def runTestsProcess = runTestsProcessBuilder.start()
+  runTestsProcess.waitFor()
 
   // Collect errors and throw exception on non-zero exit code
-  def errorStream = process.getErrorStream()
+  def errorStream = runTestsProcess.getErrorStream()
   def buffReader = new BufferedReader(new InputStreamReader(errorStream))
   def stringBuilder = new StringBuilder()
   def newLine
@@ -31,7 +42,7 @@ task runCoralDbtTests {
     stringBuilder.append(newLine + "\n")
   }
   def errorOutput = stringBuilder.toString()
-  if (process.exitValue() != 0) {
+  if (runTestsProcess.exitValue() != 0) {
     throw new GradleException(errorOutput)
   }
   println(errorOutput)
