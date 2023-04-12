@@ -21,7 +21,6 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import static com.linkedin.coral.trino.rel2trino.CoralTrinoConfigKeys.*;
-import static com.linkedin.coral.trino.rel2trino.TestUtils.hiveToRelConverter;
 import static org.testng.Assert.assertEquals;
 
 
@@ -32,7 +31,7 @@ public class HiveToTrinoConverterTest {
   @BeforeTest
   public void beforeClass() throws IOException, HiveException, MetaException {
     conf = TestUtils.loadResourceHiveConf();
-    TestUtils.initializeViews(conf);
+    TestUtils.initializeTablesAndViews(conf);
   }
 
   @AfterTest
@@ -42,8 +41,8 @@ public class HiveToTrinoConverterTest {
 
   @Test(dataProvider = "viewTestCases")
   public void testViews(String database, String view, String expectedSql) {
-    RelNode relNode = TestUtils.convertView(database, view);
-    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+    RelNode relNode = TestUtils.getHiveToRelConverter().convertView(database, view);
+    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
     String expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, expectedSql);
   }
@@ -199,13 +198,13 @@ public class HiveToTrinoConverterTest {
 
   @Test
   public void testLateralViewArray() {
-    RelNode relNode = hiveToRelConverter
+    RelNode relNode = TestUtils.getHiveToRelConverter()
         .convertSql("SELECT col FROM (SELECT ARRAY('a1', 'a2') as a) tmp LATERAL VIEW EXPLODE(a) a_alias AS col");
     String targetSql = "SELECT \"t2\".\"col\" AS \"col\"\n" + "FROM (SELECT ARRAY['a1', 'a2'] AS \"a\"\n"
         + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")) AS \"$cor0\"\n"
         + "CROSS JOIN UNNEST(\"$cor0\".\"a\") AS \"t2\" (\"col\")";
 
-    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
     String expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
   }
@@ -215,232 +214,254 @@ public class HiveToTrinoConverterTest {
    */
   @Test
   public void testLateralViewArray2() {
-    RelNode relNode = hiveToRelConverter
+    RelNode relNode = TestUtils.getHiveToRelConverter()
         .convertSql("SELECT arr.alias FROM test.tableA tmp LATERAL VIEW EXPLODE(ARRAY('a', 'b')) arr as alias");
 
     String targetSql = "SELECT \"t0\".\"alias\" AS \"alias\"\n" + "FROM \"test\".\"tablea\" AS \"tablea\",\n"
         + "UNNEST(ARRAY['a', 'b']) AS \"t0\" (\"alias\")";
-    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
     String expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
   }
 
   @Test
   public void testLateralViewArrayWithoutColumns() {
-    RelNode relNode = hiveToRelConverter
+    RelNode relNode = TestUtils.getHiveToRelConverter()
         .convertSql("SELECT col FROM (SELECT ARRAY('a1', 'a2') as a) tmp LATERAL VIEW EXPLODE(a) a_alias");
     String targetSql = "SELECT \"t2\".\"col\" AS \"col\"\n" + "FROM (SELECT ARRAY['a1', 'a2'] AS \"a\"\n"
-        + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")) AS \"$cor1\"\n"
-        + "CROSS JOIN UNNEST(\"$cor1\".\"a\") AS \"t2\" (\"col\")";
+        + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")) AS \"$cor0\"\n"
+        + "CROSS JOIN UNNEST(\"$cor0\".\"a\") AS \"t2\" (\"col\")";
 
-    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
     String expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
   }
 
   @Test
   public void testLateralViewMap() {
-    RelNode relNode = hiveToRelConverter.convertSql(
+    RelNode relNode = TestUtils.getHiveToRelConverter().convertSql(
         "SELECT key, value FROM (SELECT MAP('key1', 'value1') as m) tmp LATERAL VIEW EXPLODE(m) m_alias AS key, value");
     String targetSql = "SELECT \"t2\".\"key\" AS \"key\", \"t2\".\"value\" AS \"value\"\n"
         + "FROM (SELECT MAP (ARRAY['key1'], ARRAY['value1']) AS \"m\"\n"
-        + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")) AS \"$cor2\"\n"
-        + "CROSS JOIN UNNEST(\"$cor2\".\"m\") AS \"t2\" (\"key\", \"value\")";
+        + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")) AS \"$cor0\"\n"
+        + "CROSS JOIN UNNEST(\"$cor0\".\"m\") AS \"t2\" (\"key\", \"value\")";
 
-    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
     String expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
   }
 
   @Test
   public void testLateralViewMapWithoutAlias() {
-    RelNode relNode = hiveToRelConverter
+    RelNode relNode = TestUtils.getHiveToRelConverter()
         .convertSql("SELECT key, value FROM (SELECT MAP('key1', 'value1') as m) tmp LATERAL VIEW EXPLODE(m) m_alias");
     String targetSql = "SELECT \"t2\".\"KEY\" AS \"key\", \"t2\".\"VALUE\" AS \"value\"\n"
         + "FROM (SELECT MAP (ARRAY['key1'], ARRAY['value1']) AS \"m\"\n"
-        + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")) AS \"$cor3\"\n"
-        + "CROSS JOIN UNNEST(\"$cor3\".\"m\") AS \"t2\" (\"KEY\", \"VALUE\")";
+        + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")) AS \"$cor0\"\n"
+        + "CROSS JOIN UNNEST(\"$cor0\".\"m\") AS \"t2\" (\"KEY\", \"VALUE\")";
 
-    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
     String expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
   }
 
   @Test
   public void testLateralViewPosExplodeWithAlias() {
-    RelNode relNode = hiveToRelConverter.convertSql(
+    RelNode relNode = TestUtils.getHiveToRelConverter().convertSql(
         "SELECT col FROM (SELECT ARRAY('a1', 'a2') as a) tmp LATERAL VIEW POSEXPLODE(a) a_alias AS pos, col");
     String targetSql = "SELECT \"t2\".\"col\" AS \"col\"\n" + "FROM (SELECT ARRAY['a1', 'a2'] AS \"a\"\n"
-        + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")) AS \"$cor7\"\n"
-        + "CROSS JOIN UNNEST(\"$cor7\".\"a\") WITH ORDINALITY AS \"t2\" (\"col\", \"pos\")";
+        + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")) AS \"$cor0\"\n"
+        + "CROSS JOIN UNNEST(\"$cor0\".\"a\") WITH ORDINALITY AS \"t2\" (\"col\", \"pos\")";
 
-    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
     String expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
   }
 
   @Test
   public void testLateralViewPosExplodeWithoutAlias() {
-    RelNode relNode = hiveToRelConverter
+    RelNode relNode = TestUtils.getHiveToRelConverter()
         .convertSql("SELECT col FROM (SELECT ARRAY('a1', 'a2') as a) tmp LATERAL VIEW POSEXPLODE(a) a_alias");
     String targetSql = "SELECT \"t2\".\"col\" AS \"col\"\n" + "FROM (SELECT ARRAY['a1', 'a2'] AS \"a\"\n"
-        + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")) AS \"$cor8\"\n"
-        + "CROSS JOIN UNNEST(\"$cor8\".\"a\") WITH ORDINALITY AS \"t2\" (\"col\", \"ORDINALITY\")";
+        + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")) AS \"$cor0\"\n"
+        + "CROSS JOIN UNNEST(\"$cor0\".\"a\") WITH ORDINALITY AS \"t2\" (\"col\", \"ORDINALITY\")";
 
-    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
     String expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
   }
 
   @Test
   public void testLateralViewOuterPosExplodeWithAlias() {
-    RelNode relNode = hiveToRelConverter.convertSql(
+    RelNode relNode = TestUtils.getHiveToRelConverter().convertSql(
         "SELECT col FROM (SELECT ARRAY('a1', 'a2') as a) tmp LATERAL VIEW OUTER POSEXPLODE(a) a_alias AS pos, col");
     String targetSql = "SELECT \"t2\".\"col\" AS \"col\"\n" + "FROM (SELECT ARRAY['a1', 'a2'] AS \"a\"\n"
-        + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")) AS \"$cor4\"\n"
-        + "CROSS JOIN UNNEST(\"if\"(\"$cor4\".\"a\" IS NOT NULL AND CAST(CARDINALITY(\"$cor4\".\"a\") AS INTEGER) > 0, \"$cor4\".\"a\", ARRAY[NULL])) WITH ORDINALITY AS \"t2\" (\"col\", \"pos\")";
+        + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")) AS \"$cor0\"\n"
+        + "CROSS JOIN UNNEST(\"if\"(\"$cor0\".\"a\" IS NOT NULL AND CAST(CARDINALITY(\"$cor0\".\"a\") AS INTEGER) > 0, \"$cor0\".\"a\", ARRAY[NULL])) WITH ORDINALITY AS \"t2\" (\"col\", \"pos\")";
 
-    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
     String expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
   }
 
   @Test
   public void testLegacyUnnestArrayOfStruct() {
-    RelNode relNode = hiveToRelConverter.convertView("test", "view_with_explode_struct_array");
-    String targetSql = "SELECT \"$cor12\".\"a\" AS \"a\", \"t0\".\"c\" AS \"c\"\n"
-        + "FROM \"test\".\"table_with_struct_array\" AS \"$cor12\"\n"
-        + "CROSS JOIN UNNEST(\"$cor12\".\"b\") AS \"t0\" (\"c\")";
+    RelNode relNode = TestUtils.getHiveToRelConverter().convertView("test", "view_with_explode_struct_array");
+    String targetSql = "SELECT \"$cor0\".\"a\" AS \"a\", \"t0\".\"c\" AS \"c\"\n"
+        + "FROM \"test\".\"table_with_struct_array\" AS \"$cor0\"\n"
+        + "CROSS JOIN UNNEST(\"$cor0\".\"b\") AS \"t0\" (\"c\")";
 
     RelToTrinoConverter relToTrinoConverter =
-        new RelToTrinoConverter(ImmutableMap.of(SUPPORT_LEGACY_UNNEST_ARRAY_OF_STRUCT, true));
+        TestUtils.getRelToTrinoConverter(ImmutableMap.of(SUPPORT_LEGACY_UNNEST_ARRAY_OF_STRUCT, true));
     String expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
   }
 
   @Test
   public void testLegacyOuterUnnestArrayOfStruct() {
-    RelNode relNode = hiveToRelConverter.convertView("test", "view_with_outer_explode_struct_array");
-    String targetSql = "SELECT \"$cor9\".\"a\" AS \"a\", \"t0\".\"c\" AS \"c\"\n"
-        + "FROM \"test\".\"table_with_struct_array\" AS \"$cor9\"\n"
-        + "CROSS JOIN UNNEST(\"if\"(\"$cor9\".\"b\" IS NOT NULL AND CAST(CARDINALITY(\"$cor9\".\"b\") AS INTEGER) > 0, \"$cor9\".\"b\", ARRAY[NULL])) AS \"t0\" (\"c\")";
+    RelNode relNode = TestUtils.getHiveToRelConverter().convertView("test", "view_with_outer_explode_struct_array");
+    String targetSql = "SELECT \"$cor0\".\"a\" AS \"a\", \"t0\".\"c\" AS \"c\"\n"
+        + "FROM \"test\".\"table_with_struct_array\" AS \"$cor0\"\n"
+        + "CROSS JOIN UNNEST(\"if\"(\"$cor0\".\"b\" IS NOT NULL AND CAST(CARDINALITY(\"$cor0\".\"b\") AS INTEGER) > 0, \"$cor0\".\"b\", ARRAY[NULL])) AS \"t0\" (\"c\")";
 
     RelToTrinoConverter relToTrinoConverter =
-        new RelToTrinoConverter(ImmutableMap.of(SUPPORT_LEGACY_UNNEST_ARRAY_OF_STRUCT, true));
+        TestUtils.getRelToTrinoConverter(ImmutableMap.of(SUPPORT_LEGACY_UNNEST_ARRAY_OF_STRUCT, true));
     String expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
   }
 
   @Test
   public void testAvoidTransformToDate() {
-    RelNode relNode = hiveToRelConverter
+    RelNode relNode = TestUtils.getHiveToRelConverter()
         .convertSql("SELECT to_date(substr('2021-08-20', 1, 10)), to_date('2021-08-20')" + "FROM test.tableA");
     String targetSql = "SELECT \"to_date\"(\"substr\"('2021-08-20', 1, 10)), \"to_date\"('2021-08-20')\n"
         + "FROM \"test\".\"tablea\" AS \"tablea\"";
 
     RelToTrinoConverter relToTrinoConverter =
-        new RelToTrinoConverter(ImmutableMap.of(AVOID_TRANSFORM_TO_DATE_UDF, true));
+        TestUtils.getRelToTrinoConverter(ImmutableMap.of(AVOID_TRANSFORM_TO_DATE_UDF, true));
     String expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
   }
 
   @Test
   public void testIfWithNullAsSecondParameter() {
-    RelNode relNode = hiveToRelConverter.convertSql("SELECT if(FALSE, NULL, named_struct('a', ''))");
+    RelNode relNode = TestUtils.getHiveToRelConverter().convertSql("SELECT if(FALSE, NULL, named_struct('a', ''))");
     String targetSql =
         "SELECT \"if\"(FALSE, NULL, CAST(ROW('') AS ROW(\"a\" CHAR(0))))\n" + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
 
-    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
     String expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
   }
 
   @Test
   public void testIfWithNullAsThirdParameter() {
-    RelNode relNode = hiveToRelConverter.convertSql("SELECT if(FALSE, named_struct('a', ''), NULL)");
+    RelNode relNode = TestUtils.getHiveToRelConverter().convertSql("SELECT if(FALSE, named_struct('a', ''), NULL)");
     String targetSql =
         "SELECT \"if\"(FALSE, CAST(ROW('') AS ROW(\"a\" CHAR(0))), NULL)\n" + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
 
-    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
+    String expandedSql = relToTrinoConverter.convert(relNode);
+    assertEquals(expandedSql, targetSql);
+  }
+
+  @Test
+  public void testSelectNullFields() {
+    RelNode relNode = TestUtils.getHiveToRelConverter().convertSql("SELECT NULL, NULL AS TMP, CAST(NULL AS BINARY)");
+    String targetSql =
+        "SELECT NULL, NULL AS \"TMP\", CAST(NULL AS VARBINARY)\n" + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
+
+    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
+    String expandedSql = relToTrinoConverter.convert(relNode);
+    assertEquals(expandedSql, targetSql);
+  }
+
+  @Test
+  public void testRelationalOperators() {
+    RelNode relNode = TestUtils.getHiveToRelConverter().convertSql("SELECT 1 > 2 AS col1, 2 <= 3 AS col2 WHERE 3=3");
+    String targetSql =
+        "SELECT 1 > 2 AS \"col1\", 2 <= 3 AS \"col2\"\n" + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")\n" + "WHERE 3 = 3";
+
+    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
     String expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
   }
 
   @Test
   public void testFromUnixTimeOneParameter() {
-    RelNode relNode = hiveToRelConverter.convertSql("SELECT from_unixtime(10000)");
+    RelNode relNode = TestUtils.getHiveToRelConverter().convertSql("SELECT from_unixtime(10000)");
     String targetSql = "SELECT \"format_datetime\"(\"from_unixtime\"(10000), 'yyyy-MM-dd HH:mm:ss')\n"
         + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
 
-    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
     String expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
   }
 
   @Test
   public void testFromUnixTimeTwoParameters() {
-    RelNode relNode = hiveToRelConverter.convertSql("SELECT from_unixtime(10000, 'yyyy-MM-dd')");
+    RelNode relNode = TestUtils.getHiveToRelConverter().convertSql("SELECT from_unixtime(10000, 'yyyy-MM-dd')");
     String targetSql = "SELECT \"format_datetime\"(\"from_unixtime\"(10000), 'yyyy-MM-dd')\n"
         + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
 
-    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
     String expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
   }
 
   @Test
   public void testXpathFunctions() {
-    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
 
-    RelNode relNode = hiveToRelConverter.convertSql("select xpath('<a><b>b1</b><b>b2</b></a>','a/*')");
+    RelNode relNode = TestUtils.getHiveToRelConverter().convertSql("select xpath('<a><b>b1</b><b>b2</b></a>','a/*')");
     String targetSql =
         "SELECT \"xpath\"('<a><b>b1</b><b>b2</b></a>', 'a/*')\n" + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
     assertEquals(relToTrinoConverter.convert(relNode), targetSql);
 
-    relNode = hiveToRelConverter.convertSql("SELECT xpath_string('<a><b>bb</b><c>cc</c></a>', 'a/b')");
+    relNode = TestUtils.getHiveToRelConverter().convertSql("SELECT xpath_string('<a><b>bb</b><c>cc</c></a>', 'a/b')");
     targetSql =
         "SELECT \"xpath_string\"('<a><b>bb</b><c>cc</c></a>', 'a/b')\n" + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
     assertEquals(relToTrinoConverter.convert(relNode), targetSql);
 
-    relNode = hiveToRelConverter.convertSql("SELECT xpath_boolean('<a><b>b</b></a>', 'a/b')");
+    relNode = TestUtils.getHiveToRelConverter().convertSql("SELECT xpath_boolean('<a><b>b</b></a>', 'a/b')");
     targetSql = "SELECT \"xpath_boolean\"('<a><b>b</b></a>', 'a/b')\n" + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
     assertEquals(relToTrinoConverter.convert(relNode), targetSql);
 
-    relNode = hiveToRelConverter.convertSql("SELECT xpath_int('<a>b</a>', 'a = 10')");
+    relNode = TestUtils.getHiveToRelConverter().convertSql("SELECT xpath_int('<a>b</a>', 'a = 10')");
     targetSql = "SELECT \"xpath_int\"('<a>b</a>', 'a = 10')\n" + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
     assertEquals(relToTrinoConverter.convert(relNode), targetSql);
 
-    relNode = hiveToRelConverter.convertSql("SELECT xpath_short('<a>b</a>', 'a = 10')");
+    relNode = TestUtils.getHiveToRelConverter().convertSql("SELECT xpath_short('<a>b</a>', 'a = 10')");
     targetSql = "SELECT \"xpath_short\"('<a>b</a>', 'a = 10')\n" + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
     assertEquals(relToTrinoConverter.convert(relNode), targetSql);
 
-    relNode = hiveToRelConverter.convertSql("SELECT xpath_long('<a>b</a>', 'a = 10')");
+    relNode = TestUtils.getHiveToRelConverter().convertSql("SELECT xpath_long('<a>b</a>', 'a = 10')");
     targetSql = "SELECT \"xpath_long\"('<a>b</a>', 'a = 10')\n" + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
     assertEquals(relToTrinoConverter.convert(relNode), targetSql);
 
-    relNode = hiveToRelConverter.convertSql("SELECT xpath_float('<a>b</a>', 'a = 10')");
+    relNode = TestUtils.getHiveToRelConverter().convertSql("SELECT xpath_float('<a>b</a>', 'a = 10')");
     targetSql = "SELECT \"xpath_float\"('<a>b</a>', 'a = 10')\n" + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
     assertEquals(relToTrinoConverter.convert(relNode), targetSql);
 
-    relNode = hiveToRelConverter.convertSql("SELECT xpath_double('<a>b</a>', 'a = 10')");
+    relNode = TestUtils.getHiveToRelConverter().convertSql("SELECT xpath_double('<a>b</a>', 'a = 10')");
     targetSql = "SELECT \"xpath_double\"('<a>b</a>', 'a = 10')\n" + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
     assertEquals(relToTrinoConverter.convert(relNode), targetSql);
 
-    relNode = hiveToRelConverter.convertSql("SELECT xpath_number('<a>b</a>', 'a = 10')");
+    relNode = TestUtils.getHiveToRelConverter().convertSql("SELECT xpath_number('<a>b</a>', 'a = 10')");
     targetSql = "SELECT \"xpath_number\"('<a>b</a>', 'a = 10')\n" + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
     assertEquals(relToTrinoConverter.convert(relNode), targetSql);
   }
 
   @Test
   public void testConcat() {
-    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
 
-    RelNode relNode = hiveToRelConverter.convertSql("SELECT 'a' || 'b'");
+    RelNode relNode = TestUtils.getHiveToRelConverter().convertSql("SELECT 'a' || 'b'");
     String targetSql = "SELECT \"concat\"('a', 'b')\nFROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
     String expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
 
-    RelNode relNode2 = hiveToRelConverter.convertSql("SELECT 'a' || 'b' || 'c'");
+    RelNode relNode2 = TestUtils.getHiveToRelConverter().convertSql("SELECT 'a' || 'b' || 'c'");
     String targetSql2 = "SELECT \"concat\"(\"concat\"('a', 'b'), 'c')\nFROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
     String expandedSql2 = relToTrinoConverter.convert(relNode2);
     assertEquals(expandedSql2, targetSql2);
@@ -448,9 +469,9 @@ public class HiveToTrinoConverterTest {
 
   @Test
   public void testCastTimestampToDecimal() {
-    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
 
-    RelNode relNode = hiveToRelConverter
+    RelNode relNode = TestUtils.getHiveToRelConverter()
         .convertSql("SELECT CAST(a_timestamp AS DECIMAL(10, 0)) AS d\nFROM test.table_from_utc_timestamp");
     String targetSql =
         "SELECT CAST(\"to_unixtime\"(\"with_timezone\"(\"table_from_utc_timestamp\".\"a_timestamp\", 'UTC')) AS DECIMAL(10, 0)) AS \"d\"\n"
@@ -461,9 +482,9 @@ public class HiveToTrinoConverterTest {
 
   @Test
   public void testCastNestedTimestampToDecimal() {
-    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
 
-    RelNode relNode = hiveToRelConverter.convertSql(
+    RelNode relNode = TestUtils.getHiveToRelConverter().convertSql(
         "SELECT CAST(CAST(a_date AS TIMESTAMP) AS DECIMAL(10, 0)) AS d\nFROM test.table_from_utc_timestamp");
     String targetSql =
         "SELECT CAST(\"to_unixtime\"(\"with_timezone\"(CAST(\"table_from_utc_timestamp\".\"a_date\" AS TIMESTAMP), 'UTC')) AS DECIMAL(10, 0)) AS \"d\"\n"
@@ -471,7 +492,7 @@ public class HiveToTrinoConverterTest {
     String expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
 
-    relNode = hiveToRelConverter.convertSql(
+    relNode = TestUtils.getHiveToRelConverter().convertSql(
         "SELECT CAST(from_utc_timestamp(a_date, 'America/Los_Angeles') AS DECIMAL(10, 0)) AS d\nFROM test.table_from_utc_timestamp");
     targetSql =
         "SELECT CAST(\"to_unixtime\"(\"with_timezone\"(CAST(\"at_timezone\"(\"from_unixtime\"(\"to_unixtime\"(\"with_timezone\"(\"table_from_utc_timestamp0\".\"a_date\", 'UTC'))), \"$canonicalize_hive_timezone_id\"('America/Los_Angeles')) AS TIMESTAMP(3)), 'UTC')) AS DECIMAL(10, 0)) AS \"d\"\n"
@@ -482,9 +503,9 @@ public class HiveToTrinoConverterTest {
 
   @Test
   public void testTranslateFunction() {
-    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
 
-    RelNode relNode = hiveToRelConverter.convertSql("SELECT translate('aaa', 'a', 'b')");
+    RelNode relNode = TestUtils.getHiveToRelConverter().convertSql("SELECT translate('aaa', 'a', 'b')");
     String targetSql = "SELECT TRANSLATE('aaa', 'a', 'b')\n" + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
     String expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
@@ -492,9 +513,9 @@ public class HiveToTrinoConverterTest {
 
   @Test
   public void testCastByTypeName() {
-    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
 
-    RelNode relNode = hiveToRelConverter.convertSql(
+    RelNode relNode = TestUtils.getHiveToRelConverter().convertSql(
         "SELECT CAST(1 AS DOUBLE), CAST(1.5 AS INT), CAST(2.3 AS STRING), CAST(1631142817 AS TIMESTAMP), CAST('' AS BOOLEAN)");
     String targetSql =
         "SELECT CAST(1 AS DOUBLE), CAST(1.5 AS INTEGER), CAST(2.3 AS VARCHAR(65535)), CAST(1631142817 AS TIMESTAMP), CAST('' AS BOOLEAN)\n"
@@ -505,8 +526,8 @@ public class HiveToTrinoConverterTest {
 
   @Test
   public void testResetTransformColumnFieldNameForGenericProject() {
-    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
-    RelNode relNode = hiveToRelConverter.convertView("test", "view_with_transform_column_name_reset");
+    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
+    RelNode relNode = TestUtils.getHiveToRelConverter().convertView("test", "view_with_transform_column_name_reset");
     // Without resetting `transformColumnFieldName` in `GenericProjectToTrinoConverter.convertGenericProject`, the translated SQL is
     //
     // SELECT "struct_col" AS "structCol"
@@ -528,9 +549,9 @@ public class HiveToTrinoConverterTest {
 
   @Test
   public void testTypeCastForDateDiffFunction() {
-    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
 
-    RelNode relNode = hiveToRelConverter.convertSql(
+    RelNode relNode = TestUtils.getHiveToRelConverter().convertSql(
         "SELECT datediff('2021-08-20', '2021-08-21'), datediff('2021-08-20', '2021-08-19'), datediff('2021-08-20 00:00:00', '2021-08-19 23:59:59')");
     String targetSql =
         "SELECT CAST(\"date_diff\"('day', \"date\"(CAST('2021-08-21' AS TIMESTAMP)), \"date\"(CAST('2021-08-20' AS TIMESTAMP))) AS INTEGER), CAST(\"date_diff\"('day', \"date\"(CAST('2021-08-19' AS TIMESTAMP)), \"date\"(CAST('2021-08-20' AS TIMESTAMP))) AS INTEGER), CAST(\"date_diff\"('day', \"date\"(CAST('2021-08-19 23:59:59' AS TIMESTAMP)), \"date\"(CAST('2021-08-20 00:00:00' AS TIMESTAMP))) AS INTEGER)\n"
@@ -541,9 +562,10 @@ public class HiveToTrinoConverterTest {
 
   @Test
   public void testTypeCastForDataAddFunction() {
-    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter(ImmutableMap.of(CAST_DATEADD_TO_STRING, true));
+    RelToTrinoConverter relToTrinoConverter =
+        TestUtils.getRelToTrinoConverter(ImmutableMap.of(CAST_DATEADD_TO_STRING, true));
 
-    RelNode relNode = hiveToRelConverter.convertSql(
+    RelNode relNode = TestUtils.getHiveToRelConverter().convertSql(
         "SELECT date_add('2021-08-20', 1), date_add('2021-08-20 00:00:00', 1), date_sub('2021-08-20', 1), date_sub('2021-08-20 00:00:00', 1)");
     String targetSql =
         "SELECT CAST(\"date_add\"('day', 1, \"date\"(CAST('2021-08-20' AS TIMESTAMP))) AS VARCHAR), CAST(\"date_add\"('day', 1, \"date\"(CAST('2021-08-20 00:00:00' AS TIMESTAMP))) AS VARCHAR), CAST(\"date_add\"('day', 1 * -1, \"date\"(CAST('2021-08-20' AS TIMESTAMP))) AS VARCHAR), CAST(\"date_add\"('day', 1 * -1, \"date\"(CAST('2021-08-20 00:00:00' AS TIMESTAMP))) AS VARCHAR)\n"
@@ -554,9 +576,9 @@ public class HiveToTrinoConverterTest {
 
   @Test
   public void testTypeCastForCeilFunction() {
-    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
 
-    RelNode relNode = hiveToRelConverter.convertSql("SELECT ceil(1.5)");
+    RelNode relNode = TestUtils.getHiveToRelConverter().convertSql("SELECT ceil(1.5)");
     String targetSql = "SELECT CAST(CEIL(1.5) AS BIGINT)\n" + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
     String expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
@@ -564,9 +586,9 @@ public class HiveToTrinoConverterTest {
 
   @Test
   public void testTypeCastForCeilingFunction() {
-    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
 
-    RelNode relNode = hiveToRelConverter.convertSql("SELECT ceiling(1.5)");
+    RelNode relNode = TestUtils.getHiveToRelConverter().convertSql("SELECT ceiling(1.5)");
     String targetSql = "SELECT CAST(\"ceiling\"(1.5) AS BIGINT)\n" + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
     String expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
@@ -574,9 +596,9 @@ public class HiveToTrinoConverterTest {
 
   @Test
   public void testTypeCastForFloorFunction() {
-    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
 
-    RelNode relNode = hiveToRelConverter.convertSql("SELECT floor(1.5)");
+    RelNode relNode = TestUtils.getHiveToRelConverter().convertSql("SELECT floor(1.5)");
     String targetSql = "SELECT CAST(FLOOR(1.5) AS BIGINT)\n" + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
     String expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
@@ -584,9 +606,9 @@ public class HiveToTrinoConverterTest {
 
   @Test
   public void testTypeCastForCardinalityFunction() {
-    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
 
-    RelNode relNode = hiveToRelConverter.convertSql("SELECT size(ARRAY (1, 2))");
+    RelNode relNode = TestUtils.getHiveToRelConverter().convertSql("SELECT size(ARRAY (1, 2))");
     String targetSql = "SELECT CAST(CARDINALITY(ARRAY[1, 2]) AS INTEGER)\n" + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
     String expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
@@ -594,9 +616,9 @@ public class HiveToTrinoConverterTest {
 
   @Test
   public void testNegationOperator() {
-    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
 
-    RelNode relNode = hiveToRelConverter.convertSql("SELECT !FALSE");
+    RelNode relNode = TestUtils.getHiveToRelConverter().convertSql("SELECT !FALSE");
     String targetSql = "SELECT NOT FALSE\n" + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
     String expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
@@ -604,18 +626,18 @@ public class HiveToTrinoConverterTest {
 
   @Test
   public void testSubstrWithTimestamp() {
-    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
 
-    RelNode relNode =
-        hiveToRelConverter.convertSql("SELECT SUBSTR(a_timestamp, 12, 8) AS d\nFROM test.table_from_utc_timestamp");
+    RelNode relNode = TestUtils.getHiveToRelConverter()
+        .convertSql("SELECT SUBSTR(a_timestamp, 12, 8) AS d\nFROM test.table_from_utc_timestamp");
     String targetSql =
         "SELECT \"substr\"(CAST(\"table_from_utc_timestamp\".\"a_timestamp\" AS VARCHAR(65535)), 12, 8) AS \"d\"\n"
             + "FROM \"test\".\"table_from_utc_timestamp\" AS \"table_from_utc_timestamp\"";
     String expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
 
-    relNode =
-        hiveToRelConverter.convertSql("SELECT SUBSTRING(a_timestamp, 12, 8) AS d\nFROM test.table_from_utc_timestamp");
+    relNode = TestUtils.getHiveToRelConverter()
+        .convertSql("SELECT SUBSTRING(a_timestamp, 12, 8) AS d\nFROM test.table_from_utc_timestamp");
     targetSql =
         "SELECT \"substr\"(CAST(\"table_from_utc_timestamp0\".\"a_timestamp\" AS VARCHAR(65535)), 12, 8) AS \"d\"\n"
             + "FROM \"test\".\"table_from_utc_timestamp\" AS \"table_from_utc_timestamp0\"";
@@ -625,9 +647,9 @@ public class HiveToTrinoConverterTest {
 
   @Test
   public void testAliasOrderBy() {
-    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
 
-    RelNode relNode = hiveToRelConverter
+    RelNode relNode = TestUtils.getHiveToRelConverter()
         .convertSql("SELECT a, SUBSTR(b, 1, 1) AS aliased_column, c FROM test.tabler ORDER BY aliased_column DESC");
     String targetSql =
         "SELECT \"tabler\".\"a\" AS \"a\", \"substr\"(\"tabler\".\"b\", 1, 1) AS \"aliased_column\", \"tabler\".\"c\" AS \"c\"\n"
@@ -638,9 +660,9 @@ public class HiveToTrinoConverterTest {
 
   @Test
   public void testAliasHaving() {
-    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
 
-    RelNode relNode = hiveToRelConverter.convertSql(
+    RelNode relNode = TestUtils.getHiveToRelConverter().convertSql(
         "SELECT a, SUBSTR(b, 1, 1) AS aliased_column FROM test.tabler GROUP BY a, b HAVING aliased_column in ('dummy_value')");
     String targetSql = "SELECT \"tabler\".\"a\" AS \"a\", \"substr\"(\"tabler\".\"b\", 1, 1) AS \"aliased_column\"\n"
         + "FROM \"test\".\"tabler\" AS \"tabler\"\n" + "GROUP BY \"tabler\".\"a\", \"tabler\".\"b\"\n"
@@ -651,9 +673,9 @@ public class HiveToTrinoConverterTest {
 
   @Test
   public void testCastDecimal() {
-    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
 
-    RelNode relNode = hiveToRelConverter
+    RelNode relNode = TestUtils.getHiveToRelConverter()
         .convertSql("SELECT CAST(t.a as DECIMAL(6, 2)) as casted_decimal FROM test.table_ints_strings t");
     String targetSql = "SELECT CAST(\"table_ints_strings\".\"a\" AS DECIMAL(6, 2)) AS \"casted_decimal\"\n"
         + "FROM \"test\".\"table_ints_strings\" AS \"table_ints_strings\"";
@@ -663,10 +685,10 @@ public class HiveToTrinoConverterTest {
 
   @Test
   public void testCastDecimalDefault() {
-    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
 
-    RelNode relNode =
-        hiveToRelConverter.convertSql("SELECT CAST(t.a as DECIMAL) as casted_decimal FROM test.table_ints_strings t");
+    RelNode relNode = TestUtils.getHiveToRelConverter()
+        .convertSql("SELECT CAST(t.a as DECIMAL) as casted_decimal FROM test.table_ints_strings t");
     String targetSql = "SELECT CAST(\"table_ints_strings\".\"a\" AS DECIMAL(10, 0)) AS \"casted_decimal\"\n"
         + "FROM \"test\".\"table_ints_strings\" AS \"table_ints_strings\"";
     String expandedSql = relToTrinoConverter.convert(relNode);
@@ -675,9 +697,9 @@ public class HiveToTrinoConverterTest {
 
   @Test
   public void testCollectListFunction() {
-    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
 
-    RelNode relNode = hiveToRelConverter.convertSql("SELECT collect_list(a) from test.tableA");
+    RelNode relNode = TestUtils.getHiveToRelConverter().convertSql("SELECT collect_list(a) from test.tableA");
     String targetSql = "SELECT \"array_agg\"(\"tablea\".\"a\")\n" + "FROM \"test\".\"tablea\" AS \"tablea\"";
     String expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
@@ -685,9 +707,9 @@ public class HiveToTrinoConverterTest {
 
   @Test
   public void testCollectSetFunction() {
-    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
 
-    RelNode relNode = hiveToRelConverter.convertSql("SELECT collect_set(a) from test.tableA");
+    RelNode relNode = TestUtils.getHiveToRelConverter().convertSql("SELECT collect_set(a) from test.tableA");
     String targetSql =
         "SELECT \"array_distinct\"(\"array_agg\"(\"tablea\".\"a\"))\n" + "FROM \"test\".\"tablea\" AS \"tablea\"";
     String expandedSql = relToTrinoConverter.convert(relNode);
@@ -696,9 +718,10 @@ public class HiveToTrinoConverterTest {
 
   @Test
   public void testDateFormatFunction() {
-    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
 
-    RelNode relNode = hiveToRelConverter.convertSql("select date_format(date_sub(current_date(),1),'yyyyMMdd')");
+    RelNode relNode =
+        TestUtils.getHiveToRelConverter().convertSql("select date_format(date_sub(current_date(),1),'yyyyMMdd')");
     String targetSql =
         "SELECT \"date_format\"(\"date_add\"('day', 1 * -1, \"date\"(CAST(CURRENT_DATE AS TIMESTAMP))), 'yyyyMMdd')\n"
             + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
@@ -708,9 +731,10 @@ public class HiveToTrinoConverterTest {
 
   @Test
   public void testConcatFunction() {
-    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
 
-    RelNode relNode = hiveToRelConverter.convertSql("select concat(current_date(), '|', current_date(), '-00')");
+    RelNode relNode =
+        TestUtils.getHiveToRelConverter().convertSql("select concat(current_date(), '|', current_date(), '-00')");
     String targetSql =
         "SELECT \"concat\"(CAST(CURRENT_DATE AS VARCHAR(65535)), '|', CAST(CURRENT_DATE AS VARCHAR(65535)), '-00')\n"
             + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
@@ -720,9 +744,10 @@ public class HiveToTrinoConverterTest {
 
   @Test
   public void testCastVarbinaryToVarchar() {
-    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
 
-    RelNode relNode = hiveToRelConverter.convertSql("SELECT CAST(b AS STRING) FROM test.table_with_binary_column");
+    RelNode relNode =
+        TestUtils.getHiveToRelConverter().convertSql("SELECT CAST(b AS STRING) FROM test.table_with_binary_column");
     String targetSql = "SELECT \"from_utf8\"(\"table_with_binary_column\".\"b\")\n"
         + "FROM \"test\".\"table_with_binary_column\" AS \"table_with_binary_column\"";
     String expandedSql = relToTrinoConverter.convert(relNode);
@@ -731,9 +756,10 @@ public class HiveToTrinoConverterTest {
 
   @Test
   public void testCastVarbinaryToChar() {
-    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
 
-    RelNode relNode = hiveToRelConverter.convertSql("SELECT CAST(b AS CHAR(255)) FROM test.table_with_binary_column");
+    RelNode relNode =
+        TestUtils.getHiveToRelConverter().convertSql("SELECT CAST(b AS CHAR(255)) FROM test.table_with_binary_column");
     String targetSql = "SELECT \"from_utf8\"(\"table_with_binary_column\".\"b\")\n"
         + "FROM \"test\".\"table_with_binary_column\" AS \"table_with_binary_column\"";
     String expandedSql = relToTrinoConverter.convert(relNode);
@@ -744,7 +770,7 @@ public class HiveToTrinoConverterTest {
   public void testRlikeTransformation() {
     RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
 
-    RelNode relNode = hiveToRelConverter.convertSql("SELECT '1' NOT RLIKE '^1$'");
+    RelNode relNode = TestUtils.getHiveToRelConverter().convertSql("SELECT '1' NOT RLIKE '^1$'");
     String targetSql = "SELECT NOT \"REGEXP_LIKE\"('1', '^1$')\n" + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
     String expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
@@ -754,9 +780,20 @@ public class HiveToTrinoConverterTest {
   public void testRegexpTransformation() {
     RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
 
-    RelNode relNode = hiveToRelConverter.convertSql("SELECT '1' NOT REGEXP '^1$'");
+    RelNode relNode = TestUtils.getHiveToRelConverter().convertSql("SELECT '1' NOT REGEXP '^1$'");
     String targetSql = "SELECT NOT \"REGEXP_LIKE\"('1', '^1$')\n" + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
     String expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
+  }
+
+  public void testSqlSelectAliasAppenderTransformer() {
+    //test.tableA(a int, b struct<b1:string>
+    RelNode relNode = TestUtils.getHiveToRelConverter().convertSql("SELECT tableA.b.b1 FROM test.tableA where a > 5");
+    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
+    String expandedSql = relToTrinoConverter.convert(relNode);
+
+    String expected = "SELECT \"tablea\".\"b\".\"b1\" AS \"b1\"\n" + "FROM \"test\".\"tablea\" AS \"tablea\"\n"
+        + "WHERE \"tablea\".\"a\" > 5";
+    assertEquals(expandedSql, expected);
   }
 }
