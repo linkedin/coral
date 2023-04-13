@@ -31,6 +31,9 @@ import guru.nidi.graphviz.model.Node;
 import static guru.nidi.graphviz.model.Factory.*;
 
 
+/**
+ * A visitor that converts a SqlNode tree to a graphviz node.
+ */
 public class SqlNodeVisualizationVisitor implements SqlVisitor<Node> {
   @Override
   public Node visit(SqlLiteral literal) {

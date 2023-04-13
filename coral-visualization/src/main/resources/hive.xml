@@ -8,11 +8,11 @@
 <configuration>
   <property>
     <name>hive.exec.scratchdir</name>
-    <value>${coral.hive.test.dir}/hive-scratch-dir</value>
+    <value>${coral.visualization.test.dir}/visualization-scratch-dir</value>
   </property>
   <property>
     <name>hive.metastore.warehouse.dir</name>
-    <value>${coral.hive.test.dir}/warehouse</value>
+    <value>${coral.visualization.test.dir}/warehouse</value>
   </property>
   <property>
     <name>javax.jdo.option.ConnectionDriverName</name>
@@ -20,7 +20,7 @@
   </property>
   <property>
     <name>javax.jdo.option.ConnectionURL</name>
-    <value>jdbc:derby:;databaseName=${coral.hive.test.dir}/metastore.db;create=true</value>
+    <value>jdbc:derby:;databaseName=${coral.visualization.test.dir}/metastore.db;create=true</value>
   </property>
   <property>
     <name>hive.metastore.schema.verification</name>

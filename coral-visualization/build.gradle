@@ -7,8 +7,6 @@ dependencies {
     // This exclusion is required to prevent duplicate classes since we include
     // shaded 'calcite-core' transitively
     exclude group: 'org.apache.calcite', module: 'calcite-core'
-    exclude group: 'org.apache.calcite', module: 'calcite-avatica'
   }
   testCompile deps.'hadoop'.'hadoop-mapreduce-client-core'
-  testCompile deps.'kryo'
 }

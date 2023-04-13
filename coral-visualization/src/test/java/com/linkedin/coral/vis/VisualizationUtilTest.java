@@ -22,7 +22,7 @@ import static org.testng.Assert.*;
 
 
 public class VisualizationUtilTest {
-  private static final String CORAL_VISUALIZATION_TEST_DIR = "coral.hive.test.dir";
+  private static final String CORAL_VISUALIZATION_TEST_DIR = "coral.visualization.test.dir";
 
   @Test
   public void testBasicQuery() {
@@ -44,7 +44,7 @@ public class VisualizationUtilTest {
       InputStream hiveConfStream = SqlNodeVisualizationVisitor.class.getClassLoader().getResourceAsStream("hive.xml");
       HiveConf hiveConf = new HiveConf();
       hiveConf.set(CORAL_VISUALIZATION_TEST_DIR,
-          System.getProperty("java.io.tmpdir") + "/coral/hive/" + UUID.randomUUID());
+          System.getProperty("java.io.tmpdir") + "/coral/visualization/" + UUID.randomUUID());
       hiveConf.addResource(hiveConfStream);
       hiveConf.set("mapreduce.framework.name", "local");
       hiveConf.set("_hive.hdfs.session.path", "/tmp/coral");

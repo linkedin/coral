@@ -25,10 +25,20 @@ public class VisualizationUtil {
     this.outputDirectory = outputDirectory;
   }
 
+  /**
+   * Create a visualization util.
+   * @param outputDirectory directory to write the visualization files to.
+   * @return a visualization util.
+   */
   public static VisualizationUtil create(File outputDirectory) {
     return new VisualizationUtil(outputDirectory);
   }
 
+  /**
+   * Visualize the coral sql node to a file.
+   * @param sqlNode root of the SqlNode tree to visualize.
+   * @param fileName name of the file to write the visualization to.
+   */
   public void visualizeCoralSqlNodeToFile(SqlNode sqlNode, String fileName) {
     SqlVisitor<Node> sqlVisitor = new SqlNodeVisualizationVisitor();
     Node node = sqlNode.accept(sqlVisitor);
