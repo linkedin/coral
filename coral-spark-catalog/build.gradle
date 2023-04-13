@@ -1,0 +1,25 @@
+dependencies {
+  compile project(':coral-spark')
+  compile(deps.'linkedin-calcite-core') {
+    artifact {
+      name = 'calcite-core'
+      extension = 'jar'
+      type = 'jar'
+      classifier = 'shaded'
+    }
+  }
+
+  compile 'org.apache.spark:spark-hive_2.12:3.1.3-SNAPSHOT'
+
+  testCompile('org.apache.hive:hive-metastore:2.3.7') {
+    // avro-tools brings in whole bunch of hadoop classes causing duplicates and conflicts
+    exclude group: 'org.apache.avro', module: 'avro-tools'
+  }
+  testCompile('org.apache.hive:hive-exec:2.3.7:core') {
+    exclude group: 'org.apache.avro', module: 'avro-tools'
+    // These exclusions are required to prevent duplicate classes since we include
+    // shaded jar above
+    exclude group: 'org.apache.calcite', module: 'calcite-core'
+    exclude group: 'org.apache.calcite', module: 'calcite-avatica'
+  }
+}

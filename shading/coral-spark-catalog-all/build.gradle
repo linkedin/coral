@@ -1,0 +1,331 @@
+import com.github.jengelman.gradle.plugins.shadow.relocation.SimpleRelocator
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+
+import java.util.jar.JarFile
+
+apply plugin: "com.github.johnrengelman.shadow"
+
+dependencies {
+  compile project(':coral-spark-catalog')
+}
+
+class ShadeTask extends ShadowJar {
+  static Logger LOG = Logging.getLogger(ShadeTask)
+
+  // By default we use the prefix [product-name]_[version]
+  @Internal
+  String _shadePrefix = defaultShadePrefix()
+
+  /**
+   * Shade prefix is configurable
+   * <pre>
+   * {@code
+   *   shadeJar {
+   *     shadePrefix "shade"
+   *     ...
+   *   }
+   * }
+   * </pre>
+   *
+   * @param prefix
+   */
+  void shadePrefix(String prefix) {
+    _shadePrefix = sanitize(prefix)
+  }
+
+  /**
+   * Specify patterns to exclude from shading.
+   * The classes satisfying the pattern will
+   * be present in the shaded jar, although, unshaded.
+   * <pre>
+   * {@code
+   *   shadeJar {
+   *     // multiple ways to do it
+   *     doNotShade ""*""*"/AClass."*""
+   *     doNotShade "com.linkedin.udf.AClass"
+   *     doNotShade "com/linkedin/udf/AClass"
+   *  }
+   * }
+   * </pre>
+   */
+  @Internal
+  List<String> _doNotShade = []
+
+  void doNotShade(String... patterns) {
+    _doNotShade.addAll(patterns)
+  }
+
+  /**
+   * Specify dependencies to exclude from shading.
+   * The classes in the dependency will
+   * be present in the shaded jar, although, unshaded.
+   * <pre>
+   * {@code
+   *   shadeJar {
+   *     // multiple ways to do it
+   *     doNotShadeDependencies group: com.linkedin.hive
+   *     doNotShadeDependencies group: 'com.linkedin.hive', name: 'hive-exec'
+   * }
+   * </pre>
+   */
+  @Internal
+  List<Map<String, String>> _doNotShadeDeps = []
+
+  void doNotShadeDependencies(Map<String, String>... deps) {
+    _doNotShadeDeps.addAll(deps)
+  }
+
+  /**
+   * A list restricted dependencies, where each
+   * dependency is either a group-id or a
+   * group-id and module id separated by ':'. These
+   * dependencies (along with their transitive dependencies)
+   * will not be included in the shaded jar.
+   */
+  @Internal
+  def _restrictedDependencies =
+  [
+    'commons-logging',
+    'junit',
+    'log4j',
+    'org.apache.hive',
+    'org.apache.logging.log4j',
+    'org.apache.pig',
+    'org.apache.spark',
+    'org.apache.hadoop',
+    'org.mockito',
+    'org.slf4j',
+    'org.testng'] as HashSet
+
+  /**
+   * In cases where we want to include restricted dependencies in the uber jar
+   * <pre>
+   * {@code
+   *   shadeJar {
+   *     includeRestrictedDependencies "log4j" // by group Id
+   *     includeRestrictedDependencies "com.linkedin.hive:hive-exec" // by group and module id
+   *  }
+   * }
+   * </pre>
+   */
+  void includeRestrictedDependencies(String... dependencies) {
+    dependencies.each { d ->
+      def idx = d.indexOf(':')
+      if (idx != -1) {
+        _restrictedDependencies.remove(d.substring(0, idx))
+      }
+      _restrictedDependencies.remove(d)
+    }
+  }
+
+  /**
+   * Exclude dependencies along with their transitive dependencies
+   * <pre>
+   * {@code
+   *   shadeJar {
+   *     excludeDependencies "log4j" // by group Id
+   *     excludeDependnecies "com.linkedin.hive:hive-exec" // by group and module id
+   *   }
+   * }
+   * </pre>
+   */
+  void excludeDependencies(String... dependencies) {
+    dependencies.each {
+      _restrictedDependencies.add(it)
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @TaskAction
+  @Override
+  void copy() {
+    def classPathsToShade = new HashSet<String>()
+
+    def configurations = getConfigurations().collect {
+      // Remove restricted dependencies from the specified configurations
+      setupConfiguration(it)
+    }
+
+    // Collect all classes which need to be shaded
+    configurations.each {
+      classPathsToShade.addAll(classesInConfiguration(it))
+    }
+
+    // Make sure we shade source classes of the project
+    classPathsToShade.addAll(sourceClasses())
+    if (LOG.isDebugEnabled()) {
+      LOG.debug("Classes to shade: " + classPathsToShade)
+    }
+    // The class names are the same as the paths, but with "." instead of "/"
+    def classNamesToShade = classPathsToShade.collect { it.replace('/', '.') }
+
+    // Pass the new updated conf to _shadowJar
+    setConfigurations(configurations);
+
+    // Exclude source files
+    exclude('**/*.java')
+
+    // Do not shade classes we have excluded
+    _doNotShade.addAll(excludes)
+
+    // Relocate base on the above restrictions
+    super.relocate(
+        new SimpleRelocator(null, _shadePrefix + '/', ['**'], _doNotShade) {
+          boolean canRelocatePath(String context) {
+            // Only relocate those classes present in source project and dependency jars
+            return classPathsToShade.contains(context) && super.canRelocatePath(context)
+          }
+          boolean canRelocateClass(String context) {
+            // Only relocate those classes present in source project and dependency jars
+            return classNamesToShade.contains(context) && super.canRelocateClass(context)
+          }
+        })
+    super.copy()
+  }
+
+  /*****
+   ** Private methods below
+   *****/
+
+  /**
+   * Create a copy of the input configuration and
+   * returns the copied configuration without the
+   * restricted jars
+   */
+  def setupConfiguration(Configuration configuration) {
+    Configuration conf = configuration.copyRecursive()
+
+    _restrictedDependencies.each { artifact ->
+      def idx = artifact.indexOf(':')
+      if (idx == -1) {
+        LOG.info("Will exclude all artifacts having the group: " + artifact + " from the shaded jar")
+        conf.exclude group: artifact
+      } else {
+        LOG.info("Will exclude all artifacts having the group and module: " + artifact + " from the shaded jar")
+        conf.exclude group: artifact.substring(0, idx), module: artifact.substring(idx + 1)
+      }
+    }
+    return conf
+  }
+
+  /**
+   * Returns all the classes present in all the dependencies
+   * of the input configuration
+   */
+  def classesInConfiguration(Configuration conf) {
+    // Do not modify original as it will be used in building fat jar
+    Configuration configuration = conf.copyRecursive()
+    _doNotShadeDeps.sort().each { dep ->
+      LOG.info("Will not shade dependency " + dep)
+      configuration.exclude(dep)
+    }
+    FileCollection fileCollection = super.getDependencyFilter().resolve(configuration)
+    def jars = fileCollection.asFileTree.filter {
+      it.name.endsWith(".jar")
+    }
+    LOG.info("Will shade the following jars for project " + project.name)
+    jars.sort().each { j -> LOG.info(j.toString()) }
+    def classes = new HashSet()
+    jars.each { jar ->
+      classes.addAll(classesInJar(jar))
+    }
+    return classes
+  }
+
+  /**
+   * Returns all classes in the input jar
+   */
+  static classesInJar(jar) {
+    def classes = new HashSet()
+    def jf = new JarFile(jar)
+    try {
+      jf.stream().forEach {
+        def name = it.getName()
+        if (name.endsWith(".class")) {
+          classes.add(name.substring(0, name.lastIndexOf('.')))
+        }
+      }
+    } finally {
+      jf.close()
+    }
+    return classes
+  }
+
+  /**
+   * @return A collection of source classes of a project
+   */
+  def sourceClasses() {
+    JavaPluginConvention convention = project.convention.getPlugin(JavaPluginConvention)
+    def classesDirs = convention.sourceSets.main.output.getClassesDirs().getFiles()
+
+    return convention.sourceSets.main.output.asFileTree.filter {
+      it.name.endsWith(".class")
+    }.collect {
+      getSourceClass(it, classesDirs)
+    }
+  }
+
+  def getSourceClass(File file, Set<File> classesDirs) {
+    URI relativeURI
+    URI fileURI = file.toURI()
+    for (File classesDir : classesDirs) {
+      relativeURI = classesDir.toURI().relativize(fileURI)
+      // if the path of this URI is not a prefix of the path of the given URI, then the given URI is returned.
+      if (relativeURI == fileURI) continue
+    }
+    relativeURI.path.substring(0, relativeURI.path.length() - ".class".length())
+  }
+
+  /**
+   * Computes the shade prefix. Shade prefix is [project.group]_[project.name]_[project.version],
+   * with hyphens and dots replaced by underscore
+   */
+  def defaultShadePrefix() {
+    String prefix = String.join("_",
+        sanitize(project.group.toString()),
+        sanitize(project.name),
+        sanitize(project.version.toString()))
+
+    return prefix;
+  }
+
+  static sanitize(String s) {
+    return s.replaceAll('\\-', '_').replaceAll('\\.', '_')
+  }
+}
+
+task shadeJar(type: ShadeTask) {
+  group = "shadow"
+  description = "Builds a shaded jar for coral-spark-view-catalog with all the required dependencies"
+  configurations = [
+    project.configurations.runtimeClasspath
+  ]
+  exclude('META-INF/INDEX.LIST', 'META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/*.RSA')
+  exclude(
+      // Need to exclude org/apache/hadoop because coral-hive reference to
+      // hive-metastore classes.  We let Gradle download Hive classes at run time in order to have
+      // compatible Hive classes.
+      "org/apache/hadoop/**",
+      // We need to exclude "org.codehaus.janino" package because some classes inside use reflection
+      // and make assumptions about package names.  Also we cannot use excludeDependencies command
+      // because we use 'compile files' command to build coral-hive.
+      // We need to use 'exclude' command to exclude specific file or specific package.
+      "org/codehaus/janino/**",
+      "org/codehaus/commons/**",
+      "org/apache/log4j/**",
+      "org/apache/derby/**",
+      "org/apache/ivy/core/settings/typedef.properties"
+      )
+  relocate "jdbc:calcite:", "jdbc:coral:"
+  relocate "org/apache/ivy/core/settings", "coral_shading/org/apache/ivy/core/settings"
+  mergeServiceFiles()
+  shadePrefix "coral_shading"
+}
+
+artifacts {
+  archives shadeJar
+}
+
+tasks.shadowJar.enabled = false
