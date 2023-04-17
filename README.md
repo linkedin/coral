@@ -49,6 +49,12 @@ Build:
 ./gradlew clean build
 ```
 
+Please note that this project requires Java 8 to run. Either set `JAVA_HOME` to the home of an appropriate version and then use `./gradlew clean build` as described above, or set the `org.gradle.java.home` gradle property to the Java home of an appropriate version as below:
+
+```bash
+./gradlew -Dorg.gradle.java.home=/path/to/java/home clean build
+```
+
 ## Contributing
 
 The project is under active development and we welcome contributions of different forms.
