@@ -5,7 +5,7 @@ def versions = [
   'gson': '2.9.0',
   'hadoop': '2.7.0',
   'hive': '1.2.2',
-  'ivy': '2.4.0',
+  'ivy': '2.5.1',
   'jetbrains': '16.0.2',
   'jline': '0.9.94',
   'kryo': '2.22',
