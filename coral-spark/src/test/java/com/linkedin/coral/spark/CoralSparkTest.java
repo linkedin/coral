@@ -391,10 +391,9 @@ public class CoralSparkTest {
   }
 
   @Test
-  public void testSchemaPromotionView() {
-    RelNode relNode = TestUtils.toRelNode(String.join("\n", "", "SELECT * ", "FROM view_schema_promotion_wrapper"));
-    String targetSql = "SELECT schema_promotion.a, CAST(schema_promotion.b AS ARRAY<INTEGER>) b\n"
-        + "FROM default.schema_promotion schema_promotion";
+  public void testSchemaPreservationView() {
+    RelNode relNode = TestUtils.toRelNode(String.join("\n", "", "SELECT * ", "FROM view_schema_preservation_wrapper"));
+    String targetSql = "SELECT *\n" + "FROM default.schema_preservation schema_preservation";
     assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
   }
 

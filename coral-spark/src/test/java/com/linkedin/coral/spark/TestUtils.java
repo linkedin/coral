@@ -1,5 +1,5 @@
 /**
- * Copyright 2018-2022 LinkedIn Corporation. All rights reserved.
+ * Copyright 2018-2023 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -207,12 +207,12 @@ public class TestUtils {
     run(driver,
         String.join("\n", "", "ALTER TABLE fuzzy_union.tableO CHANGE COLUMN b b struct<b0:int, b1:string, b2:int>"));
 
-    run(driver, String.join("\n", "", "CREATE TABLE IF NOT EXISTS schema_promotion(a int, b array<int>)"));
-    run(driver,
-        String.join("\n", "", "CREATE VIEW IF NOT EXISTS view_schema_promotion AS SELECT * from schema_promotion"));
+    run(driver, String.join("\n", "", "CREATE TABLE IF NOT EXISTS schema_preservation(a int, b array<int>)"));
     run(driver, String.join("\n", "",
-        "CREATE VIEW IF NOT EXISTS view_schema_promotion_wrapper AS SELECT * from view_schema_promotion"));
-    run(driver, String.join("\n", "", "ALTER TABLE schema_promotion CHANGE COLUMN b b array<double>"));
+        "CREATE VIEW IF NOT EXISTS view_schema_preservation AS SELECT * from schema_preservation"));
+    run(driver, String.join("\n", "",
+        "CREATE VIEW IF NOT EXISTS view_schema_preservation_wrapper AS SELECT * from view_schema_preservation"));
+    run(driver, String.join("\n", "", "ALTER TABLE schema_preservation CHANGE COLUMN b b array<double>"));
 
     run(driver,
         "CREATE TABLE IF NOT EXISTS union_table(foo uniontype<int, double, array<string>, struct<a:int,b:string>>)");
