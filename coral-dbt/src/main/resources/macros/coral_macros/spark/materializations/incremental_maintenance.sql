@@ -26,7 +26,7 @@
   {% set coral_response = coral_dbt.get_coral_incremental_response(sql, coral_incremental_url, table_names, sql_dialect) %}
 
 --     Generate spark scala for incremental maintenance logic
-  {% set spark_scala = coral_dbt.generate_incremental_code(coral_response, table_names, output_table) %}
+  {% set spark_scala = coral_dbt.generate_incremental_script(coral_response, table_names, output_table) %}
 
 --     Execute spark scala
   {% call statement('main') -%}

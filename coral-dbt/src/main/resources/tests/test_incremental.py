@@ -8,11 +8,10 @@ import unittest
 from jinja2 import Template
 
 SEEDS_DIR = 'seeds/'
-URL = 'http://localhost:8080/api/incremental/rewrite'
 
 class TestUtils:
     @staticmethod
-    def construct_generate_incremental_code_test(name):
+    def generate_test_vars(name):
         output_table = name + '_output'
         expected_file = open(SEEDS_DIR + 'test_' + name + '_expected.txt', 'r')
         expected_incremental_spark_scala = expected_file.read()
@@ -24,8 +23,8 @@ class TestUtils:
         })
 
     @staticmethod
-    def test_generate_incremental_code(coral_response, table_names, output_table):
-        with open('generate_incremental_code.j2') as f:
+    def test_generate_incremental_script(coral_response, table_names, output_table):
+        with open('generate_incremental_script.j2') as f:
             template = Template(f.read())
 
         context = {'coral_response': coral_response, 'table_names': table_names, 'output_table': output_table}
@@ -33,16 +32,20 @@ class TestUtils:
 
         return output
 
+#
+# Tests macros used by incremental_maintenance materialization type.
+# Mocks out Coral response and compares generated Scala code to their
+# respective expected outputs found in /seeds.
+#
 class TestIncremental(unittest.TestCase):
-    maxDiff = None
-
     @classmethod
     def setUpClass(self):
         subprocess.run(["chmod", "+x", "./setup_test.sh"])
-        subprocess.run(["./setup_test.sh", "../macros/coral_macros/spark/utils/generate_incremental_code.sql",
-                        "generate_incremental_code.j2"])
+        subprocess.run(["./setup_test.sh", "../macros/coral_macros/spark/utils/generate_incremental_script.sql",
+                        "generate_incremental_script.j2"])
 
     def test_simple_select_all(self):
+        # Input query: SELECT * FROM default.foo
         name = "simple_select_all"
         table_names = ["foo"]
         mocked_coral_response = {
@@ -50,10 +53,11 @@ class TestIncremental(unittest.TestCase):
             "incremental_table_names": ["foo_delta"],
             "underscore_delimited_table_names": ["foo"]
         }
-        test_vars = TestUtils.construct_generate_incremental_code_test(name)
-        self.assertEqual(TestUtils.test_generate_incremental_code(mocked_coral_response, table_names, test_vars['output_table']).strip(), test_vars['expected_incremental_spark_scala'].strip())
+        test_vars = TestUtils.generate_test_vars(name)
+        self.assertEqual(TestUtils.test_generate_incremental_script(mocked_coral_response, table_names, test_vars['output_table']).strip(), test_vars['expected_incremental_spark_scala'].strip())
 
     def test_join(self):
+        # Input query: SELECT * FROM default.bar1 JOIN default.bar2 ON default.bar1.x = default.bar2.x
         name = "join"
         table_names = ["bar1", "bar2"]
         mocked_coral_response = {
@@ -65,14 +69,14 @@ class TestIncremental(unittest.TestCase):
             "incremental_table_names": ["bar1_delta", "bar2_delta"],
             "underscore_delimited_table_names": ["bar1", "bar2"]
         }
-        test_vars = TestUtils.construct_generate_incremental_code_test(name)
-        self.assertEqual(TestUtils.test_generate_incremental_code(mocked_coral_response, table_names, test_vars['output_table']).strip(), test_vars['expected_incremental_spark_scala'].strip())
+        test_vars = TestUtils.generate_test_vars(name)
+        self.assertEqual(TestUtils.test_generate_incremental_script(mocked_coral_response, table_names, test_vars['output_table']).strip(), test_vars['expected_incremental_spark_scala'].strip())
 
     @classmethod
     def tearDownClass(self):
         subprocess.run(["chmod", "+x", "./cleanup_test.sh"])
-        subprocess.run(["./cleanup_test.sh", "generate_incremental_code.j2"])
-        subprocess.run(["./cleanup_test.sh", "generate_incremental_code.j2-e"])
+        subprocess.run(["./cleanup_test.sh", "generate_incremental_script.j2"])
+        subprocess.run(["./cleanup_test.sh", "generate_incremental_script.j2-e"])
 
 if __name__ == '__main__':
     unittest.main()

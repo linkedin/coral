@@ -26,7 +26,8 @@ task runCoralDbtTests {
   // Run tests
   def runTestsProcessBuilder = new ProcessBuilder([
     'python3',
-    'test_incremental.py',
+    '-m',
+    'unittest',
     '-v'
   ])
   runTestsProcessBuilder.directory(file('src/main/resources/tests'))

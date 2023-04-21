@@ -6,7 +6,7 @@ if [ $# -ne 2 ]; then
     exit 1
 fi
 
-# Copy the file
+# Copy the macro for isolated invocation as a Jinja function
 cp $1 $2
 
 # Remove copyright and comments (will otherwise be printed) and return call

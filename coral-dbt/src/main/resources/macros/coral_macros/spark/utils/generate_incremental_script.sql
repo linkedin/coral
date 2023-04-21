@@ -3,7 +3,7 @@
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
-{% macro spark__generate_incremental_code(coral_response, table_names, output_table) -%}
+{% macro spark__generate_incremental_script(coral_response, table_names, output_table) -%}
 
 --     Compiled lines of spark scala code to be executed, separated by \n delimiter
   {% set spark_scala = '' %}
@@ -23,6 +23,8 @@
 --     Namespace variable used to persist changes beyond loop scope
   {% set ns = namespace(generated_sql='') %}
   {% for source_table in table_names %}
+--     Timestamps are currently hard-coded to be the latest two timestamps; this
+--     logic will change to use Jasper in the future
     {% set snapshot_id_retrieval_code =
         'val snapshot_df = spark.read.format("iceberg").load("' ~ source_table ~ '.snapshots")\n'
         ~ 'snapshot_df.createOrReplaceTempView("snapshot_temp_table")\n'
