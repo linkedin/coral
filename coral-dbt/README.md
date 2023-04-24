@@ -60,3 +60,19 @@ In your models, specify the names of the tables your query depends on with the `
 
 SELECT * FROM db.t1 UNION SELECT * FROM db.t2
 ```
+
+## Tests
+
+### Running Tests
+
+These tests are automatically run as part of the Gradle build process (`./gradlew build`) but can be manually triggered by `cd`'ing into the `src/main/resources/tests/` directory and running:
+
+```
+python3 -m unittest -v
+```
+
+Please refer to the Python `unittest` [module documentation](https://docs.python.org/3/library/unittest.html) for more information on running tests.
+
+### Writing Tests
+
+It is encouraged to write tests using the `unittest` module so that they will run automatically with the build process.
