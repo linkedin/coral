@@ -487,7 +487,8 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
         STRING);
     createAddUserDefinedFunction("com.linkedin.etg.business.common.udfs.MapSfdcProductCode", FunctionReturnTypes.STRING,
         STRING);
-    createAddUserDefinedFunction("com.linkedin.etg.business.common.udfs.MapSfdcProductId", ReturnTypes.INTEGER, STRING);
+    createAddUserDefinedFunction("com.linkedin.etg.business.common.udfs.MapSfdcProductId", FunctionReturnTypes.STRING,
+        STRING);
     createAddUserDefinedFunction("udfs.SeoReferrerTrkUdf", FunctionReturnTypes.STRING, STRING_STRING_STRING);
     createAddUserDefinedFunction("com.linkedin.vector.daliview.udf.PresentDataType", FunctionReturnTypes.STRING,
         family(SqlTypeFamily.ANY));
