@@ -12,53 +12,66 @@ spotless {
 }
 
 task runCoralDbtTests {
-  // Ensure pip is installed
-  def ensurePipProcessBuilder = new ProcessBuilder([
-    'python3',
-    '-m',
-    'ensurepip',
-    '--upgrade'
-  ])
-  def ensurePipProcess = ensurePipProcessBuilder.start()
-  ensurePipProcess.waitFor()
+  def runTest = false
 
-  // Install Python dependencies
-  def installModulesProcessBuilder = new ProcessBuilder([
-    'python3',
-    '-m',
-    'pip',
-    'install',
-    '-r',
-    'requirements.txt'
-  ])
-  installModulesProcessBuilder.directory(file('src/main/resources/tests'))
-  def installModulesProcess = installModulesProcessBuilder.start()
-  installModulesProcess.waitFor()
-
-  // Run tests
-  def runTestsProcessBuilder = new ProcessBuilder([
-    'python3',
-    '-m',
-    'unittest',
-    '-v'
-  ])
-  runTestsProcessBuilder.directory(file('src/main/resources/tests'))
-  def runTestsProcess = runTestsProcessBuilder.start()
-  runTestsProcess.waitFor()
-
-  // Collect errors and throw exception on non-zero exit code
-  def errorStream = runTestsProcess.getErrorStream()
-  def buffReader = new BufferedReader(new InputStreamReader(errorStream))
-  def stringBuilder = new StringBuilder()
-  def newLine
-  while ((newLine = buffReader.readLine()) != null) {
-    stringBuilder.append(newLine + "\n")
+  try {
+    // Ensure pip is installed
+    def ensurePipProcessBuilder = new ProcessBuilder([
+      'python3',
+      '-m',
+      'ensurepip',
+      '--upgrade'
+    ])
+    def ensurePipProcess = ensurePipProcessBuilder.start()
+    ensurePipProcess.waitFor()
+  } catch (Exception e) {
+    println("Pip installation failed. Trying dependency installation regardless.")
   }
-  def errorOutput = stringBuilder.toString()
-  if (runTestsProcess.exitValue() != 0) {
-    throw new GradleException(errorOutput)
+
+  try {
+    // Install Python dependencies
+    def installModulesProcessBuilder = new ProcessBuilder([
+      'python3',
+      '-m',
+      'pip',
+      'install',
+      '-r',
+      'requirements.txt'
+    ])
+    installModulesProcessBuilder.directory(file('src/main/resources/tests'))
+    def installModulesProcess = installModulesProcessBuilder.start()
+    installModulesProcess.waitFor()
+    runTest = true
+  } catch (Exception e) {
+    println("Dependency installation failed. Skipping coral-dbt tests.")
   }
-  println(errorOutput)
+
+  if (runTest) {
+    // Run tests
+    def runTestsProcessBuilder = new ProcessBuilder([
+      'python3',
+      '-m',
+      'unittest',
+      '-v'
+    ])
+    runTestsProcessBuilder.directory(file('src/main/resources/tests'))
+    def runTestsProcess = runTestsProcessBuilder.start()
+    runTestsProcess.waitFor()
+
+    // Collect errors and throw exception on non-zero exit code
+    def errorStream = runTestsProcess.getErrorStream()
+    def buffReader = new BufferedReader(new InputStreamReader(errorStream))
+    def stringBuilder = new StringBuilder()
+    def newLine
+    while ((newLine = buffReader.readLine()) != null) {
+      stringBuilder.append(newLine + "\n")
+    }
+    def errorOutput = stringBuilder.toString()
+    if (runTestsProcess.exitValue() != 0) {
+      throw new GradleException(errorOutput)
+    }
+    println(errorOutput)
+  }
 }
 
 build.dependsOn 'runCoralDbtTests'
