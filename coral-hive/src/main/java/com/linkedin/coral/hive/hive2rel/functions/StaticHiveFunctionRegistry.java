@@ -566,7 +566,6 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
         or(STRING_STRING_STRING,
             family(SqlTypeFamily.STRING, SqlTypeFamily.STRING, SqlTypeFamily.STRING, SqlTypeFamily.STRING)));
     createAddUserDefinedFunction("com.linkedin.recruiter.udf.QueryRoutingTypeUDF", FunctionReturnTypes.STRING, STRING);
-    createAddUserDefinedFunction("com.linkedin.recruiter.udf.SearchQueryUDF", FunctionReturnTypes.STRING, STRING);
     createAddUserDefinedFunction("com.linkedin.snapshot.udf.ConstructSnapshotUrnUdf", FunctionReturnTypes.STRING,
         family(SqlTypeFamily.NUMERIC, SqlTypeFamily.STRING));
     createAddUserDefinedFunction("com.linkedin.snapshot.udf.SnapshotPurgeEligibleUdf", ReturnTypes.BOOLEAN,
