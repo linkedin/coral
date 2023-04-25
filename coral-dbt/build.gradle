@@ -14,6 +14,8 @@ spotless {
 task runCoralDbtTests {
   // Install Python dependencies
   def installModulesProcessBuilder = new ProcessBuilder([
+    'python3',
+    '-m',
     'pip',
     'install',
     '-r',
