@@ -12,6 +12,16 @@ spotless {
 }
 
 task runCoralDbtTests {
+  // Ensure pip is installed
+  def ensurePipProcessBuilder = new ProcessBuilder([
+    'python3',
+    '-m',
+    'ensurepip',
+    '--upgrade'
+  ])
+  def ensurePipProcess = ensurePipProcessBuilder.start()
+  ensurePipProcess.waitFor()
+
   // Install Python dependencies
   def installModulesProcessBuilder = new ProcessBuilder([
     'python3',
