@@ -79,15 +79,19 @@ public class RelNodeIncrementalTransformer {
 
         // Check if we can replace the left and right nodes with a scan of a materialized table
         if (incrementalTransformerResults.containsIntermediateQueryRelNodeKey(left.getDescription())) {
-          LogicalProject leftLastProject = createReplacementProjectNodeForGivenRelNode(left, rexBuilder);
+          String description = left.getDescription();
+          LogicalProject leftLastProject = createReplacementProjectNodeForGivenRelNode(description, left, rexBuilder);
           left = leftLastProject;
-          LogicalProject leftDeltaProject = createReplacementProjectNodeForGivenRelNode(incrementalLeft, rexBuilder);
+          LogicalProject leftDeltaProject =
+              createReplacementProjectNodeForGivenRelNode(description + "_delta", incrementalLeft, rexBuilder);
           incrementalLeft = leftDeltaProject;
         }
         if (incrementalTransformerResults.containsIntermediateQueryRelNodeKey(right.getDescription())) {
-          LogicalProject rightLastProject = createReplacementProjectNodeForGivenRelNode(right, rexBuilder);
+          LogicalProject rightLastProject =
+              createReplacementProjectNodeForGivenRelNode(right.getDescription(), right, rexBuilder);
           right = rightLastProject;
-          LogicalProject rightDeltaProject = createReplacementProjectNodeForGivenRelNode(incrementalRight, rexBuilder);
+          LogicalProject rightDeltaProject = createReplacementProjectNodeForGivenRelNode(
+              right.getDescription() + "_delta", incrementalRight, rexBuilder);
           incrementalRight = rightDeltaProject;
         }
 
@@ -118,7 +122,7 @@ public class RelNodeIncrementalTransformer {
         incrementalTransformerResults.addIntermediateQueryRelNode(project.getDescription(), project);
         LogicalProject transformedProject =
             LogicalProject.create(transformedChild, project.getProjects(), project.getRowType());
-        incrementalTransformerResults.addIntermediateQueryRelNode(transformedProject.getDescription(),
+        incrementalTransformerResults.addIntermediateQueryRelNode(project.getDescription() + "_delta",
             transformedProject);
         return transformedProject;
       }
@@ -151,9 +155,10 @@ public class RelNodeIncrementalTransformer {
     return incrementalTransformerResults;
   }
 
-  private static LogicalProject createReplacementProjectNodeForGivenRelNode(RelNode relNode, RexBuilder rexBuilder) {
-    RelOptTable table = RelOptTableImpl.create(relOptSchema, relNode.getRowType(),
-        Collections.singletonList(relNode.getDescription()), null);
+  private static LogicalProject createReplacementProjectNodeForGivenRelNode(String relOptTableName, RelNode relNode,
+      RexBuilder rexBuilder) {
+    RelOptTable table =
+        RelOptTableImpl.create(relOptSchema, relNode.getRowType(), Collections.singletonList(relOptTableName), null);
     TableScan scan = LogicalTableScan.create(relNode.getCluster(), table);
     return createProjectOverNode(scan, rexBuilder);
   }
