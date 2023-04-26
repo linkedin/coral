@@ -8,6 +8,7 @@ package com.linkedin.coral.coralservice.utils;
 import org.apache.calcite.rel.RelNode;
 
 import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
+import com.linkedin.coral.incremental.IncrementalTransformerResults;
 import com.linkedin.coral.incremental.RelNodeIncrementalTransformer;
 import com.linkedin.coral.spark.CoralSpark;
 
@@ -18,7 +19,9 @@ public class IncrementalUtils {
 
   public static String getSparkIncrementalQueryFromUserSql(String query) {
     RelNode originalNode = new HiveToRelConverter(hiveMetastoreClient).convertSql(query);
-    RelNode incrementalRelNode = RelNodeIncrementalTransformer.convertRelIncremental(originalNode);
+    IncrementalTransformerResults incrementalTransformerResults =
+        RelNodeIncrementalTransformer.performIncrementalTransformation(originalNode);
+    RelNode incrementalRelNode = incrementalTransformerResults.getIncrementalRelNode();
     CoralSpark coralSpark = CoralSpark.create(incrementalRelNode);
     return coralSpark.getSparkSql();
   }

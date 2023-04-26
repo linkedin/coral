@@ -7,10 +7,12 @@ package com.linkedin.coral.incremental;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import org.apache.calcite.plan.RelOptSchema;
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.prepare.RelOptTableImpl;
 import org.apache.calcite.rel.RelNode;
@@ -29,14 +31,29 @@ import org.apache.calcite.rex.RexNode;
 
 public class RelNodeIncrementalTransformer {
 
+  private static RelOptSchema relOptSchema;
+
   private RelNodeIncrementalTransformer() {
   }
 
-  public static RelNode convertRelIncremental(RelNode originalNode) {
+  public static IncrementalTransformerResults performIncrementalTransformation(RelNode originalNode) {
+    IncrementalTransformerResults incrementalTransformerResults = convertRelIncremental(originalNode);
+    return incrementalTransformerResults;
+  }
+
+  private static IncrementalTransformerResults convertRelIncremental(RelNode originalNode) {
+    IncrementalTransformerResults incrementalTransformerResults = new IncrementalTransformerResults();
     RelShuttle converter = new RelShuttleImpl() {
       @Override
       public RelNode visit(TableScan scan) {
         RelOptTable originalTable = scan.getTable();
+
+        // Set relOptSchema
+        if (relOptSchema == null) {
+          relOptSchema = originalTable.getRelOptSchema();
+        }
+
+        // Create delta scan
         List<String> incrementalNames = new ArrayList<>(originalTable.getQualifiedName());
         String deltaTableName = incrementalNames.remove(incrementalNames.size() - 1) + "_delta";
         incrementalNames.add(deltaTableName);
@@ -49,10 +66,30 @@ public class RelNodeIncrementalTransformer {
       public RelNode visit(LogicalJoin join) {
         RelNode left = join.getLeft();
         RelNode right = join.getRight();
-        RelNode incrementalLeft = convertRelIncremental(left);
-        RelNode incrementalRight = convertRelIncremental(right);
+        IncrementalTransformerResults incrementalTransformerResultsLeft = convertRelIncremental(left);
+        IncrementalTransformerResults incrementalTransformerResultsRight = convertRelIncremental(right);
+        RelNode incrementalLeft = incrementalTransformerResultsLeft.getIncrementalRelNode();
+        RelNode incrementalRight = incrementalTransformerResultsRight.getIncrementalRelNode();
+        incrementalTransformerResults
+            .addMultipleIntermediateQueryRelNodes(incrementalTransformerResultsLeft.getIntermediateQueryRelNodes());
+        incrementalTransformerResults
+            .addMultipleIntermediateQueryRelNodes(incrementalTransformerResultsRight.getIntermediateQueryRelNodes());
 
         RexBuilder rexBuilder = join.getCluster().getRexBuilder();
+
+        // Check if we can replace the left and right nodes with a scan of a materialized table
+        if (incrementalTransformerResults.containsIntermediateQueryRelNodeKey(left.getDescription())) {
+          LogicalProject leftLastProject = createReplacementProjectNodeForGivenRelNode(left, rexBuilder);
+          left = leftLastProject;
+          LogicalProject leftDeltaProject = createReplacementProjectNodeForGivenRelNode(incrementalLeft, rexBuilder);
+          incrementalLeft = leftDeltaProject;
+        }
+        if (incrementalTransformerResults.containsIntermediateQueryRelNodeKey(right.getDescription())) {
+          LogicalProject rightLastProject = createReplacementProjectNodeForGivenRelNode(right, rexBuilder);
+          right = rightLastProject;
+          LogicalProject rightDeltaProject = createReplacementProjectNodeForGivenRelNode(incrementalRight, rexBuilder);
+          incrementalRight = rightDeltaProject;
+        }
 
         LogicalProject p1 = createProjectOverJoin(join, left, incrementalRight, rexBuilder);
         LogicalProject p2 = createProjectOverJoin(join, incrementalLeft, right, rexBuilder);
@@ -65,45 +102,77 @@ public class RelNodeIncrementalTransformer {
 
       @Override
       public RelNode visit(LogicalFilter filter) {
-        RelNode transformedChild = convertRelIncremental(filter.getInput());
+        IncrementalTransformerResults incrementalTransformerResultsChild = convertRelIncremental(filter.getInput());
+        RelNode transformedChild = incrementalTransformerResultsChild.getIncrementalRelNode();
+        incrementalTransformerResults
+            .addMultipleIntermediateQueryRelNodes(incrementalTransformerResultsChild.getIntermediateQueryRelNodes());
         return LogicalFilter.create(transformedChild, filter.getCondition());
       }
 
       @Override
       public RelNode visit(LogicalProject project) {
-        RelNode transformedChild = convertRelIncremental(project.getInput());
-        return LogicalProject.create(transformedChild, project.getProjects(), project.getRowType());
+        IncrementalTransformerResults incrementalTransformerResultsChild = convertRelIncremental(project.getInput());
+        RelNode transformedChild = incrementalTransformerResultsChild.getIncrementalRelNode();
+        incrementalTransformerResults
+            .addMultipleIntermediateQueryRelNodes(incrementalTransformerResultsChild.getIntermediateQueryRelNodes());
+        incrementalTransformerResults.addIntermediateQueryRelNode(project.getDescription(), project);
+        LogicalProject transformedProject =
+            LogicalProject.create(transformedChild, project.getProjects(), project.getRowType());
+        incrementalTransformerResults.addIntermediateQueryRelNode(transformedProject.getDescription(),
+            transformedProject);
+        return transformedProject;
       }
 
       @Override
       public RelNode visit(LogicalUnion union) {
         List<RelNode> children = union.getInputs();
-        List<RelNode> transformedChildren =
+        List<IncrementalTransformerResults> incrementalTransformerResultsChildren =
             children.stream().map(child -> convertRelIncremental(child)).collect(Collectors.toList());
+        List<RelNode> transformedChildren = new ArrayList<>();
+        for (IncrementalTransformerResults incrementalTransformerResultsChild : incrementalTransformerResultsChildren) {
+          transformedChildren.add(incrementalTransformerResultsChild.getIncrementalRelNode());
+          incrementalTransformerResults
+              .addMultipleIntermediateQueryRelNodes(incrementalTransformerResultsChild.getIntermediateQueryRelNodes());
+        }
         return LogicalUnion.create(transformedChildren, union.all);
       }
 
       @Override
       public RelNode visit(LogicalAggregate aggregate) {
-        RelNode transformedChild = convertRelIncremental(aggregate.getInput());
+        IncrementalTransformerResults incrementalTransformerResultsChild = convertRelIncremental(aggregate.getInput());
+        RelNode transformedChild = incrementalTransformerResultsChild.getIncrementalRelNode();
+        incrementalTransformerResults
+            .addMultipleIntermediateQueryRelNodes(incrementalTransformerResultsChild.getIntermediateQueryRelNodes());
         return LogicalAggregate.create(transformedChild, aggregate.getGroupSet(), aggregate.getGroupSets(),
             aggregate.getAggCallList());
       }
     };
-    return originalNode.accept(converter);
+    incrementalTransformerResults.setIncrementalRelNode(originalNode.accept(converter));
+    return incrementalTransformerResults;
+  }
+
+  private static LogicalProject createReplacementProjectNodeForGivenRelNode(RelNode relNode, RexBuilder rexBuilder) {
+    RelOptTable table = RelOptTableImpl.create(relOptSchema, relNode.getRowType(),
+        Collections.singletonList(relNode.getDescription()), null);
+    TableScan scan = LogicalTableScan.create(relNode.getCluster(), table);
+    return createProjectOverNode(scan, rexBuilder);
+  }
+
+  private static LogicalProject createProjectOverNode(RelNode relNode, RexBuilder rexBuilder) {
+    ArrayList<RexNode> projects = new ArrayList<>();
+    ArrayList<String> names = new ArrayList<>();
+    IntStream.range(0, relNode.getRowType().getFieldList().size()).forEach(i -> {
+      projects.add(rexBuilder.makeInputRef(relNode, i));
+      names.add(relNode.getRowType().getFieldNames().get(i));
+    });
+    return LogicalProject.create(relNode, projects, names);
   }
 
   private static LogicalProject createProjectOverJoin(LogicalJoin join, RelNode left, RelNode right,
       RexBuilder rexBuilder) {
     LogicalJoin incrementalJoin =
         LogicalJoin.create(left, right, join.getCondition(), join.getVariablesSet(), join.getJoinType());
-    ArrayList<RexNode> projects = new ArrayList<>();
-    ArrayList<String> names = new ArrayList<>();
-    IntStream.range(0, incrementalJoin.getRowType().getFieldList().size()).forEach(i -> {
-      projects.add(rexBuilder.makeInputRef(incrementalJoin, i));
-      names.add(incrementalJoin.getRowType().getFieldNames().get(i));
-    });
-    return LogicalProject.create(incrementalJoin, projects, names);
+    return createProjectOverNode(incrementalJoin, rexBuilder);
   }
 
 }
