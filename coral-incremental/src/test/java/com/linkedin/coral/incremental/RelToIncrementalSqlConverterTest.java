@@ -113,9 +113,14 @@ public class RelToIncrementalSqlConverterTest {
 
   @Test
   public void testJoinOverJoin() {
-    // Debugging only
     String nestedJoin = "SELECT a1, a2 FROM test.alpha JOIN test.beta ON test.alpha.a1 = test.beta.b1";
     String sql = "SELECT a2, g1 FROM (" + nestedJoin + ") AS nj JOIN test.gamma ON nj.a2 = test.gamma.g2";
-    getIncrementalModification(sql);
+    String expected = "SELECT t0.a2, t0.g1\n" + "FROM (SELECT *\n" + "FROM (SELECT *\n" + "FROM Table#4 AS Table#4\n"
+        + "INNER JOIN test.gamma_delta AS gamma_delta ON Table#4.a2 = gamma_delta.g2\n" + "UNION ALL\n" + "SELECT *\n"
+        + "FROM Table#4_delta AS Table#4_delta\n"
+        + "INNER JOIN test.gamma AS gamma ON Table#4_delta.a2 = gamma.g2) AS t\n" + "UNION ALL\n" + "SELECT *\n"
+        + "FROM Table#4_delta AS Table#4_delta0\n"
+        + "INNER JOIN test.gamma_delta AS gamma_delta0 ON Table#4_delta0.a2 = gamma_delta0.g2) AS t0";
+    assertEquals(getIncrementalModification(sql), expected);
   }
 }
