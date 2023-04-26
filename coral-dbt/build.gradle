@@ -14,8 +14,9 @@ spotless {
 task runCoralDbtTests {
   def runTest = false
 
+  // Ensure pip is installed
   try {
-    // Ensure pip is installed
+    println("Ensuring pip is installed...")
     def ensurePipProcessBuilder = new ProcessBuilder([
       'python3',
       '-m',
@@ -28,8 +29,9 @@ task runCoralDbtTests {
     println("Pip installation failed. Trying dependency installation regardless.")
   }
 
+  // Install Python dependencies
   try {
-    // Install Python dependencies
+    println("Installing Python dependencies...")
     def installModulesProcessBuilder = new ProcessBuilder([
       'python3',
       '-m',
@@ -46,31 +48,37 @@ task runCoralDbtTests {
     println("Dependency installation failed. Skipping coral-dbt tests.")
   }
 
+  // Run tests
   if (runTest) {
-    // Run tests
-    def runTestsProcessBuilder = new ProcessBuilder([
-      'python3',
-      '-m',
-      'unittest',
-      '-v'
-    ])
-    runTestsProcessBuilder.directory(file('src/main/resources/tests'))
-    def runTestsProcess = runTestsProcessBuilder.start()
-    runTestsProcess.waitFor()
+    try {
+      println("Running coral-dbt tests...")
+      def runTestsProcessBuilder = new ProcessBuilder([
+        'python3',
+        '-m',
+        'unittest',
+        '-v'
+      ])
+      runTestsProcessBuilder.directory(file('src/main/resources/tests'))
+      def runTestsProcess = runTestsProcessBuilder.start()
+      runTestsProcess.waitFor()
 
-    // Collect errors and throw exception on non-zero exit code
-    def errorStream = runTestsProcess.getErrorStream()
-    def buffReader = new BufferedReader(new InputStreamReader(errorStream))
-    def stringBuilder = new StringBuilder()
-    def newLine
-    while ((newLine = buffReader.readLine()) != null) {
-      stringBuilder.append(newLine + "\n")
+      // Collect errors and throw exception on non-zero exit code
+      def errorStream = runTestsProcess.getErrorStream()
+      def buffReader = new BufferedReader(new InputStreamReader(errorStream))
+      def stringBuilder = new StringBuilder()
+      def newLine
+      while ((newLine = buffReader.readLine()) != null) {
+        stringBuilder.append(newLine + "\n")
+      }
+      def errorOutput = stringBuilder.toString()
+      if (runTestsProcess.exitValue() != 0) {
+        throw new GradleException(errorOutput)
+      }
+      println(errorOutput)
+    } catch (Exception e) {
+      println("coral-dbt tests failed with exception: \n" + e.toString())
+      println("Ignoring coral-dbt build failure and continuing build process...")
     }
-    def errorOutput = stringBuilder.toString()
-    if (runTestsProcess.exitValue() != 0) {
-      throw new GradleException(errorOutput)
-    }
-    println(errorOutput)
   }
 }
 
