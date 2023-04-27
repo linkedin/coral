@@ -112,15 +112,29 @@ public class RelToIncrementalSqlConverterTest {
   }
 
   @Test
-  public void testJoinOverJoin() {
+  public void testNestedJoin() {
     String nestedJoin = "SELECT a1, a2 FROM test.alpha JOIN test.beta ON test.alpha.a1 = test.beta.b1";
     String sql = "SELECT a2, g1 FROM (" + nestedJoin + ") AS nj JOIN test.gamma ON nj.a2 = test.gamma.g2";
-    String expected = "SELECT t0.a2, t0.g1\n" + "FROM (SELECT *\n" + "FROM (SELECT *\n" + "FROM Table#4 AS Table#4\n"
-        + "INNER JOIN test.gamma_delta AS gamma_delta ON Table#4.a2 = gamma_delta.g2\n" + "UNION ALL\n" + "SELECT *\n"
-        + "FROM Table#4_delta AS Table#4_delta\n"
-        + "INNER JOIN test.gamma AS gamma ON Table#4_delta.a2 = gamma.g2) AS t\n" + "UNION ALL\n" + "SELECT *\n"
-        + "FROM Table#4_delta AS Table#4_delta0\n"
-        + "INNER JOIN test.gamma_delta AS gamma_delta0 ON Table#4_delta0.a2 = gamma_delta0.g2) AS t0";
+    String expected = "SELECT t0.a2, t0.g1\n" + "FROM (SELECT *\n" + "FROM (SELECT *\n" + "FROM Table#0 AS Table#0\n"
+        + "INNER JOIN test.gamma_delta AS gamma_delta ON Table#0.a2 = gamma_delta.g2\n" + "UNION ALL\n" + "SELECT *\n"
+        + "FROM Table#0_delta AS Table#0_delta\n"
+        + "INNER JOIN test.gamma AS gamma ON Table#0_delta.a2 = gamma.g2) AS t\n" + "UNION ALL\n" + "SELECT *\n"
+        + "FROM Table#0_delta AS Table#0_delta0\n"
+        + "INNER JOIN test.gamma_delta AS gamma_delta0 ON Table#0_delta0.a2 = gamma_delta0.g2) AS t0";
+    assertEquals(getIncrementalModification(sql), expected);
+  }
+
+  @Test
+  public void testThreeNestedJoins() {
+    String nestedJoin1 = "SELECT a1, a2 FROM test.alpha JOIN test.beta ON test.alpha.a1 = test.beta.b1";
+    String nestedJoin2 = "SELECT a2, g1 FROM (" + nestedJoin1 + ") AS nj1 JOIN test.gamma ON nj1.a2 = test.gamma.g2";
+    String sql = "SELECT g1, e2 FROM (" + nestedJoin2 + ") AS nj2 JOIN test.epsilon ON nj2.g1 = test.epsilon.e1";
+    String expected = "SELECT t0.g1, t0.e2\n" + "FROM (SELECT *\n" + "FROM (SELECT *\n" + "FROM Table#2 AS Table#2\n"
+        + "INNER JOIN test.epsilon_delta AS epsilon_delta ON Table#2.g1 = epsilon_delta.e1\n" + "UNION ALL\n"
+        + "SELECT *\n" + "FROM Table#2_delta AS Table#2_delta\n"
+        + "INNER JOIN test.epsilon AS epsilon ON Table#2_delta.g1 = epsilon.e1) AS t\n" + "UNION ALL\n" + "SELECT *\n"
+        + "FROM Table#2_delta AS Table#2_delta0\n"
+        + "INNER JOIN test.epsilon_delta AS epsilon_delta0 ON Table#2_delta0.g1 = epsilon_delta0.e1) AS t0";
     assertEquals(getIncrementalModification(sql), expected);
   }
 }

@@ -78,22 +78,26 @@ public class RelNodeIncrementalTransformer {
         RexBuilder rexBuilder = join.getCluster().getRexBuilder();
 
         // Check if we can replace the left and right nodes with a scan of a materialized table
-        if (incrementalTransformerResults
-            .containsIntermediateQueryRelNodeKey(getTableNameFromProjectDescription(left))) {
-          String description = getTableNameFromProjectDescription(left);
-          LogicalProject leftLastProject = createReplacementProjectNodeForGivenRelNode(description, left, rexBuilder);
+        if (incrementalTransformerResults.containsIntermediateQueryRelNodeKey(getTableNameFromDescription(left))) {
+          String description = getTableNameFromDescription(left);
+          String deterministicDescription =
+              "Table#" + incrementalTransformerResults.getIndexOfIntermediateOrdering(description);
+          LogicalProject leftLastProject =
+              createReplacementProjectNodeForGivenRelNode(deterministicDescription, left, rexBuilder);
           left = leftLastProject;
-          LogicalProject leftDeltaProject =
-              createReplacementProjectNodeForGivenRelNode(description + "_delta", incrementalLeft, rexBuilder);
+          LogicalProject leftDeltaProject = createReplacementProjectNodeForGivenRelNode(
+              deterministicDescription + "_delta", incrementalLeft, rexBuilder);
           incrementalLeft = leftDeltaProject;
         }
-        if (incrementalTransformerResults
-            .containsIntermediateQueryRelNodeKey(getTableNameFromProjectDescription(right))) {
-          String description = getTableNameFromProjectDescription(right);
-          LogicalProject rightLastProject = createReplacementProjectNodeForGivenRelNode(description, right, rexBuilder);
+        if (incrementalTransformerResults.containsIntermediateQueryRelNodeKey(getTableNameFromDescription(right))) {
+          String description = getTableNameFromDescription(right);
+          String deterministicDescription =
+              "Table#" + incrementalTransformerResults.getIndexOfIntermediateOrdering(description);
+          LogicalProject rightLastProject =
+              createReplacementProjectNodeForGivenRelNode(deterministicDescription, right, rexBuilder);
           right = rightLastProject;
-          LogicalProject rightDeltaProject =
-              createReplacementProjectNodeForGivenRelNode(description + "_delta", incrementalRight, rexBuilder);
+          LogicalProject rightDeltaProject = createReplacementProjectNodeForGivenRelNode(
+              deterministicDescription + "_delta", incrementalRight, rexBuilder);
           incrementalRight = rightDeltaProject;
         }
 
@@ -103,6 +107,7 @@ public class RelNodeIncrementalTransformer {
 
         LogicalUnion unionAllJoins =
             LogicalUnion.create(Arrays.asList(LogicalUnion.create(Arrays.asList(p1, p2), true), p3), true);
+
         return unionAllJoins;
       }
 
@@ -121,11 +126,11 @@ public class RelNodeIncrementalTransformer {
         RelNode transformedChild = incrementalTransformerResultsChild.getIncrementalRelNode();
         incrementalTransformerResults
             .addMultipleIntermediateQueryRelNodes(incrementalTransformerResultsChild.getIntermediateQueryRelNodes());
-        incrementalTransformerResults.addIntermediateQueryRelNode(getTableNameFromProjectDescription(project), project);
+        incrementalTransformerResults.addIntermediateQueryRelNode(getTableNameFromDescription(project), project);
         LogicalProject transformedProject =
             LogicalProject.create(transformedChild, project.getProjects(), project.getRowType());
-        incrementalTransformerResults
-            .addIntermediateQueryRelNode(getTableNameFromProjectDescription(project) + "_delta", transformedProject);
+        incrementalTransformerResults.addIntermediateQueryRelNode(getTableNameFromDescription(project) + "_delta",
+            transformedProject);
         return transformedProject;
       }
 
@@ -157,8 +162,9 @@ public class RelNodeIncrementalTransformer {
     return incrementalTransformerResults;
   }
 
-  private static String getTableNameFromProjectDescription(RelNode relNode) {
-    return relNode.getDescription().replaceAll("LogicalProject", "Table");
+  private static String getTableNameFromDescription(RelNode relNode) {
+    String identifier = relNode.getDescription().split("#")[1];
+    return "Table#" + identifier;
   }
 
   private static LogicalProject createReplacementProjectNodeForGivenRelNode(String relOptTableName, RelNode relNode,

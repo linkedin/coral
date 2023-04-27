@@ -64,6 +64,7 @@ public class TestUtils {
     run(driver, "CREATE TABLE IF NOT EXISTS test.alpha(a1 int, a2 double)");
     run(driver, "CREATE TABLE IF NOT EXISTS test.beta(b1 int, b2 double)");
     run(driver, "CREATE TABLE IF NOT EXISTS test.gamma(g1 int, g2 double)");
+    run(driver, "CREATE TABLE IF NOT EXISTS test.epsilon(e1 int, e2 double)");
   }
 
   public static HiveConf loadResourceHiveConf() {
