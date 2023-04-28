@@ -110,16 +110,16 @@ public class RelNodeIncrementalTransformer {
         String leftIncrementalDescription = getDescriptionFromRelNode(left, true);
         if (snapshotRelNodes.containsKey(leftDescription)) {
           left =
-              createTableScanForGivenRelNode(getDeterministicDescriptionFromDescription(leftDescription, false), left);
-          incrementalLeft = createTableScanForGivenRelNode(
+              susbstituteWithMaterializedView(getDeterministicDescriptionFromDescription(leftDescription, false), left);
+          incrementalLeft = susbstituteWithMaterializedView(
               getDeterministicDescriptionFromDescription(leftIncrementalDescription, true), incrementalLeft);
         }
         String rightDescription = getDescriptionFromRelNode(right, false);
         String rightIncrementalDescription = getDescriptionFromRelNode(right, true);
         if (snapshotRelNodes.containsKey(rightDescription)) {
-          right = createTableScanForGivenRelNode(getDeterministicDescriptionFromDescription(rightDescription, false),
+          right = susbstituteWithMaterializedView(getDeterministicDescriptionFromDescription(rightDescription, false),
               right);
-          incrementalRight = createTableScanForGivenRelNode(
+          incrementalRight = susbstituteWithMaterializedView(
               getDeterministicDescriptionFromDescription(rightIncrementalDescription, true), incrementalRight);
         }
 
@@ -222,7 +222,7 @@ public class RelNodeIncrementalTransformer {
    * @param relOptTableName table name corresponding to table to scan over
    * @param relNode top-level RelNode that will be replaced with the TableScan
    */
-  private TableScan createTableScanForGivenRelNode(String relOptTableName, RelNode relNode) {
+  private TableScan susbstituteWithMaterializedView(String relOptTableName, RelNode relNode) {
     RelOptTable table =
         RelOptTableImpl.create(relOptSchema, relNode.getRowType(), Collections.singletonList(relOptTableName), null);
     return LogicalTableScan.create(relNode.getCluster(), table);
