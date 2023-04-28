@@ -7,6 +7,8 @@ package com.linkedin.coral.incremental;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.sql.SqlNode;
@@ -41,9 +43,8 @@ public class RelToIncrementalSqlConverterTest {
   }
 
   public String convert(RelNode relNode) {
-    IncrementalTransformerResults incrementalTransformerResults =
-        RelNodeIncrementalTransformer.performIncrementalTransformation(relNode);
-    RelNode incrementalRelNode = incrementalTransformerResults.getIncrementalRelNode();
+    RelNodeIncrementalTransformer transformer = new RelNodeIncrementalTransformer();
+    RelNode incrementalRelNode = transformer.convertRelIncremental(relNode);
     CoralRelToSqlNodeConverter converter = new CoralRelToSqlNodeConverter();
     SqlNode sqlNode = converter.convert(incrementalRelNode);
     return sqlNode.toSqlString(converter.INSTANCE).getSql();
@@ -52,6 +53,28 @@ public class RelToIncrementalSqlConverterTest {
   public String getIncrementalModification(String sql) {
     RelNode originalRelNode = hiveToRelConverter.convertSql(sql);
     return convert(originalRelNode);
+  }
+
+  public void checkAllSnapshotAndDeltaQueries(String sql, Map<String, String> snapshotExpected,
+      Map<String, String> deltaExpected) {
+    RelNode originalRelNode = hiveToRelConverter.convertSql(sql);
+    CoralRelToSqlNodeConverter converter = new CoralRelToSqlNodeConverter();
+    RelNodeIncrementalTransformer transformer = new RelNodeIncrementalTransformer();
+    transformer.convertRelIncremental(originalRelNode);
+    Map<String, RelNode> snapshotRelNodes = transformer.getSnapshotRelNodes();
+    Map<String, RelNode> deltaRelNodes = transformer.getDeltaRelNodes();
+    for (String key : snapshotRelNodes.keySet()) {
+      RelNode actualSnapshotRelNode = snapshotRelNodes.get(key);
+      SqlNode sqlNode = converter.convert(actualSnapshotRelNode);
+      String actualSql = sqlNode.toSqlString(converter.INSTANCE).getSql();
+      assertEquals(actualSql, snapshotExpected.get(key));
+    }
+    for (String key : deltaRelNodes.keySet()) {
+      RelNode actualDeltaRelNode = deltaRelNodes.get(key);
+      SqlNode sqlNode = converter.convert(actualDeltaRelNode);
+      String actualSql = sqlNode.toSqlString(converter.INSTANCE).getSql();
+      assertEquals(actualSql, deltaExpected.get(key));
+    }
   }
 
   @Test
@@ -115,13 +138,27 @@ public class RelToIncrementalSqlConverterTest {
   public void testNestedJoin() {
     String nestedJoin = "SELECT a1, a2 FROM test.alpha JOIN test.beta ON test.alpha.a1 = test.beta.b1";
     String sql = "SELECT a2, g1 FROM (" + nestedJoin + ") AS nj JOIN test.gamma ON nj.a2 = test.gamma.g2";
-    String expected = "SELECT t0.a2, t0.g1\n" + "FROM (SELECT *\n" + "FROM (SELECT *\n" + "FROM Table#0 AS Table#0\n"
-        + "INNER JOIN test.gamma_delta AS gamma_delta ON Table#0.a2 = gamma_delta.g2\n" + "UNION ALL\n" + "SELECT *\n"
-        + "FROM Table#0_delta AS Table#0_delta\n"
-        + "INNER JOIN test.gamma AS gamma ON Table#0_delta.a2 = gamma.g2) AS t\n" + "UNION ALL\n" + "SELECT *\n"
-        + "FROM Table#0_delta AS Table#0_delta0\n"
-        + "INNER JOIN test.gamma_delta AS gamma_delta0 ON Table#0_delta0.a2 = gamma_delta0.g2) AS t0";
-    assertEquals(getIncrementalModification(sql), expected);
+    Map<String, String> snapshotExpected = new LinkedHashMap<>();
+    snapshotExpected.put("Table#0",
+        "SELECT *\n" + "FROM test.alpha AS alpha\n" + "INNER JOIN test.beta AS beta ON alpha.a1 = beta.b1");
+    snapshotExpected.put("Table#1",
+        "SELECT *\n" + "FROM Table#0 AS Table#0\n" + "INNER JOIN test.gamma AS gamma ON Table#0.a2 = gamma.g2");
+    Map<String, String> deltaExpected = new LinkedHashMap<>();
+    deltaExpected.put("Table#0_delta",
+        "SELECT t0.a1, t0.a2\n" + "FROM (SELECT *\n" + "FROM (SELECT *\n" + "FROM test.alpha AS alpha0\n"
+            + "INNER JOIN test.beta_delta AS beta_delta ON alpha0.a1 = beta_delta.b1\n" + "UNION ALL\n" + "SELECT *\n"
+            + "FROM test.alpha_delta AS alpha_delta\n"
+            + "INNER JOIN test.beta AS beta0 ON alpha_delta.a1 = beta0.b1) AS t\n" + "UNION ALL\n" + "SELECT *\n"
+            + "FROM test.alpha_delta AS alpha_delta0\n"
+            + "INNER JOIN test.beta_delta AS beta_delta0 ON alpha_delta0.a1 = beta_delta0.b1) AS t0");
+    deltaExpected.put("Table#1_delta",
+        "SELECT t3.a2, t3.g1\n" + "FROM (SELECT *\n" + "FROM (SELECT *\n" + "FROM Table#0 AS Table#00\n"
+            + "INNER JOIN test.gamma_delta AS gamma_delta ON Table#00.a2 = gamma_delta.g2\n" + "UNION ALL\n"
+            + "SELECT *\n" + "FROM Table#0_delta AS Table#0_delta\n"
+            + "INNER JOIN test.gamma AS gamma0 ON Table#0_delta.a2 = gamma0.g2) AS t2\n" + "UNION ALL\n" + "SELECT *\n"
+            + "FROM Table#0_delta AS Table#0_delta0\n"
+            + "INNER JOIN test.gamma_delta AS gamma_delta0 ON Table#0_delta0.a2 = gamma_delta0.g2) AS t3");
+    checkAllSnapshotAndDeltaQueries(sql, snapshotExpected, deltaExpected);
   }
 
   @Test
@@ -129,12 +166,35 @@ public class RelToIncrementalSqlConverterTest {
     String nestedJoin1 = "SELECT a1, a2 FROM test.alpha JOIN test.beta ON test.alpha.a1 = test.beta.b1";
     String nestedJoin2 = "SELECT a2, g1 FROM (" + nestedJoin1 + ") AS nj1 JOIN test.gamma ON nj1.a2 = test.gamma.g2";
     String sql = "SELECT g1, e2 FROM (" + nestedJoin2 + ") AS nj2 JOIN test.epsilon ON nj2.g1 = test.epsilon.e1";
-    String expected = "SELECT t0.g1, t0.e2\n" + "FROM (SELECT *\n" + "FROM (SELECT *\n" + "FROM Table#2 AS Table#2\n"
-        + "INNER JOIN test.epsilon_delta AS epsilon_delta ON Table#2.g1 = epsilon_delta.e1\n" + "UNION ALL\n"
-        + "SELECT *\n" + "FROM Table#2_delta AS Table#2_delta\n"
-        + "INNER JOIN test.epsilon AS epsilon ON Table#2_delta.g1 = epsilon.e1) AS t\n" + "UNION ALL\n" + "SELECT *\n"
-        + "FROM Table#2_delta AS Table#2_delta0\n"
-        + "INNER JOIN test.epsilon_delta AS epsilon_delta0 ON Table#2_delta0.g1 = epsilon_delta0.e1) AS t0";
-    assertEquals(getIncrementalModification(sql), expected);
+    Map<String, String> snapshotExpected = new LinkedHashMap<>();
+    snapshotExpected.put("Table#0",
+        "SELECT *\n" + "FROM test.alpha AS alpha\n" + "INNER JOIN test.beta AS beta ON alpha.a1 = beta.b1");
+    snapshotExpected.put("Table#1",
+        "SELECT *\n" + "FROM Table#0 AS Table#0\n" + "INNER JOIN test.gamma AS gamma ON Table#0.a2 = gamma.g2");
+    snapshotExpected.put("Table#2",
+        "SELECT *\n" + "FROM Table#1 AS Table#1\n" + "INNER JOIN test.epsilon AS epsilon ON Table#1.g1 = epsilon.e1");
+    Map<String, String> deltaExpected = new LinkedHashMap<>();
+    deltaExpected.put("Table#0_delta",
+        "SELECT t0.a1, t0.a2\n" + "FROM (SELECT *\n" + "FROM (SELECT *\n" + "FROM test.alpha AS alpha0\n"
+            + "INNER JOIN test.beta_delta AS beta_delta ON alpha0.a1 = beta_delta.b1\n" + "UNION ALL\n" + "SELECT *\n"
+            + "FROM test.alpha_delta AS alpha_delta\n"
+            + "INNER JOIN test.beta AS beta0 ON alpha_delta.a1 = beta0.b1) AS t\n" + "UNION ALL\n" + "SELECT *\n"
+            + "FROM test.alpha_delta AS alpha_delta0\n"
+            + "INNER JOIN test.beta_delta AS beta_delta0 ON alpha_delta0.a1 = beta_delta0.b1) AS t0");
+    deltaExpected.put("Table#1_delta",
+        "SELECT t3.a2, t3.g1\n" + "FROM (SELECT *\n" + "FROM (SELECT *\n" + "FROM Table#0 AS Table#00\n"
+            + "INNER JOIN test.gamma_delta AS gamma_delta ON Table#00.a2 = gamma_delta.g2\n" + "UNION ALL\n"
+            + "SELECT *\n" + "FROM Table#0_delta AS Table#0_delta\n"
+            + "INNER JOIN test.gamma AS gamma0 ON Table#0_delta.a2 = gamma0.g2) AS t2\n" + "UNION ALL\n" + "SELECT *\n"
+            + "FROM Table#0_delta AS Table#0_delta0\n"
+            + "INNER JOIN test.gamma_delta AS gamma_delta0 ON Table#0_delta0.a2 = gamma_delta0.g2) AS t3");
+    deltaExpected.put("Table#2_delta",
+        "SELECT t6.g1, t6.e2\n" + "FROM (SELECT *\n" + "FROM (SELECT *\n" + "FROM Table#1 AS Table#10\n"
+            + "INNER JOIN test.epsilon_delta AS epsilon_delta ON Table#10.g1 = epsilon_delta.e1\n" + "UNION ALL\n"
+            + "SELECT *\n" + "FROM Table#1_delta AS Table#1_delta\n"
+            + "INNER JOIN test.epsilon AS epsilon0 ON Table#1_delta.g1 = epsilon0.e1) AS t5\n" + "UNION ALL\n"
+            + "SELECT *\n" + "FROM Table#1_delta AS Table#1_delta0\n"
+            + "INNER JOIN test.epsilon_delta AS epsilon_delta0 ON Table#1_delta0.g1 = epsilon_delta0.e1) AS t6");
+    checkAllSnapshotAndDeltaQueries(sql, snapshotExpected, deltaExpected);
   }
 }
