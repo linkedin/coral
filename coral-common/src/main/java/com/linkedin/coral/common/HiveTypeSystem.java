@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2022 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2023 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -159,6 +159,15 @@ public class HiveTypeSystem extends RelDataTypeSystemImpl {
   @Override
   public boolean isSchemaCaseSensitive() {
     return false;
+  }
+
+  /**
+   * This method needs to be overridden to make sure that the "/" operator returns
+   * {@link org.apache.calcite.sql.type.ReturnTypes#DOUBLE}, which is compatible with the expected data type in Hive/Spark.
+   */
+  @Override
+  public RelDataType deriveDecimalDivideType(RelDataTypeFactory typeFactory, RelDataType type1, RelDataType type2) {
+    return nullableType(typeFactory, SqlTypeName.DOUBLE);
   }
 
   private RelDataType nullableType(RelDataTypeFactory typeFactory, SqlTypeName typeName) {

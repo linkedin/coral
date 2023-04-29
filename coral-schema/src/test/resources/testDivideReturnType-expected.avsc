@@ -1,0 +1,10 @@
+{
+  "type" : "record",
+  "name" : "v",
+  "namespace" : "default.v",
+  "fields" : [ {
+    "name" : "a",
+    "type" : [ "null", "double" ],
+    "doc" : "Field created in view by applying operator '/' with argument(s): 1, 2"
+  } ]
+}
