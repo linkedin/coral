@@ -9,6 +9,7 @@ import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeSystemImpl;
 import org.apache.calcite.sql.type.SqlTypeName;
+import org.apache.calcite.sql.type.SqlTypeUtil;
 
 
 // Copied from Hive source code
@@ -162,12 +163,16 @@ public class HiveTypeSystem extends RelDataTypeSystemImpl {
   }
 
   /**
-   * This method needs to be overridden to make sure that the "/" operator returns
-   * {@link org.apache.calcite.sql.type.ReturnTypes#DOUBLE}, which is compatible with the expected data type in Hive/Spark.
+   * This method needs to be overridden to make sure that the "/" operator returns {@link org.apache.calcite.sql.type.ReturnTypes#DOUBLE}
+   * if neither of the operands is decimal type, which is compatible with the expected data type in Hive/Spark.
    */
   @Override
   public RelDataType deriveDecimalDivideType(RelDataTypeFactory typeFactory, RelDataType type1, RelDataType type2) {
-    return nullableType(typeFactory, SqlTypeName.DOUBLE);
+    if (SqlTypeUtil.isDecimal(type1) || SqlTypeUtil.isDecimal(type2)) {
+      return super.deriveDecimalDivideType(typeFactory, type1, type2);
+    } else {
+      return nullableType(typeFactory, SqlTypeName.DOUBLE);
+    }
   }
 
   private RelDataType nullableType(RelDataTypeFactory typeFactory, SqlTypeName typeName) {
