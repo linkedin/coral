@@ -20,11 +20,16 @@ import com.linkedin.coral.common.transformers.JsonTransformSqlCallTransformer;
 import com.linkedin.coral.common.transformers.OperatorRenameSqlCallTransformer;
 import com.linkedin.coral.common.transformers.SourceOperatorMatchSqlCallTransformer;
 import com.linkedin.coral.common.transformers.SqlCallTransformers;
+import com.linkedin.coral.hive.hive2rel.functions.HiveRLikeOperator;
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 import com.linkedin.coral.trino.rel2trino.functions.TrinoElementAtFunction;
 import com.linkedin.coral.trino.rel2trino.transformers.CollectListOrSetFunctionTransformer;
 import com.linkedin.coral.trino.rel2trino.transformers.CoralRegistryOperatorRenameSqlCallTransformer;
+import com.linkedin.coral.trino.rel2trino.transformers.CurrentTimestampTransformer;
 import com.linkedin.coral.trino.rel2trino.transformers.GenericCoralRegistryOperatorRenameSqlCallTransformer;
+import com.linkedin.coral.trino.rel2trino.transformers.MapValueConstructorTransformer;
+import com.linkedin.coral.trino.rel2trino.transformers.ReturnTypeAdjustmentTransformer;
+import com.linkedin.coral.trino.rel2trino.transformers.SqlSelectAliasAppenderTransformer;
 import com.linkedin.coral.trino.rel2trino.transformers.ToDateOperatorTransformer;
 
 import static com.linkedin.coral.trino.rel2trino.CoralTrinoConfigKeys.*;
@@ -40,10 +45,11 @@ public class CoralToTrinoSqlCallConverter extends SqlShuttle {
   private final SqlCallTransformers sqlCallTransformers;
 
   public CoralToTrinoSqlCallConverter(Map<String, Boolean> configs) {
-    this.sqlCallTransformers = SqlCallTransformers.of(
+    this.sqlCallTransformers = SqlCallTransformers.of(new SqlSelectAliasAppenderTransformer(),
         // conditional functions
         new CoralRegistryOperatorRenameSqlCallTransformer("nvl", 2, "coalesce"),
         // array and map functions
+        new MapValueConstructorTransformer(),
         new OperatorRenameSqlCallTransformer(SqlStdOperatorTable.SUBSTRING, 3, "SUBSTR"),
         new SourceOperatorMatchSqlCallTransformer("item", 2) {
           @Override
@@ -77,6 +83,8 @@ public class CoralToTrinoSqlCallConverter extends SqlShuttle {
         new JsonTransformSqlCallTransformer(hiveToCoralSqlOperator("regexp_extract"), 3, "regexp_extract",
             "[{\"input\": 1}, {\"op\": \"hive_pattern_to_trino\", \"operands\":[{\"input\": 2}]}, {\"input\": 3}]",
             null, null),
+        new OperatorRenameSqlCallTransformer(HiveRLikeOperator.REGEXP, 2, "REGEXP_LIKE"),
+        new OperatorRenameSqlCallTransformer(HiveRLikeOperator.RLIKE, 2, "REGEXP_LIKE"),
         new CoralRegistryOperatorRenameSqlCallTransformer("instr", 2, "strpos"),
         new JsonTransformSqlCallTransformer(hiveToCoralSqlOperator("decode"), 2,
             "[{\"regex\":\"(?i)('utf-8')\", \"input\":2, \"name\":\"from_utf8\"}]", "[{\"input\":1}]", null, null),
@@ -93,6 +101,7 @@ public class CoralToTrinoSqlCallConverter extends SqlShuttle {
                 + "{\"op\": \"date\", \"operands\":[{\"op\": \"timestamp\", \"operands\":[{\"input\": 1}]}]}]",
             null, null),
         new ToDateOperatorTransformer(configs.getOrDefault(AVOID_TRANSFORM_TO_DATE_UDF, false)),
+        new CurrentTimestampTransformer(),
 
         // LinkedIn specific functions
         new CoralRegistryOperatorRenameSqlCallTransformer(
@@ -109,7 +118,9 @@ public class CoralToTrinoSqlCallConverter extends SqlShuttle {
             "com.linkedin.stdudfs.urnextractor.hive.UrnExtractorFunctionWrapper", 1, "urn_extractor"),
         new CoralRegistryOperatorRenameSqlCallTransformer(
             "com.linkedin.stdudfs.hive.daliudfs.UrnExtractorFunctionWrapper", 1, "urn_extractor"),
-        new GenericCoralRegistryOperatorRenameSqlCallTransformer());
+        new GenericCoralRegistryOperatorRenameSqlCallTransformer(),
+
+        new ReturnTypeAdjustmentTransformer(configs));
   }
 
   private SqlOperator hiveToCoralSqlOperator(String functionName) {
@@ -119,7 +130,6 @@ public class CoralToTrinoSqlCallConverter extends SqlShuttle {
 
   @Override
   public SqlNode visit(SqlCall call) {
-    SqlCall transformedCall = sqlCallTransformers.apply(call);
-    return super.visit(transformedCall);
+    return sqlCallTransformers.apply((SqlCall) super.visit(call));
   }
 }

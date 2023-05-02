@@ -1078,5 +1078,16 @@ public class ViewToAvroSchemaConverterTests {
         TestUtils.loadSchema("testUnionFloatAndDoublePromoteToDouble-expected.avsc"));
   }
 
+  @Test
+  public void testDivideReturnType() {
+    String viewSql = "CREATE VIEW v AS SELECT 1/2 AS a FROM baseprimitive";
+    TestUtils.executeCreateViewQuery("default", "v", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v");
+
+    Assert.assertEquals(actualSchema.toString(true), TestUtils.loadSchema("testDivideReturnType-expected.avsc"));
+  }
+
   // TODO: add more unit tests
 }

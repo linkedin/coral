@@ -11,6 +11,7 @@ import java.util.List;
 public class IncrementalRequestBody {
   private String query;
   private List<String> tableNames;
+  private String language;
 
   public String getQuery() {
     return query;
@@ -18,5 +19,9 @@ public class IncrementalRequestBody {
 
   public List<String> getTableNames() {
     return tableNames;
+  }
+
+  public String getLanguage() {
+    return language;
   }
 }

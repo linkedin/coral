@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 import com.google.common.collect.ImmutableMap;
@@ -31,8 +30,6 @@ import org.apache.calcite.sql.*;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.SqlTypeName;
-import org.apache.calcite.sql.validate.SqlValidatorUtil;
-import org.apache.calcite.util.Util;
 
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import com.linkedin.coral.common.functions.FunctionFieldReferenceOperator;
@@ -42,6 +39,8 @@ import com.linkedin.coral.trino.rel2trino.functions.TrinoArrayTransformFunction;
 import static com.google.common.base.Preconditions.*;
 import static com.linkedin.coral.trino.rel2trino.Calcite2TrinoUDFConverter.convertRel;
 import static com.linkedin.coral.trino.rel2trino.CoralTrinoConfigKeys.*;
+import static org.apache.calcite.sql.fun.SqlStdOperatorTable.*;
+import static org.apache.calcite.sql.parser.SqlParserPos.*;
 
 
 public class RelToTrinoConverter extends RelToSqlConverter {
@@ -105,6 +104,18 @@ public class RelToTrinoConverter extends RelToSqlConverter {
     return null;
   }
 
+  /**
+   * A Project RelNode represents a relational operator that projects a subset of columns from an input relational expression.
+   * When projecting a NULL field, super's implementation casts this column to the derived data type to ensure that the column can be interpreted correctly.
+   * If the derived data type is NULL, super's implementation casts the NULL field to a NULL data type explicitly.
+   * This method override is intended to avoid adding a NULL cast to a NULL column.
+   *
+   * By default, super's implementation would generate SqlSelect statement of the form: SELECT CAST(NULL AS NULL) FROM foo.
+   * However, the overriden implementation generates a modified SqlSelect statement that omits the CAST: SELECT NULL FROM foo.
+   *
+   * @param e Project RelNode.
+   * @return Result of converting the RelNode to a SqlNode.
+   */
   @Override
   public Result visit(Project e) {
     e.getVariablesSet();
@@ -113,39 +124,21 @@ public class RelToTrinoConverter extends RelToSqlConverter {
     if (isStar(e.getChildExps(), e.getInput().getRowType(), e.getRowType())) {
       return x;
     }
-
     final Builder builder = x.builder(e, Clause.SELECT);
     final List<SqlNode> selectList = new ArrayList<>();
     for (RexNode ref : e.getChildExps()) {
       SqlNode sqlExpr = builder.context.toSql(null, ref);
+
+      // Append the CAST operator when the derived data type is NON-NULL.
+      RelDataTypeField targetField = e.getRowType().getFieldList().get(selectList.size());
+      if (SqlUtil.isNullLiteral(sqlExpr, false) && !targetField.getValue().getSqlTypeName().equals(SqlTypeName.NULL)) {
+        sqlExpr = SqlStdOperatorTable.CAST.createCall(POS, sqlExpr, dialect.getCastSpec(targetField.getType()));
+      }
+
       addSelect(selectList, sqlExpr, e.getRowType());
     }
-
     builder.setSelect(new SqlNodeList(selectList, POS));
     return builder.result();
-  }
-
-  @Override
-  public void addSelect(List<SqlNode> selectList, SqlNode node, RelDataType rowType) {
-    // Override this method from parent class RelToSqlConverter to always add "as"
-    // when accessing nested struct.
-    // In parent class "as" is skipped for "select a.b as b", here we will keep the "a.b as b"
-    SqlNode selectNode = node;
-    final String name = rowType.getFieldNames().get(selectList.size());
-    final String alias = SqlValidatorUtil.getAlias(selectNode, -1);
-    final String lowerName = name.toLowerCase(Locale.ROOT);
-    final boolean nestedFieldAccess =
-        selectNode instanceof SqlIdentifier && ((SqlIdentifier) selectNode).names.size() > 1;
-    if (lowerName.startsWith("expr$")) {
-      ordinalMap.put(lowerName, selectNode);
-    } else if (alias == null || !alias.equals(name) || nestedFieldAccess) {
-      selectNode = as(selectNode, name);
-    }
-    selectList.add(selectNode);
-  }
-
-  private SqlCall as(SqlNode e, String alias) {
-    return SqlStdOperatorTable.AS.createCall(POS, e, new SqlIdentifier(alias, POS));
   }
 
   public Result visit(Uncollect e) {
@@ -337,41 +330,6 @@ public class RelToTrinoConverter extends RelToSqlConverter {
           }
         }
         return super.toSql(program, rex);
-      }
-
-      @Override
-      public SqlNode field(int ordinal) {
-        for (Map.Entry<String, RelDataType> alias : aliases.entrySet()) {
-          final List<RelDataTypeField> fields = alias.getValue().getFieldList();
-          if (ordinal < fields.size()) {
-            RelDataTypeField field = fields.get(ordinal);
-            final SqlNode mappedSqlNode = ordinalMap.get(field.getName().toLowerCase(Locale.ROOT));
-            if (mappedSqlNode != null) {
-              return ensureAliasedNode(alias.getKey(), mappedSqlNode);
-            }
-            return new SqlIdentifier(
-                !qualified ? ImmutableList.of(field.getName()) : ImmutableList.of(alias.getKey(), field.getName()),
-                POS);
-          }
-          ordinal -= fields.size();
-        }
-        throw new AssertionError("field ordinal " + ordinal + " out of range " + aliases);
-      }
-
-      protected SqlNode ensureAliasedNode(String alias, SqlNode id) {
-        if (!(id instanceof SqlIdentifier)) {
-          return id;
-        }
-        ImmutableList<String> names = ((SqlIdentifier) id).names;
-        if (names.size() > 1) {
-          return id;
-        }
-        return new SqlIdentifier(ImmutableList.of(alias, Util.last(names)), POS);
-      }
-
-      private RexNode stripCastFromString(RexNode node) {
-        // DO NOT strip
-        return node;
       }
     };
   }

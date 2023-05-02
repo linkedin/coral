@@ -28,6 +28,8 @@ and implementing query rewrite algorithms for data governance and query optimiza
 - Coral-Trino: Converts view logical plan to Trino (formerly PrestoSQL) SQL, and vice versa.
 - Coral-Spark: Converts view logical plan to Spark SQL.
 - Coral-Pig: Converts view logical plan to Pig-latin.
+- Coral-Dbt [WIP]: DBT package that houses materialization modes that exercise Coral logic.
+- Coral-Incremental [WIP]: Derives an incremental query from input SQL for incremental view maintenance.
 - Coral-Schema: Derives Avro schema of view using view logical plan and input Avro schemas of base tables.
 - Coral-Spark-Plan [WIP]: Converts Spark plan strings to equivalent logical plan.
 - Coral-Visualization [WIP]: Visualizes Coral SqlNode and RelNode trees and renders them to an output file.
@@ -46,6 +48,12 @@ Build:
 
 ```bash
 ./gradlew clean build
+```
+
+Please note that this project requires Python 3 and Java 8 to run. Either set `JAVA_HOME` to the home of an appropriate version and then use `./gradlew clean build` as described above, or set the `org.gradle.java.home` gradle property to the Java home of an appropriate version as below:
+
+```bash
+./gradlew -Dorg.gradle.java.home=/path/to/java/home clean build
 ```
 
 ## Contributing

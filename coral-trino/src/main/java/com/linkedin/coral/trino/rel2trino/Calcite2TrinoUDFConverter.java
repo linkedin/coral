@@ -8,11 +8,8 @@ package com.linkedin.coral.trino.rel2trino;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
-
-import com.google.common.collect.ImmutableMap;
 
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelShuttle;
@@ -40,8 +37,6 @@ import org.apache.calcite.rex.RexShuttle;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOperator;
-import org.apache.calcite.sql.fun.SqlMapValueConstructor;
-import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.SqlReturnTypeInference;
 import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
@@ -177,19 +172,8 @@ public class Calcite2TrinoUDFConverter {
       if (call.getOperator() instanceof GenericProjectFunction) {
         return GenericProjectToTrinoConverter.convertGenericProject(rexBuilder, call, node);
       }
-      // MAP(k1, v1, k2, v2) should be MAP(ARRAY(k1, k2), ARRAY(v1, v2))
-      if (call.getOperator() instanceof SqlMapValueConstructor) {
-        return this.convertMapValueConstructor(rexBuilder, call);
-      }
 
       final String operatorName = call.getOperator().getName();
-
-      if ((operatorName.equalsIgnoreCase("regexp") || operatorName.equalsIgnoreCase("rlike"))
-          && call.getOperands().size() == 2) {
-        return super.visitCall((RexCall) rexBuilder.makeCall(
-            createSqlOperatorOfFunction("REGEXP_LIKE", call.getOperator().getReturnTypeInference()),
-            call.getOperands()));
-      }
 
       if (operatorName.equalsIgnoreCase("from_utc_timestamp")) {
         Optional<RexNode> modifiedCall = visitFromUtcTimestampCall(call);
@@ -219,13 +203,6 @@ public class Calcite2TrinoUDFConverter {
         }
       }
 
-      if (operatorName.equalsIgnoreCase("current_timestamp")) {
-        Optional<RexNode> modifiedCall = visitCurrentTimestamp(call);
-        if (modifiedCall.isPresent()) {
-          return modifiedCall.get();
-        }
-      }
-
       if (operatorName.equalsIgnoreCase("concat")) {
         Optional<RexNode> modifiedCall = visitConcat(call);
         if (modifiedCall.isPresent()) {
@@ -233,7 +210,7 @@ public class Calcite2TrinoUDFConverter {
         }
       }
 
-      return adjustReturnTypeWithCast(rexBuilder, super.visitCall(call));
+      return super.visitCall(call);
     }
 
     private Optional<RexNode> visitConcat(RexCall call) {
@@ -346,13 +323,6 @@ public class Calcite2TrinoUDFConverter {
       return Optional.empty();
     }
 
-    private Optional<RexNode> visitCurrentTimestamp(RexCall call) {
-      final SqlOperator op = call.getOperator();
-      // We may want to extend this to allow current_timestamp(n) in case of Trino <-> Trino conversion, to make
-      // intermediate representation more complete.
-      return Optional.of(rexBuilder.makeCast(typeFactory.createSqlType(TIMESTAMP, 3), rexBuilder.makeCall(op)));
-    }
-
     private Optional<RexNode> visitCast(RexCall call) {
       final SqlOperator op = call.getOperator();
       if (op.getKind() != SqlKind.CAST) {
@@ -384,48 +354,6 @@ public class Calcite2TrinoUDFConverter {
       }
 
       return Optional.empty();
-    }
-
-    private RexNode convertMapValueConstructor(RexBuilder rexBuilder, RexCall call) {
-      List<RexNode> sourceOperands = visitList(call.getOperands(), (boolean[]) null);
-      final List<RexNode> results = new ArrayList<>();
-      // Even numbers are keys
-      List<RexNode> keys = new ArrayList<>();
-      for (int i = 0; i < sourceOperands.size(); i += 2) {
-        keys.add(sourceOperands.get(i));
-      }
-      results.add(rexBuilder.makeCall(SqlStdOperatorTable.ARRAY_VALUE_CONSTRUCTOR, keys));
-      // Odd numbers are values
-      List<RexNode> values = new ArrayList<>();
-      for (int i = 1; i < sourceOperands.size(); i += 2) {
-        values.add(sourceOperands.get(i));
-      }
-      results.add(rexBuilder.makeCall(SqlStdOperatorTable.ARRAY_VALUE_CONSTRUCTOR, values));
-      return rexBuilder.makeCall(call.getOperator(), results);
-    }
-
-    /**
-     * This method is to cast the converted call to the same return type in Hive with certain version.
-     * e.g. `datediff` in Hive returns int type, but the corresponding function `date_diff` in Trino returns bigint type
-     * the type discrepancy would cause the issue while querying the view on Trino, so we need to add the CAST for them
-     */
-    private RexNode adjustReturnTypeWithCast(RexBuilder rexBuilder, RexNode call) {
-      if (!(call instanceof RexCall)) {
-        return call;
-      }
-      final String lowercaseOperatorName = ((RexCall) call).getOperator().getName().toLowerCase(Locale.ROOT);
-      final ImmutableMap<String, RelDataType> operatorsToAdjust =
-          ImmutableMap.of("datediff", typeFactory.createSqlType(INTEGER), "cardinality",
-              typeFactory.createSqlType(INTEGER), "ceil", typeFactory.createSqlType(BIGINT), "ceiling",
-              typeFactory.createSqlType(BIGINT), "floor", typeFactory.createSqlType(BIGINT));
-      if (operatorsToAdjust.containsKey(lowercaseOperatorName)) {
-        return rexBuilder.makeCast(operatorsToAdjust.get(lowercaseOperatorName), call);
-      }
-      if (configs.getOrDefault(CAST_DATEADD_TO_STRING, false)
-          && (lowercaseOperatorName.equals("date_add") || lowercaseOperatorName.equals("date_sub"))) {
-        return rexBuilder.makeCast(typeFactory.createSqlType(VARCHAR), call);
-      }
-      return call;
     }
   }
 

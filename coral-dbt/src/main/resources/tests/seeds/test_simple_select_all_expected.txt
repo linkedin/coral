@@ -1,0 +1,11 @@
+val snapshot_df = spark.read.format("iceberg").load("foo.snapshots")
+snapshot_df.createOrReplaceTempView("snapshot_temp_table")
+val snap_ids = spark.sql("SELECT snapshot_id FROM snapshot_temp_table ORDER BY committed_at DESC LIMIT 2")
+val start_snapshot_id = snap_ids.collect()(1)(0).toString
+val end_snapshot_id = snap_ids.collect()(0)(0).toString
+val df = spark.read.format("iceberg").option("snapshot-id", start_snapshot_id).load("foo")
+df.createOrReplaceTempView("foo")
+val df = spark.read.format("iceberg").option("start-snapshot-id", start_snapshot_id).option("end-snapshot-id", end_snapshot_id).load("foo")
+df.createOrReplaceTempView("foo_delta")
+val query_response = spark.sql("SELECT * FROM default.foo_delta AS foo_delta")
+query_response.write.mode("append").saveAsTable("simple_select_all_output")

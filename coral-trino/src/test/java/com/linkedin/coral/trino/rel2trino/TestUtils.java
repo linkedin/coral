@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -49,7 +50,6 @@ public class TestUtils {
   public static final String CORAL_TRINO_TEST_DIR = "coral.trino.test.dir";
 
   private static HiveMscAdapter hiveMetastoreClient;
-  static HiveToRelConverter hiveToRelConverter;
 
   public static FrameworkConfig createFrameworkConfig(TestTable... tables) {
     SchemaPlus rootSchema = Frameworks.createRootSchema(true);
@@ -188,14 +188,25 @@ public class TestUtils {
     Hook.REL_BUILDER_SIMPLIFY.add(Hook.propertyJ(false));
   }
 
-  public static void initializeViews(HiveConf conf) throws HiveException, MetaException, IOException {
+  public static HiveToRelConverter getHiveToRelConverter() {
+    return new HiveToRelConverter(hiveMetastoreClient);
+  }
+
+  public static RelToTrinoConverter getRelToTrinoConverter() {
+    return new RelToTrinoConverter();
+  }
+
+  public static RelToTrinoConverter getRelToTrinoConverter(Map<String, Boolean> configs) {
+    return new RelToTrinoConverter(configs);
+  }
+
+  public static void initializeTablesAndViews(HiveConf conf) throws HiveException, MetaException, IOException {
     String testDir = conf.get(CORAL_TRINO_TEST_DIR);
     System.out.println("Test Workspace: " + testDir);
     FileUtils.deleteDirectory(new File(testDir));
     SessionState.start(conf);
     Driver driver = new Driver(conf);
     hiveMetastoreClient = new HiveMscAdapter(Hive.get(conf).getMSC());
-    hiveToRelConverter = new HiveToRelConverter(hiveMetastoreClient);
 
     // Views and tables used in HiveToTrinoConverterTest
     run(driver, "CREATE DATABASE IF NOT EXISTS test");
@@ -366,10 +377,19 @@ public class TestUtils {
         + "SELECT a.some_id FROM test.duplicate_column_name_a a LEFT JOIN ( SELECT trim(some_id) AS SOME_ID FROM test.duplicate_column_name_b) b ON a.some_id = b.some_id WHERE a.some_id != ''");
 
     run(driver, "CREATE TABLE test.table_with_binary_column (b binary)");
-  }
 
-  public static RelNode convertView(String db, String view) {
-    return new HiveToRelConverter(hiveMetastoreClient).convertView(db, view);
+    // Tables used in RelToTrinoConverterTest
+    run(driver,
+        "CREATE TABLE IF NOT EXISTS test.tableOne(icol int, dcol double, scol string, tcol timestamp, acol array<string>)");
+
+    run(driver,
+        "CREATE TABLE IF NOT EXISTS test.tableTwo(ifield int, dfield double, sfield string, tfield timestamp, decfield decimal)");
+
+    run(driver, "CREATE TABLE IF NOT EXISTS test.tableThree(binaryfield binary, varbinaryfield binary)");
+
+    run(driver,
+        "CREATE TABLE IF NOT EXISTS test.tableFour(icol int, scol string, acol array<string>, mcol map<string, string>)");
+
   }
 
   public static HiveConf loadResourceHiveConf() {

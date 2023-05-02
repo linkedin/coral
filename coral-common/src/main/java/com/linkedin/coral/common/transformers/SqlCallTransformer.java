@@ -49,7 +49,7 @@ public abstract class SqlCallTransformer {
   protected abstract SqlCall transform(SqlCall sqlCall);
 
   /**
-   * Public entry of the transformer, it returns the result of transformed SqlCall if `predicate(SqlCall)` returns true,
+   * Public entry of the transformer, it returns the result of transformed SqlCall if `condition(SqlCall)` returns true,
    * otherwise returns the input SqlCall without any transformation
    */
   public SqlCall apply(SqlCall sqlCall) {

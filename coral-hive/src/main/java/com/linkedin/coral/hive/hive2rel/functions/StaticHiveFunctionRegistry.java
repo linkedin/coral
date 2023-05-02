@@ -487,7 +487,8 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
         STRING);
     createAddUserDefinedFunction("com.linkedin.etg.business.common.udfs.MapSfdcProductCode", FunctionReturnTypes.STRING,
         STRING);
-    createAddUserDefinedFunction("com.linkedin.etg.business.common.udfs.MapSfdcProductId", ReturnTypes.INTEGER, STRING);
+    createAddUserDefinedFunction("com.linkedin.etg.business.common.udfs.MapSfdcProductId", FunctionReturnTypes.STRING,
+        STRING);
     createAddUserDefinedFunction("udfs.SeoReferrerTrkUdf", FunctionReturnTypes.STRING, STRING_STRING_STRING);
     createAddUserDefinedFunction("com.linkedin.vector.daliview.udf.PresentDataType", FunctionReturnTypes.STRING,
         family(SqlTypeFamily.ANY));
@@ -565,7 +566,6 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
         or(STRING_STRING_STRING,
             family(SqlTypeFamily.STRING, SqlTypeFamily.STRING, SqlTypeFamily.STRING, SqlTypeFamily.STRING)));
     createAddUserDefinedFunction("com.linkedin.recruiter.udf.QueryRoutingTypeUDF", FunctionReturnTypes.STRING, STRING);
-    createAddUserDefinedFunction("com.linkedin.recruiter.udf.SearchQueryUDF", FunctionReturnTypes.STRING, STRING);
     createAddUserDefinedFunction("com.linkedin.snapshot.udf.ConstructSnapshotUrnUdf", FunctionReturnTypes.STRING,
         family(SqlTypeFamily.NUMERIC, SqlTypeFamily.STRING));
     createAddUserDefinedFunction("com.linkedin.snapshot.udf.SnapshotPurgeEligibleUdf", ReturnTypes.BOOLEAN,
