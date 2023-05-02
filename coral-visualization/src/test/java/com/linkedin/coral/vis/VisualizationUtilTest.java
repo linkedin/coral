@@ -5,20 +5,15 @@
  */
 package com.linkedin.coral.vis;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import guru.nidi.graphviz.attribute.Font;
-import guru.nidi.graphviz.engine.Format;
-import guru.nidi.graphviz.engine.Graphviz;
-import guru.nidi.graphviz.model.Factory;
-import guru.nidi.graphviz.model.Graph;
-import guru.nidi.graphviz.model.Node;
 import java.io.File;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.UUID;
+
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.util.SqlVisitor;
@@ -31,6 +26,13 @@ import org.testng.annotations.Test;
 import com.linkedin.coral.common.HiveMscAdapter;
 import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
 
+import guru.nidi.graphviz.attribute.Font;
+import guru.nidi.graphviz.engine.Format;
+import guru.nidi.graphviz.engine.Graphviz;
+import guru.nidi.graphviz.model.Factory;
+import guru.nidi.graphviz.model.Graph;
+import guru.nidi.graphviz.model.Node;
+
 import static org.testng.Assert.*;
 
 
@@ -39,10 +41,8 @@ public class VisualizationUtilTest {
 
   @Test
   public void testRenderToFile() {
-    String[] queries = new String[] {
-        "SELECT * FROM foo, bar WHERE a = 1",
-        "SELECT key, value FROM (SELECT MAP('key1', 'value1') as m) tmp LATERAL VIEW EXPLODE(m) m_alias AS key, value"
-    };
+    String[] queries =
+        new String[] { "SELECT * FROM foo, bar WHERE a = 1", "SELECT key, value FROM (SELECT MAP('key1', 'value1') as m) tmp LATERAL VIEW EXPLODE(m) m_alias AS key, value" };
     File imagesTempDir = new File(System.getProperty("java.io.tmpdir") + "/images" + UUID.randomUUID());
     HiveMscAdapter mscAdapter = createMscAdapter();
     HiveToRelConverter converter = new HiveToRelConverter(mscAdapter);
