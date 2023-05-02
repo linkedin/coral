@@ -168,11 +168,30 @@ public class HiveTypeSystem extends RelDataTypeSystemImpl {
    */
   @Override
   public RelDataType deriveDecimalDivideType(RelDataTypeFactory typeFactory, RelDataType type1, RelDataType type2) {
-    if (SqlTypeUtil.isDecimal(type1) || SqlTypeUtil.isDecimal(type2)) {
-      return super.deriveDecimalDivideType(typeFactory, type1, type2);
-    } else {
-      return nullableType(typeFactory, SqlTypeName.DOUBLE);
+    if (SqlTypeUtil.isExactNumeric(type1) && SqlTypeUtil.isExactNumeric(type2)) {
+      if (SqlTypeUtil.isDecimal(type1) || SqlTypeUtil.isDecimal(type2)) {
+        return super.deriveDecimalDivideType(typeFactory, type1, type2);
+      } else {
+        return nullableType(typeFactory, SqlTypeName.DOUBLE);
+      }
     }
+    return null;
+  }
+
+  /**
+   * This override makes sure that the multiply operator, "*", returns {@link org.apache.calcite.sql.type.ReturnTypes#BIGINT}
+   * if neither of the operands is decimal type, which is compatible with the expected data type in Hive/Spark.
+   */
+  @Override
+  public RelDataType deriveDecimalMultiplyType(RelDataTypeFactory typeFactory, RelDataType type1, RelDataType type2) {
+    if (SqlTypeUtil.isExactNumeric(type1) && SqlTypeUtil.isExactNumeric(type2)) {
+      if (SqlTypeUtil.isDecimal(type1) || SqlTypeUtil.isDecimal(type2)) {
+        return super.deriveDecimalMultiplyType(typeFactory, type1, type2);
+      } else {
+        return nullableType(typeFactory, SqlTypeName.BIGINT);
+      }
+    }
+    return null;
   }
 
   private RelDataType nullableType(RelDataTypeFactory typeFactory, SqlTypeName typeName) {
