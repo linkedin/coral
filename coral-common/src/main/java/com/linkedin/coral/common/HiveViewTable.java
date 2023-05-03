@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2022 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2023 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -50,7 +50,7 @@ public class HiveViewTable extends HiveTable implements TranslatableTable {
     try {
       RelRoot root = relContext.expandView(relOptTable.getRowType(), hiveTable.getViewExpandedText(), schemaPath,
           ImmutableList.of(hiveTable.getTableName()));
-      root = root.withRel(createCastRel(root.rel, relOptTable.getRowType(), RelFactories.DEFAULT_PROJECT_FACTORY));
+      //      root = root.withRel(createCastRel(root.rel, relOptTable.getRowType(), RelFactories.DEFAULT_PROJECT_FACTORY));
       //root = root.withRel(RelOptUtil.createCastRel(root.rel, relOptTable.getRowType()));
       return root.rel;
     } catch (Exception e) {
