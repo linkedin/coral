@@ -185,10 +185,10 @@ public class HiveTypeSystem extends RelDataTypeSystemImpl {
   @Override
   public RelDataType deriveDecimalMultiplyType(RelDataTypeFactory typeFactory, RelDataType type1, RelDataType type2) {
     if (SqlTypeUtil.isExactNumeric(type1) && SqlTypeUtil.isExactNumeric(type2)) {
-      if (SqlTypeUtil.isBigint(type1) || SqlTypeUtil.isBigint(type2)) {
-        return nullableType(typeFactory, SqlTypeName.BIGINT);
-      } else {
+      if (SqlTypeUtil.isDecimal(type1) || SqlTypeUtil.isDecimal(type2)) {
         return super.deriveDecimalMultiplyType(typeFactory, type1, type2);
+      } else if (SqlTypeUtil.isBigint(type1) || SqlTypeUtil.isBigint(type2)) {
+        return nullableType(typeFactory, SqlTypeName.BIGINT);
       }
     }
     return null;
