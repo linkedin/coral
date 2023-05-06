@@ -21,7 +21,7 @@
 ##  Gradle start up script for UN*X
 ##
 ##############################################################################
-
+sdfsdfsdf
 # Attempt to set APP_HOME
 # Resolve links: $0 may be a link
 PRG="$0"
@@ -59,7 +59,7 @@ die () {
     echo
     exit 1
 }
-
+dfsafdsdfsdfsdfsdf
 # OS specific support (must be 'true' or 'false').
 cygwin=false
 msys=false
