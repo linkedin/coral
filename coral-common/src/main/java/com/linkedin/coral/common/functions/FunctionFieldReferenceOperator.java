@@ -1,5 +1,5 @@
 /**
- * Copyright 2018-2022 LinkedIn Corporation. All rights reserved.
+ * Copyright 2018-2023 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -74,6 +74,23 @@ public class FunctionFieldReferenceOperator extends SqlBinaryOperator {
       if (funcType.isStruct()) {
         return funcType.getField(fieldNameStripQuotes(call.operand(1)), false, false).getType();
       }
+
+      if (FunctionFieldReferenceOperator.fieldNameStripQuotes(call.operand(1)).equalsIgnoreCase("tag_0")) {
+        return funcType;
+      }
+
+      // weed out (`extract_union`(`product`.`value`).`productcategoryurns`).`tag_0`
+      // when productcategoryurns is a single type union
+      //      SqlBasicCall outerSqlBasicCall = (SqlBasicCall) firstOperand;
+      //
+      //      if (outerSqlBasicCall.operand(0) instanceof SqlBasicCall) {
+      //        SqlBasicCall innerSqlBasicCall = outerSqlBasicCall.operand(0);
+      //        if (innerSqlBasicCall.getOperator().getName().equalsIgnoreCase("extract_union")
+      //            && fieldNameStripQuotes(call.operand(1)).equalsIgnoreCase("tag_0")) {
+      //          return funcType;
+      //        }
+      //
+      //      }
     }
     return super.deriveType(validator, scope, call);
   }
