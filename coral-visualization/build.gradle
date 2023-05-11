@@ -1,7 +1,7 @@
 dependencies {
   compile project(path: ':coral-common')
   compile (deps.'graph-vis')
-  testCompile project(path: ':coral-hive')
+  compile project(path: ':coral-hive')
   testCompile (deps.'hive'.'hive-exec-core') {
     exclude group: 'org.apache.avro', module: 'avro-tools'
     // This exclusion is required to prevent duplicate classes since we include
@@ -9,4 +9,5 @@ dependencies {
     exclude group: 'org.apache.calcite', module: 'calcite-core'
   }
   testCompile deps.'hadoop'.'hadoop-mapreduce-client-core'
+  testCompile deps.'kryo'
 }
