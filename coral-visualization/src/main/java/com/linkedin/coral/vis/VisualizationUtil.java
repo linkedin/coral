@@ -5,6 +5,7 @@
  */
 package com.linkedin.coral.vis;
 
+import guru.nidi.graphviz.engine.GraphvizCmdLineEngine;
 import java.io.File;
 
 import org.apache.calcite.rel.RelNode;
@@ -48,6 +49,7 @@ public class VisualizationUtil {
         .with(Font.name("Courier"), Font.size(7)).with(node);
     File outputFile = new File(outputDirectory, fileName);
     try {
+      Graphviz.useEngine(new GraphvizCmdLineEngine());
       Graphviz.fromGraph(graph).width(1000).render(Format.SVG).toFile(outputFile);
     } catch (Exception e) {
       throw new RuntimeException("Could not render graphviz file:" + e);
@@ -68,6 +70,7 @@ public class VisualizationUtil {
             .linkAttr().with(Font.name("Courier"), Font.size(7)).with(node);
     File outputFile = new File(outputDirectory, fileName);
     try {
+      Graphviz.useEngine(new GraphvizCmdLineEngine());
       Graphviz.fromGraph(graph).width(1000).render(Format.SVG).toFile(outputFile);
     } catch (Exception e) {
       throw new RuntimeException("Could not render graphviz file:" + e);
