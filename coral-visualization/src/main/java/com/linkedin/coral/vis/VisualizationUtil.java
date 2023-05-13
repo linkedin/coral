@@ -52,7 +52,7 @@ public class VisualizationUtil {
       Graphviz.useEngine(new GraphvizCmdLineEngine());
       Graphviz.fromGraph(graph).width(1000).render(Format.SVG).toFile(outputFile);
     } catch (Exception e) {
-      throw new RuntimeException("Could not render graphviz file:" + e);
+      throw new RuntimeException("Could not render graphviz file:", e);
     }
   }
 
@@ -73,7 +73,7 @@ public class VisualizationUtil {
       Graphviz.useEngine(new GraphvizCmdLineEngine());
       Graphviz.fromGraph(graph).width(1000).render(Format.SVG).toFile(outputFile);
     } catch (Exception e) {
-      throw new RuntimeException("Could not render graphviz file:" + e);
+      throw new RuntimeException("Could not render graphviz file:", e);
     }
   }
 }
