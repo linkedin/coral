@@ -75,22 +75,14 @@ public class FunctionFieldReferenceOperator extends SqlBinaryOperator {
         return funcType.getField(fieldNameStripQuotes(call.operand(1)), false, false).getType();
       }
 
+      // When the first operand is a SqlBasicCall with a non-struct RelDataType and the second operand is `tag_0`,
+      // such as `extract_union`(`product`.`value`).`tag_0` or (`extract_union`(`product`.`value`).`id`).`tag_0`,
+      // derived data type is first operand's RelDataType.
+      // This strategy ensures that RelDataType derivation remains successful for the specified sqlCalls while maintaining backward compatibility.
+      // Such SqlCalls are transformed {@link com.linkedin.coral.transformers.SingleUnionFieldReferenceTransformer}
       if (FunctionFieldReferenceOperator.fieldNameStripQuotes(call.operand(1)).equalsIgnoreCase("tag_0")) {
         return funcType;
       }
-
-      // weed out (`extract_union`(`product`.`value`).`productcategoryurns`).`tag_0`
-      // when productcategoryurns is a single type union
-      //      SqlBasicCall outerSqlBasicCall = (SqlBasicCall) firstOperand;
-      //
-      //      if (outerSqlBasicCall.operand(0) instanceof SqlBasicCall) {
-      //        SqlBasicCall innerSqlBasicCall = outerSqlBasicCall.operand(0);
-      //        if (innerSqlBasicCall.getOperator().getName().equalsIgnoreCase("extract_union")
-      //            && fieldNameStripQuotes(call.operand(1)).equalsIgnoreCase("tag_0")) {
-      //          return funcType;
-      //        }
-      //
-      //      }
     }
     return super.deriveType(validator, scope, call);
   }

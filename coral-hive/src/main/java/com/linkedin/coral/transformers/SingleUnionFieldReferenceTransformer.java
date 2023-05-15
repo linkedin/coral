@@ -7,14 +7,21 @@ package com.linkedin.coral.transformers;
 
 import org.apache.calcite.sql.SqlBasicCall;
 import org.apache.calcite.sql.SqlCall;
-import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.validate.SqlValidator;
 
 import com.linkedin.coral.common.functions.FunctionFieldReferenceOperator;
 import com.linkedin.coral.common.transformers.SqlCallTransformer;
 
 
+/**
+ * This transformer focuses on SqlCalls that involve a FunctionFieldReferenceOperator with the following characteristics:
+ * (1) The first operand is a SqlBasicCall with a non-struct RelDataType, and the second operand is tag_0.
+ * This indicates that the first operand represents a Union data type with a single data type inside.
+ * (2) Examples of such SqlCalls include extract_union(product.value).tag_0 or (extract_union(product.value).id).tag_0.
+ * (3) The transformation for such SqlCalls is to return the first operand.
+ */
 public class SingleUnionFieldReferenceTransformer extends SqlCallTransformer {
+  private static final String TAG_0_OPERAND = "tag_0";
 
   public SingleUnionFieldReferenceTransformer(SqlValidator sqlValidator) {
     super(sqlValidator);
@@ -22,31 +29,13 @@ public class SingleUnionFieldReferenceTransformer extends SqlCallTransformer {
 
   @Override
   protected boolean condition(SqlCall sqlCall) {
-    // weed out (`extract_union`(`product`.`value`).`productcategoryurns`).`tag_0`
-    // when productcategoryurns is a single type union
-    // weed out `extract_union`(`product`.`value`).`tag_0`
     if (FunctionFieldReferenceOperator.DOT.getName().equalsIgnoreCase(sqlCall.getOperator().getName())) {
-      SqlNode firstOperand = sqlCall.operand(0);
-      if (firstOperand instanceof SqlBasicCall) {
-
-        // `extract_union`(`product`.`value`).`productcategoryurns` or (`extract_union`(`product`.`value`).`productcategoryurns`).`tag_0`
-        SqlBasicCall outerSqlBasicCall = (SqlBasicCall) firstOperand;
+      if (sqlCall.operand(0) instanceof SqlBasicCall) {
+        SqlBasicCall outerSqlBasicCall = sqlCall.operand(0);
         boolean isOperandStruct = getRelDataType(outerSqlBasicCall).isStruct();
 
-        if (!isOperandStruct
-            && FunctionFieldReferenceOperator.fieldNameStripQuotes(sqlCall.operand(1)).equalsIgnoreCase("tag_0")) {
-          return true;
-        }
-
-        // `extract_union`(`product`.`value`) = innerSqlBasicCall
-        //        if (outerSqlBasicCall.operand(0) instanceof SqlBasicCall) {
-        //          SqlBasicCall innerSqlBasicCall = outerSqlBasicCall.operand(0);
-        //          if (innerSqlBasicCall.getOperator().getName().equalsIgnoreCase("extract_union")
-        //              && FunctionFieldReferenceOperator.fieldNameStripQuotes(sqlCall.operand(1)).equalsIgnoreCase("tag_0")
-        //              && !getRelDataType(outerSqlBasicCall).isStruct() ) {
-        //            return true;
-        //          }
-        //        }
+        return !isOperandStruct
+            && FunctionFieldReferenceOperator.fieldNameStripQuotes(sqlCall.operand(1)).equalsIgnoreCase(TAG_0_OPERAND);
       }
     }
     return false;
@@ -54,11 +43,7 @@ public class SingleUnionFieldReferenceTransformer extends SqlCallTransformer {
 
   @Override
   protected SqlCall transform(SqlCall sqlCall) {
-    // convert (`extract_union`(`product`.`value`).`productcategoryurns`).`tag_0`
-    // to `extract_union`(`product`.`value`).`productcategoryurns`
-
-    // convert x.y -> x where x is a sqlBasicCall
-
+    // convert x.tag_0 -> x where x is a sqlBasicCall with non-struct RelDataType
     return sqlCall.operand(0);
   }
 }
