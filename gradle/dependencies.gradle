@@ -20,7 +20,7 @@ ext.deps = [
   'antlr': "org.antlr:antlr:${versions['antlr']}",
   'antlr-runtime': "org.antlr:antlr-runtime:${versions['antlr']}",
   'avroCompatHelper': "com.linkedin.avroutil1:helper-all:${versions['avro-utl']}",
-  'graph-vis': "guru.nidi:graphviz-java:${versions['graph-vis']}",
+  'graph-vis': "guru.nidi:graphviz-java-all-j2v8:${versions['graph-vis']}",
   'gson': "com.google.code.gson:gson:${versions['gson']}",
   'hadoop': [
     'hadoop-common': "org.apache.hadoop:hadoop-common:${versions['hadoop']}",

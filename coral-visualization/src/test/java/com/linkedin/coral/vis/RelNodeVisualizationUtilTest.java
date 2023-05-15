@@ -69,7 +69,7 @@ public class RelNodeVisualizationUtilTest {
     File imagesTempDir = new File(System.getProperty("java.io.tmpdir") + "/images" + UUID.randomUUID());
     VisualizationUtil visualizationUtil = VisualizationUtil.create(imagesTempDir);
     for (int i = 0; i < queries.length; i++) {
-      visualizationUtil.visualizeRelNodeToFile(converter.convertSql(queries[i]), "/test" + i + ".png");
+      visualizationUtil.visualizeRelNodeToFile(converter.convertSql(queries[i]), "/test" + i + ".svg");
     }
     assertEquals(imagesTempDir.list().length, 2);
     imagesTempDir.delete();

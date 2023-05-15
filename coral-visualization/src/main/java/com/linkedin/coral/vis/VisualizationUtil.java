@@ -41,16 +41,16 @@ public class VisualizationUtil {
    * @param sqlNode root of the SqlNode tree to visualize.
    * @param fileName name of the file to write the visualization to.
    */
-  public void visualizeCoralSqlNodeToFile(SqlNode sqlNode, String fileName) {
+  public void visualizeSqlNodeToFile(SqlNode sqlNode, String fileName) {
     SqlVisitor<Node> sqlVisitor = new SqlNodeVisualizationVisitor();
     Node node = sqlNode.accept(sqlVisitor);
-    Graph graph =
-        Factory.graph("test").directed().nodeAttr().with(Font.size(10)).linkAttr().with(Font.size(10)).with(node);
+    Graph graph = Factory.graph("SqlNode").directed().nodeAttr().with(Font.name("Courier"), Font.size(10)).linkAttr()
+        .with(Font.name("Courier"), Font.size(7)).with(node);
     File outputFile = new File(outputDirectory, fileName);
     try {
-      Graphviz.fromGraph(graph).width(1000).render(Format.PNG).toFile(outputFile);
+      Graphviz.fromGraph(graph).width(1000).render(Format.SVG).toFile(outputFile);
     } catch (Exception e) {
-      throw new RuntimeException("Could not render graphviz file:" + e);
+      throw new RuntimeException("Could not render graphviz file:", e);
     }
   }
 
@@ -63,13 +63,14 @@ public class VisualizationUtil {
     RelNodeVisualizationShuttle relNodeVisualizationShuttle = new RelNodeVisualizationShuttle();
     relNode.accept(relNodeVisualizationShuttle);
     Node node = relNodeVisualizationShuttle.getNode(relNode);
-    Graph graph = Factory.graph("test").directed().nodeAttr().with(Font.size(10), Shape.RECTANGLE).linkAttr()
-        .with(Font.size(7)).with(node);
+    Graph graph =
+        Factory.graph("SqlNode").directed().nodeAttr().with(Font.name("Courier"), Font.size(10), Shape.RECTANGLE)
+            .linkAttr().with(Font.name("Courier"), Font.size(7)).with(node);
     File outputFile = new File(outputDirectory, fileName);
     try {
-      Graphviz.fromGraph(graph).width(1000).render(Format.PNG).toFile(outputFile);
+      Graphviz.fromGraph(graph).width(1000).render(Format.SVG).toFile(outputFile);
     } catch (Exception e) {
-      throw new RuntimeException("Could not render graphviz file:" + e);
+      throw new RuntimeException("Could not render graphviz file:", e);
     }
   }
 }

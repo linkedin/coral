@@ -46,7 +46,7 @@ public class SqlNodeVisualizationUtilTest {
     File imagesTempDir = new File(System.getProperty("java.io.tmpdir") + "/images" + UUID.randomUUID());
     VisualizationUtil visualizationUtil = VisualizationUtil.create(imagesTempDir);
     for (int i = 0; i < queries.length; i++) {
-      visualizationUtil.visualizeCoralSqlNodeToFile(converter.toSqlNode(queries[i]), "/test" + i + ".png");
+      visualizationUtil.visualizeSqlNodeToFile(converter.toSqlNode(queries[i]), "/test" + i + ".svg");
     }
     assertEquals(imagesTempDir.list().length, 2);
     imagesTempDir.delete();
