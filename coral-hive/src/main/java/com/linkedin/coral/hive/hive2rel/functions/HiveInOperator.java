@@ -48,8 +48,8 @@ import static org.apache.calcite.util.Static.*;
  *     different from set of OR predicates
  *  2. In some cases, calcite turns IN clause to INNER JOIN query on a set of values. We
  *     again want to prevent this conversion.
- *  Unlike Calcite's IN operator, whose operands are (expr, exprList), this operator's operands
- *  are (expr, exprList[0], expr[1], ...), where (exp) is the expression preceding IN operator.
+ *  Unlike Calcite's IN operator, whose operands are (expr, values), this operator's operands
+ *  are (expr, values[0], values[1], ...), where (exp) is the expression preceding IN operator.
  */
 public class HiveInOperator extends SqlSpecialOperator {
 
