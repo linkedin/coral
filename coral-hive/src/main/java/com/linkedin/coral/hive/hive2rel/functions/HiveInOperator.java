@@ -91,7 +91,7 @@ public class HiveInOperator extends SqlSpecialOperator {
 
     // Derive type for RHS.
     List<RelDataType> rightTypeList = new ArrayList<>();
-    for (int i = 1; i < right.size(); i++) {
+    for (int i = 0; i < right.size(); i++) {
       SqlNode node = right.get(i);
       RelDataType nodeType = validator.deriveType(scope, node);
       rightTypeList.add(nodeType);
