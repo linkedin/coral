@@ -845,6 +845,14 @@ public class CoralSparkTest {
   }
 
   @Test
+  public void testSimpleCast() {
+    RelNode relNode = TestUtils.toRelNode("SELECT cast(1 as bigint)");
+
+    String targetSql = "SELECT CAST(1 AS BIGINT)\n" + "FROM (VALUES  (0)) t (ZERO)";
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+  }
+
+  @Test
   public void testCastOnString() {
     RelNode relNode = TestUtils.toRelNode("SELECT CAST('99999999999' AS BIGINT) > 0");
 

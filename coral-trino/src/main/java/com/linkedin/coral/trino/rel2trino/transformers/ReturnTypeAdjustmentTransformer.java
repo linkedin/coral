@@ -5,11 +5,13 @@
  */
 package com.linkedin.coral.trino.rel2trino.transformers;
 
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
 
 import com.google.common.collect.ImmutableMap;
 
+import java.util.Set;
 import org.apache.calcite.sql.SqlBasicTypeNameSpec;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlDataTypeSpec;
@@ -36,6 +38,7 @@ public class ReturnTypeAdjustmentTransformer extends SqlCallTransformer {
       .put("date_diff", SqlTypeName.INTEGER).put("cardinality", SqlTypeName.INTEGER).put("ceil", SqlTypeName.BIGINT)
       .put("ceiling", SqlTypeName.BIGINT).put("floor", SqlTypeName.BIGINT).put("date_add", SqlTypeName.VARCHAR).build();
   private final Map<String, Boolean> configs;
+  private final Set<SqlCall> visited = new HashSet<>();
 
   public ReturnTypeAdjustmentTransformer(Map<String, Boolean> configs) {
     this.configs = configs;
@@ -47,11 +50,12 @@ public class ReturnTypeAdjustmentTransformer extends SqlCallTransformer {
     if ("date_add".equals(lowercaseOperatorName) && !configs.getOrDefault(CAST_DATEADD_TO_STRING, false)) {
       return false;
     }
-    return OPERATORS_TO_ADJUST.containsKey(lowercaseOperatorName);
+    return OPERATORS_TO_ADJUST.containsKey(lowercaseOperatorName) && !visited.contains(sqlCall);
   }
 
   @Override
   protected SqlCall transform(SqlCall sqlCall) {
+    visited.add(sqlCall);
     String lowercaseOperatorName = sqlCall.getOperator().getName().toLowerCase(Locale.ROOT);
     SqlTypeName targetType = OPERATORS_TO_ADJUST.get(lowercaseOperatorName);
     if (targetType != null) {

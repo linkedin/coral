@@ -22,8 +22,10 @@ public class HiveSqlNodeToCoralSqlNodeConverter extends SqlShuttle {
   private final SqlCallTransformers operatorTransformerList;
 
   public HiveSqlNodeToCoralSqlNodeConverter(SqlValidator sqlValidator) {
-    operatorTransformerList = SqlCallTransformers.of(new ShiftArrayIndexTransformer(sqlValidator),
-        new SingleUnionFieldReferenceTransformer(sqlValidator));
+    operatorTransformerList = SqlCallTransformers.of(
+        new ShiftArrayIndexTransformer(sqlValidator),
+        new SingleUnionFieldReferenceTransformer(sqlValidator)
+    );
   }
 
   @Override

@@ -36,17 +36,6 @@ import com.linkedin.coral.hive.hive2rel.functions.HiveNamedStructFunction;
 public class HiveConvertletTable extends ReflectiveConvertletTable {
 
   @SuppressWarnings("unused")
-  public RexNode convertNamedStruct(SqlRexContext cx, HiveNamedStructFunction func, SqlCall call) {
-    List<RexNode> operandExpressions = new ArrayList<>(call.operandCount() / 2);
-    for (int i = 0; i < call.operandCount(); i += 2) {
-      operandExpressions.add(cx.convertExpression(call.operand(i + 1)));
-    }
-    RelDataType retType = cx.getValidator().getValidatedNodeType(call);
-    RexNode rowNode = cx.getRexBuilder().makeCall(retType, SqlStdOperatorTable.ROW, operandExpressions);
-    return cx.getRexBuilder().makeCast(retType, rowNode);
-  }
-
-  @SuppressWarnings("unused")
   public RexNode convertHiveInOperator(SqlRexContext cx, HiveInOperator operator, SqlCall call) {
     List<SqlNode> operandList = call.getOperandList();
     Preconditions.checkState(operandList.size() == 2 && operandList.get(1) instanceof SqlNodeList);

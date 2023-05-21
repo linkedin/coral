@@ -5,6 +5,7 @@
  */
 package com.linkedin.coral.trino.rel2trino;
 
+import com.linkedin.coral.trino.rel2trino.transformers.NamedStructOperandTransformer;
 import java.util.Collection;
 import java.util.Map;
 
@@ -31,6 +32,7 @@ import com.linkedin.coral.trino.rel2trino.transformers.MapValueConstructorTransf
 import com.linkedin.coral.trino.rel2trino.transformers.ReturnTypeAdjustmentTransformer;
 import com.linkedin.coral.trino.rel2trino.transformers.SqlSelectAliasAppenderTransformer;
 import com.linkedin.coral.trino.rel2trino.transformers.ToDateOperatorTransformer;
+import org.apache.calcite.sql.validate.SqlValidator;
 
 import static com.linkedin.coral.trino.rel2trino.CoralTrinoConfigKeys.*;
 
@@ -44,12 +46,14 @@ public class CoralToTrinoSqlCallConverter extends SqlShuttle {
   private static final StaticHiveFunctionRegistry HIVE_FUNCTION_REGISTRY = new StaticHiveFunctionRegistry();
   private final SqlCallTransformers sqlCallTransformers;
 
-  public CoralToTrinoSqlCallConverter(Map<String, Boolean> configs) {
+  public CoralToTrinoSqlCallConverter(Map<String, Boolean> configs, SqlValidator sqlValidator) {
     this.sqlCallTransformers = SqlCallTransformers.of(new SqlSelectAliasAppenderTransformer(),
         // conditional functions
         new CoralRegistryOperatorRenameSqlCallTransformer("nvl", 2, "coalesce"),
         // array and map functions
         new MapValueConstructorTransformer(),
+        // named_struct to cast as row
+        new NamedStructOperandTransformer(sqlValidator),
         new OperatorRenameSqlCallTransformer(SqlStdOperatorTable.SUBSTRING, 3, "SUBSTR"),
         new SourceOperatorMatchSqlCallTransformer("item", 2) {
           @Override
@@ -130,6 +134,6 @@ public class CoralToTrinoSqlCallConverter extends SqlShuttle {
 
   @Override
   public SqlNode visit(SqlCall call) {
-    return sqlCallTransformers.apply((SqlCall) super.visit(call));
+    return super.visit(sqlCallTransformers.apply(call));
   }
 }

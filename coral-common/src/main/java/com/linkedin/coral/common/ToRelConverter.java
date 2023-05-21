@@ -57,7 +57,7 @@ public abstract class ToRelConverter {
 
   protected abstract SqlRexConvertletTable getConvertletTable();
 
-  protected abstract SqlValidator getSqlValidator();
+  public abstract SqlValidator getSqlValidator();
 
   protected abstract SqlOperatorTable getOperatorTable();
 

@@ -135,6 +135,7 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
     addFunctionEntry("struct", ROW);
     addFunctionEntry("map", MAP_VALUE_CONSTRUCTOR);
     addFunctionEntry("named_struct", HiveNamedStructFunction.NAMED_STRUCT);
+    addFunctionEntry("cast", new CoralCastFunction());
     addFunctionEntry("generic_project", GenericProjectFunction.GENERIC_PROJECT);
 
     // conversion functions
