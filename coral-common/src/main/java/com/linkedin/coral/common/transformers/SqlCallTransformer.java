@@ -39,7 +39,7 @@ public abstract class SqlCallTransformer {
   }
 
   /**
-   * Condition of the transformer, it’s used to determine if the SqlCall should be transformed or not
+   * Condition of the transformer, it's used to determine if the SqlCall should be transformed or not
    */
   protected abstract boolean condition(SqlCall sqlCall);
 
