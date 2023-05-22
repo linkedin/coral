@@ -5,7 +5,6 @@
  */
 package com.linkedin.coral.trino.rel2trino;
 
-import com.linkedin.coral.trino.rel2trino.transformers.NamedStructOperandTransformer;
 import java.util.Collection;
 import java.util.Map;
 
@@ -15,6 +14,7 @@ import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.util.SqlShuttle;
+import org.apache.calcite.sql.validate.SqlValidator;
 
 import com.linkedin.coral.common.functions.Function;
 import com.linkedin.coral.common.transformers.JsonTransformSqlCallTransformer;
@@ -29,10 +29,10 @@ import com.linkedin.coral.trino.rel2trino.transformers.CoralRegistryOperatorRena
 import com.linkedin.coral.trino.rel2trino.transformers.CurrentTimestampTransformer;
 import com.linkedin.coral.trino.rel2trino.transformers.GenericCoralRegistryOperatorRenameSqlCallTransformer;
 import com.linkedin.coral.trino.rel2trino.transformers.MapValueConstructorTransformer;
+import com.linkedin.coral.trino.rel2trino.transformers.NamedStructOperandTransformer;
 import com.linkedin.coral.trino.rel2trino.transformers.ReturnTypeAdjustmentTransformer;
 import com.linkedin.coral.trino.rel2trino.transformers.SqlSelectAliasAppenderTransformer;
 import com.linkedin.coral.trino.rel2trino.transformers.ToDateOperatorTransformer;
-import org.apache.calcite.sql.validate.SqlValidator;
 
 import static com.linkedin.coral.trino.rel2trino.CoralTrinoConfigKeys.*;
 

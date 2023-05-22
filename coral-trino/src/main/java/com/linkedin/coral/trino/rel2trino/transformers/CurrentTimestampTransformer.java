@@ -7,6 +7,7 @@ package com.linkedin.coral.trino.rel2trino.transformers;
 
 import java.util.HashSet;
 import java.util.Set;
+
 import org.apache.calcite.sql.SqlBasicTypeNameSpec;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlDataTypeSpec;
@@ -33,7 +34,8 @@ public class CurrentTimestampTransformer extends SqlCallTransformer {
 
   @Override
   protected boolean condition(SqlCall sqlCall) {
-    return sqlCall.getOperator().getName().equalsIgnoreCase(CURRENT_TIMESTAMP_FUNCTION_NAME) && !visited.contains(sqlCall);
+    return sqlCall.getOperator().getName().equalsIgnoreCase(CURRENT_TIMESTAMP_FUNCTION_NAME)
+        && !visited.contains(sqlCall);
   }
 
   @Override
