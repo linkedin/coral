@@ -52,7 +52,15 @@ class RelDataTypeToAvroType {
     Preconditions.checkNotNull(relDataType);
 
     if (relDataType instanceof RelRecordType || relDataType instanceof DynamicRecordType) {
-      return relRecordTypeToAvroType(relDataType, null, recordName, "rel_avro", null);
+      String uniqueNamespace;
+      if (relDataType.getFieldList() == null || relDataType.getFieldCount() == 0) {
+        uniqueNamespace = "rel_avro";
+      } else {
+        uniqueNamespace =
+            "namespace_from_first_nested_field_" + relDataType.getFieldList().get(0).getName().toLowerCase();
+      }
+
+      return relRecordTypeToAvroType(relDataType, null, recordName, uniqueNamespace, null);
     }
 
     if (relDataType instanceof BasicSqlType) {

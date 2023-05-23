@@ -7,12 +7,13 @@
     "type" : [ "null", {
       "type" : "record",
       "name" : "c1",
-      "namespace" : "rel_avro",
+      "namespace" : "namespace_from_first_nested_field_tag_0",
       "fields" : [ {
         "name" : "tag_0",
         "type" : [ "null", {
           "type" : "record",
           "name" : "tag_0",
+          "namespace" : "namespace_from_first_nested_field_f1",
           "fields" : [ {
             "name" : "f1",
             "type" : [ "null", "string" ],
@@ -25,6 +26,7 @@
         "type" : [ "null", {
           "type" : "record",
           "name" : "tag_1",
+          "namespace" : "namespace_from_first_nested_field_f1",
           "fields" : [ {
             "name" : "f1",
             "type" : [ "null", "int" ],

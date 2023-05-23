@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2022 LinkedIn Corporation. All rights reserved.
+ * Copyright 2020-2023 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -39,6 +39,19 @@ public class RelDataTypeToAvroTypeTests {
   @AfterTest
   public void afterClass() throws IOException {
     FileUtils.deleteDirectory(new File(conf.get(TestUtils.CORAL_SCHEMA_TEST_DIR)));
+  }
+
+  @Test
+  public void testNestedRecordWithSameNameFields() {
+    String viewSql = "CREATE VIEW v AS SELECT * FROM basecomplexnestedstructsamename";
+
+    TestUtils.executeCreateViewQuery("default", "v", viewSql);
+    RelNode relNode = hiveToRelConverter.convertView("default", "v");
+    Schema actualAvroType = RelDataTypeToAvroType.relDataTypeToAvroTypeNonNullable(relNode.getRowType(),
+        "nestedRecordWithSameNameNestedFields");
+
+    Assert.assertEquals(actualAvroType.toString(true),
+        TestUtils.loadSchema("rel2avro-testNestedRecordWithSameNameRecordNestedFields-expected.avsc"));
   }
 
   @Test
