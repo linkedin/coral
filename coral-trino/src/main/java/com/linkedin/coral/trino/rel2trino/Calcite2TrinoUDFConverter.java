@@ -189,6 +189,13 @@ public class Calcite2TrinoUDFConverter {
         }
       }
 
+      if (operatorName.equalsIgnoreCase("unix_timestamp")) {
+        Optional<RexNode> modifiedCall = visitUnixTimestamp(call);
+        if (modifiedCall.isPresent()) {
+          return modifiedCall.get();
+        }
+      }
+
       if (operatorName.equalsIgnoreCase("cast")) {
         Optional<RexNode> modifiedCall = visitCast(call);
         if (modifiedCall.isPresent()) {
@@ -300,6 +307,18 @@ public class Calcite2TrinoUDFConverter {
                     rexBuilder.makeCall(trinoToUnixTime,
                         rexBuilder.makeCall(trinoWithTimeZone, sourceValue, rexBuilder.makeLiteral("UTC")))),
                 rexBuilder.makeCall(trinoCanonicalizeHiveTimezoneId, timezone))));
+      }
+
+      return Optional.empty();
+    }
+
+    private Optional<RexNode> visitUnixTimestamp(RexCall call) {
+      List<RexNode> convertedOperands = visitList(call.getOperands(), (boolean[]) null);
+      if (convertedOperands.size() == 0) {
+        SqlOperator trinoToUnixtime = createSqlOperatorOfFunction("to_unixtime", explicit(DOUBLE));
+        SqlOperator trinoCurrentTimestamp =  createSqlOperatorOfFunction("current_timestamp", explicit(TIMESTAMP));
+        return Optional.of(rexBuilder.makeCall(trinoToUnixtime,
+                rexBuilder.makeCall(trinoCurrentTimestamp, rexBuilder.makeBigintLiteral(BigDecimal.valueOf(0)))));
       }
 
       return Optional.empty();
