@@ -674,6 +674,7 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
 
     // Context functions
     addFunctionEntry("current_user", CURRENT_USER);
+    createAddUserDefinedFunction("logged_in_user", FunctionReturnTypes.STRING, NILADIC);
   }
 
   /**

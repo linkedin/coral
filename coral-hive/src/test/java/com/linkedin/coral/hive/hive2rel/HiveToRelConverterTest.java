@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2022 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2023 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -630,6 +630,14 @@ public class HiveToRelConverterTest {
     SqlNode node = viewToSqlNode("default", "view_namesake_column_names");
     converter.getSqlValidator().validate(node);
     String generated = nodeToStr(node);
+    assertEquals(generated, expected);
+  }
+
+  @Test
+  public void testLoggedInUser() {
+    final String sql = "SELECT logged_in_user() as liu";
+    String generated = relToString(sql);
+    final String expected = "LogicalProject(liu=[logged_in_user()])\n  LogicalValues(tuples=[[{ 0 }]])\n";
     assertEquals(generated, expected);
   }
 
