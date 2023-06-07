@@ -1,7 +1,7 @@
 {
   "type" : "record",
   "name" : "nestedRecord",
-  "namespace" : "namespace_from_first_nested_field_id",
+  "namespace" : "rel_avro",
   "fields" : [ {
     "name" : "id",
     "type" : [ "null", "int" ],
@@ -25,7 +25,6 @@
     "type" : [ "null", {
       "type" : "record",
       "name" : "struct_col",
-      "namespace" : "namespace_from_first_nested_field_bool_field",
       "fields" : [ {
         "name" : "bool_field",
         "type" : [ "null", "boolean" ],

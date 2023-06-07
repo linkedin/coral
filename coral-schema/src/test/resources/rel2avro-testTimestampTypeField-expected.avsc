@@ -1,7 +1,7 @@
 {
   "type" : "record",
   "name" : "timestampTypeField",
-  "namespace" : "namespace_from_first_nested_field_timestamp_field",
+  "namespace" : "rel_avro",
   "fields" : [ {
     "name" : "timestamp_field",
     "type" : [ "null", {

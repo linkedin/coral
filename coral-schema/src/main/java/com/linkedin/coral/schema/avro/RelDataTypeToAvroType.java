@@ -7,6 +7,7 @@ package com.linkedin.coral.schema.avro;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
 
@@ -52,14 +53,7 @@ class RelDataTypeToAvroType {
     Preconditions.checkNotNull(relDataType);
 
     if (relDataType instanceof RelRecordType || relDataType instanceof DynamicRecordType) {
-      String uniqueNamespace;
-      if (relDataType.getFieldList() == null || relDataType.getFieldCount() == 0) {
-        uniqueNamespace = "rel_avro";
-      } else {
-        uniqueNamespace =
-            "namespace_from_first_nested_field_" + relDataType.getFieldList().get(0).getName().toLowerCase();
-      }
-
+      String uniqueNamespace = getUniqueNamespace(relDataType, recordName);
       return relRecordTypeToAvroType(relDataType, null, recordName, uniqueNamespace, null);
     }
 
@@ -157,6 +151,20 @@ class RelDataTypeToAvroType {
 
     avroSchema.setFields(fields);
     return avroSchema;
+  }
+
+  private static String getUniqueNamespace(RelDataType relDataType, String recordName) {
+    if (relDataType.getFieldList() == null || relDataType.getFieldCount() == 0) {
+      return "rel_avro";
+    }
+    List<RelDataTypeField> fields = relDataType.getFieldList();
+
+    if (fields.stream().anyMatch(field -> field.getName().equals(recordName))) {
+      String interim_namespace = fields.stream().map(RelDataTypeField::getName).collect(Collectors.joining("_"));
+      return "namespace_from_nested_fields_" + interim_namespace;
+    } else {
+      return "rel_avro";
+    }
   }
 
   private static String toAvroQualifiedName(String relName) {
