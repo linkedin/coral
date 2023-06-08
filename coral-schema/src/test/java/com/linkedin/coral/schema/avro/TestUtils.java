@@ -101,6 +101,7 @@ public class TestUtils {
     String baseComplexLowercase = loadSchema("base-complex-lowercase.avsc");
     String baseComplexNullableWithDefaults = loadSchema("base-complex-nullable-with-defaults.avsc");
     String basePrimitive = loadSchema("base-primitive.avsc");
+    String baseComplexNestedStructSameName = loadSchema("base-complex-nested-struct-same-name.avsc");
 
     executeCreateTableQuery("default", "basecomplex", baseComplexSchema);
     executeCreateTableQuery("default", "basecomplexunioncompatible", baseComplexUnionCompatible);
@@ -115,6 +116,7 @@ public class TestUtils {
     executeCreateTableQuery("default", "basenestedunion", baseNestedUnionSchema);
     executeCreateTableQuery("default", "basecomplexlowercase", baseComplexLowercase);
     executeCreateTableQuery("default", "baseprimitive", basePrimitive);
+    executeCreateTableQuery("default", "basecomplexnestedstructsamename", baseComplexNestedStructSameName);
     executeCreateTableWithPartitionQuery("default", "basecasepreservation", baseCasePreservation);
     executeCreateTableWithPartitionFieldSchemaQuery("default", "basecomplexfieldschema", baseComplexFieldSchema);
     executeCreateTableWithPartitionQuery("default", "basenestedcomplex", baseNestedComplexSchema);

@@ -1,0 +1,43 @@
+{
+  "type" : "record",
+  "name" : "nestedRecordWithSameNameNestedFields",
+  "namespace" : "rel_avro",
+  "fields" : [ {
+    "name" : "id",
+    "type" : [ "null", "int" ],
+    "default" : null
+  }, {
+    "name" : "array_col",
+    "type" : [ "null", {
+      "type" : "array",
+      "items" : [ "null", "string" ]
+    } ],
+    "default" : null
+  }, {
+    "name" : "structcol",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "structcol",
+      "namespace" : "namespace_from_nested_fields_string_field_structcol",
+      "fields" : [ {
+        "name" : "string_field",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "structcol",
+        "type" : [ "null", {
+          "type" : "record",
+          "name" : "structcol",
+          "namespace" : "rel_avro",
+          "fields" : [ {
+            "name" : "int_field",
+            "type" : [ "null", "int" ],
+            "default" : null
+          } ]
+        } ],
+        "default" : null
+      } ]
+    } ],
+    "default" : null
+  } ]
+}
