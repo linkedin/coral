@@ -35,6 +35,20 @@ and implementing query rewrite algorithms for data governance and query optimiza
 - Coral-Visualization [WIP]: Visualizes Coral SqlNode and RelNode trees and renders them to an output file.
 - Coral-Service: Service that exposes REST APIs that allow users to interact with Coral (see [Coral-as-a-Service](#Coral-as-a-Service) for more details).
 
+## Version Upgrades
+
+This project follows a versioning scheme in the format of x.y.z. As you integrate this project, it's essential to consider potential changes required when upgrading to different versions.
+
+**'y' Upgrade**
+
+An 'y' upgrade represents a version change where limited backward-incompatible modifications are introduced. These changes impact a few classes (less than 3). Therefore, updates are only necessary for a restricted portion of your existing codebases.
+
+**'x' Upgrade**
+
+An 'x' upgrade signifies a version change involving extensive backward-incompatible alterations. These modifications impact a significant number of classes or components (3 or more). Consequently, substantial updates or even rewrites of your existing codebases may be necessary to align with the new version.
+
+Please carefully review the release notes and documentation accompanying each version upgrade to understand the specific changes and the recommended steps for migration.
+
 
 ## How to Build
 
