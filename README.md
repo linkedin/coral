@@ -41,11 +41,11 @@ This project follows a versioning scheme in the format of x.y.z. As you integrat
 
 **'y' Upgrade**
 
-An 'y' upgrade represents a version change where limited backward-incompatible modifications are introduced. These changes impact a few classes (less than 3). Therefore, updates are only necessary for a restricted portion of your existing codebases.
+An 'y' upgrade represents a version change where backward-incompatible modifications are introduced by deleting methods.
 
 **'x' Upgrade**
 
-An 'x' upgrade signifies a version change involving extensive backward-incompatible alterations. These modifications impact a significant number of classes or components (3 or more). Consequently, substantial updates or even rewrites of your existing codebases may be necessary to align with the new version.
+An 'x' upgrade signifies a version change where backward-incompatible modifications are introducedby deleting classes. Consequently, substantial updates or even rewrites of your existing codebases may be necessary to align with the new version.
 
 Please carefully review the release notes and documentation accompanying each version upgrade to understand the specific changes and the recommended steps for migration.
 
