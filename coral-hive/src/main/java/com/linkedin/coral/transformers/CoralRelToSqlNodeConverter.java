@@ -23,6 +23,7 @@ import org.apache.calcite.rel.core.Values;
 import org.apache.calcite.rel.logical.LogicalTableFunctionScan;
 import org.apache.calcite.rel.rel2sql.RelToSqlConverter;
 import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexCorrelVariable;
 import org.apache.calcite.rex.RexFieldAccess;
@@ -38,7 +39,9 @@ import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlLateralOperator;
 import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlNode;
+import org.apache.calcite.sql.SqlNodeList;
 import org.apache.calcite.sql.SqlOperator;
+import org.apache.calcite.sql.SqlUtil;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.SqlTypeName;
@@ -156,6 +159,43 @@ public class CoralRelToSqlNodeConverter extends RelToSqlConverter {
     }
     final SqlIdentifier identifier = new SqlIdentifier(qualifiedName, SqlParserPos.ZERO);
     return result(identifier, ImmutableList.of(Clause.FROM), e, null);
+  }
+
+  /**
+   * A Project RelNode represents a relational operator that projects a subset of columns from an input relational expression.
+   * When projecting a NULL field, super's implementation casts this column to the derived data type to ensure that the column can be interpreted correctly.
+   * If the derived data type is NULL, super's implementation casts the NULL field to a NULL data type explicitly.
+   * This method override is intended to avoid adding a NULL cast to a NULL column.
+   *
+   * By default, super's implementation would generate SqlSelect statement of the form: SELECT CAST(NULL AS NULL) FROM foo.
+   * However, the overriden implementation generates a modified SqlSelect statement that omits the CAST: SELECT NULL FROM foo.
+   *
+   * @param e Project RelNode.
+   * @return Result of converting the RelNode to a SqlNode.
+   */
+  @Override
+  public Result visit(Project e) {
+    e.getVariablesSet();
+    Result x = visitChild(0, e.getInput());
+    parseCorrelTable(e, x);
+    if (isStar(e.getChildExps(), e.getInput().getRowType(), e.getRowType())) {
+      return x;
+    }
+    final Builder builder = x.builder(e, Clause.SELECT);
+    final List<SqlNode> selectList = new ArrayList<>();
+    for (RexNode ref : e.getChildExps()) {
+      SqlNode sqlExpr = builder.context.toSql(null, ref);
+
+      // Append the CAST operator when the derived data type is NON-NULL.
+      RelDataTypeField targetField = e.getRowType().getFieldList().get(selectList.size());
+      if (SqlUtil.isNullLiteral(sqlExpr, false) && !targetField.getValue().getSqlTypeName().equals(SqlTypeName.NULL)) {
+        sqlExpr = SqlStdOperatorTable.CAST.createCall(POS, sqlExpr, dialect.getCastSpec(targetField.getType()));
+      }
+
+      addSelect(selectList, sqlExpr, e.getRowType());
+    }
+    builder.setSelect(new SqlNodeList(selectList, POS));
+    return builder.result();
   }
 
   /**
