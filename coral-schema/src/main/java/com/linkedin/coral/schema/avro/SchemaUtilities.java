@@ -482,10 +482,8 @@ class SchemaUtilities {
 
     // uniquify namespaces for schemas with multiple fields with the same name
     if (!strictMode) {
-      leftSchema = SchemaUtilities.setupNameAndNamespace(originalLeftSchema, originalLeftSchema.getName(),
-          originalLeftSchema.getNamespace());
-      rightSchema = SchemaUtilities.setupNameAndNamespace(originalRightSchema, originalRightSchema.getName(),
-          originalRightSchema.getNamespace());
+      leftSchema = modifySchemaBeforeMerge(originalLeftSchema);
+      rightSchema = modifySchemaBeforeMerge(originalRightSchema);
     }
 
     // TODO: we should investigate simplify casing transformations
@@ -828,6 +826,20 @@ class SchemaUtilities {
       default:
         throw new IllegalArgumentException("Unsupported Schema type: " + schema.getType().toString());
     }
+  }
+
+  static Schema modifySchemaBeforeMerge(@Nonnull Schema originalSchema) {
+    Schema modifiedSchema = originalSchema;
+
+    if (originalSchema.getNamespace() == null) {
+      modifiedSchema = Schema.createRecord(originalSchema.getName(), originalSchema.getDoc(), originalSchema.getName(),
+          originalSchema.isError());
+      List<Schema.Field> fields = cloneFieldList(originalSchema.getFields());
+      modifiedSchema.setFields(fields);
+    }
+
+    return SchemaUtilities.setupNameAndNamespace(modifiedSchema, modifiedSchema.getName(),
+        modifiedSchema.getNamespace());
   }
 
   private static Schema setupTopLevelRecordName(@Nonnull Schema schema, @Nonnull String schemaName) {
