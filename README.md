@@ -37,15 +37,15 @@ and implementing query rewrite algorithms for data governance and query optimiza
 
 ## Version Upgrades
 
-This project follows a versioning scheme in the format of x.y.z. As you integrate this project, it's essential to consider potential changes required when upgrading to different versions.
+This project adheres to semantic versioning, where the format x.y.z represents major, minor, and patch version upgrades. Consideration should be given to potential changes required when integrating different versions of this project.
 
 **'y' Upgrade**
 
-An 'y' upgrade represents a version change where backward-incompatible modifications are introduced by deleting methods.
+An 'y' upgrade represents a version change that introduces backward incompatibility by removal or modification of methods.
 
 **'x' Upgrade**
 
-An 'x' upgrade signifies a version change where backward-incompatible modifications are introducedby deleting classes. Consequently, substantial updates or even rewrites of your existing codebases may be necessary to align with the new version.
+An 'x' upgrade signifies a version change that introduces backward incompatibility by affecting the availability of classes.
 
 Please carefully review the release notes and documentation accompanying each version upgrade to understand the specific changes and the recommended steps for migration.
 
