@@ -14,9 +14,9 @@ import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.ArraySqlType;
 import org.apache.calcite.sql.type.SqlTypeName;
-import org.apache.calcite.sql.validate.SqlValidator;
 
 import com.linkedin.coral.common.transformers.SqlCallTransformer;
+import com.linkedin.coral.common.utils.TypeDerivationUtil;
 
 
 /**
@@ -26,15 +26,15 @@ public class ShiftArrayIndexTransformer extends SqlCallTransformer {
 
   private static final String ITEM_OPERATOR = "ITEM";
 
-  public ShiftArrayIndexTransformer(SqlValidator sqlValidator) {
-    super(sqlValidator);
+  public ShiftArrayIndexTransformer(TypeDerivationUtil typeDerivationUtil) {
+    super(typeDerivationUtil);
   }
 
   @Override
   public boolean condition(SqlCall sqlCall) {
     if (ITEM_OPERATOR.equalsIgnoreCase(sqlCall.getOperator().getName())) {
       final SqlNode columnNode = sqlCall.getOperandList().get(0);
-      return getRelDataType(columnNode) instanceof ArraySqlType;
+      return deriveRelDatatype(columnNode) instanceof ArraySqlType;
     }
     return false;
   }
@@ -43,7 +43,7 @@ public class ShiftArrayIndexTransformer extends SqlCallTransformer {
   public SqlCall transform(SqlCall sqlCall) {
     final SqlNode itemNode = sqlCall.getOperandList().get(1);
     if (itemNode instanceof SqlNumericLiteral
-        && getRelDataType(itemNode).getSqlTypeName().equals(SqlTypeName.INTEGER)) {
+        && deriveRelDatatype(itemNode).getSqlTypeName().equals(SqlTypeName.INTEGER)) {
       final Integer value = ((SqlNumericLiteral) itemNode).getValueAs(Integer.class);
       sqlCall.setOperand(1,
           SqlNumericLiteral.createExactNumeric(new BigDecimal(value + 1).toString(), itemNode.getParserPosition()));
