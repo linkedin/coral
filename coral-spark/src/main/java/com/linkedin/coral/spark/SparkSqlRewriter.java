@@ -16,12 +16,9 @@ import org.apache.calcite.sql.SqlMapTypeSpec;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlRowTypeSpec;
 import org.apache.calcite.sql.SqlTypeNameSpec;
-import org.apache.calcite.sql.SqlUtil;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.sql.util.SqlShuttle;
-
-import com.linkedin.coral.spark.dialect.SparkSqlDialect;
 
 
 /**
@@ -47,21 +44,12 @@ public class SparkSqlRewriter extends SqlShuttle {
    *  SELECT named_struct(.....)
    *
    *  Check `CoralSparkTest#testAvoidCastToRow` for unit test and a more complex example.
-   *
-   *  Also replaces:
-   *
-   *  CAST(NULL AS NULL)
-   *    to
-   *  NULL
    */
   @Override
   public SqlNode visit(SqlCall call) {
     if (call.getOperator().getKind() == SqlKind.CAST
         && containsSqlRowTypeSpec((SqlDataTypeSpec) call.getOperandList().get(1))) {
       return call.getOperandList().get(0).accept(this);
-    } else if (call.getOperator().getKind() == SqlKind.CAST && SqlUtil.isNull(call.getOperandList().get(0)) && call
-        .getOperandList().get(1).toSqlString(SparkSqlDialect.INSTANCE).getSql().equals(SqlTypeName.NULL.getName())) {
-      return call.getOperandList().get(0);
     }
     return super.visit(call);
   }
