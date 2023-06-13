@@ -24,11 +24,11 @@ import org.apache.calcite.sql.validate.SqlValidator;
  * This is a utility class which helps derive the RelDataType of a given SqlNode.
  */
 public class TypeDerivationUtil {
-  private final SqlValidator _sqlValidator;
+  private final SqlValidator sqlValidator;
   private final List<SqlSelect> topSelectNodes = new ArrayList<>();
 
   public TypeDerivationUtil(SqlValidator sqlValidator, SqlNode topSqlNode) {
-    _sqlValidator = sqlValidator;
+    this.sqlValidator = sqlValidator;
     topSqlNode.accept(new SqlNodePreprocessorForTypeDerivation());
   }
 
@@ -55,7 +55,7 @@ public class TypeDerivationUtil {
    * @throws RuntimeException if the RelDataType cannot be derived for the given SqlNode.
    */
   public RelDataType getRelDataType(SqlNode sqlNode) {
-    if (_sqlValidator == null) {
+    if (sqlValidator == null) {
       throw new RuntimeException("SqlValidator does not exist to derive the RelDataType for SqlNode: " + sqlNode);
     }
 
@@ -66,8 +66,8 @@ public class TypeDerivationUtil {
           topSqlSelectNode.getOffset(), topSqlSelectNode.getFetch());
 
       try {
-        _sqlValidator.validate(dummySqlSelect);
-        return _sqlValidator.getValidatedNodeType(dummySqlSelect).getFieldList().get(0).getType();
+        sqlValidator.validate(dummySqlSelect);
+        return sqlValidator.getValidatedNodeType(dummySqlSelect).getFieldList().get(0).getType();
       } catch (Throwable ignored) {
       }
     }

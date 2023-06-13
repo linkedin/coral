@@ -23,14 +23,14 @@ import com.linkedin.coral.common.utils.TypeDerivationUtil;
  * Abstract class for generic transformations on SqlCalls
  */
 public abstract class SqlCallTransformer {
-  private TypeDerivationUtil _typeDerivationUtil;
+  private TypeDerivationUtil typeDerivationUtil;
 
   public SqlCallTransformer() {
 
   }
 
   public SqlCallTransformer(TypeDerivationUtil typeDerivationUtil) {
-    _typeDerivationUtil = typeDerivationUtil;
+    this.typeDerivationUtil = typeDerivationUtil;
   }
 
   /**
@@ -61,10 +61,10 @@ public abstract class SqlCallTransformer {
    * @return derived RelDataType
    */
   protected RelDataType deriveRelDatatype(SqlNode sqlNode) {
-    if (_typeDerivationUtil == null) {
+    if (typeDerivationUtil == null) {
       throw new RuntimeException("TypeDerivationUtil does not exist to derive the RelDataType for SqlNode: " + sqlNode);
     }
-    return _typeDerivationUtil.getRelDataType(sqlNode);
+    return typeDerivationUtil.getRelDataType(sqlNode);
   }
 
   /**
