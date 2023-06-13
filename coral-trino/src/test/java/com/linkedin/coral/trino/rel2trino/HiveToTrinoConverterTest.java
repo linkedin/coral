@@ -768,7 +768,7 @@ public class HiveToTrinoConverterTest {
 
   @Test
   public void testRlikeTransformation() {
-    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
 
     RelNode relNode = TestUtils.getHiveToRelConverter().convertSql("SELECT '1' NOT RLIKE '^1$'");
     String targetSql = "SELECT NOT \"REGEXP_LIKE\"('1', '^1$')\n" + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
@@ -778,7 +778,7 @@ public class HiveToTrinoConverterTest {
 
   @Test
   public void testRegexpTransformation() {
-    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
 
     RelNode relNode = TestUtils.getHiveToRelConverter().convertSql("SELECT '1' NOT REGEXP '^1$'");
     String targetSql = "SELECT NOT \"REGEXP_LIKE\"('1', '^1$')\n" + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
