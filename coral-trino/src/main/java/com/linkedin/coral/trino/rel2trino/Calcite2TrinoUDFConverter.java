@@ -176,18 +176,18 @@ public class Calcite2TrinoUDFConverter {
       final String operatorName = call.getOperator().getName();
 
       if (operatorName.equalsIgnoreCase("from_utc_timestamp")) {
-        Optional<RexNode> modifiedCall = visitFromUtcTimestampCall(call);
-        if (modifiedCall.isPresent()) {
-          return modifiedCall.get();
-        }
+        //        Optional<RexNode> modifiedCall = visitFromUtcTimestampCall(call);
+        //        if (modifiedCall.isPresent()) {
+        //          return modifiedCall.get();
+        //        }
       }
 
-      if (operatorName.equalsIgnoreCase("from_unixtime")) {
-        Optional<RexNode> modifiedCall = visitFromUnixtime(call);
-        if (modifiedCall.isPresent()) {
-          return modifiedCall.get();
-        }
-      }
+      //      if (operatorName.equalsIgnoreCase("from_unixtime")) {
+      //        Optional<RexNode> modifiedCall = visitFromUnixtime(call);
+      //        if (modifiedCall.isPresent()) {
+      //          return modifiedCall.get();
+      //        }
+      //      }
 
       if (operatorName.equalsIgnoreCase("cast")) {
         Optional<RexNode> modifiedCall = visitCast(call);
