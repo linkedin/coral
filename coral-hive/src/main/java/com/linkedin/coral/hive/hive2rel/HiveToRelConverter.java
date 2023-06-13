@@ -96,7 +96,7 @@ public class HiveToRelConverter extends ToRelConverter {
     if (hiveView != null) {
       sqlNode.accept(new FuzzyUnionSqlRewriter(hiveView.getTableName(), this));
     }
-    return sqlNode.accept(new HiveSqlNodeToCoralSqlNodeConverter(getSqlValidator()));
+    return sqlNode.accept(new HiveSqlNodeToCoralSqlNodeConverter(getSqlValidator(), sqlNode));
   }
 
   private static String trimParenthesis(String value) {
