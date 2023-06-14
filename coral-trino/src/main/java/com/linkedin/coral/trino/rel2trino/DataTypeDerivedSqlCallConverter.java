@@ -5,6 +5,7 @@
  */
 package com.linkedin.coral.trino.rel2trino;
 
+import com.linkedin.coral.trino.rel2trino.transformers.ConcatOperatorTransformer;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.util.SqlShuttle;
@@ -34,7 +35,7 @@ public class DataTypeDerivedSqlCallConverter extends SqlShuttle {
     SqlValidator sqlValidator = new HiveToRelConverter(mscClient).getSqlValidator();
     TypeDerivationUtil typeDerivationUtil = new TypeDerivationUtil(sqlValidator, topSqlNode);
     operatorTransformerList = SqlCallTransformers.of(new FromUtcTimestampOperatorTransformer(typeDerivationUtil),
-        new GenericProjectTransformer(typeDerivationUtil), new NamedStructToCastTransformer(typeDerivationUtil));
+        new GenericProjectTransformer(typeDerivationUtil), new NamedStructToCastTransformer(typeDerivationUtil), new ConcatOperatorTransformer(typeDerivationUtil));
   }
 
   @Override
