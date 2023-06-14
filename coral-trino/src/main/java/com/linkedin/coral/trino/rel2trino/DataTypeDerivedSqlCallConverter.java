@@ -18,18 +18,17 @@ import com.linkedin.coral.trino.rel2trino.transformers.FromUtcTimestampOperatorT
 
 
 /**
- * SqlNodeConverter transforms the sqlNodes
+ * DataTypeDerivedSqlCallConverter transforms the sqlCalls
  * in the input SqlNode representation to be compatible with Trino engine.
  * The transformation may involve change in operator, reordering the operands
- * or even re-constructing the SqlNode. All the transformations performed as part of this shuttle require data type derivation.
+ * or even re-constructing the SqlNode.
  *
- * NOTE: This is a temporary class which hosts certain transformations which were previously done in RelToTrinoConverter.
- * This class may be refactored once standardized CoralIR is integrated in the CoralRelNode to trino SQL translation path.
+ * All the transformations performed as part of this shuttle require RelDataType derivation.
  */
-public class SqlNodeConverter extends SqlShuttle {
+public class DataTypeDerivedSqlCallConverter extends SqlShuttle {
   private final SqlCallTransformers operatorTransformerList;
 
-  public SqlNodeConverter(HiveMetastoreClient mscClient, SqlNode topSqlNode) {
+  public DataTypeDerivedSqlCallConverter(HiveMetastoreClient mscClient, SqlNode topSqlNode) {
     SqlValidator sqlValidator = new HiveToRelConverter(mscClient).getSqlValidator();
     TypeDerivationUtil typeDerivationUtil = new TypeDerivationUtil(sqlValidator, topSqlNode);
     operatorTransformerList = SqlCallTransformers.of(new FromUtcTimestampOperatorTransformer(typeDerivationUtil));

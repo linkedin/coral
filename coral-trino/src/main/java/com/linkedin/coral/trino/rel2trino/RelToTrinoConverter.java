@@ -37,8 +37,6 @@ import com.linkedin.coral.common.functions.FunctionFieldReferenceOperator;
 import static com.google.common.base.Preconditions.*;
 import static com.linkedin.coral.trino.rel2trino.Calcite2TrinoUDFConverter.convertRel;
 import static com.linkedin.coral.trino.rel2trino.CoralTrinoConfigKeys.*;
-import static org.apache.calcite.sql.fun.SqlStdOperatorTable.*;
-import static org.apache.calcite.sql.parser.SqlParserPos.*;
 
 
 public class RelToTrinoConverter extends RelToSqlConverter {
@@ -89,7 +87,7 @@ public class RelToTrinoConverter extends RelToSqlConverter {
     RelNode rel = convertRel(relNode, configs);
     SqlNode sqlNode = convertToSqlNode(rel);
 
-    SqlNode transformedSqlNode = sqlNode.accept(new SqlNodeConverter(_hiveMetastoreClient, sqlNode));
+    SqlNode transformedSqlNode = sqlNode.accept(new DataTypeDerivedSqlCallConverter(_hiveMetastoreClient, sqlNode));
 
     SqlNode sqlNodeWithUDFOperatorConverted = transformedSqlNode.accept(new CoralToTrinoSqlCallConverter(configs));
     return sqlNodeWithUDFOperatorConverted.accept(new TrinoSqlRewriter()).toSqlString(TrinoSqlDialect.INSTANCE)
