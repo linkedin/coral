@@ -5,7 +5,6 @@
  */
 package com.linkedin.coral.trino.rel2trino;
 
-import com.linkedin.coral.trino.rel2trino.transformers.ConcatOperatorTransformer;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.util.SqlShuttle;
@@ -15,6 +14,7 @@ import com.linkedin.coral.common.HiveMetastoreClient;
 import com.linkedin.coral.common.transformers.SqlCallTransformers;
 import com.linkedin.coral.common.utils.TypeDerivationUtil;
 import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
+import com.linkedin.coral.trino.rel2trino.transformers.ConcatOperatorTransformer;
 import com.linkedin.coral.trino.rel2trino.transformers.FromUtcTimestampOperatorTransformer;
 import com.linkedin.coral.trino.rel2trino.transformers.GenericProjectTransformer;
 import com.linkedin.coral.trino.rel2trino.transformers.NamedStructToCastTransformer;
