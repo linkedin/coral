@@ -87,9 +87,11 @@ public class RelToTrinoConverter extends RelToSqlConverter {
     RelNode rel = convertRel(relNode, configs);
     SqlNode sqlNode = convertToSqlNode(rel);
 
-    SqlNode transformedSqlNode = sqlNode.accept(new DataTypeDerivedSqlCallConverter(_hiveMetastoreClient, sqlNode));
+    SqlNode sqlNodeWithRelDataTypeDerivedConversions =
+        sqlNode.accept(new DataTypeDerivedSqlCallConverter(_hiveMetastoreClient, sqlNode));
 
-    SqlNode sqlNodeWithUDFOperatorConverted = transformedSqlNode.accept(new CoralToTrinoSqlCallConverter(configs));
+    SqlNode sqlNodeWithUDFOperatorConverted =
+        sqlNodeWithRelDataTypeDerivedConversions.accept(new CoralToTrinoSqlCallConverter(configs));
     return sqlNodeWithUDFOperatorConverted.accept(new TrinoSqlRewriter()).toSqlString(TrinoSqlDialect.INSTANCE)
         .toString();
   }
