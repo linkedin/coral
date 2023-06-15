@@ -102,8 +102,7 @@ public class CoralToTrinoSqlCallConverter extends SqlShuttle {
                 + "{\"op\": \"date\", \"operands\":[{\"op\": \"timestamp\", \"operands\":[{\"input\": 1}]}]}]",
             null, null),
         new ToDateOperatorTransformer(configs.getOrDefault(AVOID_TRANSFORM_TO_DATE_UDF, false)),
-        new CurrentTimestampTransformer(),
-        new UnixTimestampOperatorTransformer(),
+        new CurrentTimestampTransformer(), new UnixTimestampOperatorTransformer(),
 
         // LinkedIn specific functions
         new CoralRegistryOperatorRenameSqlCallTransformer(
