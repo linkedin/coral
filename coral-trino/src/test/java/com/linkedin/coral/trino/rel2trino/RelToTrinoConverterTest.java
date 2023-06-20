@@ -266,9 +266,9 @@ public class RelToTrinoConverterTest {
   @Test
   public void testLateralViewUnnest() {
     String sql = "select icol, acol_elem from test.tableOne LATERAL VIEW explode(acol) t1 AS acol_elem";
-    String expectedSql = "SELECT \"$cor0\".\"icol\" AS \"icol\", \"t0\".\"acol_elem\" AS \"acol_elem\"\n"
-        + "FROM \"test\".\"tableone\" AS \"$cor0\"\n"
-        + "CROSS JOIN UNNEST(\"$cor0\".\"acol\") AS \"t0\" (\"acol_elem\")";
+    String expectedSql = "SELECT \"tableone\".\"icol\" AS \"icol\", \"t0\".\"acol_elem\" AS \"acol_elem\"\n"
+        + "FROM \"test\".\"tableone\" AS \"tableone\"\n"
+        + "CROSS JOIN UNNEST(\"tableone\".\"acol\") AS \"t0\" (\"acol_elem\")";
     testConversion(sql, expectedSql);
   }
 
