@@ -38,12 +38,10 @@ import static org.apache.calcite.rel.rel2sql.SqlImplementor.*;
  *  Given table:
  *      t1(id INTEGER, arr array&lt;struct&lt;sa: int, sb: string&gt;&gt; )
  *  and a Coral IR SqlCall:
- *      EXPLODE(arr)
+ *      UNNEST(arr)
  *
  *  The transformed SqlCall would be:
  *      UNNEST(TRANSFORM(arr, x -&gt; ROW(x)))
- *
- *
  */
 public class UnnestOperatorTransformer extends SqlCallTransformer {
   @Override

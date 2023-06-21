@@ -49,26 +49,17 @@ public class JoinSqlCallTransformer extends SqlCallTransformer {
   protected SqlCall transform(SqlCall sqlCall) {
     SqlJoin joinSqlCall = (SqlJoin) sqlCall;
 
-    /**
-     * check if there's an unnest SqlCall present in the nested SqlNodes:
-     * false -> substitute COMMA JOIN with CROSS JOIN
-     * true -> check if unnest operand is an inline independent array (not referring to columns in the SQL)
-     *                  true -> return
-     *                  false -> substitute COMMA JOIN with CROSS JOIN
-     */
     // Check if there's an unnest SqlCall present in the nested SqlNodes
-    // if not, substitute COMMA JOIN with CROSS JOIN
-    // if yes, check if the unnest SqlCall is uncorrelated.
-    //
-
     if (isUnnestOperatorPresentInRightSqlNode(joinSqlCall.getRight())) {
-      // Check if the unnest SqlCall is uncorrelated with the SqlJoin
+      // Check if the unnest SqlCall is uncorrelated with the SqlJoin SqlCall
       if (isUnnestSqlCallCorrelated(joinSqlCall.getRight())) {
+        // Substitute COMMA JOIN with CROSS JOIN
         return createCrossJoinSqlCall(joinSqlCall);
       } else {
         return joinSqlCall;
       }
     } else {
+      // Substitute COMMA JOIN with CROSS JOIN
       return createCrossJoinSqlCall(joinSqlCall);
     }
   }
@@ -85,10 +76,10 @@ public class JoinSqlCallTransformer extends SqlCallTransformer {
   }
 
   private static boolean isUnnestSqlCallCorrelated(SqlNode sqlNode) {
-    SqlNode aliasOperand = ((SqlCall) sqlNode).operand(0); //  unnest(x) AS y
-    SqlNode unnestOperand = ((SqlCall) aliasOperand).operand(0);
+    SqlNode aliasOperand = ((SqlCall) sqlNode).operand(0); //  unnest(x)
+    SqlNode unnestOperand = ((SqlCall) aliasOperand).operand(0); // x
 
-    // When the unnest operand is:
+    // When the unnest operand, 'x', is:
     // (1) SqlIdentifier referring to a column, ex: table1.col1
     // (2) SqlCall with "IF" operator for outer unnest
     // (3) SqlCall with "TRANSFORM" operator to support unnesting array of structs
