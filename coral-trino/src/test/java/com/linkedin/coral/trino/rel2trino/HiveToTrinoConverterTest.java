@@ -302,30 +302,6 @@ public class HiveToTrinoConverterTest {
     assertEquals(expandedSql, targetSql);
   }
 
-  @Test(enabled = false)
-  public void testLegacyUnnestArrayOfStruct() {
-    RelNode relNode = TestUtils.getHiveToRelConverter().convertView("test", "view_with_explode_struct_array");
-    String targetSql = "SELECT \"table_with_struct_array\".\"a\" AS \"a\", \"t0\".\"c\" AS \"c\"\n"
-        + "FROM \"test\".\"table_with_struct_array\" AS \"table_with_struct_array\"\n"
-        + "CROSS JOIN UNNEST(TRANSFORM(\"table_with_struct_array\".\"b\", x -> ROW(x))) AS \"t0\" (\"c\")";
-
-    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
-    String expandedSql = relToTrinoConverter.convert(relNode);
-    assertEquals(expandedSql, targetSql);
-  }
-
-  @Test(enabled = false)
-  public void testLegacyOuterUnnestArrayOfStruct() {
-    RelNode relNode = TestUtils.getHiveToRelConverter().convertView("test", "view_with_outer_explode_struct_array");
-    String targetSql = "SELECT \"table_with_struct_array\".\"a\" AS \"a\", \"t0\".\"c\" AS \"c\"\n"
-        + "FROM \"test\".\"table_with_struct_array\" AS \"table_with_struct_array\"\n"
-        + "CROSS JOIN UNNEST(TRANSFORM(\"if\"(\"table_with_struct_array\".\"b\" IS NOT NULL AND CARDINALITY(\"table_with_struct_array\".\"b\") > 0, \"table_with_struct_array\".\"b\", ARRAY[NULL]), x -> ROW(x))) AS \"t0\" (\"c\")";
-
-    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
-    String expandedSql = relToTrinoConverter.convert(relNode);
-    assertEquals(expandedSql, targetSql);
-  }
-
   @Test
   public void testAvoidTransformToDate() {
     RelNode relNode = TestUtils.getHiveToRelConverter()
