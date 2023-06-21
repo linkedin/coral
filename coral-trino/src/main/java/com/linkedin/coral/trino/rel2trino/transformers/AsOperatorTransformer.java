@@ -19,15 +19,18 @@ import com.linkedin.coral.common.transformers.SqlCallTransformer;
 import static org.apache.calcite.sql.parser.SqlParserPos.*;
 
 
+/**
+ * This class implements the transformation of SqlCalls with AS operator in format: LATERAL UNNEST(x) AS y (z)
+ * to their corresponding Trino-compatible versions.
+ *
+ * For example, "LATERAL UNNEST(x) AS y (z)" is transformed to "UNNEST(x) AS y (z)"
+ */
 public class AsOperatorTransformer extends SqlCallTransformer {
+
   @Override
   protected boolean condition(SqlCall sqlCall) {
-    if (sqlCall.getOperator().getKind() != SqlKind.AS || sqlCall.operandCount() <= 2
-        || !(sqlCall.operand(0) instanceof SqlBasicCall)
-        || !(sqlCall.operand(0) instanceof SqlBasicCall && sqlCall.operand(0).getKind() == SqlKind.LATERAL)) {
-      return false;
-    }
-    return true;
+    return sqlCall.getOperator().getKind() == SqlKind.AS && sqlCall.operandCount() > 2
+        && sqlCall.operand(0) instanceof SqlBasicCall && sqlCall.operand(0).getKind() == SqlKind.LATERAL;
   }
 
   @Override
@@ -36,7 +39,7 @@ public class AsOperatorTransformer extends SqlCallTransformer {
     List<SqlNode> newAliasOperands = new ArrayList<>();
     SqlCall lateralSqlCall = sqlCall.operand(0);
 
-    // Drop the LATERAL operator when a lateralSqlCall's child operator is UNNEST
+    // Drop the LATERAL operator when a lateralSqlCall's operand's operator is UNNEST
     SqlCall newAliasFirstOperand =
         lateralSqlCall.operand(0).getKind() == SqlKind.UNNEST ? lateralSqlCall.operand(0) : lateralSqlCall;
 

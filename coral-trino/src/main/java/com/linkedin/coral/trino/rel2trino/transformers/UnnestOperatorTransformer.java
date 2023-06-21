@@ -27,13 +27,30 @@ import com.linkedin.coral.trino.rel2trino.functions.TrinoArrayTransformFunction;
 import static org.apache.calcite.rel.rel2sql.SqlImplementor.*;
 
 
+/**
+ * This class implements the transformation of SqlCalls with UNNEST operator to their
+ * corresponding Trino-compatible versions.
+ *
+ * When expanding an array of type struct, Coral IR returns a row set of a single column. This transformer
+ * wraps the unnest operand with an additional ROW to enable the equivalent operation in Trino.
+ *
+ * For example:
+ *  Given table:
+ *      t1(id INTEGER, arr array&lt;struct&lt;sa: int, sb: string&gt;&gt; )
+ *  and a Coral IR SqlCall:
+ *      EXPLODE(arr)
+ *
+ *  The transformed SqlCall would be:
+ *      UNNEST(TRANSFORM(arr, x -&gt; ROW(x)))
+ *
+ *
+ */
 public class UnnestOperatorTransformer extends SqlCallTransformer {
   @Override
   protected boolean condition(SqlCall sqlCall) {
     return sqlCall.getOperator() instanceof CoralSqlUnnestOperator;
   }
 
-  // Update unnest operand for trino engine to expand the unnest operand to a single column
   @Override
   protected SqlCall transform(SqlCall sqlCall) {
     CoralSqlUnnestOperator operator = (CoralSqlUnnestOperator) sqlCall.getOperator();
@@ -54,11 +71,15 @@ public class UnnestOperatorTransformer extends SqlCallTransformer {
       SqlCharStringLiteral transformArgsLiteral =
           SqlLiteral.createCharString(String.format("%s, x -> ROW(x)", fieldName), POS);
 
+      // The crucial part in above transformation is call to TRANSFORM with lambda which adds extra layer of
+      // ROW wrapping.
       // Generate expected recordType required for transformation
       RelDataType recordType = operator.getRelDataType();
       RelRecordType transformDataType =
           new RelRecordType(ImmutableList.of(new RelDataTypeFieldImpl("wrapper_field", 0, recordType)));
 
+      // wrap unnested field to recordType by calling TRANSFORM with lambda which adds an extra layer of ROW wrapping
+      // and generates: transform(field, x -> ROW(x))
       unnestOperand = new TrinoArrayTransformFunction(transformDataType).createCall(POS, transformArgsLiteral);
     }
 

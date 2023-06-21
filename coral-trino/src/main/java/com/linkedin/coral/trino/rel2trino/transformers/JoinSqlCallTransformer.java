@@ -19,16 +19,32 @@ import com.linkedin.coral.common.transformers.SqlCallTransformer;
 import static org.apache.calcite.rel.rel2sql.SqlImplementor.*;
 
 
+/**
+ * This class implements the transformation of SqlCalls with JOIN operator with COMMA JoinType to
+ * their corresponding Trino-compatible versions.
+ *
+ * For example, an input SqlJoin SqlCall:
+ *
+ *          SqlJoin[`default`.`complex` , UNNEST(`complex`.`c`) AS `t_alias` (`col_alias`)]
+ *                                         |
+ *                _________________________|_____________________________
+ *               |                         |                            |
+ *  left: `default`.`complex`         joinType: ,       right: UNNEST(`complex`.`c`) AS `t_alias` (`col_alias`)
+ *
+ * Is transformed to:
+ *
+ *          SqlJoin[`default`.`complex` CROSS JOIN UNNEST(`complex`.`c`) AS `t_alias` (`col_alias`)]
+ *                                         |
+ *                _________________________|_____________________________
+ *               |                         |                            |
+ *  left: `default`.`complex`         joinType: CROSS JOIN       right: UNNEST(`complex`.`c`) AS `t_alias` (`col_alias`)
+ */
 public class JoinSqlCallTransformer extends SqlCallTransformer {
   @Override
   protected boolean condition(SqlCall sqlCall) {
-    if (sqlCall.getOperator().kind == SqlKind.JOIN && ((SqlJoin) sqlCall).getJoinType() == JoinType.COMMA) {
-      return true;
-    }
-    return false;
+    return sqlCall.getOperator().kind == SqlKind.JOIN && ((SqlJoin) sqlCall).getJoinType() == JoinType.COMMA;
   }
 
-  // Update unnest operand for trino engine to expand the unnest operand to a single column
   @Override
   protected SqlCall transform(SqlCall sqlCall) {
     SqlJoin joinSqlCall = (SqlJoin) sqlCall;
@@ -40,8 +56,14 @@ public class JoinSqlCallTransformer extends SqlCallTransformer {
      *                  true -> return
      *                  false -> substitute COMMA JOIN with CROSS JOIN
      */
-    if (isUnnestOperatorPresentInChildNodeNew(joinSqlCall.getRight())) {
-      if (shouldSwapForCrossJoinNew(joinSqlCall.getRight())) {
+    // Check if there's an unnest SqlCall present in the nested SqlNodes
+    // if not, substitute COMMA JOIN with CROSS JOIN
+    // if yes, check if the unnest SqlCall is uncorrelated.
+    //
+
+    if (isUnnestOperatorPresentInRightSqlNode(joinSqlCall.getRight())) {
+      // Check if the unnest SqlCall is uncorrelated with the SqlJoin
+      if (isUnnestSqlCallCorrelated(joinSqlCall.getRight())) {
         return createCrossJoinSqlCall(joinSqlCall);
       } else {
         return joinSqlCall;
@@ -51,71 +73,40 @@ public class JoinSqlCallTransformer extends SqlCallTransformer {
     }
   }
 
-  private static boolean isUnnestOperatorPresentInChildNodeNew(SqlNode sqlNode) {
-    if (sqlNode instanceof SqlCall && sqlNode.getKind() == SqlKind.AS
-        && ((SqlCall) sqlNode).operand(0) instanceof SqlCall
-        && ((SqlCall) sqlNode).operand(0).getKind() == SqlKind.UNNEST) {
-      return true;
-    }
-    return false;
+  /**
+   * Check if the input sqlNode has a nested SqlCall with UNNEST operator
+   * @param rightSqlNode right child of a SqlJoin SqlCall
+   * @return boolean result
+   */
+  private static boolean isUnnestOperatorPresentInRightSqlNode(SqlNode rightSqlNode) {
+    return rightSqlNode instanceof SqlCall && rightSqlNode.getKind() == SqlKind.AS
+        && ((SqlCall) rightSqlNode).operand(0) instanceof SqlCall
+        && ((SqlCall) rightSqlNode).operand(0).getKind() == SqlKind.UNNEST;
   }
 
-  private static boolean isUnnestOperatorPresentInChildNode(SqlNode sqlNode) {
-    if (sqlNode instanceof SqlCall && sqlNode.getKind() == SqlKind.AS
-        && ((SqlCall) sqlNode).operand(0) instanceof SqlCall
-        && ((SqlCall) sqlNode).operand(0).getKind() == SqlKind.LATERAL
-        && ((SqlCall) ((SqlCall) sqlNode).operand(0)).operand(0) instanceof SqlCall
-        && ((SqlCall) ((SqlCall) sqlNode).operand(0)).operand(0).getKind() == SqlKind.UNNEST) {
-      return true;
-    }
-    return false;
-  }
-
-  private static boolean shouldSwapForCrossJoinNew(SqlNode sqlNode) {
-    SqlNode aliasOperand = ((SqlCall) sqlNode).operand(0); //  unnest(x)
-    SqlNode lateralOperand = ((SqlCall) aliasOperand).operand(0); //  unnest(x)
+  private static boolean isUnnestSqlCallCorrelated(SqlNode sqlNode) {
+    SqlNode aliasOperand = ((SqlCall) sqlNode).operand(0); //  unnest(x) AS y
     SqlNode unnestOperand = ((SqlCall) aliasOperand).operand(0);
 
-    // Field to unnest can be:
-    // (1) a SqlIdentifier referring to a column, ex: table1.col1
-    // (2) a SqlCall with "if" operator for outer unnest
-    // (3) a SqlSelect SqlCall
-    // For the above scenarios, return true
+    // When the unnest operand is:
+    // (1) SqlIdentifier referring to a column, ex: table1.col1
+    // (2) SqlCall with "IF" operator for outer unnest
+    // (3) SqlCall with "TRANSFORM" operator to support unnesting array of structs
+    // Substitute JoinType with CROSS JoinType.
     if (unnestOperand.getKind() == SqlKind.IDENTIFIER
         || (unnestOperand instanceof SqlCall
             && ((SqlCall) unnestOperand).getOperator().getName().equalsIgnoreCase("transform"))
         || (unnestOperand instanceof SqlCall
             && ((SqlCall) unnestOperand).getOperator().getName().equalsIgnoreCase("if"))) {
-      // should go to cross join
       return true;
     }
-    // If the unnest operand is an inline defined array, return false
+    // If the unnest SqlCall is uncorrelated with the SqlJoin, for example,
+    // when the unnest operand is an inline defined array, do not substitute JoinType
     return false;
   }
 
-  private static boolean shouldSwapForCrossJoin(SqlNode sqlNode) {
-    SqlNode aliasOperand = ((SqlCall) sqlNode).operand(0); // LATERAL unnest(x)
-    SqlNode lateralOperand = ((SqlCall) aliasOperand).operand(0); //  unnest(x)
-    SqlNode unnestOperand = ((SqlCall) lateralOperand).operand(0);
-
-    // Field to unnest can be:
-    // (1) a SqlIdentifier referring to a column, ex: table1.col1
-    // (2) a SqlCall with "if" operator for outer unnest
-    // (3) a SqlSelect SqlCall
-    // For the above scenarios, return true
-    if (unnestOperand.getKind() == SqlKind.IDENTIFIER
-        || (unnestOperand instanceof SqlCall
-            && ((SqlCall) unnestOperand).getOperator().getName().equalsIgnoreCase("if"))
-        || (lateralOperand.getKind() == SqlKind.SELECT)) { // should go to cross join
-      return true;
-    }
-    // If the unnest operand is an inline defined array, return false
-    return false;
-  }
-
-  private static SqlCall createCrossJoinSqlCall(SqlCall sqlCall) {
-    return new SqlJoin(POS, ((SqlJoin) sqlCall).getLeft(), SqlLiteral.createBoolean(false, SqlParserPos.ZERO),
-        JoinType.CROSS.symbol(POS), ((SqlJoin) sqlCall).getRight(), JoinConditionType.NONE.symbol(SqlParserPos.ZERO),
-        null);
+  private static SqlCall createCrossJoinSqlCall(SqlJoin sqlCall) {
+    return new SqlJoin(POS, (sqlCall).getLeft(), SqlLiteral.createBoolean(false, SqlParserPos.ZERO),
+        JoinType.CROSS.symbol(POS), (sqlCall).getRight(), JoinConditionType.NONE.symbol(SqlParserPos.ZERO), null);
   }
 }
