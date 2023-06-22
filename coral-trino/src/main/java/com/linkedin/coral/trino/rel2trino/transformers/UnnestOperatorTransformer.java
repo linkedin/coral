@@ -56,7 +56,7 @@ public class UnnestOperatorTransformer extends SqlCallTransformer {
 
     // Transform UNNEST(fieldName) to UNNEST(TRANSFORM(fieldName, x -> ROW(x)))
     if (operator.getRelDataType() != null) {
-      String fieldName = "empty";
+      String fieldName = unnestOperand.toSqlString(TrinoSqlDialect.INSTANCE).getSql();
 
       if (unnestOperand instanceof SqlIdentifier) {
         SqlIdentifier operand = (SqlIdentifier) unnestOperand;
