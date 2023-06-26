@@ -81,10 +81,11 @@ public class TypeDerivationUtil {
           SqlNodeList.of(sqlNode), topSelectNodes.get(0), null, null, null, null, null, null, null);
       sqlValidator.validate(dummySqlSelect);
       return sqlValidator.getValidatedNodeType(sqlNode);
-    } catch (Exception ignored) {
+    } catch (Throwable ignored) {
     }
 
-    throw new RuntimeException("Failed to derive the RelDataType for SqlNode " + sqlNode);
+    throw new RuntimeException(String.format("Failed to derive the RelDataType for SqlNode: %s with topSqlNode: %s",
+        sqlNode, topSelectNodes.get(0)));
   }
 
   private class SqlNodePreprocessorForTypeDerivation extends SqlShuttle {
