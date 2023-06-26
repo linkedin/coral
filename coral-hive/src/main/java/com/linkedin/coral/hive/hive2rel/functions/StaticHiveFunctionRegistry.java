@@ -297,6 +297,7 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
     createAddUserDefinedFunction("sha", FunctionReturnTypes.STRING,
         or(family(SqlTypeFamily.STRING), family(SqlTypeFamily.BINARY)));
     createAddUserDefinedFunction("crc32", BIGINT, or(family(SqlTypeFamily.STRING), family(SqlTypeFamily.BINARY)));
+    createAddUserDefinedFunction("from_utf8", explicit(SqlTypeName.VARCHAR), or(CHARACTER, BINARY));
 
     // xpath functions
     createAddUserDefinedFunction("xpath", FunctionReturnTypes.arrayOfType(SqlTypeName.VARCHAR), STRING_STRING);
