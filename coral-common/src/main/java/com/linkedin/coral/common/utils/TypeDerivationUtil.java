@@ -72,7 +72,20 @@ public class TypeDerivationUtil {
       }
     }
 
-    throw new RuntimeException("Failed to derive the RelDataType for SqlNode " + sqlNode);
+    // Additional attempt to derive RelDataType of the input sqlNode by validating the topSelectNode.
+    // This is particularly useful when the input is defined as an alias in topSelectNode's selectList.
+    // For example, when the topSelectNode is: `SELECT a AS tmp FROM foo WHERE tmp > 5`.
+    // Previous attempts would try validating dummySqlNode: `SELECT tmp FROM foo WHERE tmp > 5`, which would fail RelDataType derivation.
+    try {
+      final SqlSelect dummySqlSelect = new SqlSelect(topSelectNodes.get(0).getParserPosition(), null,
+          SqlNodeList.of(sqlNode), topSelectNodes.get(0), null, null, null, null, null, null, null);
+      sqlValidator.validate(dummySqlSelect);
+      return sqlValidator.getValidatedNodeType(sqlNode);
+    } catch (Throwable ignored) {
+    }
+
+    throw new RuntimeException(String.format("Failed to derive the RelDataType for SqlNode: %s with topSqlNode: %s",
+        sqlNode, topSelectNodes.get(0)));
   }
 
   private class SqlNodePreprocessorForTypeDerivation extends SqlShuttle {
