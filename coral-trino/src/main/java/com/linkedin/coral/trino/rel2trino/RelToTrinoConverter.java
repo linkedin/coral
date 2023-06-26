@@ -28,6 +28,7 @@ import org.apache.calcite.sql.*;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.SqlTypeName;
+import org.apache.calcite.sql.validate.SqlValidator;
 
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import com.linkedin.coral.common.HiveMetastoreClient;
@@ -88,7 +89,20 @@ public class RelToTrinoConverter extends RelToSqlConverter {
   public String convert(RelNode relNode) {
     RelNode rel = convertRel(relNode, configs);
     SqlNode sqlNode = convertToSqlNode(rel);
-    SqlNode sqlNodeWithUDFOperatorConverted = sqlNode.accept(new CoralToTrinoSqlCallConverter(configs));
+    SqlNode sqlNodeWithUDFOperatorConverted = sqlNode.accept(new CoralToTrinoSqlCallConverter(configs, null));
+    return sqlNodeWithUDFOperatorConverted.accept(new TrinoSqlRewriter()).toSqlString(TrinoSqlDialect.INSTANCE)
+        .toString();
+  }
+
+  /**
+   * Convert relational algebra to Trino's SQL
+   * @param relNode calcite relational algebra representation of SQL
+   * @return SQL string
+   */
+  public String convert(RelNode relNode, SqlValidator sqlValidator) {
+    RelNode rel = convertRel(relNode, configs);
+    SqlNode sqlNode = convertToSqlNode(rel);
+    SqlNode sqlNodeWithUDFOperatorConverted = sqlNode.accept(new CoralToTrinoSqlCallConverter(configs, sqlValidator));
     return sqlNodeWithUDFOperatorConverted.accept(new TrinoSqlRewriter()).toSqlString(TrinoSqlDialect.INSTANCE)
         .toString();
   }

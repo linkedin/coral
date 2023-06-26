@@ -322,7 +322,7 @@ public class HiveToTrinoConverterTest {
         "SELECT \"if\"(FALSE, NULL, CAST(ROW('') AS ROW(\"a\" CHAR(0))))\n" + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
 
     RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
-    String expandedSql = relToTrinoConverter.convert(relNode);
+    String expandedSql = relToTrinoConverter.convert(relNode, TestUtils.getHiveToRelConverter().getSqlValidator());
     assertEquals(expandedSql, targetSql);
   }
 
@@ -333,7 +333,7 @@ public class HiveToTrinoConverterTest {
         "SELECT \"if\"(FALSE, CAST(ROW('') AS ROW(\"a\" CHAR(0))), NULL)\n" + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
 
     RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
-    String expandedSql = relToTrinoConverter.convert(relNode);
+    String expandedSql = relToTrinoConverter.convert(relNode, TestUtils.getHiveToRelConverter().getSqlValidator());
     assertEquals(expandedSql, targetSql);
   }
 

@@ -5,6 +5,9 @@
  */
 package com.linkedin.coral.trino.rel2trino.transformers;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.apache.calcite.sql.SqlBasicTypeNameSpec;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlDataTypeSpec;
@@ -23,14 +26,21 @@ import com.linkedin.coral.common.transformers.SqlCallTransformer;
 public class CurrentTimestampTransformer extends SqlCallTransformer {
 
   private static final String CURRENT_TIMESTAMP_FUNCTION_NAME = "CURRENT_TIMESTAMP";
+  private final Set<SqlCall> visited;
+
+  public CurrentTimestampTransformer() {
+    visited = new HashSet<>();
+  }
 
   @Override
   protected boolean condition(SqlCall sqlCall) {
-    return sqlCall.getOperator().getName().equalsIgnoreCase(CURRENT_TIMESTAMP_FUNCTION_NAME);
+    return sqlCall.getOperator().getName().equalsIgnoreCase(CURRENT_TIMESTAMP_FUNCTION_NAME)
+        && !visited.contains(sqlCall);
   }
 
   @Override
   protected SqlCall transform(SqlCall sqlCall) {
+    visited.add(sqlCall);
     SqlDataTypeSpec timestampType =
         new SqlDataTypeSpec(new SqlBasicTypeNameSpec(SqlTypeName.TIMESTAMP, 3, SqlParserPos.ZERO), SqlParserPos.ZERO);
     return SqlStdOperatorTable.CAST.createCall(SqlParserPos.ZERO, sqlCall, timestampType);
