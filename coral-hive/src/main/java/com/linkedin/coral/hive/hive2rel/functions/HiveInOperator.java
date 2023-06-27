@@ -1,5 +1,5 @@
 /**
- * Copyright 2018-2021 LinkedIn Corporation. All rights reserved.
+ * Copyright 2018-2023 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -34,6 +34,7 @@ import org.apache.calcite.sql.validate.SqlValidator;
 import org.apache.calcite.sql.validate.SqlValidatorImpl;
 import org.apache.calcite.sql.validate.SqlValidatorScope;
 
+import static org.apache.calcite.sql.parser.SqlParserPos.ZERO;
 import static org.apache.calcite.util.Static.*;
 
 
@@ -47,6 +48,8 @@ import static org.apache.calcite.util.Static.*;
  *     different from set of OR predicates
  *  2. In some cases, calcite turns IN clause to INNER JOIN query on a set of values. We
  *     again want to prevent this conversion.
+ *  Unlike Calcite's IN operator, whose operands are (expr, values), this operator's operands
+ *  are (expr, values[0], values[1], ...), where (exp) is the expression preceding IN operator.
  */
 public class HiveInOperator extends SqlSpecialOperator {
 
@@ -73,46 +76,42 @@ public class HiveInOperator extends SqlSpecialOperator {
     writer.endList(listFrame);
   }
 
-  // copied from Calcite' SqlInOperator
+  // Adapts the parent's behavior to allow IN to have any number of arguments (i.e., list elements).
   public RelDataType deriveType(SqlValidator validator, SqlValidatorScope scope, SqlCall call) {
     final List<SqlNode> operands = call.getOperandList();
-    assert operands.size() == 2;
     final SqlNode left = operands.get(0);
-    final SqlNode right = operands.get(1);
+    final SqlNodeList right = new SqlNodeList(ZERO);
+    for (int i = 1; i < operands.size(); i++) {
+      right.add(operands.get(i));
+    }
 
     final RelDataTypeFactory typeFactory = validator.getTypeFactory();
     RelDataType leftType = validator.deriveType(scope, left);
     RelDataType rightType;
 
     // Derive type for RHS.
-    if (right instanceof SqlNodeList) {
-      // Handle the 'IN (expr, ...)' form.
-      List<RelDataType> rightTypeList = new ArrayList<>();
-      SqlNodeList nodeList = (SqlNodeList) right;
-      for (int i = 0; i < nodeList.size(); i++) {
-        SqlNode node = nodeList.get(i);
-        RelDataType nodeType = validator.deriveType(scope, node);
-        rightTypeList.add(nodeType);
-      }
-      rightType = typeFactory.leastRestrictive(rightTypeList);
-
-      // First check that the expressions in the IN list are compatible
-      // with each other. Same rules as the VALUES operator (per
-      // SQL:2003 Part 2 Section 8.4, <in predicate>).
-      if (null == rightType && validator.isTypeCoercionEnabled()) {
-        // Do implicit type cast if it is allowed to.
-        rightType = validator.getTypeCoercion().getWiderTypeFor(rightTypeList, true);
-      }
-      if (null == rightType) {
-        throw validator.newValidationError(right, RESOURCE.incompatibleTypesInList());
-      }
-
-      // Record the RHS type for use by SqlToRelConverter.
-      ((SqlValidatorImpl) validator).setValidatedNodeType(nodeList, rightType);
-    } else {
-      // Handle the 'IN (query)' form.
-      rightType = validator.deriveType(scope, right);
+    List<RelDataType> rightTypeList = new ArrayList<>();
+    for (int i = 0; i < right.size(); i++) {
+      SqlNode node = right.get(i);
+      RelDataType nodeType = validator.deriveType(scope, node);
+      rightTypeList.add(nodeType);
     }
+    rightType = typeFactory.leastRestrictive(rightTypeList);
+
+    // First check that the expressions in the IN list are compatible
+    // with each other. Same rules as the VALUES operator (per
+    // SQL:2003 Part 2 Section 8.4, <in predicate>).
+    if (null == rightType && validator.isTypeCoercionEnabled()) {
+      // Do implicit type cast if it is allowed to.
+      rightType = validator.getTypeCoercion().getWiderTypeFor(rightTypeList, true);
+    }
+    if (null == rightType) {
+      throw validator.newValidationError(right, RESOURCE.incompatibleTypesInList());
+    }
+
+    // Record the RHS type for use by SqlToRelConverter.
+    ((SqlValidatorImpl) validator).setValidatedNodeType(right, rightType);
+
     SqlCallBinding callBinding = new SqlCallBinding(validator, scope, call);
     // Coerce type first.
     if (callBinding.getValidator().isTypeCoercionEnabled()) {

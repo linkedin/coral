@@ -690,6 +690,13 @@ public class CoralSparkTest {
   }
 
   @Test
+  public void testInOperator() {
+    RelNode relNode = TestUtils.toRelNode("SELECT a from foo where b in ('v1', 'v2')");
+    String targetSql = "SELECT foo.a\n" + "FROM default.foo foo\n" + "WHERE foo.b IN ('v1', 'v2')";
+    assertEquals(CoralSpark.create(relNode).getSparkSql(), targetSql);
+  }
+
+  @Test
   public void testCastDecimal() {
     RelNode relNode = TestUtils.toRelNode("SELECT CAST(a as DECIMAL(6, 2)) as casted_decimal FROM default.foo");
     String targetSql = "SELECT CAST(foo.a AS DECIMAL(6, 2)) casted_decimal\n" + "FROM default.foo foo";
