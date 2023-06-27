@@ -25,11 +25,13 @@ import static org.apache.calcite.sql.parser.SqlParserPos.ZERO;
 
 
 /**
- * Converts Coral's named_struct function to CAST AS ROW(types) function.
+ * This transformer converts Coral IR function `named_struct` to a Trino compatible representation.
+ * For example, the SqlCall: `named_struct('abc', 123, 'def', 'xyz')` will be transformed to
+ * `CAST(ROW(123, 'xyz') AS ROW(`abc` INTEGER, `def` CHAR(3) CHARACTER SET `ISO-8859-1`))`
  */
-public class NamedStructOperandTransformer extends SqlCallTransformer {
+public class NamedStructToCastTransformer extends SqlCallTransformer {
 
-  public NamedStructOperandTransformer(TypeDerivationUtil typeDerivationUtil) {
+  public NamedStructToCastTransformer(TypeDerivationUtil typeDerivationUtil) {
     super(typeDerivationUtil);
   }
 

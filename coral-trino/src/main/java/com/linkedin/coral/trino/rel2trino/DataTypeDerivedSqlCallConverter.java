@@ -16,7 +16,7 @@ import com.linkedin.coral.common.utils.TypeDerivationUtil;
 import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
 import com.linkedin.coral.trino.rel2trino.transformers.FromUtcTimestampOperatorTransformer;
 import com.linkedin.coral.trino.rel2trino.transformers.GenericProjectTransformer;
-import com.linkedin.coral.trino.rel2trino.transformers.NamedStructOperandTransformer;
+import com.linkedin.coral.trino.rel2trino.transformers.NamedStructToCastTransformer;
 
 
 /**
@@ -35,7 +35,7 @@ public class DataTypeDerivedSqlCallConverter extends SqlShuttle {
     TypeDerivationUtil typeDerivationUtil = new TypeDerivationUtil(sqlValidator, topSqlNode);
     operatorTransformerList = SqlCallTransformers.of(new FromUtcTimestampOperatorTransformer(typeDerivationUtil),
         new GenericProjectTransformer(typeDerivationUtil),
-        new NamedStructOperandTransformer(typeDerivationUtil));
+        new NamedStructToCastTransformer(typeDerivationUtil));
   }
 
   @Override
