@@ -18,7 +18,8 @@ public class IncrementalUtils {
 
   public static String getSparkIncrementalQueryFromUserSql(String query) {
     RelNode originalNode = new HiveToRelConverter(hiveMetastoreClient).convertSql(query);
-    RelNode incrementalRelNode = RelNodeIncrementalTransformer.convertRelIncremental(originalNode);
+    RelNodeIncrementalTransformer transformer = new RelNodeIncrementalTransformer();
+    RelNode incrementalRelNode = transformer.convertRelIncremental(originalNode);
     CoralSpark coralSpark = CoralSpark.create(incrementalRelNode);
     return coralSpark.getSparkSql();
   }
