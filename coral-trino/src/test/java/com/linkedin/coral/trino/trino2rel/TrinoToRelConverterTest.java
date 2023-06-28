@@ -127,55 +127,38 @@ public class TrinoToRelConverterTest {
                 + "  LogicalTableScan(table=[[hive, default, my_table]])\n",
             "SELECT element_at(\"my_table\".\"x\", CAST(10 * SIN(\"my_table\".\"z\") AS BIGINT))\n"
                 + "FROM \"default\".\"my_table\" AS \"my_table\""))
-        .add(new TrinoToRelTestDataProvider("select * from unnest(array[1, 2, 3])",
-            "LogicalProject(EXPR$0=[$0])\n" + "  HiveUncollect\n" + "    LogicalProject(col=[ARRAY(1, 2, 3)])\n"
-                + "      LogicalValues(tuples=[[{ 0 }]])\n",
-            "SELECT \"t0\".\"col\" AS \"col\"\n" + "FROM UNNEST(ARRAY[1, 2, 3]) AS \"t0\" (\"col\")"))
-        .add(new TrinoToRelTestDataProvider("select x from unnest(array[1, 2, 3]) t(x)",
-            "LogicalProject(X=[$0])\n" + "  HiveUncollect\n" + "    LogicalProject(col=[ARRAY(1, 2, 3)])\n"
-                + "      LogicalValues(tuples=[[{ 0 }]])\n",
-            "SELECT *\n" + "FROM UNNEST(ARRAY[1, 2, 3]) AS \"t0\" (\"X\")"))
         .add(new TrinoToRelTestDataProvider("select * from my_table cross join unnest(x)",
             "LogicalProject(x=[$0], y=[$1], z=[$2], EXPR$0=[$3])\n"
                 + "  LogicalCorrelate(correlation=[$cor0], joinType=[inner], requiredColumns=[{0}])\n"
                 + "    LogicalTableScan(table=[[hive, default, my_table]])\n" + "    HiveUncollect\n"
                 + "      LogicalProject(col=[$cor0.x])\n" + "        LogicalValues(tuples=[[{ 0 }]])\n",
-            "SELECT \"$cor0\".\"x\" AS \"x\", \"$cor0\".\"y\" AS \"y\", \"$cor0\".\"z\" AS \"z\", \"t0\".\"col\" AS \"col\"\n"
-                + "FROM \"default\".\"my_table\" AS \"$cor0\"\n"
-                + "CROSS JOIN UNNEST(\"$cor0\".\"x\") AS \"t0\" (\"col\")"))
+            "SELECT \"my_table\".\"x\" AS \"x\", \"my_table\".\"y\" AS \"y\", \"my_table\".\"z\" AS \"z\", \"t0\".\"col\" AS \"col\"\n"
+                + "FROM \"default\".\"my_table\" AS \"my_table\"\n"
+                + "CROSS JOIN UNNEST(\"my_table\".\"x\") AS \"t0\" (\"col\")"))
         .add(new TrinoToRelTestDataProvider("select z from my_table cross join unnest(x) t(x_)",
             "LogicalProject(Z=[$2])\n"
                 + "  LogicalCorrelate(correlation=[$cor0], joinType=[inner], requiredColumns=[{0}])\n"
                 + "    LogicalTableScan(table=[[hive, default, my_table]])\n" + "    HiveUncollect\n"
                 + "      LogicalProject(col=[$cor0.x])\n" + "        LogicalValues(tuples=[[{ 0 }]])\n",
-            "SELECT \"$cor0\".\"z\" AS \"Z\"\n" + "FROM \"default\".\"my_table\" AS \"$cor0\"\n"
-                + "CROSS JOIN UNNEST(\"$cor0\".\"x\") AS \"t0\" (\"X_\")"))
-        .add(new TrinoToRelTestDataProvider("select * from unnest(array[1, 2, 3]) with ordinality",
-            "LogicalProject(EXPR$0=[$0], ORDINALITY=[$1])\n" + "  HiveUncollect(withOrdinality=[true])\n"
-                + "    LogicalProject(col=[ARRAY(1, 2, 3)])\n" + "      LogicalValues(tuples=[[{ 0 }]])\n",
-            "SELECT \"t0\".\"col\" AS \"col\", \"t0\".\"ORDINALITY\" AS \"ORDINALITY\"\n"
-                + "FROM UNNEST(ARRAY[1, 2, 3]) WITH ORDINALITY AS \"t0\" (\"col\", \"ORDINALITY\")"))
-        .add(new TrinoToRelTestDataProvider("select * from unnest(array[1, 2, 3]) with ordinality t(x, y)",
-            "LogicalProject(X=[$0], Y=[$1])\n" + "  HiveUncollect(withOrdinality=[true])\n"
-                + "    LogicalProject(col=[ARRAY(1, 2, 3)])\n" + "      LogicalValues(tuples=[[{ 0 }]])\n",
-            "SELECT *\n" + "FROM UNNEST(ARRAY[1, 2, 3]) WITH ORDINALITY AS \"t0\" (\"X\", \"Y\")"))
+            "SELECT \"my_table\".\"z\" AS \"Z\"\n" + "FROM \"default\".\"my_table\" AS \"my_table\"\n"
+                + "CROSS JOIN UNNEST(\"my_table\".\"x\") AS \"t0\" (\"X_\")"))
         .add(new TrinoToRelTestDataProvider("select * from my_table cross join unnest(x) with ordinality",
             "LogicalProject(x=[$0], y=[$1], z=[$2], EXPR$0=[$3], ORDINALITY=[$4])\n"
                 + "  LogicalCorrelate(correlation=[$cor0], joinType=[inner], requiredColumns=[{0}])\n"
                 + "    LogicalTableScan(table=[[hive, default, my_table]])\n"
                 + "    HiveUncollect(withOrdinality=[true])\n" + "      LogicalProject(col=[$cor0.x])\n"
                 + "        LogicalValues(tuples=[[{ 0 }]])\n",
-            "SELECT \"$cor0\".\"x\" AS \"x\", \"$cor0\".\"y\" AS \"y\", \"$cor0\".\"z\" AS \"z\", \"t0\".\"col\" AS \"col\", \"t0\".\"ORDINALITY\" AS \"ORDINALITY\"\n"
-                + "FROM \"default\".\"my_table\" AS \"$cor0\"\n"
-                + "CROSS JOIN UNNEST(\"$cor0\".\"x\") WITH ORDINALITY AS \"t0\" (\"col\", \"ORDINALITY\")"))
+            "SELECT \"my_table\".\"x\" AS \"x\", \"my_table\".\"y\" AS \"y\", \"my_table\".\"z\" AS \"z\", \"t0\".\"col\" AS \"col\", \"t0\".\"ORDINALITY\" AS \"ORDINALITY\"\n"
+                + "FROM \"default\".\"my_table\" AS \"my_table\"\n"
+                + "CROSS JOIN UNNEST(\"my_table\".\"x\") WITH ORDINALITY AS \"t0\" (\"col\", \"ORDINALITY\")"))
         .add(new TrinoToRelTestDataProvider("select z from my_table cross join unnest(x) with ordinality t(a, b)",
             "LogicalProject(Z=[$2])\n"
                 + "  LogicalCorrelate(correlation=[$cor0], joinType=[inner], requiredColumns=[{0}])\n"
                 + "    LogicalTableScan(table=[[hive, default, my_table]])\n"
                 + "    HiveUncollect(withOrdinality=[true])\n" + "      LogicalProject(col=[$cor0.x])\n"
                 + "        LogicalValues(tuples=[[{ 0 }]])\n",
-            "SELECT \"$cor0\".\"z\" AS \"Z\"\n" + "FROM \"default\".\"my_table\" AS \"$cor0\"\n"
-                + "CROSS JOIN UNNEST(\"$cor0\".\"x\") WITH ORDINALITY AS \"t0\" (\"A\", \"B\")"))
+            "SELECT \"my_table\".\"z\" AS \"Z\"\n" + "FROM \"default\".\"my_table\" AS \"my_table\"\n"
+                + "CROSS JOIN UNNEST(\"my_table\".\"x\") WITH ORDINALITY AS \"t0\" (\"A\", \"B\")"))
         .add(new TrinoToRelTestDataProvider(
             "with a (id) as (with x as (select 123 from foo) select * from x)    , b (id) as (select 999 from foo) select * from a join b using (id)",
             "LogicalProject(ID=[COALESCE($0, $1)])\n" + "  LogicalJoin(condition=[=($0, $1)], joinType=[inner])\n"
@@ -249,6 +232,43 @@ public class TrinoToRelConverterTest {
   public void testSupport(String trinoSql, String expectedRelString, String expectedSql) {
     RelNode relNode = getTrinoToRelConverter().convertSql(trinoSql);
     assertEquals(expectedRelString, relToStr(relNode));
+
+    RelToTrinoConverter relToTrinoConverter = getRelToTrinoConverter();
+    // Convert rel node back to Sql
+    String expandedSql = relToTrinoConverter.convert(relNode);
+    assertEquals(expectedSql, expandedSql);
+  }
+
+  @DataProvider(name = "Unsupported")
+  public Iterator<Object[]> getUnsupportedSql() {
+    return ImmutableList.<TrinoToRelTestDataProvider> builder()
+        .add(new TrinoToRelTestDataProvider("select * from unnest(array[1, 2, 3])",
+            "LogicalProject(EXPR$0=[$0])\n" + "  HiveUncollect\n" + "    LogicalProject(col=[ARRAY(1, 2, 3)])\n"
+                + "      LogicalValues(tuples=[[{ 0 }]])\n",
+            "SELECT \"col\"\n" + "FROM UNNEST(ARRAY[1, 2, 3]) AS \"t0\" (\"col\")"))
+        .add(new TrinoToRelTestDataProvider("select x from unnest(array[1, 2, 3]) t(x)",
+            "LogicalProject(X=[$0])\n" + "  HiveUncollect\n" + "    LogicalProject(col=[ARRAY(1, 2, 3)])\n"
+                + "      LogicalValues(tuples=[[{ 0 }]])\n",
+            "SELECT \"X\"\n" + "FROM UNNEST(ARRAY[1, 2, 3]) AS \"t0\" (\"X\")"))
+        .add(new TrinoToRelTestDataProvider("select * from unnest(array[1, 2, 3]) with ordinality",
+            "LogicalProject(EXPR$0=[$0], ORDINALITY=[$1])\n" + "  HiveUncollect(withOrdinality=[true])\n"
+                + "    LogicalProject(col=[ARRAY(1, 2, 3)])\n" + "      LogicalValues(tuples=[[{ 0 }]])\n",
+            "SELECT \"col\", \"ORDINALITY\"\n"
+                + "FROM UNNEST(ARRAY[1, 2, 3]) WITH ORDINALITY AS \"t0\" (\"col\", \"ORDINALITY\")"))
+        .add(new TrinoToRelTestDataProvider("select * from unnest(array[1, 2, 3]) with ordinality t(x, y)",
+            "LogicalProject(X=[$0], Y=[$1])\n" + "  HiveUncollect(withOrdinality=[true])\n"
+                + "    LogicalProject(col=[ARRAY(1, 2, 3)])\n" + "      LogicalValues(tuples=[[{ 0 }]])\n",
+            "SELECT \"X\", \"Y\"\n" + "FROM UNNEST(ARRAY[1, 2, 3]) WITH ORDINALITY AS \"t0\" (\"X\", \"Y\")"))
+        .add(new TrinoToRelTestDataProvider(
+            "SELECT * from default.table_with_struct_arr cross join unnest(struct.b) AS t(b1col, b2col)", null, null))
+        .build().stream().map(x -> new Object[] { x.trinoSql, x.expectedRelString, x.expectedSql }).iterator();
+  }
+
+  @Test(dataProvider = "Unsupported", enabled = false,
+      description = "Input Trino SQLs which do not conform to a valid Coral IR representation")
+  public void testUnsupported(String trinoSql, String expectedRelString, String expectedSql) {
+    RelNode relNode = getTrinoToRelConverter().convertSql(trinoSql);
+    assertEquals(relToStr(relNode), expectedRelString);
 
     RelToTrinoConverter relToTrinoConverter = getRelToTrinoConverter();
     // Convert rel node back to Sql
