@@ -40,8 +40,6 @@ import org.apache.calcite.sql.type.SqlReturnTypeInference;
 import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
 
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
-import com.linkedin.coral.common.functions.GenericProjectFunction;
-import com.linkedin.coral.trino.rel2trino.functions.GenericProjectToTrinoConverter;
 
 import static com.linkedin.coral.trino.rel2trino.CoralTrinoConfigKeys.*;
 import static org.apache.calcite.sql.type.ReturnTypes.explicit;
@@ -165,9 +163,6 @@ public class Calcite2TrinoUDFConverter {
       //     which has lambda functions as parameters
       //     - syntax is difficult for Calcite to parse
       //   - the return type varies based on a desired schema to be projected
-      if (call.getOperator() instanceof GenericProjectFunction) {
-        return GenericProjectToTrinoConverter.convertGenericProject(rexBuilder, call, node);
-      }
 
       final String operatorName = call.getOperator().getName();
 

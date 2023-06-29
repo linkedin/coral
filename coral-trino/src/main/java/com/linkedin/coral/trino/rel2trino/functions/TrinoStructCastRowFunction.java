@@ -19,7 +19,7 @@ import org.apache.calcite.rel.type.RelDataType;
  * Instead, we represent the input to this UDF as a string and we set its return type is passed as a parameter
  * on creation.
  */
-class TrinoStructCastRowFunction extends GenericTemplateFunction {
+public class TrinoStructCastRowFunction extends GenericTemplateFunction {
   public TrinoStructCastRowFunction(RelDataType structDataType) {
     super(structDataType, "cast");
   }

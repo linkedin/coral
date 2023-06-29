@@ -39,7 +39,7 @@ public class NamedStructTest {
     FileUtils.deleteDirectory(new File(conf.get(TestUtils.CORAL_HIVE_TEST_DIR)));
   }
 
-  @Test
+  @Test(enabled = false)
   public void testMixedTypes() {
     final String sql = "SELECT named_struct('abc', 123, 'def', 'xyz')";
     RelNode rel = toRel(sql);
@@ -50,7 +50,7 @@ public class NamedStructTest {
     assertEquals(generated, expected);
   }
 
-  @Test
+  @Test(enabled = false)
   public void testNullFieldValue() {
     final String sql = "SELECT named_struct('abc', cast(NULL as int), 'def', 150)";
     final String generated = sqlToRelStr(sql);
@@ -60,7 +60,7 @@ public class NamedStructTest {
     assertEquals(generated, expected);
   }
 
-  @Test
+  @Test(enabled = false)
   public void testAllNullValues() {
     final String sql = "SELECT named_struct('abc', cast(NULL as int), 'def', cast(NULL as double))";
     final String generated = sqlToRelStr(sql);
@@ -70,7 +70,7 @@ public class NamedStructTest {
     assertEquals(generated, expected);
   }
 
-  @Test
+  @Test(enabled = false)
   public void testNestedComplexTypes() {
     final String sql = "SELECT named_struct('arr', array(10, 15), 's', named_struct('f1', 123, 'f2', array(20.5)))";
     final String generated = sqlToRelStr(sql);

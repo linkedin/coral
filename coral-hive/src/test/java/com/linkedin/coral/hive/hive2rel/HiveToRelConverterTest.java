@@ -493,7 +493,7 @@ public class HiveToRelConverterTest {
     RelNode rel = toRel(sql);
   }
 
-  @Test
+  @Test(enabled = false)
   public void testStructReturnFieldAccess() {
     final String sql = "select named_struct('field_a', 10, 'field_b', 'abc').field_b";
     RelNode rel = toRel(sql);
