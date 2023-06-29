@@ -158,11 +158,6 @@ public class Calcite2TrinoUDFConverter {
 
     @Override
     public RexNode visitCall(RexCall call) {
-      // GenericProject requires a nontrivial function rewrite because of the following:
-      //   - makes use of Trino built-in UDFs transform_values for map objects and transform for array objects
-      //     which has lambda functions as parameters
-      //     - syntax is difficult for Calcite to parse
-      //   - the return type varies based on a desired schema to be projected
 
       final String operatorName = call.getOperator().getName();
 

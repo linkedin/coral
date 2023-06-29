@@ -62,15 +62,23 @@ public class NamedStructToCastTransformer extends SqlCallTransformer {
       rowTypes.add(SqlTypeUtil.convertTypeToSpec(type));
     }
     SqlNode rowCall = SqlStdOperatorTable.ROW.createCall(ZERO, rowCallOperands);
+
+    // This following override enables operand relDatatType derivation for a nested named_struct() SqlCalls.
+    // For a SqlCall:
+    // `named_struct('outerF1', 123, 'outerF2', 'xyz', 'nestedNamedStruct', named_struct('innerF1', 123, 'innerF2', 'xyz'))`
+    // the inner `named_struct()`, is visited first and transformed to its Trino compatible representation:
+    // `CAST(ROW(123, 'xyz') AS ROW(`innerF1` INTEGER, `innerF2` CHAR(3) CHARACTER SET `ISO-8859-1`))`
+    // When the outer named_struct() is visited, the transformer accepts input sqlCall:
+    // `named_struct('outerF1', 123, 'outerF2', 'xyz',
+    //                'nestedNamedStruct', CAST(ROW(123, 'xyz') AS ROW(`innerF1` INTEGER, `innerF2` CHAR(3) CHARACTER SET `ISO-8859-1`)))`
+    // and fails to derive the relDataType for its operand: nestedNamedStruct in format - CAST(ROW() AS ROW())
+    // The following overriden deriveType() implementation enables type derivation for `CAST(ROW() AS ROW())` type sqlCalls.
     return new SqlCastFunction() {
       @Override
       public RelDataType deriveType(SqlValidator validator, SqlValidatorScope scope, SqlCall call) {
         SqlCallBinding opBinding = new SqlCallBinding(validator, scope, call);
         return inferReturnType(opBinding);
-        //        return validator.deriveType(scope, call.operand(1));
       }
     }.createCall(ZERO, rowCall, new SqlRowTypeSpec(fieldNames, rowTypes, ZERO));
-
-    //    return SqlStdOperatorTable.CAST.createCall(ZERO, rowCall, new SqlRowTypeSpec(fieldNames, rowTypes, ZERO));
   }
 }
