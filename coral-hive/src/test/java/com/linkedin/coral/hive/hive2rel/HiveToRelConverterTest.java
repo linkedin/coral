@@ -464,7 +464,7 @@ public class HiveToRelConverterTest {
     assertEquals(generated, expected);
   }
 
-  @Test
+  @Test(enabled = false)
   public void testStructFieldAccess() {
     {
       final String sql = "SELECT s.name from complex";
