@@ -10,12 +10,16 @@ import java.util.List;
 
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.sql.SqlCall;
+import org.apache.calcite.sql.SqlCallBinding;
 import org.apache.calcite.sql.SqlDataTypeSpec;
 import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlRowTypeSpec;
+import org.apache.calcite.sql.fun.SqlCastFunction;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.type.SqlTypeUtil;
+import org.apache.calcite.sql.validate.SqlValidator;
+import org.apache.calcite.sql.validate.SqlValidatorScope;
 
 import com.linkedin.coral.common.transformers.SqlCallTransformer;
 import com.linkedin.coral.common.utils.TypeDerivationUtil;
@@ -58,6 +62,15 @@ public class NamedStructToCastTransformer extends SqlCallTransformer {
       rowTypes.add(SqlTypeUtil.convertTypeToSpec(type));
     }
     SqlNode rowCall = SqlStdOperatorTable.ROW.createCall(ZERO, rowCallOperands);
-    return SqlStdOperatorTable.CAST.createCall(ZERO, rowCall, new SqlRowTypeSpec(fieldNames, rowTypes, ZERO));
+    return new SqlCastFunction() {
+      @Override
+      public RelDataType deriveType(SqlValidator validator, SqlValidatorScope scope, SqlCall call) {
+        SqlCallBinding opBinding = new SqlCallBinding(validator, scope, call);
+        return inferReturnType(opBinding);
+        //        return validator.deriveType(scope, call.operand(1));
+      }
+    }.createCall(ZERO, rowCall, new SqlRowTypeSpec(fieldNames, rowTypes, ZERO));
+
+    //    return SqlStdOperatorTable.CAST.createCall(ZERO, rowCall, new SqlRowTypeSpec(fieldNames, rowTypes, ZERO));
   }
 }
