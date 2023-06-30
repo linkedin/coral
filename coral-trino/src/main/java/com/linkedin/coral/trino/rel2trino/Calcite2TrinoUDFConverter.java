@@ -39,6 +39,7 @@ import org.apache.calcite.sql.type.SqlReturnTypeInference;
 import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
 
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
+import com.linkedin.coral.common.functions.GenericProjectFunction;
 
 import static com.linkedin.coral.trino.rel2trino.CoralTrinoConfigKeys.*;
 import static org.apache.calcite.sql.type.ReturnTypes.explicit;
@@ -167,32 +168,7 @@ public class Calcite2TrinoUDFConverter {
         }
       }
 
-      if (operatorName.equalsIgnoreCase("substr")) {
-        Optional<RexNode> modifiedCall = visitSubstring(call);
-        if (modifiedCall.isPresent()) {
-          return modifiedCall.get();
-        }
-      }
-
       return super.visitCall(call);
-    }
-
-    // Hive allows passing in a byte array or String to substr/substring, so we can make an effort to emulate the
-    // behavior by casting non-String input to String
-    // https://cwiki.apache.org/confluence/display/hive/languagemanual+udf
-    private Optional<RexNode> visitSubstring(RexCall call) {
-      final SqlOperator op = call.getOperator();
-      List<RexNode> convertedOperands = visitList(call.getOperands(), (boolean[]) null);
-      RexNode inputOperand = convertedOperands.get(0);
-
-      if (inputOperand.getType().getSqlTypeName() != VARCHAR && inputOperand.getType().getSqlTypeName() != CHAR) {
-        List<RexNode> operands = new ImmutableList.Builder<RexNode>()
-            .add(rexBuilder.makeCast(typeFactory.createSqlType(VARCHAR), inputOperand))
-            .addAll(convertedOperands.subList(1, convertedOperands.size())).build();
-        return Optional.of(rexBuilder.makeCall(op, operands));
-      }
-
-      return Optional.empty();
     }
 
     private Optional<RexNode> visitCast(RexCall call) {
