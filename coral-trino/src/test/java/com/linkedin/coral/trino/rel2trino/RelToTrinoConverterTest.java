@@ -366,7 +366,7 @@ public class RelToTrinoConverterTest {
   @Test
   public void testSubString3() {
     String sql = "SELECT SUBSTR(scol, icol, 3) FROM test.tableOne";
-    String expectedSql = "SELECT \"substr\"(\"tableone\".\"scol\", \"tableone\".\"icol\", 3)\n"
+    String expectedSql = "SELECT \"substr\"(\"tableone\".\"scol\", \"tableone\".\"icol\" + 1, 3)\n"
         + "FROM \"test\".\"tableone\" AS \"tableone\"";
     testConversion(sql, expectedSql);
   }
