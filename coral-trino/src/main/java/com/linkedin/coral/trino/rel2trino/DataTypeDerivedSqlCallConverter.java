@@ -35,7 +35,8 @@ public class DataTypeDerivedSqlCallConverter extends SqlShuttle {
     SqlValidator sqlValidator = new HiveToRelConverter(mscClient).getSqlValidator();
     TypeDerivationUtil typeDerivationUtil = new TypeDerivationUtil(sqlValidator, topSqlNode);
     operatorTransformerList = SqlCallTransformers.of(new FromUtcTimestampOperatorTransformer(typeDerivationUtil),
-        new GenericProjectTransformer(typeDerivationUtil), new NamedStructToCastTransformer(typeDerivationUtil), new ConcatOperatorTransformer(typeDerivationUtil));
+        new GenericProjectTransformer(typeDerivationUtil), new NamedStructToCastTransformer(typeDerivationUtil),
+        new ConcatOperatorTransformer(typeDerivationUtil));
   }
 
   @Override
