@@ -327,6 +327,19 @@ public class HiveToTrinoConverterTest {
   }
 
   @Test
+  public void testNamedStructWithConcat() {
+    RelNode relNode = TestUtils.getHiveToRelConverter().convertSql(
+        "SELECT if(FALSE, NULL, named_struct('a', '')) from test.tableB where concat(current_date(), '|', tableB.a) = 'invalid'");
+    String targetSql = "SELECT \"if\"(FALSE, NULL, CAST(ROW('') AS ROW(\"a\" CHAR(0))))\n"
+        + "FROM \"test\".\"tableb\" AS \"tableb\"\n"
+        + "WHERE \"concat\"(CAST(CURRENT_DATE AS VARCHAR(65535)), '|', CAST(\"tableb\".\"a\" AS VARCHAR(65535))) = 'invalid'";
+
+    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
+    String expandedSql = relToTrinoConverter.convert(relNode);
+    assertEquals(expandedSql, targetSql);
+  }
+
+  @Test
   public void testIfWithNullAsThirdParameter() {
     RelNode relNode = TestUtils.getHiveToRelConverter().convertSql("SELECT if(FALSE, named_struct('a', ''), NULL)");
     String targetSql =

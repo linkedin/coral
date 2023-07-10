@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2022 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2023 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -497,12 +497,11 @@ public class HiveToRelConverterTest {
   public void testStructReturnFieldAccess() {
     final String sql = "select named_struct('field_a', 10, 'field_b', 'abc').field_b";
     RelNode rel = toRel(sql);
-    final String expectedRel = "LogicalProject(EXPR$0=[CAST(ROW(10, 'abc')):"
-        + "RecordType(INTEGER NOT NULL field_a, CHAR(3) NOT NULL field_b) NOT NULL.field_b])\n"
+    final String expectedRel = "LogicalProject(EXPR$0=[named_struct('field_a', 10, 'field_b', 'abc').field_b])\n"
         + "  LogicalValues(tuples=[[{ 0 }]])\n";
     assertEquals(relToStr(rel), expectedRel);
-    final String expectedSql = "SELECT CAST(ROW(10, 'abc') AS ROW(field_a INTEGER, field_b CHAR(3))).field_b\n"
-        + "FROM (VALUES  (0)) t (ZERO)";
+    final String expectedSql =
+        "SELECT named_struct('field_a', 10, 'field_b', 'abc').field_b\n" + "FROM (VALUES  (0)) t (ZERO)";
     assertEquals(relToHql(rel), expectedSql);
   }
 
