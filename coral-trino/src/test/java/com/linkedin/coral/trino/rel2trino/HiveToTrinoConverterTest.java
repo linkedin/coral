@@ -636,9 +636,10 @@ public class HiveToTrinoConverterTest {
 
     RelNode relNode = TestUtils.getHiveToRelConverter().convertSql(
         "SELECT a, SUBSTR(b, 1, 1) AS aliased_column FROM test.tabler GROUP BY a, b HAVING aliased_column in ('dummy_value')");
-    String targetSql = "SELECT \"tabler\".\"a\" AS \"a\", \"substr\"(\"tabler\".\"b\", 1 + 1, 1) AS \"aliased_column\"\n"
-        + "FROM \"test\".\"tabler\" AS \"tabler\"\n" + "GROUP BY \"tabler\".\"a\", \"tabler\".\"b\"\n"
-        + "HAVING \"substr\"(\"tabler\".\"b\", 1 + 1, 1)\n" + "IN ('dummy_value')";
+    String targetSql =
+        "SELECT \"tabler\".\"a\" AS \"a\", \"substr\"(\"tabler\".\"b\", 1 + 1, 1) AS \"aliased_column\"\n"
+            + "FROM \"test\".\"tabler\" AS \"tabler\"\n" + "GROUP BY \"tabler\".\"a\", \"tabler\".\"b\"\n"
+            + "HAVING \"substr\"(\"tabler\".\"b\", 1 + 1, 1)\n" + "IN ('dummy_value')";
     String expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
   }
