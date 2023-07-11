@@ -203,6 +203,12 @@ public class HiveFunctionResolver {
         .collect(Collectors.toList());
   }
 
+  public void addDynamicFunctionToTheRegistry(String funcClassName, Function function) {
+    if (!dynamicFunctionRegistry.contains(funcClassName)) {
+      dynamicFunctionRegistry.put(funcClassName, function);
+    }
+  }
+
   private @Nonnull Collection<Function> resolveDaliFunctionDynamically(String functionName, String funcClassName,
       HiveTable hiveTable, int numOfOperands) {
     if (dynamicFunctionRegistry.contains(funcClassName)) {

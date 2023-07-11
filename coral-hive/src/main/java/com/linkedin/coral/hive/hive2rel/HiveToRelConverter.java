@@ -63,6 +63,10 @@ public class HiveToRelConverter extends ToRelConverter {
     this.parseTreeBuilder = new ParseTreeBuilder(functionResolver);
   }
 
+  public HiveFunctionResolver getFunctionResolver() {
+    return functionResolver;
+  }
+
   @Override
   protected SqlRexConvertletTable getConvertletTable() {
     return new HiveConvertletTable();
