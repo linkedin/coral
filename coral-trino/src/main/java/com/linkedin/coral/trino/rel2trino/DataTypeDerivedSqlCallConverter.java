@@ -54,7 +54,8 @@ public class DataTypeDerivedSqlCallConverter extends SqlShuttle {
     public SqlNode visit(SqlCall sqlCall) {
       if (sqlCall instanceof SqlBasicCall && sqlCall.getOperator() instanceof VersionedSqlUserDefinedFunction
           && sqlCall.getOperator().getName().contains(".")) {
-        // name is the un-versioned udf name - "com.linkedin.dali.views.feed.udf.foo"
+        // Register versioned SqlUserDefinedFunctions in RelConverter's dynamicFunctionRegistry.
+        // This enables the SqlValidator to derive RelDataType for SqlCalls that involve these operators.
         Function function = new Function(sqlCall.getOperator().getName(), sqlCall.getOperator());
         toRelConverter.getFunctionResolver().addDynamicFunctionToTheRegistry(sqlCall.getOperator().getName(), function);
       }
