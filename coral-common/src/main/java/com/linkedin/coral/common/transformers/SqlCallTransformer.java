@@ -26,7 +26,6 @@ public abstract class SqlCallTransformer {
   private TypeDerivationUtil typeDerivationUtil;
 
   public SqlCallTransformer() {
-
   }
 
   public SqlCallTransformer(TypeDerivationUtil typeDerivationUtil) {

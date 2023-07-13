@@ -138,13 +138,11 @@ public class RelToTrinoConverter extends RelToSqlConverter {
     final List<SqlNode> selectList = new ArrayList<>();
     for (RexNode ref : e.getChildExps()) {
       SqlNode sqlExpr = builder.context.toSql(null, ref);
-
       // Append the CAST operator when the derived data type is NON-NULL.
       RelDataTypeField targetField = e.getRowType().getFieldList().get(selectList.size());
       if (SqlUtil.isNullLiteral(sqlExpr, false) && !targetField.getValue().getSqlTypeName().equals(SqlTypeName.NULL)) {
         sqlExpr = SqlStdOperatorTable.CAST.createCall(POS, sqlExpr, dialect.getCastSpec(targetField.getType()));
       }
-
       addSelect(selectList, sqlExpr, e.getRowType());
     }
     builder.setSelect(new SqlNodeList(selectList, POS));

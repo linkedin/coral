@@ -5,7 +5,6 @@
  */
 package com.linkedin.coral.trino.rel2trino;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -175,32 +174,7 @@ public class Calcite2TrinoUDFConverter {
         }
       }
 
-      if (operatorName.equalsIgnoreCase("concat")) {
-        Optional<RexNode> modifiedCall = visitConcat(call);
-        if (modifiedCall.isPresent()) {
-          return modifiedCall.get();
-        }
-      }
-
       return super.visitCall(call);
-    }
-
-    private Optional<RexNode> visitConcat(RexCall call) {
-      // Hive supports operations like CONCAT(date, varchar) while Trino only supports CONCAT(varchar, varchar)
-      // So we need to cast the unsupported types to varchar
-      final SqlOperator op = call.getOperator();
-      List<RexNode> convertedOperands = visitList(call.getOperands(), (boolean[]) null);
-      List<RexNode> castOperands = new ArrayList<>();
-
-      for (RexNode inputOperand : convertedOperands) {
-        if (inputOperand.getType().getSqlTypeName() != VARCHAR && inputOperand.getType().getSqlTypeName() != CHAR) {
-          final RexNode castOperand = rexBuilder.makeCast(typeFactory.createSqlType(VARCHAR), inputOperand);
-          castOperands.add(castOperand);
-        } else {
-          castOperands.add(inputOperand);
-        }
-      }
-      return Optional.of(rexBuilder.makeCall(op, castOperands));
     }
 
     // Hive allows passing in a byte array or String to substr/substring, so we can make an effort to emulate the
