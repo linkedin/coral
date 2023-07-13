@@ -298,6 +298,10 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
         or(family(SqlTypeFamily.STRING), family(SqlTypeFamily.BINARY)));
     createAddUserDefinedFunction("crc32", BIGINT, or(family(SqlTypeFamily.STRING), family(SqlTypeFamily.BINARY)));
     createAddUserDefinedFunction("from_utf8", explicit(SqlTypeName.VARCHAR), or(CHARACTER, BINARY));
+    createAddUserDefinedFunction("from_unixtime_nanos", explicit(SqlTypeName.TIMESTAMP), NUMERIC);
+    createAddUserDefinedFunction("$canonicalize_hive_timezone_id", explicit(SqlTypeName.VARCHAR), STRING);
+    createAddUserDefinedFunction("at_timezone", explicit(SqlTypeName.TIMESTAMP),
+        family(SqlTypeFamily.TIMESTAMP, SqlTypeFamily.STRING));
 
     // xpath functions
     createAddUserDefinedFunction("xpath", FunctionReturnTypes.arrayOfType(SqlTypeName.VARCHAR), STRING_STRING);
