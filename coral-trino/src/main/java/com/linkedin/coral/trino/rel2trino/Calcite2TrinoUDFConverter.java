@@ -38,9 +38,6 @@ import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.SqlReturnTypeInference;
 import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
 
-import com.linkedin.coral.com.google.common.collect.ImmutableList;
-import com.linkedin.coral.common.functions.GenericProjectFunction;
-
 import static com.linkedin.coral.trino.rel2trino.CoralTrinoConfigKeys.*;
 import static org.apache.calcite.sql.type.ReturnTypes.explicit;
 import static org.apache.calcite.sql.type.SqlTypeName.*;
