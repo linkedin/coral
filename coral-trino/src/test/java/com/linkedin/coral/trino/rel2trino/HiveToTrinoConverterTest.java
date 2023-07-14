@@ -487,6 +487,35 @@ public class HiveToTrinoConverterTest {
   }
 
   @Test
+  public void testSubstrWithTimestampOperator() {
+    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
+
+    RelNode relNode = TestUtils.getHiveToRelConverter().convertSql(
+        "SELECT substring(from_utc_timestamp(a_bigint,'PST'),1,10) AS d\nFROM test.table_from_utc_timestamp");
+    String targetSql =
+        "SELECT \"substr\"(CAST(CAST(\"at_timezone\"(\"from_unixtime_nanos\"(CAST(\"table_from_utc_timestamp\".\"a_bigint\" AS BIGINT) * 1000000), \"$canonicalize_hive_timezone_id\"('PST')) AS TIMESTAMP(3)) AS VARCHAR(65535)), 1, 10) AS \"d\"\n"
+            + "FROM \"test\".\"table_from_utc_timestamp\" AS \"table_from_utc_timestamp\"";
+    String expandedSql = relToTrinoConverter.convert(relNode);
+    assertEquals(expandedSql, targetSql);
+
+    relNode = TestUtils.getHiveToRelConverter().convertSql(
+        "SELECT substring(from_utc_timestamp(a_decimal_three,'PST'),1,10) AS d\nFROM test.table_from_utc_timestamp");
+    targetSql =
+        "SELECT \"substr\"(CAST(CAST(\"at_timezone\"(CAST(\"format_datetime\"(\"from_unixtime\"(CAST(\"table_from_utc_timestamp0\".\"a_decimal_three\" AS DOUBLE)), 'yyyy-MM-dd HH:mm:ss') AS TIMESTAMP), \"$canonicalize_hive_timezone_id\"('PST')) AS TIMESTAMP(3)) AS VARCHAR(65535)), 1, 10) AS \"d\"\n"
+            + "FROM \"test\".\"table_from_utc_timestamp\" AS \"table_from_utc_timestamp0\"";
+    expandedSql = relToTrinoConverter.convert(relNode);
+    assertEquals(expandedSql, targetSql);
+
+    relNode = TestUtils.getHiveToRelConverter().convertSql(
+        "SELECT substring(from_utc_timestamp(a_timestamp,'PST'),1,10) AS d\nFROM test.table_from_utc_timestamp");
+    targetSql =
+        "SELECT \"substr\"(CAST(CAST(\"at_timezone\"(CAST(\"format_datetime\"(\"from_unixtime\"(\"to_unixtime\"(\"with_timezone\"(\"table_from_utc_timestamp1\".\"a_timestamp\", 'UTC'))), 'yyyy-MM-dd HH:mm:ss') AS TIMESTAMP), \"$canonicalize_hive_timezone_id\"('PST')) AS TIMESTAMP(3)) AS VARCHAR(65535)), 1, 10) AS \"d\"\n"
+            + "FROM \"test\".\"table_from_utc_timestamp\" AS \"table_from_utc_timestamp1\"";
+    expandedSql = relToTrinoConverter.convert(relNode);
+    assertEquals(expandedSql, targetSql);
+  }
+
+  @Test
   public void testTranslateFunction() {
     RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
 
