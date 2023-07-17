@@ -20,6 +20,7 @@ import com.linkedin.coral.trino.rel2trino.transformers.ConcatOperatorTransformer
 import com.linkedin.coral.trino.rel2trino.transformers.FromUtcTimestampOperatorTransformer;
 import com.linkedin.coral.trino.rel2trino.transformers.GenericProjectTransformer;
 import com.linkedin.coral.trino.rel2trino.transformers.NamedStructToCastTransformer;
+import com.linkedin.coral.trino.rel2trino.transformers.SubstrOperatorTransformer;
 
 
 /**
@@ -41,7 +42,7 @@ public class DataTypeDerivedSqlCallConverter extends SqlShuttle {
     TypeDerivationUtil typeDerivationUtil = new TypeDerivationUtil(toRelConverter.getSqlValidator(), topSqlNode);
     operatorTransformerList = SqlCallTransformers.of(new FromUtcTimestampOperatorTransformer(typeDerivationUtil),
         new GenericProjectTransformer(typeDerivationUtil), new NamedStructToCastTransformer(typeDerivationUtil),
-        new ConcatOperatorTransformer(typeDerivationUtil));
+        new ConcatOperatorTransformer(typeDerivationUtil), new SubstrOperatorTransformer(typeDerivationUtil));
   }
 
   @Override
