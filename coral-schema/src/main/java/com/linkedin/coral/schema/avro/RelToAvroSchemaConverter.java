@@ -453,8 +453,14 @@ public class RelToAvroSchemaConverter {
 
     @Override
     public RexNode visitOver(RexOver rexOver) {
-      // TODO: implement this method
-      return super.visitOver(rexOver);
+      /**
+       * For aggregates over window, derive th expected field's schema using RexOver's return type alone.
+       * Example RexOver:
+       *  ROW_NUMBER() OVER (PARTITION BY colA, colB ORDER BY colC DESC)
+       */
+      appendField(rexOver.getType(), false,
+          SchemaUtilities.generateDocumentationForFunctionCall(rexOver, inputSchema, inputNode));
+      return rexOver;
     }
 
     @Override
