@@ -159,7 +159,7 @@ public class Calcite2TrinoUDFConverter {
       final String operatorName = call.getOperator().getName();
 
       if (operatorName.equalsIgnoreCase("cast")) {
-        Optional<RexNode> modifiedCall = visitCast(call);
+        Optional<RexNode> modifiedCall = Optional.empty(); //visitCast(call);
         if (modifiedCall.isPresent()) {
           return modifiedCall.get();
         }
