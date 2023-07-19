@@ -12,13 +12,19 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.calcite.linq4j.Ord;
+import org.apache.calcite.linq4j.tree.Expressions;
 import org.apache.calcite.rel.BiRel;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.RelShuttleImpl;
 import org.apache.calcite.rel.core.*;
+import org.apache.calcite.rel.logical.LogicalProject;
 import org.apache.calcite.rel.logical.LogicalTableFunctionScan;
 import org.apache.calcite.rel.rel2sql.RelToSqlConverter;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
+import org.apache.calcite.rel.type.RelRecordType;
+import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexFieldAccess;
 import org.apache.calcite.rex.RexLiteral;
@@ -452,5 +458,76 @@ public class RelToTrinoConverter extends RelToSqlConverter {
         return super.toSql(program, rex);
       }
     };
+  }
+
+  @Override
+  public Result setOpToSql(SqlSetOperator operator, RelNode rel) {
+    SqlNode node = null;
+    for (Ord<RelNode> input : Ord.zip(rel.getInputs())) {
+      RelNode adapted = input.e.accept(new SetProjectAdapterShuttle(rel.getRowType()));
+      final Result result = visitChild(input.i, adapted);
+      if (node == null) {
+        node = result.asSelect();
+      } else {
+        node = operator.createCall(POS, node, result.asSelect());
+      }
+    }
+    final List<Clause> clauses = Expressions.list(Clause.SET_OP);
+    return result(node, clauses, rel, null);
+  }
+
+  /**
+   * This visitor class is used to adapt `LogicalProject` relational
+   * expression in set statements (e.g.: `UNION`, `INTERSECT`, `MINUS`)
+   * in case that the branches of the set statement contain fields in
+   * char family which have different types.
+   * The `char` fields which are differing from the expected `varchar` output
+   * of the set statement will be adapted through an explicit `CAST` to the `varchar` type.
+   *
+   * @see <a href="Change char/varchar coercion in Trino">https://github.com/trinodb/trino/issues/9031</a>
+   */
+  private static class SetProjectAdapterShuttle extends RelShuttleImpl {
+    private final RelDataType setRowType;
+
+    public SetProjectAdapterShuttle(RelDataType setRowType) {
+      this.setRowType = setRowType;
+
+    }
+
+    @Override
+    public RelNode visit(LogicalProject project) {
+      List<RelDataTypeField> setNodeFieldList = setRowType.getFieldList();
+      RelDataType projectRowType = project.getRowType();
+      List<RelDataTypeField> projectFieldList = projectRowType.getFieldList();
+      if (setNodeFieldList.size() != projectFieldList.size()) {
+        return project;
+      }
+
+      RexBuilder rexBuilder = project.getCluster().getRexBuilder();
+      List<RexNode> projects = new ArrayList<>(setNodeFieldList.size());
+      List<RelDataTypeField> projectFieldTypes = new ArrayList<>(setNodeFieldList.size());
+      boolean useAdjustedProjectFieldTypes = false;
+      for (int fieldIndex = 0; fieldIndex < projectRowType.getFieldCount(); fieldIndex++) {
+        RexNode expression = project.getProjects().get(fieldIndex);
+        if (setNodeFieldList.get(fieldIndex).getType() != null && projectFieldList.get(fieldIndex).getType() != null
+            && !setNodeFieldList.get(fieldIndex).getType().equals(projectFieldList.get(fieldIndex).getType())
+            && SqlTypeName.VARCHAR == setNodeFieldList.get(fieldIndex).getType().getSqlTypeName()
+            && SqlTypeName.CHAR == projectFieldList.get(fieldIndex).getType().getSqlTypeName()) {
+          // Work-around for the Trino limitation in dealing set statements between `char` and `varchar` columns. See https://github.com/trinodb/trino/issues/9031
+          RexNode castRexNode = rexBuilder.makeCast(setRowType.getFieldList().get(fieldIndex).getType(), expression);
+          projects.add(castRexNode);
+          projectFieldTypes.add(setRowType.getFieldList().get(fieldIndex));
+          useAdjustedProjectFieldTypes = true;
+        } else {
+          projects.add(expression);
+          projectFieldTypes.add(projectRowType.getFieldList().get(fieldIndex));
+        }
+      }
+
+      RelDataType setOutputRowType = useAdjustedProjectFieldTypes
+          ? new RelRecordType(projectRowType.getStructKind(), projectFieldTypes, projectRowType.isNullable())
+          : projectRowType;
+      return LogicalProject.create(project.getInput(), projects, setOutputRowType);
+    }
   }
 }
