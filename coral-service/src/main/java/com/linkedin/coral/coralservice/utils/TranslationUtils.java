@@ -19,7 +19,7 @@ public class TranslationUtils {
 
   public static String translateTrinoToSpark(String query) {
     RelNode relNode = new TrinoToRelConverter(hiveMetastoreClient).convertSql(query);
-    CoralSpark coralSpark = CoralSpark.create(relNode);
+    CoralSpark coralSpark = CoralSpark.create(relNode, hiveMetastoreClient);
     return coralSpark.getSparkSql();
   }
 
@@ -30,7 +30,7 @@ public class TranslationUtils {
 
   public static String translateHiveToSpark(String query) {
     RelNode relNode = new HiveToRelConverter(hiveMetastoreClient).convertSql(query);
-    CoralSpark coralSpark = CoralSpark.create(relNode);
+    CoralSpark coralSpark = CoralSpark.create(relNode, hiveMetastoreClient);
     return coralSpark.getSparkSql();
   }
 }

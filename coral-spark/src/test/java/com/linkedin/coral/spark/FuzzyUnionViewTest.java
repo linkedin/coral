@@ -17,6 +17,7 @@ import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import static com.linkedin.coral.spark.TestUtils.*;
 import static org.testng.Assert.*;
 
 
@@ -40,7 +41,7 @@ public class FuzzyUnionViewTest {
     String database = "fuzzy_union";
     String view = "union_view";
     RelNode relNode = TestUtils.toRelNode(database, view);
-    CoralSpark coralSpark = CoralSpark.create(relNode);
+    CoralSpark coralSpark = CoralSpark.create(relNode, getHiveMetastoreClient());
     String expandedSql = coralSpark.getSparkSql();
 
     String expectedSql = "SELECT *\n" + "FROM fuzzy_union.tablea tablea\n" + "UNION ALL\n" + "SELECT *\n"
@@ -54,7 +55,7 @@ public class FuzzyUnionViewTest {
     String database = "fuzzy_union";
     String view = "union_view_with_more_than_two_tables";
     RelNode relNode = TestUtils.toRelNode(database, view);
-    CoralSpark coralSpark = CoralSpark.create(relNode);
+    CoralSpark coralSpark = CoralSpark.create(relNode, getHiveMetastoreClient());
     String expandedSql = coralSpark.getSparkSql();
 
     String expectedSql =
@@ -69,7 +70,7 @@ public class FuzzyUnionViewTest {
     String database = "fuzzy_union";
     String view = "union_view_with_alias";
     RelNode relNode = TestUtils.toRelNode(database, view);
-    CoralSpark coralSpark = CoralSpark.create(relNode);
+    CoralSpark coralSpark = CoralSpark.create(relNode, getHiveMetastoreClient());
     String expandedSql = coralSpark.getSparkSql();
 
     String expectedSql = "SELECT *\n" + "FROM fuzzy_union.tablea tablea\n" + "UNION ALL\n" + "SELECT *\n"
@@ -83,7 +84,7 @@ public class FuzzyUnionViewTest {
     String database = "fuzzy_union";
     String view = "union_view_single_branch_evolved";
     RelNode relNode = TestUtils.toRelNode(database, view);
-    CoralSpark coralSpark = CoralSpark.create(relNode);
+    CoralSpark coralSpark = CoralSpark.create(relNode, getHiveMetastoreClient());
     String expandedSql = coralSpark.getSparkSql();
 
     String expectedSql = "SELECT *\n" + "FROM fuzzy_union.tableb tableb\n" + "UNION ALL\n"
@@ -97,7 +98,7 @@ public class FuzzyUnionViewTest {
     String database = "fuzzy_union";
     String view = "union_view_double_branch_evolved_same";
     RelNode relNode = TestUtils.toRelNode(database, view);
-    CoralSpark coralSpark = CoralSpark.create(relNode);
+    CoralSpark coralSpark = CoralSpark.create(relNode, getHiveMetastoreClient());
     String expandedSql = coralSpark.getSparkSql();
 
     // TODO(ralam): This unit test may be inconsistent with what we want.
@@ -117,7 +118,7 @@ public class FuzzyUnionViewTest {
     String database = "fuzzy_union";
     String view = "union_view_double_branch_evolved_different";
     RelNode relNode = TestUtils.toRelNode(database, view);
-    CoralSpark coralSpark = CoralSpark.create(relNode);
+    CoralSpark coralSpark = CoralSpark.create(relNode, getHiveMetastoreClient());
     String expandedSql = coralSpark.getSparkSql();
 
     String expectedSql = "SELECT tablef.a, generic_project(tablef.b, 'struct<b1:string>') b\n"
@@ -132,7 +133,7 @@ public class FuzzyUnionViewTest {
     String database = "fuzzy_union";
     String view = "union_view_more_than_two_branches_evolved";
     RelNode relNode = TestUtils.toRelNode(database, view);
-    CoralSpark coralSpark = CoralSpark.create(relNode);
+    CoralSpark coralSpark = CoralSpark.create(relNode, getHiveMetastoreClient());
     String expandedSql = coralSpark.getSparkSql();
 
     String expectedSql = "SELECT *\n" + "FROM (SELECT tablef.a, generic_project(tablef.b, 'struct<b1:string>') b\n"
@@ -149,7 +150,7 @@ public class FuzzyUnionViewTest {
     String database = "fuzzy_union";
     String view = "union_view_map_with_struct_value_evolved";
     RelNode relNode = TestUtils.toRelNode(database, view);
-    CoralSpark coralSpark = CoralSpark.create(relNode);
+    CoralSpark coralSpark = CoralSpark.create(relNode, getHiveMetastoreClient());
     String expandedSql = coralSpark.getSparkSql();
 
     String expectedSql = "SELECT tableh.a, generic_project(tableh.b, 'map<string,struct<b1:string>>') b\n"
@@ -163,7 +164,7 @@ public class FuzzyUnionViewTest {
     String database = "fuzzy_union";
     String view = "union_view_array_with_struct_value_evolved";
     RelNode relNode = TestUtils.toRelNode(database, view);
-    CoralSpark coralSpark = CoralSpark.create(relNode);
+    CoralSpark coralSpark = CoralSpark.create(relNode, getHiveMetastoreClient());
     String expandedSql = coralSpark.getSparkSql();
 
     String expectedSql = "SELECT tablej.a, generic_project(tablej.b, 'array<struct<b1:string>>') b\n"
@@ -177,7 +178,7 @@ public class FuzzyUnionViewTest {
     String database = "fuzzy_union";
     String view = "union_view_deeply_nested_struct_evolved";
     RelNode relNode = TestUtils.toRelNode(database, view);
-    CoralSpark coralSpark = CoralSpark.create(relNode);
+    CoralSpark coralSpark = CoralSpark.create(relNode, getHiveMetastoreClient());
     String expandedSql = coralSpark.getSparkSql();
 
     String expectedSql =
@@ -192,7 +193,7 @@ public class FuzzyUnionViewTest {
     String database = "fuzzy_union";
     String view = "union_view_same_schema_evolution_with_different_ordering";
     RelNode relNode = TestUtils.toRelNode(database, view);
-    CoralSpark coralSpark = CoralSpark.create(relNode);
+    CoralSpark coralSpark = CoralSpark.create(relNode, getHiveMetastoreClient());
     String expandedSql = coralSpark.getSparkSql();
 
     String expectedSql = "SELECT *\n" + "FROM fuzzy_union.tablen tablen\n" + "UNION ALL\n"
