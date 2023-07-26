@@ -53,7 +53,7 @@ public class CastOperatorTransformer extends SqlCallTransformer {
     List<SqlNode> operands = sqlCall.getOperandList();
     SqlNode leftOperand = operands.get(0);
     RelDataType leftOperandType = deriveRelDatatype(leftOperand);
-//    RelDataType targetTypee = deriveRelDatatype(sqlCall); // operands.get(1) = SqlDataTypeSpec : varchar(65535)
+    //    RelDataType targetTypee = deriveRelDatatype(sqlCall); // operands.get(1) = SqlDataTypeSpec : varchar(65535)
     SqlDataTypeSpec targetSqlDataTypeSpec = (SqlDataTypeSpec) operands.get(1);
     SqlTypeName targetType = SqlTypeName.get(targetSqlDataTypeSpec.getTypeNameSpec().getTypeName().toString());
 
@@ -75,8 +75,7 @@ public class CastOperatorTransformer extends SqlCallTransformer {
 
     // Trino doesn't allow casting varbinary/binary to varchar/char, we need to use the built-in function `from_utf8`
     // to replace the cast, i.e. CAST(binary AS VARCHAR) -> from_utf8(binary)
-    if (BINARY_SQL_TYPE_NAMES.contains(leftOperandType.getSqlTypeName())
-        && CHAR_SQL_TYPE_NAMES.contains(targetType)) {
+    if (BINARY_SQL_TYPE_NAMES.contains(leftOperandType.getSqlTypeName()) && CHAR_SQL_TYPE_NAMES.contains(targetType)) {
       SqlOperator fromUTF8 = createSqlOperator("from_utf8", explicit(VARCHAR));
 
       return fromUTF8.createCall(ZERO, leftOperand);
