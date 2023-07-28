@@ -12,12 +12,18 @@ import java.util.List;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlIdentifier;
+import org.apache.calcite.sql.SqlJoin;
+import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlNodeList;
 import org.apache.calcite.sql.SqlSelect;
+import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.util.SqlShuttle;
 import org.apache.calcite.sql.validate.SqlValidator;
+
+import static org.apache.calcite.rel.rel2sql.SqlImplementor.*;
+import static org.apache.calcite.sql.parser.SqlParserPos.*;
 
 
 /**
@@ -72,6 +78,7 @@ public class TypeDerivationUtil {
 
       try {
         sqlValidator.validate(dummySqlSelect);
+        dummySqlSelect.accept(new SqlNodePostprocessorForTypeDerivation());
         return sqlValidator.getValidatedNodeType(dummySqlSelect).getFieldList().get(0).getType();
       } catch (Throwable ignored) {
       }
@@ -85,6 +92,7 @@ public class TypeDerivationUtil {
       final SqlSelect dummySqlSelect = new SqlSelect(topSelectNodes.get(0).getParserPosition(), null,
           SqlNodeList.of(sqlNode), topSelectNodes.get(0), null, null, null, null, null, null, null);
       sqlValidator.validate(dummySqlSelect);
+      dummySqlSelect.accept(new SqlNodePostprocessorForTypeDerivation());
       return sqlValidator.getValidatedNodeType(sqlNode);
     } catch (Throwable ignored) {
     }
@@ -107,6 +115,31 @@ public class TypeDerivationUtil {
           ((SqlSelect) sqlCall).setSelectList(SqlNodeList.of(star));
         }
         topSelectNodes.add((SqlSelect) sqlCall);
+      }
+      return super.visit(sqlCall);
+    }
+  }
+
+  private class SqlNodePostprocessorForTypeDerivation extends SqlShuttle {
+    @Override
+    public SqlNode visit(SqlCall sqlCall) {
+
+      if (sqlCall instanceof SqlJoin) {
+        SqlJoin joinSqlCall = (SqlJoin) sqlCall;
+        SqlNode rightChild = joinSqlCall.getRight();
+
+        if (rightChild instanceof SqlCall && ((SqlCall) rightChild).getOperator().kind == SqlKind.AS) {
+          List<SqlNode> oldAliasOperands = ((SqlCall) rightChild).getOperandList();
+          List<SqlNode> newAliasOperands = new ArrayList<>();
+
+          SqlNode lateralNode =
+              SqlStdOperatorTable.LATERAL.createCall(POS, (SqlNode) ((SqlCall) rightChild).operand(0));
+          newAliasOperands.add(lateralNode);
+          newAliasOperands.addAll(oldAliasOperands.subList(1, oldAliasOperands.size()));
+          SqlCall newAsOpSqlCall = SqlStdOperatorTable.AS.createCall(ZERO, newAliasOperands);
+
+          joinSqlCall.setOperand(3, newAsOpSqlCall);
+        }
       }
       return super.visit(sqlCall);
     }
