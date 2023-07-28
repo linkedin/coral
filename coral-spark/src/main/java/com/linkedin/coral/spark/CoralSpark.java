@@ -54,11 +54,11 @@ public class CoralSpark {
   }
 
   private CoralSpark(List<String> baseTables, List<SparkUDFInfo> sparkUDFInfoList, String sparkSql,
-      HiveMetastoreClient mscClient) {
+      HiveMetastoreClient hmsClient) {
     this.baseTables = baseTables;
     this.sparkUDFInfoList = sparkUDFInfoList;
     this.sparkSql = sparkSql;
-    this.hiveMetastoreClient = mscClient;
+    this.hiveMetastoreClient = hmsClient;
   }
 
   /**
@@ -73,7 +73,7 @@ public class CoralSpark {
    *
    * @param irRelNode A IR RelNode for which CoralSpark will be constructed.
    *
-   * @return [[CoralSparkInfo]]
+   * @return [[CoralSpark]]
    */
   @Deprecated
   public static CoralSpark create(RelNode irRelNode) {
@@ -96,17 +96,17 @@ public class CoralSpark {
    *  3) Spark UDF information objects, ie. List of {@link SparkUDFInfo}
    *
    * @param irRelNode A IR RelNode for which CoralSpark will be constructed.
-   * @param mscClient client interface used to interact with the Hive Metastore service.
+   * @param hmsClient client interface used to interact with the Hive Metastore service.
    *
-   * @return [[CoralSparkInfo]]
+   * @return [[CoralSpark]]
    */
-  public static CoralSpark create(RelNode irRelNode, HiveMetastoreClient mscClient) {
+  public static CoralSpark create(RelNode irRelNode, HiveMetastoreClient hmsClient) {
     SparkRelInfo sparkRelInfo = IRRelToSparkRelTransformer.transform(irRelNode);
     Set<SparkUDFInfo> sparkUDFInfos = sparkRelInfo.getSparkUDFInfos();
     RelNode sparkRelNode = sparkRelInfo.getSparkRelNode();
     String sparkSQL = constructSparkSQL(sparkRelNode, sparkUDFInfos);
     List<String> baseTables = constructBaseTables(sparkRelNode);
-    return new CoralSpark(baseTables, ImmutableList.copyOf(sparkUDFInfos), sparkSQL, mscClient);
+    return new CoralSpark(baseTables, ImmutableList.copyOf(sparkUDFInfos), sparkSQL, hmsClient);
   }
 
   /**
@@ -116,7 +116,7 @@ public class CoralSpark {
    *
    * @param irRelNode An IR RelNode for which CoralSpark will be constructed.
    * @param schema Coral schema that is represented by an Avro schema
-   * @return [[CoralSparkInfo]]
+   * @return [[CoralSpark]]
    */
   @Deprecated
   public static CoralSpark create(RelNode irRelNode, Schema schema) {
@@ -136,21 +136,21 @@ public class CoralSpark {
    *
    * @param irRelNode An IR RelNode for which CoralSpark will be constructed.
    * @param schema Coral schema that is represented by an Avro schema
-   * @param mscClient client interface used to interact with the Hive Metastore service.
-   * @return [[CoralSparkInfo]]
+   * @param hmsClient client interface used to interact with the Hive Metastore service.
+   * @return [[CoralSpark]]
    */
-  public static CoralSpark create(RelNode irRelNode, Schema schema, HiveMetastoreClient mscClient) {
+  public static CoralSpark create(RelNode irRelNode, Schema schema, HiveMetastoreClient hmsClient) {
     List<String> aliases = schema.getFields().stream().map(Schema.Field::name).collect(Collectors.toList());
-    return createWithAlias(irRelNode, aliases, mscClient);
+    return createWithAlias(irRelNode, aliases, hmsClient);
   }
 
-  private static CoralSpark createWithAlias(RelNode irRelNode, List<String> aliases, HiveMetastoreClient mscClient) {
+  private static CoralSpark createWithAlias(RelNode irRelNode, List<String> aliases, HiveMetastoreClient hmsClient) {
     SparkRelInfo sparkRelInfo = IRRelToSparkRelTransformer.transform(irRelNode);
     Set<SparkUDFInfo> sparkUDFInfos = sparkRelInfo.getSparkUDFInfos();
     RelNode sparkRelNode = sparkRelInfo.getSparkRelNode();
     String sparkSQL = constructSparkSQLWithExplicitAlias(sparkRelNode, aliases, sparkUDFInfos);
     List<String> baseTables = constructBaseTables(sparkRelNode);
-    return new CoralSpark(baseTables, ImmutableList.copyOf(sparkUDFInfos), sparkSQL, mscClient);
+    return new CoralSpark(baseTables, ImmutableList.copyOf(sparkUDFInfos), sparkSQL, hmsClient);
   }
 
   /**
