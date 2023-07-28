@@ -1,5 +1,5 @@
 /**
- * Copyright 2018-2022 LinkedIn Corporation. All rights reserved.
+ * Copyright 2018-2023 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -33,6 +33,7 @@ public class TestUtils {
 
   static HiveToRelConverter hiveToRelConverter;
   static ViewToAvroSchemaConverter viewToAvroSchemaConverter;
+  static HiveMetastoreClient hiveMetastoreClient;
 
   static void run(Driver driver, String sql) {
     while (true) {
@@ -51,7 +52,7 @@ public class TestUtils {
     FileUtils.deleteDirectory(new File(testDir));
     SessionState.start(conf);
     Driver driver = new Driver(conf);
-    HiveMetastoreClient hiveMetastoreClient = new HiveMscAdapter(Hive.get(conf).getMSC());
+    hiveMetastoreClient = new HiveMscAdapter(Hive.get(conf).getMSC());
     hiveToRelConverter = new HiveToRelConverter(hiveMetastoreClient);
     viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
     run(driver, "CREATE TABLE IF NOT EXISTS foo(a int, b varchar(30), c double)");
@@ -271,4 +272,7 @@ public class TestUtils {
     return viewToAvroSchemaConverter.toAvroSchema(sql, false, lowercase);
   }
 
+  public static HiveMetastoreClient getHiveMetastoreClient() {
+    return hiveMetastoreClient;
+  }
 }
