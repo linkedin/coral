@@ -74,11 +74,11 @@ public class CoralToTrinoSqlCallConverter extends SqlShuttle {
         // string functions
         new JsonTransformSqlCallTransformer(SqlStdOperatorTable.SUBSTRING, 2, "substr",
             "[{\"input\": 1}, {\"op\": \"+\", \"operands\": [{\"input\": 2}, {\"value\": 1}]}]", null, null),
-        new JsonTransformSqlCallTransformer(SqlStdOperatorTable.SUBSTRING, 2, "substr",
-            "[{\"input\": 1}, {\"op\": \"+\", \"operands\": [{\"input\": 2}, {\"value\": 1}]}]", null, null),
         new JsonTransformSqlCallTransformer(SqlStdOperatorTable.SUBSTRING, 3, "substr",
             "[{\"input\": 1}, {\"op\": \"+\", \"operands\": [{\"input\": 2}, {\"value\": 1}]}, {\"input\": 3}]", null,
             null),
+        new JsonTransformSqlCallTransformer(hiveToCoralSqlOperator("substr"), 2, "substr",
+            "[{\"input\": 1}, {\"op\": \"+\", \"operands\": [{\"input\": 2}, {\"value\": 1}]}]", null, null),
         new JsonTransformSqlCallTransformer(hiveToCoralSqlOperator("substr"), 3, "substr",
             "[{\"input\": 1}, {\"op\": \"+\", \"operands\": [{\"input\": 2}, {\"value\": 1}]}, {\"input\": 3}]", null,
             null),
