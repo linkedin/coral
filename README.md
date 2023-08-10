@@ -13,11 +13,11 @@ Coral exposes APIs for implementing conversions between SQL dialects and Coral I
 Currently, Coral supports converting HiveQL and Spark SQL to Coral IR, and converting Coral IR to HiveQL, Spark SQL,
 and Trino SQL. With multiple SQL dialects supported, Coral can be used to translate SQL statements and views defined in
 one dialect to equivalent ones in another dialect. For dialect conversion examples, see the modules
-[coral-hive](coral-hive), [coral-spark](coral-spar), and [coral-trino](coral-hive).
+[coral-hive](coral-hive), [coral-spark](coral-spark), and [coral-trino](coral-hive).
 
 Coral also exposes APIs for Coral IR rewrite and manipulation. This includes rewriting Coral IR expressions to produce
 semantically equivalent, but more performant expressions. For example, Coral automates
-incremental view maintenance by rewriting a view definition to an incremental one. See the module [coral-incremental](coral-incremental/README.md)
+incremental view maintenance by rewriting a view definition to an incremental one. See the module [coral-incremental](coral-incremental)
 for more details. Other Coral rewrite applications include data governance and policy enforcement.
 
 Coral can be used as a library in other projects, or as a service. See instructions below for more details.
