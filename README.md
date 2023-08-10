@@ -6,8 +6,8 @@
 
 **Coral** is a SQL translation, analysis, and rewrite engine. It establishes a standard intermediate representation, 
 Coral IR, which captures the semantics of relational algebraic expressions independently of any SQL dialect. Coral IR
-is defined in two forms: one is the AST layer, and another at the logical plan layer. Both forms are isomorphic
-and convertible to each other.
+is defined in two forms: one is the at the abstract syntax tree (AST) layer, and another at the logical plan layer. Both
+forms are isomorphic and convertible to each other.
 
 Coral exposes APIs for implementing conversions between SQL dialects and Coral IR in both directions.
 Currently, Coral supports converting HiveQL and Spark SQL to Coral IR, and converting Coral IR to HiveQL, Spark SQL,
@@ -31,8 +31,8 @@ Coral can be used as a library in other projects, or as a service. See instructi
 **Coral** consists of following modules:
 
 - Coral-Hive: Converts HiveQL to Coral IR (can be typically used with Spark SQL as well).
-- Coral-Trino: Converts Coral IR to Trino SQL. Convering Trino SQL to Coral IR is WIP.
-- Coral-Spark: Converts Coral IR to Spark SQL (can be typically used with Hive QL as well).
+- Coral-Trino: Converts Coral IR to Trino SQL. Converting Trino SQL to Coral IR is WIP.
+- Coral-Spark: Converts Coral IR to Spark SQL (can be typically used with HiveQL as well).
 - Coral-Dbt: Integrates Coral with DBT. It enables applying Coral transformations on DBT models.
 - Coral-Incremental: Derives an incremental query from input SQL for incremental view maintenance.
 - Coral-Schema: Derives Avro schema of view using view logical plan and input Avro schemas of base tables.
@@ -46,7 +46,7 @@ This project adheres to semantic versioning, where the format x.y.z represents m
 
 **Major version Upgrade**
 
-A minor version upgrade represents a version change that introduces backward incompatibility by removal or renaming of classes.
+A major version upgrade represents a version change that introduces backward incompatibility by removal or renaming of classes.
 
 **Minor version Upgrade**
 
@@ -202,7 +202,7 @@ curl --header "Content-Type: application/json" \
 ```
 The translation result is:
 ```
-Original query in Hive QL:
+Original query in HiveQL:
 SELECT * FROM db1.airport
 Translated to Trino SQL:
 SELECT "name", "country", "area_code", "code", "datepartition"
