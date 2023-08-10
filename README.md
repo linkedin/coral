@@ -4,17 +4,21 @@
  <img src="docs/coral-logo.jpg" width="400" title="Coral Logo">
 </p>
 
-**Coral** is a library for analyzing, processing, and rewriting views defined in the Hive Metastore, and sharing them
-across multiple execution engines. It performs SQL translations to enable views expressed in HiveQL (and potentially
-other languages) to be accessible in engines such as [Trino (formerly PrestoSQL)](https://trino.io/),
-[Apache Spark](https://spark.apache.org/), and [Apache Pig](https://pig.apache.org/).
-Coral not only translates view definitions between different SQL/non-SQL dialects, but also rewrites expressions to
-produce semantically equivalent ones, taking into account the semantics of the target language or engine.
-For example, it automatically composes new built-in expressions that are equivalent to each built-in expression in the
-source view definition. Additionally, it integrates with [Transport UDFs](https://github.com/linkedin/transport)
-to enable translating and executing user-defined functions (UDFs) across Hive, Trino, Spark, and Pig. Coral is under
-active development. Currently, we are looking into expanding the set of input view language APIs beyond HiveQL,
-and implementing query rewrite algorithms for data governance and query optimization.
+**Coral** is a SQL translation, analysis, and rewrite engine. Coral defines a standard intermediate representation,
+called Coral IR, to represent relational algebra expressions independently of any SQL dialect. There are two variants of
+Coral IR; one is at the AST layer, and the other is at the logical plan layer. Both variants are isomorphic to each
+other.
+
+Coral defines APIs to convert SQL dialects to Coral IR, and vice versa. It also defines APIs to rewrite Coral IR.
+Currently, Coral supports converting HiveQL and Spark SQL to Coral IR, and converting Coral IR to HiveQL, Spark SQL,
+and Trino SQL. With multiple SQL dialects supported, Coral can be used to translate SQL statements and views defined in
+one dialect to equivalent ones in another dialect.
+
+Coral also supports rewriting Coral IR to produce semantically equivalent Coral IR. For example, Coral can automate
+incremental view maintenance by rewriting a view definition to an incremental one. Other Coral rewrite applications
+include data governance and policy enforcement.
+
+Coral can be used as a library in other projects, or as a service. See instructions below for more details.
 
 ## <img src="https://user-images.githubusercontent.com/10084105/141652009-eeacfab4-0e7b-4320-9379-6c3f8641fcf1.png" width="30" title="Slack Logo"> Slack
 
@@ -24,28 +28,27 @@ and implementing query rewrite algorithms for data governance and query optimiza
 
 **Coral** consists of following modules:
 
-- Coral-Hive: Converts definitions of Hive views with UDFs to equivalent view logical plan.
-- Coral-Trino: Converts view logical plan to Trino (formerly PrestoSQL) SQL, and vice versa.
-- Coral-Spark: Converts view logical plan to Spark SQL.
-- Coral-Pig: Converts view logical plan to Pig-latin.
-- Coral-Dbt [WIP]: DBT package that houses materialization modes that exercise Coral logic.
-- Coral-Incremental [WIP]: Derives an incremental query from input SQL for incremental view maintenance.
+- Coral-Hive: Converts HiveQL to Coral IR (can be typically used with Spark SQL as well).
+- Coral-Trino: Converts Coral IR to Trino SQL. Convering Trino SQL to Coral IR is WIP.
+- Coral-Spark: Converts Coral IR to Spark SQL (can be typically used with Hive QL as well).
+- Coral-Dbt: Integrates Coral with DBT. It enables applying Coral transformations on DBT models.
+- Coral-Incremental: Derives an incremental query from input SQL for incremental view maintenance.
 - Coral-Schema: Derives Avro schema of view using view logical plan and input Avro schemas of base tables.
 - Coral-Spark-Plan [WIP]: Converts Spark plan strings to equivalent logical plan.
-- Coral-Visualization [WIP]: Visualizes Coral SqlNode and RelNode trees and renders them to an output file.
+- Coral-Visualization: Visualizes Coral SqlNode and RelNode trees and renders them to an output file.
 - Coral-Service: Service that exposes REST APIs that allow users to interact with Coral (see [Coral-as-a-Service](#Coral-as-a-Service) for more details).
 
 ## Version Upgrades
 
 This project adheres to semantic versioning, where the format x.y.z represents major, minor, and patch version upgrades. Consideration should be given to potential changes required when integrating different versions of this project.
 
-**'y' Upgrade**
+**Major version Upgrade**
 
-An 'y' upgrade represents a version change that introduces backward incompatibility by removal or modification of methods.
+A minor version upgrade represents a version change that introduces backward incompatibility by removal or renaming of classes.
 
-**'x' Upgrade**
+**Minor version Upgrade**
 
-An 'x' upgrade signifies a version change that introduces backward incompatibility by affecting the availability of classes.
+A minor version upgrade represents a version change that introduces backward incompatibility by removal or renaming of methods.
 
 Please carefully review the release notes and documentation accompanying each version upgrade to understand the specific changes and the recommended steps for migration.
 
