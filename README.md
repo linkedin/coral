@@ -6,7 +6,7 @@
 
 **Coral** is a SQL translation, analysis, and rewrite engine. It establishes a standard intermediate representation, 
 Coral IR, which captures the semantics of relational algebraic expressions independently of any SQL dialect. Coral IR
-is defined in two forms: one is the AST layer, and the other at the logical plan layer. Both forms are isomorphic
+is defined in two forms: one is the AST layer, and another at the logical plan layer. Both forms are isomorphic
 and convertible to each other.
 
 Coral exposes APIs for implementing conversions between SQL dialects and Coral IR in both directions.
