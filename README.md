@@ -6,14 +6,15 @@
 
 **Coral** is a SQL translation, analysis, and rewrite engine. It establishes a standard intermediate representation, 
 Coral IR, which captures the semantics of relational algebraic expressions independently of any SQL dialect. Coral IR
-is defined in two forms: one is the at the abstract syntax tree (AST) layer, and another at the logical plan layer. Both
-forms are isomorphic and convertible to each other.
+is defined in two forms: one is the at the abstract syntax tree (AST) layer, and the other is at the logical plan layer.
+Both forms are isomorphic and convertible to each other.
 
 Coral exposes APIs for implementing conversions between SQL dialects and Coral IR in both directions.
 Currently, Coral supports converting HiveQL and Spark SQL to Coral IR, and converting Coral IR to HiveQL, Spark SQL,
 and Trino SQL. With multiple SQL dialects supported, Coral can be used to translate SQL statements and views defined in
-one dialect to equivalent ones in another dialect. For dialect conversion examples, see the modules
-[coral-hive](coral-hive), [coral-spark](coral-spark), and [coral-trino](coral-trino).
+one dialect to equivalent ones in another dialect. It can also be used to interoperate between engines and SQL-powered 
+data sources. For dialect conversion examples, see the modules [coral-hive](coral-hive), [coral-spark](coral-spark), 
+and [coral-trino](coral-trino).
 
 Coral also exposes APIs for Coral IR rewrite and manipulation. This includes rewriting Coral IR expressions to produce
 semantically equivalent, but more performant expressions. For example, Coral automates
