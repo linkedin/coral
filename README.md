@@ -4,19 +4,21 @@
  <img src="docs/coral-logo.jpg" width="400" title="Coral Logo">
 </p>
 
-**Coral** is a SQL translation, analysis, and rewrite engine. Coral defines a standard intermediate representation,
-called Coral IR, to represent relational algebra expressions independently of any SQL dialect. There are two variants of
-Coral IR; one is at the AST layer, and the other is at the logical plan layer. Both variants are isomorphic to each
-other.
+**Coral** is a SQL translation, analysis, and rewrite engine. It establishes a standard intermediate representation, 
+Coral IR, which captures the semantics of relational algebraic expressions independently of any SQL dialect. Coral IR
+is defined in two forms: one is the AST layer, and the other at the logical plan layer. Both forms are isomorphic
+and convertible to each other.
 
-Coral defines APIs to convert SQL dialects to Coral IR, and vice versa. It also defines APIs to rewrite Coral IR.
+Coral exposes APIs for implementing conversions between SQL dialects and Coral IR in both directions.
 Currently, Coral supports converting HiveQL and Spark SQL to Coral IR, and converting Coral IR to HiveQL, Spark SQL,
 and Trino SQL. With multiple SQL dialects supported, Coral can be used to translate SQL statements and views defined in
-one dialect to equivalent ones in another dialect.
+one dialect to equivalent ones in another dialect. For dialect conversion examples, see the modules
+[coral-hive](coral-hive), [coral-spark](coral-spar), and [coral-trino](coral-hive).
 
-Coral also supports rewriting Coral IR to produce semantically equivalent Coral IR. For example, Coral can automate
-incremental view maintenance by rewriting a view definition to an incremental one. Other Coral rewrite applications
-include data governance and policy enforcement.
+Coral also exposes APIs for Coral IR rewrite and manipulation. This includes rewriting Coral IR expressions to produce
+semantically equivalent, but more performant expressions. For example, Coral automates
+incremental view maintenance by rewriting a view definition to an incremental one. See the module [coral-incremental](coral-incremental/README.md)
+for more details. Other Coral rewrite applications include data governance and policy enforcement.
 
 Coral can be used as a library in other projects, or as a service. See instructions below for more details.
 
