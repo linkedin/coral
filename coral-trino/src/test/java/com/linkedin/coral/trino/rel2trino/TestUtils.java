@@ -193,11 +193,11 @@ public class TestUtils {
   }
 
   public static RelToTrinoConverter getRelToTrinoConverter() {
-    return new RelToTrinoConverter();
+    return new RelToTrinoConverter(hiveMetastoreClient);
   }
 
   public static RelToTrinoConverter getRelToTrinoConverter(Map<String, Boolean> configs) {
-    return new RelToTrinoConverter(configs);
+    return new RelToTrinoConverter(hiveMetastoreClient, configs);
   }
 
   public static void initializeTablesAndViews(HiveConf conf) throws HiveException, MetaException, IOException {

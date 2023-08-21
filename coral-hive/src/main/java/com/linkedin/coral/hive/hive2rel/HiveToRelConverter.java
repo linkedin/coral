@@ -63,13 +63,17 @@ public class HiveToRelConverter extends ToRelConverter {
     this.parseTreeBuilder = new ParseTreeBuilder(functionResolver);
   }
 
+  public HiveFunctionResolver getFunctionResolver() {
+    return functionResolver;
+  }
+
   @Override
   protected SqlRexConvertletTable getConvertletTable() {
     return new HiveConvertletTable();
   }
 
   @Override
-  protected SqlValidator getSqlValidator() {
+  public SqlValidator getSqlValidator() {
     return sqlValidator;
   }
 
@@ -96,7 +100,7 @@ public class HiveToRelConverter extends ToRelConverter {
     if (hiveView != null) {
       sqlNode.accept(new FuzzyUnionSqlRewriter(hiveView.getTableName(), this));
     }
-    return sqlNode.accept(new HiveSqlNodeToCoralSqlNodeConverter(getSqlValidator()));
+    return sqlNode.accept(new HiveSqlNodeToCoralSqlNodeConverter(getSqlValidator(), sqlNode));
   }
 
   private static String trimParenthesis(String value) {

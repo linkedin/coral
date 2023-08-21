@@ -21,7 +21,7 @@ import org.apache.calcite.sql.type.MapSqlType;
  * If a column, colA, has a RelDataType, relDataTypeA, with a Trino type string, trinoTypeStringA = buildStructDataTypeString(relDataTypeA),
  * then the following operation is syntactically and semantically correct in Trino: CAST(colA as trinoTypeStringA)
  */
-class RelDataTypeToTrinoTypeStringConverter {
+public class RelDataTypeToTrinoTypeStringConverter {
   private RelDataTypeToTrinoTypeStringConverter() {
   }
 

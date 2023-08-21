@@ -1,0 +1,42 @@
+{
+  "type" : "record",
+  "name" : "basecomplexwithsamenamenestedfields",
+  "namespace" : "coral.schema.avro.base.complex",
+  "fields" : [ {
+    "name" : "Id",
+    "type" : "int"
+  }, {
+    "name" : "Array_Col",
+    "type" : [ "null", {
+      "type" : "array",
+      "items" : [ "null", "string" ]
+    } ],
+    "default" : null
+  }, {
+    "name" : "structcol",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "structcol",
+      "namespace" : "coral.schema.avro.base.complex.basecomplexwithsamenamenestedfields",
+      "fields" : [ {
+        "name" : "String_Field",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "structcol",
+        "type" : [ "null", {
+          "type" : "record",
+          "name" : "structcol",
+          "namespace" : "coral.schema.avro.base.complex.basecomplexwithsamenamenestedfields.structcol",
+          "fields" : [ {
+            "name" : "Int_Field",
+            "type" : [ "null", "int" ],
+            "default" : null
+          } ]
+        } ],
+        "default" : null
+      } ]
+    } ],
+    "default" : null
+  } ]
+}

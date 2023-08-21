@@ -23,14 +23,18 @@ import com.linkedin.coral.common.transformers.SqlCallTransformers;
 import com.linkedin.coral.hive.hive2rel.functions.HiveRLikeOperator;
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 import com.linkedin.coral.trino.rel2trino.functions.TrinoElementAtFunction;
+import com.linkedin.coral.trino.rel2trino.transformers.AsOperatorTransformer;
 import com.linkedin.coral.trino.rel2trino.transformers.CollectListOrSetFunctionTransformer;
 import com.linkedin.coral.trino.rel2trino.transformers.CoralRegistryOperatorRenameSqlCallTransformer;
 import com.linkedin.coral.trino.rel2trino.transformers.CurrentTimestampTransformer;
+import com.linkedin.coral.trino.rel2trino.transformers.FromUnixtimeOperatorTransformer;
 import com.linkedin.coral.trino.rel2trino.transformers.GenericCoralRegistryOperatorRenameSqlCallTransformer;
+import com.linkedin.coral.trino.rel2trino.transformers.JoinSqlCallTransformer;
 import com.linkedin.coral.trino.rel2trino.transformers.MapValueConstructorTransformer;
 import com.linkedin.coral.trino.rel2trino.transformers.ReturnTypeAdjustmentTransformer;
 import com.linkedin.coral.trino.rel2trino.transformers.SqlSelectAliasAppenderTransformer;
 import com.linkedin.coral.trino.rel2trino.transformers.ToDateOperatorTransformer;
+import com.linkedin.coral.trino.rel2trino.transformers.UnnestOperatorTransformer;
 
 import static com.linkedin.coral.trino.rel2trino.CoralTrinoConfigKeys.*;
 
@@ -101,7 +105,7 @@ public class CoralToTrinoSqlCallConverter extends SqlShuttle {
                 + "{\"op\": \"date\", \"operands\":[{\"op\": \"timestamp\", \"operands\":[{\"input\": 1}]}]}]",
             null, null),
         new ToDateOperatorTransformer(configs.getOrDefault(AVOID_TRANSFORM_TO_DATE_UDF, false)),
-        new CurrentTimestampTransformer(),
+        new CurrentTimestampTransformer(), new FromUnixtimeOperatorTransformer(),
 
         // LinkedIn specific functions
         new CoralRegistryOperatorRenameSqlCallTransformer(
@@ -120,7 +124,8 @@ public class CoralToTrinoSqlCallConverter extends SqlShuttle {
             "com.linkedin.stdudfs.hive.daliudfs.UrnExtractorFunctionWrapper", 1, "urn_extractor"),
         new GenericCoralRegistryOperatorRenameSqlCallTransformer(),
 
-        new ReturnTypeAdjustmentTransformer(configs));
+        new ReturnTypeAdjustmentTransformer(configs), new UnnestOperatorTransformer(), new AsOperatorTransformer(),
+        new JoinSqlCallTransformer());
   }
 
   private SqlOperator hiveToCoralSqlOperator(String functionName) {

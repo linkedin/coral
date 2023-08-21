@@ -1,5 +1,5 @@
 /**
- * Copyright 2018-2022 LinkedIn Corporation. All rights reserved.
+ * Copyright 2018-2023 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -44,8 +44,7 @@ public class NamedStructTest {
     final String sql = "SELECT named_struct('abc', 123, 'def', 'xyz')";
     RelNode rel = toRel(sql);
     final String generated = relToStr(rel);
-    final String expected = ""
-        + "LogicalProject(EXPR$0=[CAST(ROW(123, 'xyz')):RecordType(INTEGER NOT NULL abc, CHAR(3) NOT NULL def) NOT NULL])\n"
+    final String expected = "" + "LogicalProject(EXPR$0=[named_struct('abc', 123, 'def', 'xyz')])\n"
         + "  LogicalValues(tuples=[[{ 0 }]])\n";
     assertEquals(generated, expected);
   }
@@ -54,9 +53,8 @@ public class NamedStructTest {
   public void testNullFieldValue() {
     final String sql = "SELECT named_struct('abc', cast(NULL as int), 'def', 150)";
     final String generated = sqlToRelStr(sql);
-    final String expected =
-        "LogicalProject(EXPR$0=[CAST(ROW(CAST(null:NULL):INTEGER, 150)):RecordType(INTEGER abc, INTEGER NOT NULL def) NOT NULL])\n"
-            + "  LogicalValues(tuples=[[{ 0 }]])\n";
+    final String expected = "LogicalProject(EXPR$0=[named_struct('abc', CAST(null:NULL):INTEGER, 'def', 150)])\n"
+        + "  LogicalValues(tuples=[[{ 0 }]])\n";
     assertEquals(generated, expected);
   }
 
@@ -65,7 +63,7 @@ public class NamedStructTest {
     final String sql = "SELECT named_struct('abc', cast(NULL as int), 'def', cast(NULL as double))";
     final String generated = sqlToRelStr(sql);
     final String expected =
-        "LogicalProject(EXPR$0=[CAST(ROW(CAST(null:NULL):INTEGER, CAST(null:NULL):DOUBLE)):RecordType(INTEGER abc, DOUBLE def) NOT NULL])\n"
+        "LogicalProject(EXPR$0=[named_struct('abc', CAST(null:NULL):INTEGER, 'def', CAST(null:NULL):DOUBLE)])\n"
             + "  LogicalValues(tuples=[[{ 0 }]])\n";
     assertEquals(generated, expected);
   }
@@ -74,10 +72,9 @@ public class NamedStructTest {
   public void testNestedComplexTypes() {
     final String sql = "SELECT named_struct('arr', array(10, 15), 's', named_struct('f1', 123, 'f2', array(20.5)))";
     final String generated = sqlToRelStr(sql);
-    final String expected = "LogicalProject(EXPR$0=[CAST(ROW(ARRAY(10, 15), CAST(ROW(123, ARRAY(20.5:DECIMAL(3, 1)))):"
-        + "RecordType(INTEGER NOT NULL f1, DECIMAL(3, 1) NOT NULL ARRAY NOT NULL f2) NOT NULL)):"
-        + "RecordType(INTEGER NOT NULL ARRAY NOT NULL arr, RecordType(INTEGER NOT NULL f1, DECIMAL(3, 1) NOT NULL ARRAY NOT NULL f2) NOT NULL s) NOT NULL])\n"
-        + "  LogicalValues(tuples=[[{ 0 }]])\n";
+    final String expected =
+        "LogicalProject(EXPR$0=[named_struct('arr', ARRAY(10, 15), 's', named_struct('f1', 123, 'f2', ARRAY(20.5:DECIMAL(3, 1))))])\n"
+            + "  LogicalValues(tuples=[[{ 0 }]])\n";
     // verified by human that expected string is correct and retained here to protect from future changes
     assertEquals(generated, expected);
   }

@@ -7,10 +7,10 @@ package com.linkedin.coral.transformers;
 
 import org.apache.calcite.sql.SqlBasicCall;
 import org.apache.calcite.sql.SqlCall;
-import org.apache.calcite.sql.validate.SqlValidator;
 
 import com.linkedin.coral.common.functions.FunctionFieldReferenceOperator;
 import com.linkedin.coral.common.transformers.SqlCallTransformer;
+import com.linkedin.coral.common.utils.TypeDerivationUtil;
 
 
 /**
@@ -23,8 +23,8 @@ import com.linkedin.coral.common.transformers.SqlCallTransformer;
 public class SingleUnionFieldReferenceTransformer extends SqlCallTransformer {
   private static final String TAG_0_OPERAND = "tag_0";
 
-  public SingleUnionFieldReferenceTransformer(SqlValidator sqlValidator) {
-    super(sqlValidator);
+  public SingleUnionFieldReferenceTransformer(TypeDerivationUtil typeDerivationUtil) {
+    super(typeDerivationUtil);
   }
 
   @Override
@@ -32,7 +32,7 @@ public class SingleUnionFieldReferenceTransformer extends SqlCallTransformer {
     if (FunctionFieldReferenceOperator.DOT.getName().equalsIgnoreCase(sqlCall.getOperator().getName())) {
       if (sqlCall.operand(0) instanceof SqlBasicCall) {
         SqlBasicCall outerSqlBasicCall = sqlCall.operand(0);
-        boolean isOperandStruct = getRelDataType(outerSqlBasicCall).isStruct();
+        boolean isOperandStruct = deriveRelDatatype(outerSqlBasicCall).isStruct();
 
         return !isOperandStruct
             && FunctionFieldReferenceOperator.fieldNameStripQuotes(sqlCall.operand(1)).equalsIgnoreCase(TAG_0_OPERAND);

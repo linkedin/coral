@@ -23,7 +23,7 @@ public class HiveToTrinoConverter {
   public static HiveToTrinoConverter create(HiveMetastoreClient mscClient) {
     checkNotNull(mscClient);
     HiveToRelConverter hiveToRelConverter = new HiveToRelConverter(mscClient);
-    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter();
+    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter(mscClient);
     return new HiveToTrinoConverter(hiveToRelConverter, relToTrinoConverter);
   }
 
@@ -31,7 +31,7 @@ public class HiveToTrinoConverter {
     checkNotNull(mscClient);
     checkNotNull(configs);
     HiveToRelConverter hiveToRelConverter = new HiveToRelConverter(mscClient);
-    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter(configs);
+    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter(mscClient, configs);
     return new HiveToTrinoConverter(hiveToRelConverter, relToTrinoConverter);
   }
 

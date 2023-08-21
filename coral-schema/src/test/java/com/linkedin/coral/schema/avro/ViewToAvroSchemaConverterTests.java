@@ -1016,6 +1016,19 @@ public class ViewToAvroSchemaConverterTests {
   }
 
   @Test
+  public void testRowNumberOverWindow() {
+    String viewSql = "CREATE VIEW foo_with_rownumber_over_window AS SELECT *, ROW_NUMBER() OVER"
+        + " (PARTITION BY Id, Struct_Col.Bigint_Field" + " ORDER BY Id DESC) rank" + " FROM basecomplex bc";
+
+    TestUtils.executeCreateViewQuery("default", "foo_with_rownumber_over_window", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "foo_with_rownumber_over_window");
+
+    Assert.assertEquals(actualSchema.toString(true), TestUtils.loadSchema("testRowNumberOverWindow-expected.avsc"));
+  }
+
+  @Test
   public void testLowercaseSchema() {
     String viewSql = "CREATE VIEW v AS SELECT id as Id FROM basecomplex";
     TestUtils.executeCreateViewQuery("default", "v", viewSql);

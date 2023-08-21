@@ -297,6 +297,14 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
     createAddUserDefinedFunction("sha", FunctionReturnTypes.STRING,
         or(family(SqlTypeFamily.STRING), family(SqlTypeFamily.BINARY)));
     createAddUserDefinedFunction("crc32", BIGINT, or(family(SqlTypeFamily.STRING), family(SqlTypeFamily.BINARY)));
+    createAddUserDefinedFunction("from_utf8", explicit(SqlTypeName.VARCHAR), or(CHARACTER, BINARY));
+    createAddUserDefinedFunction("at_timezone", explicit(SqlTypeName.TIMESTAMP),
+        family(SqlTypeFamily.TIMESTAMP, SqlTypeFamily.STRING));
+    createAddUserDefinedFunction("with_timezone", explicit(SqlTypeName.TIMESTAMP),
+        family(SqlTypeFamily.TIMESTAMP, SqlTypeFamily.STRING));
+    createAddUserDefinedFunction("to_unixtime", explicit(SqlTypeName.DOUBLE), family(SqlTypeFamily.TIMESTAMP));
+    createAddUserDefinedFunction("from_unixtime_nanos", explicit(SqlTypeName.TIMESTAMP), NUMERIC);
+    createAddUserDefinedFunction("$canonicalize_hive_timezone_id", explicit(SqlTypeName.VARCHAR), STRING);
 
     // xpath functions
     createAddUserDefinedFunction("xpath", FunctionReturnTypes.arrayOfType(SqlTypeName.VARCHAR), STRING_STRING);

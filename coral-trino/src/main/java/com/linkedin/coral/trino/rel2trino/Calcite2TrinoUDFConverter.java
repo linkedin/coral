@@ -5,8 +5,6 @@
  */
 package com.linkedin.coral.trino.rel2trino;
 
-import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -28,7 +26,6 @@ import org.apache.calcite.rel.logical.LogicalProject;
 import org.apache.calcite.rel.logical.LogicalSort;
 import org.apache.calcite.rel.logical.LogicalUnion;
 import org.apache.calcite.rel.logical.LogicalValues;
-import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexCall;
@@ -41,13 +38,7 @@ import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.SqlReturnTypeInference;
 import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
 
-import com.linkedin.coral.com.google.common.collect.ImmutableList;
-import com.linkedin.coral.common.functions.FunctionReturnTypes;
-import com.linkedin.coral.common.functions.GenericProjectFunction;
-import com.linkedin.coral.trino.rel2trino.functions.GenericProjectToTrinoConverter;
-
 import static com.linkedin.coral.trino.rel2trino.CoralTrinoConfigKeys.*;
-import static org.apache.calcite.sql.fun.SqlStdOperatorTable.MULTIPLY;
 import static org.apache.calcite.sql.type.ReturnTypes.explicit;
 import static org.apache.calcite.sql.type.SqlTypeName.*;
 
@@ -164,30 +155,8 @@ public class Calcite2TrinoUDFConverter {
 
     @Override
     public RexNode visitCall(RexCall call) {
-      // GenericProject requires a nontrivial function rewrite because of the following:
-      //   - makes use of Trino built-in UDFs transform_values for map objects and transform for array objects
-      //     which has lambda functions as parameters
-      //     - syntax is difficult for Calcite to parse
-      //   - the return type varies based on a desired schema to be projected
-      if (call.getOperator() instanceof GenericProjectFunction) {
-        return GenericProjectToTrinoConverter.convertGenericProject(rexBuilder, call, node);
-      }
 
       final String operatorName = call.getOperator().getName();
-
-      if (operatorName.equalsIgnoreCase("from_utc_timestamp")) {
-        Optional<RexNode> modifiedCall = visitFromUtcTimestampCall(call);
-        if (modifiedCall.isPresent()) {
-          return modifiedCall.get();
-        }
-      }
-
-      if (operatorName.equalsIgnoreCase("from_unixtime")) {
-        Optional<RexNode> modifiedCall = visitFromUnixtime(call);
-        if (modifiedCall.isPresent()) {
-          return modifiedCall.get();
-        }
-      }
 
       if (operatorName.equalsIgnoreCase("cast")) {
         Optional<RexNode> modifiedCall = visitCast(call);
@@ -196,131 +165,7 @@ public class Calcite2TrinoUDFConverter {
         }
       }
 
-      if (operatorName.equalsIgnoreCase("substr")) {
-        Optional<RexNode> modifiedCall = visitSubstring(call);
-        if (modifiedCall.isPresent()) {
-          return modifiedCall.get();
-        }
-      }
-
-      if (operatorName.equalsIgnoreCase("concat")) {
-        Optional<RexNode> modifiedCall = visitConcat(call);
-        if (modifiedCall.isPresent()) {
-          return modifiedCall.get();
-        }
-      }
-
       return super.visitCall(call);
-    }
-
-    private Optional<RexNode> visitConcat(RexCall call) {
-      // Hive supports operations like CONCAT(date, varchar) while Trino only supports CONCAT(varchar, varchar)
-      // So we need to cast the unsupported types to varchar
-      final SqlOperator op = call.getOperator();
-      List<RexNode> convertedOperands = visitList(call.getOperands(), (boolean[]) null);
-      List<RexNode> castOperands = new ArrayList<>();
-
-      for (RexNode inputOperand : convertedOperands) {
-        if (inputOperand.getType().getSqlTypeName() != VARCHAR && inputOperand.getType().getSqlTypeName() != CHAR) {
-          final RexNode castOperand = rexBuilder.makeCast(typeFactory.createSqlType(VARCHAR), inputOperand);
-          castOperands.add(castOperand);
-        } else {
-          castOperands.add(inputOperand);
-        }
-      }
-      return Optional.of(rexBuilder.makeCall(op, castOperands));
-    }
-
-    private Optional<RexNode> visitFromUnixtime(RexCall call) {
-      List<RexNode> convertedOperands = visitList(call.getOperands(), (boolean[]) null);
-      SqlOperator formatDatetime = createSqlOperatorOfFunction("format_datetime", FunctionReturnTypes.STRING);
-      SqlOperator fromUnixtime = createSqlOperatorOfFunction("from_unixtime", explicit(TIMESTAMP));
-      if (convertedOperands.size() == 1) {
-        return Optional
-            .of(rexBuilder.makeCall(formatDatetime, rexBuilder.makeCall(fromUnixtime, call.getOperands().get(0)),
-                rexBuilder.makeLiteral("yyyy-MM-dd HH:mm:ss")));
-      } else if (convertedOperands.size() == 2) {
-        return Optional.of(rexBuilder.makeCall(formatDatetime,
-            rexBuilder.makeCall(fromUnixtime, call.getOperands().get(0)), call.getOperands().get(1)));
-      }
-      return Optional.empty();
-    }
-
-    private Optional<RexNode> visitFromUtcTimestampCall(RexCall call) {
-      RelDataType inputType = call.getOperands().get(0).getType();
-      // TODO(trinodb/trino#6295) support high-precision timestamp
-      RelDataType targetType = typeFactory.createSqlType(TIMESTAMP, 3);
-
-      List<RexNode> convertedOperands = visitList(call.getOperands(), (boolean[]) null);
-      RexNode sourceValue = convertedOperands.get(0);
-      RexNode timezone = convertedOperands.get(1);
-
-      // In below definitions we should use `TIMESTATMP WITH TIME ZONE`. As calcite is lacking
-      // this type we use `TIMESTAMP` instead. It does not have any practical implications as result syntax tree
-      // is not type-checked, and only used for generating output SQL for a view query.
-      SqlOperator trinoAtTimeZone =
-          createSqlOperatorOfFunction("at_timezone", explicit(TIMESTAMP /* should be WITH TIME ZONE */));
-      SqlOperator trinoWithTimeZone =
-          createSqlOperatorOfFunction("with_timezone", explicit(TIMESTAMP /* should be WITH TIME ZONE */));
-      SqlOperator trinoToUnixTime = createSqlOperatorOfFunction("to_unixtime", explicit(DOUBLE));
-      SqlOperator trinoFromUnixtimeNanos =
-          createSqlOperatorOfFunction("from_unixtime_nanos", explicit(TIMESTAMP /* should be WITH TIME ZONE */));
-      SqlOperator trinoFromUnixTime =
-          createSqlOperatorOfFunction("from_unixtime", explicit(TIMESTAMP /* should be WITH TIME ZONE */));
-      SqlOperator trinoCanonicalizeHiveTimezoneId =
-          createSqlOperatorOfFunction("$canonicalize_hive_timezone_id", explicit(VARCHAR));
-
-      RelDataType bigintType = typeFactory.createSqlType(BIGINT);
-      RelDataType doubleType = typeFactory.createSqlType(DOUBLE);
-
-      if (inputType.getSqlTypeName() == BIGINT || inputType.getSqlTypeName() == INTEGER
-          || inputType.getSqlTypeName() == SMALLINT || inputType.getSqlTypeName() == TINYINT) {
-
-        return Optional.of(rexBuilder.makeCast(targetType,
-            rexBuilder.makeCall(trinoAtTimeZone,
-                rexBuilder.makeCall(trinoFromUnixtimeNanos,
-                    rexBuilder.makeCall(MULTIPLY, rexBuilder.makeCast(bigintType, sourceValue),
-                        rexBuilder.makeBigintLiteral(BigDecimal.valueOf(1000000)))),
-                rexBuilder.makeCall(trinoCanonicalizeHiveTimezoneId, timezone))));
-      }
-
-      if (inputType.getSqlTypeName() == DOUBLE || inputType.getSqlTypeName() == FLOAT
-          || inputType.getSqlTypeName() == DECIMAL) {
-
-        return Optional.of(rexBuilder.makeCast(targetType,
-            rexBuilder.makeCall(trinoAtTimeZone,
-                rexBuilder.makeCall(trinoFromUnixTime, rexBuilder.makeCast(doubleType, sourceValue)),
-                rexBuilder.makeCall(trinoCanonicalizeHiveTimezoneId, timezone))));
-      }
-
-      if (inputType.getSqlTypeName() == TIMESTAMP || inputType.getSqlTypeName() == DATE) {
-        return Optional.of(rexBuilder.makeCast(targetType,
-            rexBuilder.makeCall(trinoAtTimeZone,
-                rexBuilder.makeCall(trinoFromUnixTime,
-                    rexBuilder.makeCall(trinoToUnixTime,
-                        rexBuilder.makeCall(trinoWithTimeZone, sourceValue, rexBuilder.makeLiteral("UTC")))),
-                rexBuilder.makeCall(trinoCanonicalizeHiveTimezoneId, timezone))));
-      }
-
-      return Optional.empty();
-    }
-
-    // Hive allows passing in a byte array or String to substr/substring, so we can make an effort to emulate the
-    // behavior by casting non-String input to String
-    // https://cwiki.apache.org/confluence/display/hive/languagemanual+udf
-    private Optional<RexNode> visitSubstring(RexCall call) {
-      final SqlOperator op = call.getOperator();
-      List<RexNode> convertedOperands = visitList(call.getOperands(), (boolean[]) null);
-      RexNode inputOperand = convertedOperands.get(0);
-
-      if (inputOperand.getType().getSqlTypeName() != VARCHAR && inputOperand.getType().getSqlTypeName() != CHAR) {
-        List<RexNode> operands = new ImmutableList.Builder<RexNode>()
-            .add(rexBuilder.makeCast(typeFactory.createSqlType(VARCHAR), inputOperand))
-            .addAll(convertedOperands.subList(1, convertedOperands.size())).build();
-        return Optional.of(rexBuilder.makeCall(op, operands));
-      }
-
-      return Optional.empty();
     }
 
     private Optional<RexNode> visitCast(RexCall call) {

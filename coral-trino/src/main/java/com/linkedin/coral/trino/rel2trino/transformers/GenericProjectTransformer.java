@@ -1,32 +1,38 @@
 /**
- * Copyright 2019-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2023 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
-package com.linkedin.coral.trino.rel2trino.functions;
+package com.linkedin.coral.trino.rel2trino.transformers;
 
 import java.util.ArrayList;
-import java.util.Deque;
-import java.util.LinkedList;
 import java.util.List;
 
-import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rel.type.RelRecordType;
-import org.apache.calcite.rex.RexBuilder;
-import org.apache.calcite.rex.RexCall;
-import org.apache.calcite.rex.RexInputRef;
-import org.apache.calcite.rex.RexLiteral;
-import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.sql.SqlCall;
+import org.apache.calcite.sql.SqlIdentifier;
+import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.type.ArraySqlType;
 import org.apache.calcite.sql.type.MapSqlType;
 
+import com.linkedin.coral.com.google.common.collect.ImmutableList;
+import com.linkedin.coral.common.functions.GenericProjectFunction;
+import com.linkedin.coral.common.transformers.SqlCallTransformer;
+import com.linkedin.coral.common.utils.TypeDerivationUtil;
+import com.linkedin.coral.trino.rel2trino.functions.RelDataTypeToTrinoTypeStringConverter;
+import com.linkedin.coral.trino.rel2trino.functions.TrinoArrayTransformFunction;
+import com.linkedin.coral.trino.rel2trino.functions.TrinoKeywordsConverter;
+import com.linkedin.coral.trino.rel2trino.functions.TrinoMapTransformValuesFunction;
+import com.linkedin.coral.trino.rel2trino.functions.TrinoStructCastRowFunction;
+
+import static org.apache.calcite.sql.parser.SqlParserPos.*;
+
 
 /**
- * GenericProjectToTrinoConverter takes a GenericProject RexCall call and rewrites its function call to be suitable
- * to Trino.
+ * GenericProjectTransformer converts Coral IR function `generic_project` to its Trino compatible representation.
  *
  * Trino does not support the GenericProject UDF which can be done in Hive and Spark because the return type of
  * GenericProject can only be determined at runtime based on the schema. Trino has compile-time validations that will
@@ -95,14 +101,25 @@ import org.apache.calcite.sql.type.MapSqlType;
  *             cast(row(x.a, cast(row(x.s.b) as row(b int))) as row(a int, s row(b int)))
  *           )
  *         )
- *
  */
-public class GenericProjectToTrinoConverter {
-  private GenericProjectToTrinoConverter() {
+public class GenericProjectTransformer extends SqlCallTransformer {
+
+  public GenericProjectTransformer(TypeDerivationUtil typeDerivationUtil) {
+    super(typeDerivationUtil);
+  }
+
+  @Override
+  protected boolean condition(SqlCall sqlCall) {
+    return sqlCall.getOperator() instanceof GenericProjectFunction;
+  }
+
+  @Override
+  protected SqlCall transform(SqlCall sqlCall) {
+    return convertGenericProject(sqlCall);
   }
 
   /**
-   * Create a RexCall that performs GenericProject-like operations for Trino depending on the given return type.
+   * Create a SqlCall that performs GenericProject-like operations for Trino depending on the given return type.
    * The Trino UDF for each data type is as follows:
    *   - struct/row
    *     - CAST
@@ -112,37 +129,33 @@ public class GenericProjectToTrinoConverter {
    *     - TRANSFORM_VALUES
    *   - other/primitives
    *     - N/A
-   * @param builder RexBuilder for the call
-   * @param call a GenericProject call
-   * @param node parent relNode of call
-   * @return a Trino UDF call equivalent for the given GenericProject call
+   * @param call a GenericProject SqlCall
+   * @return SqlCall a Trino UDF call equivalent for the given GenericProject call
    */
-  public static RexCall convertGenericProject(RexBuilder builder, RexCall call, RelNode node) {
-    // We build a RexCall to a UDF based on the outermost return type.
-    // Although other transformations may be necessary, we do not recursively build RexCalls.
-    // Instead, we represent these nested transformations as an input string to the top level RexCall.
+  private SqlCall convertGenericProject(SqlCall call) {
+
+    // We build a SqlCall to a UDF based on the outermost return type.
+    // Although other transformations may be necessary, we do not recursively build SqlCalls.
+    // Instead, we represent these nested transformations as an input string to the top level SqlCall.
     //
     // This is necessary because it is hard to represent lambda expressions as input parameters in Calcite.
     // Since these UDF calls are only used in re-writers, we do not have to worry about external use-cases.
     //
     // This function internally does the following:
-    // 1. Takes a RexCall 'call' to 'generic_project(transformColumn, columnNameLiteral)
-    //                  [RexCall:generic_project(`arg_0`, `arg_1`)]
+    // 1. Takes a SqlCall 'call' to 'generic_project(transformColumn, columnNameLiteral)
+    //                  [SqlCall:generic_project(`arg_0`, `arg_1`)]
     //                  /                                         \
-    // [RexInputRef:transformColumn]                [RexLiteral:columnNameLiteral]
+    // [SqlIdentifier:transformColumn]                [SqlLiteral:columnNameLiteral]
     // where:
     //  - transformColumn:
-    //    - contains the type of the input column
+    //    - contains the fully qualified name of the input column and enables RelDataType derivation of this source column
     //  - columnNameLiteral:
     //    - the string name of the column
-    //      - this is necessary because the transformColumn is represented as a numbered reference used by the
-    //        RexBuilder
-    //        - we cannot retrieve the name of the column from the RexBuilder from the numbered reference
     //
-    // 2. Transforms the original RexCall 'call' to a transformed call using a Trino UDF
-    //               [RexCall:Trino_UDF_call(`arg_0`)]
+    // 2. Transforms the original SqlCall 'call' to a modified call using a Trino UDF
+    //               [SqlCall:Trino_UDF_call(`arg_0`)]
     //                                 |
-    //            [RexLiteral:input_transformation_string]
+    //            [SqlLiteral:input_transformation_string]
     //
     // A non-trivial example that requires more than one transformation illustrates the UDF call re-write and recursive
     // transformation string building:
@@ -152,18 +165,18 @@ public class GenericProjectToTrinoConverter {
     //   Suppose we wanted an output column of type:
     //     map<string: array<struct<a int>>>
     //
-    // 1. The RexCall 'call' would look something like:
-    //                  [RexCall:generic_project(`arg_0`, `arg_1`)]
+    // 1. The input SqlCall would look something like:
+    //                  [SqlCall:generic_project(`arg_0`, `arg_1`)]
     //                  /                                         \
-    // [RexInputRef:transformColumn]                    [RexLiteral:'col1']
+    // [SqlIdentifier:transformColumn]                    [SqlLiteral:'col1']
     // where:
     //  - transformColumn has type map<string: array<struct<a int, b int>>>
     //  - generic_project has type map<string: array<struct<a int>>>
     //
     // 2. The re-written transformed call would look something like:
-    //              [RexCall:transform_values(`arg_0`)]
+    //              [SqlCall:transform_values(`arg_0`)]
     //                              |
-    //           [RexLiteral:input_transformation_string]
+    //           [SqlLiteral:input_transformation_string]
     // NOTE:
     //  - The transform_values UDF is chosen because the outermost data type is a map type.
     //  - The input_transformation_string is recursively built as follows:
@@ -179,62 +192,38 @@ public class GenericProjectToTrinoConverter {
     //    Resolving for the transform_string gives:
     //      'col1, (k, v) -> transform(v , x -> cast(row(x.a) as row(a int)))'
     //
-    // The final RexCall will look like:
-    //                             [RexCall:transform_values(`arg_0`)]
+    // The final SqlCall will look like:
+    //                             [SqlCall:transform_values(`arg_0`)]
     //                                              |
-    //           [RexLiteral: 'col1, (k, v) -> transform(v , x -> cast(row(x.a) as row(a int)))']
+    //           [SqlLiteral: 'col1, (k, v) -> transform(v , x -> cast(row(x.a) as row(a int)))']
     // The resolved SQL string will look like:
     //   'transform_values(col1, (k, v) -> transform(v , x -> cast(row(x.a) as row(a int))))'
+    final SqlNode transformColumn = call.getOperandList().get(0);
+    ImmutableList<String> transformColumnFieldFullName = ((SqlIdentifier) transformColumn).names;
+    String transformColumnFieldName = transformColumnFieldFullName.get(transformColumnFieldFullName.size() - 1);
 
-    RexLiteral columnNameLiteral = (RexLiteral) call.getOperands().get(1);
-    String transformColumnFieldName = RexLiteral.stringValue(columnNameLiteral);
-    final RexNode transformColumn = call.getOperands().get(0);
-
-    // `transformColumnFieldName` could be the column name in an intermediate view, which might be different
-    // from the base table's column name because of the alias operation. In this case, the translated SQL couldn't be resolved.
-    // Therefore, we add the following `if` block to reset `transformColumnFieldName` if necessary.
-    // It traverses the base nodes, and if the column type on the corresponding index equals to the type of `transformColumn`
-    // but the column name is different from `transformColumnFieldName`, we reset `transformColumnFieldName`
-    // Corresponding unit test is `HiveToTrinoConverterTest#testResetTransformColumnFieldNameForGenericProject`
-    if (transformColumn instanceof RexInputRef) {
-      int columnIndexInBaseTable = ((RexInputRef) transformColumn).getIndex();
-      Deque<RelNode> nodeDeque = new LinkedList<>(node.getInputs());
-      while (!nodeDeque.isEmpty()) {
-        RelNode currentNode = nodeDeque.pollFirst();
-        final List<RelDataTypeField> fieldList = currentNode.getRowType().getFieldList();
-        if (columnIndexInBaseTable < fieldList.size()) {
-          final RelDataTypeField relDataTypeField = fieldList.get(columnIndexInBaseTable);
-          if (relDataTypeField.getType() == transformColumn.getType()
-              && !transformColumnFieldName.equalsIgnoreCase(relDataTypeField.getName())) {
-            transformColumnFieldName = relDataTypeField.getName();
-            break;
-          }
-        }
-        nodeDeque.addAll(currentNode.getInputs());
-      }
-    }
-
-    RelDataType fromDataType = transformColumn.getType();
+    RelDataType fromDataType = deriveRelDatatype(transformColumn);
     RelDataType toDataType = call.getOperator().inferReturnType(null);
+
     switch (toDataType.getSqlTypeName()) {
       case ROW:
-        // Create a Trino CAST RexCall
+        // Create a Trino CAST SqlCall
         String structDataTypeArgumentString = structDataTypeArgumentString((RelRecordType) fromDataType,
             (RelRecordType) toDataType, transformColumnFieldName);
         SqlOperator structFunction = new TrinoStructCastRowFunction(toDataType);
-        return (RexCall) builder.makeCall(structFunction, builder.makeLiteral(structDataTypeArgumentString));
+        return structFunction.createCall(ZERO, new SqlIdentifier(structDataTypeArgumentString, ZERO));
       case ARRAY:
-        // Create a Trino TRANSFORM RexCall
+        // Create a Trino TRANSFORM SqlCall
         String arrayDataTypeArgumentString = arrayDataTypeArgumentString((ArraySqlType) fromDataType,
             (ArraySqlType) toDataType, transformColumnFieldName);
         SqlOperator arrayFunction = new TrinoArrayTransformFunction(toDataType);
-        return (RexCall) builder.makeCall(arrayFunction, builder.makeLiteral(arrayDataTypeArgumentString));
+        return arrayFunction.createCall(ZERO, new SqlIdentifier(arrayDataTypeArgumentString, ZERO));
       case MAP:
-        // Create a Trino TRANSFORM_VALUES RexCall
+        // Create a Trino TRANSFORM_VALUES SqlCall
         String mapDataTypeArgumentString =
             mapDataTypeArgumentString((MapSqlType) fromDataType, (MapSqlType) toDataType, transformColumnFieldName);
         SqlOperator mapFunction = new TrinoMapTransformValuesFunction(toDataType);
-        return (RexCall) builder.makeCall(mapFunction, builder.makeLiteral(mapDataTypeArgumentString));
+        return mapFunction.createCall(ZERO, new SqlIdentifier(mapDataTypeArgumentString, ZERO));
       default:
         return call;
     }
@@ -249,7 +238,7 @@ public class GenericProjectToTrinoConverter {
    * @param fieldNameReference name of the field that references the map input
    * @return string denoting the UDF call applied to the map
    */
-  private static String mapDataTypeString(MapSqlType fromDataType, MapSqlType toDataType, String fieldNameReference) {
+  private String mapDataTypeString(MapSqlType fromDataType, MapSqlType toDataType, String fieldNameReference) {
     String mapDataTypeArgumentString = mapDataTypeArgumentString(fromDataType, toDataType, fieldNameReference);
     return String.format("transform_values(%s)", mapDataTypeArgumentString);
   }
@@ -263,8 +252,7 @@ public class GenericProjectToTrinoConverter {
    * @param fieldNameReference name of the field that references the map input
    * @return string denoting the argument to a TRANSFORM_VALUES UDF call
    */
-  private static String mapDataTypeArgumentString(MapSqlType fromDataType, MapSqlType toDataType,
-      String fieldNameReference) {
+  private String mapDataTypeArgumentString(MapSqlType fromDataType, MapSqlType toDataType, String fieldNameReference) {
     String mapKeyFieldReference = "k";
     String mapValueFieldReference = "v";
     String valueTransformedFieldString =
@@ -282,8 +270,7 @@ public class GenericProjectToTrinoConverter {
    * @param fieldNameReference name of the field that references the array input
    * @return string denoting the UDF call applied to the array
    */
-  private static String arrayDataTypeString(ArraySqlType fromDataType, ArraySqlType toDataType,
-      String fieldNameReference) {
+  private String arrayDataTypeString(ArraySqlType fromDataType, ArraySqlType toDataType, String fieldNameReference) {
     String arrayDataTypeArgumentString = arrayDataTypeArgumentString(fromDataType, toDataType, fieldNameReference);
     return String.format("transform(%s)", arrayDataTypeArgumentString);
   }
@@ -297,7 +284,7 @@ public class GenericProjectToTrinoConverter {
    * @param fieldNameReference name of the field that references the array input
    * @return string denoting the argument to a TRANSFORM UDF call
    */
-  private static String arrayDataTypeArgumentString(ArraySqlType fromDataType, ArraySqlType toDataType,
+  private String arrayDataTypeArgumentString(ArraySqlType fromDataType, ArraySqlType toDataType,
       String fieldNameReference) {
     String elementFieldReference = "x";
     String elementTransformedFieldString = relDataTypeFieldAccessString(fromDataType.getComponentType(),
@@ -314,8 +301,7 @@ public class GenericProjectToTrinoConverter {
    * @param fieldNameReference name of the field that references the struct input
    * @return string denoting the UDF call applied to the struct
    */
-  private static String structDataTypeString(RelRecordType fromDataType, RelRecordType toDataType,
-      String fieldNameReference) {
+  private String structDataTypeString(RelRecordType fromDataType, RelRecordType toDataType, String fieldNameReference) {
     String structDataTypeArgumentString = structDataTypeArgumentString(fromDataType, toDataType, fieldNameReference);
     return (String.format("cast(%s)", structDataTypeArgumentString));
   }
@@ -329,7 +315,7 @@ public class GenericProjectToTrinoConverter {
    * @param fieldNameReference name of the field that references the struct input
    * @return string denoting the argument to a CAST UDF call
    */
-  private static String structDataTypeArgumentString(RelRecordType fromDataType, RelRecordType toDataType,
+  private String structDataTypeArgumentString(RelRecordType fromDataType, RelRecordType toDataType,
       String fieldNameReference) {
     String structFieldsAccessString =
         buildStructRelDataTypeFieldAccessString(fromDataType, toDataType, fieldNameReference);
@@ -344,7 +330,7 @@ public class GenericProjectToTrinoConverter {
    * @param fieldNameReference name of the field reference
    * @return string denoting the argument to a CAST UDF call
    */
-  private static String relDataTypeFieldAccessString(RelDataType fromDataType, RelDataType toDataType,
+  private String relDataTypeFieldAccessString(RelDataType fromDataType, RelDataType toDataType,
       String fieldNameReference) {
     if (fromDataType.equals(toDataType)) {
       return fieldNameReference;
@@ -370,7 +356,7 @@ public class GenericProjectToTrinoConverter {
    * @param fieldNameReference name of the struct field reference
    * @return string denoting a row with all desired field accesses in toDataType derived from fromDataType
    */
-  private static String buildStructRelDataTypeFieldAccessString(RelRecordType fromDataType, RelRecordType toDataType,
+  private String buildStructRelDataTypeFieldAccessString(RelRecordType fromDataType, RelRecordType toDataType,
       String fieldNameReference) {
     List<String> structSelectedFieldStrings = new ArrayList<>();
     for (RelDataTypeField toDataTypeField : toDataType.getFieldList()) {

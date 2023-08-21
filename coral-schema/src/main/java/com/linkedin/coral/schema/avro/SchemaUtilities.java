@@ -465,17 +465,27 @@ class SchemaUtilities {
   /**
    * This method merges two input schemas of LogicalUnion operator, or throws exception if they can't be merged.
    *
-   * @param leftSchema Left schema to be merged
-   * @param rightSchema Right schema to be merged
+   * @param originalLeftSchema Left schema to be merged
+   * @param originalRightSchema Right schema to be merged
    * @param strictMode If set to true, namespaces are required to be same.
    *                   If set to false, we don't check namespaces.
    * @param forceLowercase If set to true, cast schema to lowercase
    * @return Merged schema if the input schemas can be merged
    */
-  static Schema mergeUnionRecordSchema(@Nonnull Schema leftSchema, @Nonnull Schema rightSchema, boolean strictMode,
-      boolean forceLowercase) {
-    Preconditions.checkNotNull(leftSchema);
-    Preconditions.checkNotNull(rightSchema);
+  static Schema mergeUnionRecordSchema(@Nonnull Schema originalLeftSchema, @Nonnull Schema originalRightSchema,
+      boolean strictMode, boolean forceLowercase) {
+    Preconditions.checkNotNull(originalLeftSchema);
+    Preconditions.checkNotNull(originalRightSchema);
+
+    Schema leftSchema = originalLeftSchema;
+    Schema rightSchema = originalRightSchema;
+
+    // uniquify namespaces for schemas with multiple fields with the same name
+    if (!strictMode) {
+      leftSchema = modifySchemaBeforeMerge(originalLeftSchema);
+      rightSchema = modifySchemaBeforeMerge(originalRightSchema);
+    }
+
     // TODO: we should investigate simplify casing transformations
     if (forceLowercase) {
       leftSchema = ToLowercaseSchemaVisitor.visit(leftSchema);
@@ -816,6 +826,20 @@ class SchemaUtilities {
       default:
         throw new IllegalArgumentException("Unsupported Schema type: " + schema.getType().toString());
     }
+  }
+
+  static Schema modifySchemaBeforeMerge(@Nonnull Schema originalSchema) {
+    Schema modifiedSchema = originalSchema;
+
+    if (originalSchema.getNamespace() == null) {
+      modifiedSchema = Schema.createRecord(originalSchema.getName(), originalSchema.getDoc(), originalSchema.getName(),
+          originalSchema.isError());
+      List<Schema.Field> fields = cloneFieldList(originalSchema.getFields());
+      modifiedSchema.setFields(fields);
+    }
+
+    return SchemaUtilities.setupNameAndNamespace(modifiedSchema, modifiedSchema.getName(),
+        modifiedSchema.getNamespace());
   }
 
   private static Schema setupTopLevelRecordName(@Nonnull Schema schema, @Nonnull String schemaName) {
