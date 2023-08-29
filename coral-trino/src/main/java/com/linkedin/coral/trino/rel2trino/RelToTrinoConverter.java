@@ -9,9 +9,13 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
+import org.apache.calcite.plan.RelOptTable;
+import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.BiRel;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.*;
@@ -36,7 +40,6 @@ import com.linkedin.coral.common.functions.FunctionFieldReferenceOperator;
 
 import static com.google.common.base.Preconditions.*;
 import static com.linkedin.coral.trino.rel2trino.Calcite2TrinoUDFConverter.convertRel;
-import static com.linkedin.coral.trino.rel2trino.CoralTrinoConfigKeys.*;
 
 
 public class RelToTrinoConverter extends RelToSqlConverter {
@@ -85,6 +88,7 @@ public class RelToTrinoConverter extends RelToSqlConverter {
    */
   public String convert(RelNode relNode) {
     RelNode rel = convertRel(relNode, configs);
+    List<String> baseTables = constructBaseTables(rel);
     SqlNode sqlNode = convertToSqlNode(rel);
 
     SqlNode sqlNodeWithRelDataTypeDerivedConversions =
@@ -92,8 +96,15 @@ public class RelToTrinoConverter extends RelToSqlConverter {
 
     SqlNode sqlNodeWithUDFOperatorConverted =
         sqlNodeWithRelDataTypeDerivedConversions.accept(new CoralToTrinoSqlCallConverter(configs));
-    return sqlNodeWithUDFOperatorConverted.accept(new TrinoSqlRewriter()).toSqlString(TrinoSqlDialect.INSTANCE)
-        .toString();
+    SqlNode rewrittenSqlNode = sqlNodeWithUDFOperatorConverted.accept(new TrinoSqlRewriter())
+        .accept(new RewriteTableNameShuttle(new HashSet<>(baseTables)));
+
+    return rewrittenSqlNode.toSqlString(TrinoSqlDialect.INSTANCE).toString();
+  }
+
+  private static List<String> constructBaseTables(RelNode relNode) {
+    return RelOptUtil.findAllTables(relNode).stream().map(RelOptTable::getQualifiedName)
+        .map(x -> String.join(".", x.get(1), x.get(2))).collect(Collectors.toList());
   }
 
   /**
