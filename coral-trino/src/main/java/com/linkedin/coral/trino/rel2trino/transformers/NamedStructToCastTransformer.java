@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.sql.SqlArrayTypeSpec;
+import org.apache.calcite.sql.SqlBasicTypeNameSpec;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlCallBinding;
 import org.apache.calcite.sql.SqlDataTypeSpec;
@@ -17,10 +19,12 @@ import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlRowTypeSpec;
 import org.apache.calcite.sql.fun.SqlCastFunction;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
+import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.sql.type.SqlTypeUtil;
 import org.apache.calcite.sql.validate.SqlValidator;
 import org.apache.calcite.sql.validate.SqlValidatorScope;
 
+import com.linkedin.coral.common.HiveTypeSystem;
 import com.linkedin.coral.common.transformers.SqlCallTransformer;
 import com.linkedin.coral.common.utils.TypeDerivationUtil;
 import com.linkedin.coral.hive.hive2rel.functions.HiveNamedStructFunction;
@@ -59,7 +63,15 @@ public class NamedStructToCastTransformer extends SqlCallTransformer {
     for (int i = 1; i < inputOperands.size(); i += 2) {
       rowCallOperands.add(inputOperands.get(i));
       RelDataType type = deriveRelDatatype(inputOperands.get(i));
-      rowTypes.add(SqlTypeUtil.convertTypeToSpec(type));
+      SqlDataTypeSpec sqlDataTypeSpec = SqlTypeUtil.convertTypeToSpec(type);
+      if (sqlDataTypeSpec instanceof SqlArrayTypeSpec
+          && ((SqlArrayTypeSpec) sqlDataTypeSpec).getElementTypeSpec().toString().equalsIgnoreCase("null")) {
+        int DEFAULT_VARCHAR_PRECISION = new HiveTypeSystem().getDefaultPrecision(SqlTypeName.VARCHAR);
+        sqlDataTypeSpec = new SqlArrayTypeSpec(
+            new SqlDataTypeSpec(new SqlBasicTypeNameSpec(SqlTypeName.VARCHAR, DEFAULT_VARCHAR_PRECISION, ZERO), ZERO),
+            ZERO);
+      }
+      rowTypes.add(sqlDataTypeSpec);
     }
     SqlNode rowCall = SqlStdOperatorTable.ROW.createCall(ZERO, rowCallOperands);
 
