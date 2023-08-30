@@ -42,8 +42,9 @@ public class CoralSpark {
 
   private final List<String> baseTables;
   private final List<SparkUDFInfo> sparkUDFInfoList;
-  private final String sparkSql;
   private final HiveMetastoreClient hiveMetastoreClient;
+  private final SqlNode sparkSqlNode;
+  private String sparkSql;
 
   @Deprecated
   private CoralSpark(List<String> baseTables, List<SparkUDFInfo> sparkUDFInfoList, String sparkSql) {
@@ -51,14 +52,16 @@ public class CoralSpark {
     this.sparkUDFInfoList = sparkUDFInfoList;
     this.sparkSql = sparkSql;
     this.hiveMetastoreClient = null;
+    this.sparkSqlNode = null;
   }
 
   private CoralSpark(List<String> baseTables, List<SparkUDFInfo> sparkUDFInfoList, String sparkSql,
-      HiveMetastoreClient hmsClient) {
+      HiveMetastoreClient hmsClient, SqlNode sparkSqlNode) {
     this.baseTables = baseTables;
     this.sparkUDFInfoList = sparkUDFInfoList;
     this.sparkSql = sparkSql;
     this.hiveMetastoreClient = hmsClient;
+    this.sparkSqlNode = sparkSqlNode;
   }
 
   /**
@@ -104,9 +107,10 @@ public class CoralSpark {
     SparkRelInfo sparkRelInfo = IRRelToSparkRelTransformer.transform(irRelNode);
     Set<SparkUDFInfo> sparkUDFInfos = sparkRelInfo.getSparkUDFInfos();
     RelNode sparkRelNode = sparkRelInfo.getSparkRelNode();
-    String sparkSQL = constructSparkSQL(sparkRelNode, sparkUDFInfos);
+    SqlNode sparkSqlNode = constructSparkSqlNode(sparkRelNode, sparkUDFInfos);
+    String sparkSQL = constructSparkSQL(sparkSqlNode);
     List<String> baseTables = constructBaseTables(sparkRelNode);
-    return new CoralSpark(baseTables, ImmutableList.copyOf(sparkUDFInfos), sparkSQL, hmsClient);
+    return new CoralSpark(baseTables, ImmutableList.copyOf(sparkUDFInfos), sparkSQL, hmsClient, sparkSqlNode);
   }
 
   /**
@@ -148,9 +152,28 @@ public class CoralSpark {
     SparkRelInfo sparkRelInfo = IRRelToSparkRelTransformer.transform(irRelNode);
     Set<SparkUDFInfo> sparkUDFInfos = sparkRelInfo.getSparkUDFInfos();
     RelNode sparkRelNode = sparkRelInfo.getSparkRelNode();
-    String sparkSQL = constructSparkSQLWithExplicitAlias(sparkRelNode, aliases, sparkUDFInfos);
+    SqlNode sparkSqlNode = constructSparkSqlNode(sparkRelNode, sparkUDFInfos);
+    // Use a second pass visit to add explicit alias names,
+    // only do this when it's not a select star case,
+    // since for select star we don't need to add any explicit aliases
+    if (sparkSqlNode.getKind() == SqlKind.SELECT && ((SqlSelect) sparkSqlNode).getSelectList() != null) {
+      sparkSqlNode = sparkSqlNode.accept(new AddExplicitAlias(aliases));
+    }
+    String sparkSQL = constructSparkSQL(sparkSqlNode);
     List<String> baseTables = constructBaseTables(sparkRelNode);
-    return new CoralSpark(baseTables, ImmutableList.copyOf(sparkUDFInfos), sparkSQL, hmsClient);
+    return new CoralSpark(baseTables, ImmutableList.copyOf(sparkUDFInfos), sparkSQL, hmsClient, sparkSqlNode);
+  }
+
+  private static SqlNode constructSparkSqlNode(RelNode sparkRelNode, Set<SparkUDFInfo> sparkUDFInfos) {
+    CoralRelToSqlNodeConverter rel2sql = new CoralRelToSqlNodeConverter();
+    SqlNode coralSqlNode = rel2sql.convert(sparkRelNode);
+    SqlNode sparkSqlNode = coralSqlNode.accept(new CoralSqlNodeToSparkSqlNodeConverter())
+        .accept(new CoralToSparkSqlCallConverter(sparkUDFInfos));
+    return sparkSqlNode.accept(new SparkSqlRewriter());
+  }
+
+  private static String constructSparkSQL(SqlNode sparkSqlNode) {
+    return sparkSqlNode.toSqlString(SparkSqlDialect.INSTANCE).getSql();
   }
 
   /**
@@ -240,5 +263,13 @@ public class CoralSpark {
    */
   public String getSparkSql() {
     return sparkSql;
+  }
+
+  public void setSparkSql(String sparkSql) {
+    this.sparkSql = sparkSql;
+  }
+
+  public SqlNode getSparkSqlNode() {
+    return sparkSqlNode;
   }
 }
