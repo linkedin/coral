@@ -45,7 +45,7 @@ public class CoralSpark {
   private final List<SparkUDFInfo> sparkUDFInfoList;
   private final HiveMetastoreClient hiveMetastoreClient;
   private final SqlNode sqlNode;
-  private String sparkSql;
+  private final String sparkSql;
 
   @Deprecated
   private CoralSpark(List<String> baseTables, List<SparkUDFInfo> sparkUDFInfoList, String sparkSql) {
@@ -274,12 +274,5 @@ public class CoralSpark {
    */
   public SqlNode getSqlNode() {
     return sqlNode;
-  }
-
-  /**
-   * Setter for the Spark SQL
-   */
-  public void setSparkSql(String sparkSql) {
-    this.sparkSql = sparkSql;
   }
 }
