@@ -32,6 +32,7 @@ import com.linkedin.coral.transformers.CoralRelToSqlNodeConverter;
  *  1) Spark SQL
  *  2) Base tables
  *  3) Spark UDF information objects, ie. List of {@link SparkUDFInfo}
+ *  4) SqlNode representation
  *
  * This class converts a IR RelNode to a Spark SQL by
  *  1) Transforming it to a Spark RelNode with Spark details [[IRRelToSparkRelTransformer]]
@@ -43,7 +44,7 @@ public class CoralSpark {
   private final List<String> baseTables;
   private final List<SparkUDFInfo> sparkUDFInfoList;
   private final HiveMetastoreClient hiveMetastoreClient;
-  private final SqlNode sparkSqlNode;
+  private final SqlNode sqlNode;
   private String sparkSql;
 
   @Deprecated
@@ -52,16 +53,16 @@ public class CoralSpark {
     this.sparkUDFInfoList = sparkUDFInfoList;
     this.sparkSql = sparkSql;
     this.hiveMetastoreClient = null;
-    this.sparkSqlNode = null;
+    this.sqlNode = null;
   }
 
   private CoralSpark(List<String> baseTables, List<SparkUDFInfo> sparkUDFInfoList, String sparkSql,
-      HiveMetastoreClient hmsClient, SqlNode sparkSqlNode) {
+      HiveMetastoreClient hmsClient, SqlNode sqlNode) {
     this.baseTables = baseTables;
     this.sparkUDFInfoList = sparkUDFInfoList;
     this.sparkSql = sparkSql;
     this.hiveMetastoreClient = hmsClient;
-    this.sparkSqlNode = sparkSqlNode;
+    this.sqlNode = sqlNode;
   }
 
   /**
@@ -97,6 +98,7 @@ public class CoralSpark {
    *  1) Spark SQL
    *  2) Base tables
    *  3) Spark UDF information objects, ie. List of {@link SparkUDFInfo}
+   *  4) SqlNode representation
    *
    * @param irRelNode A IR RelNode for which CoralSpark will be constructed.
    * @param hmsClient client interface used to interact with the Hive Metastore service.
@@ -265,11 +267,19 @@ public class CoralSpark {
     return sparkSql;
   }
 
-  public void setSparkSql(String sparkSql) {
-    this.sparkSql = sparkSql;
+  /**
+   * Getter for the SqlNode representation
+   *
+   * @return SqlNode
+   */
+  public SqlNode getSqlNode() {
+    return sqlNode;
   }
 
-  public SqlNode getSparkSqlNode() {
-    return sparkSqlNode;
+  /**
+   * Setter for the Spark SQL
+   */
+  public void setSparkSql(String sparkSql) {
+    this.sparkSql = sparkSql;
   }
 }
