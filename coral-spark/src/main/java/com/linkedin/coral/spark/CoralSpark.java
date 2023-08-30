@@ -172,7 +172,7 @@ public class CoralSpark {
     return sparkSqlNode.accept(new SparkSqlRewriter());
   }
 
-  private static String constructSparkSQL(SqlNode sparkSqlNode) {
+  public static String constructSparkSQL(SqlNode sparkSqlNode) {
     return sparkSqlNode.toSqlString(SparkSqlDialect.INSTANCE).getSql();
   }
 
