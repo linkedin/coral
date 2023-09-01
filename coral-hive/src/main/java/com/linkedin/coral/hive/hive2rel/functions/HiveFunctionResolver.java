@@ -172,7 +172,7 @@ public class HiveFunctionResolver {
     Preconditions.checkNotNull(table);
     String functionPrefix = String.format("%s_%s_", table.getDbName(), table.getTableName());
     if (!functionName.toLowerCase().startsWith(functionPrefix.toLowerCase())) {
-      // If the it is not in `databaseName_tableName_udfName` format, we don't require the `databaseName_tableName_` prefix
+      // if functionName is not in `databaseName_tableName_udfName` format, we don't require the `databaseName_tableName_` prefix
       functionPrefix = "";
     }
     String funcBaseName = functionName.substring(functionPrefix.length());

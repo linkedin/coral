@@ -79,6 +79,7 @@ public class TestUtils {
         "create function default_foo_lateral_udtf_CountOfRow as 'com.linkedin.coral.hive.hive2rel.CoralTestUDTF'");
     run(driver,
         "create function default_foo_duplicate_udf_LessThanHundred as 'com.linkedin.coral.hive.hive2rel.CoralTestUDF'");
+    run(driver, "CREATE FUNCTION LessThanHundred as 'com.linkedin.coral.hive.hive2rel.CoralTestUDF'");
 
     run(driver, String.join("\n", "", "CREATE VIEW IF NOT EXISTS foo_view", "AS", "SELECT b AS bcol, sum(c) AS sum_c",
         "FROM foo", "GROUP BY b"));
@@ -114,6 +115,10 @@ public class TestUtils {
             "tblproperties('functions' = 'UnsupportedUDF:com.linkedin.coral.hive.hive2rel.CoralTestUnsupportedUDF',",
             "              'dependencies' = 'com.linkedin:udf:1.0')", "AS",
             "SELECT default_foo_dali_udf5_UnsupportedUDF(a)", "FROM foo"));
+
+    run(driver, String.join("\n", "", "CREATE VIEW IF NOT EXISTS foo_dali_udf_no_prefix",
+        "tblproperties('functions' = 'LessThanHundred:com.linkedin.coral.hive.hive2rel.CoralTestUDF',",
+        "              'dependencies' = 'ivy://com.linkedin:udf:1.0')", "AS", "SELECT LessThanHundred(a)", "FROM foo"));
 
     run(driver,
         String.join("\n", "", "CREATE VIEW IF NOT EXISTS foo_lateral_udtf",
