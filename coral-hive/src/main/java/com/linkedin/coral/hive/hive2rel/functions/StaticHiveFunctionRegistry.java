@@ -662,6 +662,8 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
     // This UDF is not converted to a transport UDF.
     createAddUserDefinedFunction("com.linkedin.dali.customudf.date.hive.DateFormatToEpoch", BIGINT_NULLABLE,
         STRING_STRING_STRING);
+    createAddUserDefinedFunction("com.linkedin.policy.decoration.udfs.HasMemberConsent", ReturnTypes.BOOLEAN,
+        family(SqlTypeFamily.STRING, SqlTypeFamily.ANY, SqlTypeFamily.TIMESTAMP, SqlTypeFamily.BOOLEAN));
 
     // UDTFs
     addFunctionEntry("explode", new CoralSqlUnnestOperator(false));
