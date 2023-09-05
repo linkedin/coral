@@ -19,7 +19,7 @@ public class TrinoSqlDialect extends SqlDialect {
 
   public static final TrinoSqlDialect INSTANCE =
       new TrinoSqlDialect(emptyContext().withDatabaseProduct(DatabaseProduct.UNKNOWN).withDatabaseProductName("Trino")
-          .withIdentifierQuoteString(IDENTIFIER_QUOTE_STRING).withNullCollation(NullCollation.LAST));
+          .withIdentifierQuoteString(IDENTIFIER_QUOTE_STRING).withNullCollation(NullCollation.HIGH));
 
   private TrinoSqlDialect(Context context) {
     super(context);
