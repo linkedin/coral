@@ -64,11 +64,15 @@ public class NamedStructToCastTransformer extends SqlCallTransformer {
       rowCallOperands.add(inputOperands.get(i));
       RelDataType type = deriveRelDatatype(inputOperands.get(i));
       SqlDataTypeSpec sqlDataTypeSpec = SqlTypeUtil.convertTypeToSpec(type);
+      // When the Coral IR operator `named_struct` has a field with value as an empty array, for example:
+      // NAMED_STRUCT('value', ARRAY())
+      // the array is assigned type VARCHAR in the transformed SqlCall to be compatible with Trino, for example:
+      // CAST(ROW(ARRAY[]) AS ROW('value' ARRAY<VARCHAR(65535)>))
       if (sqlDataTypeSpec instanceof SqlArrayTypeSpec
           && ((SqlArrayTypeSpec) sqlDataTypeSpec).getElementTypeSpec().toString().equalsIgnoreCase("null")) {
-        int DEFAULT_VARCHAR_PRECISION = new HiveTypeSystem().getDefaultPrecision(SqlTypeName.VARCHAR);
+        int defaultVarcharPrecision = new HiveTypeSystem().getDefaultPrecision(SqlTypeName.VARCHAR);
         sqlDataTypeSpec = new SqlArrayTypeSpec(
-            new SqlDataTypeSpec(new SqlBasicTypeNameSpec(SqlTypeName.VARCHAR, DEFAULT_VARCHAR_PRECISION, ZERO), ZERO),
+            new SqlDataTypeSpec(new SqlBasicTypeNameSpec(SqlTypeName.VARCHAR, defaultVarcharPrecision, ZERO), ZERO),
             ZERO);
       }
       rowTypes.add(sqlDataTypeSpec);
