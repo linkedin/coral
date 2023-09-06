@@ -692,7 +692,8 @@ public class HiveToTrinoConverterTest {
     // We want NULLS LAST since we're translating from Hive and that is the default null ordering for DESC in Hive
     String targetSql =
         "SELECT \"tabler\".\"a\" AS \"a\", \"substr\"(\"tabler\".\"b\", 1, 1) AS \"aliased_column\", \"tabler\".\"c\" AS \"c\"\n"
-            + "FROM \"test\".\"tabler\" AS \"tabler\"\n" + "ORDER BY \"substr\"(\"tabler\".\"b\", 1, 1) DESC NULLS LAST";
+            + "FROM \"test\".\"tabler\" AS \"tabler\"\n"
+            + "ORDER BY \"substr\"(\"tabler\".\"b\", 1, 1) DESC NULLS LAST";
     String expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
   }
