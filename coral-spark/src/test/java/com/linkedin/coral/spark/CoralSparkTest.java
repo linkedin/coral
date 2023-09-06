@@ -860,6 +860,14 @@ public class CoralSparkTest {
     assertEquals(createCoralSpark(relNode).getSparkSql(), targetSql);
   }
 
+  @Test
+  public void testUdfWithoutDatabaseTableNamePrefix() {
+    RelNode relNode = TestUtils.toRelNode("default", "foo_dali_udf_no_prefix");
+
+    String targetSql = "SELECT LessThanHundred(foo.a)\n" + "FROM default.foo foo";
+    assertEquals(createCoralSpark(relNode).getSparkSql(), targetSql);
+  }
+
   private String getCoralSparkTranslatedSqlWithAliasFromCoralSchema(String db, String view) {
     RelNode relNode = TestUtils.toRelNode(db, view);
     Schema schema = TestUtils.getAvroSchemaForView(db, view, false);
