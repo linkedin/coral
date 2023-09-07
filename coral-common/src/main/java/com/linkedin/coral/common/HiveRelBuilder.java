@@ -24,8 +24,20 @@ import org.apache.calcite.tools.RelBuilder;
 import org.apache.calcite.tools.RelBuilderFactory;
 import org.apache.calcite.util.Pair;
 
-import static org.apache.calcite.rel.core.RelFactories.*;
+import static org.apache.calcite.rel.core.RelFactories.DEFAULT_AGGREGATE_FACTORY;
+import static org.apache.calcite.rel.core.RelFactories.DEFAULT_EXCHANGE_FACTORY;
+import static org.apache.calcite.rel.core.RelFactories.DEFAULT_FILTER_FACTORY;
+import static org.apache.calcite.rel.core.RelFactories.DEFAULT_JOIN_FACTORY;
+import static org.apache.calcite.rel.core.RelFactories.DEFAULT_MATCH_FACTORY;
+import static org.apache.calcite.rel.core.RelFactories.DEFAULT_PROJECT_FACTORY;
 import static org.apache.calcite.rel.core.RelFactories.DEFAULT_REPEAT_UNION_FACTORY;
+import static org.apache.calcite.rel.core.RelFactories.DEFAULT_SET_OP_FACTORY;
+import static org.apache.calcite.rel.core.RelFactories.DEFAULT_SNAPSHOT_FACTORY;
+import static org.apache.calcite.rel.core.RelFactories.DEFAULT_SORT_EXCHANGE_FACTORY;
+import static org.apache.calcite.rel.core.RelFactories.DEFAULT_SORT_FACTORY;
+import static org.apache.calcite.rel.core.RelFactories.DEFAULT_SPOOL_FACTORY;
+import static org.apache.calcite.rel.core.RelFactories.DEFAULT_TABLE_SCAN_FACTORY;
+import static org.apache.calcite.rel.core.RelFactories.DEFAULT_VALUES_FACTORY;
 
 
 /**
