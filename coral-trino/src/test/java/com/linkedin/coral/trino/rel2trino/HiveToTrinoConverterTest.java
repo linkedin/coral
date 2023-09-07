@@ -168,7 +168,7 @@ public class HiveToTrinoConverterTest {
         { "test", "pmod_view", "SELECT MOD(MOD(- 9, 4) + 4, 4)\n" + "FROM \"test\".\"tablea\" AS \"tablea\"" },
 
         { "test", "nullscollationd_view", "SELECT *\n" + "FROM \"test\".\"tabler\" AS \"tabler\"\n"
-            + "ORDER BY \"tabler\".\"b\" DESC NULLS LAST" },
+            + "ORDER BY \"tabler\".\"b\" DESC" },
 
         { "test", "view_with_date_and_interval", "SELECT (CAST('2021-08-30' AS DATE) + INTERVAL '3' DAY)\n"
             + "FROM \"test\".\"tablea\" AS \"tablea\"" },
@@ -689,11 +689,10 @@ public class HiveToTrinoConverterTest {
 
     RelNode relNode = TestUtils.getHiveToRelConverter()
         .convertSql("SELECT a, SUBSTR(b, 1, 1) AS aliased_column, c FROM test.tabler ORDER BY aliased_column DESC");
-    // We want NULLS LAST since we're translating from Hive and that is the default null ordering for DESC in Hive
     String targetSql =
         "SELECT \"tabler\".\"a\" AS \"a\", \"substr\"(\"tabler\".\"b\", 1, 1) AS \"aliased_column\", \"tabler\".\"c\" AS \"c\"\n"
             + "FROM \"test\".\"tabler\" AS \"tabler\"\n"
-            + "ORDER BY \"substr\"(\"tabler\".\"b\", 1, 1) DESC NULLS LAST";
+            + "ORDER BY \"substr\"(\"tabler\".\"b\", 1, 1) DESC";
     String expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
   }

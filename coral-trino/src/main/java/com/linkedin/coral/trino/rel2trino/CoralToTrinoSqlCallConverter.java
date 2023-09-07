@@ -35,6 +35,7 @@ import com.linkedin.coral.trino.rel2trino.transformers.ReturnTypeAdjustmentTrans
 import com.linkedin.coral.trino.rel2trino.transformers.SqlSelectAliasAppenderTransformer;
 import com.linkedin.coral.trino.rel2trino.transformers.ToDateOperatorTransformer;
 import com.linkedin.coral.trino.rel2trino.transformers.UnnestOperatorTransformer;
+import com.linkedin.coral.trino.rel2trino.transformers.NullOrderingTransformer;
 
 import static com.linkedin.coral.trino.rel2trino.CoralTrinoConfigKeys.*;
 
@@ -125,7 +126,8 @@ public class CoralToTrinoSqlCallConverter extends SqlShuttle {
         new GenericCoralRegistryOperatorRenameSqlCallTransformer(),
 
         new ReturnTypeAdjustmentTransformer(configs), new UnnestOperatorTransformer(), new AsOperatorTransformer(),
-        new JoinSqlCallTransformer());
+        new JoinSqlCallTransformer(),
+        new NullOrderingTransformer());
   }
 
   private SqlOperator hiveToCoralSqlOperator(String functionName) {
