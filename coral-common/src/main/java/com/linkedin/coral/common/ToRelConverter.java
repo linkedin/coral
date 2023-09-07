@@ -170,7 +170,7 @@ public abstract class ToRelConverter {
     // 2. Converted expression is harder to validate for correctness(because it appears different from input)
     if (relBuilder == null) {
       Hook.REL_BUILDER_SIMPLIFY.add(Hook.propertyJ(false));
-      relBuilder = RelBuilder.create(config);
+      relBuilder = HiveCommonRelBuilder.create(config);
     }
     return relBuilder;
   }
