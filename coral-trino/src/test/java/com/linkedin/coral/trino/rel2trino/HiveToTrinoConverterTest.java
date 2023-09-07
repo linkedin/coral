@@ -850,7 +850,7 @@ public class HiveToTrinoConverterTest {
   }
 
   @Test
-  public void testSqlSelectAliasAppenderTransformerWithoutTableAlias() {
+  public void testSqlSelectAliasAppenderTransformerWithoutTableAliasPrefix() {
     // test.tableA(a int, b struct<b1:string>
     RelNode relNode = TestUtils.getHiveToRelConverter().convertSql("SELECT b.b1 FROM test.tableA where a > 5");
     RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
