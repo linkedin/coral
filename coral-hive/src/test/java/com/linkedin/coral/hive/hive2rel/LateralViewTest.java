@@ -1,5 +1,5 @@
 /**
- * Copyright 2018-2022 LinkedIn Corporation. All rights reserved.
+ * Copyright 2018-2023 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -136,7 +136,7 @@ public class LateralViewTest {
     String expectedPlan = "LogicalProject(a=[$0], col1=[$4])\n"
         + "  LogicalCorrelate(correlation=[$cor0], joinType=[inner], requiredColumns=[{0}])\n"
         + "    LogicalTableScan(table=[[hive, test, tableone]])\n"
-        + "    LogicalTableFunctionScan(invocation=[com.linkedin.coral.hive.hive2rel.CoralTestUDTF($cor0.a)], rowType=[RecordType(INTEGER col1)])\n";
+        + "    LogicalTableFunctionScan(invocation=[com.linkedin.coral.hive.hive2rel.CoralTestUDTF($cor0.a)], rowType=[RecordType:peek_no_expand(INTEGER col1)])\n";
     assertEquals(RelOptUtil.toString(rel), expectedPlan);
   }
 
