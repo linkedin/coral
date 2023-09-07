@@ -691,8 +691,7 @@ public class HiveToTrinoConverterTest {
         .convertSql("SELECT a, SUBSTR(b, 1, 1) AS aliased_column, c FROM test.tabler ORDER BY aliased_column DESC");
     String targetSql =
         "SELECT \"tabler\".\"a\" AS \"a\", \"substr\"(\"tabler\".\"b\", 1, 1) AS \"aliased_column\", \"tabler\".\"c\" AS \"c\"\n"
-            + "FROM \"test\".\"tabler\" AS \"tabler\"\n"
-            + "ORDER BY \"substr\"(\"tabler\".\"b\", 1, 1) DESC";
+            + "FROM \"test\".\"tabler\" AS \"tabler\"\n" + "ORDER BY \"substr\"(\"tabler\".\"b\", 1, 1) DESC";
     String expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
   }
