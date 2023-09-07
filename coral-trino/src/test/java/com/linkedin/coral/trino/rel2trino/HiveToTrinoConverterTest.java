@@ -857,7 +857,7 @@ public class HiveToTrinoConverterTest {
     String expandedSql = relToTrinoConverter.convert(relNode);
 
     String expected = "SELECT \"tablea\".\"b\".\"b1\" AS \"b1\"\n" + "FROM \"test\".\"tablea\" AS \"tablea\"\n"
-            + "WHERE \"tablea\".\"a\" > 5";
+        + "WHERE \"tablea\".\"a\" > 5";
     assertEquals(expandedSql, expected);
   }
 }
