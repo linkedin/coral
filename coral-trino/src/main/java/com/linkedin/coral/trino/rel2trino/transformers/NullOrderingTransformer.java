@@ -5,11 +5,8 @@
  */
 package com.linkedin.coral.trino.rel2trino.transformers;
 
-import java.util.List;
-
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlKind;
-import org.apache.calcite.sql.SqlNode;
 
 import com.linkedin.coral.common.transformers.SqlCallTransformer;
 
@@ -26,18 +23,12 @@ import com.linkedin.coral.common.transformers.SqlCallTransformer;
 public class NullOrderingTransformer extends SqlCallTransformer {
   @Override
   protected boolean condition(SqlCall sqlCall) {
-    return sqlCall.getOperator().kind == SqlKind.NULLS_LAST && sqlCall.operand(0).getKind() == SqlKind.DESCENDING;
+    return sqlCall.getOperator().kind == SqlKind.NULLS_LAST && sqlCall.operand(0).getKind() == SqlKind.DESCENDING
+        && sqlCall.operandCount() > 0;
   }
 
   @Override
   protected SqlCall transform(SqlCall sqlCall) {
-    final List<SqlNode> sourceOperands = sqlCall.getOperandList();
-    String orderBy = sourceOperands.get(0).getKind().toString();
-    if (orderBy == "DESCENDING" && sqlCall.operandCount() > 0) {
-      // drop redundant "NULLS LAST"
-      return sqlCall.operand(0);
-    }
-
-    return sqlCall;
+    return sqlCall.operand(0);
   }
 }
