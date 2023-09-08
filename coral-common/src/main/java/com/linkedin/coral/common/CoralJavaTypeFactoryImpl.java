@@ -13,6 +13,19 @@ import org.apache.calcite.rel.type.RelDataTypeSystem;
 import org.apache.calcite.rel.type.StructKind;
 
 
+/**
+ * As Coral depends on the code of Calcite to generate RelDataType for each column,
+ * RelDataType of a column of struct type is always generated with StructKind.FULLY_QUALIFIED
+ * in {@link org.apache.calcite.rel.type.RelDataTypeFactoryImpl#createStructType(List, List)}.
+ * With {@link org.apache.calcite.rel.type.StructKind}.FULLY_QUALIFIED,
+ * the validation of Sql query always requires a fully qualified name of a field from a column
+ * of struct type like tbl.structCol.field, otherwise an exception is thrown with the message
+ * of "table not found". In order to make the translation of the query with non-fully-qualified
+ * name for a field from a struct-type column, CoralJavaTypeFactoryImpl overrides
+ * {@link org.apache.calcite.rel.type.RelDataTypeFactoryImpl#createStructType(List, List)} to
+ * assign {@link org.apache.calcite.rel.type.StructKind}.PEEK_FIELDS_NO_EXPAND
+ * to returned {@link org.apache.calcite.rel.type.RelDataType}
+ */
 public class CoralJavaTypeFactoryImpl extends JavaTypeFactoryImpl {
   public CoralJavaTypeFactoryImpl(RelDataTypeSystem typeSystem) {
     super(typeSystem);
