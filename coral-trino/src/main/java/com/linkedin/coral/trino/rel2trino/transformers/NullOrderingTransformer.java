@@ -23,8 +23,8 @@ import com.linkedin.coral.common.transformers.SqlCallTransformer;
 public class NullOrderingTransformer extends SqlCallTransformer {
   @Override
   protected boolean condition(SqlCall sqlCall) {
-    return sqlCall.getOperator().kind == SqlKind.NULLS_LAST && sqlCall.operand(0).getKind() == SqlKind.DESCENDING
-        && sqlCall.operandCount() > 0;
+    return sqlCall.getOperator().kind == SqlKind.NULLS_LAST && sqlCall.operandCount() > 0
+        && sqlCall.operand(0).getKind() == SqlKind.DESCENDING;
   }
 
   @Override
