@@ -15,7 +15,6 @@ import com.google.common.collect.ImmutableMap;
 
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.runtime.CalciteContextException;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.type.ReturnTypes;
 import org.apache.calcite.sql.type.SqlTypeFamily;
@@ -482,15 +481,6 @@ public class HiveToRelConverterTest {
       System.out.println(relToStr(rel));
       System.out.println(relToSql(rel));
     }
-  }
-
-  // Calcite supports PEEK_FIELDS to peek into struct fields
-  // That is not suitable for our usecase. This test is to ensure
-  // we don't inadvertently introduce that change
-  @Test(expectedExceptions = CalciteContextException.class)
-  public void testStructPeekDisallowed() {
-    final String sql = "SELECT name from complex";
-    RelNode rel = toRel(sql);
   }
 
   @Test

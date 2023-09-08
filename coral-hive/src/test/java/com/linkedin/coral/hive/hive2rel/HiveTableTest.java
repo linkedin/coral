@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2022 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2023 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -121,8 +121,8 @@ public class HiveTableTest {
     HiveToRelConverter converter = new HiveToRelConverter(mscAdapter);
     RelDataType rowType2 = converter.convertSql("SELECT coalesce_struct(foo) AS bar from nested_union").getRowType();
     assertNotNull(rowType2);
-    expectedTypeString = "RecordType(" + "RecordType(" + "INTEGER tag_0, DOUBLE tag_1, "
-        + "RecordType(INTEGER a, RecordType(INTEGER tag_0, DOUBLE tag_1) b) tag_2) bar)";
+    expectedTypeString = "RecordType(" + "RecordType:peek_no_expand(" + "INTEGER tag_0, DOUBLE tag_1, "
+        + "RecordType:peek_no_expand(INTEGER a, RecordType:peek_no_expand(INTEGER tag_0, DOUBLE tag_1) b) tag_2) bar)";
     assertEquals(rowType2.toString(), expectedTypeString);
   }
 

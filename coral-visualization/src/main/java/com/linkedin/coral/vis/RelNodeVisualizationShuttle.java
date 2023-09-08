@@ -26,7 +26,7 @@ import org.apache.calcite.rel.logical.LogicalSort;
 import org.apache.calcite.rel.logical.LogicalUnion;
 import org.apache.calcite.rel.logical.LogicalValues;
 
-import com.linkedin.coral.hive.hive2rel.rel.HiveUncollect;
+import com.linkedin.coral.common.HiveUncollect;
 
 import guru.nidi.graphviz.attribute.Label;
 import guru.nidi.graphviz.model.Factory;
