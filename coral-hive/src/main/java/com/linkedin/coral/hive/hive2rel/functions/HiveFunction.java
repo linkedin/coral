@@ -92,7 +92,7 @@ public class HiveFunction {
     }
   };
 
-  public static final Function IN = new Function("in", HiveInOperator.IN) {
+  public static final Function IN = new Function("in", CoralINOperator.IN) {
     @Override
     public SqlCall createCall(SqlNode function, List<SqlNode> operands, SqlLiteral qualifier) {
       checkState(operands.size() >= 2);
@@ -102,7 +102,7 @@ public class HiveFunction {
         // tested.
         return SqlStdOperatorTable.IN.createCall(ZERO, operands);
       } else {
-        // For IN whose operand is a list of values, we use custom IN operator {@link HiveInOperator}.
+        // For IN whose operand is a list of values, we use custom IN operator {@link CoralINOperator}.
         return getSqlOperator().createCall(ZERO, operands);
       }
     }

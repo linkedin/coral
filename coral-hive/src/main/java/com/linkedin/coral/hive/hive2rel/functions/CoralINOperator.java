@@ -51,11 +51,11 @@ import static org.apache.calcite.util.Static.*;
  *  Unlike Calcite's IN operator, whose operands are (expr, values), this operator's operands
  *  are (expr, values[0], values[1], ...), where (exp) is the expression preceding IN operator.
  */
-public class HiveInOperator extends SqlSpecialOperator {
+public class CoralINOperator extends SqlSpecialOperator {
 
-  public static final HiveInOperator IN = new HiveInOperator();
+  public static final CoralINOperator IN = new CoralINOperator();
 
-  public HiveInOperator() {
+  public CoralINOperator() {
     super("IN", SqlKind.OTHER, 32, true, ReturnTypes.BOOLEAN_NULLABLE, InferTypes.FIRST_KNOWN, null);
   }
 
