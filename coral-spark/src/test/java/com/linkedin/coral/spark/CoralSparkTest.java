@@ -861,6 +861,24 @@ public class CoralSparkTest {
     assertEquals(createCoralSpark(relNode).getSparkSql(), targetSql);
   }
 
+  @Test
+  public void testStructColProjectionWithoutTableAliasPrefix() {
+    RelNode relNode = TestUtils.toRelNode("SELECT s.name as name FROM default.complex");
+    String targetSql = createCoralSpark(relNode).getSparkSql();
+
+    String expectedSql = "SELECT complex.s.name\n" + "FROM default.complex complex";
+    assertEquals(expectedSql, targetSql);
+  }
+
+  @Test
+  public void testStructColProjectionWithTableAliasPrefix() {
+    RelNode relNode = TestUtils.toRelNode("SELECT complex.s.name as name FROM default.complex");
+    String targetSql = createCoralSpark(relNode).getSparkSql();
+
+    String expectedSql = "SELECT complex.s.name\n" + "FROM default.complex complex";
+    assertEquals(expectedSql, targetSql);
+  }
+
   private String getCoralSparkTranslatedSqlWithAliasFromCoralSchema(String db, String view) {
     RelNode relNode = TestUtils.toRelNode(db, view);
     Schema schema = TestUtils.getAvroSchemaForView(db, view, false);
