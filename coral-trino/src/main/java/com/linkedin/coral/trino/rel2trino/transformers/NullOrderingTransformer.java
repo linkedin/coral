@@ -24,7 +24,7 @@ import static org.apache.calcite.rel.rel2sql.SqlImplementor.*;
  * For example, "SELECT * FROM TABLE_NAME ORDER BY COL_NAME DESC NULLS LAST "
  * is transformed to "SELECT * FROM TABLE_NAME ORDER BY COL_NAME DESC"
  *
- * We want this change as the NULLS LAST is redundant as Trino defaults to NULLS LAST ordering,
+ * This change is desired as "NULLS LAST" is redundant since Trino defaults to NULLS LAST ordering,
  * furthermore, this allows us to avoid regression.
  */
 public class NullOrderingTransformer extends SqlCallTransformer {
