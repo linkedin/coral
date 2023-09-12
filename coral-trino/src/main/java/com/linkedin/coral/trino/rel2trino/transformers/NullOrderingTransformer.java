@@ -5,10 +5,16 @@
  */
 package com.linkedin.coral.trino.rel2trino.transformers;
 
+import org.apache.calcite.sql.SqlBasicCall;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlKind;
+import org.apache.calcite.sql.SqlNode;
+import org.apache.calcite.sql.SqlNodeList;
+import org.apache.calcite.sql.SqlSelect;
 
 import com.linkedin.coral.common.transformers.SqlCallTransformer;
+
+import static org.apache.calcite.rel.rel2sql.SqlImplementor.*;
 
 
 /**
@@ -23,12 +29,27 @@ import com.linkedin.coral.common.transformers.SqlCallTransformer;
 public class NullOrderingTransformer extends SqlCallTransformer {
   @Override
   protected boolean condition(SqlCall sqlCall) {
-    return sqlCall.getOperator().kind == SqlKind.NULLS_LAST && sqlCall.operandCount() > 0
-        && sqlCall.operand(0).getKind() == SqlKind.DESCENDING;
+    return sqlCall.getOperator().kind == SqlKind.SELECT && ((SqlSelect) sqlCall).getOrderList() != null
+        && ((SqlSelect) sqlCall).getOrderList().size() > 0;
   }
 
   @Override
   protected SqlCall transform(SqlCall sqlCall) {
-    return sqlCall.operand(0);
+    SqlNodeList orderList = ((SqlSelect) sqlCall).getOrderList();
+    SqlNodeList newOrderList = new SqlNodeList(POS);
+
+    for (SqlNode node : orderList) {
+      SqlNode operand = ((SqlBasicCall) node).getOperandList().get(0);
+
+      if (node instanceof SqlBasicCall && ((SqlBasicCall) node).getOperator().kind == SqlKind.NULLS_LAST
+          && operand instanceof SqlBasicCall && ((SqlBasicCall) operand).getOperator().kind == SqlKind.DESCENDING) {
+        newOrderList.add(operand);
+      } else {
+        newOrderList.add(node);
+      }
+    }
+
+    ((SqlSelect) sqlCall).setOrderBy(newOrderList);
+    return sqlCall;
   }
 }
