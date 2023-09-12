@@ -19,13 +19,16 @@ import static org.apache.calcite.rel.rel2sql.SqlImplementor.*;
 
 
 /**
- * This class implements the transformation of SqlCalls with NULLS LAST operator preceded by DESC
+ * This class transforms the ordering in the input SqlCall to be compatible with Trino engine.
+ * There is no need to override ASC inputs since the default null orderings of Coral IR, Hive and Trino all match.
+ * However, "DESC NULLS LAST" need to be overridden to remove the redundant "NULLS LAST" since
+ * Trino defaults to a NULLS LAST ordering for DESC anyways.
  *
  * For example, "SELECT * FROM TABLE_NAME ORDER BY COL_NAME DESC NULLS LAST "
  * is transformed to "SELECT * FROM TABLE_NAME ORDER BY COL_NAME DESC"
  *
- * This change is desired as "NULLS LAST" is redundant since Trino defaults to NULLS LAST ordering,
- * furthermore, this allows us to avoid regression.
+ * Also, "SELECT ROW_NUMBER() OVER (PARTITION BY a ORDER BY b DESC NULLS LAST) AS rid FROM foo"
+ * is transformed to "SELECT ROW_NUMBER() OVER (PARTITION BY a ORDER BY b DESC) AS rid FROM foo"
  */
 public class NullOrderingTransformer extends SqlCallTransformer {
   @Override
