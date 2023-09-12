@@ -36,20 +36,9 @@ public class NullOrderingTransformer extends SqlCallTransformer {
 
   @Override
   protected SqlCall transform(SqlCall sqlCall) {
-    SqlNodeList orderList = new SqlNodeList(POS);
-
-    switch (sqlCall.getOperator().kind) {
-      case SELECT:
-        orderList = ((SqlSelect) sqlCall).getOrderList();
-        break;
-      case WINDOW:
-        orderList = ((SqlWindow) sqlCall).getOrderList();
-        break;
-    }
-
     SqlNodeList newOrderList = new SqlNodeList(POS);
 
-    for (SqlNode node : orderList) {
+    for (SqlNode node : getOrderList(sqlCall)) {
       SqlNode operand = ((SqlBasicCall) node).getOperandList().get(0);
 
       if (node instanceof SqlBasicCall && ((SqlBasicCall) node).getOperator().kind == SqlKind.NULLS_LAST
@@ -60,6 +49,24 @@ public class NullOrderingTransformer extends SqlCallTransformer {
       }
     }
 
+    setOrderList(sqlCall, newOrderList);
+    return sqlCall;
+  }
+
+  private SqlNodeList getOrderList(SqlCall sqlCall) {
+    switch (sqlCall.getOperator().kind) {
+      case SELECT:
+        return ((SqlSelect) sqlCall).getOrderList();
+      case WINDOW:
+        return ((SqlWindow) sqlCall).getOrderList();
+      case DEFAULT:
+        return new SqlNodeList(POS);
+    }
+
+    return new SqlNodeList(POS);
+  }
+
+  private void setOrderList(SqlCall sqlCall, SqlNodeList newOrderList) {
     switch (sqlCall.getOperator().kind) {
       case SELECT:
         ((SqlSelect) sqlCall).setOrderBy(newOrderList);
@@ -68,7 +75,5 @@ public class NullOrderingTransformer extends SqlCallTransformer {
         ((SqlWindow) sqlCall).setOrderList(newOrderList);
         break;
     }
-
-    return sqlCall;
   }
 }
