@@ -697,6 +697,33 @@ public class HiveToTrinoConverterTest {
   }
 
   @Test
+  public void testAliasOrderByDESCMultipleOrderings() {
+    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
+
+    RelNode relNode = TestUtils.getHiveToRelConverter().convertSql(
+        "SELECT a, SUBSTR(b, 1, 1) AS aliased_column, c FROM test.tabler ORDER BY aliased_column DESC, a DESC, c DESC");
+    String targetSql =
+        "SELECT \"tabler\".\"a\" AS \"a\", \"substr\"(\"tabler\".\"b\", 1, 1) AS \"aliased_column\", \"tabler\".\"c\" AS \"c\"\n"
+            + "FROM \"test\".\"tabler\" AS \"tabler\"\n"
+            + "ORDER BY \"substr\"(\"tabler\".\"b\", 1, 1) DESC, \"tabler\".\"a\" DESC, \"tabler\".\"c\" DESC";
+    String expandedSql = relToTrinoConverter.convert(relNode);
+    assertEquals(expandedSql, targetSql);
+  }
+
+  @Test
+  public void testAliasOrderByDESCWindow() {
+    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
+
+    RelNode relNode = TestUtils.getHiveToRelConverter()
+        .convertSql("SELECT ROW_NUMBER() OVER (PARTITION BY a ORDER BY b DESC) AS rid FROM test.tabler");
+    String targetSql =
+        "SELECT ROW_NUMBER() OVER (PARTITION BY \"tabler\".\"a\" ORDER BY \"tabler\".\"b\" DESC) AS \"rid\"\n"
+            + "FROM \"test\".\"tabler\" AS \"tabler\"";
+    String expandedSql = relToTrinoConverter.convert(relNode);
+    assertEquals(expandedSql, targetSql);
+  }
+
+  @Test
   public void testAliasOrderByASC() {
     RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
 

@@ -11,6 +11,7 @@ import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlNodeList;
 import org.apache.calcite.sql.SqlSelect;
+import org.apache.calcite.sql.SqlWindow;
 
 import com.linkedin.coral.common.transformers.SqlCallTransformer;
 
@@ -29,13 +30,23 @@ import static org.apache.calcite.rel.rel2sql.SqlImplementor.*;
 public class NullOrderingTransformer extends SqlCallTransformer {
   @Override
   protected boolean condition(SqlCall sqlCall) {
-    return sqlCall.getOperator().kind == SqlKind.SELECT && ((SqlSelect) sqlCall).getOrderList() != null
-        && ((SqlSelect) sqlCall).getOrderList().size() > 0;
+    return (sqlCall.getOperator().kind == SqlKind.SELECT && ((SqlSelect) sqlCall).getOrderList() != null)
+        || (sqlCall.getOperator().kind == SqlKind.WINDOW && ((SqlWindow) sqlCall).getOrderList() != null);
   }
 
   @Override
   protected SqlCall transform(SqlCall sqlCall) {
-    SqlNodeList orderList = ((SqlSelect) sqlCall).getOrderList();
+    SqlNodeList orderList = new SqlNodeList(POS);
+
+    switch (sqlCall.getOperator().kind) {
+      case SELECT:
+        orderList = ((SqlSelect) sqlCall).getOrderList();
+        break;
+      case WINDOW:
+        orderList = ((SqlWindow) sqlCall).getOrderList();
+        break;
+    }
+
     SqlNodeList newOrderList = new SqlNodeList(POS);
 
     for (SqlNode node : orderList) {
@@ -49,7 +60,15 @@ public class NullOrderingTransformer extends SqlCallTransformer {
       }
     }
 
-    ((SqlSelect) sqlCall).setOrderBy(newOrderList);
+    switch (sqlCall.getOperator().kind) {
+      case SELECT:
+        ((SqlSelect) sqlCall).setOrderBy(newOrderList);
+        break;
+      case WINDOW:
+        ((SqlWindow) sqlCall).setOrderList(newOrderList);
+        break;
+    }
+
     return sqlCall;
   }
 }
