@@ -5,9 +5,7 @@
  */
 package com.linkedin.coral.coralservice.controller;
 
-import java.io.File;
 import java.util.List;
-import java.util.UUID;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -27,8 +25,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.linkedin.coral.coralservice.entity.IncrementalRequestBody;
 import com.linkedin.coral.coralservice.entity.IncrementalResponseBody;
 import com.linkedin.coral.coralservice.entity.TranslateRequestBody;
-import com.linkedin.coral.coralservice.entity.VisualizationRequestBody;
-import com.linkedin.coral.coralservice.entity.VisualizationResponseBody;
 
 import static com.linkedin.coral.coralservice.utils.CoralProvider.*;
 import static com.linkedin.coral.coralservice.utils.IncrementalUtils.*;
@@ -45,7 +41,6 @@ import static com.linkedin.coral.coralservice.utils.VisualizationUtils.*;
 public class TranslationController implements ApplicationListener<ContextRefreshedEvent> {
   @Value("${hivePropsLocation:}")
   private String hivePropsLocation;
-  private File imageDir = createImageDir();
 
   private final static ImmutableMap<String, String> LANGUAGE_MAP =
       ImmutableMap.of("hive", "Hive QL", "trino", "Trino SQL", "spark", "Spark SQL");
@@ -108,28 +103,6 @@ public class TranslationController implements ApplicationListener<ContextRefresh
           + LANGUAGE_MAP.get(toLanguage) + ":\n" + translatedSql + "\n";
     }
     return ResponseEntity.status(HttpStatus.OK).body(message);
-  }
-
-  @PostMapping("/api/visualizations/getgraphs")
-  public ResponseEntity getIRVisualizations(@RequestBody VisualizationRequestBody visualizationRequestBody) {
-    final String fromLanguage = visualizationRequestBody.getFromLanguage();
-    final String query = visualizationRequestBody.getQuery();
-    //    final VisualizationRequestBody.RewriteType rewriteType = visualizationRequestBody.getRewriteType();
-    UUID sqlNodeImageID;
-    UUID relNodeImageID;
-
-    try {
-      sqlNodeImageID = generateSqlNodeVisualization(query, fromLanguage, imageDir);
-      relNodeImageID = generateRelNodeVisualization(query, fromLanguage, imageDir);
-    } catch (Throwable t) {
-      t.printStackTrace();
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(t.getMessage());
-    }
-    VisualizationResponseBody responseBody = new VisualizationResponseBody();
-    responseBody.setSqlNodeImageID(sqlNodeImageID);
-    responseBody.setRelNodeImageID(relNodeImageID);
-
-    return ResponseEntity.status(HttpStatus.OK).body(responseBody);
   }
 
   @PostMapping("/api/incremental/rewrite")
