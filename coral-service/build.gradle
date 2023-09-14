@@ -28,6 +28,7 @@ dependencies {
   implementation project(':coral-incremental')
   implementation project(':coral-trino')
   implementation project(':coral-spark')
+  implementation project(':coral-visualization')
 
   implementation('org.apache.hive:hive-exec:1.2.2:core') {
     exclude group: 'org.apache.calcite', module: 'calcite-core'
