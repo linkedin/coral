@@ -39,22 +39,15 @@ public class VisualizationUtils {
       sqlNode = new HiveToRelConverter(hiveMetastoreClient).toSqlNode(query);
     }
 
-    if (incrementalRewrittenRelNode != null) {
-      switch (rewriteType) {
-        case INCREMENTAL:
-          // We want to instead generate the visualization of SqlNode2 of the RHS of Coral's translation
-          sqlNode = new CoralRelToSqlNodeConverter().convert(incrementalRewrittenRelNode);
-          break;
-        case DATAMASKING:
-        case NONE:
-        default:
-          break;
-      }
+    if (incrementalRewrittenRelNode != null && rewriteType == INCREMENTAL) {
+      // We want to instead generate the visualization of SqlNode2 of the RHS of Coral's translation
+      sqlNode = new CoralRelToSqlNodeConverter().convert(incrementalRewrittenRelNode);
     }
 
     assert sqlNode != null;
-    VisualizationUtil visualizationUtil = VisualizationUtil.create(imageDir);
 
+    // Generate graphviz svg using sqlNode
+    VisualizationUtil visualizationUtil = VisualizationUtil.create(imageDir);
     UUID sqlNodeId = UUID.randomUUID();
     visualizationUtil.visualizeSqlNodeToFile(sqlNode, "/" + sqlNodeId + ".svg");
 
@@ -82,8 +75,9 @@ public class VisualizationUtils {
     }
 
     assert relNode != null;
-    VisualizationUtil visualizationUtil = VisualizationUtil.create(imageDir);
 
+    // Generate graphviz svg using relNode
+    VisualizationUtil visualizationUtil = VisualizationUtil.create(imageDir);
     UUID relNodeID = UUID.randomUUID();
     visualizationUtil.visualizeRelNodeToFile(relNode, "/" + relNodeID + ".svg");
 

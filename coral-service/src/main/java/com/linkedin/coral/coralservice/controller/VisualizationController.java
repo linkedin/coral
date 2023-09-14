@@ -62,7 +62,7 @@ public class VisualizationController {
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(t.getMessage());
     }
 
-    // Build  response body
+    // Build response body
     VisualizationResponseBody responseBody = new VisualizationResponseBody();
     responseBody.setSqlNodeImageID(sqlNodeImageID);
     responseBody.setRelNodeImageID(relNodeImageID);
@@ -76,7 +76,7 @@ public class VisualizationController {
   public ResponseEntity<FileSystemResource> getImage(@PathVariable String imageId) {
     String imagePath = imageDir + File.separator + imageId + ".svg";
 
-    if (isValidImageId(imagePath)) {
+    if (isValidImage(imagePath)) {
       try {
         Path path = new File(imagePath).toPath();
         String contentType = Files.probeContentType(path);
@@ -97,9 +97,9 @@ public class VisualizationController {
     }
   }
 
-  private boolean isValidImageId(String imagePath) {
-    File imageFile = new File(imagePath);
+  private boolean isValidImage(String imagePath) {
     // Check if the file exists and is a regular file (not a directory)
+    File imageFile = new File(imagePath);
     return imageFile.exists() && imageFile.isFile();
   }
 }
