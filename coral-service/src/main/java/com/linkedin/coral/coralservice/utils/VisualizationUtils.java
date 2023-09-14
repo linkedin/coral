@@ -18,6 +18,7 @@ import com.linkedin.coral.trino.trino2rel.TrinoToRelConverter;
 import com.linkedin.coral.vis.VisualizationUtil;
 
 import static com.linkedin.coral.coralservice.utils.CoralProvider.*;
+import static com.linkedin.coral.coralservice.utils.RewriteType.*;
 
 
 public class VisualizationUtils {
@@ -38,9 +39,17 @@ public class VisualizationUtils {
       sqlNode = new HiveToRelConverter(hiveMetastoreClient).toSqlNode(query);
     }
 
-    if (incrementalRewrittenRelNode != null && rewriteType == RewriteType.INCREMENTAL) {
-      // We want to instead generate the visualization of SqlNode2 of the RHS of Coral's translation
-      sqlNode = new CoralRelToSqlNodeConverter().convert(incrementalRewrittenRelNode);
+    if (incrementalRewrittenRelNode != null) {
+      switch (rewriteType) {
+        case INCREMENTAL:
+          // We want to instead generate the visualization of SqlNode2 of the RHS of Coral's translation
+          sqlNode = new CoralRelToSqlNodeConverter().convert(incrementalRewrittenRelNode);
+          break;
+        case DATAMASKING:
+        case NONE:
+        default:
+          break;
+      }
     }
 
     assert sqlNode != null;
@@ -61,9 +70,15 @@ public class VisualizationUtils {
       relNode = new HiveToRelConverter(hiveMetastoreClient).convertSql(query);
     }
 
-    if (rewriteType == RewriteType.INCREMENTAL) {
-      relNode = RelNodeIncrementalTransformer.convertRelIncremental(relNode);
-      incrementalRewrittenRelNode = relNode;
+    switch (rewriteType) {
+      case INCREMENTAL:
+        relNode = RelNodeIncrementalTransformer.convertRelIncremental(relNode);
+        incrementalRewrittenRelNode = relNode;
+        break;
+      case DATAMASKING:
+      case NONE:
+      default:
+        break;
     }
 
     assert relNode != null;
