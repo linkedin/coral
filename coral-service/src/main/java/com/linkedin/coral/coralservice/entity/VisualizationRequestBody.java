@@ -5,11 +5,14 @@
  */
 package com.linkedin.coral.coralservice.entity;
 
+import com.linkedin.coral.coralservice.utils.RewriteType;
+
+
 public class VisualizationRequestBody {
   private String fromLanguage;
   private String query;
 
-  private String rewriteType;
+  private RewriteType rewriteType;
 
   public String getFromLanguage() {
     return fromLanguage;
@@ -19,24 +22,7 @@ public class VisualizationRequestBody {
     return query;
   }
 
-  public String getRewriteType() {
+  public RewriteType getRewriteType() {
     return rewriteType;
-  }
-
-  public enum RewriteType {
-    NONE("none"),
-    INCREMENTAL("incremental"),
-    DATAMASKING("datamasking");
-
-    private final String type;
-
-    RewriteType(String description) {
-      this.type = description;
-    }
-
-    @Override
-    public String toString() {
-      return type;
-    }
   }
 }

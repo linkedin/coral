@@ -24,12 +24,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.linkedin.coral.coralservice.entity.VisualizationRequestBody;
 import com.linkedin.coral.coralservice.entity.VisualizationResponseBody;
+import com.linkedin.coral.coralservice.utils.RewriteType;
 
 import static com.linkedin.coral.coralservice.utils.VisualizationUtils.*;
 
 
 @RestController
-@RequestMapping("/api/visualization")
+@RequestMapping("/api/visualizations")
 public class VisualizationController {
   private File imageDir = createImageDir();
 
@@ -37,20 +38,36 @@ public class VisualizationController {
   public ResponseEntity getIRVisualizations(@RequestBody VisualizationRequestBody visualizationRequestBody) {
     final String fromLanguage = visualizationRequestBody.getFromLanguage();
     final String query = visualizationRequestBody.getQuery();
-    //    final VisualizationRequestBody.RewriteType rewriteType = visualizationRequestBody.getRewriteType();
-    UUID sqlNodeImageID;
-    UUID relNodeImageID;
+    final RewriteType rewriteType = visualizationRequestBody.getRewriteType();
+
+    UUID sqlNodeImageID, relNodeImageID;
+    UUID postRewriteSqlNodeImageID = null;
+    UUID postRewriteRelNodeImageID = null;
 
     try {
-      sqlNodeImageID = generateSqlNodeVisualization(query, fromLanguage, imageDir);
-      relNodeImageID = generateRelNodeVisualization(query, fromLanguage, imageDir);
+      // Always generate the pre/no rewrite images first
+      sqlNodeImageID = generateSqlNodeVisualization(query, fromLanguage, imageDir, RewriteType.NONE);
+      relNodeImageID = generateRelNodeVisualization(query, fromLanguage, imageDir, RewriteType.NONE);
+      assert !sqlNodeImageID.equals(relNodeImageID);
+
+      if (rewriteType != RewriteType.NONE && rewriteType != null) {
+        // A rewrite was requested
+        postRewriteRelNodeImageID = generateRelNodeVisualization(query, fromLanguage, imageDir, rewriteType);
+        postRewriteSqlNodeImageID = generateSqlNodeVisualization(query, fromLanguage, imageDir, rewriteType);
+        assert !postRewriteSqlNodeImageID.equals(postRewriteRelNodeImageID);
+      }
+
     } catch (Throwable t) {
       t.printStackTrace();
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(t.getMessage());
     }
+
+    // Build  response body
     VisualizationResponseBody responseBody = new VisualizationResponseBody();
     responseBody.setSqlNodeImageID(sqlNodeImageID);
     responseBody.setRelNodeImageID(relNodeImageID);
+    responseBody.setPostRewriteSqlNodeImageID(postRewriteSqlNodeImageID);
+    responseBody.setPostRewriteRelNodeImageID(postRewriteRelNodeImageID);
 
     return ResponseEntity.status(HttpStatus.OK).body(responseBody);
   }

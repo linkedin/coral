@@ -11,9 +11,9 @@ import java.util.UUID;
 public class VisualizationResponseBody {
 
   private UUID sqlNodeImageID;
-
   private UUID relNodeImageID;
-
+  private UUID postRewriteSqlNodeImageID;
+  private UUID postRewriteRelNodeImageID;
   public VisualizationResponseBody() {
   }
 
@@ -25,12 +25,28 @@ public class VisualizationResponseBody {
     return relNodeImageID;
   }
 
+  public UUID getPostRewriteSqlNodeImageID() {
+    return postRewriteSqlNodeImageID;
+  }
+
+  public void setPostRewriteSqlNodeImageID(UUID postRewriteSqlNodeImageID) {
+    this.postRewriteSqlNodeImageID = postRewriteSqlNodeImageID;
+  }
+
   public void setSqlNodeImageID(UUID sqlNodeImageID) {
     this.sqlNodeImageID = sqlNodeImageID;
   }
 
   public void setRelNodeImageID(UUID relNodeImageID) {
     this.relNodeImageID = relNodeImageID;
+  }
+
+  public UUID getPostRewriteRelNodeImageID() {
+    return postRewriteRelNodeImageID;
+  }
+
+  public void setPostRewriteRelNodeImageID(UUID postRewriteRelNodeImageID) {
+    this.postRewriteRelNodeImageID = postRewriteRelNodeImageID;
   }
 
 }

@@ -12,6 +12,8 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.sql.SqlNode;
 
 import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
+import com.linkedin.coral.incremental.RelNodeIncrementalTransformer;
+import com.linkedin.coral.transformers.CoralRelToSqlNodeConverter;
 import com.linkedin.coral.trino.trino2rel.TrinoToRelConverter;
 import com.linkedin.coral.vis.VisualizationUtil;
 
@@ -24,12 +26,21 @@ public class VisualizationUtils {
     return new File(System.getProperty("java.io.tmpdir") + "/images" + UUID.randomUUID());
   }
 
-  public static UUID generateSqlNodeVisualization(String query, String fromLanguage, File imageDir) {
+  public static RelNode incrementalRewrittenRelNode = null;
+
+  public static UUID generateSqlNodeVisualization(String query, String fromLanguage, File imageDir,
+      RewriteType rewriteType) {
+
     SqlNode sqlNode = null;
     if (fromLanguage.equalsIgnoreCase("trino")) {
       sqlNode = new TrinoToRelConverter(hiveMetastoreClient).toSqlNode(query);
     } else if (fromLanguage.equalsIgnoreCase("hive")) {
       sqlNode = new HiveToRelConverter(hiveMetastoreClient).toSqlNode(query);
+    }
+
+    if (incrementalRewrittenRelNode != null && rewriteType == RewriteType.INCREMENTAL) {
+      // We want to instead generate the visualization of SqlNode2 of the RHS of Coral's translation
+      sqlNode = new CoralRelToSqlNodeConverter().convert(incrementalRewrittenRelNode);
     }
 
     assert sqlNode != null;
@@ -41,12 +52,18 @@ public class VisualizationUtils {
     return sqlNodeId;
   }
 
-  public static UUID generateRelNodeVisualization(String query, String fromLanguage, File imageDir) {
+  public static UUID generateRelNodeVisualization(String query, String fromLanguage, File imageDir,
+      RewriteType rewriteType) {
     RelNode relNode = null;
     if (fromLanguage.equalsIgnoreCase("trino")) {
       relNode = new TrinoToRelConverter(hiveMetastoreClient).convertSql(query);
     } else if (fromLanguage.equalsIgnoreCase("hive")) {
       relNode = new HiveToRelConverter(hiveMetastoreClient).convertSql(query);
+    }
+
+    if (rewriteType == RewriteType.INCREMENTAL) {
+      relNode = RelNodeIncrementalTransformer.convertRelIncremental(relNode);
+      incrementalRewrittenRelNode = relNode;
     }
 
     assert relNode != null;
