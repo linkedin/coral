@@ -89,6 +89,7 @@ public class TranslationController implements ApplicationListener<ContextRefresh
         }
       }
     } catch (Throwable t) {
+      // TODO: use logger
       t.printStackTrace();
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(t.getMessage());
     }

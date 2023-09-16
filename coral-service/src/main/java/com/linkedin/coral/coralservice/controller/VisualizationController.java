@@ -5,10 +5,12 @@
  */
 package com.linkedin.coral.coralservice.controller;
 
+import com.linkedin.coral.coralservice.utils.VisualizationUtils;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.UUID;
 
 import org.springframework.core.io.FileSystemResource;
@@ -33,6 +35,7 @@ import static com.linkedin.coral.coralservice.utils.VisualizationUtils.*;
 @RequestMapping("/api/visualizations")
 public class VisualizationController {
   private File imageDir = createImageDir();
+  private VisualizationUtils visualizationUtils = new VisualizationUtils();
 
   @PostMapping("/generategraphs")
   public ResponseEntity getIRVisualizations(@RequestBody VisualizationRequestBody visualizationRequestBody) {
@@ -40,34 +43,37 @@ public class VisualizationController {
     final String query = visualizationRequestBody.getQuery();
     final RewriteType rewriteType = visualizationRequestBody.getRewriteType();
 
-    UUID sqlNodeImageID, relNodeImageID;
-    UUID postRewriteSqlNodeImageID = null;
-    UUID postRewriteRelNodeImageID = null;
+    if (!visualizationUtils.isValidFromLanguage(fromLanguage)) {
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+          .body("Currently, only Hive and Trino are supported as engines to generate graphs using.\n");
+    }
 
+    // A list of UUIDs in this order of:
+    // 1. Image ID of pre/no rewrite relNode
+    // 2. Image ID of pre/no rewrite sqlNode
+    // If a rewrite was requested:
+    // 3. Image ID of post rewrite relNode
+    // 4. Image ID of post rewrite sqlNode
+    ArrayList<UUID> imageIdList;
     try {
-      // Always generate the pre/no rewrite images first
-      sqlNodeImageID = generateSqlNodeVisualization(query, fromLanguage, imageDir, RewriteType.NONE);
-      relNodeImageID = generateRelNodeVisualization(query, fromLanguage, imageDir, RewriteType.NONE);
-      assert !sqlNodeImageID.equals(relNodeImageID);
-
-      if (rewriteType != RewriteType.NONE && rewriteType != null) {
-        // A rewrite was requested
-        postRewriteRelNodeImageID = generateRelNodeVisualization(query, fromLanguage, imageDir, rewriteType);
-        postRewriteSqlNodeImageID = generateSqlNodeVisualization(query, fromLanguage, imageDir, rewriteType);
-        assert !postRewriteSqlNodeImageID.equals(postRewriteRelNodeImageID);
-      }
-
+      imageIdList = visualizationUtils.generateIRVisualizations(query, fromLanguage, imageDir, rewriteType);
     } catch (Throwable t) {
+      // TODO: use logger
       t.printStackTrace();
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(t.getMessage());
     }
 
+    assert imageIdList.size() > 0;
+
     // Build response body
     VisualizationResponseBody responseBody = new VisualizationResponseBody();
-    responseBody.setSqlNodeImageID(sqlNodeImageID);
-    responseBody.setRelNodeImageID(relNodeImageID);
-    responseBody.setPostRewriteSqlNodeImageID(postRewriteSqlNodeImageID);
-    responseBody.setPostRewriteRelNodeImageID(postRewriteRelNodeImageID);
+    responseBody.setRelNodeImageID(imageIdList.get(0));
+    responseBody.setSqlNodeImageID(imageIdList.get(1));
+    if (imageIdList.size() >= 4) {
+      // Rewrite was requested
+      responseBody.setPostRewriteRelNodeImageID(imageIdList.get(2));
+      responseBody.setPostRewriteSqlNodeImageID(imageIdList.get(3));
+    }
 
     return ResponseEntity.status(HttpStatus.OK).body(responseBody);
   }
