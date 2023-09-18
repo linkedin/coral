@@ -9,13 +9,13 @@ import com.linkedin.coral.coralservice.utils.RewriteType;
 
 
 public class VisualizationRequestBody {
-  private String fromLanguage;
+  private String sourceLanguage;
   private String query;
 
   private RewriteType rewriteType;
 
-  public String getFromLanguage() {
-    return fromLanguage;
+  public String getSourceLanguage() {
+    return sourceLanguage;
   }
 
   public String getQuery() {

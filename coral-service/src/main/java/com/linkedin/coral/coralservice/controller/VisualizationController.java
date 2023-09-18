@@ -39,13 +39,13 @@ public class VisualizationController {
 
   @PostMapping("/generategraphs")
   public ResponseEntity getIRVisualizations(@RequestBody VisualizationRequestBody visualizationRequestBody) {
-    final String fromLanguage = visualizationRequestBody.getFromLanguage();
+    final String sourceLanguage = visualizationRequestBody.getSourceLanguage();
     final String query = visualizationRequestBody.getQuery();
     final RewriteType rewriteType = visualizationRequestBody.getRewriteType();
 
-    if (!visualizationUtils.isValidFromLanguage(fromLanguage)) {
+    if (!visualizationUtils.isValidSourceLanguage(sourceLanguage)) {
       return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-          .body("Currently, only Hive and Trino are supported as engines to generate graphs using.\n");
+          .body("Currently, only Hive, Spark, and Trino are supported as engines to generate graphs using.\n");
     }
 
     // A list of UUIDs in this order of:
@@ -56,7 +56,7 @@ public class VisualizationController {
     // 4. Image ID of post rewrite sqlNode
     ArrayList<UUID> imageIdList;
     try {
-      imageIdList = visualizationUtils.generateIRVisualizations(query, fromLanguage, imageDir, rewriteType);
+      imageIdList = visualizationUtils.generateIRVisualizations(query, sourceLanguage, imageDir, rewriteType);
     } catch (Throwable t) {
       // TODO: use logger
       t.printStackTrace();

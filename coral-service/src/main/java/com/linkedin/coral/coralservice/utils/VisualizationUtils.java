@@ -27,20 +27,20 @@ public class VisualizationUtils {
     return new File(System.getProperty("java.io.tmpdir") + "/images" + UUID.randomUUID());
   }
 
-  public boolean isValidFromLanguage(String fromLanguage) {
-    return fromLanguage.equalsIgnoreCase("trino") || fromLanguage.equalsIgnoreCase("hive");
+  public boolean isValidSourceLanguage(String sourceLanguage) {
+    return sourceLanguage.equalsIgnoreCase("trino") || sourceLanguage.equalsIgnoreCase("hive");
   }
 
-  public ArrayList<UUID> generateIRVisualizations(String query, String fromLanguage, File imageDir,
+  public ArrayList<UUID> generateIRVisualizations(String query, String sourceLanguage, File imageDir,
       RewriteType rewriteType) {
     ArrayList<UUID> imageIDList = new ArrayList<>();
 
     // Always generate the pre/no rewrite images first
-    RelNode relNode = getRelNode(query, fromLanguage);
+    RelNode relNode = getRelNode(query, sourceLanguage);
     UUID relNodeID = generateRelNodeVisualization(relNode, imageDir);
     imageIDList.add(relNodeID);
 
-    UUID sqlNodeID = generateSqlNodeVisualization(getSqlNode(query, fromLanguage), imageDir);
+    UUID sqlNodeID = generateSqlNodeVisualization(getSqlNode(query, sourceLanguage), imageDir);
     imageIDList.add(sqlNodeID);
 
     // Generate rewritten IR images if requested, otherwise, simply return the non rewritten image ids
@@ -85,22 +85,24 @@ public class VisualizationUtils {
     return relNodeID;
   }
 
-  private RelNode getRelNode(String query, String fromLanguage) {
+  private RelNode getRelNode(String query, String sourceLanguage) {
     RelNode relNode = null;
-    if (fromLanguage.equalsIgnoreCase("trino")) {
+    if (sourceLanguage.equalsIgnoreCase("trino")) {
       relNode = new TrinoToRelConverter(hiveMetastoreClient).convertSql(query);
-    } else if (fromLanguage.equalsIgnoreCase("hive")) {
+    } else if (sourceLanguage.equalsIgnoreCase("hive")) {
       relNode = new HiveToRelConverter(hiveMetastoreClient).convertSql(query);
+    } else if (sourceLanguage.equalsIgnoreCase("spark")) {
+
     }
 
     return relNode;
   }
 
-  private SqlNode getSqlNode(String query, String fromLanguage) {
+  private SqlNode getSqlNode(String query, String sourceLanguage) {
     SqlNode sqlNode = null;
-    if (fromLanguage.equalsIgnoreCase("trino")) {
+    if (sourceLanguage.equalsIgnoreCase("trino")) {
       sqlNode = new TrinoToRelConverter(hiveMetastoreClient).toSqlNode(query);
-    } else if (fromLanguage.equalsIgnoreCase("hive")) {
+    } else if (sourceLanguage.equalsIgnoreCase("hive")) {
       sqlNode = new HiveToRelConverter(hiveMetastoreClient).toSqlNode(query);
     }
 

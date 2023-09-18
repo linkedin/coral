@@ -29,7 +29,6 @@ import com.linkedin.coral.coralservice.entity.TranslateRequestBody;
 import static com.linkedin.coral.coralservice.utils.CoralProvider.*;
 import static com.linkedin.coral.coralservice.utils.IncrementalUtils.*;
 import static com.linkedin.coral.coralservice.utils.TranslationUtils.*;
-import static com.linkedin.coral.coralservice.utils.VisualizationUtils.*;
 
 
 /**
@@ -57,11 +56,11 @@ public class TranslationController implements ApplicationListener<ContextRefresh
 
   @PostMapping("/api/translations/translate")
   public ResponseEntity translate(@RequestBody TranslateRequestBody translateRequestBody) {
-    final String fromLanguage = translateRequestBody.getFromLanguage();
-    final String toLanguage = translateRequestBody.getToLanguage();
+    final String sourceLanguage = translateRequestBody.getSourceLanguage();
+    final String targetLanguage = translateRequestBody.getTargetLanguage();
     final String query = translateRequestBody.getQuery();
 
-    if (fromLanguage.equalsIgnoreCase(toLanguage)) {
+    if (sourceLanguage.equalsIgnoreCase(targetLanguage)) {
       return ResponseEntity.status(HttpStatus.BAD_REQUEST)
           .body("Please choose different languages to translate between.\n");
     }
@@ -71,20 +70,20 @@ public class TranslationController implements ApplicationListener<ContextRefresh
     try {
       // TODO: add more translations once n-to-one-to-n is completed
       // From Trino
-      if (fromLanguage.equalsIgnoreCase("trino")) {
+      if (sourceLanguage.equalsIgnoreCase("trino")) {
         // To Spark
-        if (toLanguage.equalsIgnoreCase("spark")) {
+        if (targetLanguage.equalsIgnoreCase("spark")) {
           translatedSql = translateTrinoToSpark(query);
         }
       }
       // From Hive
-      else if (fromLanguage.equalsIgnoreCase("hive")) {
+      else if (sourceLanguage.equalsIgnoreCase("hive")) {
         // To Spark
-        if (toLanguage.equalsIgnoreCase("spark")) {
+        if (targetLanguage.equalsIgnoreCase("spark")) {
           translatedSql = translateHiveToSpark(query);
         }
         // To Trino
-        else if (toLanguage.equalsIgnoreCase("trino")) {
+        else if (targetLanguage.equalsIgnoreCase("trino")) {
           translatedSql = translateHiveToTrino(query);
         }
       }
@@ -96,12 +95,12 @@ public class TranslationController implements ApplicationListener<ContextRefresh
 
     String message;
     if (translatedSql == null) {
-      message = "Translation from " + LANGUAGE_MAP.get(fromLanguage) + " to " + LANGUAGE_MAP.get(toLanguage)
+      message = "Translation from " + LANGUAGE_MAP.get(sourceLanguage) + " to " + LANGUAGE_MAP.get(targetLanguage)
           + " is not currently supported."
           + " Coral-Service only supports translation from Hive to Trino/Spark, or translation from Trino to Spark.\n";
     } else {
-      message = "Original query in " + LANGUAGE_MAP.get(fromLanguage) + ":\n" + query + "\n" + "Translated to "
-          + LANGUAGE_MAP.get(toLanguage) + ":\n" + translatedSql + "\n";
+      message = "Original query in " + LANGUAGE_MAP.get(sourceLanguage) + ":\n" + query + "\n" + "Translated to "
+          + LANGUAGE_MAP.get(targetLanguage) + ":\n" + translatedSql + "\n";
     }
     return ResponseEntity.status(HttpStatus.OK).body(message);
   }

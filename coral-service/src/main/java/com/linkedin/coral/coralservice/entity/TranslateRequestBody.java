@@ -6,16 +6,16 @@
 package com.linkedin.coral.coralservice.entity;
 
 public class TranslateRequestBody {
-  private String fromLanguage;
-  private String toLanguage;
+  private String sourceLanguage;
+  private String targetLanguage;
   private String query;
 
-  public String getFromLanguage() {
-    return fromLanguage;
+  public String getSourceLanguage() {
+    return sourceLanguage;
   }
 
-  public String getToLanguage() {
-    return toLanguage;
+  public String getTargetLanguage() {
+    return targetLanguage;
   }
 
   public String getQuery() {
