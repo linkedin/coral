@@ -36,52 +36,53 @@ public class VisualizationUtils {
     ArrayList<UUID> imageIDList = new ArrayList<>();
 
     // Always generate the pre/no rewrite images first
-    RelNodeAndID relNodeAndID = generateRelNodeVisualization(getRelNode(query, fromLanguage), imageDir);
-    imageIDList.add(relNodeAndID.id);
+    RelNode relNode = getRelNode(query, fromLanguage);
+    UUID relNodeID = generateRelNodeVisualization(relNode, imageDir);
+    imageIDList.add(relNodeID);
 
-    SqlNodeAndID sqlNodeAndID = generateSqlNodeVisualization(getSqlNode(query, fromLanguage), imageDir);
-    imageIDList.add(sqlNodeAndID.id);
+    UUID sqlNodeID = generateSqlNodeVisualization(getSqlNode(query, fromLanguage), imageDir);
+    imageIDList.add(sqlNodeID);
 
     // Generate rewritten IR images if requested, otherwise, simply return the non rewritten image ids
-    RelNode preRewriteRelNode = relNodeAndID.relNode;
     RelNode postRewriteRelNode;
 
     if (rewriteType != RewriteType.NONE && rewriteType != null) {
+      // Pass in pre-rewrite rel node
       switch (rewriteType) {
         case INCREMENTAL:
-          postRewriteRelNode = RelNodeIncrementalTransformer.convertRelIncremental(preRewriteRelNode);
+          postRewriteRelNode = RelNodeIncrementalTransformer.convertRelIncremental(relNode);
           break;
         case DATAMASKING:
         default:
           return imageIDList;
       }
-      RelNodeAndID postRewroteRelNodeAndID = generateRelNodeVisualization(postRewriteRelNode, imageDir);
-      imageIDList.add(postRewroteRelNodeAndID.id);
+      UUID postRewroteRelNodeID = generateRelNodeVisualization(postRewriteRelNode, imageDir);
+      imageIDList.add(postRewroteRelNodeID);
 
       SqlNode postRewriteSqlNode = new CoralRelToSqlNodeConverter().convert(postRewriteRelNode);
-      SqlNodeAndID postRewriteSqlNodeAndID = generateSqlNodeVisualization(postRewriteSqlNode, imageDir);
-      imageIDList.add(postRewriteSqlNodeAndID.id);
+      UUID postRewriteSqlNodeID = generateSqlNodeVisualization(postRewriteSqlNode, imageDir);
+      imageIDList.add(postRewriteSqlNodeID);
     }
 
     return imageIDList;
   }
 
-  private SqlNodeAndID generateSqlNodeVisualization(SqlNode sqlNode, File imageDir) {
+  private UUID generateSqlNodeVisualization(SqlNode sqlNode, File imageDir) {
     // Generate graphviz svg using sqlNode
     VisualizationUtil visualizationUtil = VisualizationUtil.create(imageDir);
     UUID sqlNodeId = UUID.randomUUID();
     visualizationUtil.visualizeSqlNodeToFile(sqlNode, "/" + sqlNodeId + ".svg");
 
-    return new SqlNodeAndID(sqlNodeId, sqlNode);
+    return sqlNodeId;
   }
 
-  private RelNodeAndID generateRelNodeVisualization(RelNode relNode, File imageDir) {
+  private UUID generateRelNodeVisualization(RelNode relNode, File imageDir) {
     // Generate graphviz svg using relNode
     VisualizationUtil visualizationUtil = VisualizationUtil.create(imageDir);
     UUID relNodeID = UUID.randomUUID();
     visualizationUtil.visualizeRelNodeToFile(relNode, "/" + relNodeID + ".svg");
 
-    return new RelNodeAndID(relNodeID, relNode);
+    return relNodeID;
   }
 
   private RelNode getRelNode(String query, String fromLanguage) {
@@ -104,25 +105,5 @@ public class VisualizationUtils {
     }
 
     return sqlNode;
-  }
-
-  private class RelNodeAndID {
-    private UUID id;
-    private RelNode relNode;
-
-    public RelNodeAndID(UUID id, RelNode relNode) {
-      this.id = id;
-      this.relNode = relNode;
-    }
-  }
-
-  private class SqlNodeAndID {
-    private UUID id;
-    private SqlNode sqlNode;
-
-    public SqlNodeAndID(UUID id, SqlNode sqlNode) {
-      this.id = id;
-      this.sqlNode = sqlNode;
-    }
   }
 }
