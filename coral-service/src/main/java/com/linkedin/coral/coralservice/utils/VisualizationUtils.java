@@ -23,7 +23,7 @@ import static com.linkedin.coral.coralservice.utils.CoralProvider.*;
 
 public class VisualizationUtils {
 
-  public static File createImageDir() {
+  public static File getImageDir() {
     return new File(System.getProperty("java.io.tmpdir") + "/images" + UUID.randomUUID());
   }
 

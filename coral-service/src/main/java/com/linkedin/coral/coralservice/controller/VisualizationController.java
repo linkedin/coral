@@ -5,7 +5,6 @@
  */
 package com.linkedin.coral.coralservice.controller;
 
-import com.linkedin.coral.coralservice.utils.VisualizationUtils;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -27,6 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.linkedin.coral.coralservice.entity.VisualizationRequestBody;
 import com.linkedin.coral.coralservice.entity.VisualizationResponseBody;
 import com.linkedin.coral.coralservice.utils.RewriteType;
+import com.linkedin.coral.coralservice.utils.VisualizationUtils;
 
 import static com.linkedin.coral.coralservice.utils.VisualizationUtils.*;
 
@@ -34,7 +34,7 @@ import static com.linkedin.coral.coralservice.utils.VisualizationUtils.*;
 @RestController
 @RequestMapping("/api/visualizations")
 public class VisualizationController {
-  private File imageDir = createImageDir();
+  private File imageDir = getImageDir();
   private VisualizationUtils visualizationUtils = new VisualizationUtils();
 
   @PostMapping("/generategraphs")
