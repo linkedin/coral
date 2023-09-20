@@ -5,20 +5,24 @@
  */
 package com.linkedin.coral.coralservice.entity;
 
-public class TranslateRequestBody {
+import com.linkedin.coral.coralservice.utils.RewriteType;
+
+
+public class VisualizationRequestBody {
   private String sourceLanguage;
-  private String targetLanguage;
   private String query;
+
+  private RewriteType rewriteType;
 
   public String getSourceLanguage() {
     return sourceLanguage;
   }
 
-  public String getTargetLanguage() {
-    return targetLanguage;
-  }
-
   public String getQuery() {
     return query;
+  }
+
+  public RewriteType getRewriteType() {
+    return rewriteType;
   }
 }
