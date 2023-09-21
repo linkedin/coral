@@ -1,8 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import LoadingButton from '@/app/components/Buttons/LoadingButton';
-import ResultCard from '@/app/components/Cards/ResultCard';
 
 export default function TranslationForm({
   onTranslationFetchComplete,
@@ -33,7 +32,7 @@ export default function TranslationForm({
     await fetch('http://localhost:8080/api/translations/translate', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json', // Correctly set the Content-Type header
+        'Content-Type': 'application/json',
         Accept: 'application/json',
       },
       body: JSON.stringify(Object.fromEntries(formData)),
@@ -41,7 +40,6 @@ export default function TranslationForm({
       .then((response) => response.text())
       .then((data) => {
         onTranslationFetchComplete(data);
-        console.log(data);
       });
   }
 
