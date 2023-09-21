@@ -71,7 +71,7 @@ public class TranslationController implements ApplicationListener<ContextRefresh
 
     if (!isValidSourceLanguage(sourceLanguage)) {
       return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-          .body("Currently, only Hive, and Trino are supported as source languages.\n");
+          .body("Currently, only Hive, Trino and Spark are supported as source languages.\n");
     }
 
     String translatedSql = null;

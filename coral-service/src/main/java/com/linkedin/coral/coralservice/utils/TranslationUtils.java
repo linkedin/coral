@@ -45,8 +45,8 @@ public class TranslationUtils {
         translatedSql = translateTrinoToSpark(query);
       }
     }
-    // From Hive
-    else if (sourceLanguage.equalsIgnoreCase("hive")) {
+    // From Hive or Spark
+    else if (sourceLanguage.equalsIgnoreCase("hive") || sourceLanguage.equalsIgnoreCase("spark")) {
       // To Spark
       if (targetLanguage.equalsIgnoreCase("spark")) {
         translatedSql = translateHiveToSpark(query);

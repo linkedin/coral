@@ -45,8 +45,8 @@ public class VisualizationController {
     final RewriteType rewriteType = visualizationRequestBody.getRewriteType();
 
     if (!isValidSourceLanguage(sourceLanguage)) {
-      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-          .body("Currently, only Hive, and Trino are supported as engines to generate graphs using.\n");
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+          "Currently, only Hive, Spark, and Trino SQL are supported as source languages for Coral IR visualization. \n");
     }
 
     // A list of UUIDs in this order of:

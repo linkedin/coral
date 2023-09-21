@@ -8,6 +8,7 @@ package com.linkedin.coral.coralservice.utils;
 public class CommonUtils {
 
   public static boolean isValidSourceLanguage(String sourceLanguage) {
-    return sourceLanguage.equalsIgnoreCase("trino") || sourceLanguage.equalsIgnoreCase("hive");
+    return sourceLanguage.equalsIgnoreCase("trino") || sourceLanguage.equalsIgnoreCase("hive")
+        || sourceLanguage.equalsIgnoreCase("spark");
   }
 }

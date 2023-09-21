@@ -85,10 +85,8 @@ public class VisualizationUtils {
     RelNode relNode = null;
     if (sourceLanguage.equalsIgnoreCase("trino")) {
       relNode = new TrinoToRelConverter(hiveMetastoreClient).convertSql(query);
-    } else if (sourceLanguage.equalsIgnoreCase("hive")) {
+    } else if (sourceLanguage.equalsIgnoreCase("hive") || sourceLanguage.equalsIgnoreCase("spark")) {
       relNode = new HiveToRelConverter(hiveMetastoreClient).convertSql(query);
-    } else if (sourceLanguage.equalsIgnoreCase("spark")) {
-
     }
 
     return relNode;
