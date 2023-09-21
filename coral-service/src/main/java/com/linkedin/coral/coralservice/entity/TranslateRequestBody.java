@@ -5,10 +5,15 @@
  */
 package com.linkedin.coral.coralservice.entity;
 
+import com.linkedin.coral.coralservice.utils.RewriteType;
+
+
 public class TranslateRequestBody {
   private String sourceLanguage;
   private String targetLanguage;
   private String query;
+
+  private RewriteType rewriteType;
 
   public String getSourceLanguage() {
     return sourceLanguage;
@@ -20,5 +25,9 @@ public class TranslateRequestBody {
 
   public String getQuery() {
     return query;
+  }
+
+  public RewriteType getRewriteType() {
+    return rewriteType;
   }
 }

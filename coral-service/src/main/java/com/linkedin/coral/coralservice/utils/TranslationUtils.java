@@ -33,4 +33,30 @@ public class TranslationUtils {
     CoralSpark coralSpark = CoralSpark.create(relNode, hiveMetastoreClient);
     return coralSpark.getSparkSql();
   }
+
+  public static String translateQuery(String query, String sourceLanguage, String targetLanguage) {
+    String translatedSql = null;
+
+    // TODO: add more translations once n-to-one-to-n is completed
+    // From Trino
+    if (sourceLanguage.equalsIgnoreCase("trino")) {
+      // To Spark
+      if (targetLanguage.equalsIgnoreCase("spark")) {
+        translatedSql = translateTrinoToSpark(query);
+      }
+    }
+    // From Hive
+    else if (sourceLanguage.equalsIgnoreCase("hive")) {
+      // To Spark
+      if (targetLanguage.equalsIgnoreCase("spark")) {
+        translatedSql = translateHiveToSpark(query);
+      }
+      // To Trino
+      else if (targetLanguage.equalsIgnoreCase("trino")) {
+        translatedSql = translateHiveToTrino(query);
+      }
+    }
+
+    return translatedSql;
+  }
 }
