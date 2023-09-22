@@ -28,6 +28,7 @@ import com.linkedin.coral.coralservice.entity.VisualizationResponseBody;
 import com.linkedin.coral.coralservice.utils.RewriteType;
 import com.linkedin.coral.coralservice.utils.VisualizationUtils;
 
+import static com.linkedin.coral.coralservice.utils.CommonUtils.*;
 import static com.linkedin.coral.coralservice.utils.VisualizationUtils.*;
 
 
@@ -43,9 +44,9 @@ public class VisualizationController {
     final String query = visualizationRequestBody.getQuery();
     final RewriteType rewriteType = visualizationRequestBody.getRewriteType();
 
-    if (!visualizationUtils.isValidSourceLanguage(sourceLanguage)) {
-      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-          .body("Currently, only Hive, Spark, and Trino are supported as engines to generate graphs using.\n");
+    if (!isValidSourceLanguage(sourceLanguage)) {
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+          "Currently, only Hive, Spark, and Trino SQL are supported as source languages for Coral IR visualization. \n");
     }
 
     // A list of UUIDs in this order of:

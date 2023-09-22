@@ -98,9 +98,10 @@ Please see the [Contribution Agreement](CONTRIBUTING.md).
 
 #### /api/translations/translate
 A **POST** API which takes JSON request body containing following parameters and returns the translated query:
-- `fromLanguage`: Input dialect (e.g., spark, trino, hive -- see below for supported inputs)
-- `toLanguage`: Output dialect (e.g., spark, trino, hive -- see below for supported outputs)
+- `sourceLanguage`: Input dialect (e.g., spark, trino, hive -- see below for supported inputs)
+- `targetLanguage`: Output dialect (e.g., spark, trino, hive -- see below for supported outputs)
 - `query`: SQL query to translate between two dialects
+- [Optional] `rewriteType`: Type of Coral IR rewrite (e.g, incremental)
 
 #### /api/catalog-ops/execute
 A **POST** API which takes a SQL statement to create a database/table/view in the local metastore
@@ -195,8 +196,8 @@ Creation successful
 curl --header "Content-Type: application/json" \
   --request POST \
   --data '{
-    "fromLanguage":"hive", 
-    "toLanguage":"trino", 
+    "sourceLanguage":"hive", 
+    "targetLanguage":"trino", 
     "query":"SELECT * FROM db1.airport"
   }' \
   http://localhost:8080/api/translations/translate
@@ -216,3 +217,4 @@ FROM "db1"."airport"
 2. Hive to Spark
 3. Trino to Spark  
    Note: During Trino to Spark translations, views referenced in queries are considered to be defined in HiveQL and hence cannot be used when translating a view from Trino. Currently, only referencing base tables is supported in Trino queries. This translation path is currently a POC and may need further improvements.
+4. Spark to Trino

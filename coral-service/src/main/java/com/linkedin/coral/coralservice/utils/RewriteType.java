@@ -25,7 +25,7 @@ public enum RewriteType {
   }
 
   @JsonCreator
-  public static RewriteType getDepartmentFromCode(String value) {
+  public static RewriteType getRewriteTypeFromCode(String value) {
     for (RewriteType type : RewriteType.values()) {
       if (type.toString().equals(value)) {
         return type;

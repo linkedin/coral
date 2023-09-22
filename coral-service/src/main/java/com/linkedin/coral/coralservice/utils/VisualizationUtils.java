@@ -27,10 +27,6 @@ public class VisualizationUtils {
     return new File(System.getProperty("java.io.tmpdir") + "/images" + UUID.randomUUID());
   }
 
-  public boolean isValidSourceLanguage(String sourceLanguage) {
-    return sourceLanguage.equalsIgnoreCase("trino") || sourceLanguage.equalsIgnoreCase("hive");
-  }
-
   public ArrayList<UUID> generateIRVisualizations(String query, String sourceLanguage, File imageDir,
       RewriteType rewriteType) {
     ArrayList<UUID> imageIDList = new ArrayList<>();
@@ -89,10 +85,8 @@ public class VisualizationUtils {
     RelNode relNode = null;
     if (sourceLanguage.equalsIgnoreCase("trino")) {
       relNode = new TrinoToRelConverter(hiveMetastoreClient).convertSql(query);
-    } else if (sourceLanguage.equalsIgnoreCase("hive")) {
+    } else if (sourceLanguage.equalsIgnoreCase("hive") || sourceLanguage.equalsIgnoreCase("spark")) {
       relNode = new HiveToRelConverter(hiveMetastoreClient).convertSql(query);
-    } else if (sourceLanguage.equalsIgnoreCase("spark")) {
-
     }
 
     return relNode;
