@@ -18,6 +18,7 @@ import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -39,6 +40,7 @@ import static com.linkedin.coral.coralservice.utils.TranslationUtils.*;
 @RestController
 @Service
 @Profile({ "remoteMetastore", "default" })
+@CrossOrigin(origins = CORAL_SERVICE_FRONTEND_URL)
 public class TranslationController implements ApplicationListener<ContextRefreshedEvent> {
   @Value("${hivePropsLocation:}")
   private String hivePropsLocation;
