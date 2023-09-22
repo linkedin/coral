@@ -122,7 +122,7 @@ public class TranslationController implements ApplicationListener<ContextRefresh
     incrementalResponseBody.setIncrementalQuery(null);
     try {
       if (language.equalsIgnoreCase("spark")) {
-        // TODO: add a sourceLanguage field to IncrementalRequestBody and use it here
+        // TODO: rename language to sourceLanguage and add a targetLanguage field IncrementalRequestBody to use here
         String incrementalQuery = getIncrementalQuery(query, language, "spark");
         for (String tableName : tableNames) {
           /* Generate underscore delimited and incremental table names
