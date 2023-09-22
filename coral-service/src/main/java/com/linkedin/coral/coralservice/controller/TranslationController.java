@@ -115,15 +115,15 @@ public class TranslationController implements ApplicationListener<ContextRefresh
       throws JSONException {
     final String query = incrementalRequestBody.getQuery();
     final List<String> tableNames = incrementalRequestBody.getTableNames();
-    final String language = incrementalRequestBody.getLanguage();
+    final String language = incrementalRequestBody.getLanguage(); // source language
 
     // Response will contain incremental query and incremental table names
     IncrementalResponseBody incrementalResponseBody = new IncrementalResponseBody();
     incrementalResponseBody.setIncrementalQuery(null);
     try {
       if (language.equalsIgnoreCase("spark")) {
-        // TODO: replace getSparkIncrementalQueryFromUserSql with getIncrementalQuery
-        String incrementalQuery = getSparkIncrementalQueryFromUserSql(query);
+        // TODO: add a sourceLanguage field to IncrementalRequestBody and use it here
+        String incrementalQuery = getIncrementalQuery(query, language, "spark");
         for (String tableName : tableNames) {
           /* Generate underscore delimited and incremental table names
            Table name: db.t1
