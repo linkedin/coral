@@ -12,6 +12,10 @@ module.exports = {
         'gradient-conic':
           'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
       },
+      fontFamily: {
+        // Add Courier New to the list of fonts
+        courier: ['Courier New', 'monospace'],
+      },
     },
   },
   plugins: [require('@tailwindcss/forms')],
