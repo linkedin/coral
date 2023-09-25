@@ -23,9 +23,23 @@ export default function TranslationForm({
       },
       body: JSON.stringify(Object.fromEntries(formData)),
     })
-      .then((response) => response.text())
+      .then((response) => {
+        if (!response.ok) {
+          return response.text().then(errorMessage => {
+            throw new Error(errorMessage);
+          });
+        }
+
+        return response.text();
+      })
       .then((data) => {
         onTranslationFetchComplete(data);
+      })
+      .catch((error) => {
+        console.error('Error:', error);
+        onTranslationFetchComplete(error.message);
+        setIsLoading(false);
+
       });
 
     await fetch('http://localhost:8080/api/visualizations/generategraphs', {
@@ -36,9 +50,21 @@ export default function TranslationForm({
       },
       body: JSON.stringify(Object.fromEntries(formData)),
     })
-      .then((response) => response.json())
+      .then((response) => {
+        if (!response.ok) {
+          return response.text().then(errorMessage => {
+            throw new Error(errorMessage);
+          });
+        }
+
+        return response.json();
+      })
       .then((data) => {
-        onImageIDsFetchComplete(data);
+        onImageIDsFetchComplete(data, null);
+        setIsLoading(false);
+      })
+      .catch((error) => {
+        onImageIDsFetchComplete(null, error.message);
         setIsLoading(false);
       });
   }

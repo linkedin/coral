@@ -10,13 +10,15 @@ import GraphCard from '@/app/components/Cards/GraphCard';
 export default function TranslationPage() {
   const [translationResult, setTranslationResult] = useState(null);
   const [imageIDs, setImageIDs] = useState(null);
+  const [imageFetchError, setImageFetchError] = useState(null);
 
-  const handleTranslationFetch = (data) => {
-    setTranslationResult(data);
+  const handleTranslationFetch = (result) => {
+    setTranslationResult(result);
   };
 
-  const handleImageFetch = (data) => {
-    setImageIDs(data);
+  const handleImageFetch = (graphs, error) => {
+    setImageIDs(graphs);
+    setImageFetchError(error);
   };
 
   return (
@@ -25,10 +27,10 @@ export default function TranslationPage() {
 
       <TranslationForm
         onTranslationFetchComplete={handleTranslationFetch}
-        onImageIDsFetchComplete={handleImageFetch}
+        onImageIDsFetchComplete={(graphs, error) => handleImageFetch(graphs, error)}
       />
       {translationResult && <ResultCard translation={translationResult} />}
-      {imageIDs && <GraphCard imageIDs={imageIDs} />}
+      {(imageIDs || imageFetchError) && <GraphCard imageIDs={imageIDs} imageFetchError={imageFetchError}/>}
     </>
   );
 }
