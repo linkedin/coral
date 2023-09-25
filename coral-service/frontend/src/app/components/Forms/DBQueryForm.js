@@ -32,7 +32,7 @@ export default function DBQueryForm() {
   return (
     <>
       <div className='flex flex-1 flex-col justify-center px-6 py-12 lg:px-8'>
-        <div className='mt-10 sm:mx-auto sm:w-full sm:max-w-sm'>
+        <div className='mt-10 sm:mx-auto sm:w-full sm:max-w-lg'>
           <form
             className='space-y-6'
             action='#'
@@ -41,8 +41,7 @@ export default function DBQueryForm() {
           >
             <div className='col-span-full'>
               <label
-                htmlFor='about'
-                className='block text-xl font-medium leading-6 text-gray-900'
+                className='block text-3xl font-medium leading-6 text-gray-900 mb-4'
               >
                 Create database/table/view
               </label>
@@ -51,14 +50,14 @@ export default function DBQueryForm() {
                   id='statement'
                   name='statement'
                   rows='3'
-                  className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6'
+                  className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-lg sm:leading-6'
                   placeholder='CREATE DATABASE/TABLE/VIEW'
                   value={statement}
                   onChange={(e) => setStatement(e.target.value)}
                   required
                 ></textarea>
               </div>
-              <p className='mt-3 text-sm leading-6 text-gray-600'>
+              <p className='mt-3 text-md leading-6 text-gray-600'>
                 Only happens in local mode.
               </p>
             </div>
@@ -66,7 +65,7 @@ export default function DBQueryForm() {
             <div>
               <button
                 type='submit'
-                className='flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
+                className='flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-md font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
               >
                 Create
               </button>
