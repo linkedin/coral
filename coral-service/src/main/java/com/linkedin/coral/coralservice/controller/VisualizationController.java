@@ -30,6 +30,7 @@ import com.linkedin.coral.coralservice.utils.RewriteType;
 import com.linkedin.coral.coralservice.utils.VisualizationUtils;
 
 import static com.linkedin.coral.coralservice.utils.CommonUtils.*;
+import static com.linkedin.coral.coralservice.utils.CoralProvider.*;
 import static com.linkedin.coral.coralservice.utils.VisualizationUtils.*;
 
 

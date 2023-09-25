@@ -55,6 +55,7 @@ export default function DBQueryForm() {
                   placeholder='CREATE DATABASE/TABLE/VIEW'
                   value={statement}
                   onChange={(e) => setStatement(e.target.value)}
+                  required
                 ></textarea>
               </div>
               <p className='mt-3 text-sm leading-6 text-gray-600'>
