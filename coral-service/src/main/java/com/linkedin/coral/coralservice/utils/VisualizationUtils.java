@@ -96,7 +96,7 @@ public class VisualizationUtils {
     SqlNode sqlNode = null;
     if (sourceLanguage.equalsIgnoreCase("trino")) {
       sqlNode = new TrinoToRelConverter(hiveMetastoreClient).toSqlNode(query);
-    } else if (sourceLanguage.equalsIgnoreCase("hive")) {
+    } else if (sourceLanguage.equalsIgnoreCase("hive")  || sourceLanguage.equalsIgnoreCase("spark")) {
       sqlNode = new HiveToRelConverter(hiveMetastoreClient).toSqlNode(query);
     }
 
