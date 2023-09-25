@@ -27,10 +27,14 @@ export default function TranslationPage() {
 
       <TranslationForm
         onTranslationFetchComplete={handleTranslationFetch}
-        onImageIDsFetchComplete={(graphs, error) => handleImageFetch(graphs, error)}
+        onImageIDsFetchComplete={(graphs, error) =>
+          handleImageFetch(graphs, error)
+        }
       />
       {translationResult && <ResultCard translation={translationResult} />}
-      {(imageIDs || imageFetchError) && <GraphCard imageIDs={imageIDs} imageFetchError={imageFetchError}/>}
+      {(imageIDs || imageFetchError) && (
+        <GraphCard imageIDs={imageIDs} imageFetchError={imageFetchError} />
+      )}
     </>
   );
 }

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function NavBar() {
   return (
@@ -52,9 +53,12 @@ export default function NavBar() {
             <div className='flex flex-1 items-center justify-center sm:items-stretch sm:justify-start'>
               <Link href='/'>
                 <div className='flex flex-shrink-0 items-center'>
-                  <img
+                  <Image
+                    width='0'
+                    height='0'
+                    sizes='100vw'
                     className='h-10 w-auto'
-                    src='https://i.ibb.co/C0VXDZX/image.png'
+                    src='/coral-logo-transparent.png'
                     alt='Coral Logo'
                   />
                 </div>
@@ -85,20 +89,19 @@ export default function NavBar() {
         <div className='sm:hidden' id='mobile-menu'>
           <div className='space-y-1 px-2 pb-3 pt-2'>
             <Link
-                href='/'
-                className='text-gray-300 hover:bg-gray-700 hover:text-white block rounded-md px-3 py-2 text-base font-medium'
-                aria-current='page'
+              href='/'
+              className='text-gray-300 hover:bg-gray-700 hover:text-white block rounded-md px-3 py-2 text-base font-medium'
+              aria-current='page'
             >
               Database Query
             </Link>
             <Link
-                href='/translation'
-                className='text-gray-300 hover:bg-gray-700 hover:text-white block rounded-md px-3 py-2 text-base font-medium'
-                aria-current='page'
+              href='/translation'
+              className='text-gray-300 hover:bg-gray-700 hover:text-white block rounded-md px-3 py-2 text-base font-medium'
+              aria-current='page'
             >
               Translation
             </Link>
-
           </div>
         </div>
       </nav>

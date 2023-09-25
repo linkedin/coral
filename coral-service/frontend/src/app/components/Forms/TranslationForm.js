@@ -29,7 +29,7 @@ export default function TranslationForm({
     })
       .then((response) => {
         if (!response.ok) {
-          return response.text().then(errorMessage => {
+          return response.text().then((errorMessage) => {
             throw new Error(errorMessage);
           });
         }
@@ -43,7 +43,6 @@ export default function TranslationForm({
         console.error('Error:', error);
         onTranslationFetchComplete(error.message);
         setIsLoading(false);
-
       });
 
     await fetch('http://localhost:8080/api/visualizations/generategraphs', {
@@ -56,7 +55,7 @@ export default function TranslationForm({
     })
       .then((response) => {
         if (!response.ok) {
-          return response.text().then(errorMessage => {
+          return response.text().then((errorMessage) => {
             throw new Error(errorMessage);
           });
         }

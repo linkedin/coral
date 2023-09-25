@@ -40,9 +40,7 @@ export default function DBQueryForm() {
             onSubmit={onSubmit}
           >
             <div className='col-span-full'>
-              <label
-                className='block text-3xl font-medium leading-6 text-gray-900 mb-4'
-              >
+              <label className='block text-3xl font-medium leading-6 text-gray-900 mb-4'>
                 Create database/table/view
               </label>
               <div className='mt-2'>
