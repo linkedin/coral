@@ -6,7 +6,6 @@ const inter = Inter({ subsets: ['latin'] });
 export const metadata = {
   title: 'Coral',
   description:
-    'About\n' +
     'Coral is a translation, analysis, and query rewrite engine for SQL and other relational languages.',
 };
 

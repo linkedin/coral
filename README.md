@@ -166,10 +166,9 @@ This feature is available with Coral Service in both local and remote metastore 
 You can enter a SQL query and specify the source and target language to use Coral translation service. You can also 
 specify the rewrite type to apply on the input query.
 
-#### Translate SQL from source language to target language (with rewrites)
-
+#### Generate graphviz visualizations of Coral intermediate representations
 During translation, graphs of the Coral intermediate representations
-will also be generated and shown on screen.
+will also be generated and shown on screen. This will also include any rewritten nodes.
 
 #### Developing on the frontend code
 
