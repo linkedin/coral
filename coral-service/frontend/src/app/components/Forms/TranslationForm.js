@@ -3,6 +3,9 @@
 import { useState } from 'react';
 import LoadingButton from '@/app/components/Buttons/LoadingButton';
 const baseUrl = process.env.NEXT_PUBLIC_CORAL_SERVICE_API_URL;
+import {
+  QuestionMarkCircleIcon
+} from '@heroicons/react/24/outline';
 
 export default function TranslationForm({
   onTranslationFetchComplete,
@@ -75,7 +78,7 @@ export default function TranslationForm({
 
   return (
     <>
-      <div className='flex flex-1 flex-col justify-center px-6 py-12 lg:px-8'>
+      <div className='flex flex-1 flex-col justify-center px-6 pt-2 pb-12 lg:px-8'>
         <div className='mt-10 sm:mx-auto sm:w-full sm:max-w-lg'>
           <form
             className='space-y-6'
@@ -124,12 +127,26 @@ export default function TranslationForm({
             </div>
 
             <div className='col-span-full'>
-              <label
-                htmlFor='rewriteType'
-                className='block text-md font-medium leading-6 text-gray-900'
-              >
-                Rewrite Type
-              </label>
+              <div className="flex justify-start ...">
+                <label
+                    htmlFor='rewriteType'
+                    className='block text-md font-medium leading-6 text-gray-900 mr-1'
+                >
+                  Rewrite Type
+                </label>
+
+                {/* Floating Tooltip */}
+                <div className="relative flex flex-col items-center group">
+                  <QuestionMarkCircleIcon className='h-6 w-6'
+                  />
+                  <div className="absolute bottom-0 flex flex-col items-center hidden mb-6 group-hover:flex">
+                  <span
+                      className="relative z-10 p-2 text-xs leading-none text-white whitespace-no-wrap bg-black shadow-lg w-48">A rewrite type to apply on the input query.</span>
+                    <div className="w-4 h-4 -mt-3 rotate-45 bg-black"></div>
+                  </div>
+                </div>
+              </div>
+
 
               <div className='mt-2'>
                 <select
