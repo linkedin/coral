@@ -141,29 +141,43 @@ Then you can interact with the service using your [browser](#coral-service-ui) o
 
 ### Coral Service UI
 After running `../gradlew bootRun --args='--spring.profiles.active=localMetastore'` (for local metastore mode) 
-or `../gradlew bootRun` (for remote metastore mode) from coral-service module, 
-the UI can be accessed from the browser. Use the URL http://localhost:8080 to run the UI on a local browser.
-<p align="center">
- <img src="docs/coral-service-ui/start.png" title="Coral Service UI">
-</p>
+or `../gradlew bootRun` (for remote metastore mode) from coral-service module, configure and start the UI.
 
-The UI provides 2 features:
+#### To configure environment variables:
+1. Create a `.env.local` file in the frontend project's root directory
+2. Copy over the template from `.env.local.example` into the new `.env.local` file
+3. Fill in the environment variable values in `.env.local`
+
+#### Now you can start the Coral Service UI by running:
+```bash  
+npm run dev
+```
+Once compiled, the UI can be accessed from the browser at http://localhost:3000.
+
+The UI provides 3 features:
 #### Create a database/table/view in local metastore mode
 This feature is only available with Coral Service in local metastore mode, it calls `/api/catalog-ops/execute` API above.
 
-You can enter a SQL statement to create a database/table/view in the local metastore:
-<p align="center">
- <img src="docs/coral-service-ui/creation.png" title="Coral Service Creation Feature">
-</p>
+You can enter a SQL statement to create a database/table/view in the local metastore.
 
-#### Translate SQL from source language to target language
+#### Translate SQL from source language to target language (with rewrites)
 This feature is available with Coral Service in both local and remote metastore modes, it calls `/api/translations/translate` API above.
 
-You can enter a SQL query and specify the source and target language to use Coral translation service:
-<p align="center">
- <img src="docs/coral-service-ui/translation.png" title="Coral Service Translation Feature">
-</p>
+You can enter a SQL query and specify the source and target language to use Coral translation service. You can also 
+specify the rewrite type to apply on the input query.
 
+#### Translate SQL from source language to target language (with rewrites)
+
+During translation, graphs of the Coral intermediate representations
+will also be generated and shown on screen.
+
+#### Developing on the frontend code
+
+#### To lint/format your code:
+```bash  
+npm run lint:fix
+npm run format
+```
 ### Coral Service CLI
 Apart from the UI above, you can also interact with the service using the CLI.
 
