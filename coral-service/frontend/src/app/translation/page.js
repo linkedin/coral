@@ -27,11 +27,11 @@ export default function TranslationPage() {
       <NavBar />
 
       <Image
-          width='200'
-          height='200'
-          className='mx-auto pt-4'
-          src='/coral-logo.jpg'
-          alt='Coral Logo'
+        width='200'
+        height='200'
+        className='mx-auto pt-4'
+        src='/coral-logo.jpg'
+        alt='Coral Logo'
       />
 
       <TranslationForm

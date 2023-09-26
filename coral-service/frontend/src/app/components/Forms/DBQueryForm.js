@@ -15,13 +15,17 @@ export default function DBQueryForm() {
   async function onSubmit(event) {
     event.preventDefault();
 
-    await fetch(process.env.NEXT_PUBLIC_CORAL_SERVICE_API_URL + '/api/catalog-ops/execute', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
+    await fetch(
+      process.env.NEXT_PUBLIC_CORAL_SERVICE_API_URL +
+        '/api/catalog-ops/execute',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: statement,
       },
-      body: statement,
-    })
+    )
       .then((response) => response.text())
       .then((data) => {
         setCreationResult(data);
