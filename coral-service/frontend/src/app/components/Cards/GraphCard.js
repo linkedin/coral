@@ -1,4 +1,5 @@
 import React from 'react';
+const baseUrl = process.env.NEXT_PUBLIC_CORAL_SERVICE_API_URL;
 
 export default function GraphCard(props) {
   const { imageIDs, imageFetchError } = props;
@@ -18,10 +19,7 @@ export default function GraphCard(props) {
                 Sql Node
               </h4>
               <img
-                src={
-                  'http://localhost:8080/api/visualizations/' +
-                  imageIDs.sqlNodeImageID
-                }
+                src={`${baseUrl}/api/visualizations/${imageIDs.sqlNodeImageID}`}
                 alt='SQL Node Image'
               />
             </div>
@@ -31,10 +29,7 @@ export default function GraphCard(props) {
                 Rel Node
               </h4>
               <img
-                src={
-                  'http://localhost:8080/api/visualizations/' +
-                  imageIDs.relNodeImageID
-                }
+                src={`${baseUrl}/api/visualizations/${imageIDs.relNodeImageID}`}
                 alt='Rel Node Image'
               />
             </div>
@@ -45,10 +40,7 @@ export default function GraphCard(props) {
                   Post-Rewrite SQL Node
                 </h4>
                 <img
-                  src={
-                    'http://localhost:8080/api/visualizations/' +
-                    imageIDs.postRewriteSqlNodeImageID
-                  }
+                  src={`${baseUrl}/api/visualizations/${imageIDs.postRewriteSqlNodeImageID}`}
                   alt='Post Rewrite SQL Node Image'
                 />
               </div>
@@ -60,10 +52,7 @@ export default function GraphCard(props) {
                   Post-Rewrite Rel Node
                 </h4>
                 <img
-                  src={
-                    'http://localhost:8080/api/visualizations/' +
-                    imageIDs.postRewriteRelNodeImageID
-                  }
+                  src={`${baseUrl}/api/visualizations/${imageIDs.postRewriteRelNodeImageID}`}
                   alt='Post Rewrite Rel Node Image'
                 />
               </div>
