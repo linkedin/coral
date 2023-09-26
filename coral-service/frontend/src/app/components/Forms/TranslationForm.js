@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import LoadingButton from '@/app/components/Buttons/LoadingButton';
+const baseUrl = process.env.NEXT_PUBLIC_CORAL_SERVICE_API_URL;
 
 export default function TranslationForm({
   onTranslationFetchComplete,
@@ -19,7 +20,7 @@ export default function TranslationForm({
 
     const formData = new FormData(event.currentTarget);
 
-    await fetch('http://localhost:8080/api/translations/translate', {
+    await fetch( baseUrl + '/api/translations/translate', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -45,7 +46,7 @@ export default function TranslationForm({
         setIsLoading(false);
       });
 
-    await fetch('http://localhost:8080/api/visualizations/generategraphs', {
+    await fetch(baseUrl + '/api/visualizations/generategraphs', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

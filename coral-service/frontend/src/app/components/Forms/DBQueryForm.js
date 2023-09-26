@@ -15,7 +15,7 @@ export default function DBQueryForm() {
   async function onSubmit(event) {
     event.preventDefault();
 
-    await fetch('http://localhost:8080/api/catalog-ops/execute', {
+    await fetch(process.env.NEXT_PUBLIC_CORAL_SERVICE_API_URL + '/api/catalog-ops/execute', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
