@@ -1,5 +1,5 @@
 /**
- * Copyright 2018-2022 LinkedIn Corporation. All rights reserved.
+ * Copyright 2018-2023 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -92,22 +92,18 @@ public class HiveFunction {
     }
   };
 
-  public static final Function IN = new Function("in", HiveInOperator.IN) {
+  public static final Function IN = new Function("in", CoralINOperator.IN) {
     @Override
     public SqlCall createCall(SqlNode function, List<SqlNode> operands, SqlLiteral qualifier) {
       checkState(operands.size() >= 2);
-      SqlNode lhs = operands.get(0);
-      SqlNode firstRhs = operands.get(1);
-      if (firstRhs instanceof SqlSelect) {
+      if (operands.get(1) instanceof SqlSelect) {
         // for IN subquery use Calcite IN operator. Calcite IN operator
         // will turn it into inner join, which not ideal but that's better
         // tested.
         return SqlStdOperatorTable.IN.createCall(ZERO, operands);
       } else {
-        // column IN values () clause
-        List<SqlNode> rhsList = operands.subList(1, operands.size());
-        SqlNodeList rhs = new SqlNodeList(rhsList, ZERO);
-        return getSqlOperator().createCall(ZERO, lhs, rhs);
+        // For IN whose operand is a list of values, we use custom IN operator {@link CoralINOperator}.
+        return getSqlOperator().createCall(ZERO, operands);
       }
     }
   };

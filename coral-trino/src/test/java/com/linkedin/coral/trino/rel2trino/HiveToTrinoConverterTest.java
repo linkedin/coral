@@ -891,6 +891,18 @@ public class HiveToTrinoConverterTest {
   }
 
   @Test
+  public void testInOperator() {
+    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
+
+    RelNode relNode =
+        TestUtils.getHiveToRelConverter().convertSql("SELECT a from test.tabler where b in ('dummy_value')");
+    String targetSql = "SELECT \"tabler\".\"a\" AS \"a\"\n" + "FROM \"test\".\"tabler\" AS \"tabler\"\n"
+        + "WHERE \"tabler\".\"b\" IN ('dummy_value')";
+    String expandedSql = relToTrinoConverter.convert(relNode);
+    assertEquals(expandedSql, targetSql);
+  }
+
+  @Test
   public void testSqlSelectAliasAppenderTransformerWithoutTableAliasPrefix() {
     // test.tableA(a int, b struct<b1:string>
     RelNode relNode = TestUtils.getHiveToRelConverter().convertSql("SELECT b.b1 FROM test.tableA where a > 5");

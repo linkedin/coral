@@ -5,25 +5,18 @@
  */
 package com.linkedin.coral.hive.hive2rel;
 
-import java.util.List;
-
-import com.google.common.base.Preconditions;
-
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlDataTypeSpec;
 import org.apache.calcite.sql.SqlNode;
-import org.apache.calcite.sql.SqlNodeList;
 import org.apache.calcite.sql.fun.SqlCastFunction;
 import org.apache.calcite.sql2rel.ReflectiveConvertletTable;
 import org.apache.calcite.sql2rel.SqlRexContext;
 import org.apache.calcite.sql2rel.SqlRexConvertlet;
 import org.apache.calcite.sql2rel.StandardConvertletTable;
 
-import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import com.linkedin.coral.common.functions.FunctionFieldReferenceOperator;
-import com.linkedin.coral.hive.hive2rel.functions.HiveInOperator;
 
 
 /**
@@ -31,21 +24,6 @@ import com.linkedin.coral.hive.hive2rel.functions.HiveInOperator;
  * @see ReflectiveConvertletTable documentation for method naming and visibility rules
  */
 public class HiveConvertletTable extends ReflectiveConvertletTable {
-
-  @SuppressWarnings("unused")
-  public RexNode convertHiveInOperator(SqlRexContext cx, HiveInOperator operator, SqlCall call) {
-    List<SqlNode> operandList = call.getOperandList();
-    Preconditions.checkState(operandList.size() == 2 && operandList.get(1) instanceof SqlNodeList);
-    RexNode lhs = cx.convertExpression(operandList.get(0));
-    SqlNodeList rhsNodes = (SqlNodeList) operandList.get(1);
-    ImmutableList.Builder<RexNode> rexNodes = ImmutableList.<RexNode> builder().add(lhs);
-    for (int i = 0; i < rhsNodes.size(); i++) {
-      rexNodes.add(cx.convertExpression(rhsNodes.get(i)));
-    }
-
-    RelDataType retType = cx.getValidator().getValidatedNodeType(call);
-    return cx.getRexBuilder().makeCall(retType, HiveInOperator.IN, rexNodes.build());
-  }
 
   @SuppressWarnings("unused")
   public RexNode convertFunctionFieldReferenceOperator(SqlRexContext cx, FunctionFieldReferenceOperator op,
