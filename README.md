@@ -153,22 +153,34 @@ or `../gradlew bootRun` (for remote metastore mode) from coral-service module, c
 npm run dev
 ```
 Once compiled, the UI can be accessed from the browser at http://localhost:3000.
-
+<p align="center">
+ <img src="docs/coral-service-ui/start.png" title="Coral Service UI">
+</p>
 The UI provides 3 features:
+
 #### Create a database/table/view in local metastore mode
 This feature is only available with Coral Service in local metastore mode, it calls `/api/catalog-ops/execute` API above.
 
 You can enter a SQL statement to create a database/table/view in the local metastore.
+<p align="center">
+ <img src="docs/coral-service-ui/creation.png" title="Coral Service Creation Feature">
+</p>
 
 #### Translate SQL from source language to target language (with rewrites)
 This feature is available with Coral Service in both local and remote metastore modes, it calls `/api/translations/translate` API above.
 
 You can enter a SQL query and specify the source and target language to use Coral translation service. You can also 
 specify the rewrite type to apply on the input query.
+<p align="center">
+ <img src="docs/coral-service-ui/translation.png" title="Coral Service Translation Feature">
+</p>
 
 #### Generate graphviz visualizations of Coral intermediate representations
 During translation, graphs of the Coral intermediate representations
-will also be generated and shown on screen. This will also include any rewritten nodes.
+will also be generated and shown on screen. This will also include any post-rewrite nodes.
+<p align="center">
+ <img src="docs/coral-service-ui/graphs.png" title="Coral Service Translation Feature">
+</p>
 
 #### Developing on the frontend code
 
