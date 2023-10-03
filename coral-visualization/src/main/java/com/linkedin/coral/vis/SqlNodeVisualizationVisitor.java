@@ -6,6 +6,7 @@
 package com.linkedin.coral.vis;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
@@ -20,6 +21,7 @@ import org.apache.calcite.sql.SqlLiteral;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlNodeList;
 import org.apache.calcite.sql.SqlSelect;
+import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.util.SqlVisitor;
 
 import guru.nidi.graphviz.attribute.Label;
@@ -28,6 +30,7 @@ import guru.nidi.graphviz.model.Link;
 import guru.nidi.graphviz.model.LinkTarget;
 import guru.nidi.graphviz.model.Node;
 
+import static com.linkedin.coral.common.calcite.CalciteUtil.*;
 import static guru.nidi.graphviz.model.Factory.*;
 
 
@@ -59,6 +62,8 @@ public class SqlNodeVisualizationVisitor implements SqlVisitor<Node> {
       }
       if (sqlSelect.getSelectList() != null) {
         edges.add(edge(sqlSelect.getSelectList(), "select_list"));
+      } else {
+        edges.add(edge(createSelectStarSqlNodeList(), "select_list"));
       }
       if (sqlSelect.getOrderList() != null) {
         edges.add(edge(sqlSelect.getOrderList(), "order_by_list"));
@@ -121,5 +126,12 @@ public class SqlNodeVisualizationVisitor implements SqlVisitor<Node> {
 
   private static Node node(String label) {
     return Factory.node(UUID.randomUUID().toString()).with(Label.of(label));
+  }
+
+  private static SqlNodeList createSelectStarSqlNodeList() {
+    Collection<SqlNode> sqlNodeList = new ArrayList();
+    sqlNodeList.add(createStarIdentifier(SqlParserPos.ZERO));
+    SqlNodeList selectStar = createSqlNodeList(sqlNodeList);
+    return selectStar;
   }
 }
