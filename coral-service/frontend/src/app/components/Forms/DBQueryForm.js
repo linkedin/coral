@@ -44,7 +44,7 @@ export default function DBQueryForm() {
             onSubmit={onSubmit}
           >
             <div className='col-span-full'>
-              <label className='block text-3xl font-medium leading-6 text-gray-900 mb-4'>
+              <label className='block text-3xl font-medium leading-6 text-gray-900 mb-6'>
                 Create database/table/view
               </label>
               <div className='mt-2'>
@@ -52,7 +52,7 @@ export default function DBQueryForm() {
                   id='statement'
                   name='statement'
                   rows='3'
-                  className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-coral-blue sm:text-lg sm:leading-6'
+                  className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-coral-blue sm:text-lg sm:leading-6 font-courier'
                   placeholder='CREATE DATABASE/TABLE/VIEW'
                   value={statement}
                   onChange={(e) => setStatement(e.target.value)}

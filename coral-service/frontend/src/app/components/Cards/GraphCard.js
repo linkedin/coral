@@ -6,7 +6,7 @@ export default function GraphCard(props) {
 
   return (
     <div className='bg-white p-6 border-2 rounded-3xl w-8/12 mx-auto my-10 overflow-auto '>
-      <h2 className='text-2xl font-bold mb-6 text-gray-800'>
+      <h2 className='text-xl font-bold mb-6 text-gray-800'>
         Intermediate Representation Graphs
       </h2>
       {imageFetchError ? (

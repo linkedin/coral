@@ -14,6 +14,7 @@ module.exports = {
       },
       fontFamily: {
         sans: ['"DM Sans"', 'sans-serif'],
+        courier: ['Courier New', 'monospace'],
       },
       colors: {
         'coral-blue': '#4470c1',
