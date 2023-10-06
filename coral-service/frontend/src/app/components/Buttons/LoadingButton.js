@@ -6,7 +6,7 @@ export default function LoadingButton(props) {
   return (
     <button
       type='button'
-      className='flex w-full justify-center px-4 py-2 border border-transparent text-base leading-6 font-medium rounded-md text-white bg-purple-600 hover:bg-rose-500 focus:border-rose-700 active:bg-rose-700 transition ease-in-out duration-150 cursor-not-allowed'
+      className='flex w-full justify-center px-4 py-2 border border-transparent text-base leading-6 font-medium rounded-md text-white bg-coral-blue hover:bg-rose-500 focus:border-rose-700 active:bg-rose-700 transition ease-in-out duration-150 cursor-not-allowed'
       disabled=''
     >
       <svg

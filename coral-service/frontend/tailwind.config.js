@@ -15,6 +15,10 @@ module.exports = {
       fontFamily: {
         sans: ['"DM Sans"', 'sans-serif'],
       },
+      colors: {
+        'coral-blue': '#4470c1',
+        'coral-blue-lighter': '#6e83c9',
+      },
     },
   },
   plugins: [require('@tailwindcss/forms')],
