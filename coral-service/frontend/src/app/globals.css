@@ -26,3 +26,13 @@ body {
     )
     rgb(var(--background-start-rgb));
 }
+
+.on-hover-opaque {
+  transition-property: opacity;
+  transition-duration: 300ms;
+  transition-timing-function: ease-in-out;
+}
+
+.on-hover-opaque:hover {
+  opacity: 0.5;
+}
