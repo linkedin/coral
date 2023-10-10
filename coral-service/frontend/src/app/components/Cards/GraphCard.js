@@ -1,6 +1,6 @@
 import React from 'react';
-import Zoom from 'react-medium-image-zoom'
-import 'react-medium-image-zoom/dist/styles.css'
+import Zoom from 'react-medium-image-zoom';
+import 'react-medium-image-zoom/dist/styles.css';
 const baseUrl = process.env.NEXT_PUBLIC_CORAL_SERVICE_API_URL;
 
 export default function GraphCard(props) {
@@ -22,12 +22,11 @@ export default function GraphCard(props) {
               </h4>
               <Zoom>
                 <img
-                    src={`${baseUrl}/api/visualizations/${imageIDs.sqlNodeImageID}`}
-                    alt='SQL Node Image'
-                    className='on-hover-opaque'
+                  src={`${baseUrl}/api/visualizations/${imageIDs.sqlNodeImageID}`}
+                  alt='SQL Node Image'
+                  className='on-hover-opaque'
                 />
               </Zoom>
-
             </div>
 
             <div className='border-2 rounded-md	p-2'>
@@ -36,9 +35,9 @@ export default function GraphCard(props) {
               </h4>
               <Zoom>
                 <img
-                    src={`${baseUrl}/api/visualizations/${imageIDs.relNodeImageID}`}
-                    alt='Rel Node Image'
-                    className='on-hover-opaque'
+                  src={`${baseUrl}/api/visualizations/${imageIDs.relNodeImageID}`}
+                  alt='Rel Node Image'
+                  className='on-hover-opaque'
                 />
               </Zoom>
             </div>
@@ -50,9 +49,9 @@ export default function GraphCard(props) {
                 </h4>
                 <Zoom>
                   <img
-                      src={`${baseUrl}/api/visualizations/${imageIDs.postRewriteSqlNodeImageID}`}
-                      alt='Post Rewrite SQL Node Image'
-                      className='on-hover-opaque'
+                    src={`${baseUrl}/api/visualizations/${imageIDs.postRewriteSqlNodeImageID}`}
+                    alt='Post Rewrite SQL Node Image'
+                    className='on-hover-opaque'
                   />
                 </Zoom>
               </div>
@@ -65,9 +64,9 @@ export default function GraphCard(props) {
                 </h4>
                 <Zoom>
                   <img
-                      src={`${baseUrl}/api/visualizations/${imageIDs.postRewriteRelNodeImageID}`}
-                      alt='Post Rewrite Rel Node Image'
-                      className='on-hover-opaque'
+                    src={`${baseUrl}/api/visualizations/${imageIDs.postRewriteRelNodeImageID}`}
+                    alt='Post Rewrite Rel Node Image'
+                    className='on-hover-opaque'
                   />
                 </Zoom>
               </div>
