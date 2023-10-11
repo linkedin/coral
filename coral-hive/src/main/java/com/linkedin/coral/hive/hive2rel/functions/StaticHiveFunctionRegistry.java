@@ -664,6 +664,8 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
         STRING_STRING_STRING);
     createAddUserDefinedFunction("com.linkedin.policy.decoration.udfs.HasMemberConsent", ReturnTypes.BOOLEAN,
         family(SqlTypeFamily.STRING, SqlTypeFamily.ANY, SqlTypeFamily.TIMESTAMP));
+    createAddUserDefinedFunction("com.linkedin.policy.decoration.udfs.RedactFieldIf", ARG1,
+        family(SqlTypeFamily.STRING, SqlTypeFamily.ANY, SqlTypeFamily.STRING, SqlTypeFamily.ANY));
 
     // UDTFs
     addFunctionEntry("explode", new CoralSqlUnnestOperator(false));
