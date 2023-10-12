@@ -44,7 +44,7 @@ export default function DBQueryForm() {
             onSubmit={onSubmit}
           >
             <div className='col-span-full'>
-              <label className='block text-3xl font-medium leading-6 text-gray-900 mb-4'>
+              <label className='block text-3xl font-medium leading-6 text-gray-900 mb-6'>
                 Create database/table/view
               </label>
               <div className='mt-2'>
@@ -52,7 +52,7 @@ export default function DBQueryForm() {
                   id='statement'
                   name='statement'
                   rows='3'
-                  className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-lg sm:leading-6'
+                  className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-coral-blue sm:text-lg sm:leading-6 font-courier'
                   placeholder='CREATE DATABASE/TABLE/VIEW'
                   value={statement}
                   onChange={(e) => setStatement(e.target.value)}
@@ -67,7 +67,7 @@ export default function DBQueryForm() {
             <div>
               <button
                 type='submit'
-                className='flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-md font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
+                className='flex w-full justify-center rounded-md px-3 py-1.5 text-md font-semibold leading-6 text-white shadow-sm bg-coral-blue hover:bg-coral-blue-lighter focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral-blue'
               >
                 Create
               </button>
@@ -78,7 +78,7 @@ export default function DBQueryForm() {
             Done with creating?{' '}
             <a
               href='/translation'
-              className='font-semibold leading-6 text-indigo-600 hover:text-indigo-500'
+              className='font-semibold leading-6 text-coral-blue hover:text-coral-blue-lighter'
             >
               Start translating!
             </a>

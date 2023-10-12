@@ -96,7 +96,7 @@ export default function TranslationForm({
                   id='query'
                   name='query'
                   rows='3'
-                  className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-md sm:leading-6'
+                  className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-coral-blue sm:text-md sm:leading-6 font-courier'
                   placeholder='SELECT * FROM db.tbl'
                   required
                 ></textarea>
@@ -107,7 +107,7 @@ export default function TranslationForm({
               <select
                 id='sourceLanguage'
                 name='sourceLanguage'
-                className='mx-6 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:max-w-xs sm:text-md sm:leading-6'
+                className='mx-6 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-coral-blue sm:max-w-xs sm:text-md sm:leading-6'
               >
                 <option value='hive'>Hive</option>
                 <option value='trino'>Trino</option>
@@ -117,7 +117,7 @@ export default function TranslationForm({
               <select
                 id='targetLanguage'
                 name='targetLanguage'
-                className='mx-6 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:max-w-xs sm:text-md sm:leading-6'
+                className='ml-6 block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-coral-blue sm:max-w-xs sm:text-md sm:leading-6'
               >
                 <option value='trino'>Trino</option>
                 <option value='spark'>Spark</option>
@@ -149,7 +149,7 @@ export default function TranslationForm({
                 <select
                   id='rewriteType'
                   name='rewriteType'
-                  className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:max-w-xs sm:text-md sm:leading-6'
+                  className='block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-coral-blue sm:w-1/2 sm:max-w-xs sm:text-md sm:leading-6'
                 >
                   <option value='none'>None</option>
                   <option value='incremental'>Incremental</option>
@@ -163,7 +163,7 @@ export default function TranslationForm({
               ) : (
                 <button
                   type='submit'
-                  className='flex w-full justify-center rounded-md bg-indigo-600  px-4 py-2 text-md font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
+                  className='flex w-full justify-center rounded-md px-4 py-2 text-md font-semibold leading-6 text-white shadow-sm bg-coral-blue hover:bg-coral-blue-lighter focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-coral-blue'
                 >
                   Translate
                 </button>

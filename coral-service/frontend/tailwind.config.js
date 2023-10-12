@@ -7,14 +7,13 @@ module.exports = {
   ],
   theme: {
     extend: {
-      backgroundImage: {
-        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-        'gradient-conic':
-          'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
-      },
       fontFamily: {
-        // Add Courier New to the list of fonts
+        sans: ['"DM Sans"', 'sans-serif'],
         courier: ['Courier New', 'monospace'],
+      },
+      colors: {
+        'coral-blue': '#4470c1',
+        'coral-blue-lighter': '#6e83c9',
       },
     },
   },
