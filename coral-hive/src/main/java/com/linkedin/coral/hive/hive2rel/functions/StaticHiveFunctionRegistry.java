@@ -373,7 +373,6 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
       return typeFactory.createArrayType(operandType.getValueType(), -1);
     }, family(SqlTypeFamily.MAP));
 
-    createAddUserDefinedFunction("array_contains", ReturnTypes.BOOLEAN, family(SqlTypeFamily.ARRAY, SqlTypeFamily.ANY));
     createAddUserDefinedFunction("sort_array", ARG0, ARRAY);
 
     createAddUserDefinedFunction("extract_union", COALESCE_STRUCT_FUNCTION_RETURN_STRATEGY,
