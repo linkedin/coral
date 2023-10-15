@@ -8,6 +8,8 @@ package com.linkedin.coral.trino.rel2trino;
 import java.util.Collection;
 import java.util.Map;
 
+import com.linkedin.coral.common.transformers.SqlCallTransformer;
+import com.linkedin.coral.trino.rel2trino.functions.TrinoFromUnixtimeFunction;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlOperator;
@@ -37,7 +39,7 @@ import com.linkedin.coral.trino.rel2trino.transformers.SqlSelectAliasAppenderTra
 import com.linkedin.coral.trino.rel2trino.transformers.ToDateOperatorTransformer;
 import com.linkedin.coral.trino.rel2trino.transformers.UnnestOperatorTransformer;
 
-import static com.linkedin.coral.trino.rel2trino.CoralTrinoConfigKeys.*;
+import static com.linkedin.coral.trino.rel2trino.CoralTrinoConfigKeys.AVOID_TRANSFORM_TO_DATE_UDF;
 
 
 /**
@@ -107,6 +109,18 @@ public class CoralToTrinoSqlCallConverter extends SqlShuttle {
             null, null),
         new ToDateOperatorTransformer(configs.getOrDefault(AVOID_TRANSFORM_TO_DATE_UDF, false)),
         new CurrentTimestampTransformer(), new FromUnixtimeOperatorTransformer(),
+        // Avoid unintentional transformation of Trino's from_unixtime SQL calls
+        new SqlCallTransformer() {
+            @Override
+            protected boolean condition(SqlCall sqlCall) {
+                return "trino_from_unixtime".equalsIgnoreCase(sqlCall.getOperator().getName());
+            }
+
+            @Override
+            protected SqlCall transform(SqlCall sqlCall) {
+                return TrinoFromUnixtimeFunction.INSTANCE.createCall(SqlParserPos.ZERO, sqlCall.getOperandList());
+            }
+        },
 
         // LinkedIn specific functions
         new CoralRegistryOperatorRenameSqlCallTransformer(
