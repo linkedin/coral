@@ -54,7 +54,7 @@ public class FromUtcTimestampOperatorTransformer extends SqlCallTransformer {
   private static final String WITH_TIMEZONE = "with_timezone";
   private static final String TO_UNIXTIME = "to_unixtime";
   private static final String FROM_UNIXTIME_NANOS = "from_unixtime_nanos";
-  private static final String FROM_UNIXTIME = "from_unixtime";
+  private static final String TIMESTAMP_FROM_UNIXTIME = "timestamp_from_unixtime";
   private static final String CANONICALIZE_HIVE_TIMEZONE_ID = "$canonicalize_hive_timezone_id";
 
   public FromUtcTimestampOperatorTransformer(TypeDerivationUtil typeDerivationUtil) {
@@ -86,7 +86,7 @@ public class FromUtcTimestampOperatorTransformer extends SqlCallTransformer {
     SqlOperator trinoFromUnixtimeNanos =
         createSqlOperator(FROM_UNIXTIME_NANOS, explicit(TIMESTAMP /* should be WITH TIME ZONE */));
     SqlOperator trinoFromUnixTime =
-        createSqlOperator(FROM_UNIXTIME, explicit(TIMESTAMP /* should be WITH TIME ZONE */));
+        createSqlOperator(TIMESTAMP_FROM_UNIXTIME, explicit(TIMESTAMP /* should be WITH TIME ZONE */));
     SqlOperator trinoCanonicalizeHiveTimezoneId = createSqlOperator(CANONICALIZE_HIVE_TIMEZONE_ID, explicit(VARCHAR));
 
     SqlCall canonicalizeHiveTimezoneIdSqlCall = trinoCanonicalizeHiveTimezoneId.createCall(ZERO, timezone);
