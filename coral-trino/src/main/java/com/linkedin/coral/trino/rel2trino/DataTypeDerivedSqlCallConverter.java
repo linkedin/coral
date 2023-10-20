@@ -5,6 +5,8 @@
  */
 package com.linkedin.coral.trino.rel2trino;
 
+import com.google.common.collect.ImmutableList;
+
 import org.apache.calcite.sql.SqlBasicCall;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlNode;
@@ -15,7 +17,10 @@ import com.linkedin.coral.common.functions.Function;
 import com.linkedin.coral.common.transformers.SqlCallTransformers;
 import com.linkedin.coral.common.utils.TypeDerivationUtil;
 import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
+import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 import com.linkedin.coral.hive.hive2rel.functions.VersionedSqlUserDefinedFunction;
+import com.linkedin.coral.trino.rel2trino.functions.CompositeFunctionRegistry;
+import com.linkedin.coral.trino.rel2trino.functions.StaticTrinoFunctionRegistry;
 import com.linkedin.coral.trino.rel2trino.transformers.ConcatOperatorTransformer;
 import com.linkedin.coral.trino.rel2trino.transformers.FromUtcTimestampOperatorTransformer;
 import com.linkedin.coral.trino.rel2trino.transformers.GenericProjectTransformer;
@@ -37,7 +42,8 @@ public class DataTypeDerivedSqlCallConverter extends SqlShuttle {
   private final HiveToRelConverter toRelConverter;
 
   public DataTypeDerivedSqlCallConverter(HiveMetastoreClient mscClient, SqlNode topSqlNode) {
-    toRelConverter = new HiveToRelConverter(mscClient);
+    toRelConverter = new HiveToRelConverter(mscClient, new CompositeFunctionRegistry(
+        ImmutableList.of(new StaticHiveFunctionRegistry(), new StaticTrinoFunctionRegistry())));
     topSqlNode.accept(new RegisterDynamicFunctionsForTypeDerivation());
 
     TypeDerivationUtil typeDerivationUtil = new TypeDerivationUtil(toRelConverter.getSqlValidator(), topSqlNode);

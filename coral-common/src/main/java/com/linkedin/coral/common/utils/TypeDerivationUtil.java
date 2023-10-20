@@ -69,6 +69,7 @@ public class TypeDerivationUtil {
         sqlValidator.validate(dummySqlSelect);
         return sqlValidator.getValidatedNodeType(dummySqlSelect).getFieldList().get(0).getType();
       } catch (Throwable ignored) {
+        ignored.printStackTrace();
       }
     }
 

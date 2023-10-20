@@ -10,8 +10,11 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.calcite.adapter.java.JavaTypeFactory;
+import org.apache.calcite.jdbc.Driver;
 import org.apache.calcite.plan.RelOptCluster;
+import org.apache.calcite.plan.RelTraitDef;
 import org.apache.calcite.plan.volcano.VolcanoPlanner;
+import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlOperatorTable;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
@@ -19,10 +22,16 @@ import org.apache.calcite.sql.util.ChainedSqlOperatorTable;
 import org.apache.calcite.sql.validate.SqlValidator;
 import org.apache.calcite.sql2rel.SqlRexConvertletTable;
 import org.apache.calcite.sql2rel.SqlToRelConverter;
+import org.apache.calcite.tools.FrameworkConfig;
+import org.apache.calcite.tools.Frameworks;
+import org.apache.calcite.tools.Programs;
 import org.apache.hadoop.hive.metastore.api.Table;
 
 import com.linkedin.coral.common.HiveMetastoreClient;
 import com.linkedin.coral.common.HiveRelBuilder;
+import com.linkedin.coral.common.HiveSchema;
+import com.linkedin.coral.common.HiveTypeSystem;
+import com.linkedin.coral.common.LocalMetastoreHiveSchema;
 import com.linkedin.coral.common.ToRelConverter;
 import com.linkedin.coral.hive.hive2rel.DaliOperatorTable;
 import com.linkedin.coral.hive.hive2rel.HiveConvertletTable;
@@ -50,15 +59,45 @@ public class TrinoToRelConverter extends ToRelConverter {
       new HiveFunctionResolver(new StaticHiveFunctionRegistry(), new ConcurrentHashMap<>());
   private final
   // The validator must be reused
-  SqlValidator sqlValidator = new HiveSqlValidator(getOperatorTable(), getCalciteCatalogReader(),
-      ((JavaTypeFactory) getRelBuilder().getTypeFactory()), TRINO_SQL);
+  SqlValidator sqlValidator;
+
+  private final FrameworkConfig config;
 
   public TrinoToRelConverter(HiveMetastoreClient hiveMetastoreClient) {
     super(hiveMetastoreClient);
+    SchemaPlus schemaPlus = Frameworks.createRootSchema(false);
+    schemaPlus.add(HiveSchema.ROOT_SCHEMA, new HiveSchema(hiveMetastoreClient));
+    // this is to ensure that jdbc:calcite driver is correctly registered
+    // before initializing framework (which needs it)
+    // We don't want each engine to register the driver. It may not also load correctly
+    // if the service uses its own service loader (see Trino)
+    new Driver();
+    config = Frameworks.newConfigBuilder().convertletTable(getConvertletTable()).defaultSchema(schemaPlus)
+        .typeSystem(new HiveTypeSystem()).traitDefs((List<RelTraitDef>) null).operatorTable(getOperatorTable())
+        .programs(Programs.ofRules(Programs.RULE_SET)).build();
+    sqlValidator = new HiveSqlValidator(getOperatorTable(), getCalciteCatalogReader(),
+        ((JavaTypeFactory) getRelBuilder().getTypeFactory()), TRINO_SQL);
   }
 
   public TrinoToRelConverter(Map<String, Map<String, List<String>>> localMetaStore) {
     super(localMetaStore);
+    SchemaPlus schemaPlus = Frameworks.createRootSchema(false);
+    schemaPlus.add(HiveSchema.ROOT_SCHEMA, new LocalMetastoreHiveSchema(localMetaStore));
+    // this is to ensure that jdbc:calcite driver is correctly registered
+    // before initializing framework (which needs it)
+    // We don't want each engine to register the driver. It may not also load correctly
+    // if the service uses its own service loader (see Trino)
+    new Driver();
+    config = Frameworks.newConfigBuilder().convertletTable(getConvertletTable()).defaultSchema(schemaPlus)
+        .typeSystem(new HiveTypeSystem()).traitDefs((List<RelTraitDef>) null).operatorTable(getOperatorTable())
+        .programs(Programs.ofRules(Programs.RULE_SET)).build();
+    sqlValidator = new HiveSqlValidator(getOperatorTable(), getCalciteCatalogReader(),
+        ((JavaTypeFactory) getRelBuilder().getTypeFactory()), TRINO_SQL);
+  }
+
+  @Override
+  protected FrameworkConfig getConfig() {
+    return config;
   }
 
   @Override

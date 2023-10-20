@@ -304,7 +304,6 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
         family(SqlTypeFamily.TIMESTAMP, SqlTypeFamily.STRING));
     createAddUserDefinedFunction("to_unixtime", explicit(SqlTypeName.DOUBLE), family(SqlTypeFamily.TIMESTAMP));
     createAddUserDefinedFunction("from_unixtime_nanos", explicit(SqlTypeName.TIMESTAMP), NUMERIC);
-    createAddUserDefinedFunction("$canonicalize_hive_timezone_id", explicit(SqlTypeName.VARCHAR), STRING);
 
     // xpath functions
     createAddUserDefinedFunction("xpath", FunctionReturnTypes.arrayOfType(SqlTypeName.VARCHAR), STRING_STRING);
@@ -320,10 +319,6 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
     // Date Functions
     createAddUserDefinedFunction("from_unixtime", FunctionReturnTypes.STRING,
         family(ImmutableList.of(SqlTypeFamily.NUMERIC, SqlTypeFamily.STRING), optionalOrd(1)));
-    createAddUserDefinedFunction("timestamp_from_unixtime", explicit(SqlTypeName.TIMESTAMP),
-        or(family(ImmutableList.of(SqlTypeFamily.NUMERIC)),
-            family(ImmutableList.of(SqlTypeFamily.NUMERIC, SqlTypeFamily.STRING)),
-            family(ImmutableList.of(SqlTypeFamily.NUMERIC, SqlTypeFamily.NUMERIC, SqlTypeFamily.NUMERIC))));
     createAddUserDefinedFunction("unix_timestamp", BIGINT,
         family(ImmutableList.of(SqlTypeFamily.STRING, SqlTypeFamily.STRING), optionalOrd(ImmutableList.of(0, 1))));
     createAddUserDefinedFunction("to_date", FunctionReturnTypes.STRING, or(STRING, DATETIME));

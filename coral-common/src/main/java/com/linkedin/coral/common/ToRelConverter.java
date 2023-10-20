@@ -17,14 +17,11 @@ import org.apache.calcite.config.CalciteConnectionConfig;
 import org.apache.calcite.config.CalciteConnectionConfigImpl;
 import org.apache.calcite.config.CalciteConnectionProperty;
 import org.apache.calcite.jdbc.CalciteSchema;
-import org.apache.calcite.jdbc.Driver;
-import org.apache.calcite.plan.RelTraitDef;
 import org.apache.calcite.prepare.CalciteCatalogReader;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelRoot;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.runtime.Hook;
-import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlOperatorTable;
 import org.apache.calcite.sql.validate.SqlNameMatchers;
@@ -32,8 +29,6 @@ import org.apache.calcite.sql.validate.SqlValidator;
 import org.apache.calcite.sql2rel.SqlRexConvertletTable;
 import org.apache.calcite.sql2rel.SqlToRelConverter;
 import org.apache.calcite.tools.FrameworkConfig;
-import org.apache.calcite.tools.Frameworks;
-import org.apache.calcite.tools.Programs;
 import org.apache.calcite.tools.RelBuilder;
 import org.apache.calcite.util.Util;
 
@@ -50,8 +45,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public abstract class ToRelConverter {
 
   private final HiveMetastoreClient hiveMetastoreClient;
-  private final FrameworkConfig config;
-  private final SqlRexConvertletTable convertletTable = getConvertletTable();
   private CalciteCatalogReader catalogReader;
   private RelBuilder relBuilder;
 
@@ -63,37 +56,17 @@ public abstract class ToRelConverter {
 
   protected abstract SqlToRelConverter getSqlToRelConverter();
 
+  protected abstract FrameworkConfig getConfig();
+
   protected abstract SqlNode toSqlNode(String sql, org.apache.hadoop.hive.metastore.api.Table hiveView);
 
   protected ToRelConverter(@Nonnull HiveMetastoreClient hiveMetastoreClient) {
     checkNotNull(hiveMetastoreClient);
     this.hiveMetastoreClient = hiveMetastoreClient;
-    SchemaPlus schemaPlus = Frameworks.createRootSchema(false);
-    schemaPlus.add(HiveSchema.ROOT_SCHEMA, new HiveSchema(hiveMetastoreClient));
-    // this is to ensure that jdbc:calcite driver is correctly registered
-    // before initializing framework (which needs it)
-    // We don't want each engine to register the driver. It may not also load correctly
-    // if the service uses its own service loader (see Trino)
-    new Driver();
-    config = Frameworks.newConfigBuilder().convertletTable(convertletTable).defaultSchema(schemaPlus)
-        .typeSystem(new HiveTypeSystem()).traitDefs((List<RelTraitDef>) null).operatorTable(getOperatorTable())
-        .programs(Programs.ofRules(Programs.RULE_SET)).build();
-
   }
 
   protected ToRelConverter(Map<String, Map<String, List<String>>> localMetaStore) {
     this.hiveMetastoreClient = null;
-    SchemaPlus schemaPlus = Frameworks.createRootSchema(false);
-    schemaPlus.add(HiveSchema.ROOT_SCHEMA, new LocalMetastoreHiveSchema(localMetaStore));
-    // this is to ensure that jdbc:calcite driver is correctly registered
-    // before initializing framework (which needs it)
-    // We don't want each engine to register the driver. It may not also load correctly
-    // if the service uses its own service loader (see Trino)
-    new Driver();
-    config = Frameworks.newConfigBuilder().convertletTable(convertletTable).defaultSchema(schemaPlus)
-        .typeSystem(new HiveTypeSystem()).traitDefs((List<RelTraitDef>) null).operatorTable(getOperatorTable())
-        .programs(Programs.ofRules(Programs.RULE_SET)).build();
-
   }
 
   /**
@@ -170,7 +143,7 @@ public abstract class ToRelConverter {
     // 2. Converted expression is harder to validate for correctness(because it appears different from input)
     if (relBuilder == null) {
       Hook.REL_BUILDER_SIMPLIFY.add(Hook.propertyJ(false));
-      relBuilder = HiveRelBuilder.create(config);
+      relBuilder = HiveRelBuilder.create(getConfig());
     }
     return relBuilder;
   }
@@ -195,18 +168,19 @@ public abstract class ToRelConverter {
    */
   protected CalciteCatalogReader getCalciteCatalogReader() {
     CalciteConnectionConfig connectionConfig;
-    if (config.getContext() != null) {
-      connectionConfig = config.getContext().unwrap(CalciteConnectionConfig.class);
+    if (getConfig().getContext() != null) {
+      connectionConfig = getConfig().getContext().unwrap(CalciteConnectionConfig.class);
     } else {
       Properties properties = new Properties();
       properties.setProperty(CalciteConnectionProperty.CASE_SENSITIVE.camelName(), String.valueOf(false));
       connectionConfig = new CalciteConnectionConfigImpl(properties);
     }
     if (catalogReader == null) {
-      catalogReader = new MultiSchemaPathCalciteCatalogReader(config.getDefaultSchema().unwrap(CalciteSchema.class),
-          ImmutableList.of(ImmutableList.of(HiveSchema.ROOT_SCHEMA, HiveSchema.DEFAULT_DB),
-              ImmutableList.of(HiveSchema.ROOT_SCHEMA), ImmutableList.of()),
-          getRelBuilder().getTypeFactory(), connectionConfig);
+      catalogReader =
+          new MultiSchemaPathCalciteCatalogReader(getConfig().getDefaultSchema().unwrap(CalciteSchema.class),
+              ImmutableList.of(ImmutableList.of(HiveSchema.ROOT_SCHEMA, HiveSchema.DEFAULT_DB),
+                  ImmutableList.of(HiveSchema.ROOT_SCHEMA), ImmutableList.of()),
+              getRelBuilder().getTypeFactory(), connectionConfig);
     }
     return catalogReader;
   }

@@ -42,6 +42,9 @@ import org.apache.hadoop.hive.ql.session.SessionState;
 
 import com.linkedin.coral.common.HiveMscAdapter;
 import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
+import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
+import com.linkedin.coral.trino.rel2trino.functions.CompositeFunctionRegistry;
+import com.linkedin.coral.trino.rel2trino.functions.StaticTrinoFunctionRegistry;
 
 import static com.linkedin.coral.trino.rel2trino.TestTable.*;
 
@@ -189,7 +192,8 @@ public class TestUtils {
   }
 
   public static HiveToRelConverter getHiveToRelConverter() {
-    return new HiveToRelConverter(hiveMetastoreClient);
+    return new HiveToRelConverter(hiveMetastoreClient, new CompositeFunctionRegistry(
+        ImmutableList.of(new StaticHiveFunctionRegistry(), new StaticTrinoFunctionRegistry())));
   }
 
   public static RelToTrinoConverter getRelToTrinoConverter() {
