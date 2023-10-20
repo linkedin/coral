@@ -320,6 +320,10 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
     // Date Functions
     createAddUserDefinedFunction("from_unixtime", FunctionReturnTypes.STRING,
         family(ImmutableList.of(SqlTypeFamily.NUMERIC, SqlTypeFamily.STRING), optionalOrd(1)));
+    createAddUserDefinedFunction("timestamp_from_unixtime", explicit(SqlTypeName.TIMESTAMP),
+        or(family(ImmutableList.of(SqlTypeFamily.NUMERIC)),
+            family(ImmutableList.of(SqlTypeFamily.NUMERIC, SqlTypeFamily.STRING)),
+            family(ImmutableList.of(SqlTypeFamily.NUMERIC, SqlTypeFamily.NUMERIC, SqlTypeFamily.NUMERIC))));
     createAddUserDefinedFunction("unix_timestamp", BIGINT,
         family(ImmutableList.of(SqlTypeFamily.STRING, SqlTypeFamily.STRING), optionalOrd(ImmutableList.of(0, 1))));
     createAddUserDefinedFunction("to_date", FunctionReturnTypes.STRING, or(STRING, DATETIME));
