@@ -13,6 +13,8 @@ import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlWriter;
 import org.apache.calcite.sql.parser.SqlParserPos;
 
+import static com.linkedin.coral.hive.hive2rel.functions.TimestampFromUnixtime.TIMESTAMP_FROM_UNIXTIME;
+
 
 public class TrinoSqlDialect extends SqlDialect {
   private static final String IDENTIFIER_QUOTE_STRING = "\"";
@@ -74,7 +76,11 @@ public class TrinoSqlDialect extends SqlDialect {
         unparseMapValueConstructor(writer, call, leftPrec, rightPrec);
         break;
       default:
-        super.unparseCall(writer, call, leftPrec, rightPrec);
+        if (call.getOperator().getName().equals("timestamp_from_unixtime")) {
+          TIMESTAMP_FROM_UNIXTIME.unparse(writer, call, leftPrec, rightPrec);
+        } else {
+          super.unparseCall(writer, call, leftPrec, rightPrec);
+        }
     }
   }
 

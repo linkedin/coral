@@ -39,6 +39,7 @@ import com.linkedin.coral.common.functions.OperandTypeInference;
 import com.linkedin.coral.common.functions.SameOperandTypeExceptFirstOperandChecker;
 
 import static com.linkedin.coral.hive.hive2rel.functions.CoalesceStructUtility.*;
+import static com.linkedin.coral.hive.hive2rel.functions.TimestampFromUnixtime.TIMESTAMP_FROM_UNIXTIME;
 import static org.apache.calcite.sql.fun.SqlLibraryOperators.*;
 import static org.apache.calcite.sql.fun.SqlStdOperatorTable.*;
 import static org.apache.calcite.sql.type.OperandTypes.*;
@@ -320,6 +321,7 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
     // Date Functions
     createAddUserDefinedFunction("from_unixtime", FunctionReturnTypes.STRING,
         family(ImmutableList.of(SqlTypeFamily.NUMERIC, SqlTypeFamily.STRING), optionalOrd(1)));
+    addFunctionEntry("timestamp_from_unixtime", TIMESTAMP_FROM_UNIXTIME);
     createAddUserDefinedFunction("unix_timestamp", BIGINT,
         family(ImmutableList.of(SqlTypeFamily.STRING, SqlTypeFamily.STRING), optionalOrd(ImmutableList.of(0, 1))));
     createAddUserDefinedFunction("to_date", FunctionReturnTypes.STRING, or(STRING, DATETIME));
