@@ -73,6 +73,13 @@ public class CoralSparkTest {
   }
 
   @Test
+  public void testTimestamp() {
+    RelNode relNode = TestUtils.toRelNode("default", "baz_view");
+    CoralSpark coralSpark = createCoralSpark(relNode);
+    assertEquals(coralSpark.getSparkSql(), "SELECT baz.`select`, baz.`timestamp`\n" + "FROM default.baz baz");
+  }
+
+  @Test
   public void testLiteralColumnsFromView() {
     // use date literal in view definition
     String targetSql = "SELECT '2013-01-01', '2017-08-22 01:02:03', CAST(123 AS SMALLINT), CAST(123 AS TINYINT)\n"

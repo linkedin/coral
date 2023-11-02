@@ -57,6 +57,8 @@ public class TestUtils {
     viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
     run(driver, "CREATE TABLE IF NOT EXISTS foo(a int, b varchar(30), c double)");
     run(driver, "CREATE TABLE IF NOT EXISTS bar(x int, y double)");
+    run(driver, "CREATE TABLE IF NOT EXISTS baz(`timestamp` int, `select` double)");
+    run(driver, "CREATE VIEW IF NOT EXISTS baz_view as select `select`, `timestamp` from baz");
     run(driver,
         "CREATE TABLE IF NOT EXISTS complex(a int, b string, c array<double>, s struct<name:string, age:int>, m map<string, int>, sarr array<struct<name:string, age:int>>)");
 
