@@ -7,7 +7,6 @@ package com.linkedin.coral.spark.dialect;
 
 import com.google.common.collect.ImmutableList;
 import java.util.List;
-import org.apache.calcite.avatica.util.Quoting;
 import org.apache.calcite.config.NullCollation;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlDialect;
@@ -131,11 +130,6 @@ public class SparkSqlDialect extends SqlDialect {
   @Override
   public boolean supportsCharSet() {
     return false;
-  }
-
-  @Override
-  protected boolean identifierNeedsQuote(String val) {
-    return ImmutableList.of("select", "timestamp").contains(val.toLowerCase());
   }
 
   public String quoteIdentifier(String val) {
