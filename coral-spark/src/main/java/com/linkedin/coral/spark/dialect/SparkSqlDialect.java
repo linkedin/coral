@@ -6,6 +6,8 @@
 package com.linkedin.coral.spark.dialect;
 
 import org.apache.calcite.avatica.util.Casing;
+import com.google.common.collect.ImmutableList;
+import java.util.List;
 import org.apache.calcite.config.NullCollation;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlDialect;
@@ -34,7 +36,7 @@ public class SparkSqlDialect extends SqlDialect {
   public static final SqlDialect.Context DEFAULT_CONTEXT =
       SqlDialect.EMPTY_CONTEXT.withDatabaseProduct(DatabaseProduct.SPARK).withLiteralQuoteString("'")
           .withLiteralEscapedQuoteString("\\'").withNullCollation(NullCollation.LOW)
-          .withUnquotedCasing(Casing.UNCHANGED).withQuotedCasing(Casing.UNCHANGED).withCaseSensitive(false);
+          .withUnquotedCasing(Casing.UNCHANGED).withQuotedCasing(Casing.UNCHANGED).withCaseSensitive(false).withIdentifierQuoteString("`");
 
   public static final SparkSqlDialect INSTANCE = new SparkSqlDialect(DEFAULT_CONTEXT);
 
@@ -134,6 +136,20 @@ public class SparkSqlDialect extends SqlDialect {
   public boolean supportsCharSet() {
     return false;
   }
+
+  public String quoteIdentifier(String val) {
+    List<String> reservedKeywords = ImmutableList.of("select", "timestamp");
+    if (reservedKeywords.contains(val.toLowerCase())) {
+      String val2 =
+          val.replaceAll(
+              identifierEndQuoteString,
+              identifierEscapedQuote);
+      return identifierQuoteString + val2 + identifierEndQuoteString;
+    } else {
+      return val;
+    }
+  }
+
 
   public void unparseOffsetFetch(SqlWriter writer, SqlNode offset, SqlNode fetch) {
     unparseFetchUsingLimit(writer, offset, fetch);
