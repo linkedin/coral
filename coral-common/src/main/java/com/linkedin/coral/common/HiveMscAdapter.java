@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2022 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2023 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -13,9 +13,13 @@ import org.apache.hadoop.hive.metastore.IMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.Database;
 import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.thrift.TException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class HiveMscAdapter implements HiveMetastoreClient {
+
+  private final static Logger LOG = LoggerFactory.getLogger(HiveMscAdapter.class);
 
   private final IMetaStoreClient delegate;
 
@@ -28,6 +32,7 @@ public class HiveMscAdapter implements HiveMetastoreClient {
     try {
       return delegate.getAllDatabases();
     } catch (TException e) {
+      LOG.error("Failed to get all databases.", e);
       return ImmutableList.of();
     }
   }
@@ -37,6 +42,7 @@ public class HiveMscAdapter implements HiveMetastoreClient {
     try {
       return delegate.getDatabase(dbName);
     } catch (TException e) {
+      LOG.error(String.format("Failed to get database %s.", dbName), e);
       return null;
     }
   }
@@ -46,6 +52,7 @@ public class HiveMscAdapter implements HiveMetastoreClient {
     try {
       return delegate.getAllTables(dbName);
     } catch (TException e) {
+      LOG.error(String.format("Failed to get all tables from database %s.", dbName), e);
       return ImmutableList.of();
     }
   }
@@ -55,6 +62,7 @@ public class HiveMscAdapter implements HiveMetastoreClient {
     try {
       return delegate.getTable(dbName, tableName);
     } catch (TException e) {
+      LOG.error(String.format("Failed to get table %s.%s.", dbName, tableName), e);
       return null;
     }
   }
