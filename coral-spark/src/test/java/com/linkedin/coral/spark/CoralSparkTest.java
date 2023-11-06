@@ -893,6 +893,42 @@ public class CoralSparkTest {
     assertEquals(expectedSql, targetSql);
   }
 
+  @Test
+  public void testUnescapedSingleQuote() {
+    RelNode relNode = TestUtils.toRelNode("SELECT 'abc' col1 FROM default.complex");
+    String targetSql = createCoralSpark(relNode).getSparkSql();
+
+    String expectedSql = "SELECT 'abc' col1\n" + "FROM default.complex complex";
+    assertEquals(targetSql, expectedSql);
+  }
+
+  @Test
+  public void testUnescapedDoubleQuote() {
+    RelNode relNode = TestUtils.toRelNode("SELECT \"abc\" col1 FROM default.complex");
+    String targetSql = createCoralSpark(relNode).getSparkSql();
+
+    String expectedSql = "SELECT 'abc' col1\n" + "FROM default.complex complex";
+    assertEquals(targetSql, expectedSql);
+  }
+
+  @Test
+  public void testSingleQuoteInsideSingleQuote() {
+    RelNode relNode = TestUtils.toRelNode("SELECT 'abc[\\'xyz\\']' col1 FROM default.complex");
+    String targetSql = createCoralSpark(relNode).getSparkSql();
+
+    String expectedSql = "SELECT 'abc[\\'xyz\\']' col1\n" + "FROM default.complex complex";
+    assertEquals(targetSql, expectedSql);
+  }
+
+  @Test
+  public void testSingleQuoteInsideDoubleQuote() {
+    RelNode relNode = TestUtils.toRelNode("SELECT \"abc['xyz']\" col1 FROM default.complex");
+    String targetSql = createCoralSpark(relNode).getSparkSql();
+
+    String expectedSql = "SELECT 'abc[\\'xyz\\']' col1\n" + "FROM default.complex complex";
+    assertEquals(targetSql, expectedSql);
+  }
+
   private String getCoralSparkTranslatedSqlWithAliasFromCoralSchema(String db, String view) {
     RelNode relNode = TestUtils.toRelNode(db, view);
     Schema schema = TestUtils.getAvroSchemaForView(db, view, false);
