@@ -929,6 +929,24 @@ public class CoralSparkTest {
     assertEquals(targetSql, expectedSql);
   }
 
+  @Test
+  public void testDoubleQuoteInsideDoubleQuote() {
+    RelNode relNode = TestUtils.toRelNode("SELECT \"abc[\\\"xyz\\\"]\" col1 FROM default.complex");
+    String targetSql = createCoralSpark(relNode).getSparkSql();
+
+    String expectedSql = "SELECT 'abc[\"xyz\"]' col1\n" + "FROM default.complex complex";
+    assertEquals(targetSql, expectedSql);
+  }
+
+  @Test
+  public void testDoubleQuoteInsideSingleQuote() {
+    RelNode relNode = TestUtils.toRelNode("SELECT 'abc[\"xyz\"]' col1 FROM default.complex");
+    String targetSql = createCoralSpark(relNode).getSparkSql();
+
+    String expectedSql = "SELECT 'abc[\"xyz\"]' col1\n" + "FROM default.complex complex";
+    assertEquals(targetSql, expectedSql);
+  }
+
   private String getCoralSparkTranslatedSqlWithAliasFromCoralSchema(String db, String view) {
     RelNode relNode = TestUtils.toRelNode(db, view);
     Schema schema = TestUtils.getAvroSchemaForView(db, view, false);

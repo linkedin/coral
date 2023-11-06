@@ -692,9 +692,9 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     return new SqlIdentifier(node.getText(), ZERO);
   }
 
-  /** See {@link #removeBackslashBeforeSingleQuote}
-   * We use removeBackslashBeforeSingleQuote to remove the backslash before single quote,
-   * so that we maintain patterns like {@code I'm} or {@code won't} as is in the java object in memory,
+  /** See {@link #removeBackslashBeforeQuotes}
+   * We use removeBackslashBeforeQuotes to remove the backslash before quotes,
+   * so that we maintain patterns like {@code I'm} or {@code abc"xyz} as is in the java object in memory,
    * the escaped literal string representation will be generated when the SqlNode is written to string
    * by the SqlWriter, which can be controlled by the SqlDialect to decide the choice of escaping mechanism.
    * */
@@ -703,12 +703,12 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     // TODO: Add charset here. UTF-8 is not supported by calcite
     String text = node.getText();
     checkState(text.length() >= 2);
-    return SqlLiteral.createCharString(removeBackslashBeforeSingleQuote(text.substring(1, text.length() - 1)), ZERO);
+    return SqlLiteral.createCharString(removeBackslashBeforeQuotes(text.substring(1, text.length() - 1)), ZERO);
   }
 
-  private String removeBackslashBeforeSingleQuote(String input) {
+  private String removeBackslashBeforeQuotes(String input) {
     // matches a \' literal pattern
-    Pattern pattern = Pattern.compile("\\\\'");
+    Pattern pattern = Pattern.compile("\\\\['\"]");
     Matcher matcher = pattern.matcher(input);
 
     StringBuffer res = new StringBuffer();
