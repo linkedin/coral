@@ -703,8 +703,7 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     // TODO: Add charset here. UTF-8 is not supported by calcite
     String text = node.getText();
     checkState(text.length() >= 2);
-    return SqlLiteral.createCharString(
-        removeBackslashBeforeSingleQuote(text.substring(1, text.length() - 1)), ZERO);
+    return SqlLiteral.createCharString(removeBackslashBeforeSingleQuote(text.substring(1, text.length() - 1)), ZERO);
   }
 
   private String removeBackslashBeforeSingleQuote(String input) {
