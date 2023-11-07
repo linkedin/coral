@@ -5,6 +5,7 @@
  */
 package com.linkedin.coral.spark.dialect;
 
+import org.apache.calcite.avatica.util.Casing;
 import org.apache.calcite.config.NullCollation;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlDialect;
@@ -30,8 +31,12 @@ import com.linkedin.coral.common.functions.CoralSqlUnnestOperator;
  */
 public class SparkSqlDialect extends SqlDialect {
 
-  public static final SparkSqlDialect INSTANCE = new SparkSqlDialect(
-      emptyContext().withDatabaseProduct(DatabaseProduct.HIVE).withNullCollation(NullCollation.HIGH));
+  public static final SqlDialect.Context DEFAULT_CONTEXT =
+      SqlDialect.EMPTY_CONTEXT.withDatabaseProduct(DatabaseProduct.SPARK).withLiteralQuoteString("'")
+          .withLiteralEscapedQuoteString("\\'").withNullCollation(NullCollation.LOW)
+          .withUnquotedCasing(Casing.UNCHANGED).withQuotedCasing(Casing.UNCHANGED).withCaseSensitive(false);
+
+  public static final SparkSqlDialect INSTANCE = new SparkSqlDialect(DEFAULT_CONTEXT);
 
   private SparkSqlDialect(Context context) {
     super(context);

@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
@@ -690,12 +692,33 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     return new SqlIdentifier(node.getText(), ZERO);
   }
 
+  /** See {@link #removeBackslashBeforeQuotes}
+   * We use removeBackslashBeforeQuotes to remove the backslash before quotes,
+   * so that we maintain patterns like {@code I'm} or {@code abc"xyz} as is in the java object in memory,
+   * the escaped literal string representation will be generated when the SqlNode is written to string
+   * by the SqlWriter, which can be controlled by the SqlDialect to decide the choice of escaping mechanism.
+   * */
   @Override
   protected SqlNode visitStringLiteral(ASTNode node, ParseContext ctx) {
     // TODO: Add charset here. UTF-8 is not supported by calcite
     String text = node.getText();
     checkState(text.length() >= 2);
-    return SqlLiteral.createCharString(text.substring(1, text.length() - 1), ZERO);
+    return SqlLiteral.createCharString(removeBackslashBeforeQuotes(text.substring(1, text.length() - 1)), ZERO);
+  }
+
+  private String removeBackslashBeforeQuotes(String input) {
+    // matches a \' or \" literal pattern
+    Pattern pattern = Pattern.compile("\\\\['\"]");
+    Matcher matcher = pattern.matcher(input);
+
+    StringBuffer res = new StringBuffer();
+    while (matcher.find()) {
+      String replacement = matcher.group().substring(1);
+      matcher.appendReplacement(res, replacement);
+    }
+    matcher.appendTail(res);
+
+    return res.toString();
   }
 
   @Override
