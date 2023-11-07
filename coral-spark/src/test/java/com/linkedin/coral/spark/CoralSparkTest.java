@@ -73,7 +73,7 @@ public class CoralSparkTest {
   }
 
   @Test
-  public void testTimestamp() {
+  public void testQuotingKeywords() {
     RelNode relNode = TestUtils.toRelNode("default", "baz_view");
     CoralSpark coralSpark = createCoralSpark(relNode);
     assertEquals(coralSpark.getSparkSql(), "SELECT baz.`select`, baz.`timestamp`\n" + "FROM default.baz baz");

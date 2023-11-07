@@ -5,9 +5,13 @@
  */
 package com.linkedin.coral.spark.dialect;
 
-import org.apache.calcite.avatica.util.Casing;
-import com.google.common.collect.ImmutableList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
+
+import com.google.common.collect.ImmutableList;
+
+import org.apache.calcite.avatica.util.Casing;
 import org.apache.calcite.config.NullCollation;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlDialect;
@@ -33,12 +37,25 @@ import com.linkedin.coral.common.functions.CoralSqlUnnestOperator;
  */
 public class SparkSqlDialect extends SqlDialect {
 
-  public static final SqlDialect.Context DEFAULT_CONTEXT =
-      SqlDialect.EMPTY_CONTEXT.withDatabaseProduct(DatabaseProduct.SPARK).withLiteralQuoteString("'")
-          .withLiteralEscapedQuoteString("\\'").withNullCollation(NullCollation.LOW)
-          .withUnquotedCasing(Casing.UNCHANGED).withQuotedCasing(Casing.UNCHANGED).withCaseSensitive(false).withIdentifierQuoteString("`");
+  public static final SqlDialect.Context DEFAULT_CONTEXT = SqlDialect.EMPTY_CONTEXT
+      .withDatabaseProduct(DatabaseProduct.SPARK).withLiteralQuoteString("'").withLiteralEscapedQuoteString("\\'")
+      .withNullCollation(NullCollation.LOW).withUnquotedCasing(Casing.UNCHANGED).withQuotedCasing(Casing.UNCHANGED)
+      .withCaseSensitive(false).withIdentifierQuoteString("`");
 
   public static final SparkSqlDialect INSTANCE = new SparkSqlDialect(DEFAULT_CONTEXT);
+
+  private static final List<String> RESERVED_KEYWORDS = ImmutableList.copyOf(
+      Arrays.asList("ALL", "ALTER", "AND", "ARRAY", "AS", "AUTHORIZATION", "BETWEEN", "BIGINT", "BINARY", "BOOLEAN",
+          "BOTH", "BY", "CASE", "CAST", "CHAR", "COLUMN", "CONF", "CREATE", "CROSS", "CUBE", "CURRENT", "CURRENT_DATE",
+          "CURRENT_TIMESTAMP", "CURSOR", "DATABASE", "DATE", "DECIMAL", "DELETE", "DESCRIBE", "DISTINCT", "DOUBLE",
+          "DROP", "ELSE", "END", "EXCHANGE", "EXISTS", "EXTENDED", "EXTERNAL", "FALSE", "FETCH", "FLOAT", "FOLLOWING",
+          "FOR", "FROM", "FULL", "FUNCTION", "GRANT", "GROUP", "GROUPING", "HAVING", "IF", "IMPORT", "IN", "INNER",
+          "INSERT", "INT", "INTERSECT", "INTERVAL", "INTO", "IS", "JOIN", "LATERAL", "LEFT", "LESS", "LIKE", "LOCAL",
+          "MACRO", "MAP", "MORE", "NONE", "NOT", "NULL", "OF", "ON", "OR", "ORDER", "OUT", "OUTER", "OVER",
+          "PARTIALSCAN", "PARTITION", "PERCENT", "PRECEDING", "PRESERVE", "PROCEDURE", "RANGE", "READS", "REDUCE",
+          "REVOKE", "RIGHT", "ROLLUP", "ROW", "ROWS", "SELECT", "SET", "SMALLINT", "TABLE", "TABLESAMPLE", "THEN",
+          "TIMESTAMP", "TO", "TRANSFORM", "TRIGGER", "TRUE", "TRUNCATE", "UNBOUNDED", "UNION", "UNIQUEJOIN", "UPDATE",
+          "USER", "USING", "UTC_TMESTAMP", "VALUES", "VARCHAR", "WHEN", "WHERE", "WINDOW", "WITH"));
 
   private SparkSqlDialect(Context context) {
     super(context);
@@ -137,20 +154,12 @@ public class SparkSqlDialect extends SqlDialect {
     return false;
   }
 
-  public String quoteIdentifier(String val) {
-    List<String> reservedKeywords = ImmutableList.of("select", "timestamp");
-    if (reservedKeywords.contains(val.toLowerCase())) {
-      String val2 =
-          val.replaceAll(
-              identifierEndQuoteString,
-              identifierEscapedQuote);
-      return identifierQuoteString + val2 + identifierEndQuoteString;
-    } else {
-      return val;
-    }
+  @Override
+  protected boolean identifierNeedsQuote(String val) {
+    return RESERVED_KEYWORDS.contains(val.toUpperCase(Locale.ROOT));
   }
 
-
+  @Override
   public void unparseOffsetFetch(SqlWriter writer, SqlNode offset, SqlNode fetch) {
     unparseFetchUsingLimit(writer, offset, fetch);
   }
