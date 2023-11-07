@@ -424,7 +424,7 @@ public class CoralSparkTest {
   @Test
   public void testDateFunction() {
     RelNode relNode = TestUtils.toRelNode("SELECT date('2021-01-02') as a FROM foo");
-    String targetSql = "SELECT date('2021-01-02') a\n" + "FROM default.foo foo";
+    String targetSql = "SELECT `date`('2021-01-02') a\n" + "FROM default.foo foo";
     assertEquals(createCoralSpark(relNode).getSparkSql(), targetSql);
   }
 
@@ -579,7 +579,7 @@ public class CoralSparkTest {
   public void testIfWithNullAsSecondParameter() {
     RelNode relNode = TestUtils.toRelNode("SELECT if(FALSE, NULL, named_struct('a', ''))");
 
-    String targetSql = "SELECT if(FALSE, NULL, named_struct('a', ''))\n" + "FROM (VALUES  (0)) t (ZERO)";
+    String targetSql = "SELECT `if`(FALSE, NULL, named_struct('a', ''))\n" + "FROM (VALUES  (0)) t (ZERO)";
     assertEquals(createCoralSpark(relNode).getSparkSql(), targetSql);
   }
 
@@ -587,7 +587,7 @@ public class CoralSparkTest {
   public void testIfWithNullAsThirdParameter() {
     RelNode relNode = TestUtils.toRelNode("SELECT if(FALSE, named_struct('a', ''), NULL)");
 
-    String targetSql = "SELECT if(FALSE, named_struct('a', ''), NULL)\n" + "FROM (VALUES  (0)) t (ZERO)";
+    String targetSql = "SELECT `if`(FALSE, named_struct('a', ''), NULL)\n" + "FROM (VALUES  (0)) t (ZERO)";
     assertEquals(createCoralSpark(relNode).getSparkSql(), targetSql);
   }
 
