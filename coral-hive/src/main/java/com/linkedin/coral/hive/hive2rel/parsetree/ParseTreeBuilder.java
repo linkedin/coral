@@ -707,7 +707,7 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
   }
 
   private String removeBackslashBeforeQuotes(String input) {
-    // matches a \' literal pattern
+    // matches a \' or \" literal pattern
     Pattern pattern = Pattern.compile("\\\\['\"]");
     Matcher matcher = pattern.matcher(input);
 
