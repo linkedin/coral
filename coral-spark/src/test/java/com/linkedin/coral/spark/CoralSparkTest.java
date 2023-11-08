@@ -73,6 +73,13 @@ public class CoralSparkTest {
   }
 
   @Test
+  public void testQuotingKeywords() {
+    RelNode relNode = TestUtils.toRelNode("default", "baz_view");
+    CoralSpark coralSpark = createCoralSpark(relNode);
+    assertEquals(coralSpark.getSparkSql(), "SELECT baz.`select`, baz.`timestamp`\n" + "FROM default.baz baz");
+  }
+
+  @Test
   public void testLiteralColumnsFromView() {
     // use date literal in view definition
     String targetSql = "SELECT '2013-01-01', '2017-08-22 01:02:03', CAST(123 AS SMALLINT), CAST(123 AS TINYINT)\n"
@@ -417,7 +424,7 @@ public class CoralSparkTest {
   @Test
   public void testDateFunction() {
     RelNode relNode = TestUtils.toRelNode("SELECT date('2021-01-02') as a FROM foo");
-    String targetSql = "SELECT date('2021-01-02') a\n" + "FROM default.foo foo";
+    String targetSql = "SELECT `date`('2021-01-02') a\n" + "FROM default.foo foo";
     assertEquals(createCoralSpark(relNode).getSparkSql(), targetSql);
   }
 
@@ -572,7 +579,7 @@ public class CoralSparkTest {
   public void testIfWithNullAsSecondParameter() {
     RelNode relNode = TestUtils.toRelNode("SELECT if(FALSE, NULL, named_struct('a', ''))");
 
-    String targetSql = "SELECT if(FALSE, NULL, named_struct('a', ''))\n" + "FROM (VALUES  (0)) t (ZERO)";
+    String targetSql = "SELECT `if`(FALSE, NULL, named_struct('a', ''))\n" + "FROM (VALUES  (0)) t (ZERO)";
     assertEquals(createCoralSpark(relNode).getSparkSql(), targetSql);
   }
 
@@ -580,7 +587,7 @@ public class CoralSparkTest {
   public void testIfWithNullAsThirdParameter() {
     RelNode relNode = TestUtils.toRelNode("SELECT if(FALSE, named_struct('a', ''), NULL)");
 
-    String targetSql = "SELECT if(FALSE, named_struct('a', ''), NULL)\n" + "FROM (VALUES  (0)) t (ZERO)";
+    String targetSql = "SELECT `if`(FALSE, named_struct('a', ''), NULL)\n" + "FROM (VALUES  (0)) t (ZERO)";
     assertEquals(createCoralSpark(relNode).getSparkSql(), targetSql);
   }
 
