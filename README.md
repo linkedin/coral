@@ -111,15 +111,15 @@ A **POST** API which takes a SQL statement to create a database/table/view in th
 1. Clone [Coral repo](https://github.com/linkedin/coral)
 ```bash  
 git clone https://github.com/linkedin/coral.git  
-```  
+```
 2. From the root directory of Coral, access the coral-service module
 ```bash  
 cd coral-service  
-```  
+```
 3. Build
 ```bash  
 ../gradlew clean build  
-```  
+```
 #### To run Coral Service using the **local metastore**:
 4. Run
 ```bash  
@@ -132,7 +132,7 @@ cd coral-service
 6. Run
 ```  
 ../gradlew bootRun  
-```  
+```
 You can also specify a custom location of `hive.properties` file through `--hivePropsLocation` as follows
 ```
  ./gradlew bootRun --args='--hivePropsLocation=/tmp/hive.properties'
@@ -147,6 +147,12 @@ or `../gradlew bootRun` (for remote metastore mode) from coral-service module, c
 1. Create a `.env.local` file in the frontend project's root directory
 2. Copy over the template from `.env.local.example` into the new `.env.local` file
 3. Fill in the environment variable values in `.env.local`
+
+#### Install the required packages in the frontend directory:
+
+```bash
+npm install
+```
 
 #### Now you can start the Coral Service UI by running:
 ```bash  
