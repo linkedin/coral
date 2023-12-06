@@ -5,6 +5,7 @@
  */
 package com.linkedin.coral.schema.avro;
 
+import com.linkedin.coral.hive.hive2rel.functions.OrdinalReturnTypeInferenceV2;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.*;
@@ -29,6 +30,7 @@ import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.SqlKind;
+import org.apache.calcite.sql.type.OrdinalReturnTypeInference;
 import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
@@ -235,6 +237,19 @@ class SchemaUtilities {
     // determined by calcite rather than avro.schema.literal
     if (USE_CALCITE_NULLABILITY_FUNCS.contains(rexCall.getOperator().getName().toLowerCase())) {
       return rexCall.getType().isNullable();
+    }
+
+    if (rexCall.getOperator().getReturnTypeInference() instanceof OrdinalReturnTypeInferenceV2) {
+      int index = ((OrdinalReturnTypeInferenceV2) rexCall.getOperator().getReturnTypeInference())
+          .getOrdinal();
+      RexNode operand = rexCall.operands.get(index);
+
+      if (operand instanceof RexInputRef) {
+        Schema schema = inputSchema.getFields().get(((RexInputRef) operand).getIndex()).schema();
+        return isNullableType(schema);
+      } else if (operand instanceof RexCall) {
+        return isFieldNullable((RexCall) operand, inputSchema);
+      }
     }
 
     // the field is non-nullable only if all operands are RexInputRef
