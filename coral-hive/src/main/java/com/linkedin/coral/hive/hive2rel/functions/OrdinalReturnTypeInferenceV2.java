@@ -2,7 +2,10 @@ package com.linkedin.coral.hive.hive2rel.functions;
 
 import org.apache.calcite.sql.type.OrdinalReturnTypeInference;
 
-
+/**
+ * Custom implementation of {@link OrdinalReturnTypeInference} which allows inferring the return type
+ * based on the ordinal of a given input argument and also exposes the ordinal.
+ */
 public class OrdinalReturnTypeInferenceV2 extends OrdinalReturnTypeInference {
   private final int ordinal;
 

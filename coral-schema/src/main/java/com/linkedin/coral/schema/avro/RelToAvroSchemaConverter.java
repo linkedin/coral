@@ -5,6 +5,7 @@
  */
 package com.linkedin.coral.schema.avro;
 
+import com.linkedin.coral.hive.hive2rel.functions.OrdinalReturnTypeInferenceV2;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -407,14 +408,7 @@ public class RelToAvroSchemaConverter {
     @Override
     public RexNode visitInputRef(RexInputRef rexInputRef) {
       RexNode rexNode = super.visitInputRef(rexInputRef);
-
-      Schema.Field field = inputSchema.getFields().get(rexInputRef.getIndex());
-      String oldFieldName = field.name();
-      String suggestNewFieldName = suggestedFieldNames.poll();
-      String newFieldName = SchemaUtilities.getFieldName(oldFieldName, suggestNewFieldName);
-
-      SchemaUtilities.appendField(newFieldName, field, fieldAssembler);
-
+      appendRexInputRefField(rexInputRef);
       return rexNode;
     }
 
@@ -442,6 +436,23 @@ public class RelToAvroSchemaConverter {
        * For SqlUserDefinedFunction and SqlOperator RexCall, no need to handle it recursively
        * and only return type of udf or sql operator is relevant
        */
+
+      /**
+       * If the return type of RexCall is based on the ordinal of its input argument
+       * and the corresponding input argument refers to a field from the input schema,
+       * use the field's schema as is.
+       */
+      if (rexCall.getOperator().getReturnTypeInference() instanceof OrdinalReturnTypeInferenceV2) {
+        int index = ((OrdinalReturnTypeInferenceV2) rexCall.getOperator().getReturnTypeInference())
+            .getOrdinal();
+        RexNode operand = rexCall.operands.get(index);
+
+        if (operand instanceof RexInputRef) {
+          appendRexInputRefField((RexInputRef) operand);
+          return rexCall;
+        }
+      }
+
       RelDataType fieldType = rexCall.getType();
       boolean isNullable = SchemaUtilities.isFieldNullable(rexCall, inputSchema);
 
@@ -543,6 +554,15 @@ public class RelToAvroSchemaConverter {
     public RexNode visitPatternFieldRef(RexPatternFieldRef rexPatternFieldRef) {
       // TODO: implement this method
       return super.visitPatternFieldRef(rexPatternFieldRef);
+    }
+
+    private void appendRexInputRefField(RexInputRef rexInputRef) {
+      Schema.Field field = inputSchema.getFields().get(rexInputRef.getIndex());
+      String oldFieldName = field.name();
+      String suggestNewFieldName = suggestedFieldNames.poll();
+      String newFieldName = SchemaUtilities.getFieldName(oldFieldName, suggestNewFieldName);
+
+      SchemaUtilities.appendField(newFieldName, field, fieldAssembler);
     }
 
     private void appendField(RelDataType fieldType, boolean isNullable, String doc) {
