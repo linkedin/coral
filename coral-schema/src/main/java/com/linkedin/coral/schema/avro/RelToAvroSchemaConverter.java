@@ -5,7 +5,6 @@
  */
 package com.linkedin.coral.schema.avro;
 
-import com.linkedin.coral.hive.hive2rel.functions.OrdinalReturnTypeInferenceV2;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -60,6 +59,7 @@ import org.slf4j.LoggerFactory;
 import com.linkedin.coral.com.google.common.base.Preconditions;
 import com.linkedin.coral.common.HiveMetastoreClient;
 import com.linkedin.coral.common.HiveUncollect;
+import com.linkedin.coral.hive.hive2rel.functions.OrdinalReturnTypeInferenceV2;
 
 
 /**
@@ -443,8 +443,7 @@ public class RelToAvroSchemaConverter {
        * use the field's schema as is.
        */
       if (rexCall.getOperator().getReturnTypeInference() instanceof OrdinalReturnTypeInferenceV2) {
-        int index = ((OrdinalReturnTypeInferenceV2) rexCall.getOperator().getReturnTypeInference())
-            .getOrdinal();
+        int index = ((OrdinalReturnTypeInferenceV2) rexCall.getOperator().getReturnTypeInference()).getOrdinal();
         RexNode operand = rexCall.operands.get(index);
 
         if (operand instanceof RexInputRef) {
