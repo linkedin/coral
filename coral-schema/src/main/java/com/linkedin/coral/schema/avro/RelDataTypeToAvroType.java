@@ -84,6 +84,8 @@ class RelDataTypeToAvroType {
 
   private static Schema relDataTypeToAvroType(RelDataType relDataType, String recordName) {
     final Schema avroSchema = relDataTypeToAvroTypeNonNullable(relDataType, recordName);
+    // TODO: Current logic ALWAYS sets the inner fields of RelDataType record nullable.
+    //  Modify this to be applied only when RelDataType record was generated from a HIVE_UDF RexCall
     return SchemaUtilities.makeNullable(avroSchema, false);
   }
 

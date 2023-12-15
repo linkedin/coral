@@ -99,6 +99,7 @@ public class TestUtils {
     String baseComplexUnionTypeSchema = loadSchema("base-complex-union-type.avsc");
     String baseNestedUnionSchema = loadSchema("base-nested-union.avsc");
     String baseComplexLowercase = loadSchema("base-complex-lowercase.avsc");
+    String baseComplexNonNullable = loadSchema("base-complex-non-nullable.avsc");
     String baseComplexNullableWithDefaults = loadSchema("base-complex-nullable-with-defaults.avsc");
     String basePrimitive = loadSchema("base-primitive.avsc");
     String baseComplexNestedStructSameName = loadSchema("base-complex-nested-struct-same-name.avsc");
@@ -121,6 +122,7 @@ public class TestUtils {
     executeCreateTableWithPartitionFieldSchemaQuery("default", "basecomplexfieldschema", baseComplexFieldSchema);
     executeCreateTableWithPartitionQuery("default", "basenestedcomplex", baseNestedComplexSchema);
     executeCreateTableWithPartitionQuery("default", "basecomplexnullablewithdefaults", baseComplexNullableWithDefaults);
+    executeCreateTableWithPartitionQuery("default", "basecomplexnonnullable", baseComplexNonNullable);
 
     String baseComplexSchemaWithDoc = loadSchema("docTestResources/base-complex-with-doc.avsc");
     String baseEnumSchemaWithDoc = loadSchema("docTestResources/base-enum-with-doc.avsc");
