@@ -667,7 +667,7 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
         family(SqlTypeFamily.STRING, SqlTypeFamily.ANY, SqlTypeFamily.TIMESTAMP));
     createAddUserDefinedFunction("com.linkedin.policy.decoration.udfs.RedactFieldIf", ARG1,
         family(SqlTypeFamily.BOOLEAN, SqlTypeFamily.ANY, SqlTypeFamily.STRING, SqlTypeFamily.ANY));
-    createAddUserDefinedFunction("cast_nullability", new OrdinalReturnTypeInferenceV2(1),
+    createAddUserDefinedFunction("li_groot_cast_nullability", new OrdinalReturnTypeInferenceV2(1),
         family(SqlTypeFamily.ANY, SqlTypeFamily.ANY));
 
     createAddUserDefinedFunction("com.linkedin.policy.decoration.udfs.RedactSecondarySchemaFieldIf", ARG1, family(
