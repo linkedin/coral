@@ -162,7 +162,7 @@ public class HiveToTrinoConverterTest {
         { "test", "view_from_utc_timestamp", "SELECT CAST(\"at_timezone\"(\"from_unixtime_nanos\"(CAST(\"table_from_utc_timestamp\".\"a_tinyint\" AS BIGINT) * 1000000), \"$canonicalize_hive_timezone_id\"('America/Los_Angeles')) AS TIMESTAMP(3)), CAST(\"at_timezone\"(\"from_unixtime_nanos\"(CAST(\"table_from_utc_timestamp\".\"a_smallint\" AS BIGINT) * 1000000), \"$canonicalize_hive_timezone_id\"('America/Los_Angeles')) AS TIMESTAMP(3)), CAST(\"at_timezone\"(\"from_unixtime_nanos\"(CAST(\"table_from_utc_timestamp\".\"a_integer\" AS BIGINT) * 1000000), \"$canonicalize_hive_timezone_id\"('America/Los_Angeles')) AS TIMESTAMP(3)), CAST(\"at_timezone\"(\"from_unixtime_nanos\"(CAST(\"table_from_utc_timestamp\".\"a_bigint\" AS BIGINT) * 1000000), \"$canonicalize_hive_timezone_id\"('America/Los_Angeles')) AS TIMESTAMP(3)), CAST(\"at_timezone\"(\"from_unixtime\"(CAST(\"table_from_utc_timestamp\".\"a_float\" AS DOUBLE)), \"$canonicalize_hive_timezone_id\"('America/Los_Angeles')) AS TIMESTAMP(3)), CAST(\"at_timezone\"(\"from_unixtime\"(CAST(\"table_from_utc_timestamp\".\"a_double\" AS DOUBLE)), \"$canonicalize_hive_timezone_id\"('America/Los_Angeles')) AS TIMESTAMP(3)), CAST(\"at_timezone\"(\"from_unixtime\"(CAST(\"table_from_utc_timestamp\".\"a_decimal_three\" AS DOUBLE)), \"$canonicalize_hive_timezone_id\"('America/Los_Angeles')) AS TIMESTAMP(3)), CAST(\"at_timezone\"(\"from_unixtime\"(CAST(\"table_from_utc_timestamp\".\"a_decimal_zero\" AS DOUBLE)), \"$canonicalize_hive_timezone_id\"('America/Los_Angeles')) AS TIMESTAMP(3)), CAST(\"at_timezone\"(\"from_unixtime\"(\"to_unixtime\"(\"with_timezone\"(\"table_from_utc_timestamp\".\"a_timestamp\", 'UTC'))), \"$canonicalize_hive_timezone_id\"('America/Los_Angeles')) AS TIMESTAMP(3)), CAST(\"at_timezone\"(\"from_unixtime\"(\"to_unixtime\"(\"with_timezone\"(\"table_from_utc_timestamp\".\"a_date\", 'UTC'))), \"$canonicalize_hive_timezone_id\"('America/Los_Angeles')) AS TIMESTAMP(3))\n"
             + "FROM \"test\".\"table_from_utc_timestamp\" AS \"table_from_utc_timestamp\"" },
 
-        { "test", "date_calculation_view", "SELECT \"date\"(CAST(\"substr\"('2021-08-20', 1, 10) AS TIMESTAMP)), \"date\"(CAST('2021-08-20' AS TIMESTAMP)), \"date\"(CAST('2021-08-20 00:00:00' AS TIMESTAMP)), \"date_add\"('day', 1, \"date\"(CAST('2021-08-20' AS TIMESTAMP))), \"date_add\"('day', 1, \"date\"(CAST('2021-08-20 00:00:00' AS TIMESTAMP))), \"date_add\"('day', 1 * -1, \"date\"(CAST('2021-08-20' AS TIMESTAMP))), \"date_add\"('day', 1 * -1, \"date\"(CAST('2021-08-20 00:00:00' AS TIMESTAMP))), CAST(\"date_diff\"('day', \"date\"(CAST('2021-08-21' AS TIMESTAMP)), \"date\"(CAST('2021-08-20' AS TIMESTAMP))) AS INTEGER), CAST(\"date_diff\"('day', \"date\"(CAST('2021-08-19' AS TIMESTAMP)), \"date\"(CAST('2021-08-20' AS TIMESTAMP))) AS INTEGER), CAST(\"date_diff\"('day', \"date\"(CAST('2021-08-19 23:59:59' AS TIMESTAMP)), \"date\"(CAST('2021-08-20 00:00:00' AS TIMESTAMP))) AS INTEGER)\n"
+        { "test", "date_calculation_view", "SELECT \"date\"(CAST(\"substr\"('2021-08-20', 1 + 1, 10) AS TIMESTAMP)), \"date\"(CAST('2021-08-20' AS TIMESTAMP)), \"date\"(CAST('2021-08-20 00:00:00' AS TIMESTAMP)), \"date_add\"('day', 1, \"date\"(CAST('2021-08-20' AS TIMESTAMP))), \"date_add\"('day', 1, \"date\"(CAST('2021-08-20 00:00:00' AS TIMESTAMP))), \"date_add\"('day', 1 * -1, \"date\"(CAST('2021-08-20' AS TIMESTAMP))), \"date_add\"('day', 1 * -1, \"date\"(CAST('2021-08-20 00:00:00' AS TIMESTAMP))), CAST(\"date_diff\"('day', \"date\"(CAST('2021-08-21' AS TIMESTAMP)), \"date\"(CAST('2021-08-20' AS TIMESTAMP))) AS INTEGER), CAST(\"date_diff\"('day', \"date\"(CAST('2021-08-19' AS TIMESTAMP)), \"date\"(CAST('2021-08-20' AS TIMESTAMP))) AS INTEGER), CAST(\"date_diff\"('day', \"date\"(CAST('2021-08-19 23:59:59' AS TIMESTAMP)), \"date\"(CAST('2021-08-20 00:00:00' AS TIMESTAMP))) AS INTEGER)\n"
             + "FROM \"test\".\"tablea\" AS \"tablea\"" },
 
         { "test", "pmod_view", "SELECT MOD(MOD(- 9, 4) + 4, 4)\n" + "FROM \"test\".\"tablea\" AS \"tablea\"" },
@@ -349,7 +349,7 @@ public class HiveToTrinoConverterTest {
   public void testAvoidTransformToDate() {
     RelNode relNode = TestUtils.getHiveToRelConverter()
         .convertSql("SELECT to_date(substr('2021-08-20', 1, 10)), to_date('2021-08-20')" + "FROM test.tableA");
-    String targetSql = "SELECT \"to_date\"(\"substr\"('2021-08-20', 1, 10)), \"to_date\"('2021-08-20')\n"
+    String targetSql = "SELECT \"to_date\"(\"substr\"('2021-08-20', 1 + 1, 10)), \"to_date\"('2021-08-20')\n"
         + "FROM \"test\".\"tablea\" AS \"tablea\"";
 
     RelToTrinoConverter relToTrinoConverter =
@@ -725,7 +725,7 @@ public class HiveToTrinoConverterTest {
     RelNode relNode = TestUtils.getHiveToRelConverter()
         .convertSql("SELECT SUBSTR(a_timestamp, 12, 8) AS d\nFROM test.table_from_utc_timestamp");
     String targetSql =
-        "SELECT \"substr\"(CAST(\"table_from_utc_timestamp\".\"a_timestamp\" AS VARCHAR(65535)), 12, 8) AS \"d\"\n"
+        "SELECT \"substr\"(CAST(\"table_from_utc_timestamp\".\"a_timestamp\" AS VARCHAR(65535)), 12 + 1, 8) AS \"d\"\n"
             + "FROM \"test\".\"table_from_utc_timestamp\" AS \"table_from_utc_timestamp\"";
     String expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
@@ -733,7 +733,7 @@ public class HiveToTrinoConverterTest {
     relNode = TestUtils.getHiveToRelConverter()
         .convertSql("SELECT SUBSTRING(a_timestamp, 12, 8) AS d\nFROM test.table_from_utc_timestamp");
     targetSql =
-        "SELECT \"substr\"(CAST(\"table_from_utc_timestamp0\".\"a_timestamp\" AS VARCHAR(65535)), 12, 8) AS \"d\"\n"
+        "SELECT \"substr\"(CAST(\"table_from_utc_timestamp0\".\"a_timestamp\" AS VARCHAR(65535)), 12 + 1, 8) AS \"d\"\n"
             + "FROM \"test\".\"table_from_utc_timestamp\" AS \"table_from_utc_timestamp0\"";
     expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
@@ -746,8 +746,8 @@ public class HiveToTrinoConverterTest {
     RelNode relNode = TestUtils.getHiveToRelConverter()
         .convertSql("SELECT a, SUBSTR(b, 1, 1) AS aliased_column, c FROM test.tabler ORDER BY aliased_column DESC");
     String targetSql =
-        "SELECT \"tabler\".\"a\" AS \"a\", \"substr\"(\"tabler\".\"b\", 1, 1) AS \"aliased_column\", \"tabler\".\"c\" AS \"c\"\n"
-            + "FROM \"test\".\"tabler\" AS \"tabler\"\n" + "ORDER BY \"substr\"(\"tabler\".\"b\", 1, 1) DESC";
+        "SELECT \"tabler\".\"a\" AS \"a\", \"substr\"(\"tabler\".\"b\", 1 + 1, 1) AS \"aliased_column\", \"tabler\".\"c\" AS \"c\"\n"
+            + "FROM \"test\".\"tabler\" AS \"tabler\"\n" + "ORDER BY \"substr\"(\"tabler\".\"b\", 1 + 1, 1) DESC";
     String expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
   }
@@ -799,9 +799,10 @@ public class HiveToTrinoConverterTest {
 
     RelNode relNode = TestUtils.getHiveToRelConverter().convertSql(
         "SELECT a, SUBSTR(b, 1, 1) AS aliased_column FROM test.tabler GROUP BY a, b HAVING aliased_column in ('dummy_value')");
-    String targetSql = "SELECT \"tabler\".\"a\" AS \"a\", \"substr\"(\"tabler\".\"b\", 1, 1) AS \"aliased_column\"\n"
-        + "FROM \"test\".\"tabler\" AS \"tabler\"\n" + "GROUP BY \"tabler\".\"a\", \"tabler\".\"b\"\n"
-        + "HAVING \"substr\"(\"tabler\".\"b\", 1, 1)\n" + "IN ('dummy_value')";
+    String targetSql =
+        "SELECT \"tabler\".\"a\" AS \"a\", \"substr\"(\"tabler\".\"b\", 1 + 1, 1) AS \"aliased_column\"\n"
+            + "FROM \"test\".\"tabler\" AS \"tabler\"\n" + "GROUP BY \"tabler\".\"a\", \"tabler\".\"b\"\n"
+            + "HAVING \"substr\"(\"tabler\".\"b\", 1 + 1, 1)\n" + "IN ('dummy_value')";
     String expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
   }
