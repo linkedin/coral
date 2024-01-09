@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -510,8 +510,8 @@ public class RelToTrinoConverterTest {
   @Test
   public void testCurrentTimestamp() {
     String sql = "SELECT current_timestamp";
-    String expected =
-        formatSql("SELECT CAST(CURRENT_TIMESTAMP AS TIMESTAMP(3))\nFROM (VALUES  (0)) AS \"t\" (\"ZERO\")");
+    String expected = formatSql(
+        "SELECT CAST(CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AS TIMESTAMP(3))\nFROM (VALUES  (0)) AS \"t\" (\"ZERO\")");
     testConversion(sql, expected);
   }
 

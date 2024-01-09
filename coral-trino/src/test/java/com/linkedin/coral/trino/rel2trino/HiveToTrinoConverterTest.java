@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -136,7 +136,7 @@ public class HiveToTrinoConverterTest {
         { "test", "map_array_view", "SELECT MAP (ARRAY['key1', 'key2'], ARRAY['value1', 'value2']) AS \"simple_map_col\", MAP (ARRAY['key1', 'key2'], ARRAY[MAP (ARRAY['a', 'c'], ARRAY['b', 'd']), MAP (ARRAY['a', 'c'], ARRAY['b', 'd'])]) AS \"nested_map_col\"\n"
             + "FROM \"test\".\"tablea\" AS \"tablea\"" },
 
-        { "test", "current_date_and_timestamp_view", "SELECT CAST(CURRENT_TIMESTAMP AS TIMESTAMP(3)), TRIM(CAST(CAST(CURRENT_TIMESTAMP AS TIMESTAMP(3)) AS VARCHAR(65535))) AS \"ct\", CURRENT_DATE, CURRENT_DATE AS \"cd\", \"tablea\".\"a\" AS \"a\"\n"
+        { "test", "current_date_and_timestamp_view", "SELECT CAST(CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AS TIMESTAMP(3)), TRIM(CAST(CAST(CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AS TIMESTAMP(3)) AS VARCHAR(65535))) AS \"ct\", CURRENT_DATE, CURRENT_DATE AS \"cd\", \"tablea\".\"a\" AS \"a\"\n"
             + "FROM \"test\".\"tablea\" AS \"tablea\"" },
 
         { "test", "date_function_view", "SELECT \"date\"('2021-01-02') AS \"a\"\n"
