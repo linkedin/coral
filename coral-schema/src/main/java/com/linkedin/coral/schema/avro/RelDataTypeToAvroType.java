@@ -115,6 +115,8 @@ class RelDataTypeToAvroType {
         schema.addProp("logicalType", "timestamp-millis");
         return schema;
       case DATE:
+        // Spark recognizes the data type of {"type": "int", "logicalType": "date"} as a date type:
+        // https://github.com/apache/spark/blob/master/connector/avro/src/main/scala/org/apache/spark/sql/avro/AvroDeserializer.scala#L145
         schema = Schema.create(Schema.Type.INT);
         schema.addProp("logicalType", "date");
         return schema;
