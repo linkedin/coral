@@ -1,0 +1,12 @@
+{
+  "type" : "record",
+  "name" : "basedatetypefield",
+  "namespace" : "coral.schema.avro.base.date.type.field",
+  "fields" : [ {
+    "name" : "Date_Field",
+    "type" : [ "null", {
+      "type" : "int",
+      "logicalType" : "date"
+    } ]
+  } ]
+}
