@@ -1,0 +1,13 @@
+{
+  "type" : "record",
+  "name" : "dateTypeField",
+  "namespace" : "rel_avro",
+  "fields" : [ {
+    "name" : "date_field",
+    "type" : [ "null", {
+      "type" : "int",
+      "logicalType" : "date"
+    } ],
+    "default" : null
+  } ]
+}

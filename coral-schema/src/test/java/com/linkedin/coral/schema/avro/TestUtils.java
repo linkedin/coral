@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2019-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -96,6 +96,7 @@ public class TestUtils {
     String baseNestedComplexSchema = loadSchema("base-nested-complex.avsc");
     String baseNullTypeFieldSchema = loadSchema("base-null-type-field.avsc");
     String baseTimestampTypeFieldSchema = loadSchema("base-timestamp-type-field.avsc");
+    String baseDateTypeFieldSchema = loadSchema("base-date-type-field.avsc");
     String baseComplexUnionTypeSchema = loadSchema("base-complex-union-type.avsc");
     String baseNestedUnionSchema = loadSchema("base-nested-union.avsc");
     String baseComplexLowercase = loadSchema("base-complex-lowercase.avsc");
@@ -113,6 +114,7 @@ public class TestUtils {
     executeCreateTableQuery("default", "basenullability", baseNullabilitySchema);
     executeCreateTableQuery("default", "basenulltypefield", baseNullTypeFieldSchema);
     executeCreateTableQuery("default", "basetimestamptypefield", baseTimestampTypeFieldSchema);
+    executeCreateTableQuery("default", "basedatetypefield", baseDateTypeFieldSchema);
     executeCreateTableQuery("default", "basecomplexuniontype", baseComplexUnionTypeSchema);
     executeCreateTableQuery("default", "basenestedunion", baseNestedUnionSchema);
     executeCreateTableQuery("default", "basecomplexlowercase", baseComplexLowercase);
