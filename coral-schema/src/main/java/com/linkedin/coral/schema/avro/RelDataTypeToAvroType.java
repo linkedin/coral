@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2019-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -84,10 +84,13 @@ class RelDataTypeToAvroType {
 
   private static Schema relDataTypeToAvroType(RelDataType relDataType, String recordName) {
     final Schema avroSchema = relDataTypeToAvroTypeNonNullable(relDataType, recordName);
+    // TODO: Current logic ALWAYS sets the inner fields of RelDataType record nullable.
+    //  Modify this to be applied only when RelDataType record was generated from a HIVE_UDF RexCall
     return SchemaUtilities.makeNullable(avroSchema, false);
   }
 
   private static Schema basicSqlTypeToAvroType(BasicSqlType relDataType) {
+    Schema schema;
     switch (relDataType.getSqlTypeName()) {
       case BOOLEAN:
         return Schema.create(Schema.Type.BOOLEAN);
@@ -108,8 +111,13 @@ class RelDataTypeToAvroType {
       case NULL:
         return Schema.create(Schema.Type.NULL);
       case TIMESTAMP:
-        Schema schema = Schema.create(Schema.Type.LONG);
+        schema = Schema.create(Schema.Type.LONG);
         schema.addProp("logicalType", "timestamp-millis");
+        return schema;
+      case DATE:
+        // In Avro, "date" type is represented as {"type": "int", "logicalType": "date"}.
+        schema = Schema.create(Schema.Type.INT);
+        schema.addProp("logicalType", "date");
         return schema;
       case DECIMAL:
         JsonNodeFactory factory = JsonNodeFactory.instance;

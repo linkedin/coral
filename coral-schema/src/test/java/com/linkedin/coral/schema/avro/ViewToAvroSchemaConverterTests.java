@@ -1102,5 +1102,19 @@ public class ViewToAvroSchemaConverterTests {
     Assert.assertEquals(actualSchema.toString(true), TestUtils.loadSchema("testDivideReturnType-expected.avsc"));
   }
 
+  @Test
+  public void testLiGrootCastNullability() {
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+
+    Schema schemaWithUDF = viewToAvroSchemaConverter
+        .toAvroSchema("SELECT li_groot_cast_nullability(Struct_Col, Struct_Col) AS modCol FROM basecomplexnonnullable");
+    Schema schemaWithField =
+        viewToAvroSchemaConverter.toAvroSchema("SELECT Struct_Col AS modCol FROM basecomplexnonnullable");
+
+    Assert.assertEquals(schemaWithUDF.toString(true), TestUtils.loadSchema("testLiGrootCastNullability-expected.avsc"));
+    Assert.assertEquals(schemaWithField.toString(true),
+        TestUtils.loadSchema("testLiGrootCastNullability-expected.avsc"));
+  }
+
   // TODO: add more unit tests
 }

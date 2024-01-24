@@ -141,7 +141,9 @@ Then you can interact with the service using your [browser](#coral-service-ui) o
 
 ### Coral Service UI
 After running `../gradlew bootRun --args='--spring.profiles.active=localMetastore'` (for local metastore mode) 
-or `../gradlew bootRun` (for remote metastore mode) from coral-service module, configure and start the UI.
+or `../gradlew bootRun` (for remote metastore mode) from coral-service module, configure and start the UI. 
+
+Please note: The backend service runs on port 8080 (by default) and the web UI runs on port 3000 (by default). 
 
 #### To configure environment variables:
 1. Create a `.env.local` file in the frontend project's root directory
