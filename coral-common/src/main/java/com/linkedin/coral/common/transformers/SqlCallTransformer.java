@@ -5,6 +5,8 @@
  */
 package com.linkedin.coral.common.transformers;
 
+import java.util.List;
+
 import com.google.common.collect.ImmutableList;
 
 import org.apache.calcite.rel.type.RelDataType;
@@ -64,6 +66,10 @@ public abstract class SqlCallTransformer {
       throw new RuntimeException("TypeDerivationUtil does not exist to derive the RelDataType for SqlNode: " + sqlNode);
     }
     return typeDerivationUtil.getRelDataType(sqlNode);
+  }
+
+  protected RelDataType leastRestrictive(List<RelDataType> types) {
+    return typeDerivationUtil.leastRestrictive(types);
   }
 
   /**

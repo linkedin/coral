@@ -22,6 +22,7 @@ import com.linkedin.coral.trino.rel2trino.transformers.FromUtcTimestampOperatorT
 import com.linkedin.coral.trino.rel2trino.transformers.GenericProjectTransformer;
 import com.linkedin.coral.trino.rel2trino.transformers.NamedStructToCastTransformer;
 import com.linkedin.coral.trino.rel2trino.transformers.SubstrOperatorTransformer;
+import com.linkedin.coral.trino.rel2trino.transformers.UnionSqlCallTransformer;
 
 
 /**
@@ -44,7 +45,8 @@ public class DataTypeDerivedSqlCallConverter extends SqlShuttle {
     operatorTransformerList = SqlCallTransformers.of(new FromUtcTimestampOperatorTransformer(typeDerivationUtil),
         new GenericProjectTransformer(typeDerivationUtil), new NamedStructToCastTransformer(typeDerivationUtil),
         new ConcatOperatorTransformer(typeDerivationUtil), new SubstrOperatorTransformer(typeDerivationUtil),
-        new CastOperatorTransformer(typeDerivationUtil));
+        new CastOperatorTransformer(typeDerivationUtil),
+        new UnionSqlCallTransformer(typeDerivationUtil));
   }
 
   @Override

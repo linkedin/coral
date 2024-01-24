@@ -1,0 +1,176 @@
+// This Jenkinsfile handles the PR build for li-3.1.1 target branches
+
+global = [
+    'sparkRepo'      : "https://github.com/linkedin-grid/spark.git",
+    'sparkMpRepo'   : "https://github.com/linkedin-multiproduct/spark-mp.git",
+    'credentialsId'     : "921ab2b9-8b29-4d92-8bf2-79fdd91a222e",
+    'am_endpoint'       : "https://ghae-production.auto-merge-service.corp-lva1.atd.corp.linkedin.com:14592/api/v1/pull_request",
+    'commit_branch'     : "spark-mp-${BUILD_NUMBER}"
+]
+
+def auto_merge(org, repo, pr_title, pr_branch, endpoint ){
+    def head = "${pr_branch}".replace('origin/', '')
+
+    am_payload = [
+        'org': org,
+        'repo': repo,
+        'title': pr_title,
+        'head': "${head}",
+        'base': "master",
+        'outfile': "${WORKSPACE}/auto_merge.out"
+    ]
+    println "========== My am_payload"
+    am_payload.each{ k, v -> println "${k}: ${v}" }
+
+
+    sh '''
+        #!/bin/bash
+        status_code=\$(curl --cacert /etc/riddler/ca-bundle.crt  -u  "\${USERNAME}:\${PASSWORD}" --write-out '%{response_code}\\n' --output "\${WORKSPACE}/auto_merge.out" \
+                -F "org=linkedin-multiproduct" \
+                -F "repo=spark-mp" \
+                -F "title=Auto merge PR pipeline \${BUILD_TAG}" \
+                -F "head=\${BUILD_TAG}" \
+                -F "base=master" \
+                https://ghae-production.auto-merge-service.corp-lva1.atd.corp.linkedin.com:14592/api/v1/pull_request )
+        # Check HTTP status code
+        if [[ "\${status_code}" -ne "201" ]]; then
+            echo -e "\n\n===================== E R R O R =====================\nAuto-merge failed with http status code: \${status_code}.\n"
+            cat "\${WORKSPACE}/auto_merge.out"
+            exit 1
+        fi
+        # print curl commad output
+        echo "=== Auto-merge submit: COMPLETE"
+        cat "\${WORKSPACE}/auto_merge.out"
+    '''
+}
+
+
+pipeline{
+    agent { label 'rhel7_jenbuild_edge' }
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '50'))
+        githubProjectProperty(projectUrlStr: "${global.sparkRepo}")
+        skipDefaultCheckout(true)
+        parallelsAlwaysFailFast()
+    }
+    stages {
+        stage('Prepare dir') {
+            steps {
+                script {
+                    cleanWs()
+                    sh'''
+                        mkdir -p spark
+                        mkdir -p spark-mp
+                        mkdir -p tmp
+                    '''
+                }
+            }
+        }
+        stage('Clone repository and add tag') {
+            steps {
+                script {
+                    dir("${env.WORKSPACE}/spark") {
+                        checkout([$class: 'GitSCM', branches: [[name: 'li-3.1.1']], extensions: [[$class: 'CloneOption', noTags: false, reference: '', shallow: false, timeout: 20], [$class: 'CleanBeforeCheckout']], userRemoteConfigs: [[credentialsId: "${global.credentialsId}", url: "${global.sparkRepo}"]]])
+                    }
+                    dir("${env.WORKSPACE}/spark-mp") {
+                        checkout([$class: 'GitSCM', branches: [[name: 'master']], extensions: [[$class: 'CloneOption', noTags: false, reference: '', shallow: false, timeout: 20], [$class: 'CleanBeforeCheckout']], userRemoteConfigs: [[credentialsId: "${global.credentialsId}", url: "${global.sparkMpRepo}"]]])
+                    }
+                    withCredentials([gitUsernamePassword(credentialsId: "${global.credentialsId}", gitToolName: 'Default')]) {
+                    sh'''
+                        export VERSION_BASE_STR="3.1.1"
+                        cd spark-mp
+                        export LATEST_SPARKMP_VERSION=$(git tag --contains HEAD | (grep "spark-mp_" || echo "NONE") | perl -pe 's/spark-mp_([.[:digit:]]+)/$1/')
+
+                        export LATEST_SPARK_VERSION=$(git log -5 --pretty=%B | awk -F 'spark_|;' '{print $2}' | grep -m 1 .)
+                        if [[ "$LATEST_SPARK_VERSION" == "NONE" && "$LATEST_SPARKMP_VERSION" == "NONE" ]]; then
+                            echo "Found no version tags on most recent commits. This is unexpected. Manual push? HEAD is at: $(git rev-parse HEAD)"
+                            exit 1
+                        elif [[ "$LATEST_SPARKMP_VERSION" == "NONE" ]]; then
+                            echo "Found no 'spark-mp_' tag on HEAD of Spark MP repo. This indicates CRT should be running. Refusing to push a new version for now."
+                            exit 0
+                        elif [[ ! "$LATEST_SPARKMP_VERSION" =~ ^$VERSION_BASE_STR.[[:digit:]]+$ ]]; then
+                            echo "Expected version tag in Spark MP repo like $VERSION_BASE_STR but found: $LATEST_SPARKMP_VERSION"
+                            exit 1
+                        elif [[ ! "$LATEST_SPARK_VERSION" =~ ^$VERSION_BASE_STR.[[:digit:]]+$ ]]; then
+                            echo "Expected Spark version tag in Spark MP repo like $VERSION_BASE_STR but found: $LATEST_SPARK_VERSION"
+                            exit 1
+                        fi
+
+                        SPARKMP_PATCH_VERSION=$(echo "$LATEST_SPARKMP_VERSION" | perl -pe 's/[[:digit:]]+.[[:digit:]]+.[[:digit:]]+.([[:digit:]]+)/$1/')
+                        SPARK_PATCH_VERSION=$(echo "$LATEST_SPARK_VERSION" | perl -pe 's/[[:digit:]]+.[[:digit:]]+.[[:digit:]]+.([[:digit:]]+)/$1/')
+
+                        cd ../spark
+                        export LATEST_REPO_VERSION=$(git rev-list --tags --max-count=50 | xargs -n 1 git describe --tags | grep "$VERSION_BASE_STR" | head -n 1)
+
+                        if [[ ! "$LATEST_REPO_VERSION" =~ $VERSION_BASE_STR.[[:digit:]]+ ]]; then
+                            echo "Expected version tag in Spark repo like $VERSION_BASE_STR but found: $LATEST_REPO_VERSION"
+                            exit 1
+                        fi
+
+                        echo "Found latest repo version $LATEST_REPO_VERSION and latest Spark MP version $LATEST_SPARK_VERSION."
+
+                        cd ../tmp
+                        echo "" > build_conditional
+
+                        REPO_PATCH_VERSION=$(echo "$LATEST_REPO_VERSION" | perl -pe 's/[[:digit:]]+.[[:digit:]]+.[[:digit:]]+.([[:digit:]]+)/$1/')
+
+                        if [[ "$SPARK_PATCH_VERSION" == "$REPO_PATCH_VERSION" ]]; then
+                          echo "Latest repo version is $LATEST_REPO_VERSION and latest spark_ tag is $LATEST_SPARK_VERSION; nothing to be done."
+                        elif [[ "$REPO_PATCH_VERSION" -lt "$SPARK_PATCH_VERSION" ]]; then
+                          echo "Latest repo version is older than the latest spark_ tag. Something is wrong. Not publishing any new version."
+                          exit 1
+                        else
+                            cd ../spark-mp
+                            git checkout -b $BUILD_TAG
+                            echo "Pushing empty commit to trigger build for version $LATEST_REPO_VERSION"
+                            git commit --allow-empty -m "Empty commit to trigger build for version spark_$LATEST_REPO_VERSION; ACLOVERRIDE ; DESCRIPTIONCHECKOVERRIDE"
+                            git tag -a "spark_${LATEST_REPO_VERSION}" HEAD -m "Tag indicating that Jenkins has made an empty commit to publish version $LATEST_REPO_VERSION."
+
+                            cd ../tmp
+
+                            echo "Added new tag" > build_conditional
+                        fi
+                    '''
+                    }
+                    env.SKIP_CONDITIONAL = readFile('./tmp/build_conditional').trim()
+                }
+            }
+        }
+        stage('Push tags if needed') {
+            when {
+              expression { return SKIP_CONDITIONAL != "" }
+            }
+            steps {
+               dir("${env.WORKSPACE}/spark-mp") {
+                    withCredentials([gitUsernamePassword(credentialsId: "${global.credentialsId}", gitToolName: 'Default')]) {
+                        sh '''
+                            git config --global user.name Jenkins BuildBot
+                            git config --global user.email spark-dev@linkedin.com
+                            git push origin $BUILD_TAG
+                        '''
+                    }
+                }
+            }
+        }
+        stage('Auto Merge') {
+            when {
+              expression { return SKIP_CONDITIONAL != "" }
+            }
+            steps {
+                    script {
+                        withCredentials([usernamePassword(credentialsId: "425b091e-85cb-4a50-9181-2a200820c53c", usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                                auto_merge('grid', "${global.sparkMpRepo}", "My auto merge PR pipeline ${BUILD_TAG}", "$BUILD_TAG", "${global.endpoint}")
+                        }
+                    }
+            }
+        }
+    }
+    post {
+        cleanup {
+            cleanWs(cleanWhenNotBuilt: false,
+                    deleteDirs: true,
+                    disableDeferredWipeout: true,
+                    notFailBuild: true)
+        }
+    }
+}

@@ -1,0 +1,133 @@
+// this variable will be used across stages
+def coral_build_version = ''
+def coral_latest_version = ''
+
+global = [
+    'credentialsId'     : "921ab2b9-8b29-4d92-8bf2-79fdd91a222e",
+]
+
+pipeline {
+    agent { label 'rhel7_cop_slave_jenbuild1||rhel7_cop_slave_jenbuild2' }
+
+    stages {
+        stage('Setup') {
+            steps {
+                deleteDir()
+                cleanWs()
+                // APA-3010: Set GRADLE_USER_HOME to avoid compilation failures from avro jars in Gradle cache being deleted during runtime
+                sh 'mkdir -p /export/home/$USER/coral-tools-gradle-home'
+                sh 'export GRADLE_USER_HOME=/export/home/$USER/coral-tools-gradle-home'
+            }
+        }
+
+        stage('Build Coral based on the provided patch branch') {
+            steps {
+                dir('coral-baseline') {
+                    checkout([$class: 'GitSCM', branches: [[name: "*/master"]],
+                        userRemoteConfigs: [[url: "https://github.com/linkedin/coral.git"]]])
+                    sh './gradlew -Dhttps.proxyHost=lca1-pxy01.corp.linkedin.com  -Dhttps.proxyPort=3128 build -x test -x :coral-service:build -x spotlessJavaCheck'
+                    sh './gradlew -Pversion=1.0.baseline publishToMavenLocal -x :coral-service:publishToMavenLocal -x :coral-dbt:publishToMavenLocal'
+                }
+                dir('coral') {
+                    checkout([$class: 'GitSCM', branches: [[name: "*/${params.BRANCH_NAME}"]],
+                        userRemoteConfigs: [[url: "${params.GIT_REPO_URL}"]]])
+                    sh './gradlew -Dhttps.proxyHost=lca1-pxy01.corp.linkedin.com  -Dhttps.proxyPort=3128 build -x test -x :coral-service:build -x spotlessJavaCheck'
+                    sh './gradlew -Pversion=1.0.regression publishToMavenLocal -x :coral-service:publishToMavenLocal -x :coral-dbt:publishToMavenLocal'
+                }
+            }
+        }
+
+        stage('Run baseline test in coral-tools') {
+            steps {
+                dir('coral-tools') {
+                    checkout([$class: 'GitSCM', branches: [[name: "*/${params.CORAL_TOOLS_BRANCH}"]],
+                        userRemoteConfigs: [[credentialsId: "${global.credentialsId}", url: "https://github.com/linkedin-multiproduct/coral-tools.git"]]])
+                    sh """jq -M '.build.versions += {"coral": "1.0.baseline"}' product-spec.json > tmp.json && mv tmp.json product-spec.json"""
+                    // should change hive properties here
+                    sh '''sed -ir "s/^[#]*\\s*hive.metastore.client.principal=.*/hive.metastore.client.principal=daliview/" coral-tools/src/main/resources/hive.properties'''
+                    sh '''sed -ir "s/^[#]*\\s*hive.metastore.uris=.*/hive.metastore.uris=thrift:\\/\\/ltx1-holdemhcat01.grid.linkedin.com:7552/" coral-tools/src/main/resources/hive.properties'''
+                    sh '''sed -ir "s/^[#]*\\s*hive.metastore.client.keytab=.*/hive.metastore.client.keytab=\\/export\\/home\\/jenbuild\\/daliview.headless.keytab/" coral-tools/src/main/resources/hive.properties'''
+                    sh "sed -ir 's/svc_password/${params.TRINO_SVC_PASSWORD}/' coral-tools/src/main/java/com/linkedin/coral/tools/ViewTranslationUtils.java"
+                    // debug
+                    sh 'cat coral-tools/src/main/resources/hive.properties'
+                    sh 'cat coral-tools/src/main/java/com/linkedin/coral/tools/ViewTranslationUtils.java'
+
+                    sh 'ligradle clean'
+                    sh 'ligradle -x test build'
+                    sh "ligradle translateAll -PresultDir=baseline -Planguage=${params.TARGET_LANGUAGE}  --refresh-dependencies"
+                }
+            }
+        }
+
+        stage('Run test in coral-tools') {
+            steps {
+                dir('coral-tools') {
+                    // change the product-spec to point to maven local coral dependency
+                    // sh """jq -M '.build.versions += {"coral": "${coral_build_version}"}' product-spec.json > tmp.json && mv tmp.json product-spec.json"""
+                    sh """jq -M '.build.versions += {"coral": "1.0.regression"}' product-spec.json > tmp.json && mv tmp.json product-spec.json"""
+                    // sh '''sed -ir "s/hive\\.hive2rel/common/" coral-tools/src/main/java/com/linkedin/coral/tools/AllViewTranslation.java'''
+                    sh 'ligradle clean'
+                    sh 'ligradle -q :coral-tools:dependencyInsight --dependency hive-exec --configuration compile'
+                    // sh 'ligradle -x test build --refresh-dependencies'
+                    sh "ligradle translateAll -PresultDir=regression -Pinclude=baseline/successes.txt -Planguage=${params.TARGET_LANGUAGE} --refresh-dependencies"
+                    echo 'CORAL NEW FAILURES'
+                    sh 'cat coral-tools/regression/failures.txt'
+                    sh '''
+                        if [ -s "coral-tools/regression/failures.txt" ]
+                        then
+                                echo "There are some new failures:"
+                                cat coral-tools/regression/failures.txt
+                        else
+                                echo "Success!"
+                        fi
+                    '''
+                }
+            }
+        }
+
+        stage('Compare results') {
+            steps {
+                dir('coral-tools') {
+                    sh """python3 coral-tools/src/main/python/compare_result.py ${params.TARGET_LANGUAGE} diff.txt"""
+                    echo 'TEST RESULTS'
+                    sh '''
+                        if [ -s "coral-tools/regression/failures.txt" ] || [ -s "diff.txt" ]
+                        then
+                            if [ -s "coral-tools/regression/failures.txt" ]
+                            then
+                                echo "There are some new failures:"
+                                cat coral-tools/regression/failures.txt
+                            fi
+                            if [ -s "diff.txt" ]
+                            then
+                                echo "There are some translation result diffs, please check:"
+                                cat diff.txt
+                            fi
+                            exit 1
+                        else
+                                echo "Success!"
+                        fi
+                    '''
+                }
+            }
+        }
+    }
+    post {
+        // always {
+        //     deleteDir() /* clean up our workspace */
+        // }
+        always {
+            // deleteDir() /* clean up our workspace */
+            cleanWs(cleanWhenNotBuilt: false,
+                    // deleteDirs: true,
+                    disableDeferredWipeout: true,
+                    notFailBuild: true)
+        }
+        success {
+            echo 'The run succeeded!'
+        }
+        failure {
+            echo 'The run failed.'
+        }
+    }
+}

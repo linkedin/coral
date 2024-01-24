@@ -197,7 +197,7 @@ public class RelToTrinoConverterTest {
 
   // Sub query types
   @Test
-  public void testInClause() {
+  public void testInOperator() {
     String sql = "SELECT tcol, scol\n" + "FROM test.tableOne" + " WHERE icol IN ( "
         + " SELECT ifield from test.tableTwo" + "   WHERE ifield < 10)";
 

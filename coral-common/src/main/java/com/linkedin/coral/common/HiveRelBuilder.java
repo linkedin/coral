@@ -1,9 +1,9 @@
 /**
- * Copyright 2021-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2023 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
-package com.linkedin.coral.hive.hive2rel;
+package com.linkedin.coral.common;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,13 +17,12 @@ import org.apache.calcite.plan.RelOptSchema;
 import org.apache.calcite.rel.core.Values;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeField;
+import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.tools.FrameworkConfig;
 import org.apache.calcite.tools.Frameworks;
 import org.apache.calcite.tools.RelBuilder;
 import org.apache.calcite.tools.RelBuilderFactory;
 import org.apache.calcite.util.Pair;
-
-import com.linkedin.coral.hive.hive2rel.rel.HiveUncollect;
 
 import static org.apache.calcite.rel.core.RelFactories.DEFAULT_AGGREGATE_FACTORY;
 import static org.apache.calcite.rel.core.RelFactories.DEFAULT_EXCHANGE_FACTORY;
@@ -44,7 +43,7 @@ import static org.apache.calcite.rel.core.RelFactories.DEFAULT_VALUES_FACTORY;
 /**
  * HiveRelBuilder overrides {@link #rename} method.
  * Instead of wrapping round HiveUncollect with a Project RelNode, it tries to rebuild
- * HiveUncollect by calling {@link com.linkedin.coral.hive.hive2rel.rel.HiveUncollect#copy(org.apache.calcite.rel.type.RelDataType)}
+ * HiveUncollect by calling {@link com.linkedin.coral.common.HiveUncollect#copy(org.apache.calcite.rel.type.RelDataType)}
  * which sets the rowType.
  *
  * The benefit of eliminating the Project RelNode is that it avoids an extra and unnecessary
@@ -53,17 +52,16 @@ import static org.apache.calcite.rel.core.RelFactories.DEFAULT_VALUES_FACTORY;
  * "FROM ... CROSS JOIN (SELECT ... FROM UNNEST(...))".
  */
 public class HiveRelBuilder extends RelBuilder {
-
   private HiveRelBuilder(Context context, RelOptCluster cluster, RelOptSchema relOptSchema) {
     super(context, cluster, relOptSchema);
   }
 
-  /**
-   * Creates a RelBuilder.
-   */
   public static RelBuilder create(FrameworkConfig config) {
-    return Frameworks.withPrepare(config, (cluster, relOptSchema, rootSchema,
-        statement) -> new HiveRelBuilder(config.getContext(), cluster, relOptSchema));
+    return Frameworks.withPrepare(config, (cluster, relOptSchema, rootSchema, statement) -> {
+      cluster = RelOptCluster.create(cluster.getPlanner(),
+          new RexBuilder(new CoralJavaTypeFactoryImpl(cluster.getTypeFactory().getTypeSystem())));
+      return new HiveRelBuilder(config.getContext(), cluster, relOptSchema);
+    });
   }
 
   /** Creates a {@link RelBuilderFactory}, a partially-created RelBuilder.

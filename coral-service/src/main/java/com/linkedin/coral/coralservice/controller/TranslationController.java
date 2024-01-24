@@ -18,6 +18,7 @@ import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -25,7 +26,9 @@ import org.springframework.web.bind.annotation.RestController;
 import com.linkedin.coral.coralservice.entity.IncrementalRequestBody;
 import com.linkedin.coral.coralservice.entity.IncrementalResponseBody;
 import com.linkedin.coral.coralservice.entity.TranslateRequestBody;
+import com.linkedin.coral.coralservice.utils.RewriteType;
 
+import static com.linkedin.coral.coralservice.utils.CommonUtils.*;
 import static com.linkedin.coral.coralservice.utils.CoralProvider.*;
 import static com.linkedin.coral.coralservice.utils.IncrementalUtils.*;
 import static com.linkedin.coral.coralservice.utils.TranslationUtils.*;
@@ -37,6 +40,7 @@ import static com.linkedin.coral.coralservice.utils.TranslationUtils.*;
 @RestController
 @Service
 @Profile({ "remoteMetastore", "default" })
+@CrossOrigin(origins = CORAL_SERVICE_FRONTEND_URL)
 public class TranslationController implements ApplicationListener<ContextRefreshedEvent> {
   @Value("${hivePropsLocation:}")
   private String hivePropsLocation;
@@ -56,50 +60,54 @@ public class TranslationController implements ApplicationListener<ContextRefresh
 
   @PostMapping("/api/translations/translate")
   public ResponseEntity translate(@RequestBody TranslateRequestBody translateRequestBody) {
-    final String fromLanguage = translateRequestBody.getFromLanguage();
-    final String toLanguage = translateRequestBody.getToLanguage();
+    final String sourceLanguage = translateRequestBody.getSourceLanguage();
+    final String targetLanguage = translateRequestBody.getTargetLanguage();
     final String query = translateRequestBody.getQuery();
+    final RewriteType rewriteType = translateRequestBody.getRewriteType();
 
-    if (fromLanguage.equalsIgnoreCase(toLanguage)) {
+    // TODO: Allow translations between the same language
+    if (sourceLanguage.equalsIgnoreCase(targetLanguage)) {
       return ResponseEntity.status(HttpStatus.BAD_REQUEST)
           .body("Please choose different languages to translate between.\n");
+    }
+
+    if (!isValidSourceLanguage(sourceLanguage)) {
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+          .body("Currently, only Hive, Trino and Spark are supported as source languages.\n");
     }
 
     String translatedSql = null;
 
     try {
-      // TODO: add more translations once n-to-one-to-n is completed
-      // From Trino
-      if (fromLanguage.equalsIgnoreCase("trino")) {
-        // To Spark
-        if (toLanguage.equalsIgnoreCase("spark")) {
-          translatedSql = translateTrinoToSpark(query);
-        }
-      }
-      // From Hive
-      else if (fromLanguage.equalsIgnoreCase("hive")) {
-        // To Spark
-        if (toLanguage.equalsIgnoreCase("spark")) {
-          translatedSql = translateHiveToSpark(query);
-        }
-        // To Trino
-        else if (toLanguage.equalsIgnoreCase("trino")) {
-          translatedSql = translateHiveToTrino(query);
+      if (rewriteType == null) {
+        // Invalid rewriteType values are deserialized as null
+        translatedSql = translateQuery(query, sourceLanguage, targetLanguage);
+      } else {
+        switch (rewriteType) {
+          case INCREMENTAL:
+            translatedSql = getIncrementalQuery(query, sourceLanguage, targetLanguage);
+            break;
+          case DATAMASKING:
+          case NONE:
+          default:
+            translatedSql = translateQuery(query, sourceLanguage, targetLanguage);
+            break;
         }
       }
     } catch (Throwable t) {
+      // TODO: use logger
       t.printStackTrace();
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(t.getMessage());
     }
 
     String message;
     if (translatedSql == null) {
-      message = "Translation from " + LANGUAGE_MAP.get(fromLanguage) + " to " + LANGUAGE_MAP.get(toLanguage)
+      message = "Translation from " + LANGUAGE_MAP.get(sourceLanguage) + " to " + LANGUAGE_MAP.get(targetLanguage)
           + " is not currently supported."
           + " Coral-Service only supports translation from Hive to Trino/Spark, or translation from Trino to Spark.\n";
     } else {
-      message = "Original query in " + LANGUAGE_MAP.get(fromLanguage) + ":\n" + query + "\n" + "Translated to "
-          + LANGUAGE_MAP.get(toLanguage) + ":\n" + translatedSql + "\n";
+      message = "Original query in " + LANGUAGE_MAP.get(sourceLanguage) + ":\n" + query + "\n" + "Translated to "
+          + LANGUAGE_MAP.get(targetLanguage) + ":\n" + translatedSql + "\n";
     }
     return ResponseEntity.status(HttpStatus.OK).body(message);
   }
@@ -109,14 +117,15 @@ public class TranslationController implements ApplicationListener<ContextRefresh
       throws JSONException {
     final String query = incrementalRequestBody.getQuery();
     final List<String> tableNames = incrementalRequestBody.getTableNames();
-    final String language = incrementalRequestBody.getLanguage();
+    final String language = incrementalRequestBody.getLanguage(); // source language
 
     // Response will contain incremental query and incremental table names
     IncrementalResponseBody incrementalResponseBody = new IncrementalResponseBody();
     incrementalResponseBody.setIncrementalQuery(null);
     try {
       if (language.equalsIgnoreCase("spark")) {
-        String incrementalQuery = getSparkIncrementalQueryFromUserSql(query);
+        // TODO: rename language to sourceLanguage and add a targetLanguage field IncrementalRequestBody to use here
+        String incrementalQuery = getIncrementalQuery(query, language, "spark");
         for (String tableName : tableNames) {
           /* Generate underscore delimited and incremental table names
            Table name: db.t1

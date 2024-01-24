@@ -177,7 +177,7 @@ public class HiveToTrinoConverterTest {
         { "test", "get_json_object_view", "SELECT \"json_extract\"(\"tablea\".\"b\".\"b1\", '$.name')\n"
             + "FROM \"test\".\"tablea\" AS \"tablea\"" },
 
-        { "test", "view_from_utc_timestamp", "SELECT CAST(\"at_timezone\"(\"from_unixtime_nanos\"(CAST(\"table_from_utc_timestamp\".\"a_tinyint\" AS BIGINT) * 1000000), \"$canonicalize_hive_timezone_id\"('America/Los_Angeles')) AS TIMESTAMP(3)), CAST(\"at_timezone\"(\"from_unixtime_nanos\"(CAST(\"table_from_utc_timestamp\".\"a_smallint\" AS BIGINT) * 1000000), \"$canonicalize_hive_timezone_id\"('America/Los_Angeles')) AS TIMESTAMP(3)), CAST(\"at_timezone\"(\"from_unixtime_nanos\"(CAST(\"table_from_utc_timestamp\".\"a_integer\" AS BIGINT) * 1000000), \"$canonicalize_hive_timezone_id\"('America/Los_Angeles')) AS TIMESTAMP(3)), CAST(\"at_timezone\"(\"from_unixtime_nanos\"(CAST(\"table_from_utc_timestamp\".\"a_bigint\" AS BIGINT) * 1000000), \"$canonicalize_hive_timezone_id\"('America/Los_Angeles')) AS TIMESTAMP(3)), CAST(\"at_timezone\"(\"format_datetime\"(\"from_unixtime\"(CAST(\"table_from_utc_timestamp\".\"a_float\" AS DOUBLE)), 'yyyy-MM-dd HH:mm:ss'), \"$canonicalize_hive_timezone_id\"('America/Los_Angeles')) AS TIMESTAMP(3)), CAST(\"at_timezone\"(\"format_datetime\"(\"from_unixtime\"(CAST(\"table_from_utc_timestamp\".\"a_double\" AS DOUBLE)), 'yyyy-MM-dd HH:mm:ss'), \"$canonicalize_hive_timezone_id\"('America/Los_Angeles')) AS TIMESTAMP(3)), CAST(\"at_timezone\"(\"format_datetime\"(\"from_unixtime\"(CAST(\"table_from_utc_timestamp\".\"a_decimal_three\" AS DOUBLE)), 'yyyy-MM-dd HH:mm:ss'), \"$canonicalize_hive_timezone_id\"('America/Los_Angeles')) AS TIMESTAMP(3)), CAST(\"at_timezone\"(\"format_datetime\"(\"from_unixtime\"(CAST(\"table_from_utc_timestamp\".\"a_decimal_zero\" AS DOUBLE)), 'yyyy-MM-dd HH:mm:ss'), \"$canonicalize_hive_timezone_id\"('America/Los_Angeles')) AS TIMESTAMP(3)), CAST(\"at_timezone\"(\"format_datetime\"(\"from_unixtime\"(\"to_unixtime\"(\"with_timezone\"(\"table_from_utc_timestamp\".\"a_timestamp\", 'UTC'))), 'yyyy-MM-dd HH:mm:ss'), \"$canonicalize_hive_timezone_id\"('America/Los_Angeles')) AS TIMESTAMP(3)), CAST(\"at_timezone\"(\"format_datetime\"(\"from_unixtime\"(\"to_unixtime\"(\"with_timezone\"(\"table_from_utc_timestamp\".\"a_date\", 'UTC'))), 'yyyy-MM-dd HH:mm:ss'), \"$canonicalize_hive_timezone_id\"('America/Los_Angeles')) AS TIMESTAMP(3))\n"
+        { "test", "view_from_utc_timestamp", "SELECT CAST(\"at_timezone\"(\"from_unixtime_nanos\"(CAST(\"table_from_utc_timestamp\".\"a_tinyint\" AS BIGINT) * 1000000), \"$canonicalize_hive_timezone_id\"('America/Los_Angeles')) AS TIMESTAMP(3)), CAST(\"at_timezone\"(\"from_unixtime_nanos\"(CAST(\"table_from_utc_timestamp\".\"a_smallint\" AS BIGINT) * 1000000), \"$canonicalize_hive_timezone_id\"('America/Los_Angeles')) AS TIMESTAMP(3)), CAST(\"at_timezone\"(\"from_unixtime_nanos\"(CAST(\"table_from_utc_timestamp\".\"a_integer\" AS BIGINT) * 1000000), \"$canonicalize_hive_timezone_id\"('America/Los_Angeles')) AS TIMESTAMP(3)), CAST(\"at_timezone\"(\"from_unixtime_nanos\"(CAST(\"table_from_utc_timestamp\".\"a_bigint\" AS BIGINT) * 1000000), \"$canonicalize_hive_timezone_id\"('America/Los_Angeles')) AS TIMESTAMP(3)), CAST(\"at_timezone\"(\"from_unixtime\"(CAST(\"table_from_utc_timestamp\".\"a_float\" AS DOUBLE)), \"$canonicalize_hive_timezone_id\"('America/Los_Angeles')) AS TIMESTAMP(3)), CAST(\"at_timezone\"(\"from_unixtime\"(CAST(\"table_from_utc_timestamp\".\"a_double\" AS DOUBLE)), \"$canonicalize_hive_timezone_id\"('America/Los_Angeles')) AS TIMESTAMP(3)), CAST(\"at_timezone\"(\"from_unixtime\"(CAST(\"table_from_utc_timestamp\".\"a_decimal_three\" AS DOUBLE)), \"$canonicalize_hive_timezone_id\"('America/Los_Angeles')) AS TIMESTAMP(3)), CAST(\"at_timezone\"(\"from_unixtime\"(CAST(\"table_from_utc_timestamp\".\"a_decimal_zero\" AS DOUBLE)), \"$canonicalize_hive_timezone_id\"('America/Los_Angeles')) AS TIMESTAMP(3)), CAST(\"at_timezone\"(\"from_unixtime\"(\"to_unixtime\"(\"with_timezone\"(\"table_from_utc_timestamp\".\"a_timestamp\", 'UTC'))), \"$canonicalize_hive_timezone_id\"('America/Los_Angeles')) AS TIMESTAMP(3)), CAST(\"at_timezone\"(\"from_unixtime\"(\"to_unixtime\"(\"with_timezone\"(\"table_from_utc_timestamp\".\"a_date\", 'UTC'))), \"$canonicalize_hive_timezone_id\"('America/Los_Angeles')) AS TIMESTAMP(3))\n"
             + "FROM \"test\".\"table_from_utc_timestamp\" AS \"table_from_utc_timestamp\"" },
 
         { "test", "date_calculation_view", "SELECT \"date\"(CAST(\"substr\"('2021-08-20', 1, 10) AS TIMESTAMP)), \"date\"(CAST('2021-08-20' AS TIMESTAMP)), \"date\"(CAST('2021-08-20 00:00:00' AS TIMESTAMP)), \"date_add\"('day', 1, \"date\"(CAST('2021-08-20' AS TIMESTAMP))), \"date_add\"('day', 1, \"date\"(CAST('2021-08-20 00:00:00' AS TIMESTAMP))), \"date_add\"('day', 1 * -1, \"date\"(CAST('2021-08-20' AS TIMESTAMP))), \"date_add\"('day', 1 * -1, \"date\"(CAST('2021-08-20 00:00:00' AS TIMESTAMP))), CAST(\"date_diff\"('day', \"date\"(CAST('2021-08-21' AS TIMESTAMP)), \"date\"(CAST('2021-08-20' AS TIMESTAMP))) AS INTEGER), CAST(\"date_diff\"('day', \"date\"(CAST('2021-08-19' AS TIMESTAMP)), \"date\"(CAST('2021-08-20' AS TIMESTAMP))) AS INTEGER), CAST(\"date_diff\"('day', \"date\"(CAST('2021-08-19 23:59:59' AS TIMESTAMP)), \"date\"(CAST('2021-08-20 00:00:00' AS TIMESTAMP))) AS INTEGER)\n"
@@ -211,7 +211,50 @@ public class HiveToTrinoConverterTest {
             + "FROM \"test\".\"duplicate_column_name_a\" AS \"duplicate_column_name_a\"\n"
             + "LEFT JOIN (SELECT TRIM(\"duplicate_column_name_b\".\"some_id\") AS \"SOME_ID\", CAST(TRIM(\"duplicate_column_name_b\".\"some_id\") AS VARCHAR(65536)) AS \"$f1\"\n"
             + "FROM \"test\".\"duplicate_column_name_b\" AS \"duplicate_column_name_b\") AS \"t\" ON \"duplicate_column_name_a\".\"some_id\" = \"t\".\"$f1\") AS \"t0\"\n"
-            + "WHERE \"t0\".\"some_id\" <> ''" } };
+            + "WHERE \"t0\".\"some_id\" <> ''" },
+
+        { "test", "view_char_different_size_in_union", "SELECT CAST(\"table_with_mixed_columns\".\"a_char1\" AS VARCHAR(255)) AS \"col\"\n"
+            + "FROM \"test\".\"table_with_mixed_columns\" AS \"table_with_mixed_columns\"\n" + "UNION ALL\n"
+            + "SELECT CAST(\"table_with_mixed_columns0\".\"a_char255\" AS VARCHAR(255)) AS \"col\"\n"
+            + "FROM \"test\".\"table_with_mixed_columns\" AS \"table_with_mixed_columns0\"" },
+
+        { "test", "view_cast_char_to_varchar", "SELECT CAST(\"table_with_mixed_columns\".\"a_char1\" AS VARCHAR(65535)) AS \"col\"\n"
+            + "FROM \"test\".\"table_with_mixed_columns\" AS \"table_with_mixed_columns\"" },
+
+        { "test", "view_cast_char_to_varchar_in_union", "SELECT CAST(\"table_with_mixed_columns\".\"a_char1\" AS VARCHAR(65535)) AS \"col\"\n"
+            + "FROM \"test\".\"table_with_mixed_columns\" AS \"table_with_mixed_columns\"\n" + "UNION ALL\n"
+            + "SELECT CAST(CASE WHEN \"table_with_mixed_columns0\".\"a_char1\" IS NOT NULL THEN \"table_with_mixed_columns0\".\"a_char1\" ELSE 'N' END AS VARCHAR(65535)) AS \"col\"\n"
+            + "FROM \"test\".\"table_with_mixed_columns\" AS \"table_with_mixed_columns0\"" },
+
+        { "test", "view_cast_char_to_varchar_in_union_flipped", "SELECT CAST(CASE WHEN \"table_with_mixed_columns\".\"a_char1\" IS NOT NULL THEN \"table_with_mixed_columns\".\"a_char1\" ELSE 'N' END AS VARCHAR(65535)) AS \"col\"\n"
+            + "FROM \"test\".\"table_with_mixed_columns\" AS \"table_with_mixed_columns\"\n" + "UNION ALL\n"
+            + "SELECT CAST(\"table_with_mixed_columns0\".\"a_char1\" AS VARCHAR(65535)) AS \"col\"\n"
+            + "FROM \"test\".\"table_with_mixed_columns\" AS \"table_with_mixed_columns0\"" },
+
+        { "test", "view_cast_char_to_varchar_with_other_fields_in_union", "SELECT CAST(\"table_with_mixed_columns\".\"a_char1\" AS VARCHAR(65535)) AS \"text\", \"table_with_mixed_columns\".\"a_boolean\" AS \"a_boolean\", \"table_with_mixed_columns\".\"a_smallint\" AS \"a_number\"\n"
+            + "FROM \"test\".\"table_with_mixed_columns\" AS \"table_with_mixed_columns\"\n" + "UNION ALL\n"
+            + "SELECT CAST(CASE WHEN \"table_with_mixed_columns0\".\"a_char1\" IS NOT NULL THEN \"table_with_mixed_columns0\".\"a_char1\" ELSE 'N' END AS VARCHAR(65535)) AS \"text\", \"table_with_mixed_columns0\".\"a_boolean\" AS \"a_boolean\", \"table_with_mixed_columns0\".\"a_integer\" AS \"a_number\"\n"
+            + "FROM \"test\".\"table_with_mixed_columns\" AS \"table_with_mixed_columns0\"" },
+
+        { "test", "view_char_and_null_in_union", "SELECT \"table_with_mixed_columns\".\"a_char1\" AS \"text\"\n"
+            + "FROM \"test\".\"table_with_mixed_columns\" AS \"table_with_mixed_columns\"\n" + "UNION ALL\n"
+            + "SELECT NULL AS \"text\"\n"
+            + "FROM \"test\".\"table_with_mixed_columns\" AS \"table_with_mixed_columns0\"" },
+
+        { "test", "view_different_numerical_types_in_union", "SELECT *\n" + "FROM (SELECT *\n"
+            + "FROM (SELECT \"table_with_mixed_columns\".\"a_tinyint\" AS \"a_number\", \"table_with_mixed_columns\".\"a_float\" AS \"a_float\"\n"
+            + "FROM \"test\".\"table_with_mixed_columns\" AS \"table_with_mixed_columns\"\n" + "UNION ALL\n"
+            + "SELECT \"table_with_mixed_columns0\".\"a_smallint\" AS \"a_number\", \"table_with_mixed_columns0\".\"a_float\" AS \"a_float\"\n"
+            + "FROM \"test\".\"table_with_mixed_columns\" AS \"table_with_mixed_columns0\") AS \"t1\"\n" + "UNION ALL\n"
+            + "SELECT \"table_with_mixed_columns1\".\"a_integer\" AS \"a_number\", \"table_with_mixed_columns1\".\"a_float\" AS \"a_float\"\n"
+            + "FROM \"test\".\"table_with_mixed_columns\" AS \"table_with_mixed_columns1\") AS \"t3\"\n" + "UNION ALL\n"
+            + "SELECT \"table_with_mixed_columns2\".\"a_bigint\" AS \"a_number\", \"table_with_mixed_columns2\".\"a_float\" AS \"a_float\"\n"
+            + "FROM \"test\".\"table_with_mixed_columns\" AS \"table_with_mixed_columns2\"" },
+
+        { "test", "view_union_no_casting", "SELECT \"table_with_mixed_columns\".\"a_tinyint\" AS \"a_tinyint\", \"table_with_mixed_columns\".\"a_smallint\" AS \"a_smallint\", \"table_with_mixed_columns\".\"a_integer\" AS \"a_integer\", \"table_with_mixed_columns\".\"a_bigint\" AS \"a_bigint\", \"table_with_mixed_columns\".\"a_float\" AS \"a_float\"\n"
+            + "FROM \"test\".\"table_with_mixed_columns\" AS \"table_with_mixed_columns\"\n" + "UNION ALL\n"
+            + "SELECT \"table_with_mixed_columns0\".\"a_tinyint\" AS \"a_tinyint\", \"table_with_mixed_columns0\".\"a_smallint\" AS \"a_smallint\", \"table_with_mixed_columns0\".\"a_integer\" AS \"a_integer\", \"table_with_mixed_columns0\".\"a_bigint\" AS \"a_bigint\", \"table_with_mixed_columns0\".\"a_float\" AS \"a_float\"\n"
+            + "FROM \"test\".\"table_with_mixed_columns\" AS \"table_with_mixed_columns0\"" } };
   }
 
   @Test
@@ -338,6 +381,43 @@ public class HiveToTrinoConverterTest {
     RelNode relNode = TestUtils.getHiveToRelConverter().convertSql("SELECT if(FALSE, NULL, named_struct('a', ''))");
     String targetSql =
         "SELECT \"if\"(FALSE, NULL, CAST(ROW('') AS ROW(\"a\" CHAR(0))))\n" + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
+
+    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
+    String expandedSql = relToTrinoConverter.convert(relNode);
+    assertEquals(expandedSql, targetSql);
+  }
+
+  @Test
+  public void testNamedStructWithArrayWithoutType() {
+    RelNode relNode = TestUtils.getHiveToRelConverter().convertSql("SELECT NAMED_STRUCT('value', ARRAY())");
+    String targetSql = "SELECT CAST(ROW(ARRAY[]) AS ROW(\"value\" ARRAY<VARCHAR(65535)>))\n"
+        + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
+
+    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
+    String expandedSql = relToTrinoConverter.convert(relNode);
+    assertEquals(expandedSql, targetSql);
+  }
+
+  @Test
+  public void testNestedNamedStructWithArrayWithoutType() {
+    RelNode relNode =
+        TestUtils.getHiveToRelConverter().convertSql("SELECT NAMED_STRUCT('value', NAMED_STRUCT('value2', ARRAY()))");
+    String targetSql =
+        "SELECT CAST(ROW(CAST(ROW(ARRAY[]) AS ROW(\"value2\" ARRAY<VARCHAR(65535)>))) AS ROW(\"value\" ROW(\"value2\" ARRAY<VARCHAR(65535)>)))\n"
+            + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
+
+    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
+    String expandedSql = relToTrinoConverter.convert(relNode);
+    assertEquals(expandedSql, targetSql);
+  }
+
+  @Test
+  public void testNamedStructWithStringTypeArray() {
+    RelNode relNode =
+        TestUtils.getHiveToRelConverter().convertSql("SELECT NAMED_STRUCT('value', ARRAY(CAST('tmp' AS STRING)))");
+    String targetSql =
+        "SELECT CAST(ROW(ARRAY[CAST('tmp' AS VARCHAR(65535))]) AS ROW(\"value\" ARRAY<VARCHAR(65535)>))\n"
+            + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
 
     RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
     String expandedSql = relToTrinoConverter.convert(relNode);
@@ -519,7 +599,7 @@ public class HiveToTrinoConverterTest {
     relNode = TestUtils.getHiveToRelConverter().convertSql(
         "SELECT substring(from_utc_timestamp(a_decimal_three,'PST'),1,10) AS d\nFROM test.table_from_utc_timestamp");
     targetSql =
-        "SELECT \"substr\"(CAST(CAST(\"at_timezone\"(CAST(\"format_datetime\"(\"from_unixtime\"(CAST(\"table_from_utc_timestamp0\".\"a_decimal_three\" AS DOUBLE)), 'yyyy-MM-dd HH:mm:ss') AS TIMESTAMP), \"$canonicalize_hive_timezone_id\"('PST')) AS TIMESTAMP(3)) AS VARCHAR(65535)), 1, 10) AS \"d\"\n"
+        "SELECT \"substr\"(CAST(CAST(\"at_timezone\"(\"from_unixtime\"(CAST(\"table_from_utc_timestamp0\".\"a_decimal_three\" AS DOUBLE)), \"$canonicalize_hive_timezone_id\"('PST')) AS TIMESTAMP(3)) AS VARCHAR(65535)), 1, 10) AS \"d\"\n"
             + "FROM \"test\".\"table_from_utc_timestamp\" AS \"table_from_utc_timestamp0\"";
     expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
@@ -527,7 +607,7 @@ public class HiveToTrinoConverterTest {
     relNode = TestUtils.getHiveToRelConverter().convertSql(
         "SELECT substring(from_utc_timestamp(a_timestamp,'PST'),1,10) AS d\nFROM test.table_from_utc_timestamp");
     targetSql =
-        "SELECT \"substr\"(CAST(CAST(\"at_timezone\"(CAST(\"format_datetime\"(\"from_unixtime\"(\"to_unixtime\"(\"with_timezone\"(\"table_from_utc_timestamp1\".\"a_timestamp\", 'UTC'))), 'yyyy-MM-dd HH:mm:ss') AS TIMESTAMP), \"$canonicalize_hive_timezone_id\"('PST')) AS TIMESTAMP(3)) AS VARCHAR(65535)), 1, 10) AS \"d\"\n"
+        "SELECT \"substr\"(CAST(CAST(\"at_timezone\"(\"from_unixtime\"(\"to_unixtime\"(\"with_timezone\"(\"table_from_utc_timestamp1\".\"a_timestamp\", 'UTC'))), \"$canonicalize_hive_timezone_id\"('PST')) AS TIMESTAMP(3)) AS VARCHAR(65535)), 1, 10) AS \"d\"\n"
             + "FROM \"test\".\"table_from_utc_timestamp\" AS \"table_from_utc_timestamp1\"";
     expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
@@ -678,7 +758,7 @@ public class HiveToTrinoConverterTest {
   }
 
   @Test
-  public void testAliasOrderBy() {
+  public void testAliasOrderByDESC() {
     RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
 
     RelNode relNode = TestUtils.getHiveToRelConverter()
@@ -686,6 +766,47 @@ public class HiveToTrinoConverterTest {
     String targetSql =
         "SELECT \"tabler\".\"a\" AS \"a\", \"substr\"(\"tabler\".\"b\", 1, 1) AS \"aliased_column\", \"tabler\".\"c\" AS \"c\"\n"
             + "FROM \"test\".\"tabler\" AS \"tabler\"\n" + "ORDER BY \"substr\"(\"tabler\".\"b\", 1, 1) DESC";
+    String expandedSql = relToTrinoConverter.convert(relNode);
+    assertEquals(expandedSql, targetSql);
+  }
+
+  @Test
+  public void testAliasOrderByDESCMultipleOrderings() {
+    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
+
+    RelNode relNode = TestUtils.getHiveToRelConverter().convertSql(
+        "SELECT a, SUBSTR(b, 1, 1) AS aliased_column, c FROM test.tabler ORDER BY aliased_column DESC, a DESC, c DESC");
+    String targetSql =
+        "SELECT \"tabler\".\"a\" AS \"a\", \"substr\"(\"tabler\".\"b\", 1, 1) AS \"aliased_column\", \"tabler\".\"c\" AS \"c\"\n"
+            + "FROM \"test\".\"tabler\" AS \"tabler\"\n"
+            + "ORDER BY \"substr\"(\"tabler\".\"b\", 1, 1) DESC, \"tabler\".\"a\" DESC, \"tabler\".\"c\" DESC";
+    String expandedSql = relToTrinoConverter.convert(relNode);
+    assertEquals(expandedSql, targetSql);
+  }
+
+  @Test
+  public void testAliasOrderByDESCWindow() {
+    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
+
+    RelNode relNode = TestUtils.getHiveToRelConverter()
+        .convertSql("SELECT ROW_NUMBER() OVER (PARTITION BY a ORDER BY b DESC) AS rid FROM test.tabler");
+    String targetSql =
+        "SELECT ROW_NUMBER() OVER (PARTITION BY \"tabler\".\"a\" ORDER BY \"tabler\".\"b\" DESC) AS \"rid\"\n"
+            + "FROM \"test\".\"tabler\" AS \"tabler\"";
+    String expandedSql = relToTrinoConverter.convert(relNode);
+    assertEquals(expandedSql, targetSql);
+  }
+
+  @Test
+  public void testAliasOrderByASC() {
+    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
+
+    RelNode relNode = TestUtils.getHiveToRelConverter()
+        .convertSql("SELECT a, SUBSTR(b, 1, 1) AS aliased_column, c FROM test.tabler ORDER BY aliased_column ASC");
+    // We want NULLS FIRST since we're translating from Hive and that is the default null ordering for ASC in Hive
+    String targetSql =
+        "SELECT \"tabler\".\"a\" AS \"a\", \"substr\"(\"tabler\".\"b\", 1, 1) AS \"aliased_column\", \"tabler\".\"c\" AS \"c\"\n"
+            + "FROM \"test\".\"tabler\" AS \"tabler\"\n" + "ORDER BY \"substr\"(\"tabler\".\"b\", 1, 1) NULLS FIRST";
     String expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
   }
@@ -835,6 +956,30 @@ public class HiveToTrinoConverterTest {
   public void testSqlSelectAliasAppenderTransformer() {
     // test.tableA(a int, b struct<b1:string>
     RelNode relNode = TestUtils.getHiveToRelConverter().convertSql("SELECT tableA.b.b1 FROM test.tableA where a > 5");
+    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
+    String expandedSql = relToTrinoConverter.convert(relNode);
+
+    String expected = "SELECT \"tablea\".\"b\".\"b1\" AS \"b1\"\n" + "FROM \"test\".\"tablea\" AS \"tablea\"\n"
+        + "WHERE \"tablea\".\"a\" > 5";
+    assertEquals(expandedSql, expected);
+  }
+
+  @Test
+  public void testInOperator() {
+    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
+
+    RelNode relNode =
+        TestUtils.getHiveToRelConverter().convertSql("SELECT a from test.tabler where b in ('dummy_value')");
+    String targetSql = "SELECT \"tabler\".\"a\" AS \"a\"\n" + "FROM \"test\".\"tabler\" AS \"tabler\"\n"
+        + "WHERE \"tabler\".\"b\" IN ('dummy_value')";
+    String expandedSql = relToTrinoConverter.convert(relNode);
+    assertEquals(expandedSql, targetSql);
+  }
+
+  @Test
+  public void testSqlSelectAliasAppenderTransformerWithoutTableAliasPrefix() {
+    // test.tableA(a int, b struct<b1:string>
+    RelNode relNode = TestUtils.getHiveToRelConverter().convertSql("SELECT b.b1 FROM test.tableA where a > 5");
     RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
     String expandedSql = relToTrinoConverter.convert(relNode);
 
