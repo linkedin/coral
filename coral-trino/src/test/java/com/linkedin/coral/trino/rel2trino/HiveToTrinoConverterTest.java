@@ -563,26 +563,39 @@ public class HiveToTrinoConverterTest {
     assertEquals(expandedSql, targetSql);
   }
 
-    @Test
-    public void testCastNestedTimestampToDecimal() {
-      RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
+  @Test
+  public void testCastNestedTimestampToDecimal() {
+    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
 
-      RelNode relNode = TestUtils.getHiveToRelConverter().convertSql(
-          "SELECT CAST(CAST(a_date AS TIMESTAMP) AS DECIMAL(10, 0)) AS d\nFROM test.table_from_utc_timestamp");
-      String targetSql =
-          "SELECT CAST(\"to_unixtime\"(\"with_timezone\"(CAST(\"table_from_utc_timestamp\".\"a_date\" AS TIMESTAMP), 'UTC')) AS DECIMAL(10, 0)) AS \"d\"\n"
-              + "FROM \"test\".\"table_from_utc_timestamp\" AS \"table_from_utc_timestamp\"";
-      String expandedSql = relToTrinoConverter.convert(relNode);
-      assertEquals(expandedSql, targetSql);
+    RelNode relNode = TestUtils.getHiveToRelConverter().convertSql(
+        "SELECT CAST(CAST(a_date AS TIMESTAMP) AS DECIMAL(10, 0)) AS d\nFROM test.table_from_utc_timestamp");
+    String targetSql =
+        "SELECT CAST(\"to_unixtime\"(\"with_timezone\"(CAST(\"table_from_utc_timestamp\".\"a_date\" AS TIMESTAMP), 'UTC')) AS DECIMAL(10, 0)) AS \"d\"\n"
+            + "FROM \"test\".\"table_from_utc_timestamp\" AS \"table_from_utc_timestamp\"";
+    String expandedSql = relToTrinoConverter.convert(relNode);
+    assertEquals(expandedSql, targetSql);
 
-      relNode = TestUtils.getHiveToRelConverter().convertSql(
-          "SELECT CAST(from_utc_timestamp(a_date, 'America/Los_Angeles') AS DECIMAL(10, 0)) AS d\nFROM test.table_from_utc_timestamp");
-      targetSql =
-          "SELECT CAST(\"to_unixtime\"(\"with_timezone\"(CAST(\"at_timezone\"(\"from_unixtime\"(\"to_unixtime\"(\"with_timezone\"(CAST(\"table_from_utc_timestamp0\".\"a_date\" AS TIMESTAMP), 'UTC'))), \"$canonicalize_hive_timezone_id\"('America/Los_Angeles')) AS TIMESTAMP(3)), 'UTC')) AS DECIMAL(10, 0)) AS \"d\"\n"
-              + "FROM \"test\".\"table_from_utc_timestamp\" AS \"table_from_utc_timestamp0\"";
-      expandedSql = relToTrinoConverter.convert(relNode);
-      assertEquals(expandedSql, targetSql);
-    }
+    relNode = TestUtils.getHiveToRelConverter().convertSql(
+        "SELECT CAST(from_utc_timestamp(a_date, 'America/Los_Angeles') AS DECIMAL(10, 0)) AS d\nFROM test.table_from_utc_timestamp");
+    targetSql =
+        "SELECT CAST(\"to_unixtime\"(\"with_timezone\"(CAST(\"at_timezone\"(\"from_unixtime\"(\"to_unixtime\"(\"with_timezone\"(CAST(\"table_from_utc_timestamp0\".\"a_date\" AS TIMESTAMP), 'UTC'))), \"$canonicalize_hive_timezone_id\"('America/Los_Angeles')) AS TIMESTAMP(3)), 'UTC')) AS DECIMAL(10, 0)) AS \"d\"\n"
+            + "FROM \"test\".\"table_from_utc_timestamp\" AS \"table_from_utc_timestamp0\"";
+    expandedSql = relToTrinoConverter.convert(relNode);
+    assertEquals(expandedSql, targetSql);
+  }
+
+  @Test
+  public void testCastWithJoinOnTableAlias() {
+    RelNode relNode = TestUtils.getHiveToRelConverter().convertSql(
+        "SELECT t1.*, CAST('123' AS INT) FROM (SELECT * FROM test.tableA) t1 LEFT OUTER JOIN test.tableB t2 ON t1.a = t2.a");
+    String targetSql = "SELECT \"tablea\".\"a\" AS \"a\", \"tablea\".\"b\" AS \"b\", CAST('123' AS INTEGER)\n"
+        + "FROM \"test\".\"tablea\" AS \"tablea\"\n"
+        + "LEFT JOIN \"test\".\"tableb\" AS \"tableb\" ON \"tablea\".\"a\" = \"tableb\".\"a\"";
+
+    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
+    String expandedSql = relToTrinoConverter.convert(relNode);
+    assertEquals(expandedSql, targetSql);
+  }
 
   @Test
   public void testSubstrWithTimestampOperator() {
