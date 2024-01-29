@@ -133,9 +133,7 @@ public class TypeDerivationUtil {
         SqlNode rightChild = joinSqlCall.getRight();
 
         if (rightChild instanceof SqlCall && ((SqlCall) rightChild).getOperator().kind == SqlKind.AS) {
-          if (((SqlCall) rightChild).getOperandList().size() == 2
-              && ((SqlCall) rightChild).getOperandList().get(0).getKind() == SqlKind.IDENTIFIER
-              && ((SqlCall) rightChild).getOperandList().get(1).getKind() == SqlKind.IDENTIFIER) {
+          if (((SqlCall) rightChild).getOperandList().size() == 2) {
             // Don't want lateral joins on simple aliases, for example:
             // We want:         LEFT JOIN db.t1 AS t1 ON t2.id = t1.id
             // We don't want :  LEFT JOIN LATERAL(db.t1) AS t1 ON t2.id = t1.id
