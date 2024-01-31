@@ -66,7 +66,6 @@ git clone https://github.com/linkedin/coral.git
 
 Build:
 
-**Important:**
 Please note that this project requires Python 3 and Java 8 to run. Set `JAVA_HOME` to the home of an appropriate version and then use:
 
 ```bash
