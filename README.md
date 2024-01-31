@@ -66,12 +66,12 @@ git clone https://github.com/linkedin/coral.git
 
 Build:
 
+**Please note that this project requires Python 3 and Java 8 to run.** Set `JAVA_HOME` to the home of an appropriate version and then use:
+
 ```bash
 ./gradlew clean build
 ```
-
-Please note that this project requires Python 3 and Java 8 to run. Either set `JAVA_HOME` to the home of an appropriate version and then use `./gradlew clean build` as described above, or set the `org.gradle.java.home` gradle property to the Java home of an appropriate version as below:
-
+or, set the `org.gradle.java.home` gradle property to the Java home of an appropriate version as below:
 ```bash
 ./gradlew -Dorg.gradle.java.home=/path/to/java/home clean build
 ```
