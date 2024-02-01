@@ -72,7 +72,9 @@ public class TypeDerivationUtil {
 
     for (SqlSelect topSqlSelectNode : topSelectNodes) {
       final SqlSelect dummySqlSelect = new SqlSelect(topSqlSelectNode.getParserPosition(), null,
-          SqlNodeList.of(sqlNode), topSqlSelectNode.getFrom(), null, null, null, null, null, null, null);
+          SqlNodeList.of(sqlNode), topSqlSelectNode.getFrom(), topSqlSelectNode.getWhere(), topSqlSelectNode.getGroup(),
+          topSqlSelectNode.getHaving(), topSqlSelectNode.getWindowList(), topSqlSelectNode.getOrderList(),
+          topSqlSelectNode.getOffset(), topSqlSelectNode.getFetch());
 
       try {
         sqlValidator.validate(dummySqlSelect);
