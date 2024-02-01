@@ -71,12 +71,12 @@ public class TypeDerivationUtil {
     }
 
     for (SqlSelect topSqlSelectNode : topSelectNodes) {
-      final SqlSelect dummySqlSelect = new SqlSelect(topSqlSelectNode.getParserPosition(), null, SqlNodeList.of(sqlNode),
-          topSqlSelectNode.getFrom(), null, null, null, null, null, null, null);
+      final SqlSelect dummySqlSelect = new SqlSelect(topSqlSelectNode.getParserPosition(), null,
+          SqlNodeList.of(sqlNode), topSqlSelectNode.getFrom(), null, null, null, null, null, null, null);
 
       try {
         sqlValidator.validate(dummySqlSelect);
-        dummySqlSelect.accept(new SqlNodePostprocessorForTypeDerivation());
+        //        dummySqlSelect.accept(new SqlNodePostprocessorForTypeDerivation());
         return sqlValidator.getValidatedNodeType(dummySqlSelect).getFieldList().get(0).getType();
       } catch (Throwable ignored) {
       }
@@ -90,7 +90,7 @@ public class TypeDerivationUtil {
       final SqlSelect dummySqlSelect = new SqlSelect(topSelectNodes.get(0).getParserPosition(), null,
           SqlNodeList.of(sqlNode), topSelectNodes.get(0), null, null, null, null, null, null, null);
       sqlValidator.validate(dummySqlSelect);
-      dummySqlSelect.accept(new SqlNodePostprocessorForTypeDerivation());
+      //      dummySqlSelect.accept(new SqlNodePostprocessorForTypeDerivation());
       return sqlValidator.getValidatedNodeType(sqlNode);
     } catch (Throwable ignored) {
     }
