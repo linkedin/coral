@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2020-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -128,8 +128,7 @@ public class ArtifactsResolver {
     try {
       final ResolveReport report = _ivyInstance.resolve(md, resolveOptions);
       if (report.hasError()) {
-        LOG.warn("Unable to fetch dependencies for UDF {}: {}",
-            udfClassName, report.getAllProblemMessages());
+        LOG.warn("Unable to fetch dependencies for UDF {}: {}", udfClassName, report.getAllProblemMessages());
       }
       return report;
     } catch (ParseException | IOException e) {
