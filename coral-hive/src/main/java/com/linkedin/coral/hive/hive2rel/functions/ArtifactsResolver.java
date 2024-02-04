@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2020-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -128,8 +128,7 @@ public class ArtifactsResolver {
     try {
       final ResolveReport report = _ivyInstance.resolve(md, resolveOptions);
       if (report.hasError()) {
-        LOG.warn(
-            String.format("Unable to fetch dependencies for UDF %s: %s", udfClassName, report.getAllProblemMessages()));
+        LOG.warn("Unable to fetch dependencies for UDF {}: {}", udfClassName, report.getAllProblemMessages());
       }
       return report;
     } catch (ParseException | IOException e) {
@@ -142,11 +141,11 @@ public class ArtifactsResolver {
     try {
       if (System.getenv().containsKey(IVY_SETTINGS_LOCATION)) {
         File settingsFile = getSettingsFile();
-        LOG.info("Reading Ivy settings from: " + settingsFile);
+        LOG.info("Reading Ivy settings from: {}.", settingsFile);
         settings.load(settingsFile);
       } else {
         final URL settingsUrl = ArtifactsResolver.class.getClassLoader().getResource(IVY_SETTINGS_FILE_NAME);
-        LOG.info("Reading Ivy settings from: " + settingsUrl);
+        LOG.info("Reading Ivy settings from: {}.", settingsUrl);
         settings.load(settingsUrl);
       }
     } catch (ParseException | IOException e) {
@@ -202,7 +201,7 @@ public class ArtifactsResolver {
     try {
       return Integer.parseInt(r);
     } catch (NumberFormatException ignore) {
-      LOG.warn("Could not parse number: " + r + " corresponding to key: " + IVY_LOG_LEVEL);
+      LOG.warn("Could not parse number: {} corresponding to key: {}.", r, IVY_LOG_LEVEL);
       return Message.MSG_INFO;
     }
   }
