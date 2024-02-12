@@ -1,5 +1,5 @@
 # Using coral-dbt Materialization Modes
-This module implements a new materialization mode for dbt called "incremetnal_maintenance". This materialization mode is a dop-in replacement for the "table" materialization mode, but instead of repeatedly replacing tables and computing their data from scratch, it maintains the tables incrementally. This mode leverages Coral to rewrite the input SQL to an incremental version that leverages incremental changes to the input tables, computes the updates to the output tables, and merges them. More details can be found in those [slides](https://www.slideshare.net/walaa_eldin_moustafa/incremental-view-maintenance-with-coral-dbt-and-iceberg).
+This module implements a new materialization mode for dbt called "incremetnal_maintenance". This materialization mode is a drop-in replacement for the "table" materialization mode, but instead of repeatedly replacing tables and computing their data from scratch, it maintains the tables incrementally. This mode leverages Coral to rewrite the input SQL to an incremental version that leverages incremental changes to the input tables, computes the updates to the output tables, and merges them. More details can be found in those [slides](https://www.slideshare.net/walaa_eldin_moustafa/incremental-view-maintenance-with-coral-dbt-and-iceberg).
 
 Note: This project is currently WIP.
 
