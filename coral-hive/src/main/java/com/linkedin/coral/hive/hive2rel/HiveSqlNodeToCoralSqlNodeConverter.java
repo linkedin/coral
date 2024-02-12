@@ -13,7 +13,6 @@ import org.apache.calcite.sql.validate.SqlValidator;
 import com.linkedin.coral.common.transformers.SqlCallTransformers;
 import com.linkedin.coral.common.utils.TypeDerivationUtil;
 import com.linkedin.coral.transformers.ShiftArrayIndexTransformer;
-import com.linkedin.coral.transformers.SingleUnionFieldReferenceTransformer;
 
 
 /**
@@ -24,8 +23,7 @@ public class HiveSqlNodeToCoralSqlNodeConverter extends SqlShuttle {
 
   public HiveSqlNodeToCoralSqlNodeConverter(SqlValidator sqlValidator, SqlNode topSqlNode) {
     TypeDerivationUtil typeDerivationUtil = new TypeDerivationUtil(sqlValidator, topSqlNode);
-    operatorTransformerList = SqlCallTransformers.of(new ShiftArrayIndexTransformer(typeDerivationUtil),
-        new SingleUnionFieldReferenceTransformer(typeDerivationUtil));
+    operatorTransformerList = SqlCallTransformers.of(new ShiftArrayIndexTransformer(typeDerivationUtil));
   }
 
   @Override

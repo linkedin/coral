@@ -67,10 +67,6 @@ class RelDataTypeToAvroType {
 
     if (relDataType instanceof MapSqlType) {
       final MapSqlType mapSqlType = (MapSqlType) relDataType;
-      if (SqlTypeName.NULL == mapSqlType.getKeyType().getSqlTypeName()
-          && SqlTypeName.NULL == mapSqlType.getValueType().getSqlTypeName()) {
-        return Schema.createMap(SchemaUtilities.makeNullable(Schema.create(Schema.Type.STRING), false));
-      }
       if (!SqlTypeName.CHAR_TYPES.contains(mapSqlType.getKeyType().getSqlTypeName())) {
         throw new UnsupportedOperationException(
             "Key of Map can only be a String: " + mapSqlType.getKeyType().getSqlTypeName().getName());
