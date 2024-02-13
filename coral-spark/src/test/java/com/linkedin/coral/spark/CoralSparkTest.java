@@ -1,5 +1,5 @@
 /**
- * Copyright 2018-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2018-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -401,7 +401,8 @@ public class CoralSparkTest {
   @Test
   public void testSchemaPromotionView() {
     RelNode relNode = TestUtils.toRelNode(String.join("\n", "", "SELECT * ", "FROM view_schema_promotion_wrapper"));
-    String targetSql = "SELECT *\n" + "FROM default.schema_promotion schema_promotion";
+    String targetSql = "SELECT schema_promotion.a, CAST(schema_promotion.b AS ARRAY<INTEGER>) b\n"
+        + "FROM default.schema_promotion schema_promotion";
     assertEquals(createCoralSpark(relNode).getSparkSql(), targetSql);
   }
 
