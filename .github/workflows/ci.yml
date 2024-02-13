@@ -51,11 +51,11 @@ jobs:
           PGP_PWD: ${{secrets.PGP_PWD}}
 
       - name: 5. Derive version for li-trino-hotfix
-          if: github.ref == 'refs/heads/li-trino-hotfix'
-          run: |
-            branch_name="${{ github.ref#refs/heads/ }}"
-            echo "branch_name=${branch_name}" >> $GITHUB_ENV
-            echo "DERIVED_VERSION=2.2.27-${branch_name}" >> $GITHUB_ENV
+        if: github.ref == 'refs/heads/li-trino-hotfix'
+        run: |
+          branch_name="${{ github.ref#refs/heads/ }}"
+          echo "branch_name=${branch_name}" >> $GITHUB_ENV
+          echo "DERIVED_VERSION=2.2.27-${branch_name}" >> $GITHUB_ENV
 
       - name: 6. Perform release for li-trino-hotfix branch if commit is this branch
         # Release job, only for pushes to the main development branch
