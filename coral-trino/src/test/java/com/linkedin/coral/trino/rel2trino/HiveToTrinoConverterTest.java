@@ -162,19 +162,19 @@ public class HiveToTrinoConverterTest {
 
         // lateral_view_json_tuple_view
         // SELECT a, d, e, f FROM test.tableA LATERAL VIEW json_tuple(b.b1, 'trino', 'always', 'rocks') jt AS d, e, f")
-        //        { "test", "lateral_view_json_tuple_view", "SELECT \"tablea\".\"a\" AS \"a\", \"t0\".\"d\" AS \"d\", \"t0\".\"e\" AS \"e\", \"t0\".\"f\" AS \"f\"\n"
-        //            + "FROM \"test\".\"tablea\" AS \"tablea\"\nCROSS JOIN LATERAL (SELECT "
-        //            + "\"if\"(\"REGEXP_LIKE\"('trino', '^[^\\\"]*$'), CAST(\"json_extract\"(\"tablea\".\"b\".\"b1\", '$[\"' || 'trino' || '\"]') AS VARCHAR(65535)), NULL) AS \"d\", "
-        //            + "\"if\"(\"REGEXP_LIKE\"('always', '^[^\\\"]*$'), CAST(\"json_extract\"(\"tablea\".\"b\".\"b1\", '$[\"' || 'always' || '\"]') AS VARCHAR(65535)), NULL) AS \"e\", "
-        //            + "\"if\"(\"REGEXP_LIKE\"('rocks', '^[^\\\"]*$'), CAST(\"json_extract\"(\"tablea\".\"b\".\"b1\", '$[\"' || 'rocks' || '\"]') AS VARCHAR(65535)), NULL) AS \"f\"\n"
-        //            + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")) AS \"t0\" (\"d\", \"e\", \"f\")" },
-        //
-        //        { "test", "lateral_view_json_tuple_view_qualified", "SELECT \"tablea\".\"a\" AS \"a\", \"t0\".\"d\" AS \"d\", \"t0\".\"e\" AS \"e\", \"t0\".\"f\" AS \"f\"\n"
-        //            + "FROM \"test\".\"tablea\" AS \"tablea\"\nCROSS JOIN LATERAL (SELECT "
-        //            + "\"if\"(\"REGEXP_LIKE\"('trino', '^[^\\\"]*$'), CAST(\"json_extract\"(\"tablea\".\"b\".\"b1\", '$[\"' || 'trino' || '\"]') AS VARCHAR(65535)), NULL) AS \"d\", "
-        //            + "\"if\"(\"REGEXP_LIKE\"('always', '^[^\\\"]*$'), CAST(\"json_extract\"(\"tablea\".\"b\".\"b1\", '$[\"' || 'always' || '\"]') AS VARCHAR(65535)), NULL) AS \"e\", "
-        //            + "\"if\"(\"REGEXP_LIKE\"('rocks', '^[^\\\"]*$'), CAST(\"json_extract\"(\"tablea\".\"b\".\"b1\", '$[\"' || 'rocks' || '\"]') AS VARCHAR(65535)), NULL) AS \"f\"\n"
-        //            + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")) AS \"t0\" (\"d\", \"e\", \"f\")" },
+        { "test", "lateral_view_json_tuple_view", "SELECT \"tablea\".\"a\" AS \"a\", \"t0\".\"d\" AS \"d\", \"t0\".\"e\" AS \"e\", \"t0\".\"f\" AS \"f\"\n"
+            + "FROM \"test\".\"tablea\" AS \"tablea\"\nCROSS JOIN LATERAL (SELECT "
+            + "\"if\"(\"REGEXP_LIKE\"('trino', '^[^\\\"]*$'), CAST(\"json_extract\"(\"tablea\".\"b\".\"b1\", '$[\"' || 'trino' || '\"]') AS VARCHAR(65535)), NULL) AS \"d\", "
+            + "\"if\"(\"REGEXP_LIKE\"('always', '^[^\\\"]*$'), CAST(\"json_extract\"(\"tablea\".\"b\".\"b1\", '$[\"' || 'always' || '\"]') AS VARCHAR(65535)), NULL) AS \"e\", "
+            + "\"if\"(\"REGEXP_LIKE\"('rocks', '^[^\\\"]*$'), CAST(\"json_extract\"(\"tablea\".\"b\".\"b1\", '$[\"' || 'rocks' || '\"]') AS VARCHAR(65535)), NULL) AS \"f\"\n"
+            + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")) AS \"t0\" (\"d\", \"e\", \"f\")" },
+
+        { "test", "lateral_view_json_tuple_view_qualified", "SELECT \"tablea\".\"a\" AS \"a\", \"t0\".\"d\" AS \"d\", \"t0\".\"e\" AS \"e\", \"t0\".\"f\" AS \"f\"\n"
+            + "FROM \"test\".\"tablea\" AS \"tablea\"\nCROSS JOIN LATERAL (SELECT "
+            + "\"if\"(\"REGEXP_LIKE\"('trino', '^[^\\\"]*$'), CAST(\"json_extract\"(\"tablea\".\"b\".\"b1\", '$[\"' || 'trino' || '\"]') AS VARCHAR(65535)), NULL) AS \"d\", "
+            + "\"if\"(\"REGEXP_LIKE\"('always', '^[^\\\"]*$'), CAST(\"json_extract\"(\"tablea\".\"b\".\"b1\", '$[\"' || 'always' || '\"]') AS VARCHAR(65535)), NULL) AS \"e\", "
+            + "\"if\"(\"REGEXP_LIKE\"('rocks', '^[^\\\"]*$'), CAST(\"json_extract\"(\"tablea\".\"b\".\"b1\", '$[\"' || 'rocks' || '\"]') AS VARCHAR(65535)), NULL) AS \"f\"\n"
+            + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")) AS \"t0\" (\"d\", \"e\", \"f\")" },
 
         { "test", "get_json_object_view", "SELECT \"json_extract\"(\"tablea\".\"b\".\"b1\", '$.name')\n"
             + "FROM \"test\".\"tablea\" AS \"tablea\"" },
