@@ -19,6 +19,7 @@ import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.util.SqlShuttle;
 import org.apache.calcite.sql.validate.SqlValidator;
 
+
 /**
  * This is a utility class which helps derive the RelDataType of a given SqlNode.
  */
