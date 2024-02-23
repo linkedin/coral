@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -357,33 +357,16 @@ public class RelToTrinoConverterTest {
   }
 
   @Test
-  public void testSubStr2() {
-    String sql = "SELECT SUBSTR(scol, 1) FROM test.tableOne";
-    String expectedSql =
-        "SELECT \"substr\"(\"tableone\".\"scol\", 1 + 1)\n" + "FROM \"test\".\"tableone\" AS \"tableone\"";
-    testConversion(sql, expectedSql);
-  }
-
-  @Test
   public void testSubString2() {
-    String sql = "SELECT SUBSTRING(scol, 1) FROM test.tableOne";
-    String expectedSql =
-        "SELECT \"substr\"(\"tableone\".\"scol\", 1 + 1)\n" + "FROM \"test\".\"tableone\" AS \"tableone\"";
-    testConversion(sql, expectedSql);
-  }
-
-  @Test
-  public void testSubStr3() {
-    String sql = "SELECT SUBSTR(scol, icol, 3) FROM test.tableOne";
-    String expectedSql = "SELECT \"substr\"(\"tableone\".\"scol\", \"tableone\".\"icol\" + 1, 3)\n"
-        + "FROM \"test\".\"tableone\" AS \"tableone\"";
+    String sql = "SELECT SUBSTR(scol, 1) FROM test.tableOne";
+    String expectedSql = "SELECT \"substr\"(\"tableone\".\"scol\", 1)\n" + "FROM \"test\".\"tableone\" AS \"tableone\"";
     testConversion(sql, expectedSql);
   }
 
   @Test
   public void testSubString3() {
-    String sql = "SELECT SUBSTRING(scol, icol, 3) FROM test.tableOne";
-    String expectedSql = "SELECT \"substr\"(\"tableone\".\"scol\", \"tableone\".\"icol\" + 1, 3)\n"
+    String sql = "SELECT SUBSTR(scol, icol, 3) FROM test.tableOne";
+    String expectedSql = "SELECT \"substr\"(\"tableone\".\"scol\", \"tableone\".\"icol\", 3)\n"
         + "FROM \"test\".\"tableone\" AS \"tableone\"";
     testConversion(sql, expectedSql);
   }

@@ -52,7 +52,7 @@ jobs:
 
       - name: 5. Derive version for li-trino-hotfix
         if: github.ref == 'refs/heads/li-trino-hotfix'
-        run: echo "DERIVED_VERSION=2.2.27-li-trino-hotfix" >> $GITHUB_ENV
+        run: echo "DERIVED_VERSION=2.2.28-li-trino-hotfix" >> $GITHUB_ENV
 
       - name: 6. Perform release for li-trino-hotfix branch if commit is this branch
         # Release job, only for pushes to the main development branch

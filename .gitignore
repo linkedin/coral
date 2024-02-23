@@ -18,4 +18,3 @@ ligradle
 .DS_Store
 *.patch
 */metastore_db
-.pyc
