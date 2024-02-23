@@ -573,7 +573,7 @@ public class HiveToTrinoConverterTest {
     RelNode relNode = TestUtils.getHiveToRelConverter().convertSql(
         "SELECT substring(from_utc_timestamp(a_bigint,'PST'),1,10) AS d\nFROM test.table_from_utc_timestamp");
     String targetSql =
-        "SELECT \"substr\"(CAST(CAST(\"at_timezone\"(\"from_unixtime_nanos\"(CAST(\"table_from_utc_timestamp\".\"a_bigint\" AS BIGINT) * 1000000), \"$canonicalize_hive_timezone_id\"('PST')) AS TIMESTAMP(3)) AS VARCHAR(65535)), 1 + 1, 10) AS \"d\"\n"
+        "SELECT \"substr\"(CAST(CAST(\"at_timezone\"(\"from_unixtime_nanos\"(CAST(\"table_from_utc_timestamp\".\"a_bigint\" AS BIGINT) * 1000000), \"$canonicalize_hive_timezone_id\"('PST')) AS TIMESTAMP(3)) AS VARCHAR(65535)), 1, 10) AS \"d\"\n"
             + "FROM \"test\".\"table_from_utc_timestamp\" AS \"table_from_utc_timestamp\"";
     String expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
@@ -581,7 +581,7 @@ public class HiveToTrinoConverterTest {
     relNode = TestUtils.getHiveToRelConverter().convertSql(
         "SELECT substring(from_utc_timestamp(a_decimal_three,'PST'),1,10) AS d\nFROM test.table_from_utc_timestamp");
     targetSql =
-        "SELECT \"substr\"(CAST(CAST(\"at_timezone\"(\"from_unixtime\"(CAST(\"table_from_utc_timestamp0\".\"a_decimal_three\" AS DOUBLE)), \"$canonicalize_hive_timezone_id\"('PST')) AS TIMESTAMP(3)) AS VARCHAR(65535)), 1 + 1, 10) AS \"d\"\n"
+        "SELECT \"substr\"(CAST(CAST(\"at_timezone\"(\"from_unixtime\"(CAST(\"table_from_utc_timestamp0\".\"a_decimal_three\" AS DOUBLE)), \"$canonicalize_hive_timezone_id\"('PST')) AS TIMESTAMP(3)) AS VARCHAR(65535)), 1, 10) AS \"d\"\n"
             + "FROM \"test\".\"table_from_utc_timestamp\" AS \"table_from_utc_timestamp0\"";
     expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
@@ -589,7 +589,7 @@ public class HiveToTrinoConverterTest {
     relNode = TestUtils.getHiveToRelConverter().convertSql(
         "SELECT substring(from_utc_timestamp(a_timestamp,'PST'),1,10) AS d\nFROM test.table_from_utc_timestamp");
     targetSql =
-        "SELECT \"substr\"(CAST(CAST(\"at_timezone\"(\"from_unixtime\"(\"to_unixtime\"(\"with_timezone\"(\"table_from_utc_timestamp1\".\"a_timestamp\", 'UTC'))), \"$canonicalize_hive_timezone_id\"('PST')) AS TIMESTAMP(3)) AS VARCHAR(65535)), 1 + 1, 10) AS \"d\"\n"
+        "SELECT \"substr\"(CAST(CAST(\"at_timezone\"(\"from_unixtime\"(\"to_unixtime\"(\"with_timezone\"(\"table_from_utc_timestamp1\".\"a_timestamp\", 'UTC'))), \"$canonicalize_hive_timezone_id\"('PST')) AS TIMESTAMP(3)) AS VARCHAR(65535)), 1, 10) AS \"d\"\n"
             + "FROM \"test\".\"table_from_utc_timestamp\" AS \"table_from_utc_timestamp1\"";
     expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
@@ -759,9 +759,9 @@ public class HiveToTrinoConverterTest {
     RelNode relNode = TestUtils.getHiveToRelConverter().convertSql(
         "SELECT a, SUBSTR(b, 1, 1) AS aliased_column, c FROM test.tabler ORDER BY aliased_column DESC, a DESC, c DESC");
     String targetSql =
-        "SELECT \"tabler\".\"a\" AS \"a\", \"substr\"(\"tabler\".\"b\", 1 + 1, 1) AS \"aliased_column\", \"tabler\".\"c\" AS \"c\"\n"
+        "SELECT \"tabler\".\"a\" AS \"a\", \"substr\"(\"tabler\".\"b\", 1, 1) AS \"aliased_column\", \"tabler\".\"c\" AS \"c\"\n"
             + "FROM \"test\".\"tabler\" AS \"tabler\"\n"
-            + "ORDER BY \"substr\"(\"tabler\".\"b\", 1 + 1, 1) DESC, \"tabler\".\"a\" DESC, \"tabler\".\"c\" DESC";
+            + "ORDER BY \"substr\"(\"tabler\".\"b\", 1, 1) DESC, \"tabler\".\"a\" DESC, \"tabler\".\"c\" DESC";
     String expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
   }
@@ -787,9 +787,8 @@ public class HiveToTrinoConverterTest {
         .convertSql("SELECT a, SUBSTR(b, 1, 1) AS aliased_column, c FROM test.tabler ORDER BY aliased_column ASC");
     // We want NULLS FIRST since we're translating from Hive and that is the default null ordering for ASC in Hive
     String targetSql =
-        "SELECT \"tabler\".\"a\" AS \"a\", \"substr\"(\"tabler\".\"b\", 1 + 1, 1) AS \"aliased_column\", \"tabler\".\"c\" AS \"c\"\n"
-            + "FROM \"test\".\"tabler\" AS \"tabler\"\n"
-            + "ORDER BY \"substr\"(\"tabler\".\"b\", 1 + 1, 1) NULLS FIRST";
+        "SELECT \"tabler\".\"a\" AS \"a\", \"substr\"(\"tabler\".\"b\", 1, 1) AS \"aliased_column\", \"tabler\".\"c\" AS \"c\"\n"
+            + "FROM \"test\".\"tabler\" AS \"tabler\"\n" + "ORDER BY \"substr\"(\"tabler\".\"b\", 1, 1) NULLS FIRST";
     String expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
   }
