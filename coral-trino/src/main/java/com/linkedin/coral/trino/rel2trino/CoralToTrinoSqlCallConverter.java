@@ -55,7 +55,7 @@ public class CoralToTrinoSqlCallConverter extends SqlShuttle {
         new CoralRegistryOperatorRenameSqlCallTransformer("nvl", 2, "coalesce"),
         // array and map functions
         new MapValueConstructorTransformer(),
-
+        new OperatorRenameSqlCallTransformer(SqlStdOperatorTable.SUBSTRING, 3, "SUBSTR"),
         new SourceOperatorMatchSqlCallTransformer("item", 2) {
           @Override
           protected SqlCall transform(SqlCall sqlCall) {
@@ -73,16 +73,7 @@ public class CoralToTrinoSqlCallConverter extends SqlShuttle {
             "{\"op\":\"/\",\"operands\":[{\"input\":0},{\"op\":\"^\",\"operands\":[{\"value\":10},{\"input\":2}]}]}",
             null),
         // string functions
-        new JsonTransformSqlCallTransformer(SqlStdOperatorTable.SUBSTRING, 2, "substr",
-            "[{\"input\": 1}, {\"op\": \"+\", \"operands\": [{\"input\": 2}, {\"value\": 1}]}]", null, null),
-        new JsonTransformSqlCallTransformer(SqlStdOperatorTable.SUBSTRING, 3, "substr",
-            "[{\"input\": 1}, {\"op\": \"+\", \"operands\": [{\"input\": 2}, {\"value\": 1}]}, {\"input\": 3}]", null,
-            null),
-        new JsonTransformSqlCallTransformer(hiveToCoralSqlOperator("substr"), 2, "substr",
-            "[{\"input\": 1}, {\"op\": \"+\", \"operands\": [{\"input\": 2}, {\"value\": 1}]}]", null, null),
-        new JsonTransformSqlCallTransformer(hiveToCoralSqlOperator("substr"), 3, "substr",
-            "[{\"input\": 1}, {\"op\": \"+\", \"operands\": [{\"input\": 2}, {\"value\": 1}]}, {\"input\": 3}]", null,
-            null),
+        new OperatorRenameSqlCallTransformer(SqlStdOperatorTable.SUBSTRING, 2, "SUBSTR"),
         // JSON functions
         new CoralRegistryOperatorRenameSqlCallTransformer("get_json_object", 2, "json_extract"),
         // map various hive functions
