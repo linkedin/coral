@@ -1,5 +1,5 @@
 /**
- * Copyright 2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2023-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -8,6 +8,7 @@ package com.linkedin.coral.trino.rel2trino.transformers;
 import org.apache.calcite.sql.JoinConditionType;
 import org.apache.calcite.sql.JoinType;
 import org.apache.calcite.sql.SqlCall;
+import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlJoin;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlLiteral;
@@ -40,6 +41,8 @@ import static org.apache.calcite.rel.rel2sql.SqlImplementor.*;
  *  left: `default`.`complex`         joinType: CROSS JOIN       right: UNNEST(`complex`.`c`) AS `t_alias` (`col_alias`)
  */
 public class JoinSqlCallTransformer extends SqlCallTransformer {
+  private static final String TRANSFORM_OPERATOR = "transform";
+
   @Override
   protected boolean condition(SqlCall sqlCall) {
     return sqlCall.getOperator().kind == SqlKind.JOIN && ((SqlJoin) sqlCall).getJoinType() == JoinType.COMMA;
@@ -51,11 +54,14 @@ public class JoinSqlCallTransformer extends SqlCallTransformer {
 
     // Check if there's an unnest SqlCall present in the nested SqlNodes
     if (isUnnestOperatorPresentInRightSqlNode(joinSqlCall.getRight())) {
-      // Check if the unnest SqlCall is uncorrelated with the SqlJoin SqlCall
-      if (isUnnestSqlCallCorrelated(joinSqlCall.getRight())) {
+      // Check if the nested UNNEST SqlCall is correlated to the outer SQL query
+      SqlCall unnestCall = ((SqlCall) joinSqlCall.getRight()).operand(0);
+      if (isUnnestSqlCallCorrelated(unnestCall)) {
         // Substitute COMMA JOIN with CROSS JOIN
         return createCrossJoinSqlCall(joinSqlCall);
       } else {
+        // If the unnest SqlCall is uncorrelated to the outer SQL query, for example,
+        // when the unnest operand is an inline defined array, do not substitute JoinType
         return joinSqlCall;
       }
     } else {
@@ -75,24 +81,41 @@ public class JoinSqlCallTransformer extends SqlCallTransformer {
         && ((SqlCall) rightSqlNode).operand(0).getKind() == SqlKind.UNNEST;
   }
 
-  private static boolean isUnnestSqlCallCorrelated(SqlNode sqlNode) {
-    SqlNode aliasOperand = ((SqlCall) sqlNode).operand(0); //  unnest(x)
-    SqlNode unnestOperand = ((SqlCall) aliasOperand).operand(0); // x
+  /**
+   * Given an Unnest SqlCall, UNNEST('x'), the SqlCall is considered correlated when the unnest operand, 'x':
+   *      (1) References a column from the base tables:
+   *      Sample SqlCalls:
+   *          - UNNEST(table1.col)
+   *          - UNNEST(if(table1.col IS NOT NULL AND CAST(CARDINALITY(table1.col) AS INTEGER) > 0 table1.col, ARRAY[NULL] WITH ORDINALITY))
+   *          - UNNEST(split(table1.stringCol, "delimiter"))
+   *      (2) SqlCall with "TRANSFORM" operator to support unnesting array of structs
+   *      Sample SqlCalls:
+   *          - UNNEST(TRANSFORM(table1.col, x -> ROW(x)))
+   * @param unnestSqlCall unnest sqlCall
+   * @return true if the sqlCall is correlated to the outer query
+   */
+  private static boolean isUnnestSqlCallCorrelated(SqlCall unnestSqlCall) {
+    return isSqlCallCorrelation(unnestSqlCall);
+  }
 
-    // When the unnest operand, 'x', is:
-    // (1) SqlIdentifier referring to a column, ex: table1.col1
-    // (2) SqlCall with "IF" operator for outer unnest
-    // (3) SqlCall with "TRANSFORM" operator to support unnesting array of structs
-    // Substitute JoinType with CROSS JoinType.
-    if (unnestOperand.getKind() == SqlKind.IDENTIFIER
-        || (unnestOperand instanceof SqlCall
-            && ((SqlCall) unnestOperand).getOperator().getName().equalsIgnoreCase("transform"))
-        || (unnestOperand instanceof SqlCall
-            && ((SqlCall) unnestOperand).getOperator().getName().equalsIgnoreCase("if"))) {
-      return true;
+  private static boolean isSqlCallCorrelation(SqlCall sqlCall) {
+    for (SqlNode operand : sqlCall.getOperandList()) {
+      if (operand instanceof SqlIdentifier) {
+        return true;
+      } else if (operand instanceof SqlCall) {
+        /**
+         * transform sqlCall: TRANSFORM(table1.col, x -> ROW(x))
+         * operator = "TRANSFORM"
+         * operand = "table1.col, x -> ROW(x)"
+         */
+        if (((SqlCall) operand).getOperator().getName().equalsIgnoreCase(TRANSFORM_OPERATOR)) {
+          return true;
+        }
+        if (isSqlCallCorrelation((SqlCall) operand)) {
+          return true;
+        }
+      }
     }
-    // If the unnest SqlCall is uncorrelated with the SqlJoin, for example,
-    // when the unnest operand is an inline defined array, do not substitute JoinType
     return false;
   }
 
