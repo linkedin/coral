@@ -52,6 +52,8 @@ public class ShiftArrayIndexTransformer extends SqlCallTransformer {
       newIndex = SqlStdOperatorTable.PLUS.createCall(itemNode.getParserPosition(), itemNode,
           SqlNumericLiteral.createExactNumeric("1", SqlParserPos.ZERO));
     }
+    // Create new object instead of modifying the old SqlCall to avoid transforming the same object
+    // multiple times if it appears multiple times in SqlNode
     return SqlStdOperatorTable.ITEM.createCall(SqlParserPos.ZERO, sqlCall.getOperandList().get(0), newIndex);
   }
 }
