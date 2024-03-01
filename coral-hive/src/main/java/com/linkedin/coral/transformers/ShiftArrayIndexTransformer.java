@@ -1,5 +1,5 @@
 /**
- * Copyright 2022-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2022-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -42,16 +42,16 @@ public class ShiftArrayIndexTransformer extends SqlCallTransformer {
   @Override
   public SqlCall transform(SqlCall sqlCall) {
     final SqlNode itemNode = sqlCall.getOperandList().get(1);
+    SqlNode newIndex;
     if (itemNode instanceof SqlNumericLiteral
         && deriveRelDatatype(itemNode).getSqlTypeName().equals(SqlTypeName.INTEGER)) {
       final Integer value = ((SqlNumericLiteral) itemNode).getValueAs(Integer.class);
-      sqlCall.setOperand(1,
-          SqlNumericLiteral.createExactNumeric(new BigDecimal(value + 1).toString(), itemNode.getParserPosition()));
+      newIndex =
+          SqlNumericLiteral.createExactNumeric(new BigDecimal(value + 1).toString(), itemNode.getParserPosition());
     } else {
-      final SqlCall oneBasedIndex = SqlStdOperatorTable.PLUS.createCall(itemNode.getParserPosition(), itemNode,
+      newIndex = SqlStdOperatorTable.PLUS.createCall(itemNode.getParserPosition(), itemNode,
           SqlNumericLiteral.createExactNumeric("1", SqlParserPos.ZERO));
-      sqlCall.setOperand(1, oneBasedIndex);
     }
-    return sqlCall;
+    return SqlStdOperatorTable.ITEM.createCall(SqlParserPos.ZERO, sqlCall.getOperandList().get(0), newIndex);
   }
 }
