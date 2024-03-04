@@ -56,7 +56,7 @@ public class JoinSqlCallTransformer extends SqlCallTransformer {
     if (isUnnestOperatorPresentInRightSqlNode(joinSqlCall.getRight())) {
       // Check if the nested UNNEST SqlCall is correlated to the outer SQL query
       SqlCall unnestCall = ((SqlCall) joinSqlCall.getRight()).operand(0);
-      if (isUnnestSqlCallCorrelated(unnestCall)) {
+      if (isSqlCallCorrelated(unnestCall)) {
         // Substitute COMMA JOIN with CROSS JOIN
         return createCrossJoinSqlCall(joinSqlCall);
       } else {
@@ -94,12 +94,8 @@ public class JoinSqlCallTransformer extends SqlCallTransformer {
    * @param unnestSqlCall unnest sqlCall
    * @return true if the sqlCall is correlated to the outer query
    */
-  private static boolean isUnnestSqlCallCorrelated(SqlCall unnestSqlCall) {
-    return isSqlCallCorrelation(unnestSqlCall);
-  }
-
-  private static boolean isSqlCallCorrelation(SqlCall sqlCall) {
-    for (SqlNode operand : sqlCall.getOperandList()) {
+  private static boolean isSqlCallCorrelated(SqlCall unnestSqlCall) {
+    for (SqlNode operand : unnestSqlCall.getOperandList()) {
       if (operand instanceof SqlIdentifier) {
         return true;
       } else if (operand instanceof SqlCall) {
@@ -111,7 +107,7 @@ public class JoinSqlCallTransformer extends SqlCallTransformer {
         if (((SqlCall) operand).getOperator().getName().equalsIgnoreCase(TRANSFORM_OPERATOR)) {
           return true;
         }
-        if (isSqlCallCorrelation((SqlCall) operand)) {
+        if (isSqlCallCorrelated((SqlCall) operand)) {
           return true;
         }
       }
