@@ -1,5 +1,5 @@
 /**
- * Copyright 2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2023-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -86,10 +86,6 @@ public class TypeDerivationUtil {
 
     throw new RuntimeException(String.format("Failed to derive the RelDataType for SqlNode: %s with topSqlNode: %s",
         sqlNode, topSelectNodes.get(0)));
-  }
-
-  public RelDataType leastRestrictive(List<RelDataType> types) {
-    return sqlValidator.getTypeFactory().leastRestrictive(types);
   }
 
   private class SqlNodePreprocessorForTypeDerivation extends SqlShuttle {
