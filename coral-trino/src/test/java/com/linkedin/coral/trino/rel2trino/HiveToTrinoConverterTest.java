@@ -267,6 +267,18 @@ public class HiveToTrinoConverterTest {
   }
 
   @Test
+  public void testLateralViewArray3() {
+    RelNode relNode = TestUtils.getHiveToRelConverter().convertSql(
+        "SELECT arr.alias FROM test.tableA tmp LATERAL VIEW EXPLODE(split(tmp.b.b1, 'delim')) arr as alias");
+
+    String targetSql = "SELECT \"t0\".\"alias\" AS \"alias\"\n" + "FROM \"test\".\"tablea\" AS \"tablea\"\n"
+        + "CROSS JOIN UNNEST(\"split\"(\"tablea\".\"b\".\"b1\", 'delim')) AS \"t0\" (\"alias\")";
+    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
+    String expandedSql = relToTrinoConverter.convert(relNode);
+    assertEquals(expandedSql, targetSql);
+  }
+
+  @Test
   public void testLateralViewArrayWithoutColumns() {
     RelNode relNode = TestUtils.getHiveToRelConverter()
         .convertSql("SELECT col FROM (SELECT ARRAY('a1', 'a2') as a) tmp LATERAL VIEW EXPLODE(a) a_alias");
