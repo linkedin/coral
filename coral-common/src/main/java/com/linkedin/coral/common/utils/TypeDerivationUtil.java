@@ -88,10 +88,6 @@ public class TypeDerivationUtil {
         sqlNode, topSelectNodes.get(0)));
   }
 
-  public RelDataType leastRestrictive(List<RelDataType> types) {
-    return sqlValidator.getTypeFactory().leastRestrictive(types);
-  }
-
   private class SqlNodePreprocessorForTypeDerivation extends SqlShuttle {
     @Override
     public SqlNode visit(SqlCall sqlCall) {

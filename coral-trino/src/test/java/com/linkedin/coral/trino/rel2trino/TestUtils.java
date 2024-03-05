@@ -378,42 +378,6 @@ public class TestUtils {
 
     run(driver, "CREATE TABLE test.table_with_binary_column (b binary)");
 
-    run(driver,
-        "CREATE TABLE test.table_with_mixed_columns (a_char1 char(1), a_char255 char(255), a_string string, a_tinyint tinyint, a_smallint smallint, a_integer int, a_bigint bigint, a_float float, a_double double, a_boolean boolean)");
-    run(driver, "CREATE VIEW IF NOT EXISTS test.view_cast_char_to_varchar AS \n"
-        + "SELECT CAST(a_char1 AS VARCHAR(65535)) AS col FROM test.table_with_mixed_columns");
-    run(driver,
-        "CREATE VIEW IF NOT EXISTS test.view_char_different_size_in_union AS \n"
-            + "SELECT a_char1 AS col FROM test.table_with_mixed_columns \n" + "UNION ALL\n"
-            + "SELECT a_char255 AS col FROM test.table_with_mixed_columns");
-    run(driver,
-        "CREATE VIEW IF NOT EXISTS test.view_cast_char_to_varchar_in_union AS \n"
-            + "SELECT CAST(a_char1 AS VARCHAR(65535)) AS col FROM test.table_with_mixed_columns \n" + "UNION ALL\n"
-            + "SELECT COALESCE(a_char1, 'N') AS  col FROM test.table_with_mixed_columns");
-    run(driver,
-        "CREATE VIEW IF NOT EXISTS test.view_cast_char_to_varchar_in_union_flipped AS \n"
-            + "SELECT COALESCE(a_char1, 'N') as  col FROM test.table_with_mixed_columns \n" + "UNION ALL\n"
-            + "SELECT CAST(a_char1 AS VARCHAR(65535)) AS col FROM test.table_with_mixed_columns");
-    run(driver, "CREATE VIEW IF NOT EXISTS test.view_cast_char_to_varchar_with_other_fields_in_union AS \n"
-        + "SELECT CAST(a_char1 AS VARCHAR(65535)) AS text , a_boolean, a_smallint as a_number FROM test.table_with_mixed_columns \n"
-        + "UNION ALL\n"
-        + "SELECT COALESCE(a_char1, 'N') as  text, a_boolean, a_integer as a_number FROM test.table_with_mixed_columns");
-    run(driver,
-        "CREATE VIEW IF NOT EXISTS test.view_char_and_null_in_union AS \n"
-            + "SELECT a_char1 as text FROM test.table_with_mixed_columns \n" + "UNION ALL\n"
-            + "SELECT NULL  text FROM test.table_with_mixed_columns");
-    run(driver,
-        "CREATE VIEW IF NOT EXISTS test.view_different_numerical_types_in_union AS \n"
-            + "SELECT a_tinyint AS a_number, a_float FROM test.table_with_mixed_columns \n" + "UNION ALL\n"
-            + "SELECT a_smallint AS a_number, a_float FROM test.table_with_mixed_columns \n" + "UNION ALL\n"
-            + "SELECT a_integer AS a_number, a_float FROM test.table_with_mixed_columns \n" + "UNION ALL\n"
-            + "SELECT a_bigint AS a_number, a_float FROM test.table_with_mixed_columns");
-    run(driver,
-        "CREATE VIEW IF NOT EXISTS test.view_union_no_casting AS \n"
-            + "SELECT a_tinyint, a_smallint, a_integer, a_bigint, a_float FROM test.table_with_mixed_columns \n"
-            + "UNION ALL\n"
-            + "SELECT a_tinyint, a_smallint, a_integer, a_bigint, a_float FROM test.table_with_mixed_columns");
-
     // Tables used in RelToTrinoConverterTest
     run(driver,
         "CREATE TABLE IF NOT EXISTS test.tableOne(icol int, dcol double, scol string, tcol timestamp, acol array<string>)");

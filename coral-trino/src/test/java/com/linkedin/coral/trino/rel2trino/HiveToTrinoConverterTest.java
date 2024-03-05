@@ -193,50 +193,7 @@ public class HiveToTrinoConverterTest {
             + "FROM \"test\".\"duplicate_column_name_a\" AS \"duplicate_column_name_a\"\n"
             + "LEFT JOIN (SELECT TRIM(\"duplicate_column_name_b\".\"some_id\") AS \"SOME_ID\", CAST(TRIM(\"duplicate_column_name_b\".\"some_id\") AS VARCHAR(65536)) AS \"$f1\"\n"
             + "FROM \"test\".\"duplicate_column_name_b\" AS \"duplicate_column_name_b\") AS \"t\" ON \"duplicate_column_name_a\".\"some_id\" = \"t\".\"$f1\") AS \"t0\"\n"
-            + "WHERE \"t0\".\"some_id\" <> ''" },
-
-        { "test", "view_char_different_size_in_union", "SELECT CAST(\"table_with_mixed_columns\".\"a_char1\" AS VARCHAR(255)) AS \"col\"\n"
-            + "FROM \"test\".\"table_with_mixed_columns\" AS \"table_with_mixed_columns\"\n" + "UNION ALL\n"
-            + "SELECT CAST(\"table_with_mixed_columns0\".\"a_char255\" AS VARCHAR(255)) AS \"col\"\n"
-            + "FROM \"test\".\"table_with_mixed_columns\" AS \"table_with_mixed_columns0\"" },
-
-        { "test", "view_cast_char_to_varchar", "SELECT CAST(\"table_with_mixed_columns\".\"a_char1\" AS VARCHAR(65535)) AS \"col\"\n"
-            + "FROM \"test\".\"table_with_mixed_columns\" AS \"table_with_mixed_columns\"" },
-
-        { "test", "view_cast_char_to_varchar_in_union", "SELECT CAST(\"table_with_mixed_columns\".\"a_char1\" AS VARCHAR(65535)) AS \"col\"\n"
-            + "FROM \"test\".\"table_with_mixed_columns\" AS \"table_with_mixed_columns\"\n" + "UNION ALL\n"
-            + "SELECT CAST(CASE WHEN \"table_with_mixed_columns0\".\"a_char1\" IS NOT NULL THEN \"table_with_mixed_columns0\".\"a_char1\" ELSE 'N' END AS VARCHAR(65535)) AS \"col\"\n"
-            + "FROM \"test\".\"table_with_mixed_columns\" AS \"table_with_mixed_columns0\"" },
-
-        { "test", "view_cast_char_to_varchar_in_union_flipped", "SELECT CAST(CASE WHEN \"table_with_mixed_columns\".\"a_char1\" IS NOT NULL THEN \"table_with_mixed_columns\".\"a_char1\" ELSE 'N' END AS VARCHAR(65535)) AS \"col\"\n"
-            + "FROM \"test\".\"table_with_mixed_columns\" AS \"table_with_mixed_columns\"\n" + "UNION ALL\n"
-            + "SELECT CAST(\"table_with_mixed_columns0\".\"a_char1\" AS VARCHAR(65535)) AS \"col\"\n"
-            + "FROM \"test\".\"table_with_mixed_columns\" AS \"table_with_mixed_columns0\"" },
-
-        { "test", "view_cast_char_to_varchar_with_other_fields_in_union", "SELECT CAST(\"table_with_mixed_columns\".\"a_char1\" AS VARCHAR(65535)) AS \"text\", \"table_with_mixed_columns\".\"a_boolean\" AS \"a_boolean\", \"table_with_mixed_columns\".\"a_smallint\" AS \"a_number\"\n"
-            + "FROM \"test\".\"table_with_mixed_columns\" AS \"table_with_mixed_columns\"\n" + "UNION ALL\n"
-            + "SELECT CAST(CASE WHEN \"table_with_mixed_columns0\".\"a_char1\" IS NOT NULL THEN \"table_with_mixed_columns0\".\"a_char1\" ELSE 'N' END AS VARCHAR(65535)) AS \"text\", \"table_with_mixed_columns0\".\"a_boolean\" AS \"a_boolean\", \"table_with_mixed_columns0\".\"a_integer\" AS \"a_number\"\n"
-            + "FROM \"test\".\"table_with_mixed_columns\" AS \"table_with_mixed_columns0\"" },
-
-        { "test", "view_char_and_null_in_union", "SELECT \"table_with_mixed_columns\".\"a_char1\" AS \"text\"\n"
-            + "FROM \"test\".\"table_with_mixed_columns\" AS \"table_with_mixed_columns\"\n" + "UNION ALL\n"
-            + "SELECT NULL AS \"text\"\n"
-            + "FROM \"test\".\"table_with_mixed_columns\" AS \"table_with_mixed_columns0\"" },
-
-        { "test", "view_different_numerical_types_in_union", "SELECT *\n" + "FROM (SELECT *\n"
-            + "FROM (SELECT \"table_with_mixed_columns\".\"a_tinyint\" AS \"a_number\", \"table_with_mixed_columns\".\"a_float\" AS \"a_float\"\n"
-            + "FROM \"test\".\"table_with_mixed_columns\" AS \"table_with_mixed_columns\"\n" + "UNION ALL\n"
-            + "SELECT \"table_with_mixed_columns0\".\"a_smallint\" AS \"a_number\", \"table_with_mixed_columns0\".\"a_float\" AS \"a_float\"\n"
-            + "FROM \"test\".\"table_with_mixed_columns\" AS \"table_with_mixed_columns0\") AS \"t1\"\n" + "UNION ALL\n"
-            + "SELECT \"table_with_mixed_columns1\".\"a_integer\" AS \"a_number\", \"table_with_mixed_columns1\".\"a_float\" AS \"a_float\"\n"
-            + "FROM \"test\".\"table_with_mixed_columns\" AS \"table_with_mixed_columns1\") AS \"t3\"\n" + "UNION ALL\n"
-            + "SELECT \"table_with_mixed_columns2\".\"a_bigint\" AS \"a_number\", \"table_with_mixed_columns2\".\"a_float\" AS \"a_float\"\n"
-            + "FROM \"test\".\"table_with_mixed_columns\" AS \"table_with_mixed_columns2\"" },
-
-        { "test", "view_union_no_casting", "SELECT \"table_with_mixed_columns\".\"a_tinyint\" AS \"a_tinyint\", \"table_with_mixed_columns\".\"a_smallint\" AS \"a_smallint\", \"table_with_mixed_columns\".\"a_integer\" AS \"a_integer\", \"table_with_mixed_columns\".\"a_bigint\" AS \"a_bigint\", \"table_with_mixed_columns\".\"a_float\" AS \"a_float\"\n"
-            + "FROM \"test\".\"table_with_mixed_columns\" AS \"table_with_mixed_columns\"\n" + "UNION ALL\n"
-            + "SELECT \"table_with_mixed_columns0\".\"a_tinyint\" AS \"a_tinyint\", \"table_with_mixed_columns0\".\"a_smallint\" AS \"a_smallint\", \"table_with_mixed_columns0\".\"a_integer\" AS \"a_integer\", \"table_with_mixed_columns0\".\"a_bigint\" AS \"a_bigint\", \"table_with_mixed_columns0\".\"a_float\" AS \"a_float\"\n"
-            + "FROM \"test\".\"table_with_mixed_columns\" AS \"table_with_mixed_columns0\"" } };
+            + "WHERE \"t0\".\"some_id\" <> ''" } };
   }
 
   @Test
