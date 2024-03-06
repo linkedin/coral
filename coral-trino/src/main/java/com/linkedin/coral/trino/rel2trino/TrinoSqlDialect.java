@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -25,6 +25,11 @@ public class TrinoSqlDialect extends SqlDialect {
 
   private TrinoSqlDialect(Context context) {
     super(context);
+  }
+
+  @Override
+  public boolean supportsCharSet() {
+    return false;
   }
 
   /**

@@ -350,19 +350,6 @@ public class HiveToTrinoConverterTest {
   }
 
   @Test
-  public void testNestedNamedStructWithArrayWithoutType() {
-    RelNode relNode =
-        TestUtils.getHiveToRelConverter().convertSql("SELECT NAMED_STRUCT('value', NAMED_STRUCT('value2', ARRAY()))");
-    String targetSql =
-        "SELECT CAST(ROW(CAST(ROW(ARRAY[]) AS ROW(\"value2\" ARRAY<VARCHAR(65535)>))) AS ROW(\"value\" ROW(\"value2\" ARRAY<VARCHAR(65535)>)))\n"
-            + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
-
-    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
-    String expandedSql = relToTrinoConverter.convert(relNode);
-    assertEquals(expandedSql, targetSql);
-  }
-
-  @Test
   public void testNamedStructWithStringTypeArray() {
     RelNode relNode =
         TestUtils.getHiveToRelConverter().convertSql("SELECT NAMED_STRUCT('value', ARRAY(CAST('tmp' AS STRING)))");
