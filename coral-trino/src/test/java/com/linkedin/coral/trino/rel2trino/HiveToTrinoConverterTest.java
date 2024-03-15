@@ -349,8 +349,9 @@ public class HiveToTrinoConverterTest {
   public void testAvoidTransformToDate() {
     RelNode relNode = TestUtils.getHiveToRelConverter()
         .convertSql("SELECT to_date(substr('2021-08-20', 1, 10)), to_date('2021-08-20')" + "FROM test.tableA");
-    String targetSql = "SELECT \"to_date\"(\"substr\"('2021-08-20', \"greatest\"(1, 1), 10)), \"to_date\"('2021-08-20')\n"
-        + "FROM \"test\".\"tablea\" AS \"tablea\"";
+    String targetSql =
+        "SELECT \"to_date\"(\"substr\"('2021-08-20', \"greatest\"(1, 1), 10)), \"to_date\"('2021-08-20')\n"
+            + "FROM \"test\".\"tablea\" AS \"tablea\"";
 
     RelToTrinoConverter relToTrinoConverter =
         TestUtils.getRelToTrinoConverter(ImmutableMap.of(AVOID_TRANSFORM_TO_DATE_UDF, true));
@@ -747,7 +748,8 @@ public class HiveToTrinoConverterTest {
         .convertSql("SELECT a, SUBSTR(b, 1, 1) AS aliased_column, c FROM test.tabler ORDER BY aliased_column DESC");
     String targetSql =
         "SELECT \"tabler\".\"a\" AS \"a\", \"substr\"(\"tabler\".\"b\", \"greatest\"(1, 1), 1) AS \"aliased_column\", \"tabler\".\"c\" AS \"c\"\n"
-            + "FROM \"test\".\"tabler\" AS \"tabler\"\n" + "ORDER BY \"substr\"(\"tabler\".\"b\", \"greatest\"(1, 1), 1) DESC";
+            + "FROM \"test\".\"tabler\" AS \"tabler\"\n"
+            + "ORDER BY \"substr\"(\"tabler\".\"b\", \"greatest\"(1, 1), 1) DESC";
     String expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
   }
