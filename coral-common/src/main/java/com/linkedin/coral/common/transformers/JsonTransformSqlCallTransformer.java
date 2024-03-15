@@ -50,6 +50,8 @@ public class JsonTransformSqlCallTransformer extends SourceOperatorMatchSqlCallT
     OP_MAP.put("/", SqlStdOperatorTable.DIVIDE);
     OP_MAP.put("^", SqlStdOperatorTable.POWER);
     OP_MAP.put("%", SqlStdOperatorTable.MOD);
+    OP_MAP.put("greatest", new SqlUserDefinedFunction(new SqlIdentifier("greatest", SqlParserPos.ZERO), ReturnTypes.ARG0_NULLABLE, null,
+        OperandTypes.SAME_VARIADIC, null, null));
     OP_MAP.put("date", new SqlUserDefinedFunction(new SqlIdentifier("date", SqlParserPos.ZERO), ReturnTypes.DATE, null,
         OperandTypes.STRING, null, null));
     OP_MAP.put("timestamp", new SqlUserDefinedFunction(new SqlIdentifier("timestamp", SqlParserPos.ZERO),
