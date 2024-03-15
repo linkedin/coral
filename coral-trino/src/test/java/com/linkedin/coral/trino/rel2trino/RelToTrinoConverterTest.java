@@ -397,6 +397,13 @@ public class RelToTrinoConverterTest {
   }
 
   @Test
+  public void testSubString4() {
+    String sql = "SELECT SUBSTRING('123', 0, 3)";
+    String expectedSql = "SELECT \"substr\"('123', \"greatest\"(0, 1), 3)\n" + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
+    testConversion(sql, expectedSql);
+  }
+
+  @Test
   public void testLimit() {
     String sql = "SELECT icol " + "FROM test.tableOne" + " LIMIT 100";
     String expectedSql =
