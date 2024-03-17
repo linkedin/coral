@@ -35,6 +35,7 @@ import com.linkedin.coral.trino.rel2trino.transformers.NullOrderingTransformer;
 import com.linkedin.coral.trino.rel2trino.transformers.ReturnTypeAdjustmentTransformer;
 import com.linkedin.coral.trino.rel2trino.transformers.SqlSelectAliasAppenderTransformer;
 import com.linkedin.coral.trino.rel2trino.transformers.ToDateOperatorTransformer;
+import com.linkedin.coral.trino.rel2trino.transformers.UnixTimestampOperatorTransformer;
 import com.linkedin.coral.trino.rel2trino.transformers.UnnestOperatorTransformer;
 
 import static com.linkedin.coral.trino.rel2trino.CoralTrinoConfigKeys.*;
@@ -116,6 +117,7 @@ public class CoralToTrinoSqlCallConverter extends SqlShuttle {
             null, null),
         new ToDateOperatorTransformer(configs.getOrDefault(AVOID_TRANSFORM_TO_DATE_UDF, false)),
         new CurrentTimestampTransformer(), new FromUnixtimeOperatorTransformer(),
+        new UnixTimestampOperatorTransformer(),
 
         // LinkedIn specific functions
         new CoralRegistryOperatorRenameSqlCallTransformer(

@@ -343,6 +343,11 @@ public class TestUtils {
         + "datediff('2021-08-20', '2021-08-19'), " + "datediff('2021-08-20 00:00:00', '2021-08-19 23:59:59')"
         + "FROM test.tableA");
 
+    run(driver,
+        "CREATE VIEW IF NOT EXISTS test.unix_timestamp_view AS \n"
+            + "SELECT unix_timestamp(), unix_timestamp('2023-06-14 00:00:00'), unix_timestamp('20230614','yyyyMMdd')"
+            + "FROM test.tableA");
+
     run(driver, "CREATE VIEW IF NOT EXISTS test.pmod_view AS \n" + "SELECT pmod(-9, 4) FROM test.tableA");
 
     run(driver, "CREATE TABLE IF NOT EXISTS test.tableR(a int, b string, c int)");
