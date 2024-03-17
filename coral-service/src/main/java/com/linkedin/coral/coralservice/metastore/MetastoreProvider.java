@@ -15,8 +15,8 @@ import javax.naming.ConfigurationException;
 import com.google.common.base.Strings;
 
 import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
 import org.apache.hadoop.hive.metastore.IMetaStoreClient;
+import org.apache.hadoop.hive.metastore.RetryingMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.security.UserGroupInformation;
 
@@ -97,6 +97,6 @@ public class MetastoreProvider {
       UserGroupInformation.setConfiguration(conf);
       UserGroupInformation.loginUserFromKeytab(clientPrincipal, clientKeytab);
     }
-    return new HiveMetaStoreClient(conf);
+    return RetryingMetaStoreClient.getProxy(conf);
   }
 }
