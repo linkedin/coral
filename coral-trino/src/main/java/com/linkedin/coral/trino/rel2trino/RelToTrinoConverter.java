@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -35,7 +35,6 @@ import com.linkedin.coral.common.functions.CoralSqlUnnestOperator;
 import com.linkedin.coral.common.functions.FunctionFieldReferenceOperator;
 
 import static com.google.common.base.Preconditions.*;
-import static com.linkedin.coral.trino.rel2trino.Calcite2TrinoUDFConverter.convertRel;
 import static com.linkedin.coral.trino.rel2trino.CoralTrinoConfigKeys.*;
 
 
@@ -84,8 +83,7 @@ public class RelToTrinoConverter extends RelToSqlConverter {
    * @return SQL string
    */
   public String convert(RelNode relNode) {
-    RelNode rel = convertRel(relNode, configs);
-    SqlNode sqlNode = convertToSqlNode(rel);
+    SqlNode sqlNode = convertToSqlNode(relNode);
 
     SqlNode sqlNodeWithRelDataTypeDerivedConversions =
         sqlNode.accept(new DataTypeDerivedSqlCallConverter(_hiveMetastoreClient, sqlNode));
