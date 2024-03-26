@@ -34,6 +34,7 @@ import com.linkedin.coral.trino.rel2trino.transformers.MapValueConstructorTransf
 import com.linkedin.coral.trino.rel2trino.transformers.NullOrderingTransformer;
 import com.linkedin.coral.trino.rel2trino.transformers.ReturnTypeAdjustmentTransformer;
 import com.linkedin.coral.trino.rel2trino.transformers.SqlSelectAliasAppenderTransformer;
+import com.linkedin.coral.trino.rel2trino.transformers.SubstrIndexTransformer;
 import com.linkedin.coral.trino.rel2trino.transformers.ToDateOperatorTransformer;
 import com.linkedin.coral.trino.rel2trino.transformers.UnnestOperatorTransformer;
 
@@ -72,17 +73,6 @@ public class CoralToTrinoSqlCallConverter extends SqlShuttle {
             "[{\"op\":\"*\",\"operands\":[{\"input\":1},{\"op\":\"^\",\"operands\":[{\"value\":10},{\"input\":2}]}]}]",
             "{\"op\":\"/\",\"operands\":[{\"input\":0},{\"op\":\"^\",\"operands\":[{\"value\":10},{\"input\":2}]}]}",
             null),
-        // string functions
-        new JsonTransformSqlCallTransformer(SqlStdOperatorTable.SUBSTRING, 2, "substr",
-            "[{\"input\": 1}, {\"op\": \"greatest\", \"operands\": [{\"input\": 2}, {\"value\": 1}]}]", null, null),
-        new JsonTransformSqlCallTransformer(SqlStdOperatorTable.SUBSTRING, 3, "substr",
-            "[{\"input\": 1}, {\"op\": \"greatest\", \"operands\": [{\"input\": 2}, {\"value\": 1}]}, {\"input\": 3}]",
-            null, null),
-        new JsonTransformSqlCallTransformer(hiveToCoralSqlOperator("substr"), 2, "substr",
-            "[{\"input\": 1}, {\"op\": \"greatest\", \"operands\": [{\"input\": 2}, {\"value\": 1}]}]", null, null),
-        new JsonTransformSqlCallTransformer(hiveToCoralSqlOperator("substr"), 3, "substr",
-            "[{\"input\": 1}, {\"op\": \"greatest\", \"operands\": [{\"input\": 2}, {\"value\": 1}]}, {\"input\": 3}]",
-            null, null),
         // JSON functions
         new CoralRegistryOperatorRenameSqlCallTransformer("get_json_object", 2, "json_extract"),
         // map various hive functions
@@ -135,7 +125,7 @@ public class CoralToTrinoSqlCallConverter extends SqlShuttle {
         new GenericCoralRegistryOperatorRenameSqlCallTransformer(),
 
         new ReturnTypeAdjustmentTransformer(configs), new UnnestOperatorTransformer(), new AsOperatorTransformer(),
-        new JoinSqlCallTransformer(), new NullOrderingTransformer());
+        new JoinSqlCallTransformer(), new NullOrderingTransformer(), new SubstrIndexTransformer());
   }
 
   private SqlOperator hiveToCoralSqlOperator(String functionName) {
