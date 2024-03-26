@@ -55,11 +55,8 @@ public class SubstrIndexTransformer extends SqlCallTransformer {
           .asList(SqlStdOperatorTable.EQUALS.createCall(POS, start, SqlNumericLiteral.createExactNumeric("0", POS)));
       List<SqlNode> thenClauses = Arrays.asList(SqlNumericLiteral.createExactNumeric("1", POS));
 
-      sqlCall.setOperand(1,
-          CASE.createCall(null, POS, null, CalciteUtil.createSqlNodeList(whenClauses, POS),
-              CalciteUtil.createSqlNodeList(thenClauses, POS),
-              start // default/else condition
-          ));
+      sqlCall.setOperand(1, CASE.createCall(null, POS, null, CalciteUtil.createSqlNodeList(whenClauses, POS),
+          CalciteUtil.createSqlNodeList(thenClauses, POS), start));
 
       return sqlCall;
     }

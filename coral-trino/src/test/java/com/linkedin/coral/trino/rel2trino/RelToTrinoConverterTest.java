@@ -357,6 +357,13 @@ public class RelToTrinoConverterTest {
   }
 
   @Test
+  public void testSubString1() {
+    String sql = "SELECT SUBSTRING(scol, 0) FROM test.tableOne";
+    String expectedSql = "SELECT \"substr\"(\"tableone\".\"scol\", 1)\n" + "FROM \"test\".\"tableone\" AS \"tableone\"";
+    testConversion(sql, expectedSql);
+  }
+
+  @Test
   public void testSubStr1() {
     String sql = "SELECT SUBSTR(scol, 0) FROM test.tableOne";
     String expectedSql = "SELECT \"substr\"(\"tableone\".\"scol\", 1)\n" + "FROM \"test\".\"tableone\" AS \"tableone\"";
@@ -392,6 +399,13 @@ public class RelToTrinoConverterTest {
     String expectedSql =
         "SELECT \"substr\"(\"tableone\".\"scol\", CASE WHEN \"tableone\".\"icol\" = 0 THEN 1 ELSE \"tableone\".\"icol\" END, 3)\n"
             + "FROM \"test\".\"tableone\" AS \"tableone\"";
+    testConversion(sql, expectedSql);
+  }
+
+  @Test
+  public void testSubStr4() {
+    String sql = "SELECT SUBSTR('123', 0, 3)";
+    String expectedSql = "SELECT \"substr\"('123', 1, 3)\n" + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
     testConversion(sql, expectedSql);
   }
 
