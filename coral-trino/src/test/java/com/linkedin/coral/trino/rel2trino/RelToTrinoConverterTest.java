@@ -359,6 +359,8 @@ public class RelToTrinoConverterTest {
   @Test
   public void testSubString1() {
     String sql = "SELECT SUBSTRING(scol, 0) FROM test.tableOne";
+
+    // Trino is 1-based
     String expectedSql = "SELECT \"substr\"(\"tableone\".\"scol\", 1)\n" + "FROM \"test\".\"tableone\" AS \"tableone\"";
     testConversion(sql, expectedSql);
   }
@@ -366,6 +368,8 @@ public class RelToTrinoConverterTest {
   @Test
   public void testSubStr1() {
     String sql = "SELECT SUBSTR(scol, 0) FROM test.tableOne";
+
+    // Trino is 1-based
     String expectedSql = "SELECT \"substr\"(\"tableone\".\"scol\", 1)\n" + "FROM \"test\".\"tableone\" AS \"tableone\"";
     testConversion(sql, expectedSql);
   }

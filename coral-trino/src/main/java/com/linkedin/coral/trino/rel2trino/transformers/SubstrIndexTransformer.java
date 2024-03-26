@@ -45,7 +45,6 @@ public class SubstrIndexTransformer extends SqlCallTransformer {
       if (startInt == 0) {
         SqlNumericLiteral newStart = SqlNumericLiteral.createExactNumeric(String.valueOf(1), POS);
         sqlCall.setOperand(1, newStart);
-        return sqlCall;
       }
 
     } else if (start instanceof SqlIdentifier) {
@@ -57,8 +56,6 @@ public class SubstrIndexTransformer extends SqlCallTransformer {
 
       sqlCall.setOperand(1, CASE.createCall(null, POS, null, CalciteUtil.createSqlNodeList(whenClauses, POS),
           CalciteUtil.createSqlNodeList(thenClauses, POS), start));
-
-      return sqlCall;
     }
 
     return sqlCall;
