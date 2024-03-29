@@ -59,6 +59,10 @@ public class HiveTypeSystem extends RelDataTypeSystemImpl {
     switch (typeName) {
       // Hive will always require user to specify exact sizes for char, varchar;
       // Binary doesn't need any sizes; Decimal has the default of 10.
+      case INTEGER:
+        return 10;
+      case BIGINT:
+        return 19;
       case BINARY:
       case VARBINARY:
       case TIME:
