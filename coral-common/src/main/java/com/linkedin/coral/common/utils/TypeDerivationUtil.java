@@ -59,9 +59,9 @@ public class TypeDerivationUtil {
       throw new RuntimeException("SqlValidator does not exist to derive the RelDataType for SqlNode: " + sqlNode);
     }
 
-    RelDataType fromNodeDataType = sqlValidator.getValidatedNodeTypeIfKnown(sqlNode);
-    if (fromNodeDataType != null) {
-      return fromNodeDataType;
+    RelDataType cachedDataType = sqlValidator.getValidatedNodeTypeIfKnown(sqlNode);
+    if (cachedDataType != null) {
+      return cachedDataType;
     }
 
     for (SqlSelect topSqlSelectNode : topSelectNodes) {
