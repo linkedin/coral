@@ -45,7 +45,7 @@ import static org.apache.calcite.sql.type.SqlTypeName.DOUBLE;
  *    Hive:  CAST(binary AS VARCHAR)
  *    Trino: from_utf8(binary)
  *
- * Since this transformer introduces an extra iteration of Calcite validation during RelNode -> SqlNode transformation (RHS)
+ * Since this transformer introduces an extra iteration of Calcite validation during RelNode to SqlNode transformation (RHS)
  * for queries with CAST operators, there is an added (but expected) side effect of implicit casting by Calcite's type coercion rules.
  *
  */
