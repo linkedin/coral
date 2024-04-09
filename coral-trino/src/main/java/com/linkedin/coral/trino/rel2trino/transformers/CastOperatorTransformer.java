@@ -52,12 +52,11 @@ import static org.apache.calcite.sql.type.SqlTypeName.DOUBLE;
  * Consider the following Hive input query:
  * "SELECT CAST(from_utc_timestamp(a_date, 'America/Los_Angeles') AS DECIMAL(10, 0)) AS d FROM test.table_from_utc_timestamp"
  *
- * We add an `with_timezone` operator in this transformation, and with the added layer of Calcite validation which will
- * implicitly cast the input to `with_timezone` which is a date type to the expected timestamp type.
- * So instead of just:
+ * We add a `with_timezone` operator in this transformation, and with the added layer of Calcite validation, instead
+ * of just getting:
  * "(with_timezone(table_from_utc_timestamp0.a_date), 'UTC')"
  *
- * We get an extra cast from calcite:
+ * We get an extra implicit cast from Calcite on the input to `with_timezone` which is a date type to the expected timestamp type:
  * "(with_timezone(CAST(table_from_utc_timestamp0.a_date AS TIMESTAMP), 'UTC'))"
  */
 public class CastOperatorTransformer extends SqlCallTransformer {
