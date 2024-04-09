@@ -34,9 +34,11 @@ import static org.apache.calcite.sql.type.SqlTypeName.DOUBLE;
 /**
  * The CAST operator in Trino has some differences compared to Hive, which are handled by this transformer:
  *
- * 1) Hive allows for casting of TIMESTAMP to DECIMAL, by converts it to unix time if the decimal format is valid
- *    Trino does not allow for such conversion, but we can achieve the same behavior by first calling "to_unixtime"
- *    (with the timezone) on the TIMESTAMP and then casting it to DECIMAL after.
+ * 1) Hive allows for casting of TIMESTAMP to DECIMAL, by converting it to unix time if the specified decimal
+ *    type has enough precision/scale to hold the Unix timestamp value. For example, casting to DECIMAL(10,0)
+ *    for the timestamp 1633112585
+ *    While Trino does not allow for such conversion, but we can achieve the same behavior by first calling
+ *    "to_unixtime" (with timezone specified) on the TIMESTAMP and then casting it to DECIMAL after.
  *    Hive:  SELECT CAST(timestamp AS DECIMAL(10,0))
  *    Trino: CAST(to_unixtime(with_timezone(timestamp, 'UTC')) AS DECIMAL(10, 0))
  *
@@ -47,7 +49,16 @@ import static org.apache.calcite.sql.type.SqlTypeName.DOUBLE;
  *
  * Since this transformer introduces an extra iteration of Calcite validation during RelNode to SqlNode transformation (RHS)
  * for queries with CAST operators, there is an added (but expected) side effect of implicit casting by Calcite's type coercion rules.
+ * Consider the following Hive input query:
+ * "SELECT CAST(from_utc_timestamp(a_date, 'America/Los_Angeles') AS DECIMAL(10, 0)) AS d FROM test.table_from_utc_timestamp"
  *
+ * We add an `with_timezone` operator in this transformation, and with the added layer of Calcite validation which will
+ * implicitly cast the input to `with_timezone` which is a date type to the expected timestamp type.
+ * So instead of just:
+ * "(with_timezone(table_from_utc_timestamp0.a_date), 'UTC')"
+ *
+ * We get an extra cast from calcite:
+ * "(with_timezone(CAST(table_from_utc_timestamp0.a_date AS TIMESTAMP), 'UTC'))"
  */
 public class CastOperatorTransformer extends SqlCallTransformer {
   private static final String WITH_TIMEZONE = "with_timezone";
