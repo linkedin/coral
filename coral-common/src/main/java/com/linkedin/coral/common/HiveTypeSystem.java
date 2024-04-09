@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -14,7 +14,6 @@ import org.apache.calcite.sql.type.SqlTypeUtil;
 
 // Copied from Hive source code before HIVE-22978 patch
 public class HiveTypeSystem extends RelDataTypeSystemImpl {
-  // TODO: Rename to CoralTypeSystem
   // TODO: This should come from type system; Currently there is no definition
   // in type system for this.
   private static final int MAX_DECIMAL_PRECISION = 38;
@@ -30,8 +29,8 @@ public class HiveTypeSystem extends RelDataTypeSystemImpl {
   private static final int DEFAULT_CHAR_PRECISION = 255;
   private static final int MAX_BINARY_PRECISION = Integer.MAX_VALUE;
   private static final int MAX_TIMESTAMP_PRECISION = 9;
-  private static final int DEFAULT_INTEGER_PRECISION  = 10;
-  private static final int DEFAULT_BIGINT_PRECISION   = 19;
+  private static final int DEFAULT_INTEGER_PRECISION = 10;
+  private static final int DEFAULT_BIGINT_PRECISION = 19;
 
   @Override
   public int getMaxScale(SqlTypeName typeName) {
