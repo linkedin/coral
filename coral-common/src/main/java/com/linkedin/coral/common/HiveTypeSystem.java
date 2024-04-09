@@ -12,8 +12,9 @@ import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.sql.type.SqlTypeUtil;
 
 
-// Copied from Hive source code
+// Copied from Hive source code before HIVE-22978 patch
 public class HiveTypeSystem extends RelDataTypeSystemImpl {
+  // TODO: Rename to CoralTypeSystem
   // TODO: This should come from type system; Currently there is no definition
   // in type system for this.
   private static final int MAX_DECIMAL_PRECISION = 38;
@@ -29,6 +30,8 @@ public class HiveTypeSystem extends RelDataTypeSystemImpl {
   private static final int DEFAULT_CHAR_PRECISION = 255;
   private static final int MAX_BINARY_PRECISION = Integer.MAX_VALUE;
   private static final int MAX_TIMESTAMP_PRECISION = 9;
+  private static final int DEFAULT_INTEGER_PRECISION  = 10;
+  private static final int DEFAULT_BIGINT_PRECISION   = 19;
 
   @Override
   public int getMaxScale(SqlTypeName typeName) {
@@ -59,10 +62,6 @@ public class HiveTypeSystem extends RelDataTypeSystemImpl {
     switch (typeName) {
       // Hive will always require user to specify exact sizes for char, varchar;
       // Binary doesn't need any sizes; Decimal has the default of 10.
-      case INTEGER:
-        return 10;
-      case BIGINT:
-        return 19;
       case BINARY:
       case VARBINARY:
       case TIME:
@@ -88,6 +87,10 @@ public class HiveTypeSystem extends RelDataTypeSystemImpl {
       case INTERVAL_MINUTE_SECOND:
       case INTERVAL_SECOND:
         return SqlTypeName.DEFAULT_INTERVAL_START_PRECISION;
+      case INTEGER:
+        return DEFAULT_INTEGER_PRECISION;
+      case BIGINT:
+        return DEFAULT_BIGINT_PRECISION;
       default:
         return -1;
     }
