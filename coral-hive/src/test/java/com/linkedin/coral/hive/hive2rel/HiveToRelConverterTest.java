@@ -622,6 +622,15 @@ public class HiveToRelConverterTest {
     assertEquals(generated, expected);
   }
 
+  @Test
+  public void testUnionIntAndBigInt() {
+    final String sql = "SELECT a FROM test.tableOne UNION ALL SELECT z FROM test.tableTwo";
+    RelNode rel = converter.convertSql(sql);
+    assertEquals(rel.getRowType().getFieldCount(), 1);
+    // Should be BIGINT since it is a less restrictive type than INT
+    assertEquals(rel.getRowType().getFieldList().get(0).getType().getSqlTypeName(), SqlTypeName.BIGINT);
+  }
+
   private String relToString(String sql) {
     return RelOptUtil.toString(converter.convertSql(sql));
   }
