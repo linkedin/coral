@@ -1,5 +1,5 @@
 /**
- * Copyright 2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2023-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -11,15 +11,13 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.calcite.rel.type.RelDataType;
-import org.apache.calcite.sql.SqlBasicTypeNameSpec;
 import org.apache.calcite.sql.SqlCall;
-import org.apache.calcite.sql.SqlDataTypeSpec;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlOperator;
-import org.apache.calcite.sql.SqlTypeNameSpec;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 import org.apache.calcite.sql.type.BasicSqlType;
 import org.apache.calcite.sql.type.SqlTypeName;
+import org.apache.calcite.sql.type.SqlTypeUtil;
 
 import com.linkedin.coral.common.HiveTypeSystem;
 import com.linkedin.coral.common.calcite.CalciteUtil;
@@ -122,12 +120,6 @@ public class FromUtcTimestampOperatorTransformer extends SqlCallTransformer {
   }
 
   private SqlCall castOperand(SqlNode operand, RelDataType relDataType) {
-    return SqlStdOperatorTable.CAST.createCall(ZERO, operand, getSqlDataTypeSpecForCasting(relDataType));
-  }
-
-  private SqlDataTypeSpec getSqlDataTypeSpecForCasting(RelDataType relDataType) {
-    final SqlTypeNameSpec typeNameSpec = new SqlBasicTypeNameSpec(relDataType.getSqlTypeName(),
-        relDataType.getPrecision(), relDataType.getScale(), null, ZERO);
-    return new SqlDataTypeSpec(typeNameSpec, ZERO);
+    return SqlStdOperatorTable.CAST.createCall(ZERO, operand, SqlTypeUtil.convertTypeToSpec(relDataType));
   }
 }
