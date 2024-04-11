@@ -70,7 +70,6 @@ public class TestUtils {
       RelRoot rel = planner.rel(validate);
       //RelNode relNode = rel.project();
       return rel.project();
-      //return Calcite2TrinoUDFConverter.convertRel(relNode);
     } catch (Exception e) {
       throw new RuntimeException(e);
     }

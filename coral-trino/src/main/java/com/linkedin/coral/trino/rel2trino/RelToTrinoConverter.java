@@ -19,7 +19,6 @@ import org.apache.calcite.rel.logical.LogicalTableFunctionScan;
 import org.apache.calcite.rel.rel2sql.RelToSqlConverter;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
-import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexFieldAccess;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
@@ -47,7 +46,7 @@ public class RelToTrinoConverter extends RelToSqlConverter {
    *     wrapping in {@link RelToTrinoConverter#visit(Uncollect)}
    * (2) Some internally registered UDFs which should not be converted, like `to_date`.
    *     If the value of key {@link CoralTrinoConfigKeys#AVOID_TRANSFORM_TO_DATE_UDF} is set to true, we don't transform `to_date` UDF
-   *     in {@link com.linkedin.coral.trino.rel2trino.Calcite2TrinoUDFConverter.TrinoRexConverter#visitCall(RexCall)}
+   *     in {@link com.linkedin.coral.trino.rel2trino.transformers.ToDateOperatorTransformer}
    * (3) We need to adjust the return type for some functions using cast, since the converted Trino function's return type is not
    *     aligned with the Hive function's return type. For example, if the value of key {@link CoralTrinoConfigKeys#CAST_DATEADD_TO_STRING}
    *     is set to true, we would cast the converted RexCall to `varchar` type (date_add(xxx) -> cast(date_add(xxx) as varchar))
