@@ -7,6 +7,7 @@ package com.linkedin.coral.trino.rel2trino.transformers;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlIdentifier;
@@ -14,6 +15,7 @@ import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlNumericLiteral;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 
+import com.linkedin.coral.com.google.common.collect.ImmutableSet;
 import com.linkedin.coral.common.calcite.CalciteUtil;
 import com.linkedin.coral.common.transformers.SqlCallTransformer;
 
@@ -29,10 +31,10 @@ import static org.apache.calcite.sql.fun.SqlStdOperatorTable.*;
  * This transformer guarantees that starting index will always 1 or greater.
  */
 public class SubstrIndexTransformer extends SqlCallTransformer {
+  private final static Set<String> SUBSTRING_OPERATORS = ImmutableSet.of("substr", "substring");
   @Override
   protected boolean condition(SqlCall sqlCall) {
-    return sqlCall.getOperator().getName().toLowerCase() == "substr"
-        || sqlCall.getOperator().getName().toLowerCase() == "substring";
+    return SUBSTRING_OPERATORS.contains(sqlCall.getOperator().getName().toLowerCase());
   }
 
   @Override
