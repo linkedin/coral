@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -19,7 +19,6 @@ import org.apache.calcite.rel.logical.LogicalTableFunctionScan;
 import org.apache.calcite.rel.rel2sql.RelToSqlConverter;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
-import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexFieldAccess;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
@@ -35,7 +34,6 @@ import com.linkedin.coral.common.functions.CoralSqlUnnestOperator;
 import com.linkedin.coral.common.functions.FunctionFieldReferenceOperator;
 
 import static com.google.common.base.Preconditions.*;
-import static com.linkedin.coral.trino.rel2trino.Calcite2TrinoUDFConverter.convertRel;
 import static com.linkedin.coral.trino.rel2trino.CoralTrinoConfigKeys.*;
 
 
@@ -48,7 +46,7 @@ public class RelToTrinoConverter extends RelToSqlConverter {
    *     wrapping in {@link RelToTrinoConverter#visit(Uncollect)}
    * (2) Some internally registered UDFs which should not be converted, like `to_date`.
    *     If the value of key {@link CoralTrinoConfigKeys#AVOID_TRANSFORM_TO_DATE_UDF} is set to true, we don't transform `to_date` UDF
-   *     in {@link com.linkedin.coral.trino.rel2trino.Calcite2TrinoUDFConverter.TrinoRexConverter#visitCall(RexCall)}
+   *     in {@link com.linkedin.coral.trino.rel2trino.transformers.ToDateOperatorTransformer}
    * (3) We need to adjust the return type for some functions using cast, since the converted Trino function's return type is not
    *     aligned with the Hive function's return type. For example, if the value of key {@link CoralTrinoConfigKeys#CAST_DATEADD_TO_STRING}
    *     is set to true, we would cast the converted RexCall to `varchar` type (date_add(xxx) -> cast(date_add(xxx) as varchar))
@@ -84,8 +82,7 @@ public class RelToTrinoConverter extends RelToSqlConverter {
    * @return SQL string
    */
   public String convert(RelNode relNode) {
-    RelNode rel = convertRel(relNode, configs);
-    SqlNode sqlNode = convertToSqlNode(rel);
+    SqlNode sqlNode = convertToSqlNode(relNode);
 
     SqlNode sqlNodeWithRelDataTypeDerivedConversions =
         sqlNode.accept(new DataTypeDerivedSqlCallConverter(_hiveMetastoreClient, sqlNode));

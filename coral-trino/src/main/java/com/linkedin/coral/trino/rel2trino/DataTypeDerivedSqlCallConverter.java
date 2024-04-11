@@ -1,5 +1,5 @@
 /**
- * Copyright 2022-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2022-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -16,6 +16,7 @@ import com.linkedin.coral.common.transformers.SqlCallTransformers;
 import com.linkedin.coral.common.utils.TypeDerivationUtil;
 import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
 import com.linkedin.coral.hive.hive2rel.functions.VersionedSqlUserDefinedFunction;
+import com.linkedin.coral.trino.rel2trino.transformers.CastOperatorTransformer;
 import com.linkedin.coral.trino.rel2trino.transformers.ConcatOperatorTransformer;
 import com.linkedin.coral.trino.rel2trino.transformers.FromUtcTimestampOperatorTransformer;
 import com.linkedin.coral.trino.rel2trino.transformers.GenericProjectTransformer;
@@ -44,7 +45,7 @@ public class DataTypeDerivedSqlCallConverter extends SqlShuttle {
     operatorTransformerList = SqlCallTransformers.of(new FromUtcTimestampOperatorTransformer(typeDerivationUtil),
         new GenericProjectTransformer(typeDerivationUtil), new NamedStructToCastTransformer(typeDerivationUtil),
         new ConcatOperatorTransformer(typeDerivationUtil), new SubstrOperatorTransformer(typeDerivationUtil),
-        new UnionSqlCallTransformer(typeDerivationUtil));
+        new CastOperatorTransformer(typeDerivationUtil), new UnionSqlCallTransformer(typeDerivationUtil));
   }
 
   @Override
