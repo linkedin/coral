@@ -29,6 +29,8 @@ public class HiveTypeSystem extends RelDataTypeSystemImpl {
   private static final int DEFAULT_CHAR_PRECISION = 255;
   private static final int MAX_BINARY_PRECISION = Integer.MAX_VALUE;
   private static final int MAX_TIMESTAMP_PRECISION = 9;
+  private static final int DEFAULT_TINYINT_PRECISION  = 3;
+  private static final int DEFAULT_SMALLINT_PRECISION = 5;
   private static final int DEFAULT_INTEGER_PRECISION = 10;
   private static final int DEFAULT_BIGINT_PRECISION = 19;
 
@@ -86,6 +88,10 @@ public class HiveTypeSystem extends RelDataTypeSystemImpl {
       case INTERVAL_MINUTE_SECOND:
       case INTERVAL_SECOND:
         return SqlTypeName.DEFAULT_INTERVAL_START_PRECISION;
+      case TINYINT:
+        return DEFAULT_TINYINT_PRECISION;
+      case SMALLINT:
+        return DEFAULT_SMALLINT_PRECISION;
       case INTEGER:
         return DEFAULT_INTEGER_PRECISION;
       case BIGINT:
