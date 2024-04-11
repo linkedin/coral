@@ -9,7 +9,7 @@ def versions = [
   'jetbrains': '16.0.2',
   'jline': '0.9.94',
   'kryo': '2.22',
-  'linkedin-calcite-core': '1.21.0.260',
+  'linkedin-calcite-core': '1.21.0.262',
   'pig': '0.15.0',
   'spark': '2.4.0',
   'spark3': '3.1.1',

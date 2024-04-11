@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -70,7 +70,6 @@ public class TestUtils {
       RelRoot rel = planner.rel(validate);
       //RelNode relNode = rel.project();
       return rel.project();
-      //return Calcite2TrinoUDFConverter.convertRel(relNode);
     } catch (Exception e) {
       throw new RuntimeException(e);
     }

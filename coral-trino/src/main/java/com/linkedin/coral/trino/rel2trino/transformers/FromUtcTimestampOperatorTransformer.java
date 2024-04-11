@@ -74,7 +74,7 @@ public class FromUtcTimestampOperatorTransformer extends SqlCallTransformer {
     RelDataType inputType = deriveRelDatatype(sqlCall.getOperandList().get(0));
     SqlTypeName inputSqlTypeName = inputType.getSqlTypeName();
 
-    // In below definitions we should use `TIMESTATMP WITH TIME ZONE`. As calcite is lacking
+    // In below definitions we should use `TIMESTAMP WITH TIME ZONE`. As calcite is lacking
     // this type we use `TIMESTAMP` instead. It does not have any practical implications as result syntax tree
     // is not type-checked, and only used for generating output SQL for a view query.
     SqlOperator trinoAtTimeZone = createSqlOperator(AT_TIMEZONE, explicit(TIMESTAMP /* should be WITH TIME ZONE */));
