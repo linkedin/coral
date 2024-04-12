@@ -994,4 +994,19 @@ public class HiveToTrinoConverterTest {
         + "WHERE \"tablea\".\"a\" > 5";
     assertEquals(expandedSql, expected);
   }
+
+  @Test
+  public void testIntCastToBigIntDuringComparison() {
+    // We're testing that a comparison between INT and BIGINT sees a cast on the more restrictive type to the
+    // less restrictive type and not the other way around. In other words, the INT is cast to BIGINT.
+    RelNode relNode = TestUtils.getHiveToRelConverter().convertSql(
+        "SELECT CASE WHEN a_integer = a_bigint THEN 'abc' ELSE 'def' END FROM test.table_from_utc_timestamp");
+    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
+    String expandedSql = relToTrinoConverter.convert(relNode);
+
+    String expected =
+        "SELECT CASE WHEN CAST(\"table_from_utc_timestamp\".\"a_integer\" AS BIGINT) = \"table_from_utc_timestamp\".\"a_bigint\" THEN 'abc' ELSE 'def' END\n"
+            + "FROM \"test\".\"table_from_utc_timestamp\" AS \"table_from_utc_timestamp\"";
+    assertEquals(expandedSql, expected);
+  }
 }

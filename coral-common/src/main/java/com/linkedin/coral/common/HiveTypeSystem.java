@@ -12,7 +12,7 @@ import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.sql.type.SqlTypeUtil;
 
 
-// Copied from Hive source code before HIVE-22978 patch
+// Precision and scale values copied from Hive source code
 public class HiveTypeSystem extends RelDataTypeSystemImpl {
   // TODO: This should come from type system; Currently there is no definition
   // in type system for this.

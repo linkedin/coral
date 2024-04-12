@@ -81,7 +81,9 @@ public class TestUtils {
     try {
       driver.run("CREATE DATABASE IF NOT EXISTS test");
       driver.run("CREATE TABLE IF NOT EXISTS test.tableOne(a int, b varchar(30), c double, d timestamp)");
-      driver.run("CREATE TABLE IF NOT EXISTS test.tableTwo(x int, y double, z bigint)");
+      driver.run("CREATE TABLE IF NOT EXISTS test.tableTwo(x int, y double)");
+      driver.run(
+          "CREATE TABLE IF NOT EXISTS test.tableInt(tinyint_col tinyint, smallint_col smallint, int_col int, bigint_col bigint)");
 
       driver.run("CREATE DATABASE IF NOT EXISTS fuzzy_union");
 
