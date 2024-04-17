@@ -20,6 +20,7 @@ import org.apache.calcite.sql.parser.SqlParser;
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.MetaException;
+import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeClass;
@@ -232,5 +233,19 @@ public class ParseTreeBuilderTest {
     String expected = "";
     SqlNode sqlNode = convert(input);
     assertEquals(sqlNode.toString().toLowerCase().replaceAll("\n", " "), expected.toLowerCase());
+  }
+
+  /**
+   * Validates if coral-hive can translate views with unquoted reserved keywords when the views are created using spark.
+   */
+  @Test
+  public void testUnquotedKeywordAsColumnName() {
+    HiveToRelConverter hiveToRelConverter = new HiveToRelConverter(msc);
+    Table table = msc.getTable("test", "spark_created_view");
+    // Remove the backquotes associated with the view text
+    String input = table.getViewExpandedText().replaceAll("`","");
+    SqlNode sqlNode = hiveToRelConverter.toSqlNode(input, table);
+    // Validate if the translation is successful
+    assertEquals(sqlNode.toString().replaceAll("\\r?\\n", " "), table.getViewExpandedText());
   }
 }

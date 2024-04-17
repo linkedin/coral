@@ -172,6 +172,10 @@ public class TestUtils {
       driver.run("CREATE VIEW IF NOT EXISTS view_schema_evolve_wrapper AS SELECT * from view_schema_evolve");
       driver.run("ALTER TABLE schema_evolve CHANGE COLUMN b b array<struct<b1:string, b2:double, b3:int>>");
 
+      driver.run("CREATE OR REPLACE VIEW test.spark_created_view AS SELECT 1 AS `timestamp` FROM test.tableOne");
+      // Simulate the creation of view using spark by setting the corresponding table property of the view.
+      driver.run("ALTER VIEW test.spark_created_view SET TBLPROPERTIES ('spark.sql.create.version'='3.1.1')");
+
       CommandProcessorResponse response = driver
           .run("create function test_tableOneView_LessThanHundred as 'com.linkedin.coral.hive.hive2rel.CoralTestUDF'");
       response = driver.run(

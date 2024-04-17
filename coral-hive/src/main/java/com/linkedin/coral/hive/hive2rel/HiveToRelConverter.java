@@ -96,7 +96,7 @@ public class HiveToRelConverter extends ToRelConverter {
   }
 
   @Override
-  protected SqlNode toSqlNode(String sql, Table hiveView) {
+  public SqlNode toSqlNode(String sql, Table hiveView) {
     final SqlNode sqlNode = parseTreeBuilder.process(trimParenthesis(sql), hiveView);
     if (hiveView != null) {
       sqlNode.accept(new FuzzyUnionSqlRewriter(hiveView.getTableName(), this));
