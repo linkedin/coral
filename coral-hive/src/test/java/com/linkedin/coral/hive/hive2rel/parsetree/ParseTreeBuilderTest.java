@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -243,7 +243,7 @@ public class ParseTreeBuilderTest {
     HiveToRelConverter hiveToRelConverter = new HiveToRelConverter(msc);
     Table table = msc.getTable("test", "spark_created_view");
     // Remove the backquotes associated with the view text
-    String input = table.getViewExpandedText().replaceAll("`","");
+    String input = table.getViewExpandedText().replaceAll("`", "");
     SqlNode sqlNode = hiveToRelConverter.toSqlNode(input, table);
     // Validate if the translation is successful
     assertEquals(sqlNode.toString().replaceAll("\\r?\\n", " "), table.getViewExpandedText());
