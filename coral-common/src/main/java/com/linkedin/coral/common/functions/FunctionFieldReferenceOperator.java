@@ -1,5 +1,5 @@
 /**
- * Copyright 2018-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2018-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -80,9 +80,9 @@ public class FunctionFieldReferenceOperator extends SqlBinaryOperator {
       // derived data type is first operand's RelDataType.
       // This strategy ensures that RelDataType derivation remains successful for the specified sqlCalls while maintaining backward compatibility.
       // Such SqlCalls are transformed {@link com.linkedin.coral.transformers.SingleUnionFieldReferenceTransformer}
-      if (FunctionFieldReferenceOperator.fieldNameStripQuotes(call.operand(1)).equalsIgnoreCase("tag_0")) {
-        return funcType;
-      }
+      //      if (FunctionFieldReferenceOperator.fieldNameStripQuotes(call.operand(1)).equalsIgnoreCase("tag_0")) {
+      //        return funcType;
+      //      }
     }
     return super.deriveType(validator, scope, call);
   }
