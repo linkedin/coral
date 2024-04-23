@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -96,7 +96,7 @@ public class HiveToRelConverter extends ToRelConverter {
   }
 
   @Override
-  protected SqlNode toSqlNode(String sql, Table hiveView) {
+  public SqlNode toSqlNode(String sql, Table hiveView) {
     final SqlNode sqlNode = parseTreeBuilder.process(trimParenthesis(sql), hiveView);
     if (hiveView != null) {
       sqlNode.accept(new FuzzyUnionSqlRewriter(hiveView.getTableName(), this));

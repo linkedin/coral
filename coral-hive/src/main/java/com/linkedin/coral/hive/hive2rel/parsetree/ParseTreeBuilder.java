@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -8,6 +8,7 @@ package com.linkedin.coral.hive.hive2rel.parsetree;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -104,8 +105,20 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     return process(sql, null);
   }
 
+  /**
+   * Returns true if the view is created using spark sql. This relies on the presence of the
+   * spark.sql.create.version property in the views when created using spark sql.
+   *
+   * @param hiveView
+   * @return true if the view is created using spark sql
+   */
+  private static boolean isCreatedUsingSpark(Table hiveView) {
+    Map<String, String> tableParams = hiveView.getParameters();
+    return tableParams != null && tableParams.containsKey("spark.sql.create.version");
+  }
+
   public SqlNode process(String sql, @Nullable Table hiveView) {
-    ParseDriver pd = new CoralParseDriver();
+    ParseDriver pd = new CoralParseDriver(hiveView != null && isCreatedUsingSpark(hiveView));
     try {
       ASTNode root = pd.parse(sql);
       return processAST(root, hiveView);
