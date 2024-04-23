@@ -76,7 +76,7 @@ public class CoralSpark {
     SparkRelInfo sparkRelInfo = IRRelToSparkRelTransformer.transform(irRelNode);
     Set<SparkUDFInfo> sparkUDFInfos = sparkRelInfo.getSparkUDFInfos();
     RelNode sparkRelNode = sparkRelInfo.getSparkRelNode();
-    SqlNode sparkSqlNode = constructSparkSqlNode(sparkRelNode, sparkUDFInfos);
+    SqlNode sparkSqlNode = constructSparkSqlNode(sparkRelNode, sparkUDFInfos, hmsClient);
     String sparkSQL = constructSparkSQL(sparkSqlNode);
     List<String> baseTables = constructBaseTables(sparkRelNode);
     return new CoralSpark(baseTables, ImmutableList.copyOf(sparkUDFInfos), sparkSQL, hmsClient, sparkSqlNode);
@@ -101,7 +101,7 @@ public class CoralSpark {
     SparkRelInfo sparkRelInfo = IRRelToSparkRelTransformer.transform(irRelNode);
     Set<SparkUDFInfo> sparkUDFInfos = sparkRelInfo.getSparkUDFInfos();
     RelNode sparkRelNode = sparkRelInfo.getSparkRelNode();
-    SqlNode sparkSqlNode = constructSparkSqlNode(sparkRelNode, sparkUDFInfos);
+    SqlNode sparkSqlNode = constructSparkSqlNode(sparkRelNode, sparkUDFInfos, hmsClient);
     // Use a second pass visit to add explicit alias names,
     // only do this when it's not a select star case,
     // since for select star we don't need to add any explicit aliases
@@ -113,10 +113,14 @@ public class CoralSpark {
     return new CoralSpark(baseTables, ImmutableList.copyOf(sparkUDFInfos), sparkSQL, hmsClient, sparkSqlNode);
   }
 
-  private static SqlNode constructSparkSqlNode(RelNode sparkRelNode, Set<SparkUDFInfo> sparkUDFInfos) {
+  private static SqlNode constructSparkSqlNode(RelNode sparkRelNode, Set<SparkUDFInfo> sparkUDFInfos, HiveMetastoreClient hmsClient) {
     CoralRelToSqlNodeConverter rel2sql = new CoralRelToSqlNodeConverter();
     SqlNode coralSqlNode = rel2sql.convert(sparkRelNode);
-    SqlNode sparkSqlNode = coralSqlNode.accept(new CoralSqlNodeToSparkSqlNodeConverter())
+
+    SqlNode coralSqlNodeWithRelDataTypeDerivedConversions =
+        coralSqlNode.accept(new DataTypeDerivedSqlCallConverter(hmsClient, coralSqlNode));
+
+    SqlNode sparkSqlNode = coralSqlNodeWithRelDataTypeDerivedConversions.accept(new CoralSqlNodeToSparkSqlNodeConverter())
         .accept(new CoralToSparkSqlCallConverter(sparkUDFInfos));
     return sparkSqlNode.accept(new SparkSqlRewriter());
   }
