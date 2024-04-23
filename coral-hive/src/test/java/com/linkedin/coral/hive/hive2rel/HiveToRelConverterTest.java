@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -620,6 +620,44 @@ public class HiveToRelConverterTest {
     converter.getSqlValidator().validate(node);
     String generated = nodeToStr(node);
     assertEquals(generated, expected);
+  }
+
+  @Test
+  public void testUnionIntAndBigInt() {
+    final String sql = "SELECT a FROM test.tableOne UNION ALL SELECT bigint_col FROM test.tableInt";
+    RelNode rel = converter.convertSql(sql);
+    assertEquals(rel.getRowType().getFieldCount(), 1);
+    // Should be BIGINT since it is a less restrictive type than INT
+    assertEquals(rel.getRowType().getFieldList().get(0).getType().getSqlTypeName(), SqlTypeName.BIGINT);
+  }
+
+  @Test
+  public void testUnionIntAndSmallInt() {
+    final String sql = "SELECT smallint_col FROM test.tableInt UNION ALL SELECT a FROM test.tableOne";
+    RelNode rel = converter.convertSql(sql);
+    assertEquals(rel.getRowType().getFieldCount(), 1);
+    // Should be INT since it is a less restrictive type than SMALLINT
+    assertEquals(rel.getRowType().getFieldList().get(0).getType().getSqlTypeName(), SqlTypeName.INTEGER);
+  }
+
+  @Test
+  public void testUnionIntAndTinyInt() {
+    final String sql = "SELECT tinyint_col FROM test.tableInt UNION ALL SELECT a FROM test.tableOne";
+    RelNode rel = converter.convertSql(sql);
+    assertEquals(rel.getRowType().getFieldCount(), 1);
+    // Should be INT since it is a less restrictive type than TINYINT
+    assertEquals(rel.getRowType().getFieldList().get(0).getType().getSqlTypeName(), SqlTypeName.INTEGER);
+  }
+
+  @Test
+  public void testIntCastToBigIntDuringComparison() {
+    // We're testing that a comparison between INT and BIGINT sees a cast on the more restrictive type to the
+    // less restrictive type and not the other way around. In other words, the INT is cast to BIGINT.
+    final String sql = "SELECT CASE WHEN int_col = bigint_col THEN 'abc' ELSE 'def' END FROM test.tableInt";
+    String expected = "LogicalProject(EXPR$0=[CASE(=(CAST($2):BIGINT, $3), 'abc', 'def')])\n"
+        + "  LogicalTableScan(table=[[hive, test, tableint]])\n";
+
+    assertEquals(relToString(sql), expected);
   }
 
   private String relToString(String sql) {
