@@ -108,7 +108,9 @@ public abstract class ToRelConverter {
    * @return Calcite RelNode representation of input hive sql
    */
   public RelNode convertSql(String sql) {
-    return toRel(toSqlNode(sql));
+    SqlNode test = toSqlNode(sql);
+
+    return toRel(test);
   }
 
   /**

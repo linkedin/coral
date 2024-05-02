@@ -5,17 +5,15 @@
  */
 package com.linkedin.coral.spark;
 
-import com.linkedin.coral.common.HiveMetastoreClient;
-import com.linkedin.coral.common.functions.Function;
-import com.linkedin.coral.common.transformers.SqlCallTransformers;
-import com.linkedin.coral.common.utils.TypeDerivationUtil;
-import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
-import com.linkedin.coral.hive.hive2rel.functions.VersionedSqlUserDefinedFunction;
-import com.linkedin.coral.spark.transformers.SingleUnionFieldReferenceTransformer;
-import org.apache.calcite.sql.SqlBasicCall;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.util.SqlShuttle;
+
+import com.linkedin.coral.common.HiveMetastoreClient;
+import com.linkedin.coral.common.transformers.SqlCallTransformers;
+import com.linkedin.coral.common.utils.TypeDerivationUtil;
+import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
+import com.linkedin.coral.spark.transformers.SingleUnionFieldReferenceTransformer;
 
 
 /**
@@ -29,16 +27,16 @@ import org.apache.calcite.sql.util.SqlShuttle;
 public class DataTypeDerivedSqlCallConverter extends SqlShuttle {
   private final SqlCallTransformers operatorTransformerList;
   private final HiveToRelConverter toRelConverter;
+  TypeDerivationUtil typeDerivationUtil;
 
   public DataTypeDerivedSqlCallConverter(HiveMetastoreClient mscClient, SqlNode topSqlNode) {
     toRelConverter = new HiveToRelConverter(mscClient);
-
-    TypeDerivationUtil typeDerivationUtil = new TypeDerivationUtil(toRelConverter.getSqlValidator(), topSqlNode);
+    typeDerivationUtil = new TypeDerivationUtil(toRelConverter.getSqlValidator(), topSqlNode);
     operatorTransformerList = SqlCallTransformers.of(new SingleUnionFieldReferenceTransformer(typeDerivationUtil));
   }
 
   @Override
-  public SqlNode visit(final SqlCall call) {
+  public SqlNode visit(SqlCall call) {
     return operatorTransformerList.apply((SqlCall) super.visit(call));
   }
 }

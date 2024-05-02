@@ -1,45 +1,43 @@
 /**
- * Copyright 2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2023-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
 package com.linkedin.coral.spark.transformers;
 
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.sql.SqlBasicCall;
+import org.apache.calcite.sql.SqlCall;
+import org.apache.calcite.sql.SqlNode;
+import org.apache.calcite.sql.parser.SqlParserPos;
+
 import com.linkedin.coral.common.functions.FunctionFieldReferenceOperator;
 import com.linkedin.coral.common.transformers.SqlCallTransformer;
 import com.linkedin.coral.common.utils.TypeDerivationUtil;
-import com.linkedin.coral.spark.containers.SparkUDFInfo;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
-import org.apache.calcite.rel.type.RelDataType;
-import org.apache.calcite.sql.SqlBasicCall;
-import org.apache.calcite.sql.SqlBasicTypeNameSpec;
-import org.apache.calcite.sql.SqlCall;
-import org.apache.calcite.sql.SqlDataTypeSpec;
-import org.apache.calcite.sql.SqlKind;
-import org.apache.calcite.sql.SqlNode;
-import org.apache.calcite.sql.SqlNodeList;
-import org.apache.calcite.sql.SqlOperatorTable;
-import org.apache.calcite.sql.SqlSelect;
-import org.apache.calcite.sql.SqlTypeNameSpec;
-import org.apache.calcite.sql.fun.SqlCase;
-import org.apache.calcite.sql.fun.SqlStdOperatorTable;
-import org.apache.calcite.sql.parser.SqlParserPos;
-
-import static org.apache.calcite.sql.parser.SqlParserPos.*;
+import com.linkedin.coral.hive.hive2rel.functions.CoalesceStructUtility;
+import com.linkedin.coral.spark.functions.NOP;
 
 
 /**
- * This transformer focuses on SqlCalls that involve a FunctionFieldReferenceOperator with the following characteristics:
- * (1) The first operand is a SqlBasicCall with a non-struct RelDataType, and the second operand is tag_0.
- * This indicates that the first operand represents a Union data type with a single data type inside.
- * (2) Examples of such SqlCalls include extract_union(product.value).tag_0 or (extract_union(product.value).id).tag_0.
- * (3) The transformation for such SqlCalls is to return the first operand.
+ * Necessary context: Spark has a mechanism that unwraps uniontypes that only hold one datatype, to simply, the underlying datatype itself.
+ * For example, if we have a column "single_union_col" in Hive, of type uniontype&lt;array&lt;string&gt;&gt;&gt;, Spark will unwrap single_union_col to simply array&lt;string&gt; and treat it as such.
+ * For this reason, we must be careful about that we are actually passing a struct type (that represents Hive's uniontype) into the
+ * {@link CoalesceStructUtility} function, and not the underlying data type. Note the conversion from extract_union to coalesce_struct happens after this transformer.
+ *
+ * This transformer transforms on function field references for extract_union(union_col) calls where union_col is a single uniontype, in other words,
+ * an incorrect attempt to fetch the underlying object in the uniontype.
+ *
+ * Examples of such function field references SqlCalls include:
+ * 1) extract_union(product.value).tag_0
+ *    In this case, we simply want to return product.value as we know that product.value is a no longer a uniontype (been unwrapped by Spark).
+ * 2) (extract_union(product.value).urns).tag_0.
+ *    In this case, what we're actually dealing with is calling extract_union on a regular struct (not a struct in Spark representing a uniontype) that
+ *    has a field urns, where urns is now the underlying data type before it was unwrapped from a single uniontype. So once again,
+ *    we don't want to (and can't) access "tag_0" field of urns. Rather simply return it as is: extract_union(product.value).urns
  */
 public class SingleUnionFieldReferenceTransformer extends SqlCallTransformer {
   private static final String TAG_0_OPERAND = "tag_0";
+  public static final String functionFieldReferenceOperatorName = FunctionFieldReferenceOperator.DOT.getName();
 
   public SingleUnionFieldReferenceTransformer(TypeDerivationUtil typeDerivationUtil) {
     super(typeDerivationUtil);
@@ -47,84 +45,43 @@ public class SingleUnionFieldReferenceTransformer extends SqlCallTransformer {
 
   @Override
   protected boolean condition(SqlCall sqlCall) {
-    return (sqlCall.getOperator().kind == SqlKind.SELECT || (sqlCall instanceof SqlBasicCall && FunctionFieldReferenceOperator.DOT.getName().equalsIgnoreCase(sqlCall.getOperator().getName())));
+    return sqlCall instanceof SqlBasicCall && isSingleUnionFieldReference((SqlBasicCall) sqlCall);
   }
 
   @Override
   protected SqlCall transform(SqlCall sqlCall) {
+    SqlBasicCall functionFieldReference = (SqlBasicCall) sqlCall;
 
-    if (sqlCall.getOperator().kind == SqlKind.SELECT) {
-      List<SqlNode> newSelectNodes = new ArrayList<>();
-      SqlSelect selectCall = ((SqlSelect) sqlCall);
-      for (SqlNode selectItem : selectCall.getSelectList()) {
-        if (!(selectItem instanceof SqlCall)) {
-          continue;
-        }
-        SqlBasicCall functionCall = null;
+    assert functionFieldReference.operand(0) instanceof SqlBasicCall;
+    SqlBasicCall functionCall = functionFieldReference.operand(0);
 
-
-        if (FunctionFieldReferenceOperator.DOT.getName().equalsIgnoreCase(((SqlCall) selectItem).getOperator().getName())) {
-          functionCall = ((SqlCall) selectItem).operand(0);
-        }
-
-        if (functionCall != null && isExtractUnionOnSingleUnionType(functionCall)) {
-          newSelectNodes.add(functionCall.operand(0));
-        } else {
-          newSelectNodes.add(selectItem);
-        }
-      }
-
-      selectCall.setSelectList(new SqlNodeList(newSelectNodes, SqlParserPos.ZERO));
-    } else if (sqlCall.getOperator().kind == SqlKind.AS) {
-
-      List<SqlNode> newAliasOperands = new ArrayList<>();
-
-      SqlNode aliasFirstOperand = sqlCall.operand(0);
-
-      if (aliasFirstOperand instanceof SqlBasicCall && FunctionFieldReferenceOperator.DOT.getName().equalsIgnoreCase(((SqlBasicCall) aliasFirstOperand).getOperator().getName())) {
-        if (isExtractUnionOnSingleUnionType(((SqlBasicCall) aliasFirstOperand).operand(0))) {
-          newAliasOperands.add(((SqlBasicCall) (((SqlBasicCall) aliasFirstOperand).operand(0))).operand(0));
-          newAliasOperands.add(sqlCall.operand(1));
-
-          return SqlStdOperatorTable.AS.createCall(ZERO, newAliasOperands);
-        }
-      }
-
-      return sqlCall;
-
-    } else if (sqlCall instanceof SqlBasicCall) {
-      SqlBasicCall call = (SqlBasicCall) sqlCall;
-//      if (call.getOperator().kind == SqlKind.AS) {
-//        // Aliases are handled as part of the select list for SqlSelect calls
-//        return sqlCall;
-//      }
-
-      List<SqlNode> operands = Arrays.asList(call.getOperands());
-      for (int i = 0; i < operands.size(); i++) {
-        SqlNode operand = operands.get(i);
-        if (operand instanceof SqlBasicCall && FunctionFieldReferenceOperator.DOT.getName().equalsIgnoreCase(((SqlBasicCall) operand).getOperator().getName())) {
-          if (isExtractUnionOnSingleUnionType(((SqlCall) operand).operand(0))) {
-
-            sqlCall.setOperand(i, ((SqlCall) ((SqlCall) operand).operand(0)).operand(0));
-          }
-        }
-      }
-
+    if (functionFieldReferenceOperatorName.equalsIgnoreCase(functionCall.getOperator().getName())) {
+      // (extract_union(struct).single_union).tag_0 -> extract_union(struct).single_union
+      return functionCall;
     }
 
-    return sqlCall;
+    // extract_union(single_union).tag_0 -> single_union
+    // Since the transformer contract requires we return a SqlCall object, we need to wrap the SqlIdentifier in a NOP operator.
+    // Instantiating a SqlBasicCall with the NOP operator instead of directly creating a NOP call avoids
+    // parentheses wrapped around the SqlIdentifier.
+    return new SqlBasicCall(new NOP(), new SqlNode[] { functionCall.operand(0) }, SqlParserPos.ZERO);
+  }
+
+  private boolean isSingleUnionFieldReference(SqlBasicCall sqlCall) {
+    if (functionFieldReferenceOperatorName.equalsIgnoreCase(sqlCall.getOperator().getName())) {
+      if (sqlCall.operand(0) instanceof SqlBasicCall) {
+        SqlBasicCall functionCall = sqlCall.operand(0);
+        return isExtractUnionOnSingleUnionType(functionCall);
+      }
+    }
+    return false;
   }
 
   private boolean isExtractUnionOnSingleUnionType(SqlBasicCall sqlBasicCall) {
-    RelDataType sqlBasicCallType = deriveRelDatatype(sqlBasicCall);
-    return sqlBasicCallType.isStruct()
-          && sqlBasicCallType.getFieldList().size() == 1
-          && sqlBasicCallType.getFieldList().get(0).getKey().equalsIgnoreCase(TAG_0_OPERAND);
-  }
+    // Also captures the extract_union(struct).single_union case where we call extract_union on a struct containing a single uniontype
 
-  private SqlDataTypeSpec getSqlDataTypeSpecForCasting(RelDataType relDataType) {
-    final SqlTypeNameSpec typeNameSpec = new SqlBasicTypeNameSpec(relDataType.getSqlTypeName(),
-        relDataType.getPrecision(), relDataType.getScale(), null, ZERO);
-    return new SqlDataTypeSpec(typeNameSpec, ZERO);
+    RelDataType sqlBasicCallType = deriveRelDatatype(sqlBasicCall);
+    return sqlBasicCallType.isStruct() && sqlBasicCallType.getFieldList().size() == 1
+        && sqlBasicCallType.getFieldList().get(0).getKey().equalsIgnoreCase(TAG_0_OPERAND);
   }
 }
