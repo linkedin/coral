@@ -106,7 +106,7 @@ public class CoralSpark {
     // Use a second pass visit to add explicit alias names,
     // only do this when it's not a select star case,
     // since for select star we don't need to add any explicit aliases
-    if (!isSelectStar(sparkSqlNode)) {
+    if (sparkSqlNode.getKind() == SqlKind.SELECT && !isSelectStar(sparkSqlNode)) {
       sparkSqlNode = sparkSqlNode.accept(new AddExplicitAlias(aliases));
     }
     String sparkSQL = constructSparkSQL(sparkSqlNode);
