@@ -658,7 +658,12 @@ import org.slf4j.LoggerFactory;
   }
   protected boolean useSQL11ReservedKeywordsForIdentifier() {
     try {
-      return !HiveConf.getBoolVar(hiveConf, HiveConf.ConfVars.HIVE_SUPPORT_SQL11_RESERVED_KEYWORDS);
+      /*
+       * Use the config string hive.support.sql11.reserved.keywords directly as
+       * HiveConf.ConfVars.HIVE_SUPPORT_SQL11_RESERVED_KEYWORDS might not be available in the hive-common present in the
+       * classpath during translation triggering the exception path defaulting to false
+       */
+      return !hiveConf.get("hive.support.sql11.reserved.keywords").equalsIgnoreCase("true");
     } catch (Throwable throwable) {
       LOG.warn(throwable.getMessage());
       return false;
