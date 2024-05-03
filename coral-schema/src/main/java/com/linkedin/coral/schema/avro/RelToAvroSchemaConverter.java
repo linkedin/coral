@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2019-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -495,14 +495,18 @@ public class RelToAvroSchemaConverter {
     public RexNode visitFieldAccess(RexFieldAccess rexFieldAccess) {
       RexNode referenceExpr = rexFieldAccess.getReferenceExpr();
 
-      if (referenceExpr instanceof RexCall
-          && ((RexCall) referenceExpr).getOperator() instanceof SqlUserDefinedFunction) {
+      if (referenceExpr instanceof RexCall && ((RexCall) referenceExpr).getOperator() instanceof SqlUserDefinedFunction
+          || SchemaUtilities.isSingleUnionAccessFromStruct(rexFieldAccess)) {
+        // Correctly handle field accesses on single uniontypes (accessed from extract_union on a struct) such as
+        // (extract_union(struct).single_union).tag_0 by typing the field as the underlying datatype of the single uniontype
+
         String oldFieldName = rexFieldAccess.getField().getName();
         String suggestNewFieldName = suggestedFieldNames.poll();
         String newFieldName = SchemaUtilities.getFieldName(oldFieldName, suggestNewFieldName);
 
         RelDataType fieldType = rexFieldAccess.getType();
-        boolean isNullable = SchemaUtilities.isFieldNullable((RexCall) referenceExpr, inputSchema);
+        boolean isNullable = SchemaUtilities.isSingleUnionAccessFromStruct(rexFieldAccess) ? fieldType.isNullable()
+            : SchemaUtilities.isFieldNullable((RexCall) referenceExpr, inputSchema);
         // TODO: add field documentation
         SchemaUtilities.appendField(newFieldName, fieldType, null, fieldAssembler, isNullable);
       } else {

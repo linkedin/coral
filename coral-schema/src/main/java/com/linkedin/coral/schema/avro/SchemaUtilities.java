@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2019-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -25,6 +25,7 @@ import org.apache.calcite.rel.core.AggregateCall;
 import org.apache.calcite.rel.logical.LogicalAggregate;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexCall;
+import org.apache.calcite.rex.RexFieldAccess;
 import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
@@ -1046,5 +1047,17 @@ class SchemaUtilities {
     } else {
       return schema;
     }
+  }
+
+  /**
+   * Detects if the given RexFieldAccess is a special case of accessing the "tag_0" field of an uniontype field
+   * holding a single data type in the form of: (extract_union(struct_col).single_union).tag_0
+   * where "struct_col" is a struct containing a single union field "single_union"
+   */
+  static boolean isSingleUnionAccessFromStruct(RexFieldAccess rexFieldAccess) {
+    RexNode referenceExpr = rexFieldAccess.getReferenceExpr();
+    return referenceExpr instanceof RexFieldAccess && rexFieldAccess.getField().getKey().equalsIgnoreCase("tag_0")
+        && ((RexFieldAccess) referenceExpr).getField().getValue().isStruct()
+        && ((RexFieldAccess) referenceExpr).getField().getValue().getFieldCount() == 1;
   }
 }

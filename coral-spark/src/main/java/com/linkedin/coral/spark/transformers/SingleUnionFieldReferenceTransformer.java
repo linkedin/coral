@@ -30,7 +30,7 @@ import com.linkedin.coral.spark.functions.NOP;
  * Examples of such function field references SqlCalls include:
  * 1) extract_union(product.value).tag_0
  *    In this case, we simply want to return product.value as we know that product.value is a no longer a uniontype (been unwrapped by Spark).
- * 2) (extract_union(product.value).urns).tag_0.
+ * 2) (extract_union(product.value).urns).tag_0
  *    In this case, what we're actually dealing with is calling extract_union on a regular struct (not a struct in Spark representing a uniontype) that
  *    has a field urns, where urns is now the underlying data type before it was unwrapped from a single uniontype. So once again,
  *    we don't want to (and can't) access "tag_0" field of urns. Rather simply return it as is: extract_union(product.value).urns

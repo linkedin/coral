@@ -1,0 +1,18 @@
+{
+  "type" : "record",
+  "name" : "SingleUniontypes",
+  "namespace" : "default.single_uniontypes",
+  "fields" : [ {
+    "name" : "single_in_struct",
+    "type" : [ "null", {
+      "type" : "array",
+      "items" : [ "null", "string" ]
+    } ]
+  }, {
+    "name" : "single",
+    "type" : [ "null", {
+      "type" : "array",
+      "items" : [ "null", "string" ]
+    } ]
+  } ]
+}
