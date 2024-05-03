@@ -193,7 +193,7 @@ public class TestUtils {
       }
 
       driver.run(
-          "CREATE TABLE IF NOT EXISTS union_table(foo uniontype<int, double, array<string>, struct<a:int,b:string>>)");
+          "CREATE TABLE IF NOT EXISTS union_table(foo uniontype<int, double, array<string>, struct<a:int,b:string>>, bar uniontype<array<string>>)");
 
       // Nested union case.
       // We don't put a union directly under a union since sources like https://avro.apache.org/docs/current/spec.html#Unions

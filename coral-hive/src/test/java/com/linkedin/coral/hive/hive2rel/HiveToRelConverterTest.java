@@ -15,6 +15,8 @@ import com.google.common.collect.ImmutableMap;
 
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.type.RelDataTypeFieldImpl;
+import org.apache.calcite.rel.type.RelRecordType;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.type.ReturnTypes;
 import org.apache.calcite.sql.type.SqlTypeFamily;
@@ -548,6 +550,16 @@ public class HiveToRelConverterTest {
     final String expected2 = "LogicalProject(EXPR$0=[extract_union($0, 1)])\n"
         + "  LogicalTableScan(table=[[hive, default, union_table]])\n";
     assertEquals(generated2, expected2);
+  }
+
+  // Single type uniontypes should not be unwrapped into the underlying type
+  @Test
+  public void testSingleTypeUnion() {
+    final String sql = "SELECT bar from union_table";
+    RelNode rel = toRel(sql);
+    RelDataTypeFieldImpl unionRowType = (RelDataTypeFieldImpl) rel.getRowType().getFieldList().get(0);
+    assertTrue(unionRowType.getValue().getFieldList().get(0).getKey().equals("tag")
+        && unionRowType.getValue().getFieldList().get(1).getKey().equals("field0"));
   }
 
   @Test
