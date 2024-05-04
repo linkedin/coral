@@ -193,7 +193,9 @@ public class TestUtils {
       }
 
       driver.run(
-          "CREATE TABLE IF NOT EXISTS union_table(foo uniontype<int, double, array<string>, struct<a:int,b:string>>, bar uniontype<array<string>>)");
+          "CREATE TABLE IF NOT EXISTS union_table(foo uniontype<int, double, array<string>, struct<a:int,b:string>>)");
+
+      driver.run("CREATE TABLE IF NOT EXISTS single_union(foo uniontype<array<string>>)");
 
       // Nested union case.
       // We don't put a union directly under a union since sources like https://avro.apache.org/docs/current/spec.html#Unions
@@ -212,8 +214,8 @@ public class TestUtils {
           new TestHive.DB("test", ImmutableList.of("tableOne", "tableTwo", "tableOneView")),
           new TestHive.DB("default",
               ImmutableList.of("bar", "complex", "foo", "foo_view", "null_check_view", "null_check_wrapper",
-                  "schema_evolve", "view_schema_evolve", "view_schema_evolve_wrapper", "union_table", "nested_union",
-                  "duplicate_column_name_a", "duplicate_column_name_b", "view_namesake_column_names")),
+                  "schema_evolve", "view_schema_evolve", "view_schema_evolve_wrapper", "union_table", "single_union",
+                  "nested_union", "duplicate_column_name_a", "duplicate_column_name_b", "view_namesake_column_names")),
           new TestHive.DB("fuzzy_union",
               ImmutableList.of("tableA", "tableB", "tableC", "union_view", "union_view_with_more_than_two_tables",
                   "union_view_with_alias", "union_view_single_branch_evolved",

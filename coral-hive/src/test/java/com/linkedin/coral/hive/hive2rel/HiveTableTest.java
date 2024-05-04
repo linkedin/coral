@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -93,6 +93,20 @@ public class HiveTableTest {
     String expectedTypeString =
         "RecordType(" + "RecordType(" + "INTEGER tag, INTEGER field0, DOUBLE field1, VARCHAR(65536) ARRAY field2, "
             + "RecordType(INTEGER a, VARCHAR(65536) b) field3" + ") " + "foo)";
+    assertEquals(rowType.toString(), expectedTypeString);
+  }
+
+  @Test
+  public void testTableWithSingleUnion() {
+    final RelDataTypeFactory typeFactory = new JavaTypeFactoryImpl();
+
+    Table unionTable = getTable("default", "single_union");
+    // single_union(foo uniontype<array<string>>)
+    // expected outcome schema: struct<tag:int, field0:array<string>>
+    RelDataType rowType = unionTable.getRowType(typeFactory);
+    assertNotNull(rowType);
+
+    String expectedTypeString = "RecordType(RecordType(INTEGER tag, VARCHAR(65536) ARRAY field0) foo)";
     assertEquals(rowType.toString(), expectedTypeString);
   }
 

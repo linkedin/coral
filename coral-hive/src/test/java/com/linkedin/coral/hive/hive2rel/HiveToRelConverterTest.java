@@ -554,7 +554,7 @@ public class HiveToRelConverterTest {
   // Single type uniontypes should not be unwrapped into the underlying type
   @Test
   public void testSingleTypeUnion() {
-    final String sql = "SELECT bar from union_table";
+    final String sql = "SELECT foo from union_table";
     RelNode rel = toRel(sql);
     RelDataTypeFieldImpl unionRowType = (RelDataTypeFieldImpl) rel.getRowType().getFieldList().get(0);
     assertTrue(unionRowType.getValue().getFieldList().get(0).getKey().equals("tag")
