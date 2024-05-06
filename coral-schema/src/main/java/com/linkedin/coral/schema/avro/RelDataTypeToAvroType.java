@@ -149,6 +149,10 @@ class RelDataTypeToAvroType {
       String recordNamespace, String doc) {
     final List<Schema.Field> fields = new ArrayList<>();
     final Schema avroSchema = Schema.createRecord(recordName, doc, recordNamespace, false);
+    //
+    if (relRecord.getFieldCount() == 1 && relRecord.getFieldList().get(0).getKey().equalsIgnoreCase("tag_0")) {
+      return relDataTypeToAvroTypeNonNullable(relRecord.getFieldList().get(0).getType(), recordName);
+    }
 
     for (RelDataTypeField relField : relRecord.getFieldList()) {
       final String comment = fieldComments != null && fieldComments.size() > relField.getIndex()

@@ -36,6 +36,7 @@ import org.apache.calcite.rel.logical.LogicalUnion;
 import org.apache.calcite.rel.logical.LogicalValues;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
+import org.apache.calcite.rel.type.RelRecordType;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexCorrelVariable;
 import org.apache.calcite.rex.RexDynamicParam;
@@ -218,6 +219,10 @@ public class RelToAvroSchemaConverter {
 
       Queue<String> suggestedFieldNames = new LinkedList<>();
       for (RelDataTypeField field : logicalProject.getRowType().getFieldList()) {
+        if (field instanceof RelRecordType) {
+
+        }
+
         suggestedFieldNames.offer(field.getName());
       }
 
@@ -495,18 +500,14 @@ public class RelToAvroSchemaConverter {
     public RexNode visitFieldAccess(RexFieldAccess rexFieldAccess) {
       RexNode referenceExpr = rexFieldAccess.getReferenceExpr();
 
-      if (referenceExpr instanceof RexCall && ((RexCall) referenceExpr).getOperator() instanceof SqlUserDefinedFunction
-          || SchemaUtilities.isSingleUnionAccessFromStruct(rexFieldAccess)) {
-        // Correctly handle field accesses on single uniontypes (accessed from extract_union on a struct) such as
-        // (extract_union(struct).single_union).tag_0 by typing the field as the underlying datatype of the single uniontype
-
+      if (referenceExpr instanceof RexCall
+          && ((RexCall) referenceExpr).getOperator() instanceof SqlUserDefinedFunction) {
         String oldFieldName = rexFieldAccess.getField().getName();
         String suggestNewFieldName = suggestedFieldNames.poll();
         String newFieldName = SchemaUtilities.getFieldName(oldFieldName, suggestNewFieldName);
 
         RelDataType fieldType = rexFieldAccess.getType();
-        boolean isNullable = SchemaUtilities.isSingleUnionAccessFromStruct(rexFieldAccess) ? fieldType.isNullable()
-            : SchemaUtilities.isFieldNullable((RexCall) referenceExpr, inputSchema);
+        boolean isNullable = SchemaUtilities.isFieldNullable((RexCall) referenceExpr, inputSchema);
         // TODO: add field documentation
         SchemaUtilities.appendField(newFieldName, fieldType, null, fieldAssembler, isNullable);
       } else {
