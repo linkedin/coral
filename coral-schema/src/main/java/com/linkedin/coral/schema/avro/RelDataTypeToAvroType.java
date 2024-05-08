@@ -150,12 +150,16 @@ class RelDataTypeToAvroType {
     final List<Schema.Field> fields = new ArrayList<>();
     final Schema avroSchema = Schema.createRecord(recordName, doc, recordNamespace, false);
 
+    // Surface underlying data type for union types (represented as structs) holding a single type for Spark/Avro compatibility
+    // https://spark.apache.org/docs/latest/sql-data-sources-avro.html#supported-types-for-avro---spark-sql-conversion
+    // For example, struct<tag:int,field0:array<string>> simply becomes array<string>
     if (relRecord.getFieldCount() == 2 && relRecord.getFieldList().get(0).getKey().equalsIgnoreCase("tag")
-        && relRecord.getFieldList().get(1).getKey().equalsIgnoreCase("field0")
-    ) {
+        && relRecord.getFieldList().get(1).getKey().equalsIgnoreCase("field0")) {
       return relDataTypeToAvroTypeNonNullable(relRecord.getFieldList().get(1).getType(), recordName);
     }
 
+    // Similarly, if we see a struct with a single field named "tag_0", we surface the underlying type
+    // as this is an extract_union call on a single uniontype
     if (relRecord.getFieldCount() == 1 && relRecord.getFieldList().get(0).getKey().equalsIgnoreCase("tag_0")) {
       return relDataTypeToAvroTypeNonNullable(relRecord.getFieldList().get(0).getType(), recordName);
     }
