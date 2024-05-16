@@ -219,10 +219,6 @@ public class RelToAvroSchemaConverter {
 
       Queue<String> suggestedFieldNames = new LinkedList<>();
       for (RelDataTypeField field : logicalProject.getRowType().getFieldList()) {
-        if (field instanceof RelRecordType) {
-
-        }
-
         suggestedFieldNames.offer(field.getName());
       }
 
