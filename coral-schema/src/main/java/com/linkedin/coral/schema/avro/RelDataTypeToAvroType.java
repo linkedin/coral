@@ -160,9 +160,9 @@ class RelDataTypeToAvroType {
 
     // Similarly, if we see a struct with a single field named "tag_0", we surface the underlying type
     // as this is an extract_union call on a single uniontype
-    if (relRecord.getFieldCount() == 1 && relRecord.getFieldList().get(0).getKey().equalsIgnoreCase("tag_0")) {
-      return relDataTypeToAvroTypeNonNullable(relRecord.getFieldList().get(0).getType(), recordName);
-    }
+//    if (relRecord.getFieldCount() == 1 && relRecord.getFieldList().get(0).getKey().equalsIgnoreCase("tag_0")) {
+//      return relDataTypeToAvroTypeNonNullable(relRecord.getFieldList().get(0).getType(), recordName);
+//    }
 
     for (RelDataTypeField relField : relRecord.getFieldList()) {
       final String comment = fieldComments != null && fieldComments.size() > relField.getIndex()
