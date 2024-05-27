@@ -236,7 +236,9 @@ public class HiveToTrinoConverterTest {
         { "test", "view_union_no_casting", "SELECT \"table_with_mixed_columns\".\"a_tinyint\" AS \"a_tinyint\", \"table_with_mixed_columns\".\"a_smallint\" AS \"a_smallint\", \"table_with_mixed_columns\".\"a_integer\" AS \"a_integer\", \"table_with_mixed_columns\".\"a_bigint\" AS \"a_bigint\", \"table_with_mixed_columns\".\"a_float\" AS \"a_float\"\n"
             + "FROM \"test\".\"table_with_mixed_columns\" AS \"table_with_mixed_columns\"\n" + "UNION ALL\n"
             + "SELECT \"table_with_mixed_columns0\".\"a_tinyint\" AS \"a_tinyint\", \"table_with_mixed_columns0\".\"a_smallint\" AS \"a_smallint\", \"table_with_mixed_columns0\".\"a_integer\" AS \"a_integer\", \"table_with_mixed_columns0\".\"a_bigint\" AS \"a_bigint\", \"table_with_mixed_columns0\".\"a_float\" AS \"a_float\"\n"
-            + "FROM \"test\".\"table_with_mixed_columns\" AS \"table_with_mixed_columns0\"" } };
+            + "FROM \"test\".\"table_with_mixed_columns\" AS \"table_with_mixed_columns0\"" },
+        { "test", "view_max_values", "SELECT value FROM \"test\".\"table_id_value\"  WHERE id IN (SELECT MAX(id) FROM \"test\".\"table_id_value\")" } };
+
   }
 
   @Test
