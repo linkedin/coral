@@ -622,6 +622,14 @@ public class HiveToRelConverterTest {
     assertEquals(generated, expected);
   }
 
+  @Test
+  public void testLoggedInUser() {
+    final String sql = "SELECT logged_in_user() as liu";
+    String generated = relToString(sql);
+    final String expected = "LogicalProject(liu=[logged_in_user()])\n  LogicalValues(tuples=[[{ 0 }]])\n";
+    assertEquals(generated, expected);
+  }
+
   private String relToString(String sql) {
     return RelOptUtil.toString(converter.convertSql(sql));
   }
