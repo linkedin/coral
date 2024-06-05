@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2019-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -53,8 +53,13 @@ import static org.apache.calcite.sql.type.ReturnTypes.*;
  * a new version of library.
  * TODO: Provide function registry catalog
  *
- * Note that Coral maintains a copy of StaticHiveFunctionRegistry for read only at run time.
+ * Notes:
+ * 1. Coral maintains a copy of StaticHiveFunctionRegistry for read only at run time.
  * For individual query, we create a copy of function registry in a RelConTextProvider object.
+ * 2. Coral supports registering an unshaded UDF once and allows the use of different shaded UDFs.
+ * For example, user can register "com.linkedin.abc" once and then use variations like "abc_0_1.com.linkedin.abc"
+ * or "x_y_z.com.linkedin.abc" in Hive view definitions. A UDF is considered shaded if the prefix before the
+ * first dot contains an underscore.
  */
 public class StaticHiveFunctionRegistry implements FunctionRegistry {
 

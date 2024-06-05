@@ -1,5 +1,5 @@
 /**
- * Copyright 2018-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2018-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -161,6 +161,38 @@ public class CoralSparkTest {
     assertEquals(testUdfType, targetUdfType);
     String sparkSqlStmt = coralSpark.getSparkSql();
     String targetSqlStmt = "SELECT default_foo_dali_udf2_GreaterThanHundred(foo.a)\n" + "FROM default.foo foo";
+    assertEquals(sparkSqlStmt, targetSqlStmt);
+  }
+
+  @Test
+  public void testUDFWithShadedClassName() {
+    // After registering unshaded UDF "com.linkedin.coral.hive.hive2rel.CoralTestUDF",
+    // Coral should be able to translate the view with the corresponding shaded UDF class
+    // "shade_prefix.com.linkedin.coral.hive.hive2rel.CoralTestUDF"
+    RelNode relNode = TestUtils.toRelNode("default", "foo_udf_with_shade_prefix");
+    CoralSpark coralSpark = createCoralSpark(relNode);
+    List<SparkUDFInfo> udfJars = coralSpark.getSparkUDFInfoList();
+
+    // Shaded UDF class name should be returned for UDF registration, otherwise
+    // Spark can't find the unshaded UDF name in the shaded Jar.
+    String udfClassName = udfJars.get(0).getClassName();
+    String targetClassName = "shade_prefix.com.linkedin.coral.hive.hive2rel.CoralTestUDF";
+    assertEquals(udfClassName, targetClassName);
+
+    String udfFunctionName = udfJars.get(0).getFunctionName();
+    String targetFunctionName = "LessThanHundred_0_1";
+    assertEquals(udfFunctionName, targetFunctionName);
+
+    List<String> listOfUriStrings = convertToListOfUriStrings(udfJars.get(0).getArtifactoryUrls());
+    String targetArtifactoryUrl = "ivy://com.linkedin:udf-shaded:1.0";
+    assertTrue(listOfUriStrings.contains(targetArtifactoryUrl));
+
+    SparkUDFInfo.UDFTYPE testUdfType = udfJars.get(0).getUdfType();
+    SparkUDFInfo.UDFTYPE targetUdfType = SparkUDFInfo.UDFTYPE.HIVE_CUSTOM_UDF;
+    assertEquals(testUdfType, targetUdfType);
+
+    String sparkSqlStmt = coralSpark.getSparkSql();
+    String targetSqlStmt = "SELECT LessThanHundred_0_1(foo.a)\n" + "FROM default.foo foo";
     assertEquals(sparkSqlStmt, targetSqlStmt);
   }
 

@@ -413,6 +413,13 @@ public class TestUtils {
             + "UNION ALL\n"
             + "SELECT a_tinyint, a_smallint, a_integer, a_bigint, a_float FROM test.table_with_mixed_columns");
 
+    run(driver, "CREATE FUNCTION LessThanHundred_0_1 AS 'shade_prefix.com.linkedin.coral.hive.hive2rel.CoralTestUdf'");
+
+    run(driver, String.join("\n", "CREATE VIEW IF NOT EXISTS test.udf_with_shade_prefix",
+        "tblproperties('functions' = 'LessThanHundred_0_1:shade_prefix.com.linkedin.coral.hive.hive2rel.CoralTestUdf',",
+        "              'dependencies' = 'ivy://com.linkedin:udf-shaded:1.0')", "AS", "SELECT LessThanHundred_0_1(a)",
+        "FROM test.tableA"));
+
     // Tables used in RelToTrinoConverterTest
     run(driver,
         "CREATE TABLE IF NOT EXISTS test.tableOne(icol int, dcol double, scol string, tcol timestamp, acol array<string>)");

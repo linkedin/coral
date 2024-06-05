@@ -1,5 +1,5 @@
 /**
- * Copyright 2018-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2018-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -23,6 +23,7 @@ import org.apache.calcite.sql.SqlPrefixOperator;
 import org.apache.calcite.sql.SqlSpecialOperator;
 import org.apache.calcite.sql.SqlUnresolvedFunction;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
+import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.SqlOperandTypeChecker;
 import org.apache.calcite.sql.type.SqlTypeFamily;
 import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
@@ -143,9 +144,22 @@ public class HiveFunctionResolver {
    * @return list of matching Functions or empty list if there is no match
    */
   public Collection<Function> resolve(String functionName) {
-    Collection<Function> staticLookup = registry.lookup(functionName);
+    Collection<Function> staticLookup = registry.lookup(removeShadingPrefix(functionName));
     if (!staticLookup.isEmpty()) {
-      return staticLookup;
+      if (isClassShaded(functionName)) {
+        // If the UDF class name is shaded, we need to return the function
+        // in registry with shaded class name to let Calcite know that the
+        // shaded UDF is legitimate.
+        return staticLookup.stream().map(f -> {
+          SqlOperator sqlOperator = f.getSqlOperator();
+          SqlUserDefinedFunction sqlUserDefinedFunction =
+              new SqlUserDefinedFunction(new SqlIdentifier(functionName, SqlParserPos.ZERO),
+                  sqlOperator.getReturnTypeInference(), null, sqlOperator.getOperandTypeChecker(), null, null);
+          return new Function(functionName, sqlUserDefinedFunction);
+        }).collect(Collectors.toList());
+      } else {
+        return staticLookup;
+      }
     } else {
       Collection<Function> dynamicLookup = ImmutableList.of();
       Function Function = dynamicFunctionRegistry.get(functionName);
@@ -182,8 +196,10 @@ public class HiveFunctionResolver {
     if (funcClassName == null) {
       return ImmutableList.of();
     }
-    final Collection<Function> Functions = registry.lookup(funcClassName);
-    if (Functions.size() == 0) {
+    // If the UDF class name is shaded, remove the shading prefix, which allows user to
+    // register the unshaded UDF once and use different shading prefix in the view
+    final Collection<Function> functions = registry.lookup(removeShadingPrefix(funcClassName));
+    if (functions.size() == 0) {
       Collection<Function> dynamicResolvedFunctions =
           resolveDaliFunctionDynamically(functionName, funcClassName, hiveTable, numOfOperands);
 
@@ -194,12 +210,25 @@ public class HiveFunctionResolver {
       }
 
       return dynamicResolvedFunctions;
+    } else {
+      if (isClassShaded(funcClassName)) {
+        // If the UDF class name is shaded, we need to return the function in registry
+        // with shaded class name. Note that the original function in registry is unshaded.
+        return functions.stream().map(f -> {
+          SqlUserDefinedFunction sqlUserDefinedFunction = (SqlUserDefinedFunction) f.getSqlOperator();
+          VersionedSqlUserDefinedFunction versionedSqlUserDefinedFunction =
+              new VersionedSqlUserDefinedFunction(funcClassName, sqlUserDefinedFunction.getReturnTypeInference(),
+                  sqlUserDefinedFunction.getOperandTypeChecker(), sqlUserDefinedFunction.getParamTypes(),
+                  sqlUserDefinedFunction.getFunction(), hiveTable.getDaliUdfDependencies(), functionName);
+          return new Function(functionName, versionedSqlUserDefinedFunction);
+        }).collect(Collectors.toList());
+      } else {
+        return functions.stream()
+            .map(f -> new Function(f.getFunctionName(), new VersionedSqlUserDefinedFunction(
+                (SqlUserDefinedFunction) f.getSqlOperator(), hiveTable.getDaliUdfDependencies(), functionName)))
+            .collect(Collectors.toList());
+      }
     }
-
-    return Functions.stream()
-        .map(f -> new Function(f.getFunctionName(), new VersionedSqlUserDefinedFunction(
-            (SqlUserDefinedFunction) f.getSqlOperator(), hiveTable.getDaliUdfDependencies(), functionName)))
-        .collect(Collectors.toList());
   }
 
   public void addDynamicFunctionToTheRegistry(String funcClassName, Function function) {
@@ -237,5 +266,34 @@ public class HiveFunctionResolver {
     SqlOperandTypeChecker sqlOperandTypeChecker = family(families);
 
     return sqlOperandTypeChecker;
+  }
+
+  /**
+   * Checks if the given class name has a shading prefix.
+   * A class name is considered shaded if the prefix before the first dot
+   * contains underscore, e.g., "abc_0_1.com.linkedin.x.y.z".
+   */
+  private boolean isClassShaded(String className) {
+    if (className != null && !className.isEmpty()) {
+      int firstDotIndex = className.indexOf('.');
+      if (firstDotIndex != -1) {
+        String prefix = className.substring(0, firstDotIndex);
+        return prefix.matches(".+_.+");
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Removes the shading prefix from a given UDF class name if it is present.
+   * A class name is considered to have a shading prefix if the prefix contains
+   * underscore, e.g., "abc_0_1.com.linkedin.x.y.z".
+   */
+  private String removeShadingPrefix(String className) {
+    if (isClassShaded(className)) {
+      return className.substring(className.indexOf('.') + 1);
+    } else {
+      return className;
+    }
   }
 }
