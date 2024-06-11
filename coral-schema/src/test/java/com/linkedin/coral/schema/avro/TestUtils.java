@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2024 LinkedIn Corporation. All rights reserved.
+ * Copyright 2019-2023 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -144,9 +144,6 @@ public class TestUtils {
 
     executeQuery("DROP TABLE IF EXISTS basedecimal");
     executeQuery("CREATE TABLE IF NOT EXISTS basedecimal(decimal_col decimal(2,1))");
-
-    executeQuery(
-        "CREATE TABLE IF NOT EXISTS single_uniontypes(single uniontype<string>, struct_col struct<single:uniontype<string>>)");
   }
 
   private static void initializeUdfs() {
