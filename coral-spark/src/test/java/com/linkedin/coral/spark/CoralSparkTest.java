@@ -1,5 +1,5 @@
 /**
- * Copyright 2018-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2018-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -419,6 +419,30 @@ public class CoralSparkTest {
     RelNode relNode2 = TestUtils.toRelNode("SELECT extract_union(a) from nested_union");
     String targetSql2 = "SELECT coalesce_struct(nested_union.a)\n" + "FROM default.nested_union nested_union";
     assertEquals(createCoralSpark(relNode2).getSparkSql(), targetSql2);
+  }
+
+  @Test
+  public void testUnionExtractUDFOnSingleTypeUnions() {
+    RelNode relNode = TestUtils.toRelNode("SELECT extract_union(bar) from union_table");
+    String targetSql = "SELECT coalesce_struct(union_table.bar, 'uniontype<array<string>>')\n"
+        + "FROM default.union_table union_table";
+    assertEquals(createCoralSpark(relNode).getSparkSql(), targetSql);
+
+    RelNode relNode1 = TestUtils.toRelNode("SELECT extract_union(baz) from union_table");
+    String targetSql1 = "SELECT coalesce_struct(union_table.baz, 'struct<single:uniontype<array<string>>>')\n"
+        + "FROM default.union_table union_table";
+    assertEquals(createCoralSpark(relNode1).getSparkSql(), targetSql1);
+
+    RelNode relNode2 = TestUtils.toRelNode("SELECT extract_union(bar).tag_0 from union_table");
+    String targetSql2 = "SELECT coalesce_struct(union_table.bar, 'uniontype<array<string>>').tag_0\n"
+        + "FROM default.union_table union_table";
+    assertEquals(createCoralSpark(relNode2).getSparkSql(), targetSql2);
+
+    RelNode relNode3 = TestUtils.toRelNode("SELECT extract_union(baz).single.tag_0 from union_table");
+    String targetSql4 =
+        "SELECT (coalesce_struct(union_table.baz, 'struct<single:uniontype<array<string>>>').single).tag_0\n"
+            + "FROM default.union_table union_table";
+    assertEquals(createCoralSpark(relNode3).getSparkSql(), targetSql4);
   }
 
   @Test

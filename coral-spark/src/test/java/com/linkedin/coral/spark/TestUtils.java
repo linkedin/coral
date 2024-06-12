@@ -1,5 +1,5 @@
 /**
- * Copyright 2018-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2018-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -223,7 +223,7 @@ public class TestUtils {
     run(driver, String.join("\n", "", "ALTER TABLE schema_promotion CHANGE COLUMN b b array<double>"));
 
     run(driver,
-        "CREATE TABLE IF NOT EXISTS union_table(foo uniontype<int, double, array<string>, struct<a:int,b:string>>)");
+        "CREATE TABLE IF NOT EXISTS union_table(foo uniontype<int, double, array<string>, struct<a:int,b:string>>, bar uniontype<array<string>>, baz struct<single:uniontype<array<string>>>)");
 
     run(driver, "CREATE TABLE IF NOT EXISTS nested_union(a uniontype<int, struct<a:uniontype<int, double>, b:int>>)");
 
