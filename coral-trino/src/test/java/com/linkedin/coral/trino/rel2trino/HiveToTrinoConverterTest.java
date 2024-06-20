@@ -49,7 +49,7 @@ public class HiveToTrinoConverterTest {
 
   @DataProvider(name = "viewTestCases")
   public Object[][] viewTestCasesProvider() {
-    return new Object[][] {
+    return new Object[][] { { "test", "view_table_join_with_view_table_with_nested_columns", "..." },
 
         { "test", "t_dot_star_view", "SELECT \"tablea\".\"a\" AS \"a\", \"tablea\".\"b\" AS \"b\", \"tablea0\".\"b\" AS \"tbb\"\n"
             + "FROM \"test\".\"tablea\" AS \"tablea\"\n"
