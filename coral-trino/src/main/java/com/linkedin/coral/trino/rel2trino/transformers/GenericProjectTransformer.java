@@ -1,5 +1,5 @@
 /**
- * Copyright 2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2023-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -361,7 +361,8 @@ public class GenericProjectTransformer extends SqlCallTransformer {
    * @param toDataType desired map RelDataType
    */
   private boolean areEqual(RelDataType fromDataType, RelDataType toDataType) {
-    String fromDataTypeFullyQualifiedStruct = fromDataType.getFullTypeString().replace("RecordType:peek_no_expand", "RecordType");
+    String fromDataTypeFullyQualifiedStruct =
+        fromDataType.getFullTypeString().replace("RecordType:peek_no_expand", "RecordType");
     return fromDataTypeFullyQualifiedStruct.equals(toDataType.getFullTypeString());
   }
 
