@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2019-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -672,6 +672,13 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
 
     createAddUserDefinedFunction("com.linkedin.policy.decoration.udfs.RedactSecondarySchemaFieldIf", ARG1, family(
         SqlTypeFamily.BOOLEAN, SqlTypeFamily.ANY, SqlTypeFamily.ARRAY, SqlTypeFamily.CHARACTER, SqlTypeFamily.ANY));
+
+    createAddUserDefinedFunction("com.linkedin.groot.runtime.udf.spark.HasMemberConsentUDF", ReturnTypes.BOOLEAN,
+        family(SqlTypeFamily.STRING, SqlTypeFamily.ANY, SqlTypeFamily.TIMESTAMP));
+    createAddUserDefinedFunction("com.linkedin.groot.runtime.udf.spark.RedactFieldIfUDF", ARG1,
+        family(SqlTypeFamily.BOOLEAN, SqlTypeFamily.ANY, SqlTypeFamily.STRING, SqlTypeFamily.ANY));
+    createAddUserDefinedFunction("com.linkedin.groot.runtime.udf.spark.RedactSecondarySchemaFieldIfUDF", ARG1, family(
+        SqlTypeFamily.BOOLEAN, SqlTypeFamily.ANY, SqlTypeFamily.ARRAY, SqlTypeFamily.STRING, SqlTypeFamily.STRING));
 
     // UDTFs
     addFunctionEntry("explode", new CoralSqlUnnestOperator(false));
