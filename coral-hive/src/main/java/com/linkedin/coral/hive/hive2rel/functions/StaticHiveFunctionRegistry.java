@@ -673,6 +673,13 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
     createAddUserDefinedFunction("com.linkedin.policy.decoration.udfs.RedactSecondarySchemaFieldIf", ARG1, family(
         SqlTypeFamily.BOOLEAN, SqlTypeFamily.ANY, SqlTypeFamily.ARRAY, SqlTypeFamily.CHARACTER, SqlTypeFamily.ANY));
 
+    createAddUserDefinedFunction("com.linkedin.groot.runtime.udf.spark.HasMemberConsentUDF", ReturnTypes.BOOLEAN,
+        family(SqlTypeFamily.STRING, SqlTypeFamily.ANY, SqlTypeFamily.TIMESTAMP));
+    createAddUserDefinedFunction("com.linkedin.groot.runtime.udf.spark.RedactFieldIfUDF", ARG1,
+        family(SqlTypeFamily.BOOLEAN, SqlTypeFamily.ANY, SqlTypeFamily.STRING, SqlTypeFamily.ANY));
+    createAddUserDefinedFunction("com.linkedin.groot.runtime.udf.spark.RedactSecondarySchemaFieldIfUDF", ARG1, family(
+        SqlTypeFamily.BOOLEAN, SqlTypeFamily.ANY, SqlTypeFamily.ARRAY, SqlTypeFamily.STRING, SqlTypeFamily.STRING));
+
     // UDTFs
     addFunctionEntry("explode", new CoralSqlUnnestOperator(false));
     addFunctionEntry("posexplode", new CoralSqlUnnestOperator(true));
