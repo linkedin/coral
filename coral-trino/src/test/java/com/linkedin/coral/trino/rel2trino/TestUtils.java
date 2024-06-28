@@ -413,6 +413,9 @@ public class TestUtils {
             + "UNION ALL\n"
             + "SELECT a_tinyint, a_smallint, a_integer, a_bigint, a_float FROM test.table_with_mixed_columns");
 
+    run(driver, "CREATE TABLE test.table_id_value (id int, value varchar(255))");
+    run(driver, "CREATE VIEW IF NOT EXISTS test.view_max_values AS \n"
+            + "SELECT value FROM test.table_id_value  WHERE id IN (SELECT MAX(id) FROM test.table_id_value)");
     // Tables used in RelToTrinoConverterTest
     run(driver,
         "CREATE TABLE IF NOT EXISTS test.tableOne(icol int, dcol double, scol string, tcol timestamp, acol array<string>)");
