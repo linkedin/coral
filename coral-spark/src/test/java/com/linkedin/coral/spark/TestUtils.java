@@ -1,5 +1,5 @@
 /**
- * Copyright 2018-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2018-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -82,6 +82,8 @@ public class TestUtils {
     run(driver,
         "create function default_foo_duplicate_udf_LessThanHundred as 'com.linkedin.coral.hive.hive2rel.CoralTestUDF'");
     run(driver, "CREATE FUNCTION LessThanHundred as 'com.linkedin.coral.hive.hive2rel.CoralTestUDF'");
+
+    run(driver, "CREATE FUNCTION LessThanHundred_0_1 as 'shade_prefix.com.linkedin.coral.hive.hive2rel.CoralTestUDF'");
 
     run(driver, String.join("\n", "", "CREATE VIEW IF NOT EXISTS foo_view", "AS", "SELECT b AS bcol, sum(c) AS sum_c",
         "FROM foo", "GROUP BY b"));
@@ -235,6 +237,11 @@ public class TestUtils {
             "              'dependencies' = 'ivy://com.linkedin:udf:1.0')", "AS",
             "SELECT default_foo_duplicate_udf_LessThanHundred(a), default_foo_duplicate_udf_LessThanHundred(a)",
             "FROM foo"));
+
+    run(driver, String.join("\n", "", "CREATE VIEW IF NOT EXISTS foo_udf_with_shade_prefix",
+        "tblproperties('functions' = 'LessThanHundred_0_1:shade_prefix.com.linkedin.coral.hive.hive2rel.CoralTestUDF',",
+        "              'dependencies' = 'ivy://com.linkedin:udf-shaded:1.0')", "AS", "SELECT LessThanHundred_0_1(a)",
+        "FROM foo"));
   }
 
   private static void executeCreateTableQuery(Driver driver, String dbName, String tableName, String schema) {

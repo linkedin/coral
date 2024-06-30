@@ -193,6 +193,14 @@ public class TestUtils {
       }
 
       driver.run(
+          "create function lessThanHundred_with_shade_prefix as 'shade_prefix.com.linkedin.coral.hive.hive2rel.CoralTestUDF'");
+      response = driver.run(
+          "CREATE VIEW IF NOT EXISTS test.tableOneViewShadePrefixUDF as SELECT lessThanHundred_with_shade_prefix(a) from test.tableOne");
+      if (response.getResponseCode() != 0) {
+        throw new RuntimeException("Failed to setup view");
+      }
+
+      driver.run(
           "CREATE TABLE IF NOT EXISTS union_table(foo uniontype<int, double, array<string>, struct<a:int,b:string>>)");
 
       // Nested union case.
@@ -232,8 +240,12 @@ public class TestUtils {
       setOrUpdateDaliFunction(tableOneView, "LessThanHundred", "com.linkedin.coral.hive.hive2rel.CoralTestUDF");
       Table tableOneViewLateralUDTF = msc.getTable("test", "tableOneViewLateralUDTF");
       setOrUpdateDaliFunction(tableOneViewLateralUDTF, "CountOfRow", "com.linkedin.coral.hive.hive2rel.CoralTestUDTF");
+      Table tableOneViewShadePrefixUDF = msc.getTable("test", "tableOneViewShadePrefixUDF");
+      setOrUpdateDaliFunction(tableOneViewShadePrefixUDF, "lessThanHundred_with_shade_prefix",
+          "shade_prefix.com.linkedin.coral.hive.hive2rel.CoralTestUDF");
       msc.alter_table("test", "tableOneView", tableOneView);
       msc.alter_table("test", "tableOneViewLateralUDTF", tableOneViewLateralUDTF);
+      msc.alter_table("test", "tableOneViewShadePrefixUDF", tableOneViewShadePrefixUDF);
       hive = testHive;
       return hive;
     } catch (Exception e) {
