@@ -333,7 +333,7 @@ public class GenericProjectTransformer extends SqlCallTransformer {
    */
   private String relDataTypeFieldAccessString(RelDataType fromDataType, RelDataType toDataType,
       String fieldNameReference) {
-    if (areEqual(fromDataType, toDataType)) {
+    if (fromDataType.equals(toDataType)) {
       return fieldNameReference;
     }
 
