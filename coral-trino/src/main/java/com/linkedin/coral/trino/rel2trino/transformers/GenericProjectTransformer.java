@@ -350,23 +350,6 @@ public class GenericProjectTransformer extends SqlCallTransformer {
   }
 
   /**
-   * Checks the equivalence between fromDataType and toDataType. fromDataType is derived from Coral, which produces
-   * RelRecordTypes using {@link org.apache.calcite.rel.type.StructKind}.PEEK_FIELDS_NO_EXPAND while toDataType is derived
-   * from Calcite which uses {@link org.apache.calcite.rel.type.StructKind}.FULLY_QUALIFIED. We consider the two
-   * StructKinds as equivalent for our purposes here as StructKind is used only as internal data representation.
-   *
-   * Note that this comparison using the full type string is derived from {@link RelDataTypeImpl#equals(Object)}.
-   *
-   * @param fromDataType given map RelDataType
-   * @param toDataType desired map RelDataType
-   */
-  private boolean areEqual(RelDataType fromDataType, RelDataType toDataType) {
-    String fromDataTypeFullyQualifiedStruct =
-        fromDataType.getFullTypeString().replace("RecordType:peek_no_expand", "RecordType");
-    return fromDataTypeFullyQualifiedStruct.equals(toDataType.getFullTypeString());
-  }
-
-  /**
    * Create a struct field access string in the form of:
    *   ROW([selected_col_field_1], [selected_col_field_2], etc.)
    * @param fromDataType given struct RelDataType
