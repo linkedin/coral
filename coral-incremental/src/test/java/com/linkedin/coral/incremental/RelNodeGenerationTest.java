@@ -1,8 +1,13 @@
+/**
+ * Copyright 2024 LinkedIn Corporation. All rights reserved.
+ * Licensed under the BSD-2 Clause license.
+ * See LICENSE in the project root for license information.
+ */
 package com.linkedin.coral.incremental;
 
-import com.linkedin.coral.transformers.CoralRelToSqlNodeConverter;
 import java.io.File;
 import java.io.IOException;
+
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.commons.io.FileUtils;
@@ -12,6 +17,8 @@ import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+
+import com.linkedin.coral.transformers.CoralRelToSqlNodeConverter;
 
 import static com.linkedin.coral.incremental.TestUtils.*;
 import static org.testng.Assert.*;
@@ -55,8 +62,9 @@ public class RelNodeGenerationTest {
     String sql = "SELECT * FROM test.bar1 JOIN test.bar2 ON test.bar1.x = test.bar2.x";
     String expected = "SELECT *\n" + "FROM (SELECT *\n" + "FROM test.bar1_prev AS bar1_prev\n"
         + "INNER JOIN test.bar2_delta AS bar2_delta ON bar1_prev.x = bar2_delta.x\n" + "UNION ALL\n" + "SELECT *\n"
-        + "FROM test.bar1_delta AS bar1_delta\n" + "INNER JOIN test.bar2_prev AS bar2_prev ON bar1_delta.x = bar2_prev.x) AS t\n"
-        + "UNION ALL\n" + "SELECT *\n" + "FROM test.bar1_delta AS bar1_delta0\n"
+        + "FROM test.bar1_delta AS bar1_delta\n"
+        + "INNER JOIN test.bar2_prev AS bar2_prev ON bar1_delta.x = bar2_prev.x) AS t\n" + "UNION ALL\n" + "SELECT *\n"
+        + "FROM test.bar1_delta AS bar1_delta0\n"
         + "INNER JOIN test.bar2_delta AS bar2_delta0 ON bar1_delta0.x = bar2_delta0.x";
     assertEquals(getIncrementalModification(sql), expected);
   }
@@ -66,8 +74,9 @@ public class RelNodeGenerationTest {
     String sql = "SELECT * FROM test.bar1 JOIN test.bar2 ON test.bar1.x = test.bar2.x WHERE test.bar1.x > 10";
     String expected = "SELECT *\n" + "FROM (SELECT *\n" + "FROM (SELECT *\n" + "FROM test.bar1_prev AS bar1_prev\n"
         + "INNER JOIN test.bar2_delta AS bar2_delta ON bar1_prev.x = bar2_delta.x\n" + "UNION ALL\n" + "SELECT *\n"
-        + "FROM test.bar1_delta AS bar1_delta\n" + "INNER JOIN test.bar2_prev AS bar2_prev ON bar1_delta.x = bar2_prev.x) AS t\n"
-        + "UNION ALL\n" + "SELECT *\n" + "FROM test.bar1_delta AS bar1_delta0\n"
+        + "FROM test.bar1_delta AS bar1_delta\n"
+        + "INNER JOIN test.bar2_prev AS bar2_prev ON bar1_delta.x = bar2_prev.x) AS t\n" + "UNION ALL\n" + "SELECT *\n"
+        + "FROM test.bar1_delta AS bar1_delta0\n"
         + "INNER JOIN test.bar2_delta AS bar2_delta0 ON bar1_delta0.x = bar2_delta0.x) AS t0\n" + "WHERE t0.x > 10";
     assertEquals(getIncrementalModification(sql), expected);
   }
@@ -79,8 +88,8 @@ public class RelNodeGenerationTest {
     String expected = "SELECT *\n" + "FROM (SELECT *\n" + "FROM (SELECT *\n" + "FROM test.bar1_prev AS bar1_prev\n"
         + "WHERE bar1_prev.x > 10) AS t\n" + "INNER JOIN test.bar2_delta AS bar2_delta ON t.x = bar2_delta.x\n"
         + "UNION ALL\n" + "SELECT *\n" + "FROM (SELECT *\n" + "FROM test.bar1_delta AS bar1_delta\n"
-        + "WHERE bar1_delta.x > 10) AS t0\n" + "INNER JOIN test.bar2_prev AS bar2_prev ON t0.x = bar2_prev.x) AS t1\n" + "UNION ALL\n"
-        + "SELECT *\n" + "FROM (SELECT *\n" + "FROM test.bar1_delta AS bar1_delta0\n"
+        + "WHERE bar1_delta.x > 10) AS t0\n" + "INNER JOIN test.bar2_prev AS bar2_prev ON t0.x = bar2_prev.x) AS t1\n"
+        + "UNION ALL\n" + "SELECT *\n" + "FROM (SELECT *\n" + "FROM test.bar1_delta AS bar1_delta0\n"
         + "WHERE bar1_delta0.x > 10) AS t2\n" + "INNER JOIN test.bar2_delta AS bar2_delta0 ON t2.x = bar2_delta0.x";
     assertEquals(getIncrementalModification(sql), expected);
   }
@@ -94,14 +103,16 @@ public class RelNodeGenerationTest {
         + "INNER JOIN test.bar3_delta AS bar3_delta ON bar1_prev.x = bar3_delta.x\n" + "UNION ALL\n" + "SELECT *\n"
         + "FROM (SELECT *\n" + "FROM (SELECT *\n" + "FROM test.bar1_prev AS bar1_prev0\n"
         + "INNER JOIN test.bar2_delta AS bar2_delta ON bar1_prev0.x = bar2_delta.x\n" + "UNION ALL\n" + "SELECT *\n"
-        + "FROM test.bar1_delta AS bar1_delta\n" + "INNER JOIN test.bar2_prev AS bar2_prev0 ON bar1_delta.x = bar2_prev0.x) AS t\n"
-        + "UNION ALL\n" + "SELECT *\n" + "FROM test.bar1_delta AS bar1_delta0\n"
+        + "FROM test.bar1_delta AS bar1_delta\n"
+        + "INNER JOIN test.bar2_prev AS bar2_prev0 ON bar1_delta.x = bar2_prev0.x) AS t\n" + "UNION ALL\n"
+        + "SELECT *\n" + "FROM test.bar1_delta AS bar1_delta0\n"
         + "INNER JOIN test.bar2_delta AS bar2_delta0 ON bar1_delta0.x = bar2_delta0.x) AS t0\n"
-        + "INNER JOIN test.bar3_prev AS bar3_prev ON t0.x = bar3_prev.x) AS t1\n" + "UNION ALL\n" + "SELECT *\n" + "FROM (SELECT *\n"
-        + "FROM (SELECT *\n" + "FROM test.bar1_prev AS bar1_prev1\n"
+        + "INNER JOIN test.bar3_prev AS bar3_prev ON t0.x = bar3_prev.x) AS t1\n" + "UNION ALL\n" + "SELECT *\n"
+        + "FROM (SELECT *\n" + "FROM (SELECT *\n" + "FROM test.bar1_prev AS bar1_prev1\n"
         + "INNER JOIN test.bar2_delta AS bar2_delta1 ON bar1_prev1.x = bar2_delta1.x\n" + "UNION ALL\n" + "SELECT *\n"
-        + "FROM test.bar1_delta AS bar1_delta1\n" + "INNER JOIN test.bar2_prev AS bar2_prev1 ON bar1_delta1.x = bar2_prev1.x) AS t2\n"
-        + "UNION ALL\n" + "SELECT *\n" + "FROM test.bar1_delta AS bar1_delta2\n"
+        + "FROM test.bar1_delta AS bar1_delta1\n"
+        + "INNER JOIN test.bar2_prev AS bar2_prev1 ON bar1_delta1.x = bar2_prev1.x) AS t2\n" + "UNION ALL\n"
+        + "SELECT *\n" + "FROM test.bar1_delta AS bar1_delta2\n"
         + "INNER JOIN test.bar2_delta AS bar2_delta2 ON bar1_delta2.x = bar2_delta2.x) AS t3\n"
         + "INNER JOIN test.bar3_delta AS bar3_delta0 ON t3.x = bar3_delta0.x";
     assertEquals(getIncrementalModification(sql), expected);
@@ -127,11 +138,13 @@ public class RelNodeGenerationTest {
   @Test
   public void testSelectSpecificJoin() {
     String sql = "SELECT test.bar2.y FROM test.bar1 JOIN test.bar2 ON test.bar1.x = test.bar2.x";
-    String expected = "SELECT t0.y0 AS y\n" + "FROM (SELECT *\n" + "FROM (SELECT *\n" + "FROM test.bar1_prev AS bar1_prev\n"
-        + "INNER JOIN test.bar2_delta AS bar2_delta ON bar1_prev.x = bar2_delta.x\n" + "UNION ALL\n" + "SELECT *\n"
-        + "FROM test.bar1_delta AS bar1_delta\n" + "INNER JOIN test.bar2_prev AS bar2_prev ON bar1_delta.x = bar2_prev.x) AS t\n"
-        + "UNION ALL\n" + "SELECT *\n" + "FROM test.bar1_delta AS bar1_delta0\n"
-        + "INNER JOIN test.bar2_delta AS bar2_delta0 ON bar1_delta0.x = bar2_delta0.x) AS t0";
+    String expected =
+        "SELECT t0.y0 AS y\n" + "FROM (SELECT *\n" + "FROM (SELECT *\n" + "FROM test.bar1_prev AS bar1_prev\n"
+            + "INNER JOIN test.bar2_delta AS bar2_delta ON bar1_prev.x = bar2_delta.x\n" + "UNION ALL\n" + "SELECT *\n"
+            + "FROM test.bar1_delta AS bar1_delta\n"
+            + "INNER JOIN test.bar2_prev AS bar2_prev ON bar1_delta.x = bar2_prev.x) AS t\n" + "UNION ALL\n"
+            + "SELECT *\n" + "FROM test.bar1_delta AS bar1_delta0\n"
+            + "INNER JOIN test.bar2_delta AS bar2_delta0 ON bar1_delta0.x = bar2_delta0.x) AS t0";
     assertEquals(getIncrementalModification(sql), expected);
   }
 }
