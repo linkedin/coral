@@ -7,6 +7,10 @@ package com.linkedin.coral.incremental;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.sql.SqlNode;
@@ -40,9 +44,35 @@ public class RelNodeGenerationTest {
 
   public String convert(RelNode relNode) {
     RelNode incrementalRelNode = RelNodeGenerationTransformer.convertRelIncremental(relNode);
+    List<RelNode> relNodes = new ArrayList<>();
+    relNodes.add(relNode);
+    relNodes.add(incrementalRelNode);
+    List<Double> costs = getCosts(relNodes);
     CoralRelToSqlNodeConverter converter = new CoralRelToSqlNodeConverter();
     SqlNode sqlNode = converter.convert(incrementalRelNode);
     return sqlNode.toSqlString(converter.INSTANCE).getSql();
+  }
+
+  public List<Double> getCosts(List<RelNode> relNodes) {
+    RelNodeCostEstimator estimator = new RelNodeCostEstimator();
+    Map<String, Double> stat = loadDataFromConfig("fakepath");
+    estimator.setStat(stat);
+    List<Double> costs = new ArrayList<>();
+    for (RelNode relNode : relNodes) {
+      costs.add(estimator.getCost(relNode));
+    }
+    return costs;
+  }
+
+  private Map<String, Double> loadDataFromConfig(String configPath) {
+    Map<String, Double> stat = new HashMap<>();
+    stat.put("hive.test.bar1", 100.0);
+    stat.put("hive.test.bar2", 20.0);
+    stat.put("hive.test.bar1_prev", 80.0);
+    stat.put("hive.test.bar2_prev", 15.0);
+    stat.put("hive.test.bar1_delta", 20.0);
+    stat.put("hive.test.bar2_delta", 5.0);
+    return stat;
   }
 
   public String getIncrementalModification(String sql) {
@@ -59,6 +89,18 @@ public class RelNodeGenerationTest {
 
   @Test
   public void testSimpleJoin() {
+    String sql = "SELECT * FROM test.bar1 JOIN test.bar2 ON test.bar1.x = test.bar2.x";
+    String expected = "SELECT *\n" + "FROM (SELECT *\n" + "FROM test.bar1_prev AS bar1_prev\n"
+        + "INNER JOIN test.bar2_delta AS bar2_delta ON bar1_prev.x = bar2_delta.x\n" + "UNION ALL\n" + "SELECT *\n"
+        + "FROM test.bar1_delta AS bar1_delta\n"
+        + "INNER JOIN test.bar2_prev AS bar2_prev ON bar1_delta.x = bar2_prev.x) AS t\n" + "UNION ALL\n" + "SELECT *\n"
+        + "FROM test.bar1_delta AS bar1_delta0\n"
+        + "INNER JOIN test.bar2_delta AS bar2_delta0 ON bar1_delta0.x = bar2_delta0.x";
+    getIncrementalModification(sql);
+  }
+
+  @Test
+  public void testJoinCost() {
     String sql = "SELECT * FROM test.bar1 JOIN test.bar2 ON test.bar1.x = test.bar2.x";
     String expected = "SELECT *\n" + "FROM (SELECT *\n" + "FROM test.bar1_prev AS bar1_prev\n"
         + "INNER JOIN test.bar2_delta AS bar2_delta ON bar1_prev.x = bar2_delta.x\n" + "UNION ALL\n" + "SELECT *\n"
