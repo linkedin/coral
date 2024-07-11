@@ -44,16 +44,37 @@ public class RelNodeCostEstimator {
 
   private Map<String, Double> stat = new HashMap<>();
 
+  private Map<String, Double> distinctStat = new HashMap<>();
+
   public void setStat(Map<String, Double> stat) {
     this.stat = stat;
+  }
+
+  public void setDistinctStat(Map<String, Double> distinctStat) {
+    this.distinctStat = distinctStat;
   }
 
   private Double IOCostParam = 1.0;
 
   private Double shuffleCostParam = 1.0;
 
+  public void setIOCostParam(Double IOCostParam) {
+    this.IOCostParam = IOCostParam;
+  }
+
+  public void setShuffleCostParam(Double shuffleCostParam) {
+    this.shuffleCostParam = shuffleCostParam;
+  }
+
+  public void loadStatistic(String configPath) {
+    // TODO: Load statistics from configPath
+    // Set stat and distinctStat
+  }
+
   public Double getCost(RelNode rel) {
     CostInfo executionCostInfo = getExecutionCost(rel);
+    System.out.println("Execution cost: " + executionCostInfo.cost);
+    System.out.println("Execution row: " + executionCostInfo.row);
     Double IOCost = executionCostInfo.row * IOCostParam;
     return executionCostInfo.cost * shuffleCostParam + IOCost;
   }
@@ -85,10 +106,9 @@ public class RelNodeCostEstimator {
   private CostInfo getExecutionCostJoin(LogicalJoin join) {
     RelNode left = join.getLeft();
     RelNode right = join.getRight();
-    //    if (!(left instanceof TableScan) || !(right instanceof TableScan))
-    //    {
-    //      return new CostInfo(0.0, 0.0);
-    //    }
+    if (!(left instanceof TableScan) || !(right instanceof TableScan)) {
+      return new CostInfo(0.0, 0.0);
+    }
     CostInfo leftCost = getExecutionCost(left);
     CostInfo rightCost = getExecutionCost(right);
     Double joinSize = estimateJoinSize(join, leftCost.row, rightCost.row);
@@ -136,15 +156,20 @@ public class RelNodeCostEstimator {
     }
   }
 
-  private Double estimateJoinSelectivity(List<JoinKey> joinKeys) {
-    if (joinKeys.size() == 1 && joinKeys.get(0).leftFieldName == "x") {
-      return 0.1;
-    }
-    return 1.0;
-  }
-
   private Double estimateJoinSize(LogicalJoin join, Double leftSize, Double rightSize) {
-    Double selectivity = estimateJoinSelectivity(findJoinKeys(join));
+    List<JoinKey> joinKeys = findJoinKeys(join);
+    Double selectivity = 1.0;
+    for (JoinKey joinKey : joinKeys) {
+      String leftTableName = joinKey.leftTableName;
+      String rightTableName = joinKey.rightTableName;
+      String leftFieldName = joinKey.leftFieldName;
+      String rightFieldName = joinKey.rightFieldName;
+      Double leftCardinality = stat.getOrDefault(leftTableName, 5.0);
+      Double rightCardinality = stat.getOrDefault(rightTableName, 5.0);
+      Double leftDistinct = distinctStat.getOrDefault(leftTableName + ":" + leftFieldName, leftCardinality);
+      Double rightDistinct = distinctStat.getOrDefault(rightTableName + ":" + rightFieldName, rightCardinality);
+      selectivity *= 1 / max(leftDistinct, rightDistinct);
+    }
     return leftSize * rightSize * selectivity;
   }
 
@@ -158,7 +183,7 @@ public class RelNodeCostEstimator {
       unionSize += inputCost.row;
       unionCost = max(inputCost.cost, unionCost);
     }
-    unionCost *= 1.5;
+    unionCost *= 2;
     return new CostInfo(unionCost, unionSize);
   }
 
