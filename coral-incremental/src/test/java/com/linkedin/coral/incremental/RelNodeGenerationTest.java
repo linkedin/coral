@@ -33,6 +33,8 @@ public class RelNodeGenerationTest {
 
   private RelNodeCostEstimator estimator;
 
+  static final String TEST_JSON_FILE_DIR = "src/test/resources/";
+
   @BeforeClass
   public void beforeClass() throws HiveException, MetaException, IOException {
     conf = TestUtils.loadResourceHiveConf();
@@ -79,33 +81,11 @@ public class RelNodeGenerationTest {
     Map<String, Double> stat = new HashMap<>();
     stat.put("hive.test.bar1", 100.0);
     stat.put("hive.test.bar2", 20.0);
-    stat.put("hive.test.bar1_prev", 70.0);
-    stat.put("hive.test.bar2_prev", 15.0);
-    stat.put("hive.test.bar1_delta", 30.0);
-    stat.put("hive.test.bar2_delta", 5.0);
-    return stat;
-  }
-
-  public Map<String, Double> fakeStatData2() {
-    Map<String, Double> stat = new HashMap<>();
-    stat.put("hive.test.bar1", 100.0);
-    stat.put("hive.test.bar2", 20.0);
     stat.put("hive.test.bar1_prev", 40.0);
     stat.put("hive.test.bar2_prev", 10.0);
     stat.put("hive.test.bar1_delta", 60.0);
     stat.put("hive.test.bar2_delta", 10.0);
     return stat;
-  }
-
-  public Map<String, Double> fakeDistinctStatData() {
-    Map<String, Double> distinctStat = new HashMap<>();
-    distinctStat.put("hive.test.bar1:x", 10.0);
-    distinctStat.put("hive.test.bar2:x", 5.0);
-    distinctStat.put("hive.test.bar1_prev:x", 10.0);
-    distinctStat.put("hive.test.bar2_prev:x", 5.0);
-    distinctStat.put("hive.test.bar1_delta:x", 10.0);
-    distinctStat.put("hive.test.bar2_delta:x", 5.0);
-    return distinctStat;
   }
 
   public String getIncrementalModification(String sql) {
@@ -116,8 +96,6 @@ public class RelNodeGenerationTest {
   @Test
   public void testSimpleSelectAll() {
     String sql = "SELECT * FROM test.foo";
-    estimator.setStat(fakeStatData());
-    estimator.setDistinctStat(fakeDistinctStatData());
     // assertEquals(getIncrementalModification(sql), sql);
   }
 
@@ -131,11 +109,10 @@ public class RelNodeGenerationTest {
         + "INNER JOIN test.bar2_prev AS bar2_prev ON bar1_delta.x = bar2_prev.x) AS t\n" + "UNION ALL\n" + "SELECT *\n"
         + "FROM test.bar1_delta AS bar1_delta0\n"
         + "INNER JOIN test.bar2_delta AS bar2_delta0 ON bar1_delta0.x = bar2_delta0.x";
+    estimator.loadStatistic(TEST_JSON_FILE_DIR + "statistic.json");
     estimator.setIOCostParam(2.0);
-    estimator.setStat(fakeStatData());
-    estimator.setDistinctStat(fakeDistinctStatData());
     assertEquals(getIncrementalModification(sql), expected);
-    estimator.setStat(fakeStatData2());
+    estimator.setStat(fakeStatData());
     assertEquals(getIncrementalModification(sql), prevSql);
   }
 

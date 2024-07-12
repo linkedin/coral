@@ -5,11 +5,18 @@
  */
 package com.linkedin.coral.incremental;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.rel.RelNode;
@@ -69,6 +76,40 @@ public class RelNodeCostEstimator {
   public void loadStatistic(String configPath) {
     // TODO: Load statistics from configPath
     // Set stat and distinctStat
+
+    try {
+      String content = new String(Files.readAllBytes(Paths.get(configPath)));
+      // Parse JSON string to JsonObject
+      JsonObject jsonObject = new JsonParser().parse(content).getAsJsonObject();
+      // Iterate over each table in the JSON object
+      for (Map.Entry<String, JsonElement> entry : jsonObject.entrySet()) {
+        String tableName = entry.getKey();
+        JsonObject tableObject = entry.getValue().getAsJsonObject();
+
+        // Extract row count
+        Double rowCount = tableObject.get("RowCount").getAsDouble();
+
+        // Extract distinct counts
+        JsonObject distinctCounts = tableObject.getAsJsonObject("DistinctCounts");
+
+        System.out.println("Table:" + tableName);
+        System.out.println("Row Count: " + rowCount);
+        stat.put(tableName, rowCount);
+
+        // Iterate over distinct counts
+        for (Map.Entry<String, JsonElement> distinctEntry : distinctCounts.entrySet()) {
+          String columnName = distinctEntry.getKey();
+          Double distinctCount = distinctEntry.getValue().getAsDouble();
+          System.out.println("Distinct Count (" + columnName + "): " + distinctCount);
+          distinctStat.put(tableName + ":" + columnName, distinctCount);
+        }
+
+        System.out.println();
+      }
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+
   }
 
   public Double getCost(RelNode rel) {

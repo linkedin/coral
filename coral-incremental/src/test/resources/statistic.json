@@ -1,0 +1,38 @@
+{
+  "hive.test.bar1": {
+    "RowCount": 100,
+    "DistinctCounts": {
+      "x": 10
+    }
+  },
+  "hive.test.bar2": {
+    "RowCount": 20,
+    "DistinctCounts": {
+      "x": 5
+    }
+  },
+  "hive.test.bar1_prev": {
+    "RowCount": 70,
+    "DistinctCounts": {
+      "x": 10
+    }
+  },
+    "hive.test.bar2_prev": {
+        "RowCount": 15,
+        "DistinctCounts": {
+        "x": 5
+        }
+    },
+  "hive.test.bar1_delta": {
+    "RowCount": 30,
+    "DistinctCounts": {
+      "x": 10
+    }
+  },
+    "hive.test.bar2_delta": {
+        "RowCount": 5,
+        "DistinctCounts": {
+        "x": 5
+        }
+    }
+}
