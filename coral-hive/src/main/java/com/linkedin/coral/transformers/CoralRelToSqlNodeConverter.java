@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -49,7 +49,6 @@ import org.apache.calcite.sql.type.SqlTypeName;
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import com.linkedin.coral.com.google.common.collect.ImmutableMap;
 import com.linkedin.coral.common.functions.CoralSqlUnnestOperator;
-import com.linkedin.coral.common.functions.FunctionFieldReferenceOperator;
 
 
 /**
@@ -474,7 +473,7 @@ public class CoralRelToSqlNodeConverter extends RelToSqlConverter {
    * Calcite converts it to a {@link SqlIdentifier} with {@link SqlIdentifier#names} as ["f(x)", "y"] where "f(x)" and "y" are String,
    * which is opaque and not aligned with our expectation, since we want to apply transformations on `f(x)` with
    * {@link com.linkedin.coral.common.transformers.SqlCallTransformer}. Therefore, we override this
-   * method to convert `f(x)` to {@link SqlCall} and `.` to {@link com.linkedin.coral.common.functions.FunctionFieldReferenceOperator#DOT}.
+   * method to convert `f(x)` to {@link SqlCall} and `.` to {@link SqlStdOperatorTable#DOT}.
    *
    * With this override, the converted CoralSqlNode matches the previous SqlNode handed over to Calcite for validation and conversion
    * in `HiveSqlToRelConverter#convertQuery`.
@@ -500,7 +499,9 @@ public class CoralRelToSqlNodeConverter extends RelToSqlConverter {
             SqlNode functionCall = toSql(program, referencedExpr);
             Collections.reverse(accessNames);
             for (String accessName : accessNames) {
-              functionCall = FunctionFieldReferenceOperator.DOT.createCall(SqlParserPos.ZERO, functionCall,
+              //              functionCall = FunctionFieldReferenceOperator.DOT.createCall(SqlParserPos.ZERO, functionCall,
+              //                  new SqlIdentifier(accessName, POS));
+              functionCall = SqlStdOperatorTable.DOT.createCall(SqlParserPos.ZERO, functionCall,
                   new SqlIdentifier(accessName, POS));
             }
             return functionCall;

@@ -876,9 +876,17 @@ public class CoralSparkTest {
 
   @Test
   public void testConvertFieldAccessOnFunctionCall() {
+    RelNode relNode = TestUtils.toRelNode("SELECT named_struct('a', 1).a");
+
+    String targetSql = "SELECT named_struct('a', 1).a\n" + "FROM (VALUES  (0)) t (ZERO)";
+    assertEquals(createCoralSpark(relNode).getSparkSql(), targetSql);
+  }
+
+  @Test
+  public void testConvertNestedFieldAccessOnFunctionCall() {
     RelNode relNode = TestUtils.toRelNode("SELECT named_struct('a', named_struct('b', 1)).a.b");
 
-    String targetSql = "SELECT (named_struct('a', named_struct('b', 1)).a).b\n" + "FROM (VALUES  (0)) t (ZERO)";
+    String targetSql = "SELECT named_struct('a', named_struct('b', 1)).a.b\n" + "FROM (VALUES  (0)) t (ZERO)";
     assertEquals(createCoralSpark(relNode).getSparkSql(), targetSql);
   }
 
