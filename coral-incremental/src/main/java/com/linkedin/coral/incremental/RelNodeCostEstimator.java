@@ -35,6 +35,17 @@ import static java.lang.Math.*;
 
 public class RelNodeCostEstimator {
 
+  class CostInfo {
+    // TODO: we may also need to add TableName field.
+    Double cost;
+    Double row;
+
+    public CostInfo(Double cost, Double row) {
+      this.cost = cost;
+      this.row = row;
+    }
+  }
+
   class JoinKey {
     String leftTableName;
     String rightTableName;
@@ -74,9 +85,6 @@ public class RelNodeCostEstimator {
   }
 
   public void loadStatistic(String configPath) {
-    // TODO: Load statistics from configPath
-    // Set stat and distinctStat
-
     try {
       String content = new String(Files.readAllBytes(Paths.get(configPath)));
       // Parse JSON string to JsonObject
@@ -92,19 +100,16 @@ public class RelNodeCostEstimator {
         // Extract distinct counts
         JsonObject distinctCounts = tableObject.getAsJsonObject("DistinctCounts");
 
-        System.out.println("Table:" + tableName);
-        System.out.println("Row Count: " + rowCount);
         stat.put(tableName, rowCount);
 
         // Iterate over distinct counts
         for (Map.Entry<String, JsonElement> distinctEntry : distinctCounts.entrySet()) {
           String columnName = distinctEntry.getKey();
           Double distinctCount = distinctEntry.getValue().getAsDouble();
-          System.out.println("Distinct Count (" + columnName + "): " + distinctCount);
+
           distinctStat.put(tableName + ":" + columnName, distinctCount);
         }
 
-        System.out.println();
       }
     } catch (IOException e) {
       e.printStackTrace();
@@ -114,8 +119,6 @@ public class RelNodeCostEstimator {
 
   public Double getCost(RelNode rel) {
     CostInfo executionCostInfo = getExecutionCost(rel);
-    System.out.println("Execution cost: " + executionCostInfo.cost);
-    System.out.println("Execution row: " + executionCostInfo.row);
     Double IOCost = executionCostInfo.row * IOCostParam;
     return executionCostInfo.cost * shuffleCostParam + IOCost;
   }
