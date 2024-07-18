@@ -193,7 +193,7 @@ public class TestUtils {
       }
 
       driver.run(
-          "create function lessThanHundred_with_shade_prefix as 'coralversionedudf_0_1_x.com.linkedin.coral.hive.hive2rel.CoralTestUDF'");
+          "create function lessThanHundred_with_shade_prefix as 'coral_udf_version_0_1_x.com.linkedin.coral.hive.hive2rel.CoralTestUDF'");
       response = driver.run(
           "CREATE VIEW IF NOT EXISTS test.tableOneViewShadePrefixUDF as SELECT lessThanHundred_with_shade_prefix(a) from test.tableOne");
       if (response.getResponseCode() != 0) {
@@ -242,7 +242,7 @@ public class TestUtils {
       setOrUpdateDaliFunction(tableOneViewLateralUDTF, "CountOfRow", "com.linkedin.coral.hive.hive2rel.CoralTestUDTF");
       Table tableOneViewShadePrefixUDF = msc.getTable("test", "tableOneViewShadePrefixUDF");
       setOrUpdateDaliFunction(tableOneViewShadePrefixUDF, "lessThanHundred_with_shade_prefix",
-          "coralversionedudf_0_1_x.com.linkedin.coral.hive.hive2rel.CoralTestUDF");
+          "coral_udf_version_0_1_x.com.linkedin.coral.hive.hive2rel.CoralTestUDF");
       msc.alter_table("test", "tableOneView", tableOneView);
       msc.alter_table("test", "tableOneViewLateralUDTF", tableOneViewLateralUDTF);
       msc.alter_table("test", "tableOneViewShadePrefixUDF", tableOneViewShadePrefixUDF);

@@ -7,10 +7,6 @@ package com.linkedin.coral.common.transformers;
 
 import org.apache.calcite.sql.SqlCall;
 
-import com.linkedin.coral.common.utils.FunctionUtils;
-
-import static com.linkedin.coral.common.calcite.CalciteUtil.*;
-
 
 /**
  * This class is a subclass of {@link SqlCallTransformer} which transforms a function operator on SqlNode layer
@@ -28,7 +24,7 @@ public abstract class SourceOperatorMatchSqlCallTransformer extends SqlCallTrans
 
   @Override
   protected boolean condition(SqlCall sqlCall) {
-    return sourceOpName.equalsIgnoreCase(FunctionUtils.removeShadingPrefix(sqlCall.getOperator().getName()))
+    return sourceOpName.equalsIgnoreCase(sqlCall.getOperator().getName())
         && sqlCall.getOperandList().size() == numOperands;
   }
 }

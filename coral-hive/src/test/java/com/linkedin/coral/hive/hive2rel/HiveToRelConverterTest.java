@@ -360,7 +360,7 @@ public class HiveToRelConverterTest {
   public void testUDFWithShadedClassName() {
     RelNode rel = converter.convertView("test", "tableOneViewShadePrefixUDF");
     String expectedPlan =
-        "LogicalProject(EXPR$0=[coralversionedudf_0_1_x.com.linkedin.coral.hive.hive2rel.CoralTestUDF($0)])\n"
+        "LogicalProject(EXPR$0=[coral_udf_version_0_1_x.com.linkedin.coral.hive.hive2rel.CoralTestUDF($0)])\n"
             + "  LogicalTableScan(table=[[hive, test, tableone]])\n";
     assertEquals(RelOptUtil.toString(rel), expectedPlan);
   }

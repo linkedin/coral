@@ -84,7 +84,7 @@ public class TestUtils {
     run(driver, "CREATE FUNCTION LessThanHundred as 'com.linkedin.coral.hive.hive2rel.CoralTestUDF'");
 
     run(driver,
-        "CREATE FUNCTION LessThanHundred_shade_prefix as 'coralversionedudf_0_1_x.com.linkedin.coral.hive.hive2rel.CoralTestUDF'");
+        "CREATE FUNCTION LessThanHundred_shade_prefix as 'coral_udf_version_0_1_x.com.linkedin.coral.hive.hive2rel.CoralTestUDF'");
 
     run(driver, String.join("\n", "", "CREATE VIEW IF NOT EXISTS foo_view", "AS", "SELECT b AS bcol, sum(c) AS sum_c",
         "FROM foo", "GROUP BY b"));
@@ -240,7 +240,7 @@ public class TestUtils {
             "FROM foo"));
 
     run(driver, String.join("\n", "", "CREATE VIEW IF NOT EXISTS foo_udf_with_shade_prefix",
-        "tblproperties('functions' = 'LessThanHundred_shade_prefix:coralversionedudf_0_1_x.com.linkedin.coral.hive.hive2rel.CoralTestUDF',",
+        "tblproperties('functions' = 'LessThanHundred_shade_prefix:coral_udf_version_0_1_x.com.linkedin.coral.hive.hive2rel.CoralTestUDF',",
         "              'dependencies' = 'ivy://com.linkedin:udf-shaded:1.0')", "AS",
         "SELECT LessThanHundred_shade_prefix(a)", "FROM foo"));
   }

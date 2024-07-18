@@ -3,7 +3,7 @@
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
-package coralversionedudf_0_1_x.com.linkedin.coral.hive.hive2rel;
+package coral_udf_version_0_1_x.com.linkedin.coral.hive.hive2rel;
 
 import org.apache.hadoop.hive.ql.exec.UDF;
 

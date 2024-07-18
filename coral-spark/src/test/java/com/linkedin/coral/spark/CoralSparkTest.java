@@ -166,17 +166,17 @@ public class CoralSparkTest {
 
   @Test
   public void testUDFWithShadedClassName() {
-    // After registering unshaded UDF "com.linkedin.coral.hive.hive2rel.CoralTestUDF",
-    // Coral should be able to translate the view with the corresponding shaded UDF class
-    // "coralversionedudf_0_1_x.com.linkedin.coral.hive.hive2rel.CoralTestUDF"
+    // After registering unversioned UDF "com.linkedin.coral.hive.hive2rel.CoralTestUDF",
+    // Coral should be able to translate the view with the corresponding versioned UDF class
+    // "coral_udf_version_0_1_x.com.linkedin.coral.hive.hive2rel.CoralTestUDF"
     RelNode relNode = TestUtils.toRelNode("default", "foo_udf_with_shade_prefix");
     CoralSpark coralSpark = createCoralSpark(relNode);
     List<SparkUDFInfo> udfJars = coralSpark.getSparkUDFInfoList();
 
     // Shaded UDF class name should be returned for UDF registration, otherwise
-    // Spark can't find the unshaded UDF name in the shaded Jar.
+    // Spark can't find the unversioned UDF name in the shaded Jar.
     String udfClassName = udfJars.get(0).getClassName();
-    String targetClassName = "coralversionedudf_0_1_x.com.linkedin.coral.hive.hive2rel.CoralTestUDF";
+    String targetClassName = "coral_udf_version_0_1_x.com.linkedin.coral.hive.hive2rel.CoralTestUDF";
     assertEquals(udfClassName, targetClassName);
 
     String udfFunctionName = udfJars.get(0).getFunctionName();

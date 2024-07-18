@@ -37,7 +37,7 @@ import com.linkedin.coral.common.functions.FunctionRegistry;
 import com.linkedin.coral.common.functions.UnknownSqlFunctionException;
 
 import static com.google.common.base.Preconditions.*;
-import static com.linkedin.coral.common.utils.FunctionUtils.*;
+import static com.linkedin.coral.hive.hive2rel.functions.utils.FunctionUtils.*;
 import static org.apache.calcite.sql.parser.SqlParserPos.*;
 import static org.apache.calcite.sql.type.OperandTypes.*;
 
@@ -145,12 +145,12 @@ public class HiveFunctionResolver {
    * @return list of matching Functions or empty list if there is no match
    */
   public Collection<Function> resolve(String functionName) {
-    Collection<Function> staticLookup = registry.lookup(removeShadingPrefix(functionName));
+    Collection<Function> staticLookup = registry.lookup(removeVersioningPrefix(functionName));
     if (!staticLookup.isEmpty()) {
-      if (isClassShaded(functionName)) {
-        // If the UDF class name is shaded, we need to return the function
-        // in registry with shaded class name to let Calcite know that the
-        // shaded UDF is legitimate.
+      if (isVersioningUDF(functionName)) {
+        // If the UDF class name is versioned, we need to return the function
+        // in registry with versioned class name to let Calcite know that the
+        // versioned UDF is legitimate.
         return staticLookup.stream().map(f -> {
           SqlOperator sqlOperator = f.getSqlOperator();
           SqlUserDefinedFunction sqlUserDefinedFunction =
@@ -197,9 +197,9 @@ public class HiveFunctionResolver {
     if (funcClassName == null) {
       return ImmutableList.of();
     }
-    // If the UDF class name is shaded, remove the shading prefix, which allows user to
-    // register the unshaded UDF once and use different shading prefix in the view
-    final Collection<Function> functions = registry.lookup(removeShadingPrefix(funcClassName));
+    // If the UDF class name is versioned, remove the versioning prefix, which allows user to
+    // register the unversioned UDF once and use different versioning prefix in the view
+    final Collection<Function> functions = registry.lookup(removeVersioningPrefix(funcClassName));
     if (functions.isEmpty()) {
       Collection<Function> dynamicResolvedFunctions =
           resolveDaliFunctionDynamically(functionName, funcClassName, hiveTable, numOfOperands);
@@ -212,9 +212,9 @@ public class HiveFunctionResolver {
 
       return dynamicResolvedFunctions;
     } else {
-      if (isClassShaded(funcClassName)) {
-        // If the UDF class name is shaded, we need to return the function in registry
-        // with shaded class name. Note that the original function in registry is unshaded.
+      if (isVersioningUDF(funcClassName)) {
+        // If the UDF class name is versioned, we need to return the function in registry
+        // with versioned class name. Note that the original function in registry is unversioned.
         return functions.stream().map(f -> {
           SqlUserDefinedFunction sqlUserDefinedFunction = (SqlUserDefinedFunction) f.getSqlOperator();
           VersionedSqlUserDefinedFunction versionedSqlUserDefinedFunction =

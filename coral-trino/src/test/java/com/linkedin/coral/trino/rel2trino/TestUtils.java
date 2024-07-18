@@ -414,10 +414,10 @@ public class TestUtils {
             + "SELECT a_tinyint, a_smallint, a_integer, a_bigint, a_float FROM test.table_with_mixed_columns");
 
     run(driver,
-        "CREATE FUNCTION LessThanHundred_shade_prefix AS 'coralversionedudf_0_1_x.com.linkedin.coral.hive.hive2rel.CoralTestUDF'");
+        "CREATE FUNCTION LessThanHundred_shade_prefix AS 'coral_udf_version_0_1_x.com.linkedin.coral.hive.hive2rel.CoralTestUDF'");
 
     run(driver, String.join("\n", "CREATE VIEW IF NOT EXISTS test.udf_with_shade_prefix",
-        "tblproperties('functions' = 'LessThanHundred_shade_prefix:coralversionedudf_0_1_x.com.linkedin.coral.hive.hive2rel.CoralTestUDF',",
+        "tblproperties('functions' = 'LessThanHundred_shade_prefix:coral_udf_version_0_1_x.com.linkedin.coral.hive.hive2rel.CoralTestUDF',",
         "              'dependencies' = 'ivy://com.linkedin:udf-shaded:1.0')", "AS",
         "SELECT LessThanHundred_shade_prefix(a)", "FROM test.tableA"));
 
