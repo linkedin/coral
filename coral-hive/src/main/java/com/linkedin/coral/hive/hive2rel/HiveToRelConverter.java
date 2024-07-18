@@ -70,7 +70,7 @@ public class HiveToRelConverter extends ToRelConverter {
 
   @Override
   protected SqlRexConvertletTable getConvertletTable() {
-    return new HiveConvertletTable();
+    return new CoralConvertletTable();
   }
 
   @Override
