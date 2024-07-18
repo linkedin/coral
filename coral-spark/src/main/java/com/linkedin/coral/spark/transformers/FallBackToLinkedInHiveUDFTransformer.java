@@ -8,11 +8,7 @@ package com.linkedin.coral.spark.transformers;
 import java.net.URI;
 import java.util.List;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-
-import com.google.common.collect.ImmutableList;
 
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlOperator;
@@ -71,32 +67,16 @@ public class FallBackToLinkedInHiveUDFTransformer extends SqlCallTransformer {
     if (UNSUPPORTED_HIVE_UDFS.contains(operatorName)) {
       throw new UnsupportedUDFException(operatorName);
     }
-    final String viewDependentFunctionName = operator.getViewDependentFunctionName();
-    String versionedFunctionName = getVersionedFunctionName(viewDependentFunctionName, operatorName);
+    final String versionedViewDependentFunctionName = operator.getVersionedViewDependentFunctionName();
     final List<String> dependencies = operator.getIvyDependencies();
     List<URI> listOfUris = dependencies.stream().map(URI::create).collect(Collectors.toList());
     LOG.info("Function: {} is not a Builtin UDF or Transport UDF. We fall back to its Hive "
         + "function with ivy dependency: {}", operatorName, String.join(",", dependencies));
-    final SparkUDFInfo sparkUDFInfo =
-        new SparkUDFInfo(operatorName, versionedFunctionName, listOfUris, SparkUDFInfo.UDFTYPE.HIVE_CUSTOM_UDF);
+    final SparkUDFInfo sparkUDFInfo = new SparkUDFInfo(operatorName, versionedViewDependentFunctionName, listOfUris,
+        SparkUDFInfo.UDFTYPE.HIVE_CUSTOM_UDF);
     sparkUDFInfos.add(sparkUDFInfo);
-    final SqlOperator convertedFunction = createSqlOperator(versionedFunctionName, operator.getReturnTypeInference());
+    final SqlOperator convertedFunction =
+        createSqlOperator(versionedViewDependentFunctionName, operator.getReturnTypeInference());
     return convertedFunction.createCall(sqlCall.getParserPosition(), sqlCall.getOperandList());
-  }
-
-  /**
-   * Generates a versioned function name based on the given function name and class name.
-   * For example, if the function name is "myFunction" and the class name is "coral_udf_version_1_0_0.com.linkedin.MyClass",
-   * the versioned function name will be "myFunction_1_0_0". If the class name is not versioned, such as "com.linkedin.MyClass",
-   * the versioned function name will be "myFunction".
-   */
-  private String getVersionedFunctionName(String functionName, String className) {
-    String versionedPrefix = className.substring(0, className.indexOf('.'));
-    Matcher matcher = Pattern.compile(CORAL_VERSIONED_UDF_PREFIX).matcher(versionedPrefix);
-    if (matcher.find()) {
-      return String.join("_", ImmutableList.of(functionName, matcher.group(1), matcher.group(2), matcher.group(3)));
-    } else {
-      return functionName;
-    }
   }
 }

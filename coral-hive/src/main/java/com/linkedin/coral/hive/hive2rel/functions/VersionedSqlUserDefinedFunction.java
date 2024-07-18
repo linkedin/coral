@@ -1,11 +1,13 @@
 /**
- * Copyright 2019-2022 LinkedIn Corporation. All rights reserved.
+ * Copyright 2019-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
 package com.linkedin.coral.hive.hive2rel.functions;
 
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.google.common.collect.ImmutableList;
 
@@ -22,6 +24,8 @@ import org.apache.calcite.sql.type.SqlReturnTypeInference;
 import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
 import org.apache.calcite.sql.validate.SqlValidator;
 import org.apache.calcite.sql.validate.SqlValidatorScope;
+
+import static com.linkedin.coral.hive.hive2rel.functions.utils.FunctionUtils.*;
 
 
 /**
@@ -66,6 +70,24 @@ public class VersionedSqlUserDefinedFunction extends SqlUserDefinedFunction {
 
   public String getViewDependentFunctionName() {
     return viewDependentFunctionName;
+  }
+
+  /**
+   * Get the versioned function name based on the `viewDependentFunctionName` and UDF class name.
+   * For example, if the function name is "myFunction" and the class name is "coral_udf_version_1_0_0.com.linkedin.MyClass",
+   * the versioned function name will be "myFunction_1_0_0". If the class name is not versioned, such as "com.linkedin.MyClass",
+   * the versioned function name will be "myFunction".
+   */
+  public String getVersionedViewDependentFunctionName() {
+    String className = getName();
+    String versionedPrefix = className.substring(0, className.indexOf('.'));
+    Matcher matcher = Pattern.compile(CORAL_VERSIONED_UDF_PREFIX).matcher(versionedPrefix);
+    if (matcher.find()) {
+      return String.join("_",
+          ImmutableList.of(viewDependentFunctionName, matcher.group(1), matcher.group(2), matcher.group(3)));
+    } else {
+      return viewDependentFunctionName;
+    }
   }
 
   // This method is called during SQL validation. The super-class implementation resets the call's sqlOperator to one
