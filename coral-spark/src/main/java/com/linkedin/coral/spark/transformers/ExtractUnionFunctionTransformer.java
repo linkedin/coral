@@ -79,7 +79,8 @@ public class ExtractUnionFunctionTransformer extends SqlCallTransformer {
 
       if (containsSingleUnionType(operandType)) {
         // Pass in schema string to keep track of the original Hive schema containing single uniontypes so coalesce_struct
-        // UDF knows which fields are unwrapped single uniontypes
+        // UDF knows which fields are unwrapped single uniontypes. This is needed otherwise coalesce_struct would
+        // not coalesce the single uniontype fields as expected.
         String operandSchemaString = hiveTypeStringConverter.convertRelDataType(deriveRelDatatype(sqlCall.operand(0)));
         List<SqlNode> newOperandList = new ArrayList<>(operandList);
         newOperandList.add(SqlLiteral.createCharString(operandSchemaString, SqlParserPos.ZERO));

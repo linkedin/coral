@@ -45,6 +45,19 @@ public class RelDataTypeToHiveTypeStringConverter {
     this.convertUnionTypes = convertUnionTypes;
   }
 
+  /**
+   * If true, Coral will convert single uniontypes back to Hive's native uniontype representation. This is necessary
+   * because some engines have readers that unwrap Hive single uniontypes to just the underlying data type, causing
+   * the loss of information that the column was originally a uniontype in Hive. This can be problematic when calling
+   * the `coalesce_struct` UDF on such columns, as they are expected to be treated as uniontypes. Retaining the
+   * original uniontype record and passing it into `coalesce_struct` ensures correct handling.
+   *
+   * Example:
+   * RelDataType:
+   *   struct(tag:integer,field0:varchar)
+   * Hive Type String:
+   *   uniontype&lt;string&gt;
+   */
   private static boolean convertUnionTypes = false;
 
   /**
@@ -117,8 +130,7 @@ public class RelDataTypeToHiveTypeStringConverter {
   private static String buildStructDataTypeString(RelRecordType relRecordType) {
     List<String> structFieldStrings = new ArrayList<>();
 
-    // Convert single uniontypes back to Hive representation so coalesce_struct UDF can handle
-    // single uniontypes in Spark correctly
+    // Convert single uniontypes as structs back to native Hive representation
     if (convertUnionTypes && relRecordType.getFieldList().size() == 2
         && relRecordType.getFieldList().get(0).getName().equals("tag")
         && relRecordType.getFieldList().get(1).getName().equals("field0")) {
