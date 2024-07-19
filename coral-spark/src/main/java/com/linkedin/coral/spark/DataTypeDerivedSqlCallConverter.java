@@ -21,7 +21,7 @@ import com.linkedin.coral.spark.transformers.ExtractUnionFunctionTransformer;
 
 /**
  * DataTypeDerivedSqlCallConverter transforms the sqlCalls
- * in the input SqlNode representation to be compatible with Trino engine.
+ * in the input SqlNode representation to be compatible with Spark engine.
  * The transformation may involve change in operator, reordering the operands
  * or even re-constructing the SqlNode.
  *
