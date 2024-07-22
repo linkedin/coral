@@ -491,6 +491,7 @@ public class RelToAvroSchemaConverter {
       return super.visitRangeRef(rexRangeRef);
     }
 
+    @Override
     public RexNode visitFieldAccess(RexFieldAccess rexFieldAccess) {
       RexNode referenceExpr = rexFieldAccess.getReferenceExpr();
 
