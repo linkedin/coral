@@ -140,7 +140,6 @@ public class TypeConverter {
   // The schema of output Struct conforms to https://github.com/trinodb/trino/pull/3483
   // except we adopted "integer" for the type of "tag" field instead of "tinyint" in the Trino patch
   // for compatibility with other platforms that Iceberg currently doesn't support tinyint type.
-  // When the field count inside UnionTypeInfo is one, we surface the underlying RelDataType instead.
 
   // Note: this is subject to change in the future pending on the discussion in
   // https://mail-archives.apache.org/mod_mbox/iceberg-dev/202112.mbox/browser

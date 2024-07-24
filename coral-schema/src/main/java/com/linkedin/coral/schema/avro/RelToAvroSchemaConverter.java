@@ -507,14 +507,7 @@ public class RelToAvroSchemaConverter {
           // UDFs calls could potentially be doubly (or more) field-referenced, for example, `extract_union(baz).single.tag_0`
           // where baz is a struct containing a uniontype field. In this case, we simply need to use derived type of the entire
           // call. Note that this also takes care of the simple one layer field reference on a UDF call.
-          String oldFieldName = rexFieldAccess.getField().getName();
-          String suggestNewFieldName = suggestedFieldNames.poll();
-          String newFieldName = SchemaUtilities.getFieldName(oldFieldName, suggestNewFieldName);
-
-          RelDataType fieldType = rexFieldAccess.getType();
-          boolean isNullable = SchemaUtilities.isFieldNullable((RexCall) referenceExpr, inputSchema);
-          // TODO: add field documentation
-          SchemaUtilities.appendField(newFieldName, fieldType, null, fieldAssembler, isNullable);
+          handleUDFFieldAccess(rexFieldAccess, (RexCall) referenceExpr);
           return rexFieldAccess;
         } else if (referenceExpr instanceof RexFieldAccess) {
           // While selecting `int_field` from `struct_col:struct<inner_struct_col:struct<int_field:int>>` using `struct_col.inner_struct_col.int_field`,
@@ -527,16 +520,31 @@ public class RelToAvroSchemaConverter {
         }
       }
 
+      handleFieldAccess(rexFieldAccess, (RexInputRef) referenceExpr, innerRecordNames);
+      return rexFieldAccess;
+    }
+
+    private void handleFieldAccess(RexFieldAccess rexFieldAccess, RexInputRef referenceExpr,
+        Deque<String> innerRecordNames) {
       String oldFieldName = rexFieldAccess.getField().getName();
       String suggestNewFieldName = suggestedFieldNames.poll();
       String newFieldName = SchemaUtilities.getFieldName(oldFieldName, suggestNewFieldName);
-      Schema topSchema = inputSchema.getFields().get(((RexInputRef) referenceExpr).getIndex()).schema();
 
+      Schema topSchema = inputSchema.getFields().get(referenceExpr.getIndex()).schema();
       Schema.Field accessedField = getFieldFromTopSchema(topSchema, oldFieldName, innerRecordNames);
       assert accessedField != null;
       SchemaUtilities.appendField(newFieldName, accessedField, fieldAssembler);
+    }
 
-      return rexFieldAccess;
+    private void handleUDFFieldAccess(RexFieldAccess rexFieldAccess, RexCall referenceExpr) {
+      String oldFieldName = rexFieldAccess.getField().getName();
+      String suggestNewFieldName = suggestedFieldNames.poll();
+      String newFieldName = SchemaUtilities.getFieldName(oldFieldName, suggestNewFieldName);
+
+      RelDataType fieldType = rexFieldAccess.getType();
+      boolean isNullable = SchemaUtilities.isFieldNullable(referenceExpr, inputSchema);
+      // TODO: add field documentation
+      SchemaUtilities.appendField(newFieldName, fieldType, null, fieldAssembler, isNullable);
     }
 
     @Override
