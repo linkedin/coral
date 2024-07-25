@@ -40,11 +40,21 @@ import com.linkedin.coral.spark.containers.SparkUDFInfo;
  *
  * Check `CoralSparkTest#testUnionExtractUDF` for examples.
  *
- * Note that uniontypes holding a single need to be handled specially in Spark as there is a Spark-specific mechanism
- * that unwraps a single uniontype (a uniontype holding only one data type) to just the single underlying data type.
+ * Note that there is a Spark-specific mechanism that unwraps a single uniontype (a uniontype holding only one data type)
+ * to simply the single underlying data type. This behavior is specific during the Avro schema to Spark schema conversion
+ * in base tables. The problem with this behavior is we expect `coalesce_struct` to coalesce columns that originally contained
+ * single uniontypes, yet lose this information after Spark gets rid of the uniontype. To work around this, we retain information
+ * about the original schema and pass it to `coalesce_struct` UDF as a schema string.
  * Reference: https://spark.apache.org/docs/latest/sql-data-sources-avro.html#supported-types-for-avro---spark-sql-conversion
  *
- * Check `CoralSparkTest#testUnionExtractUDFOnSingleTypeUnions` for examples.
+ * For example, if we have an input SqlNode like so, where `col` is a uniontype column holding only string type:
+ *  "SELECT extract_union(col) FROM table"
+ *
+ * This transformer would transform the above SqlNode to:
+ *  "SELECT coalesce_struct(col, 'uniontype<string>') FROM table"
+ *
+ * Check `CoralSparkTest#testUnionExtractUDFOnSingleTypeUnions` for more examples including examples where we have single
+ * uniontypes nested in a struct.
  *
  */
 public class ExtractUnionFunctionTransformer extends SqlCallTransformer {
