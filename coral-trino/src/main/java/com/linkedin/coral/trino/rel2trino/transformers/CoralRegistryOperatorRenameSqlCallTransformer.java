@@ -1,12 +1,15 @@
 /**
- * Copyright 2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2023-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
 package com.linkedin.coral.trino.rel2trino.transformers;
 
+import org.apache.calcite.sql.SqlCall;
+
 import com.linkedin.coral.common.transformers.OperatorRenameSqlCallTransformer;
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
+import com.linkedin.coral.hive.hive2rel.functions.utils.FunctionUtils;
 
 
 /**
@@ -15,6 +18,12 @@ import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
  */
 public class CoralRegistryOperatorRenameSqlCallTransformer extends OperatorRenameSqlCallTransformer {
   private static final StaticHiveFunctionRegistry HIVE_FUNCTION_REGISTRY = new StaticHiveFunctionRegistry();
+
+  @Override
+  protected boolean condition(SqlCall sqlCall) {
+    return sourceOpName.equalsIgnoreCase(FunctionUtils.removeVersioningPrefix(sqlCall.getOperator().getName()))
+        && sqlCall.getOperandList().size() == numOperands;
+  }
 
   public CoralRegistryOperatorRenameSqlCallTransformer(String sourceOpName, int numOperands, String targetOpName) {
     super(HIVE_FUNCTION_REGISTRY.lookup(sourceOpName).iterator().next().getSqlOperator(), numOperands, targetOpName);

@@ -11,6 +11,8 @@ import java.io.IOException;
 import com.google.common.collect.ImmutableMap;
 
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.sql.type.ReturnTypes;
+import org.apache.calcite.sql.type.SqlTypeFamily;
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.MetaException;
@@ -20,7 +22,10 @@ import org.testng.annotations.BeforeTest;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
+
 import static com.linkedin.coral.trino.rel2trino.CoralTrinoConfigKeys.*;
+import static org.apache.calcite.sql.type.OperandTypes.*;
 import static org.testng.Assert.assertEquals;
 
 
@@ -32,6 +37,8 @@ public class HiveToTrinoConverterTest {
   public void beforeClass() throws IOException, HiveException, MetaException {
     conf = TestUtils.loadResourceHiveConf();
     TestUtils.initializeTablesAndViews(conf);
+    StaticHiveFunctionRegistry.createAddUserDefinedFunction("com.linkedin.coral.hive.hive2rel.CoralTestUDF",
+        ReturnTypes.BOOLEAN, family(SqlTypeFamily.INTEGER));
   }
 
   @AfterTest
@@ -992,6 +999,16 @@ public class HiveToTrinoConverterTest {
 
     String expected = "SELECT \"tablea\".\"b\".\"b1\" AS \"b1\"\n" + "FROM \"test\".\"tablea\" AS \"tablea\"\n"
         + "WHERE \"tablea\".\"a\" > 5";
+    assertEquals(expandedSql, expected);
+  }
+
+  @Test
+  public void testUDFWithShadedClassName() {
+    RelNode relNode = TestUtils.getHiveToRelConverter().convertView("test", "udf_with_shade_prefix");
+    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
+    String expandedSql = relToTrinoConverter.convert(relNode);
+
+    String expected = "SELECT \"coral_test\"(\"tablea\".\"a\")\n" + "FROM \"test\".\"tablea\" AS \"tablea\"";
     assertEquals(expandedSql, expected);
   }
 }
