@@ -51,7 +51,7 @@ import com.linkedin.coral.spark.containers.SparkUDFInfo;
  *  "SELECT extract_union(col) FROM table"
  *
  * This transformer would transform the above SqlNode to:
- *  "SELECT coalesce_struct(col, 'uniontype<string>') FROM table"
+ *  "SELECT coalesce_struct(col, 'uniontype&lt;string&gt;') FROM table"
  *
  * Check `CoralSparkTest#testUnionExtractUDFOnSingleTypeUnions` for more examples including examples where we have single
  * uniontypes nested in a struct.
