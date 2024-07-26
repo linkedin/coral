@@ -33,16 +33,33 @@ import org.apache.calcite.rex.RexNode;
 import static java.lang.Math.*;
 
 
+/**
+ * RelNodeCostEstimator is a utility class designed to estimate the cost of executing relational operations
+ * in a query plan. It uses statistical information about table row counts and column distinct values
+ * to compute costs associated with different types of relational operations like table scans, joins,
+ * unions, and projections.
+ *
+ * <p>This class supports loading statistics from a JSON configuration file.
+ * For a relational operations (RelNode), the execution cost and row count are estimated based on
+ * these statistics and the input relational expressions.
+ *
+ * <p>The cost estimation takes into account factors such as I/O costs and data shuffling costs.
+ * The cost of writing a row to disk is IOCostValue, and the cost of shuffling a row
+ * between nodes is shuffleCostValue.
+ *
+ * <p>Cost is get from 'getCost' method, which returns the total cost of the query plan, and cost consists of
+ * execution cost and I/O cost.
+ */
 public class RelNodeCostEstimator {
 
   class CostInfo {
     // TODO: we may also need to add TableName field.
-    Double cost;
-    Double row;
+    Double shuffleCost;
+    Double rowCount;
 
-    public CostInfo(Double cost, Double row) {
-      this.cost = cost;
-      this.row = row;
+    public CostInfo(Double shuffleCost, Double row) {
+      this.shuffleCost = shuffleCost;
+      this.rowCount = row;
     }
   }
 
@@ -60,49 +77,51 @@ public class RelNodeCostEstimator {
     }
   }
 
-  private Map<String, Double> stat = new HashMap<>();
+  private Map<String, Double> rouCountStat = new HashMap<>();
 
   private Map<String, Double> distinctStat = new HashMap<>();
 
+  private final Double IOCostValue;
+
+  private final Double shuffleCostValue;
+
   public void setStat(Map<String, Double> stat) {
-    this.stat = stat;
+    this.rouCountStat = stat;
   }
 
   public void setDistinctStat(Map<String, Double> distinctStat) {
     this.distinctStat = distinctStat;
   }
 
-  private Double IOCostParam = 1.0;
-
-  private Double shuffleCostParam = 1.0;
-
-  public void setIOCostParam(Double IOCostParam) {
-    this.IOCostParam = IOCostParam;
+  public RelNodeCostEstimator(Double IOCostValue, Double shuffleCostValue) {
+    this.IOCostValue = IOCostValue;
+    this.shuffleCostValue = shuffleCostValue;
   }
 
-  public void setShuffleCostParam(Double shuffleCostParam) {
-    this.shuffleCostParam = shuffleCostParam;
-  }
-
+  /**
+   * Loads statistics from a JSON configuration file and stores them in internal data structures.
+   *
+   * <p>This method reads a JSON file from the specified path, parses its content, and extracts
+   * statistical information. For each table in the JSON object, it retrieves the row count and
+   * distinct counts for each column. These values are then stored in the `stat` and `distinctStat`
+   * maps, respectively.
+   *
+   * @param configPath the path to the JSON configuration file
+   */
   public void loadStatistic(String configPath) {
     try {
       String content = new String(Files.readAllBytes(Paths.get(configPath)));
-      // Parse JSON string to JsonObject
       JsonObject jsonObject = new JsonParser().parse(content).getAsJsonObject();
-      // Iterate over each table in the JSON object
       for (Map.Entry<String, JsonElement> entry : jsonObject.entrySet()) {
         String tableName = entry.getKey();
         JsonObject tableObject = entry.getValue().getAsJsonObject();
 
-        // Extract row count
         Double rowCount = tableObject.get("RowCount").getAsDouble();
 
-        // Extract distinct counts
         JsonObject distinctCounts = tableObject.getAsJsonObject("DistinctCounts");
 
-        stat.put(tableName, rowCount);
+        rouCountStat.put(tableName, rowCount);
 
-        // Iterate over distinct counts
         for (Map.Entry<String, JsonElement> distinctEntry : distinctCounts.entrySet()) {
           String columnName = distinctEntry.getKey();
           Double distinctCount = distinctEntry.getValue().getAsDouble();
@@ -117,10 +136,21 @@ public class RelNodeCostEstimator {
 
   }
 
+  /**
+   * Returns the total cost of executing a relational operation.
+   *
+   * <p>This method computes the cost of executing a relational operation based on the input
+   * relational expression. The cost is calculated as the sum of the execution cost and the I/O cost.
+   * We assume that I/O only occurs at the root of the query plan (Project) where we write the output to disk.
+   * So the cost is the sum of the shuffle cost of all children RelNodes and IOCostValue * row count of the root Project RelNode.
+   *
+   * @param rel the input relational expression
+   * @return the total cost of executing the relational operation
+   */
   public Double getCost(RelNode rel) {
     CostInfo executionCostInfo = getExecutionCost(rel);
-    Double IOCost = executionCostInfo.row * IOCostParam;
-    return executionCostInfo.cost * shuffleCostParam + IOCost;
+    Double IOCost = executionCostInfo.rowCount * IOCostValue;
+    return executionCostInfo.shuffleCost * shuffleCostValue + IOCost;
   }
 
   public CostInfo getExecutionCost(RelNode rel) {
@@ -139,7 +169,7 @@ public class RelNodeCostEstimator {
   private CostInfo getExecutionCostTableScan(TableScan scan) {
     RelOptTable originalTable = scan.getTable();
     String tableName = getTableName(originalTable);
-    Double row = stat.getOrDefault(tableName, 5.0);
+    Double row = rouCountStat.getOrDefault(tableName, 5.0);
     return new CostInfo(row, row);
   }
 
@@ -155,25 +185,27 @@ public class RelNodeCostEstimator {
     }
     CostInfo leftCost = getExecutionCost(left);
     CostInfo rightCost = getExecutionCost(right);
-    Double joinSize = estimateJoinSize(join, leftCost.row, rightCost.row);
-    return new CostInfo(max(leftCost.cost, rightCost.cost), joinSize);
+    Double joinSize = estimateJoinSize(join, leftCost.rowCount, rightCost.rowCount);
+    // The shuffle cost of a join is the maximum shuffle cost of its children because
+    // in modern distributed systems, the shuffle cost is dominated by the largest shuffle.
+    return new CostInfo(max(leftCost.shuffleCost, rightCost.shuffleCost), joinSize);
   }
 
-  private List<JoinKey> findJoinKeys(LogicalJoin join) {
+  private List<JoinKey> getJoinKeys(LogicalJoin join) {
     List<JoinKey> joinKeys = new ArrayList<>();
     RexNode condition = join.getCondition();
     if (condition instanceof RexCall) {
-      processRexCall((RexCall) condition, join, joinKeys);
+      getJoinKeysFromJoinCondition((RexCall) condition, join, joinKeys);
     }
     return joinKeys;
   }
 
-  private void processRexCall(RexCall call, LogicalJoin join, List<JoinKey> joinKeys) {
+  private void getJoinKeysFromJoinCondition(RexCall call, LogicalJoin join, List<JoinKey> joinKeys) {
     if (call.getOperator().getName().equalsIgnoreCase("AND")) {
       // Process each operand of the AND separately
       for (RexNode operand : call.getOperands()) {
         if (operand instanceof RexCall) {
-          processRexCall((RexCall) operand, join, joinKeys);
+          getJoinKeysFromJoinCondition((RexCall) operand, join, joinKeys);
         }
       }
     } else {
@@ -201,15 +233,15 @@ public class RelNodeCostEstimator {
   }
 
   private Double estimateJoinSize(LogicalJoin join, Double leftSize, Double rightSize) {
-    List<JoinKey> joinKeys = findJoinKeys(join);
+    List<JoinKey> joinKeys = getJoinKeys(join);
     Double selectivity = 1.0;
     for (JoinKey joinKey : joinKeys) {
       String leftTableName = joinKey.leftTableName;
       String rightTableName = joinKey.rightTableName;
       String leftFieldName = joinKey.leftFieldName;
       String rightFieldName = joinKey.rightFieldName;
-      Double leftCardinality = stat.getOrDefault(leftTableName, 5.0);
-      Double rightCardinality = stat.getOrDefault(rightTableName, 5.0);
+      Double leftCardinality = rouCountStat.getOrDefault(leftTableName, 5.0);
+      Double rightCardinality = rouCountStat.getOrDefault(rightTableName, 5.0);
       Double leftDistinct = distinctStat.getOrDefault(leftTableName + ":" + leftFieldName, leftCardinality);
       Double rightDistinct = distinctStat.getOrDefault(rightTableName + ":" + rightFieldName, rightCardinality);
       selectivity *= 1 / max(leftDistinct, rightDistinct);
@@ -224,8 +256,8 @@ public class RelNodeCostEstimator {
     for (Iterator var4 = union.getInputs().iterator(); var4.hasNext();) {
       input = (RelNode) var4.next();
       CostInfo inputCost = getExecutionCost(input);
-      unionSize += inputCost.row;
-      unionCost = max(inputCost.cost, unionCost);
+      unionSize += inputCost.rowCount;
+      unionCost = max(inputCost.shuffleCost, unionCost);
     }
     unionCost *= 2;
     return new CostInfo(unionCost, unionSize);

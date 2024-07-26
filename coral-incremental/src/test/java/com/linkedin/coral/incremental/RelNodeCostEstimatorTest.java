@@ -38,7 +38,7 @@ public class RelNodeCostEstimatorTest {
   @BeforeClass
   public void beforeClass() throws HiveException, MetaException, IOException {
     conf = TestUtils.loadResourceHiveConf();
-    estimator = new RelNodeCostEstimator();
+    estimator = new RelNodeCostEstimator(2.0, 1.0);
     TestUtils.initializeViews(conf);
   }
 
@@ -97,7 +97,6 @@ public class RelNodeCostEstimatorTest {
   public void testSimpleSelectAll() {
     String sql = "SELECT * FROM test.bar1";
     String incrementalSql = "SELECT *\n" + "FROM test.bar1_delta AS bar1_delta";
-    estimator.setIOCostParam(2.0);
     estimator.loadStatistic(TEST_JSON_FILE_DIR + "statistic.json");
     assertEquals(getIncrementalModification(sql), incrementalSql);
     estimator.setStat(fakeStatData());
@@ -114,7 +113,6 @@ public class RelNodeCostEstimatorTest {
         + "INNER JOIN test.bar2_prev AS bar2_prev ON bar1_delta.x = bar2_prev.x) AS t\n" + "UNION ALL\n" + "SELECT *\n"
         + "FROM test.bar1_delta AS bar1_delta0\n"
         + "INNER JOIN test.bar2_delta AS bar2_delta0 ON bar1_delta0.x = bar2_delta0.x";
-    estimator.setIOCostParam(2.0);
     estimator.loadStatistic(TEST_JSON_FILE_DIR + "statistic.json");
     assertEquals(getIncrementalModification(sql), incrementalSql);
     estimator.setStat(fakeStatData());
