@@ -1,5 +1,5 @@
 /**
- * Copyright 2023-2024 LinkedIn Corporation. All rights reserved.
+ * Copyright 2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -31,8 +31,7 @@ import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexNode;
 
 
-public class RelNodeIncrementalTransformer {
-
+public class RelNodeGenerationTransformer {
   private final String TABLE_NAME_PREFIX = "Table#";
   private final String DELTA_SUFFIX = "_delta";
 
@@ -41,7 +40,7 @@ public class RelNodeIncrementalTransformer {
   private Map<String, RelNode> deltaRelNodes;
   private RelNode tempLastRelNode;
 
-  public RelNodeIncrementalTransformer() {
+  public RelNodeGenerationTransformer() {
     relOptSchema = null;
     snapshotRelNodes = new LinkedHashMap<>();
     deltaRelNodes = new LinkedHashMap<>();
@@ -70,6 +69,63 @@ public class RelNodeIncrementalTransformer {
           deltaRelNodes.get(description));
     }
     return deterministicDeltaRelNodes;
+  }
+
+  private RelNode convertRelPrev(RelNode originalNode) {
+    RelShuttle converter = new RelShuttleImpl() {
+      @Override
+      public RelNode visit(TableScan scan) {
+        RelOptTable originalTable = scan.getTable();
+        List<String> incrementalNames = new ArrayList<>(originalTable.getQualifiedName());
+        String deltaTableName = incrementalNames.remove(incrementalNames.size() - 1) + "_prev";
+        incrementalNames.add(deltaTableName);
+        RelOptTable incrementalTable =
+            RelOptTableImpl.create(originalTable.getRelOptSchema(), originalTable.getRowType(), incrementalNames, null);
+        return LogicalTableScan.create(scan.getCluster(), incrementalTable);
+      }
+
+      @Override
+      public RelNode visit(LogicalJoin join) {
+        RelNode left = join.getLeft();
+        RelNode right = join.getRight();
+        RelNode prevLeft = convertRelPrev(left);
+        RelNode prevRight = convertRelPrev(right);
+        RexBuilder rexBuilder = join.getCluster().getRexBuilder();
+
+        LogicalProject p3 = createProjectOverJoin(join, prevLeft, prevRight, rexBuilder);
+
+        return p3;
+      }
+
+      @Override
+      public RelNode visit(LogicalFilter filter) {
+        RelNode transformedChild = convertRelPrev(filter.getInput());
+
+        return LogicalFilter.create(transformedChild, filter.getCondition());
+      }
+
+      @Override
+      public RelNode visit(LogicalProject project) {
+        RelNode transformedChild = convertRelPrev(project.getInput());
+        return LogicalProject.create(transformedChild, project.getProjects(), project.getRowType());
+      }
+
+      @Override
+      public RelNode visit(LogicalUnion union) {
+        List<RelNode> children = union.getInputs();
+        List<RelNode> transformedChildren =
+            children.stream().map(child -> convertRelPrev(child)).collect(Collectors.toList());
+        return LogicalUnion.create(transformedChildren, union.all);
+      }
+
+      @Override
+      public RelNode visit(LogicalAggregate aggregate) {
+        RelNode transformedChild = convertRelPrev(aggregate.getInput());
+        return LogicalAggregate.create(transformedChild, aggregate.getGroupSet(), aggregate.getGroupSets(),
+            aggregate.getAggCallList());
+      }
+    };
+    return originalNode.accept(converter);
   }
 
   /**
@@ -122,12 +178,14 @@ public class RelNodeIncrementalTransformer {
           incrementalRight = susbstituteWithMaterializedView(
               getDeterministicDescriptionFromDescription(rightIncrementalDescription, true), incrementalRight);
         }
+        RelNode prevLeft = convertRelPrev(left);
+        RelNode prevRight = convertRelPrev(right);
 
         // We need to do this in the join to get potentially updated left and right nodes
         tempLastRelNode = createProjectOverJoin(join, left, right, rexBuilder);
 
-        LogicalProject p1 = createProjectOverJoin(join, left, incrementalRight, rexBuilder);
-        LogicalProject p2 = createProjectOverJoin(join, incrementalLeft, right, rexBuilder);
+        LogicalProject p1 = createProjectOverJoin(join, prevLeft, incrementalRight, rexBuilder);
+        LogicalProject p2 = createProjectOverJoin(join, incrementalLeft, prevRight, rexBuilder);
         LogicalProject p3 = createProjectOverJoin(join, incrementalLeft, incrementalRight, rexBuilder);
 
         LogicalUnion unionAllJoins =
@@ -246,5 +304,4 @@ public class RelNodeIncrementalTransformer {
     });
     return LogicalProject.create(incrementalJoin, projects, names);
   }
-
 }
