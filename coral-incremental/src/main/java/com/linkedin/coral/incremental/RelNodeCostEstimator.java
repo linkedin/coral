@@ -63,6 +63,13 @@ public class RelNodeCostEstimator {
     }
   }
 
+  class TableStatistic {
+    // The number of rows in the table
+    Double rowCount;
+    // The number of distinct values in each column
+    Map<String, Double> distinctCountByRow;
+  }
+
   class JoinKey {
     String leftTableName;
     String rightTableName;
@@ -77,21 +84,11 @@ public class RelNodeCostEstimator {
     }
   }
 
-  private Map<String, Double> rouCountStat = new HashMap<>();
-
-  private Map<String, Double> distinctStat = new HashMap<>();
+  private Map<String, TableStatistic> costStatistic = new HashMap<>();
 
   private final Double IOCostValue;
 
   private final Double shuffleCostValue;
-
-  public void setStat(Map<String, Double> stat) {
-    this.rouCountStat = stat;
-  }
-
-  public void setDistinctStat(Map<String, Double> distinctStat) {
-    this.distinctStat = distinctStat;
-  }
 
   public RelNodeCostEstimator(Double IOCostValue, Double shuffleCostValue) {
     this.IOCostValue = IOCostValue;
@@ -113,6 +110,7 @@ public class RelNodeCostEstimator {
       String content = new String(Files.readAllBytes(Paths.get(configPath)));
       JsonObject jsonObject = new JsonParser().parse(content).getAsJsonObject();
       for (Map.Entry<String, JsonElement> entry : jsonObject.entrySet()) {
+        TableStatistic tableStatistic = new TableStatistic();
         String tableName = entry.getKey();
         JsonObject tableObject = entry.getValue().getAsJsonObject();
 
@@ -120,14 +118,15 @@ public class RelNodeCostEstimator {
 
         JsonObject distinctCounts = tableObject.getAsJsonObject("DistinctCounts");
 
-        rouCountStat.put(tableName, rowCount);
+        tableStatistic.rowCount = rowCount;
 
         for (Map.Entry<String, JsonElement> distinctEntry : distinctCounts.entrySet()) {
           String columnName = distinctEntry.getKey();
           Double distinctCount = distinctEntry.getValue().getAsDouble();
 
-          distinctStat.put(tableName + ":" + columnName, distinctCount);
+          tableStatistic.distinctCountByRow.put(columnName, distinctCount);
         }
+        costStatistic.put(tableName, tableStatistic);
 
       }
     } catch (IOException e) {
@@ -169,8 +168,13 @@ public class RelNodeCostEstimator {
   private CostInfo getExecutionCostTableScan(TableScan scan) {
     RelOptTable originalTable = scan.getTable();
     String tableName = getTableName(originalTable);
-    Double row = rouCountStat.getOrDefault(tableName, 5.0);
-    return new CostInfo(row, row);
+    try {
+      TableStatistic tableStat = costStatistic.get(tableName);
+      Double rowCount = tableStat.rowCount;
+      return new CostInfo(rowCount, rowCount);
+    } catch (NullPointerException e) {
+      throw new IllegalArgumentException("Table statistics not found for table: " + tableName);
+    }
   }
 
   private String getTableName(RelOptTable table) {
@@ -241,11 +245,18 @@ public class RelNodeCostEstimator {
       String rightTableName = joinKey.rightTableName;
       String leftFieldName = joinKey.leftFieldName;
       String rightFieldName = joinKey.rightFieldName;
-      Double leftCardinality = rouCountStat.getOrDefault(leftTableName, 5.0);
-      Double rightCardinality = rouCountStat.getOrDefault(rightTableName, 5.0);
-      Double leftDistinct = distinctStat.getOrDefault(leftTableName + ":" + leftFieldName, leftCardinality);
-      Double rightDistinct = distinctStat.getOrDefault(rightTableName + ":" + rightFieldName, rightCardinality);
-      selectivity *= 1 / max(leftDistinct, rightDistinct);
+      try {
+        TableStatistic leftTableStat = costStatistic.get(leftTableName);
+        TableStatistic rightTableStat = costStatistic.get(rightTableName);
+        Double leftCardinality = leftTableStat.rowCount;
+        Double rightCardinality = rightTableStat.rowCount;
+        Double leftDistinct = leftTableStat.distinctCountByRow.getOrDefault(leftFieldName, leftCardinality);
+        Double rightDistinct = rightTableStat.distinctCountByRow.getOrDefault(rightFieldName, rightCardinality);
+        selectivity *= 1 / max(leftDistinct, rightDistinct);
+      } catch (NullPointerException e) {
+        throw new IllegalArgumentException(
+            "Table statistics not found for table: " + leftTableName + " or " + rightTableName);
+      }
     }
     return leftSize * rightSize * selectivity;
   }
