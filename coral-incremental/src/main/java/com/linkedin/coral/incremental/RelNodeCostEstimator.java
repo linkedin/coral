@@ -180,9 +180,6 @@ public class RelNodeCostEstimator {
   private CostInfo getExecutionCostJoin(LogicalJoin join) {
     RelNode left = join.getLeft();
     RelNode right = join.getRight();
-    if (!(left instanceof TableScan) || !(right instanceof TableScan)) {
-      return new CostInfo(0.0, 0.0);
-    }
     CostInfo leftCost = getExecutionCost(left);
     CostInfo rightCost = getExecutionCost(right);
     Double joinSize = estimateJoinSize(join, leftCost.rowCount, rightCost.rowCount);
@@ -196,6 +193,10 @@ public class RelNodeCostEstimator {
     RexNode condition = join.getCondition();
     if (condition instanceof RexCall) {
       getJoinKeysFromJoinCondition((RexCall) condition, join, joinKeys);
+    }
+    // Assertion to check if joinKeys.size() is greater than or equal to 1
+    if (joinKeys.size() < 1) {
+      throw new IllegalArgumentException("Join keys size is less than 1");
     }
     return joinKeys;
   }
