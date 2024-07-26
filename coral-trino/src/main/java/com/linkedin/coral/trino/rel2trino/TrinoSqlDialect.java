@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -76,11 +76,7 @@ public class TrinoSqlDialect extends SqlDialect {
         unparseMapValueConstructor(writer, call, leftPrec, rightPrec);
         break;
       default:
-        if (call.getOperator().getName().equals("timestamp_from_unixtime")) {
-          TIMESTAMP_FROM_UNIXTIME.unparse(writer, call, leftPrec, rightPrec);
-        } else {
-          super.unparseCall(writer, call, leftPrec, rightPrec);
-        }
+        super.unparseCall(writer, call, leftPrec, rightPrec);
     }
   }
 
