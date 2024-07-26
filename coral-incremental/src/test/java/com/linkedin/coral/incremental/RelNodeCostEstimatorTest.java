@@ -94,7 +94,7 @@ public class RelNodeCostEstimatorTest {
   }
 
   @Test
-  public void testSimpleSelectAll() {
+  public void testSimpleSelectAll() throws IOException {
     String sql = "SELECT * FROM test.bar1";
     String incrementalSql = "SELECT *\n" + "FROM test.bar1_delta AS bar1_delta";
     estimator.loadStatistic(TEST_JSON_FILE_DIR + "statistic.json");
@@ -104,7 +104,7 @@ public class RelNodeCostEstimatorTest {
   }
 
   @Test
-  public void testSimpleJoin() {
+  public void testSimpleJoin() throws IOException {
     String sql = "SELECT * FROM test.bar1 JOIN test.bar2 ON test.bar1.x = test.bar2.x";
     String prevSql = "SELECT *\n" + "FROM test.bar1 AS bar1\n" + "INNER JOIN test.bar2 AS bar2 ON bar1.x = bar2.x";
     String incrementalSql = "SELECT *\n" + "FROM (SELECT *\n" + "FROM test.bar1_prev AS bar1_prev\n"

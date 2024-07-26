@@ -108,7 +108,7 @@ public class RelNodeCostEstimator {
    *
    * @param configPath the path to the JSON configuration file
    */
-  public void loadStatistic(String configPath) {
+  public void loadStatistic(String configPath) throws IOException {
     try {
       String content = new String(Files.readAllBytes(Paths.get(configPath)));
       JsonObject jsonObject = new JsonParser().parse(content).getAsJsonObject();
@@ -131,7 +131,7 @@ public class RelNodeCostEstimator {
 
       }
     } catch (IOException e) {
-      e.printStackTrace();
+      throw new IOException("Failed to load statistics from the configuration file: " + configPath, e);
     }
 
   }
