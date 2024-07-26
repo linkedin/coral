@@ -5,6 +5,7 @@
  */
 package com.linkedin.coral.incremental;
 
+import com.linkedin.coral.transformers.CoralRelToSqlNodeConverter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -29,6 +30,7 @@ import org.apache.calcite.rel.logical.LogicalTableScan;
 import org.apache.calcite.rel.logical.LogicalUnion;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.sql.SqlNode;
 
 
 public class RelNodeIncrementalTransformer {
@@ -46,6 +48,45 @@ public class RelNodeIncrementalTransformer {
     snapshotRelNodes = new LinkedHashMap<>();
     deltaRelNodes = new LinkedHashMap<>();
     tempLastRelNode = null;
+  }
+  public List<RelNode> generateIncrementalRelNodes(RelNode relNode) {
+    RelNodeIncrementalTransformer transformer = new RelNodeIncrementalTransformer();
+    CoralRelToSqlNodeConverter converter = new CoralRelToSqlNodeConverter();
+    Map<String, RelNode> snapshotRelNodes = transformer.getSnapshotRelNodes();
+    Map<String, RelNode> deltaRelNodes = transformer.getDeltaRelNodes();
+    List<List<RelNode>> combinedLists = generateCombinedLists(deltaRelNodes, snapshotRelNodes);
+    combinedLists.add(Arrays.asList(relNode));
+    for(List<RelNode> plan : combinedLists) {
+      for(RelNode node : plan) {
+        SqlNode sqlNode = converter.convert(node);
+        System.out.println(sqlNode.toSqlString(converter.INSTANCE).getSql());
+        System.out.println("       ");
+      }
+      System.out.println("XXXXXXXXXX");
+    }
+    return combinedLists.get(0);
+  }
+
+  public List<List<RelNode>> generateCombinedLists(Map<String, RelNode> tMap, Map<String, RelNode> mMap) {
+    List<List<RelNode>> resultList = new ArrayList<>();
+    int n = tMap.size(); // Assuming tMap and mMap have the same size
+
+    for (int i = 0; i < n; i++) {
+      List<RelNode> tempList = new ArrayList<>();
+
+      // Add elements from tMap and mMap following the rule
+      for (int j = 0; j < n; j++) {
+        if (j <= i) {
+          tempList.add(tMap.get("Table#" + j + "_delta"));
+        } else {
+          tempList.add(mMap.get("Table#" + j));
+        }
+      }
+
+      resultList.add(tempList);
+    }
+
+    return resultList;
   }
 
   /**
