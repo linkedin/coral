@@ -30,11 +30,7 @@ public class IncrementalUtils {
         break;
     }
 
-
-  public static String getSparkIncrementalQueryFromUserSql(String query) {
-    RelNode originalNode = new HiveToRelConverter(hiveMetastoreClient).convertSql(query);
-
-    RelNode incrementalRelNode = new RelNodeIncrementalTransformer.convertRelIncremental(originalNode);
+    RelNode incrementalRelNode = new RelNodeIncrementalTransformer().convertRelIncremental(originalNode);
 
     switch (targetLanguage.toLowerCase()) {
       case "trino":
