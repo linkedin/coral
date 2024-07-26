@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -23,14 +23,20 @@ import com.linkedin.coral.common.transformers.SqlCallTransformers;
 import com.linkedin.coral.hive.hive2rel.functions.HiveRLikeOperator;
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 import com.linkedin.coral.trino.rel2trino.functions.TrinoElementAtFunction;
+import com.linkedin.coral.trino.rel2trino.transformers.AsOperatorTransformer;
 import com.linkedin.coral.trino.rel2trino.transformers.CollectListOrSetFunctionTransformer;
 import com.linkedin.coral.trino.rel2trino.transformers.CoralRegistryOperatorRenameSqlCallTransformer;
 import com.linkedin.coral.trino.rel2trino.transformers.CurrentTimestampTransformer;
+import com.linkedin.coral.trino.rel2trino.transformers.FromUnixtimeOperatorTransformer;
 import com.linkedin.coral.trino.rel2trino.transformers.GenericCoralRegistryOperatorRenameSqlCallTransformer;
+import com.linkedin.coral.trino.rel2trino.transformers.JoinSqlCallTransformer;
 import com.linkedin.coral.trino.rel2trino.transformers.MapValueConstructorTransformer;
+import com.linkedin.coral.trino.rel2trino.transformers.NullOrderingTransformer;
 import com.linkedin.coral.trino.rel2trino.transformers.ReturnTypeAdjustmentTransformer;
 import com.linkedin.coral.trino.rel2trino.transformers.SqlSelectAliasAppenderTransformer;
+import com.linkedin.coral.trino.rel2trino.transformers.SubstrIndexTransformer;
 import com.linkedin.coral.trino.rel2trino.transformers.ToDateOperatorTransformer;
+import com.linkedin.coral.trino.rel2trino.transformers.UnnestOperatorTransformer;
 
 import static com.linkedin.coral.trino.rel2trino.CoralTrinoConfigKeys.*;
 
@@ -50,7 +56,7 @@ public class CoralToTrinoSqlCallConverter extends SqlShuttle {
         new CoralRegistryOperatorRenameSqlCallTransformer("nvl", 2, "coalesce"),
         // array and map functions
         new MapValueConstructorTransformer(),
-        new OperatorRenameSqlCallTransformer(SqlStdOperatorTable.SUBSTRING, 3, "SUBSTR"),
+
         new SourceOperatorMatchSqlCallTransformer("item", 2) {
           @Override
           protected SqlCall transform(SqlCall sqlCall) {
@@ -67,8 +73,6 @@ public class CoralToTrinoSqlCallConverter extends SqlShuttle {
             "[{\"op\":\"*\",\"operands\":[{\"input\":1},{\"op\":\"^\",\"operands\":[{\"value\":10},{\"input\":2}]}]}]",
             "{\"op\":\"/\",\"operands\":[{\"input\":0},{\"op\":\"^\",\"operands\":[{\"value\":10},{\"input\":2}]}]}",
             null),
-        // string functions
-        new OperatorRenameSqlCallTransformer(SqlStdOperatorTable.SUBSTRING, 2, "SUBSTR"),
         // JSON functions
         new CoralRegistryOperatorRenameSqlCallTransformer("get_json_object", 2, "json_extract"),
         // map various hive functions
@@ -101,7 +105,7 @@ public class CoralToTrinoSqlCallConverter extends SqlShuttle {
                 + "{\"op\": \"date\", \"operands\":[{\"op\": \"timestamp\", \"operands\":[{\"input\": 1}]}]}]",
             null, null),
         new ToDateOperatorTransformer(configs.getOrDefault(AVOID_TRANSFORM_TO_DATE_UDF, false)),
-        new CurrentTimestampTransformer(),
+        new CurrentTimestampTransformer(), new FromUnixtimeOperatorTransformer(),
 
         // LinkedIn specific functions
         new CoralRegistryOperatorRenameSqlCallTransformer(
@@ -120,7 +124,8 @@ public class CoralToTrinoSqlCallConverter extends SqlShuttle {
             "com.linkedin.stdudfs.hive.daliudfs.UrnExtractorFunctionWrapper", 1, "urn_extractor"),
         new GenericCoralRegistryOperatorRenameSqlCallTransformer(),
 
-        new ReturnTypeAdjustmentTransformer(configs));
+        new ReturnTypeAdjustmentTransformer(configs), new UnnestOperatorTransformer(), new AsOperatorTransformer(),
+        new JoinSqlCallTransformer(), new NullOrderingTransformer(), new SubstrIndexTransformer());
   }
 
   private SqlOperator hiveToCoralSqlOperator(String functionName) {

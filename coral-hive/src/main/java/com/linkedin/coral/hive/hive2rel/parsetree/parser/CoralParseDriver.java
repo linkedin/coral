@@ -1,5 +1,5 @@
 /**
- * Copyright 2021-2022 LinkedIn Corporation. All rights reserved.
+ * Copyright 2021-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -13,12 +13,25 @@ import org.antlr.runtime.RecognitionException;
 import org.antlr.runtime.TokenRewriteStream;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.hive.conf.HiveConf;
 
 
 public class CoralParseDriver extends ParseDriver {
 
   private static final Log LOG =
       LogFactory.getLog("com.linkedin.coral.hive.hive2rel.parsetree.parser.CoralParseDriver");
+
+  private boolean useSQL11ReservedKeywordsForIdentifier;
+
+  public CoralParseDriver(boolean useSQL11ReservedKeywordsForIdentifier) {
+    super();
+    this.useSQL11ReservedKeywordsForIdentifier = useSQL11ReservedKeywordsForIdentifier;
+  }
+
+  public CoralParseDriver() {
+    super();
+    this.useSQL11ReservedKeywordsForIdentifier = false;
+  }
 
   @Override
   public ASTNode parse(String command) throws ParseException {
@@ -29,6 +42,17 @@ public class CoralParseDriver extends ParseDriver {
     HiveLexerCoral lexer = new HiveLexerCoral(new ANTLRNoCaseStringStream(command));
     TokenRewriteStream tokens = new TokenRewriteStream(lexer);
     HiveParser parser = new HiveParser(tokens);
+    HiveConf hiveConf = new HiveConf();
+    /*
+     * This enables usage of keywords as column names without adding backquotes. This is required for translating views
+     * created using spark engine as certain keywords in hive like timestamp are not keywords in spark. This will
+     * result in creation of views without backquoting those keywords. This will be removed when coral-spark becomes
+     * a supported LHS for translations.
+     */
+    if (useSQL11ReservedKeywordsForIdentifier) {
+      hiveConf.set("hive.support.sql11.reserved.keywords", "false");
+      parser.setHiveConf(hiveConf);
+    }
     parser.setTreeAdaptor(adaptor);
     HiveParser.statement_return r = null;
     try {

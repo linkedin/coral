@@ -41,6 +41,7 @@ public class CoralProvider {
   public static Driver driver;
   public static HiveConf conf;
   public static final String CORAL_SERVICE_DIR = "coral.service.test.dir";
+  public static final String CORAL_SERVICE_FRONTEND_URL = "http://localhost:3000";
 
   public static void initHiveMetastoreClient(String hivePropsLocation) throws Exception {
     // Connect to remote production Hive Metastore Client

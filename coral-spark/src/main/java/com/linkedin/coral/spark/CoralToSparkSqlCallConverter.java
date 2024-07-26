@@ -15,7 +15,6 @@ import org.apache.calcite.sql.util.SqlShuttle;
 import com.linkedin.coral.common.transformers.OperatorRenameSqlCallTransformer;
 import com.linkedin.coral.common.transformers.SqlCallTransformers;
 import com.linkedin.coral.spark.containers.SparkUDFInfo;
-import com.linkedin.coral.spark.transformers.CastToNamedStructTransformer;
 import com.linkedin.coral.spark.transformers.ExtractUnionFunctionTransformer;
 import com.linkedin.coral.spark.transformers.FallBackToLinkedInHiveUDFTransformer;
 import com.linkedin.coral.spark.transformers.FuzzyUnionGenericProjectTransformer;
@@ -157,9 +156,6 @@ public class CoralToSparkSqlCallConverter extends SqlShuttle {
 
         // Fall back to the original Hive UDF defined in StaticHiveFunctionRegistry after failing to apply transformers above
         new FallBackToLinkedInHiveUDFTransformer(sparkUDFInfos),
-
-        // Transform `CAST(ROW: RECORD_TYPE)` to `named_struct`
-        new CastToNamedStructTransformer(),
 
         // Transform `extract_union` to `coalesce_struct`
         new ExtractUnionFunctionTransformer(sparkUDFInfos),

@@ -1,5 +1,5 @@
 /**
- * Copyright 2018-2022 LinkedIn Corporation. All rights reserved.
+ * Copyright 2018-2023 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -33,6 +33,7 @@ public class TestUtils {
 
   static HiveToRelConverter hiveToRelConverter;
   static ViewToAvroSchemaConverter viewToAvroSchemaConverter;
+  static HiveMetastoreClient hiveMetastoreClient;
 
   static void run(Driver driver, String sql) {
     while (true) {
@@ -51,11 +52,13 @@ public class TestUtils {
     FileUtils.deleteDirectory(new File(testDir));
     SessionState.start(conf);
     Driver driver = new Driver(conf);
-    HiveMetastoreClient hiveMetastoreClient = new HiveMscAdapter(Hive.get(conf).getMSC());
+    hiveMetastoreClient = new HiveMscAdapter(Hive.get(conf).getMSC());
     hiveToRelConverter = new HiveToRelConverter(hiveMetastoreClient);
     viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
     run(driver, "CREATE TABLE IF NOT EXISTS foo(a int, b varchar(30), c double)");
     run(driver, "CREATE TABLE IF NOT EXISTS bar(x int, y double)");
+    run(driver, "CREATE TABLE IF NOT EXISTS baz(`timestamp` int, `select` double)");
+    run(driver, "CREATE VIEW IF NOT EXISTS baz_view as select `select`, `timestamp` from baz");
     run(driver,
         "CREATE TABLE IF NOT EXISTS complex(a int, b string, c array<double>, s struct<name:string, age:int>, m map<string, int>, sarr array<struct<name:string, age:int>>)");
 
@@ -78,6 +81,7 @@ public class TestUtils {
         "create function default_foo_lateral_udtf_CountOfRow as 'com.linkedin.coral.hive.hive2rel.CoralTestUDTF'");
     run(driver,
         "create function default_foo_duplicate_udf_LessThanHundred as 'com.linkedin.coral.hive.hive2rel.CoralTestUDF'");
+    run(driver, "CREATE FUNCTION LessThanHundred as 'com.linkedin.coral.hive.hive2rel.CoralTestUDF'");
 
     run(driver, String.join("\n", "", "CREATE VIEW IF NOT EXISTS foo_view", "AS", "SELECT b AS bcol, sum(c) AS sum_c",
         "FROM foo", "GROUP BY b"));
@@ -113,6 +117,10 @@ public class TestUtils {
             "tblproperties('functions' = 'UnsupportedUDF:com.linkedin.coral.hive.hive2rel.CoralTestUnsupportedUDF',",
             "              'dependencies' = 'com.linkedin:udf:1.0')", "AS",
             "SELECT default_foo_dali_udf5_UnsupportedUDF(a)", "FROM foo"));
+
+    run(driver, String.join("\n", "", "CREATE VIEW IF NOT EXISTS foo_dali_udf_no_prefix",
+        "tblproperties('functions' = 'LessThanHundred:com.linkedin.coral.hive.hive2rel.CoralTestUDF',",
+        "              'dependencies' = 'ivy://com.linkedin:udf:1.0')", "AS", "SELECT LessThanHundred(a)", "FROM foo"));
 
     run(driver,
         String.join("\n", "", "CREATE VIEW IF NOT EXISTS foo_lateral_udtf",
@@ -271,4 +279,7 @@ public class TestUtils {
     return viewToAvroSchemaConverter.toAvroSchema(sql, false, lowercase);
   }
 
+  public static HiveMetastoreClient getHiveMetastoreClient() {
+    return hiveMetastoreClient;
+  }
 }

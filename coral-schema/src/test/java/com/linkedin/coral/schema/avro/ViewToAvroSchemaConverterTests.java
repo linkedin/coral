@@ -1016,6 +1016,19 @@ public class ViewToAvroSchemaConverterTests {
   }
 
   @Test
+  public void testRowNumberOverWindow() {
+    String viewSql = "CREATE VIEW foo_with_rownumber_over_window AS SELECT *, ROW_NUMBER() OVER"
+        + " (PARTITION BY Id, Struct_Col.Bigint_Field" + " ORDER BY Id DESC) rank" + " FROM basecomplex bc";
+
+    TestUtils.executeCreateViewQuery("default", "foo_with_rownumber_over_window", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "foo_with_rownumber_over_window");
+
+    Assert.assertEquals(actualSchema.toString(true), TestUtils.loadSchema("testRowNumberOverWindow-expected.avsc"));
+  }
+
+  @Test
   public void testLowercaseSchema() {
     String viewSql = "CREATE VIEW v AS SELECT id as Id FROM basecomplex";
     TestUtils.executeCreateViewQuery("default", "v", viewSql);
@@ -1076,6 +1089,31 @@ public class ViewToAvroSchemaConverterTests {
 
     Assert.assertEquals(actualSchema.toString(true),
         TestUtils.loadSchema("testUnionFloatAndDoublePromoteToDouble-expected.avsc"));
+  }
+
+  @Test
+  public void testDivideReturnType() {
+    String viewSql = "CREATE VIEW v AS SELECT 1/2 AS a FROM baseprimitive";
+    TestUtils.executeCreateViewQuery("default", "v", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v");
+
+    Assert.assertEquals(actualSchema.toString(true), TestUtils.loadSchema("testDivideReturnType-expected.avsc"));
+  }
+
+  @Test
+  public void testLiGrootCastNullability() {
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+
+    Schema schemaWithUDF = viewToAvroSchemaConverter
+        .toAvroSchema("SELECT li_groot_cast_nullability(Struct_Col, Struct_Col) AS modCol FROM basecomplexnonnullable");
+    Schema schemaWithField =
+        viewToAvroSchemaConverter.toAvroSchema("SELECT Struct_Col AS modCol FROM basecomplexnonnullable");
+
+    Assert.assertEquals(schemaWithUDF.toString(true), TestUtils.loadSchema("testLiGrootCastNullability-expected.avsc"));
+    Assert.assertEquals(schemaWithField.toString(true),
+        TestUtils.loadSchema("testLiGrootCastNullability-expected.avsc"));
   }
 
   // TODO: add more unit tests

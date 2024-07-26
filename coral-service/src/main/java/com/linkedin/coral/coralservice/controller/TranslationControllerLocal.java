@@ -11,6 +11,7 @@ import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
@@ -24,6 +25,7 @@ import static com.linkedin.coral.coralservice.utils.CoralProvider.*;
  */
 @Service
 @Profile("localMetastore")
+@CrossOrigin(origins = CORAL_SERVICE_FRONTEND_URL)
 public class TranslationControllerLocal extends TranslationController {
 
   @Override

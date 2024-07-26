@@ -1,0 +1,54 @@
+{
+  "type" : "record",
+  "name" : "foo_with_rownumber_over_window",
+  "namespace" : "default.foo_with_rownumber_over_window",
+  "fields" : [ {
+    "name" : "Id",
+    "type" : "int"
+  }, {
+    "name" : "Array_Col",
+    "type" : [ "null", {
+      "type" : "array",
+      "items" : [ "null", "string" ]
+    } ]
+  }, {
+    "name" : "Map_Col",
+    "type" : [ "null", {
+      "type" : "map",
+      "values" : [ "null", "string" ]
+    } ]
+  }, {
+    "name" : "Struct_Col",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "Struct_col",
+      "namespace" : "default.foo_with_rownumber_over_window.foo_with_rownumber_over_window",
+      "fields" : [ {
+        "name" : "Bool_Field",
+        "type" : "boolean"
+      }, {
+        "name" : "Int_Field",
+        "type" : [ "null", "int" ]
+      }, {
+        "name" : "Bigint_Field",
+        "type" : "long"
+      }, {
+        "name" : "Float_Field",
+        "type" : [ "null", "float" ]
+      }, {
+        "name" : "Double_Field",
+        "type" : "double"
+      }, {
+        "name" : "Date_String_Field",
+        "type" : [ "null", "string" ]
+      }, {
+        "name" : "String_Field",
+        "type" : [ "null", "string" ]
+      } ]
+    } ]
+  }, {
+    "name" : "rank",
+    "type" : "long",
+    "doc" : "Field created in view by applying operator 'ROW_NUMBER'"
+  } ]
+}

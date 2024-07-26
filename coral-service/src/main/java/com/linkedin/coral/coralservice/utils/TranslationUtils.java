@@ -19,18 +19,44 @@ public class TranslationUtils {
 
   public static String translateTrinoToSpark(String query) {
     RelNode relNode = new TrinoToRelConverter(hiveMetastoreClient).convertSql(query);
-    CoralSpark coralSpark = CoralSpark.create(relNode);
+    CoralSpark coralSpark = CoralSpark.create(relNode, hiveMetastoreClient);
     return coralSpark.getSparkSql();
   }
 
   public static String translateHiveToTrino(String query) {
     RelNode relNode = new HiveToRelConverter(hiveMetastoreClient).convertSql(query);
-    return new RelToTrinoConverter().convert(relNode);
+    return new RelToTrinoConverter(hiveMetastoreClient).convert(relNode);
   }
 
   public static String translateHiveToSpark(String query) {
     RelNode relNode = new HiveToRelConverter(hiveMetastoreClient).convertSql(query);
-    CoralSpark coralSpark = CoralSpark.create(relNode);
+    CoralSpark coralSpark = CoralSpark.create(relNode, hiveMetastoreClient);
     return coralSpark.getSparkSql();
+  }
+
+  public static String translateQuery(String query, String sourceLanguage, String targetLanguage) {
+    String translatedSql = null;
+
+    // TODO: add more translations once n-to-one-to-n is completed
+    // From Trino
+    if (sourceLanguage.equalsIgnoreCase("trino")) {
+      // To Spark
+      if (targetLanguage.equalsIgnoreCase("spark")) {
+        translatedSql = translateTrinoToSpark(query);
+      }
+    }
+    // From Hive or Spark
+    else if (sourceLanguage.equalsIgnoreCase("hive") || sourceLanguage.equalsIgnoreCase("spark")) {
+      // To Spark
+      if (targetLanguage.equalsIgnoreCase("spark")) {
+        translatedSql = translateHiveToSpark(query);
+      }
+      // To Trino
+      else if (targetLanguage.equalsIgnoreCase("trino")) {
+        translatedSql = translateHiveToTrino(query);
+      }
+    }
+
+    return translatedSql;
   }
 }

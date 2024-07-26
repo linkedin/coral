@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2022 LinkedIn Corporation. All rights reserved.
+ * Copyright 2020-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -42,6 +42,19 @@ public class RelDataTypeToAvroTypeTests {
   }
 
   @Test
+  public void testNestedRecordWithSameNameFields() {
+    String viewSql = "CREATE VIEW v AS SELECT * FROM basecomplexnestedstructsamename";
+
+    TestUtils.executeCreateViewQuery("default", "v", viewSql);
+    RelNode relNode = hiveToRelConverter.convertView("default", "v");
+    Schema actualAvroType = RelDataTypeToAvroType.relDataTypeToAvroTypeNonNullable(relNode.getRowType(),
+        "nestedRecordWithSameNameNestedFields");
+
+    Assert.assertEquals(actualAvroType.toString(true),
+        TestUtils.loadSchema("rel2avro-testNestedRecordWithSameNameRecordNestedFields-expected.avsc"));
+  }
+
+  @Test
   public void testNestedRecord() {
     String viewSql = "CREATE VIEW v AS SELECT * FROM basecomplex";
 
@@ -64,5 +77,18 @@ public class RelDataTypeToAvroTypeTests {
 
     Assert.assertEquals(actualAvroType.toString(true),
         TestUtils.loadSchema("rel2avro-testTimestampTypeField-expected.avsc"));
+  }
+
+  @Test
+  public void testDateTypeField() {
+    String viewSql = "CREATE VIEW v AS SELECT * FROM basedatetypefield";
+
+    TestUtils.executeCreateViewQuery("default", "v", viewSql);
+    RelNode relNode = hiveToRelConverter.convertView("default", "v");
+    Schema actualAvroType =
+        RelDataTypeToAvroType.relDataTypeToAvroTypeNonNullable(relNode.getRowType(), "dateTypeField");
+
+    Assert.assertEquals(actualAvroType.toString(true),
+        TestUtils.loadSchema("rel2avro-testDateTypeField-expected.avsc"));
   }
 }

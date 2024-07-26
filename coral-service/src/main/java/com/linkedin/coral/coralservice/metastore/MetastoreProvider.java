@@ -1,5 +1,5 @@
 /**
- * Copyright 2022-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2022-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -15,8 +15,8 @@ import javax.naming.ConfigurationException;
 import com.google.common.base.Strings;
 
 import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
 import org.apache.hadoop.hive.metastore.IMetaStoreClient;
+import org.apache.hadoop.hive.metastore.RetryingMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.security.UserGroupInformation;
 
@@ -97,6 +97,6 @@ public class MetastoreProvider {
       UserGroupInformation.setConfiguration(conf);
       UserGroupInformation.loginUserFromKeytab(clientPrincipal, clientKeytab);
     }
-    return new HiveMetaStoreClient(conf);
+    return RetryingMetaStoreClient.getProxy(conf);
   }
 }

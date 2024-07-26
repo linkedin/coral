@@ -19,7 +19,7 @@ import org.apache.calcite.rel.type.RelDataType;
  * Instead, we represent the input to this UDF as a string and we set its return type is passed as a parameter
  * on creation.
  */
-class TrinoMapTransformValuesFunction extends GenericTemplateFunction {
+public class TrinoMapTransformValuesFunction extends GenericTemplateFunction {
   public TrinoMapTransformValuesFunction(RelDataType transformValuesDataType) {
     super(transformValuesDataType, "transform_values");
   }

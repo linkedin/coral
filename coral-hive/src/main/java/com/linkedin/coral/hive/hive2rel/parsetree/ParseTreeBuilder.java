@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -8,7 +8,10 @@ package com.linkedin.coral.hive.hive2rel.parsetree;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
@@ -102,8 +105,20 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     return process(sql, null);
   }
 
+  /**
+   * Returns true if the view is created using spark sql. This relies on the presence of the
+   * spark.sql.create.version property in the views when created using spark sql.
+   *
+   * @param hiveView
+   * @return true if the view is created using spark sql
+   */
+  private static boolean isCreatedUsingSpark(Table hiveView) {
+    Map<String, String> tableParams = hiveView.getParameters();
+    return tableParams != null && tableParams.containsKey("spark.sql.create.version");
+  }
+
   public SqlNode process(String sql, @Nullable Table hiveView) {
-    ParseDriver pd = new CoralParseDriver();
+    ParseDriver pd = new CoralParseDriver(hiveView != null && isCreatedUsingSpark(hiveView));
     try {
       ASTNode root = pd.parse(sql);
       return processAST(root, hiveView);
@@ -690,12 +705,33 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     return new SqlIdentifier(node.getText(), ZERO);
   }
 
+  /** See {@link #removeBackslashBeforeQuotes}
+   * We use removeBackslashBeforeQuotes to remove the backslash before quotes,
+   * so that we maintain patterns like {@code I'm} or {@code abc"xyz} as is in the java object in memory,
+   * the escaped literal string representation will be generated when the SqlNode is written to string
+   * by the SqlWriter, which can be controlled by the SqlDialect to decide the choice of escaping mechanism.
+   * */
   @Override
   protected SqlNode visitStringLiteral(ASTNode node, ParseContext ctx) {
     // TODO: Add charset here. UTF-8 is not supported by calcite
     String text = node.getText();
     checkState(text.length() >= 2);
-    return SqlLiteral.createCharString(text.substring(1, text.length() - 1), ZERO);
+    return SqlLiteral.createCharString(removeBackslashBeforeQuotes(text.substring(1, text.length() - 1)), ZERO);
+  }
+
+  private String removeBackslashBeforeQuotes(String input) {
+    // matches a \' or \" literal pattern
+    Pattern pattern = Pattern.compile("\\\\['\"]");
+    Matcher matcher = pattern.matcher(input);
+
+    StringBuffer res = new StringBuffer();
+    while (matcher.find()) {
+      String replacement = matcher.group().substring(1);
+      matcher.appendReplacement(res, replacement);
+    }
+    matcher.appendTail(res);
+
+    return res.toString();
   }
 
   @Override

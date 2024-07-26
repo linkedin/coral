@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2019-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -39,6 +39,7 @@ import com.linkedin.coral.common.functions.OperandTypeInference;
 import com.linkedin.coral.common.functions.SameOperandTypeExceptFirstOperandChecker;
 
 import static com.linkedin.coral.hive.hive2rel.functions.CoalesceStructUtility.*;
+import static com.linkedin.coral.hive.hive2rel.functions.TimestampFromUnixtime.TIMESTAMP_FROM_UNIXTIME;
 import static org.apache.calcite.sql.fun.SqlLibraryOperators.*;
 import static org.apache.calcite.sql.fun.SqlStdOperatorTable.*;
 import static org.apache.calcite.sql.type.OperandTypes.*;
@@ -297,6 +298,14 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
     createAddUserDefinedFunction("sha", FunctionReturnTypes.STRING,
         or(family(SqlTypeFamily.STRING), family(SqlTypeFamily.BINARY)));
     createAddUserDefinedFunction("crc32", BIGINT, or(family(SqlTypeFamily.STRING), family(SqlTypeFamily.BINARY)));
+    createAddUserDefinedFunction("from_utf8", explicit(SqlTypeName.VARCHAR), or(CHARACTER, BINARY));
+    createAddUserDefinedFunction("at_timezone", explicit(SqlTypeName.TIMESTAMP),
+        family(SqlTypeFamily.TIMESTAMP, SqlTypeFamily.STRING));
+    createAddUserDefinedFunction("with_timezone", explicit(SqlTypeName.TIMESTAMP),
+        family(SqlTypeFamily.TIMESTAMP, SqlTypeFamily.STRING));
+    createAddUserDefinedFunction("to_unixtime", explicit(SqlTypeName.DOUBLE), family(SqlTypeFamily.TIMESTAMP));
+    createAddUserDefinedFunction("from_unixtime_nanos", explicit(SqlTypeName.TIMESTAMP), NUMERIC);
+    createAddUserDefinedFunction("$canonicalize_hive_timezone_id", explicit(SqlTypeName.VARCHAR), STRING);
 
     // xpath functions
     createAddUserDefinedFunction("xpath", FunctionReturnTypes.arrayOfType(SqlTypeName.VARCHAR), STRING_STRING);
@@ -312,6 +321,7 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
     // Date Functions
     createAddUserDefinedFunction("from_unixtime", FunctionReturnTypes.STRING,
         family(ImmutableList.of(SqlTypeFamily.NUMERIC, SqlTypeFamily.STRING), optionalOrd(1)));
+    addFunctionEntry("timestamp_from_unixtime", TIMESTAMP_FROM_UNIXTIME);
     createAddUserDefinedFunction("unix_timestamp", BIGINT,
         family(ImmutableList.of(SqlTypeFamily.STRING, SqlTypeFamily.STRING), optionalOrd(ImmutableList.of(0, 1))));
     createAddUserDefinedFunction("to_date", FunctionReturnTypes.STRING, or(STRING, DATETIME));
@@ -365,7 +375,6 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
       return typeFactory.createArrayType(operandType.getValueType(), -1);
     }, family(SqlTypeFamily.MAP));
 
-    createAddUserDefinedFunction("array_contains", ReturnTypes.BOOLEAN, family(SqlTypeFamily.ARRAY, SqlTypeFamily.ANY));
     createAddUserDefinedFunction("sort_array", ARG0, ARRAY);
 
     createAddUserDefinedFunction("extract_union", COALESCE_STRUCT_FUNCTION_RETURN_STRATEGY,
@@ -654,6 +663,24 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
     // This UDF is not converted to a transport UDF.
     createAddUserDefinedFunction("com.linkedin.dali.customudf.date.hive.DateFormatToEpoch", BIGINT_NULLABLE,
         STRING_STRING_STRING);
+    createAddUserDefinedFunction("com.linkedin.policy.decoration.udfs.HasMemberConsent", ReturnTypes.BOOLEAN,
+        family(SqlTypeFamily.STRING, SqlTypeFamily.ANY, SqlTypeFamily.TIMESTAMP));
+    createAddUserDefinedFunction("com.linkedin.policy.decoration.udfs.RedactFieldIf", ARG1,
+        family(SqlTypeFamily.BOOLEAN, SqlTypeFamily.ANY, SqlTypeFamily.STRING, SqlTypeFamily.ANY));
+    createAddUserDefinedFunction("li_groot_cast_nullability", new OrdinalReturnTypeInferenceV2(1),
+        family(SqlTypeFamily.ANY, SqlTypeFamily.ANY));
+
+    createAddUserDefinedFunction("com.linkedin.policy.decoration.udfs.RedactSecondarySchemaFieldIf", ARG1, family(
+        SqlTypeFamily.BOOLEAN, SqlTypeFamily.ANY, SqlTypeFamily.ARRAY, SqlTypeFamily.CHARACTER, SqlTypeFamily.ANY));
+
+    createAddUserDefinedFunction("com.linkedin.groot.runtime.udf.spark.HasMemberConsentUDF", ReturnTypes.BOOLEAN,
+        family(SqlTypeFamily.STRING, SqlTypeFamily.ANY, SqlTypeFamily.TIMESTAMP));
+    createAddUserDefinedFunction("com.linkedin.groot.runtime.udf.spark.RedactFieldIfUDF", ARG1,
+        family(SqlTypeFamily.BOOLEAN, SqlTypeFamily.ANY, SqlTypeFamily.STRING, SqlTypeFamily.ANY));
+    createAddUserDefinedFunction("com.linkedin.groot.runtime.udf.spark.RedactSecondarySchemaFieldIfUDF", ARG1, family(
+        SqlTypeFamily.BOOLEAN, SqlTypeFamily.ANY, SqlTypeFamily.ARRAY, SqlTypeFamily.STRING, SqlTypeFamily.STRING));
+    createAddUserDefinedFunction("com.linkedin.groot.runtime.udf.spark.GetMappedValueUDF", FunctionReturnTypes.STRING,
+        family(SqlTypeFamily.STRING, SqlTypeFamily.STRING));
 
     // UDTFs
     addFunctionEntry("explode", new CoralSqlUnnestOperator(false));

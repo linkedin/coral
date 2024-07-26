@@ -60,6 +60,14 @@ public class TrinoSqlRewriter extends SqlShuttle {
           final SqlBasicTypeNameSpec realTypeName =
               new SqlBasicTypeNameSpec(SqlTypeName.REAL, precision, scale, charSetName, parserPos);
           return new SqlDataTypeSpec(realTypeName, timeZone, parserPos);
+        case "VARCHAR":
+          final SqlBasicTypeNameSpec varcharTypeName =
+              new SqlBasicTypeNameSpec(SqlTypeName.VARCHAR, precision, scale, null, parserPos); // remove CHARACTER SET
+          return new SqlDataTypeSpec(varcharTypeName, timeZone, parserPos);
+        case "CHAR":
+          final SqlBasicTypeNameSpec charTypeName =
+              new SqlBasicTypeNameSpec(SqlTypeName.CHAR, precision, scale, null, parserPos); // remove CHARACTER SET
+          return new SqlDataTypeSpec(charTypeName, timeZone, parserPos);
         default:
           return type;
       }

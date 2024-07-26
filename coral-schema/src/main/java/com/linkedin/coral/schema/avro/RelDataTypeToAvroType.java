@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2019-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -7,6 +7,7 @@ package com.linkedin.coral.schema.avro;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
 
@@ -52,7 +53,8 @@ class RelDataTypeToAvroType {
     Preconditions.checkNotNull(relDataType);
 
     if (relDataType instanceof RelRecordType || relDataType instanceof DynamicRecordType) {
-      return relRecordTypeToAvroType(relDataType, null, recordName, "rel_avro", null);
+      String uniqueNamespace = getUniqueNamespace(relDataType, recordName);
+      return relRecordTypeToAvroType(relDataType, null, recordName, uniqueNamespace, null);
     }
 
     if (relDataType instanceof BasicSqlType) {
@@ -65,6 +67,10 @@ class RelDataTypeToAvroType {
 
     if (relDataType instanceof MapSqlType) {
       final MapSqlType mapSqlType = (MapSqlType) relDataType;
+      if (SqlTypeName.NULL == mapSqlType.getKeyType().getSqlTypeName()
+          && SqlTypeName.NULL == mapSqlType.getValueType().getSqlTypeName()) {
+        return Schema.createMap(SchemaUtilities.makeNullable(Schema.create(Schema.Type.STRING), false));
+      }
       if (!SqlTypeName.CHAR_TYPES.contains(mapSqlType.getKeyType().getSqlTypeName())) {
         throw new UnsupportedOperationException(
             "Key of Map can only be a String: " + mapSqlType.getKeyType().getSqlTypeName().getName());
@@ -78,10 +84,13 @@ class RelDataTypeToAvroType {
 
   private static Schema relDataTypeToAvroType(RelDataType relDataType, String recordName) {
     final Schema avroSchema = relDataTypeToAvroTypeNonNullable(relDataType, recordName);
+    // TODO: Current logic ALWAYS sets the inner fields of RelDataType record nullable.
+    //  Modify this to be applied only when RelDataType record was generated from a HIVE_UDF RexCall
     return SchemaUtilities.makeNullable(avroSchema, false);
   }
 
   private static Schema basicSqlTypeToAvroType(BasicSqlType relDataType) {
+    Schema schema;
     switch (relDataType.getSqlTypeName()) {
       case BOOLEAN:
         return Schema.create(Schema.Type.BOOLEAN);
@@ -102,8 +111,13 @@ class RelDataTypeToAvroType {
       case NULL:
         return Schema.create(Schema.Type.NULL);
       case TIMESTAMP:
-        Schema schema = Schema.create(Schema.Type.LONG);
+        schema = Schema.create(Schema.Type.LONG);
         schema.addProp("logicalType", "timestamp-millis");
+        return schema;
+      case DATE:
+        // In Avro, "date" type is represented as {"type": "int", "logicalType": "date"}.
+        schema = Schema.create(Schema.Type.INT);
+        schema.addProp("logicalType", "date");
         return schema;
       case DECIMAL:
         JsonNodeFactory factory = JsonNodeFactory.instance;
@@ -145,6 +159,20 @@ class RelDataTypeToAvroType {
 
     avroSchema.setFields(fields);
     return avroSchema;
+  }
+
+  private static String getUniqueNamespace(RelDataType relDataType, String recordName) {
+    if (relDataType.getFieldList() == null || relDataType.getFieldCount() == 0) {
+      return "rel_avro";
+    }
+    List<RelDataTypeField> fields = relDataType.getFieldList();
+
+    if (fields.stream().anyMatch(field -> field.getName().equals(recordName))) {
+      String interim_namespace = fields.stream().map(RelDataTypeField::getName).collect(Collectors.joining("_"));
+      return "namespace_from_nested_fields_" + interim_namespace;
+    } else {
+      return "rel_avro";
+    }
   }
 
   private static String toAvroQualifiedName(String relName) {

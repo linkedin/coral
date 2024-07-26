@@ -58,7 +58,8 @@ import org.slf4j.LoggerFactory;
 
 import com.linkedin.coral.com.google.common.base.Preconditions;
 import com.linkedin.coral.common.HiveMetastoreClient;
-import com.linkedin.coral.hive.hive2rel.rel.HiveUncollect;
+import com.linkedin.coral.common.HiveUncollect;
+import com.linkedin.coral.hive.hive2rel.functions.OrdinalReturnTypeInferenceV2;
 
 
 /**
@@ -407,14 +408,7 @@ public class RelToAvroSchemaConverter {
     @Override
     public RexNode visitInputRef(RexInputRef rexInputRef) {
       RexNode rexNode = super.visitInputRef(rexInputRef);
-
-      Schema.Field field = inputSchema.getFields().get(rexInputRef.getIndex());
-      String oldFieldName = field.name();
-      String suggestNewFieldName = suggestedFieldNames.poll();
-      String newFieldName = SchemaUtilities.getFieldName(oldFieldName, suggestNewFieldName);
-
-      SchemaUtilities.appendField(newFieldName, field, fieldAssembler);
-
+      appendRexInputRefField(rexInputRef);
       return rexNode;
     }
 
@@ -442,6 +436,22 @@ public class RelToAvroSchemaConverter {
        * For SqlUserDefinedFunction and SqlOperator RexCall, no need to handle it recursively
        * and only return type of udf or sql operator is relevant
        */
+
+      /**
+       * If the return type of RexCall is based on the ordinal of its input argument
+       * and the corresponding input argument refers to a field from the input schema,
+       * use the field's schema as is.
+       */
+      if (rexCall.getOperator().getReturnTypeInference() instanceof OrdinalReturnTypeInferenceV2) {
+        int index = ((OrdinalReturnTypeInferenceV2) rexCall.getOperator().getReturnTypeInference()).getOrdinal();
+        RexNode operand = rexCall.operands.get(index);
+
+        if (operand instanceof RexInputRef) {
+          appendRexInputRefField((RexInputRef) operand);
+          return rexCall;
+        }
+      }
+
       RelDataType fieldType = rexCall.getType();
       boolean isNullable = SchemaUtilities.isFieldNullable(rexCall, inputSchema);
 
@@ -453,8 +463,14 @@ public class RelToAvroSchemaConverter {
 
     @Override
     public RexNode visitOver(RexOver rexOver) {
-      // TODO: implement this method
-      return super.visitOver(rexOver);
+      /**
+       * For aggregates over window, derive the expected field's schema using RexOver's return type alone.
+       * Example RexOver:
+       *  ROW_NUMBER() OVER (PARTITION BY colA, colB ORDER BY colC DESC)
+       */
+      appendField(rexOver.getType(), false,
+          SchemaUtilities.generateDocumentationForFunctionCall(rexOver, inputSchema, inputNode));
+      return rexOver;
     }
 
     @Override
@@ -537,6 +553,15 @@ public class RelToAvroSchemaConverter {
     public RexNode visitPatternFieldRef(RexPatternFieldRef rexPatternFieldRef) {
       // TODO: implement this method
       return super.visitPatternFieldRef(rexPatternFieldRef);
+    }
+
+    private void appendRexInputRefField(RexInputRef rexInputRef) {
+      Schema.Field field = inputSchema.getFields().get(rexInputRef.getIndex());
+      String oldFieldName = field.name();
+      String suggestNewFieldName = suggestedFieldNames.poll();
+      String newFieldName = SchemaUtilities.getFieldName(oldFieldName, suggestNewFieldName);
+
+      SchemaUtilities.appendField(newFieldName, field, fieldAssembler);
     }
 
     private void appendField(RelDataType fieldType, boolean isNullable, String doc) {

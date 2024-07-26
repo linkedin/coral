@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -197,7 +197,7 @@ public class RelToTrinoConverterTest {
 
   // Sub query types
   @Test
-  public void testInClause() {
+  public void testInOperator() {
     String sql = "SELECT tcol, scol\n" + "FROM test.tableOne" + " WHERE icol IN ( "
         + " SELECT ifield from test.tableTwo" + "   WHERE ifield < 10)";
 
@@ -266,9 +266,9 @@ public class RelToTrinoConverterTest {
   @Test
   public void testLateralViewUnnest() {
     String sql = "select icol, acol_elem from test.tableOne LATERAL VIEW explode(acol) t1 AS acol_elem";
-    String expectedSql = "SELECT \"$cor0\".\"icol\" AS \"icol\", \"t0\".\"acol_elem\" AS \"acol_elem\"\n"
-        + "FROM \"test\".\"tableone\" AS \"$cor0\"\n"
-        + "CROSS JOIN UNNEST(\"$cor0\".\"acol\") AS \"t0\" (\"acol_elem\")";
+    String expectedSql = "SELECT \"tableone\".\"icol\" AS \"icol\", \"t0\".\"acol_elem\" AS \"acol_elem\"\n"
+        + "FROM \"test\".\"tableone\" AS \"tableone\"\n"
+        + "CROSS JOIN UNNEST(\"tableone\".\"acol\") AS \"t0\" (\"acol_elem\")";
     testConversion(sql, expectedSql);
   }
 
@@ -357,17 +357,66 @@ public class RelToTrinoConverterTest {
   }
 
   @Test
-  public void testSubString2() {
+  public void testSubString1() {
+    String sql = "SELECT SUBSTRING(scol, 0) FROM test.tableOne";
+
+    // Trino is 1-based
+    String expectedSql = "SELECT \"substr\"(\"tableone\".\"scol\", 1)\n" + "FROM \"test\".\"tableone\" AS \"tableone\"";
+    testConversion(sql, expectedSql);
+  }
+
+  @Test
+  public void testSubStr1() {
+    String sql = "SELECT SUBSTR(scol, 0) FROM test.tableOne";
+
+    // Trino is 1-based
+    String expectedSql = "SELECT \"substr\"(\"tableone\".\"scol\", 1)\n" + "FROM \"test\".\"tableone\" AS \"tableone\"";
+    testConversion(sql, expectedSql);
+  }
+
+  @Test
+  public void testSubStr2() {
     String sql = "SELECT SUBSTR(scol, 1) FROM test.tableOne";
     String expectedSql = "SELECT \"substr\"(\"tableone\".\"scol\", 1)\n" + "FROM \"test\".\"tableone\" AS \"tableone\"";
     testConversion(sql, expectedSql);
   }
 
   @Test
-  public void testSubString3() {
+  public void testSubString2() {
+    String sql = "SELECT SUBSTRING(scol, 1) FROM test.tableOne";
+    String expectedSql = "SELECT \"substr\"(\"tableone\".\"scol\", 1)\n" + "FROM \"test\".\"tableone\" AS \"tableone\"";
+    testConversion(sql, expectedSql);
+  }
+
+  @Test
+  public void testSubStr3() {
     String sql = "SELECT SUBSTR(scol, icol, 3) FROM test.tableOne";
-    String expectedSql = "SELECT \"substr\"(\"tableone\".\"scol\", \"tableone\".\"icol\", 3)\n"
-        + "FROM \"test\".\"tableone\" AS \"tableone\"";
+    String expectedSql =
+        "SELECT \"substr\"(\"tableone\".\"scol\", CASE WHEN \"tableone\".\"icol\" = 0 THEN 1 ELSE \"tableone\".\"icol\" END, 3)\n"
+            + "FROM \"test\".\"tableone\" AS \"tableone\"";
+    testConversion(sql, expectedSql);
+  }
+
+  @Test
+  public void testSubString3() {
+    String sql = "SELECT SUBSTRING(scol, icol, 3) FROM test.tableOne";
+    String expectedSql =
+        "SELECT \"substr\"(\"tableone\".\"scol\", CASE WHEN \"tableone\".\"icol\" = 0 THEN 1 ELSE \"tableone\".\"icol\" END, 3)\n"
+            + "FROM \"test\".\"tableone\" AS \"tableone\"";
+    testConversion(sql, expectedSql);
+  }
+
+  @Test
+  public void testSubStr4() {
+    String sql = "SELECT SUBSTR('123', 0, 3)";
+    String expectedSql = "SELECT \"substr\"('123', 1, 3)\n" + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
+    testConversion(sql, expectedSql);
+  }
+
+  @Test
+  public void testSubString4() {
+    String sql = "SELECT SUBSTRING('123', 0, 3)";
+    String expectedSql = "SELECT \"substr\"('123', 1, 3)\n" + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
     testConversion(sql, expectedSql);
   }
 

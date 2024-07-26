@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2019-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -96,11 +96,14 @@ public class TestUtils {
     String baseNestedComplexSchema = loadSchema("base-nested-complex.avsc");
     String baseNullTypeFieldSchema = loadSchema("base-null-type-field.avsc");
     String baseTimestampTypeFieldSchema = loadSchema("base-timestamp-type-field.avsc");
+    String baseDateTypeFieldSchema = loadSchema("base-date-type-field.avsc");
     String baseComplexUnionTypeSchema = loadSchema("base-complex-union-type.avsc");
     String baseNestedUnionSchema = loadSchema("base-nested-union.avsc");
     String baseComplexLowercase = loadSchema("base-complex-lowercase.avsc");
+    String baseComplexNonNullable = loadSchema("base-complex-non-nullable.avsc");
     String baseComplexNullableWithDefaults = loadSchema("base-complex-nullable-with-defaults.avsc");
     String basePrimitive = loadSchema("base-primitive.avsc");
+    String baseComplexNestedStructSameName = loadSchema("base-complex-nested-struct-same-name.avsc");
 
     executeCreateTableQuery("default", "basecomplex", baseComplexSchema);
     executeCreateTableQuery("default", "basecomplexunioncompatible", baseComplexUnionCompatible);
@@ -111,14 +114,17 @@ public class TestUtils {
     executeCreateTableQuery("default", "basenullability", baseNullabilitySchema);
     executeCreateTableQuery("default", "basenulltypefield", baseNullTypeFieldSchema);
     executeCreateTableQuery("default", "basetimestamptypefield", baseTimestampTypeFieldSchema);
+    executeCreateTableQuery("default", "basedatetypefield", baseDateTypeFieldSchema);
     executeCreateTableQuery("default", "basecomplexuniontype", baseComplexUnionTypeSchema);
     executeCreateTableQuery("default", "basenestedunion", baseNestedUnionSchema);
     executeCreateTableQuery("default", "basecomplexlowercase", baseComplexLowercase);
     executeCreateTableQuery("default", "baseprimitive", basePrimitive);
+    executeCreateTableQuery("default", "basecomplexnestedstructsamename", baseComplexNestedStructSameName);
     executeCreateTableWithPartitionQuery("default", "basecasepreservation", baseCasePreservation);
     executeCreateTableWithPartitionFieldSchemaQuery("default", "basecomplexfieldschema", baseComplexFieldSchema);
     executeCreateTableWithPartitionQuery("default", "basenestedcomplex", baseNestedComplexSchema);
     executeCreateTableWithPartitionQuery("default", "basecomplexnullablewithdefaults", baseComplexNullableWithDefaults);
+    executeCreateTableWithPartitionQuery("default", "basecomplexnonnullable", baseComplexNonNullable);
 
     String baseComplexSchemaWithDoc = loadSchema("docTestResources/base-complex-with-doc.avsc");
     String baseEnumSchemaWithDoc = loadSchema("docTestResources/base-enum-with-doc.avsc");

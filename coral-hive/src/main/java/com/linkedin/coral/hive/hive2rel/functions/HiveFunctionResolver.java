@@ -164,17 +164,16 @@ public class HiveFunctionResolver {
    * @param table Hive metastore table handle
    * @param numOfOperands number of operands this function takes. This is needed to
    *                      create SqlOperandTypeChecker to resolve Dali function dynamically
-   * @return list of matching Functions or empty list if the function name is not in the
-   *   dali function name format of db_tableName_functionName
+   * @return list of matching Functions or empty list if the function name is not in the dali function name format
+   * of `databaseName_tableName_udfName` or `udfName` (without `databaseName_tableName_` prefix)
    * @throws UnknownSqlFunctionException if the function name is in Dali function name format but there is no mapping
    */
   public Collection<Function> tryResolveAsDaliFunction(String functionName, @Nonnull Table table, int numOfOperands) {
     Preconditions.checkNotNull(table);
     String functionPrefix = String.format("%s_%s_", table.getDbName(), table.getTableName());
     if (!functionName.toLowerCase().startsWith(functionPrefix.toLowerCase())) {
-      // Don't throw UnknownSqlFunctionException here because this is not a dali function
-      // and this method is trying to resolve only Dali functions
-      return ImmutableList.of();
+      // if functionName is not in `databaseName_tableName_udfName` format, we don't require the `databaseName_tableName_` prefix
+      functionPrefix = "";
     }
     String funcBaseName = functionName.substring(functionPrefix.length());
     HiveTable hiveTable = new HiveTable(table);
@@ -201,6 +200,12 @@ public class HiveFunctionResolver {
         .map(f -> new Function(f.getFunctionName(), new VersionedSqlUserDefinedFunction(
             (SqlUserDefinedFunction) f.getSqlOperator(), hiveTable.getDaliUdfDependencies(), functionName)))
         .collect(Collectors.toList());
+  }
+
+  public void addDynamicFunctionToTheRegistry(String funcClassName, Function function) {
+    if (!dynamicFunctionRegistry.contains(funcClassName)) {
+      dynamicFunctionRegistry.put(funcClassName, function);
+    }
   }
 
   private @Nonnull Collection<Function> resolveDaliFunctionDynamically(String functionName, String funcClassName,

@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -23,6 +23,7 @@ import org.apache.hadoop.hive.metastore.api.Table;
 
 import com.linkedin.coral.common.FuzzyUnionSqlRewriter;
 import com.linkedin.coral.common.HiveMetastoreClient;
+import com.linkedin.coral.common.HiveRelBuilder;
 import com.linkedin.coral.common.ToRelConverter;
 import com.linkedin.coral.hive.hive2rel.functions.HiveFunctionResolver;
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
@@ -63,13 +64,17 @@ public class HiveToRelConverter extends ToRelConverter {
     this.parseTreeBuilder = new ParseTreeBuilder(functionResolver);
   }
 
-  @Override
-  protected SqlRexConvertletTable getConvertletTable() {
-    return new HiveConvertletTable();
+  public HiveFunctionResolver getFunctionResolver() {
+    return functionResolver;
   }
 
   @Override
-  protected SqlValidator getSqlValidator() {
+  protected SqlRexConvertletTable getConvertletTable() {
+    return new CoralConvertletTable();
+  }
+
+  @Override
+  public SqlValidator getSqlValidator() {
     return sqlValidator;
   }
 
@@ -91,12 +96,12 @@ public class HiveToRelConverter extends ToRelConverter {
   }
 
   @Override
-  protected SqlNode toSqlNode(String sql, Table hiveView) {
+  public SqlNode toSqlNode(String sql, Table hiveView) {
     final SqlNode sqlNode = parseTreeBuilder.process(trimParenthesis(sql), hiveView);
     if (hiveView != null) {
       sqlNode.accept(new FuzzyUnionSqlRewriter(hiveView.getTableName(), this));
     }
-    return sqlNode.accept(new HiveSqlNodeToCoralSqlNodeConverter(getSqlValidator()));
+    return sqlNode.accept(new HiveSqlNodeToCoralSqlNodeConverter(getSqlValidator(), sqlNode));
   }
 
   private static String trimParenthesis(String value) {

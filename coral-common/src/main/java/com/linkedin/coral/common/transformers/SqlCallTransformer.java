@@ -5,7 +5,6 @@
  */
 package com.linkedin.coral.common.transformers;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import com.google.common.collect.ImmutableList;
@@ -14,32 +13,29 @@ import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlNode;
-import org.apache.calcite.sql.SqlNodeList;
 import org.apache.calcite.sql.SqlOperator;
-import org.apache.calcite.sql.SqlSelect;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.SqlReturnTypeInference;
 import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
-import org.apache.calcite.sql.validate.SqlValidator;
+
+import com.linkedin.coral.common.utils.TypeDerivationUtil;
 
 
 /**
  * Abstract class for generic transformations on SqlCalls
  */
 public abstract class SqlCallTransformer {
-  private SqlValidator sqlValidator;
-  private final List<SqlSelect> topSelectNodes = new ArrayList<>();
+  private TypeDerivationUtil typeDerivationUtil;
 
   public SqlCallTransformer() {
-
   }
 
-  public SqlCallTransformer(SqlValidator sqlValidator) {
-    this.sqlValidator = sqlValidator;
+  public SqlCallTransformer(TypeDerivationUtil typeDerivationUtil) {
+    this.typeDerivationUtil = typeDerivationUtil;
   }
 
   /**
-   * Condition of the transformer, it’s used to determine if the SqlCall should be transformed or not
+   * Condition of the transformer, it's used to determine if the SqlCall should be transformed or not
    */
   protected abstract boolean condition(SqlCall sqlCall);
 
@@ -53,9 +49,6 @@ public abstract class SqlCallTransformer {
    * otherwise returns the input SqlCall without any transformation
    */
   public SqlCall apply(SqlCall sqlCall) {
-    if (sqlCall instanceof SqlSelect) {
-      this.topSelectNodes.add((SqlSelect) sqlCall);
-    }
     if (condition(sqlCall)) {
       return transform(sqlCall);
     } else {
@@ -64,44 +57,19 @@ public abstract class SqlCallTransformer {
   }
 
   /**
-   * To get the RelDatatype of a SqlNode, we iterate through `topSelectNodes` from the latest visited to the oldest visited,
-   * for each `topSelectNode`, we create a minimum dummy SqlSelect: SELECT `sqlNode` FROM `topSelectNode.getFrom()`
-   * If the SqlValidator is able to validate the dummy SqlSelect, return the SqlNode's RelDataType directly.
-   *
-   * We can't just use the latest visited `topSelectNode` to construct the dummy SqlSelect because of
-   * the following corner case:
-   *
-   * CREATE db.tbl(col1 array(int));
-   *
-   * SELECT * FROM (
-   *   SELECT col1 FROM db.tbl
-   * ) LATERAL JOIN EXPLODE(col1) t AS a WHERE t.a = 0
-   *
-   * If we want to derive the datatype of `t.a`, the latest visited `topSelectNode` will be `SELECT col1 FROM db.tbl`,
-   * however, `t.a` doesn't exist in `db.tbl`, so it would throw exception.
-   * Therefore, we need to store all the `topSelectNodes` (both inner `SELECT col1 FROM db.tbl` and the whole SQL)
-   * in the `topSelectNodes` list and traverse them from the latest visited to the oldest visited, return the datatype
-   * directly once it can be derived without exception.
-   *
-   * Note: This implementation assumes that the parent SqlSelect is visited before determining the datatype of the child
-   * SqlNode, which is typically achieved by traversing the SqlNode tree using SqlShuttle.
-   * The implementation might be updated to not rely on this assumption for determining the datatype of the child SqlNode.
+   * Computes the RelDataType for the passed SqlNode
+   * @param sqlNode input SqlNode
+   * @return derived RelDataType
    */
-  protected RelDataType getRelDataType(SqlNode sqlNode) {
-    if (sqlValidator == null) {
-      throw new RuntimeException("SqlValidator does not exist to derive the RelDataType for SqlNode " + sqlNode);
+  protected RelDataType deriveRelDatatype(SqlNode sqlNode) {
+    if (typeDerivationUtil == null) {
+      throw new RuntimeException("TypeDerivationUtil does not exist to derive the RelDataType for SqlNode: " + sqlNode);
     }
-    for (int i = topSelectNodes.size() - 1; i >= 0; --i) {
-      final SqlSelect topSelectNode = topSelectNodes.get(i);
-      final SqlSelect dummySqlSelect = new SqlSelect(topSelectNode.getParserPosition(), null, SqlNodeList.of(sqlNode),
-          topSelectNode.getFrom(), null, null, null, null, null, null, null);
-      try {
-        sqlValidator.validate(dummySqlSelect);
-        return sqlValidator.getValidatedNodeType(dummySqlSelect).getFieldList().get(0).getType();
-      } catch (Throwable ignored) {
-      }
-    }
-    throw new RuntimeException("Failed to derive the RelDataType for SqlNode " + sqlNode);
+    return typeDerivationUtil.getRelDataType(sqlNode);
+  }
+
+  protected RelDataType leastRestrictive(List<RelDataType> types) {
+    return typeDerivationUtil.leastRestrictive(types);
   }
 
   /**

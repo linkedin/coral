@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2022 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -9,9 +9,10 @@ import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelDataTypeSystemImpl;
 import org.apache.calcite.sql.type.SqlTypeName;
+import org.apache.calcite.sql.type.SqlTypeUtil;
 
 
-// Copied from Hive source code
+// Precision and scale values copied from Hive source code
 public class HiveTypeSystem extends RelDataTypeSystemImpl {
   // TODO: This should come from type system; Currently there is no definition
   // in type system for this.
@@ -28,6 +29,10 @@ public class HiveTypeSystem extends RelDataTypeSystemImpl {
   private static final int DEFAULT_CHAR_PRECISION = 255;
   private static final int MAX_BINARY_PRECISION = Integer.MAX_VALUE;
   private static final int MAX_TIMESTAMP_PRECISION = 9;
+  private static final int DEFAULT_TINYINT_PRECISION = 3;
+  private static final int DEFAULT_SMALLINT_PRECISION = 5;
+  private static final int DEFAULT_INTEGER_PRECISION = 10;
+  private static final int DEFAULT_BIGINT_PRECISION = 19;
 
   @Override
   public int getMaxScale(SqlTypeName typeName) {
@@ -83,6 +88,14 @@ public class HiveTypeSystem extends RelDataTypeSystemImpl {
       case INTERVAL_MINUTE_SECOND:
       case INTERVAL_SECOND:
         return SqlTypeName.DEFAULT_INTERVAL_START_PRECISION;
+      case TINYINT:
+        return DEFAULT_TINYINT_PRECISION;
+      case SMALLINT:
+        return DEFAULT_SMALLINT_PRECISION;
+      case INTEGER:
+        return DEFAULT_INTEGER_PRECISION;
+      case BIGINT:
+        return DEFAULT_BIGINT_PRECISION;
       default:
         return -1;
     }
@@ -159,6 +172,38 @@ public class HiveTypeSystem extends RelDataTypeSystemImpl {
   @Override
   public boolean isSchemaCaseSensitive() {
     return false;
+  }
+
+  /**
+   * This method needs to be overridden to make sure that the "/" operator returns {@link org.apache.calcite.sql.type.ReturnTypes#DOUBLE}
+   * if neither of the operands is decimal type, which is compatible with the expected data type in Hive/Spark.
+   */
+  @Override
+  public RelDataType deriveDecimalDivideType(RelDataTypeFactory typeFactory, RelDataType type1, RelDataType type2) {
+    if (SqlTypeUtil.isExactNumeric(type1) && SqlTypeUtil.isExactNumeric(type2)) {
+      if (SqlTypeUtil.isDecimal(type1) || SqlTypeUtil.isDecimal(type2)) {
+        return super.deriveDecimalDivideType(typeFactory, type1, type2);
+      } else {
+        return nullableType(typeFactory, SqlTypeName.DOUBLE);
+      }
+    }
+    return null;
+  }
+
+  /**
+   * This override makes sure that the multiply operator, "*", returns {@link org.apache.calcite.sql.type.ReturnTypes#BIGINT}
+   * if neither of the operands is decimal type, which is compatible with the expected data type in Hive/Spark.
+   */
+  @Override
+  public RelDataType deriveDecimalMultiplyType(RelDataTypeFactory typeFactory, RelDataType type1, RelDataType type2) {
+    if (SqlTypeUtil.isExactNumeric(type1) && SqlTypeUtil.isExactNumeric(type2)) {
+      if (SqlTypeUtil.isDecimal(type1) || SqlTypeUtil.isDecimal(type2)) {
+        return super.deriveDecimalMultiplyType(typeFactory, type1, type2);
+      } else if (SqlTypeUtil.isBigint(type1) || SqlTypeUtil.isBigint(type2)) {
+        return nullableType(typeFactory, SqlTypeName.BIGINT);
+      }
+    }
+    return null;
   }
 
   private RelDataType nullableType(RelDataTypeFactory typeFactory, SqlTypeName typeName) {
