@@ -17,12 +17,12 @@
       "x": 10
     }
   },
-    "hive.test.bar2_prev": {
-        "RowCount": 15,
-        "DistinctCounts": {
-        "x": 5
-        }
-    },
+  "hive.test.bar2_prev": {
+      "RowCount": 15,
+      "DistinctCounts": {
+      "x": 5
+      }
+  },
   "hive.test.bar1_delta": {
     "RowCount": 30,
     "DistinctCounts": {
