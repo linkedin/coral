@@ -5,12 +5,15 @@
  */
 package com.linkedin.coral.incremental;
 
+import com.linkedin.coral.transformers.CoralRelToSqlNodeConverter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -29,6 +32,7 @@ import org.apache.calcite.rel.logical.LogicalTableScan;
 import org.apache.calcite.rel.logical.LogicalUnion;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.sql.SqlNode;
 
 
 public class RelNodeGenerationTransformer {
@@ -39,12 +43,56 @@ public class RelNodeGenerationTransformer {
   private Map<String, RelNode> snapshotRelNodes;
   private Map<String, RelNode> deltaRelNodes;
   private RelNode tempLastRelNode;
+  private Set<RelNode> needsProj;
 
   public RelNodeGenerationTransformer() {
     relOptSchema = null;
     snapshotRelNodes = new LinkedHashMap<>();
     deltaRelNodes = new LinkedHashMap<>();
     tempLastRelNode = null;
+    needsProj = new HashSet<>();
+  }
+
+  public List<List<RelNode>> generateIncrementalRelNodes(RelNode relNode) {
+    getLevelRelation(relNode);
+    relNode = uniformFormat(relNode);
+    convertRelIncremental(relNode);
+    CoralRelToSqlNodeConverter converter = new CoralRelToSqlNodeConverter();
+    Map<String, RelNode> snapshotRelNodes = getSnapshotRelNodes();
+    Map<String, RelNode> deltaRelNodes = getDeltaRelNodes();
+    List<List<RelNode>> combinedLists = generateCombinedLists(deltaRelNodes, snapshotRelNodes);
+    combinedLists.add(Arrays.asList(relNode));
+    for(List<RelNode> plan : combinedLists) {
+      for(RelNode node : plan) {
+        SqlNode sqlNode = converter.convert(node);
+        System.out.println(sqlNode.toSqlString(converter.INSTANCE).getSql());
+        System.out.println("       ");
+      }
+      System.out.println("XXXXXXXXXX");
+    }
+    return combinedLists;
+  }
+
+  private List<List<RelNode>> generateCombinedLists(Map<String, RelNode> tMap, Map<String, RelNode> mMap) {
+    List<List<RelNode>> resultList = new ArrayList<>();
+    int n = tMap.size(); // Assuming tMap and mMap have the same size
+
+    for (int i = 0; i < n; i++) {
+      List<RelNode> tempList = new ArrayList<>();
+
+      // Add elements from tMap and mMap following the rule
+      for (int j = 0; j < n; j++) {
+        if (j <= i) {
+          tempList.add(tMap.get("Table#" + j + "_delta"));
+        } else {
+          tempList.add(mMap.get("Table#" + j));
+        }
+      }
+
+      resultList.add(tempList);
+    }
+
+    return resultList;
   }
 
   /**
@@ -71,6 +119,67 @@ public class RelNodeGenerationTransformer {
     return deterministicDeltaRelNodes;
   }
 
+  private void getLevelRelation(RelNode relNode) {
+    RelShuttle converter = new RelShuttleImpl() {
+
+      @Override
+      public RelNode visit(LogicalJoin join) {
+        RelNode left = join.getLeft();
+        RelNode right = join.getRight();
+        if(left instanceof LogicalJoin) {
+          needsProj.add(left);
+        }
+        if(right instanceof LogicalJoin) {
+          needsProj.add(right);
+        }
+
+        getLevelRelation(left);
+        getLevelRelation(right);
+
+        return join;
+      }
+
+      @Override
+      public RelNode visit(LogicalFilter filter) {
+        if(filter.getInput() instanceof LogicalJoin) {
+          needsProj.add(filter.getInput());
+        }
+        getLevelRelation(filter.getInput());
+
+        return filter;
+      }
+
+      @Override
+      public RelNode visit(LogicalProject project) {
+        getLevelRelation(project.getInput());
+        return project;
+      }
+
+      @Override
+      public RelNode visit(LogicalUnion union) {
+        List<RelNode> children = union.getInputs();
+        for(RelNode child : children) {
+          if(child instanceof LogicalJoin) {
+            needsProj.add(child);
+          }
+          getLevelRelation(child);
+        }
+
+        return union;
+      }
+
+      @Override
+      public RelNode visit(LogicalAggregate aggregate) {
+        if(aggregate.getInput() instanceof LogicalJoin) {
+          needsProj.add(aggregate.getInput());
+        }
+        getLevelRelation(aggregate.getInput());
+
+        return aggregate;
+      }
+    };
+    relNode.accept(converter);
+  }
   private RelNode convertRelPrev(RelNode originalNode) {
     RelShuttle converter = new RelShuttleImpl() {
       @Override
@@ -128,6 +237,54 @@ public class RelNodeGenerationTransformer {
     return originalNode.accept(converter);
   }
 
+  private RelNode uniformFormat(RelNode originalNode){
+      RelShuttle converter = new RelShuttleImpl() {
+
+        @Override
+        public RelNode visit(LogicalJoin join) {
+          RelNode left = join.getLeft();
+          RelNode right = join.getRight();
+          RelNode uniLeft = uniformFormat(left);
+          RelNode uniRight = uniformFormat(right);
+          RexBuilder rexBuilder = join.getCluster().getRexBuilder();
+          if(needsProj.contains(join)) {
+            LogicalProject p1 = createProjectOverJoin(join, uniLeft, uniRight, rexBuilder);
+            return p1;
+          }
+          return
+              LogicalJoin.create(uniLeft, uniRight, join.getCondition(), join.getVariablesSet(), join.getJoinType());
+        }
+
+        @Override
+        public RelNode visit(LogicalFilter filter) {
+          RelNode transformedChild = uniformFormat(filter.getInput());
+
+          return LogicalFilter.create(transformedChild, filter.getCondition());
+        }
+
+        @Override
+        public RelNode visit(LogicalProject project) {
+          RelNode transformedChild = uniformFormat(project.getInput());
+          return LogicalProject.create(transformedChild, project.getProjects(), project.getRowType());
+        }
+
+        @Override
+        public RelNode visit(LogicalUnion union) {
+          List<RelNode> children = union.getInputs();
+          List<RelNode> transformedChildren =
+              children.stream().map(child -> uniformFormat(child)).collect(Collectors.toList());
+          return LogicalUnion.create(transformedChildren, union.all);
+        }
+
+        @Override
+        public RelNode visit(LogicalAggregate aggregate) {
+          RelNode transformedChild = uniformFormat(aggregate.getInput());
+          return LogicalAggregate.create(transformedChild, aggregate.getGroupSet(), aggregate.getGroupSets(),
+              aggregate.getAggCallList());
+        }
+      };
+      return originalNode.accept(converter);
+  }
   /**
    * Convert an input RelNode to an incremental RelNode. Populates snapshotRelNodes and deltaRelNodes.
    * @param originalNode input RelNode to generate an incremental version for.

@@ -8,6 +8,7 @@ package com.linkedin.coral.incremental;
 import java.io.File;
 import java.io.IOException;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.calcite.rel.RelNode;
@@ -134,6 +135,35 @@ public class RelToIncrementalSqlConverterTest {
     assertEquals(getIncrementalModification(sql), expected);
   }
 
+  @Test
+  public void testSimpleJ() {
+    String sql = "SELECT a1, a2 FROM test.alpha JOIN test.beta ON test.alpha.a1 = test.beta.b1";
+    RelNode originalRelNode = hiveToRelConverter.convertSql(sql);
+    RelNodeGenerationTransformer transformer = new RelNodeGenerationTransformer();
+    List<List<RelNode>> nodes = transformer.generateIncrementalRelNodes(originalRelNode);
+    assertEquals(nodes.size(), 2);
+  }
+
+  @Test
+  public void mytest1() {
+    String nestedJoin = "SELECT a1, a2 FROM test.alpha JOIN test.beta ON test.alpha.a1 = test.beta.b1";
+    String sql = "SELECT a2, g1 FROM (" + nestedJoin + ") AS nj JOIN test.gamma ON nj.a2 = test.gamma.g2";
+    RelNode originalRelNode = hiveToRelConverter.convertSql(sql);
+    RelNodeGenerationTransformer transformer = new RelNodeGenerationTransformer();
+    List<List<RelNode>> nodes = transformer.generateIncrementalRelNodes(originalRelNode);
+    assertEquals(nodes.size(), 3);
+  }
+
+  @Test
+  public void mytest2() {
+    String nestedJoin = "SELECT a1, a2 FROM test.alpha JOIN test.beta ON test.alpha.a1 = test.beta.b1";
+    String sql2 = "SELECT a2, g1 FROM (" + nestedJoin + ") AS nj JOIN test.gamma ON nj.a2 = test.gamma.g2";
+    String sql = "SELECT a1, a2, g1 FROM test.alpha JOIN test.beta ON test.alpha.a1 = test.beta.b1 JOIN test.gamma ON test.alpha.a2 = test.gamma.g2";
+    RelNode originalRelNode = hiveToRelConverter.convertSql(sql);
+    RelNodeGenerationTransformer transformer = new RelNodeGenerationTransformer();
+    RelNode n2 = hiveToRelConverter.convertSql(sql2);
+    transformer.generateIncrementalRelNodes(originalRelNode);
+  }
   @Test
   public void testNestedJoin() {
     String nestedJoin = "SELECT a1, a2 FROM test.alpha JOIN test.beta ON test.alpha.a1 = test.beta.b1";
