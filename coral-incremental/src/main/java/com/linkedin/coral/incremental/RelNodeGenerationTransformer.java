@@ -31,14 +31,13 @@ import org.apache.calcite.rel.logical.LogicalTableScan;
 import org.apache.calcite.rel.logical.LogicalUnion;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexNode;
-import org.apache.calcite.sql.SqlNode;
-
-import com.linkedin.coral.transformers.CoralRelToSqlNodeConverter;
 
 
 public class RelNodeGenerationTransformer {
   private final String TABLE_NAME_PREFIX = "Table#";
   private final String DELTA_SUFFIX = "_delta";
+
+  private final String PREV_SUFFIX = "_prev";
 
   private RelOptSchema relOptSchema;
   private Map<String, RelNode> snapshotRelNodes;
@@ -55,22 +54,13 @@ public class RelNodeGenerationTransformer {
   }
 
   public List<List<RelNode>> generateIncrementalRelNodes(RelNode relNode) {
-    getLevelRelation(relNode);
+    findJoinNeedsProject(relNode);
     relNode = uniformFormat(relNode);
     convertRelIncremental(relNode);
-    CoralRelToSqlNodeConverter converter = new CoralRelToSqlNodeConverter();
     Map<String, RelNode> snapshotRelNodes = getSnapshotRelNodes();
     Map<String, RelNode> deltaRelNodes = getDeltaRelNodes();
     List<List<RelNode>> combinedLists = generateCombinedLists(deltaRelNodes, snapshotRelNodes);
     combinedLists.add(Arrays.asList(relNode));
-    for (List<RelNode> plan : combinedLists) {
-      for (RelNode node : plan) {
-        SqlNode sqlNode = converter.convert(node);
-        System.out.println(sqlNode.toSqlString(converter.INSTANCE).getSql());
-        System.out.println("       ");
-      }
-      System.out.println("XXXXXXXXXX");
-    }
     return combinedLists;
   }
 
@@ -120,7 +110,14 @@ public class RelNodeGenerationTransformer {
     return deterministicDeltaRelNodes;
   }
 
-  private void getLevelRelation(RelNode relNode) {
+  /**
+   * Traverses the relational algebra tree starting from the given RelNode.
+   * Identifies LogicalJoin nodes that may need a projection and adds them to the needsProj set.
+   * The traversal uses a custom RelShuttleImpl visitor that:
+   * - Checks if the input of LogicalJoin, LogicalFilter, LogicalUnion, and LogicalAggregate nodes is a LogicalJoin.
+   * - Recursively processes the inputs of RelNodes.
+   */
+  private void findJoinNeedsProject(RelNode relNode) {
     RelShuttle converter = new RelShuttleImpl() {
 
       @Override
@@ -134,8 +131,8 @@ public class RelNodeGenerationTransformer {
           needsProj.add(right);
         }
 
-        getLevelRelation(left);
-        getLevelRelation(right);
+        findJoinNeedsProject(left);
+        findJoinNeedsProject(right);
 
         return join;
       }
@@ -145,14 +142,14 @@ public class RelNodeGenerationTransformer {
         if (filter.getInput() instanceof LogicalJoin) {
           needsProj.add(filter.getInput());
         }
-        getLevelRelation(filter.getInput());
+        findJoinNeedsProject(filter.getInput());
 
         return filter;
       }
 
       @Override
       public RelNode visit(LogicalProject project) {
-        getLevelRelation(project.getInput());
+        findJoinNeedsProject(project.getInput());
         return project;
       }
 
@@ -163,7 +160,7 @@ public class RelNodeGenerationTransformer {
           if (child instanceof LogicalJoin) {
             needsProj.add(child);
           }
-          getLevelRelation(child);
+          findJoinNeedsProject(child);
         }
 
         return union;
@@ -174,7 +171,7 @@ public class RelNodeGenerationTransformer {
         if (aggregate.getInput() instanceof LogicalJoin) {
           needsProj.add(aggregate.getInput());
         }
-        getLevelRelation(aggregate.getInput());
+        findJoinNeedsProject(aggregate.getInput());
 
         return aggregate;
       }
@@ -182,13 +179,28 @@ public class RelNodeGenerationTransformer {
     relNode.accept(converter);
   }
 
-  private RelNode convertRelPrev(RelNode originalNode) {
+  /**
+   * Converts the given relational algebra tree into its "previous" version by modifying TableScan nodes
+   * and transforming the structure of other relational nodes (such as LogicalJoin, LogicalFilter, LogicalProject,
+   * LogicalUnion, and LogicalAggregate).
+   * Specifically:
+   * - TableScan nodes are modified to point to a "_prev" version of the table.
+   * - Other RelNodes are recursively transformed to operate on their "previous" versions of their inputs.
+   * <p>
+   * Example:
+   * SELECT * FROM test.bar1 JOIN test.bar2 ON test.bar1.x = test.bar2.x
+   * <p>
+   * will be transformed to:
+   * <p>
+   * SELECT * FROM test.bar1_prev JOIN test.bar2_prev ON test.bar1_prev.x = test.bar2_prev.x
+   */
+  public RelNode convertRelPrev(RelNode originalNode) {
     RelShuttle converter = new RelShuttleImpl() {
       @Override
       public RelNode visit(TableScan scan) {
         RelOptTable originalTable = scan.getTable();
         List<String> incrementalNames = new ArrayList<>(originalTable.getQualifiedName());
-        String deltaTableName = incrementalNames.remove(incrementalNames.size() - 1) + "_prev";
+        String deltaTableName = incrementalNames.remove(incrementalNames.size() - 1) + PREV_SUFFIX;
         incrementalNames.add(deltaTableName);
         RelOptTable incrementalTable =
             RelOptTableImpl.create(originalTable.getRelOptSchema(), originalTable.getRowType(), incrementalNames, null);
@@ -239,6 +251,38 @@ public class RelNodeGenerationTransformer {
     return originalNode.accept(converter);
   }
 
+  /**
+   * Transforms the given relational algebra tree to ensure a uniform format by recursively processing its nodes.
+   * This transformation involves:
+   * - For LogicalJoin nodes: recursively processing their children, and optionally creating a projection over the join
+   *   if the join is in the needsProj set. (when the Join don't have a LogicalProject as its parent)
+   * - For other RelNodes: recursively processing their inputs to ensure uniformity.
+   *
+   * Example:
+   * <pre>
+   *            LogicalProject
+   *                  |
+   *            LogicalJoin
+   *             /        \
+   *      LogicalJoin    TableScan
+   *          /   \
+   *  TableScan  TableScan
+   * </pre>
+   *
+   * will be transformed to:
+   * <pre>
+   *            LogicalProject
+   *                  |
+   *            LogicalJoin
+   *             /        \
+   *    LogicalProject   TableScan
+   *            |
+   *      LogicalJoin
+   *          /   \
+   *  TableScan  TableScan
+   * </pre>
+   *
+   */
   private RelNode uniformFormat(RelNode originalNode) {
     RelShuttle converter = new RelShuttleImpl() {
 

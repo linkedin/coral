@@ -67,6 +67,18 @@ public class RelNodeGenerationTest {
   }
 
   @Test
+  public void testSimpleJoinPrev() {
+    String sql = "SELECT * FROM test.bar1 JOIN test.bar2 ON test.bar1.x = test.bar2.x";
+    RelNodeGenerationTransformer transformer = new RelNodeGenerationTransformer();
+    RelNode originalRelNode = hiveToRelConverter.convertSql(sql);
+    RelNode prev = transformer.convertRelPrev(originalRelNode);
+    String prevSql = convert(prev);
+    String expected = "SELECT *\n" + "FROM test.bar1_prev AS bar1_prev\n"
+        + "INNER JOIN test.bar2_prev AS bar2_prev ON bar1_prev.x = bar2_prev.x";
+    assertEquals(prevSql, expected);
+  }
+
+  @Test
   public void testSimpleSelectAll() {
     String sql = "SELECT * FROM test.foo";
     List<String> incremental = Arrays.asList("SELECT *\n" + "FROM test.foo_delta AS foo_delta");
