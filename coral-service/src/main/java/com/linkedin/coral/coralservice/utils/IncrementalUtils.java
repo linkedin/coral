@@ -30,7 +30,7 @@ public class IncrementalUtils {
         break;
     }
 
-    RelNode incrementalRelNode = new RelNodeIncrementalTransformer().convertRelIncremental(originalNode);
+    RelNode incrementalRelNode = RelNodeIncrementalTransformer.convertRelIncremental(originalNode);
 
     switch (targetLanguage.toLowerCase()) {
       case "trino":
