@@ -5,7 +5,6 @@
  */
 package com.linkedin.coral.incremental;
 
-import com.linkedin.coral.transformers.CoralRelToSqlNodeConverter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -30,7 +29,6 @@ import org.apache.calcite.rel.logical.LogicalTableScan;
 import org.apache.calcite.rel.logical.LogicalUnion;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexNode;
-import org.apache.calcite.sql.SqlNode;
 
 
 public class RelNodeIncrementalTransformer {

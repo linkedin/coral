@@ -158,12 +158,14 @@ public class RelToIncrementalSqlConverterTest {
   public void mytest2() {
     String nestedJoin = "SELECT a1, a2 FROM test.alpha JOIN test.beta ON test.alpha.a1 = test.beta.b1";
     String sql2 = "SELECT a2, g1 FROM (" + nestedJoin + ") AS nj JOIN test.gamma ON nj.a2 = test.gamma.g2";
-    String sql = "SELECT a1, a2, g1 FROM test.alpha JOIN test.beta ON test.alpha.a1 = test.beta.b1 JOIN test.gamma ON test.alpha.a2 = test.gamma.g2";
+    String sql =
+        "SELECT a1, a2, g1 FROM test.alpha JOIN test.beta ON test.alpha.a1 = test.beta.b1 JOIN test.gamma ON test.alpha.a2 = test.gamma.g2";
     RelNode originalRelNode = hiveToRelConverter.convertSql(sql);
     RelNodeGenerationTransformer transformer = new RelNodeGenerationTransformer();
     RelNode n2 = hiveToRelConverter.convertSql(sql2);
     transformer.generateIncrementalRelNodes(originalRelNode);
   }
+
   @Test
   public void testNestedJoin() {
     String nestedJoin = "SELECT a1, a2 FROM test.alpha JOIN test.beta ON test.alpha.a1 = test.beta.b1";
