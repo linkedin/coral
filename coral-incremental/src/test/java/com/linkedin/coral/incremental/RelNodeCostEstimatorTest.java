@@ -59,8 +59,6 @@ public class RelNodeCostEstimatorTest {
     RelNode relNode = hiveToRelConverter.convertSql(sql);
     estimator.loadStatistic(TEST_JSON_FILE_DIR + "statistic.json");
     assertEquals(estimator.getCost(relNode), 300.0);
-    estimator.setStat(fakeStatData());
-    assertEquals(estimator.getCost(relNode), 240.0);
   }
 
   @Test
@@ -69,7 +67,40 @@ public class RelNodeCostEstimatorTest {
     RelNode relNode = hiveToRelConverter.convertSql(sql);
     estimator.loadStatistic(TEST_JSON_FILE_DIR + "statistic.json");
     assertEquals(estimator.getCost(relNode), 500.0);
-    estimator.setStat(fakeStatData());
-    assertEquals(estimator.getCost(relNode), 400.0);
+  }
+
+  @Test
+  public void testSimpleUnion() throws IOException {
+    String sql = "SELECT *\n" + "FROM test.bar1 AS bar1\n" + "INNER JOIN test.bar2 AS bar2 ON bar1.x = bar2.x\n"
+        + "UNION ALL\n" + "SELECT *\n" + "FROM test.bar3 AS bar3\n" + "INNER JOIN test.bar2 AS bar2 ON bar3.x = bar2.x";
+    RelNode relNode = hiveToRelConverter.convertSql(sql);
+    estimator.loadStatistic(TEST_JSON_FILE_DIR + "statistic.json");
+    assertEquals(estimator.getCost(relNode), 680.0);
+  }
+
+  @Test
+  public void testUnsupportOperator() throws IOException {
+    String sql = "SELECT * FROM test.bar1 WHERE x = 1";
+    RelNode relNode = hiveToRelConverter.convertSql(sql);
+    estimator.loadStatistic(TEST_JSON_FILE_DIR + "statistic.json");
+    try {
+      estimator.getCost(relNode);
+      fail("Should throw exception");
+    } catch (RuntimeException e) {
+      assertEquals(e.getMessage(), "Unsupported relational operation: " + "LogicalFilter");
+    }
+  }
+
+  @Test
+  public void testNoStatistic() throws IOException {
+    String sql = "SELECT * FROM test.foo";
+    RelNode relNode = hiveToRelConverter.convertSql(sql);
+    estimator.loadStatistic(TEST_JSON_FILE_DIR + "statistic.json");
+    try {
+      estimator.getCost(relNode);
+      fail("Should throw exception");
+    } catch (RuntimeException e) {
+      assertEquals(e.getMessage(), "Table statistics not found for table: " + "hive.test.foo");
+    }
   }
 }

@@ -68,6 +68,10 @@ public class RelNodeCostEstimator {
     Double rowCount;
     // The number of distinct values in each column
     Map<String, Double> distinctCountByRow;
+
+    public TableStatistic() {
+      this.distinctCountByRow = new HashMap<>();
+    }
   }
 
   class JoinKey {
@@ -162,7 +166,7 @@ public class RelNodeCostEstimator {
     } else if (rel instanceof LogicalProject) {
       return getExecutionCostProject((LogicalProject) rel);
     }
-    return new CostInfo(0.0, 0.0);
+    throw new IllegalArgumentException("Unsupported relational operation: " + rel.getClass().getSimpleName());
   }
 
   private CostInfo getExecutionCostTableScan(TableScan scan) {
