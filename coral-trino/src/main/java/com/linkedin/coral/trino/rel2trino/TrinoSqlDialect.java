@@ -76,7 +76,11 @@ public class TrinoSqlDialect extends SqlDialect {
         unparseMapValueConstructor(writer, call, leftPrec, rightPrec);
         break;
       default:
-        super.unparseCall(writer, call, leftPrec, rightPrec);
+        if (call.getOperator().getName().equals("timestamp_from_unixtime")) {
+          TIMESTAMP_FROM_UNIXTIME.unparse(writer, call, leftPrec, rightPrec);
+        } else {
+          super.unparseCall(writer, call, leftPrec, rightPrec);
+        }
     }
   }
 
