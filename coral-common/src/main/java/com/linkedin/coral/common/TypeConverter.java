@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -147,9 +147,6 @@ public class TypeConverter {
   public static RelDataType convert(UnionTypeInfo unionType, RelDataTypeFactory dtFactory) {
     List<RelDataType> fTypes = unionType.getAllUnionObjectTypeInfos().stream()
         .map(typeInfo -> convert(typeInfo, dtFactory)).collect(Collectors.toList());
-    if (fTypes.size() == 1) {
-      return dtFactory.createTypeWithNullability(fTypes.get(0), true);
-    }
     List<String> fNames = IntStream.range(0, unionType.getAllUnionObjectTypeInfos().size()).mapToObj(i -> "field" + i)
         .collect(Collectors.toList());
     fTypes.add(0, dtFactory.createSqlType(SqlTypeName.INTEGER));

@@ -1,5 +1,5 @@
 /**
- * Copyright 2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2023-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -15,7 +15,6 @@ import org.apache.calcite.sql.util.SqlShuttle;
 import com.linkedin.coral.common.transformers.OperatorRenameSqlCallTransformer;
 import com.linkedin.coral.common.transformers.SqlCallTransformers;
 import com.linkedin.coral.spark.containers.SparkUDFInfo;
-import com.linkedin.coral.spark.transformers.ExtractUnionFunctionTransformer;
 import com.linkedin.coral.spark.transformers.FallBackToLinkedInHiveUDFTransformer;
 import com.linkedin.coral.spark.transformers.FuzzyUnionGenericProjectTransformer;
 import com.linkedin.coral.spark.transformers.TransportUDFTransformer;
@@ -156,9 +155,6 @@ public class CoralToSparkSqlCallConverter extends SqlShuttle {
 
         // Fall back to the original Hive UDF defined in StaticHiveFunctionRegistry after failing to apply transformers above
         new FallBackToLinkedInHiveUDFTransformer(sparkUDFInfos),
-
-        // Transform `extract_union` to `coalesce_struct`
-        new ExtractUnionFunctionTransformer(sparkUDFInfos),
 
         // Transform `generic_project` function
         new FuzzyUnionGenericProjectTransformer(sparkUDFInfos));

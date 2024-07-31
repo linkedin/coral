@@ -1,5 +1,5 @@
 /**
- * Copyright 2022-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2022-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -40,6 +40,25 @@ import org.apache.calcite.sql.type.MapSqlType;
 public class RelDataTypeToHiveTypeStringConverter {
   private RelDataTypeToHiveTypeStringConverter() {
   }
+
+  public RelDataTypeToHiveTypeStringConverter(boolean convertUnionTypes) {
+    this.convertUnionTypes = convertUnionTypes;
+  }
+
+  /**
+   * If true, Coral will convert single uniontypes back to Hive's native uniontype representation. This is necessary
+   * because some engines have readers that unwrap Hive single uniontypes to just the underlying data type, causing
+   * the loss of information that the column was originally a uniontype in Hive. This can be problematic when calling
+   * the `coalesce_struct` UDF on such columns, as they are expected to be treated as uniontypes. Retaining the
+   * original uniontype record and passing it into `coalesce_struct` ensures correct handling.
+   *
+   * Example:
+   * RelDataType:
+   *   struct(tag:integer,field0:varchar)
+   * Hive Type String:
+   *   uniontype&lt;string&gt;
+   */
+  private static boolean convertUnionTypes = false;
 
   /**
    * @param relDataType a given RelDataType
@@ -110,6 +129,14 @@ public class RelDataTypeToHiveTypeStringConverter {
    */
   private static String buildStructDataTypeString(RelRecordType relRecordType) {
     List<String> structFieldStrings = new ArrayList<>();
+
+    // Convert single uniontypes as structs back to native Hive representation
+    if (convertUnionTypes && relRecordType.getFieldList().size() == 2
+        && relRecordType.getFieldList().get(0).getName().equals("tag")
+        && relRecordType.getFieldList().get(1).getName().equals("field0")) {
+      return String.format("uniontype<%s>", convertRelDataType(relRecordType.getFieldList().get(1).getType()));
+    }
+
     for (RelDataTypeField fieldRelDataType : relRecordType.getFieldList()) {
       structFieldStrings
           .add(String.format("%s:%s", fieldRelDataType.getName(), convertRelDataType(fieldRelDataType.getType())));

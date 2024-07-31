@@ -1,5 +1,5 @@
 /**
- * Copyright 2018-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2018-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -73,15 +73,6 @@ public class FunctionFieldReferenceOperator extends SqlBinaryOperator {
       RelDataType funcType = validator.deriveType(scope, firstOperand);
       if (funcType.isStruct()) {
         return funcType.getField(fieldNameStripQuotes(call.operand(1)), false, false).getType();
-      }
-
-      // When the first operand is a SqlBasicCall with a non-struct RelDataType and the second operand is `tag_0`,
-      // such as `extract_union`(`product`.`value`).`tag_0` or (`extract_union`(`product`.`value`).`id`).`tag_0`,
-      // derived data type is first operand's RelDataType.
-      // This strategy ensures that RelDataType derivation remains successful for the specified sqlCalls while maintaining backward compatibility.
-      // Such SqlCalls are transformed {@link com.linkedin.coral.transformers.SingleUnionFieldReferenceTransformer}
-      if (FunctionFieldReferenceOperator.fieldNameStripQuotes(call.operand(1)).equalsIgnoreCase("tag_0")) {
-        return funcType;
       }
     }
     return super.deriveType(validator, scope, call);

@@ -1,5 +1,5 @@
 /**
- * Copyright 2018-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2018-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -13,6 +13,7 @@ import org.apache.avro.Schema;
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlSelect;
@@ -76,7 +77,7 @@ public class CoralSpark {
     SparkRelInfo sparkRelInfo = IRRelToSparkRelTransformer.transform(irRelNode);
     Set<SparkUDFInfo> sparkUDFInfos = sparkRelInfo.getSparkUDFInfos();
     RelNode sparkRelNode = sparkRelInfo.getSparkRelNode();
-    SqlNode sparkSqlNode = constructSparkSqlNode(sparkRelNode, sparkUDFInfos);
+    SqlNode sparkSqlNode = constructSparkSqlNode(sparkRelNode, sparkUDFInfos, hmsClient);
     String sparkSQL = constructSparkSQL(sparkSqlNode);
     List<String> baseTables = constructBaseTables(sparkRelNode);
     return new CoralSpark(baseTables, ImmutableList.copyOf(sparkUDFInfos), sparkSQL, hmsClient, sparkSqlNode);
@@ -101,11 +102,11 @@ public class CoralSpark {
     SparkRelInfo sparkRelInfo = IRRelToSparkRelTransformer.transform(irRelNode);
     Set<SparkUDFInfo> sparkUDFInfos = sparkRelInfo.getSparkUDFInfos();
     RelNode sparkRelNode = sparkRelInfo.getSparkRelNode();
-    SqlNode sparkSqlNode = constructSparkSqlNode(sparkRelNode, sparkUDFInfos);
+    SqlNode sparkSqlNode = constructSparkSqlNode(sparkRelNode, sparkUDFInfos, hmsClient);
     // Use a second pass visit to add explicit alias names,
     // only do this when it's not a select star case,
     // since for select star we don't need to add any explicit aliases
-    if (sparkSqlNode.getKind() == SqlKind.SELECT && ((SqlSelect) sparkSqlNode).getSelectList() != null) {
+    if (sparkSqlNode.getKind() == SqlKind.SELECT && !isSelectStar(sparkSqlNode)) {
       sparkSqlNode = sparkSqlNode.accept(new AddExplicitAlias(aliases));
     }
     String sparkSQL = constructSparkSQL(sparkSqlNode);
@@ -113,16 +114,30 @@ public class CoralSpark {
     return new CoralSpark(baseTables, ImmutableList.copyOf(sparkUDFInfos), sparkSQL, hmsClient, sparkSqlNode);
   }
 
-  private static SqlNode constructSparkSqlNode(RelNode sparkRelNode, Set<SparkUDFInfo> sparkUDFInfos) {
+  private static SqlNode constructSparkSqlNode(RelNode sparkRelNode, Set<SparkUDFInfo> sparkUDFInfos,
+      HiveMetastoreClient hmsClient) {
     CoralRelToSqlNodeConverter rel2sql = new CoralRelToSqlNodeConverter();
     SqlNode coralSqlNode = rel2sql.convert(sparkRelNode);
-    SqlNode sparkSqlNode = coralSqlNode.accept(new CoralSqlNodeToSparkSqlNodeConverter())
-        .accept(new CoralToSparkSqlCallConverter(sparkUDFInfos));
+
+    SqlNode coralSqlNodeWithRelDataTypeDerivedConversions =
+        coralSqlNode.accept(new DataTypeDerivedSqlCallConverter(hmsClient, coralSqlNode, sparkUDFInfos));
+
+    SqlNode sparkSqlNode = coralSqlNodeWithRelDataTypeDerivedConversions
+        .accept(new CoralSqlNodeToSparkSqlNodeConverter()).accept(new CoralToSparkSqlCallConverter(sparkUDFInfos));
     return sparkSqlNode.accept(new SparkSqlRewriter());
   }
 
   public static String constructSparkSQL(SqlNode sparkSqlNode) {
     return sparkSqlNode.toSqlString(SparkSqlDialect.INSTANCE).getSql();
+  }
+
+  private static boolean isSelectStar(SqlNode node) {
+    if (node.getKind() == SqlKind.SELECT && ((SqlSelect) node).getSelectList().size() == 1
+        && ((SqlSelect) node).getSelectList().get(0) instanceof SqlIdentifier) {
+      SqlIdentifier identifier = (SqlIdentifier) ((SqlSelect) node).getSelectList().get(0);
+      return identifier.isStar();
+    }
+    return false;
   }
 
   /**
