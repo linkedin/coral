@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2019-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -558,6 +558,17 @@ public class ViewToAvroSchemaConverterTests {
     Schema actual = viewToAvroSchemaConverter.toAvroSchema(sql);
 
     Assert.assertEquals(actual.toString(true), TestUtils.loadSchema("testNullabilityExtractUnionUDF-expected.avsc"));
+  }
+
+  @Test
+  public void testSingleUnionFieldReference() {
+    String sql =
+        "select extract_union(struct_col).single.tag_0 as single_in_struct, extract_union(single).tag_0 as single from single_uniontypes";
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+
+    Schema actual = viewToAvroSchemaConverter.toAvroSchema(sql);
+
+    Assert.assertEquals(actual.toString(true), TestUtils.loadSchema("testSingleUnionFieldReference-expected.avsc"));
   }
 
   @Test(enabled = false)
