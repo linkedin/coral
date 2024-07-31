@@ -32,6 +32,7 @@ import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import com.linkedin.coral.common.HiveMetastoreClient;
 import com.linkedin.coral.common.functions.CoralSqlUnnestOperator;
 import com.linkedin.coral.common.functions.FunctionFieldReferenceOperator;
+import com.linkedin.coral.transformers.CoralRelToSqlNodeConverter;
 
 import static com.google.common.base.Preconditions.*;
 import static com.linkedin.coral.trino.rel2trino.CoralTrinoConfigKeys.*;
@@ -60,7 +61,7 @@ public class RelToTrinoConverter extends RelToSqlConverter {
    * @param mscClient client interface used to interact with the Hive Metastore service.
    */
   public RelToTrinoConverter(HiveMetastoreClient mscClient) {
-    super(TrinoSqlDialect.INSTANCE);
+    super(CoralRelToSqlNodeConverter.INSTANCE);
     _hiveMetastoreClient = mscClient;
   }
 
@@ -70,7 +71,7 @@ public class RelToTrinoConverter extends RelToSqlConverter {
    * @param configs configs
    */
   public RelToTrinoConverter(HiveMetastoreClient mscClient, Map<String, Boolean> configs) {
-    super(TrinoSqlDialect.INSTANCE);
+    super(CoralRelToSqlNodeConverter.INSTANCE);
     checkNotNull(configs);
     this.configs = configs;
     _hiveMetastoreClient = mscClient;
