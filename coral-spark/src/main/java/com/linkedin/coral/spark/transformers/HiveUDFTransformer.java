@@ -27,10 +27,10 @@ import com.linkedin.coral.spark.exceptions.UnsupportedUDFException;
  * we use this transformer to fall back to the original Hive UDF defined in
  * {@link com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry}.
  * This is reasonable since Spark understands and has ability to run Hive UDF.
- * Check `CoralSparkTest#testFallBackToLinkedInHiveUDFTransformer()` for an example.
+ * Check `CoralSparkTest#testHiveUDFTransformer()` for an example.
  */
-public class FallBackToLinkedInHiveUDFTransformer extends SqlCallTransformer {
-  private static final Logger LOG = LoggerFactory.getLogger(FallBackToLinkedInHiveUDFTransformer.class);
+public class HiveUDFTransformer extends SqlCallTransformer {
+  private static final Logger LOG = LoggerFactory.getLogger(HiveUDFTransformer.class);
 
   /**
    * Some LinkedIn UDFs get registered correctly in a SparkSession, and hence a DataFrame is successfully
@@ -46,7 +46,7 @@ public class FallBackToLinkedInHiveUDFTransformer extends SqlCallTransformer {
           "com.linkedin.coral.hive.hive2rel.CoralTestUnsupportedUDF");
   private final Set<SparkUDFInfo> sparkUDFInfos;
 
-  public FallBackToLinkedInHiveUDFTransformer(Set<SparkUDFInfo> sparkUDFInfos) {
+  public HiveUDFTransformer(Set<SparkUDFInfo> sparkUDFInfos) {
     this.sparkUDFInfos = sparkUDFInfos;
   }
 

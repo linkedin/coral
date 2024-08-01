@@ -137,7 +137,7 @@ public class CoralSparkTest {
   }
 
   @Test
-  public void testFallBackToLinkedInHiveUDFTransformer() {
+  public void testHiveUDFTransformer() {
     // Dali view foo_dali_udf2 contains a UDF not defined with OperatorBasedSqlCallTransformer or TransportUDFTransformer.
     // We need to fall back to the udf initially defined in HiveFunctionRegistry.
     // Then the function Name comes from Hive metastore in the format dbName_viewName_funcBaseName.
