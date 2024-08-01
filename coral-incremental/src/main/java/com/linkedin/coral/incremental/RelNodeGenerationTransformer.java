@@ -102,11 +102,11 @@ public class RelNodeGenerationTransformer {
    * LogicalProject#4 will be replaced with Table0 and LogicalProject#7 will be replaced with Table1.
    * There will be 3 combinations:
    * <p>
-   * Incremental: [Table0_delta, Table1_delta], which means we use incremental view maintenance for both Joins.
+   * Incremental: [Table0_delta, Table1_delta], which means incremental execution for both Joins.
    * <p>
-   * Part-Batch, Part-Incremental: [Table0_delta, Table1], which means we use incremental view maintenance for the first Join and snapshot for the second Join.
+   * Part-Batch, Part-Incremental: [Table0_delta, Table1], which means incremental execution for the first Join and batch execution for the second Join.
    * <p>
-   * Batch: [Table0, Table1], which means we use snapshot for both Joins.
+   * Batch: [Table0, Table1], which means batch execution for both Joins.
    * <p>
    * @param deltaRelNodes map of delta RelNodes
    * @param snapshotRelNodes map of snapshot RelNodes
