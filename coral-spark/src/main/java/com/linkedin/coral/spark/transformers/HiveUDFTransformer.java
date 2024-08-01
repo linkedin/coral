@@ -23,11 +23,9 @@ import com.linkedin.coral.spark.exceptions.UnsupportedUDFException;
 
 
 /**
- * After failing to transform UDF with {@link TransportUDFTransformer},
- * we use this transformer to fall back to the original Hive UDF defined in
- * {@link com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry}.
- * This is reasonable since Spark understands and has ability to run Hive UDF.
- * Check `CoralSparkTest#testHiveUDFTransformer()` for an example.
+ * This transformer converts the Hive UDF SqlCall name from the UDF class name (e.g., `com.linkedin.HiveUDF`)
+ * to the corresponding view-dependent UDF name in the view text. It also adds the UDF information to `sparkUDFInfos`.
+ * Refer to `CoralSparkTest#testHiveUDFTransformer()` for an example.
  */
 public class HiveUDFTransformer extends SqlCallTransformer {
   private static final Logger LOG = LoggerFactory.getLogger(HiveUDFTransformer.class);
