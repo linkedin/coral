@@ -15,8 +15,8 @@ import org.apache.calcite.sql.util.SqlShuttle;
 import com.linkedin.coral.common.transformers.OperatorRenameSqlCallTransformer;
 import com.linkedin.coral.common.transformers.SqlCallTransformers;
 import com.linkedin.coral.spark.containers.SparkUDFInfo;
-import com.linkedin.coral.spark.transformers.HiveUDFTransformer;
 import com.linkedin.coral.spark.transformers.FuzzyUnionGenericProjectTransformer;
+import com.linkedin.coral.spark.transformers.HiveUDFTransformer;
 import com.linkedin.coral.spark.transformers.TransportUDFTransformer;
 
 import static com.linkedin.coral.spark.transformers.TransportUDFTransformer.*;
