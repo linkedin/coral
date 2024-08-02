@@ -44,8 +44,7 @@ import static java.lang.Math.*;
  * these statistics and the input relational expressions.
  *
  * <p>The cost estimation takes into account factors such as I/O costs and data shuffling costs.
- * The cost of writing a row to disk is IOCostValue, and the cost of shuffling a row
- * between nodes is shuffleCostValue.
+ * The cost weight of writing a row to disk is IOCostValue, and the cost weight of execution is executionCostValue.
  *
  * <p>Cost is get from 'getCost' method, which returns the total cost of the query plan, and cost consists of
  * execution cost and I/O cost.
@@ -54,12 +53,12 @@ public class RelNodeCostEstimator {
 
   class CostInfo {
     // TODO: we may also need to add TableName field.
-    Double shuffleCost;
-    Double rowCount;
+    Double executionCost;
+    Double outputSize;
 
-    public CostInfo(Double shuffleCost, Double row) {
-      this.shuffleCost = shuffleCost;
-      this.rowCount = row;
+    public CostInfo(Double executionCost, Double row) {
+      this.executionCost = executionCost;
+      this.outputSize = row;
     }
   }
 
@@ -92,11 +91,11 @@ public class RelNodeCostEstimator {
 
   private final Double IOCostValue;
 
-  private final Double shuffleCostValue;
+  private final Double executionCostValue;
 
-  public RelNodeCostEstimator(Double IOCostValue, Double shuffleCostValue) {
+  public RelNodeCostEstimator(Double IOCostValue, Double executionCostValue) {
     this.IOCostValue = IOCostValue;
-    this.shuffleCostValue = shuffleCostValue;
+    this.executionCostValue = executionCostValue;
   }
 
   /**
@@ -152,11 +151,11 @@ public class RelNodeCostEstimator {
    */
   public Double getCost(RelNode rel) {
     CostInfo executionCostInfo = getExecutionCost(rel);
-    Double IOCost = executionCostInfo.rowCount * IOCostValue;
-    return executionCostInfo.shuffleCost * shuffleCostValue + IOCost;
+    Double writeCost = executionCostInfo.outputSize * IOCostValue;
+    return executionCostInfo.executionCost * executionCostValue + writeCost;
   }
 
-  public CostInfo getExecutionCost(RelNode rel) {
+  private CostInfo getExecutionCost(RelNode rel) {
     if (rel instanceof TableScan) {
       return getExecutionCostTableScan((TableScan) rel);
     } else if (rel instanceof LogicalJoin) {
@@ -190,10 +189,10 @@ public class RelNodeCostEstimator {
     RelNode right = join.getRight();
     CostInfo leftCost = getExecutionCost(left);
     CostInfo rightCost = getExecutionCost(right);
-    Double joinSize = estimateJoinSize(join, leftCost.rowCount, rightCost.rowCount);
+    Double joinSize = estimateJoinSize(join, leftCost.outputSize, rightCost.outputSize);
     // The shuffle cost of a join is the maximum shuffle cost of its children because
     // in modern distributed systems, the shuffle cost is dominated by the largest shuffle.
-    return new CostInfo(max(leftCost.shuffleCost, rightCost.shuffleCost), joinSize);
+    return new CostInfo(max(leftCost.executionCost, rightCost.executionCost), joinSize);
   }
 
   private List<JoinKey> getJoinKeys(LogicalJoin join) {
@@ -272,8 +271,8 @@ public class RelNodeCostEstimator {
     for (Iterator var4 = union.getInputs().iterator(); var4.hasNext();) {
       input = (RelNode) var4.next();
       CostInfo inputCost = getExecutionCost(input);
-      unionSize += inputCost.rowCount;
-      unionCost = max(inputCost.shuffleCost, unionCost);
+      unionSize += inputCost.outputSize;
+      unionCost = max(inputCost.executionCost, unionCost);
     }
     unionCost *= 2;
     return new CostInfo(unionCost, unionSize);
