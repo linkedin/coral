@@ -66,6 +66,7 @@ public class RelNodeCostEstimator {
     // The number of rows in the table
     Double rowCount;
     // The number of distinct values in each column
+    // This doesn't work for nested columns and complex types
     Map<String, Double> distinctCountByRow;
 
     public TableStatistic() {
@@ -144,7 +145,7 @@ public class RelNodeCostEstimator {
    * <p>This method computes the cost of executing a relational operation based on the input
    * relational expression. The cost is calculated as the sum of the execution cost and the I/O cost.
    * We assume that I/O only occurs at the root of the query plan (Project) where we write the output to disk.
-   * So the cost is the sum of the shuffle cost of all children RelNodes and IOCostValue * row count of the root Project RelNode.
+   * So the cost is the sum of the execution cost of all children RelNodes and IOCostValue * outputSize of the root Project RelNode.
    *
    * @param rel the input relational expression
    * @return the total cost of executing the relational operation
@@ -190,8 +191,9 @@ public class RelNodeCostEstimator {
     CostInfo leftCost = getExecutionCost(left);
     CostInfo rightCost = getExecutionCost(right);
     Double joinSize = estimateJoinSize(join, leftCost.outputSize, rightCost.outputSize);
-    // The shuffle cost of a join is the maximum shuffle cost of its children because
-    // in modern distributed systems, the shuffle cost is dominated by the largest shuffle.
+    // The execution cost of a join is the maximum execution cost of its children because the execution cost of a single RelNode
+    // is mainly determined by the cost of the shuffle operation.
+    // And in modern distributed systems, the shuffle cost is dominated by the largest shuffle.
     return new CostInfo(max(leftCost.executionCost, rightCost.executionCost), joinSize);
   }
 
