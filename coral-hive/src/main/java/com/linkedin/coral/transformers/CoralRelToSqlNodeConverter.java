@@ -499,8 +499,6 @@ public class CoralRelToSqlNodeConverter extends RelToSqlConverter {
             SqlNode functionCall = toSql(program, referencedExpr);
             Collections.reverse(accessNames);
             for (String accessName : accessNames) {
-              //              functionCall = FunctionFieldReferenceOperator.DOT.createCall(SqlParserPos.ZERO, functionCall,
-              //                  new SqlIdentifier(accessName, POS));
               functionCall = SqlStdOperatorTable.DOT.createCall(SqlParserPos.ZERO, functionCall,
                   new SqlIdentifier(accessName, POS));
             }
