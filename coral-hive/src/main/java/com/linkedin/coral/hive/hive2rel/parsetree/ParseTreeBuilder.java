@@ -48,7 +48,6 @@ import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import com.linkedin.coral.com.google.common.collect.Iterables;
 import com.linkedin.coral.common.functions.CoralSqlUnnestOperator;
 import com.linkedin.coral.common.functions.Function;
-import com.linkedin.coral.common.functions.FunctionFieldReferenceOperator;
 import com.linkedin.coral.hive.hive2rel.functions.HiveFunctionResolver;
 import com.linkedin.coral.hive.hive2rel.functions.HiveJsonTupleOperator;
 import com.linkedin.coral.hive.hive2rel.functions.HiveRLikeOperator;
@@ -523,7 +522,7 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
       Iterable<String> names = Iterables.concat(left.names, right.names);
       return new SqlIdentifier(ImmutableList.copyOf(names), ZERO);
     } else {
-      return FunctionFieldReferenceOperator.DOT.createCall(ZERO, sqlNodes);
+      return SqlStdOperatorTable.DOT.createCall(ZERO, sqlNodes);
     }
   }
 
