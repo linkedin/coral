@@ -84,7 +84,7 @@ public class RelNodeGenerationTransformer {
    *  That means each generated plan would be a combination of incremental plan and batch plan, consisting of
    *  a List of RelNodes, denoting each sub-query will be incremental executed or batch executed.
    * <p>
-   *  Take the following three-tables Join as an example:
+   *  Take the following three-tables Join as an example (table names are enclosed in parentheses of the RelNodes):
    * <pre>
    *            LogicalProject#8
    *                  |
@@ -292,14 +292,14 @@ public class RelNodeGenerationTransformer {
    * - TableScan nodes are modified to point to a "_prev" version of the table.
    * - Other RelNodes are recursively transformed to operate on their "previous" versions of their inputs.
    * <p>
-   * For example the following query for a two tables Join:
+   * For example the following query for a two tables Join (table names are enclosed in parentheses of the RelNodes):
    * Input:
    * <pre>
    *            LogicalProject
    *                  |
    *            LogicalJoin
    *             /        \
-   *      TableScan#A    TableScan#B
+   *   TableScan(Table_A)    TableScan(Table_B)
    * </pre>
    *
    * Output:
@@ -308,7 +308,7 @@ public class RelNodeGenerationTransformer {
    *                  |
    *            LogicalJoin
    *             /        \
-   *   TableScan#A_prev    TableScan#B_prev
+   * TableScan(Table_A_prev)     TableScan(Table_B_prev)
    * </pre>
    * In SQL view, the transformation is:
    * <p>
@@ -388,7 +388,7 @@ public class RelNodeGenerationTransformer {
    *   if the join is in the needsProj set. (when the Join don't have a LogicalProject as its parent)
    * - For other type RelNode: recursively processing its inputs, and using the transformed children as its new inputs.
    * <p>
-   * Here is an example of how the uniformFormat method works for a three-tables join query
+   * Here is an example of how the uniformFormat method works for a three-tables join query, (table names are enclosed in parentheses of the RelNodes):
    * <p>
    * Input:
    * <pre>
