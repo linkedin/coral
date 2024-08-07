@@ -144,6 +144,9 @@ public class TestUtils {
 
     executeQuery("DROP TABLE IF EXISTS basedecimal");
     executeQuery("CREATE TABLE IF NOT EXISTS basedecimal(decimal_col decimal(2,1))");
+
+    executeQuery(
+        "CREATE TABLE IF NOT EXISTS single_uniontypes(single uniontype<string>, struct_col struct<single:uniontype<string>>)");
   }
 
   private static void initializeUdfs() {

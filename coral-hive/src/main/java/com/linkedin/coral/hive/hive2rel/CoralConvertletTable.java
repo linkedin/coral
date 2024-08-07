@@ -1,5 +1,5 @@
 /**
- * Copyright 2018-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2018-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -20,10 +20,11 @@ import com.linkedin.coral.common.functions.FunctionFieldReferenceOperator;
 
 
 /**
- * ConvertletTable for Hive Operators
+ * ConvertletTable for transformations only relevant to Coral's Intermediate Representation, not specific
+ * any SQL dialect. These transformations keep data parity between the SqlNode and RelNode layer, keeping the IR intact.
  * @see ReflectiveConvertletTable documentation for method naming and visibility rules
  */
-public class HiveConvertletTable extends ReflectiveConvertletTable {
+public class CoralConvertletTable extends ReflectiveConvertletTable {
 
   @SuppressWarnings("unused")
   public RexNode convertFunctionFieldReferenceOperator(SqlRexContext cx, FunctionFieldReferenceOperator op,
@@ -33,14 +34,15 @@ public class HiveConvertletTable extends ReflectiveConvertletTable {
     return cx.getRexBuilder().makeFieldAccess(funcExpr, fieldName, false);
   }
 
+  /**
+   * Override {@link StandardConvertletTable#convertCast} to avoid cast optimizations that remove the cast.
+   */
   @SuppressWarnings("unused")
   public RexNode convertCast(SqlRexContext cx, SqlCastFunction cast, SqlCall call) {
     final SqlNode left = call.operand(0);
     RexNode leftRex = cx.convertExpression(left);
     SqlDataTypeSpec dataType = call.operand(1);
     RelDataType castType = dataType.deriveType(cx.getValidator(), true);
-    // can not call RexBuilder.makeCast() since that optimizes to remove the cast
-    // we don't want to remove the cast
     return cx.getRexBuilder().makeAbstractCast(castType, leftRex);
   }
 

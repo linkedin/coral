@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -140,16 +140,12 @@ public class TypeConverter {
   // The schema of output Struct conforms to https://github.com/trinodb/trino/pull/3483
   // except we adopted "integer" for the type of "tag" field instead of "tinyint" in the Trino patch
   // for compatibility with other platforms that Iceberg currently doesn't support tinyint type.
-  // When the field count inside UnionTypeInfo is one, we surface the underlying RelDataType instead.
 
   // Note: this is subject to change in the future pending on the discussion in
   // https://mail-archives.apache.org/mod_mbox/iceberg-dev/202112.mbox/browser
   public static RelDataType convert(UnionTypeInfo unionType, RelDataTypeFactory dtFactory) {
     List<RelDataType> fTypes = unionType.getAllUnionObjectTypeInfos().stream()
         .map(typeInfo -> convert(typeInfo, dtFactory)).collect(Collectors.toList());
-    if (fTypes.size() == 1) {
-      return dtFactory.createTypeWithNullability(fTypes.get(0), true);
-    }
     List<String> fNames = IntStream.range(0, unionType.getAllUnionObjectTypeInfos().size()).mapToObj(i -> "field" + i)
         .collect(Collectors.toList());
     fTypes.add(0, dtFactory.createSqlType(SqlTypeName.INTEGER));

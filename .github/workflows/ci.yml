@@ -45,7 +45,7 @@ jobs:
         run: ./gradlew githubRelease publishToSonatype closeAndReleaseStagingRepository --stacktrace
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-          SONATYPE_USER: ${{secrets.SONATYPE_USER}}
-          SONATYPE_PWD: ${{secrets.SONATYPE_PWD}}
+          SONATYPE_TOKEN_USERNAME: ${{secrets.SONATYPE_TOKEN_USERNAME}}
+          SONATYPE_TOKEN_PASSWORD: ${{secrets.SONATYPE_TOKEN_PASSWORD}}
           PGP_KEY: ${{secrets.PGP_KEY}}
           PGP_PWD: ${{secrets.PGP_PWD}}

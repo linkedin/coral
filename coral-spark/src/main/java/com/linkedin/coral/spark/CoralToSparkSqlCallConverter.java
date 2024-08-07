@@ -1,5 +1,5 @@
 /**
- * Copyright 2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2023-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -15,9 +15,8 @@ import org.apache.calcite.sql.util.SqlShuttle;
 import com.linkedin.coral.common.transformers.OperatorRenameSqlCallTransformer;
 import com.linkedin.coral.common.transformers.SqlCallTransformers;
 import com.linkedin.coral.spark.containers.SparkUDFInfo;
-import com.linkedin.coral.spark.transformers.ExtractUnionFunctionTransformer;
-import com.linkedin.coral.spark.transformers.FallBackToLinkedInHiveUDFTransformer;
 import com.linkedin.coral.spark.transformers.FuzzyUnionGenericProjectTransformer;
+import com.linkedin.coral.spark.transformers.HiveUDFTransformer;
 import com.linkedin.coral.spark.transformers.TransportUDFTransformer;
 
 import static com.linkedin.coral.spark.transformers.TransportUDFTransformer.*;
@@ -28,7 +27,7 @@ import static com.linkedin.coral.spark.transformers.TransportUDFTransformer.*;
  * which containing a list of {@link com.linkedin.coral.common.transformers.SqlCallTransformer} to traverse the hierarchy of a {@link org.apache.calcite.sql.SqlCall}
  * and converts the functions from Coral operator to Spark operator if it is required
  *
- * In this converter, we need to apply {@link TransportUDFTransformer} before {@link FallBackToLinkedInHiveUDFTransformer}
+ * In this converter, we need to apply {@link TransportUDFTransformer} before {@link HiveUDFTransformer}
  * because we should try to transform a UDF to an equivalent Transport UDF before falling back to LinkedIn Hive UDF.
  */
 public class CoralToSparkSqlCallConverter extends SqlShuttle {
@@ -155,10 +154,7 @@ public class CoralToSparkSqlCallConverter extends SqlShuttle {
         new OperatorRenameSqlCallTransformer(SqlStdOperatorTable.CARDINALITY, 1, "size"),
 
         // Fall back to the original Hive UDF defined in StaticHiveFunctionRegistry after failing to apply transformers above
-        new FallBackToLinkedInHiveUDFTransformer(sparkUDFInfos),
-
-        // Transform `extract_union` to `coalesce_struct`
-        new ExtractUnionFunctionTransformer(sparkUDFInfos),
+        new HiveUDFTransformer(sparkUDFInfos),
 
         // Transform `generic_project` function
         new FuzzyUnionGenericProjectTransformer(sparkUDFInfos));

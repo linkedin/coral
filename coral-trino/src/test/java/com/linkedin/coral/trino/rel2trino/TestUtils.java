@@ -425,6 +425,9 @@ public class TestUtils {
     run(driver,
         "CREATE TABLE IF NOT EXISTS test.tableFour(icol int, scol string, acol array<string>, mcol map<string, string>)");
 
+    run(driver,
+        "CREATE TABLE IF NOT EXISTS test.tableInt(tinyint_col tinyint, smallint_col smallint, int_col int, bigint_col bigint)");
+
   }
 
   public static HiveConf loadResourceHiveConf() {
