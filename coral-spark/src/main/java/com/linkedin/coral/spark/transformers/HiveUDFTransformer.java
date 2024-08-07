@@ -1,5 +1,5 @@
 /**
- * Copyright 2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2023-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -23,14 +23,12 @@ import com.linkedin.coral.spark.exceptions.UnsupportedUDFException;
 
 
 /**
- * After failing to transform UDF with {@link TransportUDFTransformer},
- * we use this transformer to fall back to the original Hive UDF defined in
- * {@link com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry}.
- * This is reasonable since Spark understands and has ability to run Hive UDF.
- * Check `CoralSparkTest#testFallBackToLinkedInHiveUDFTransformer()` for an example.
+ * This transformer converts the Hive UDF SqlCall name from the UDF class name (e.g., `com.linkedin.HiveUDF`)
+ * to the corresponding view-dependent UDF name in the view text. It also adds the UDF information to `sparkUDFInfos`.
+ * Refer to `CoralSparkTest#testHiveUDFTransformer()` for an example.
  */
-public class FallBackToLinkedInHiveUDFTransformer extends SqlCallTransformer {
-  private static final Logger LOG = LoggerFactory.getLogger(FallBackToLinkedInHiveUDFTransformer.class);
+public class HiveUDFTransformer extends SqlCallTransformer {
+  private static final Logger LOG = LoggerFactory.getLogger(HiveUDFTransformer.class);
 
   /**
    * Some LinkedIn UDFs get registered correctly in a SparkSession, and hence a DataFrame is successfully
@@ -46,7 +44,7 @@ public class FallBackToLinkedInHiveUDFTransformer extends SqlCallTransformer {
           "com.linkedin.coral.hive.hive2rel.CoralTestUnsupportedUDF");
   private final Set<SparkUDFInfo> sparkUDFInfos;
 
-  public FallBackToLinkedInHiveUDFTransformer(Set<SparkUDFInfo> sparkUDFInfos) {
+  public HiveUDFTransformer(Set<SparkUDFInfo> sparkUDFInfos) {
     this.sparkUDFInfos = sparkUDFInfos;
   }
 

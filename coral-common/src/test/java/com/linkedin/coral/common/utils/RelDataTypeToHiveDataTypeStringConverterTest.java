@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2019-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -175,6 +175,20 @@ public class RelDataTypeToHiveDataTypeStringConverterTest {
     BasicSqlType charSqlType = new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.CHAR, 16);
 
     String hiveDataTypeSchemaString = RelDataTypeToHiveTypeStringConverter.convertRelDataType(charSqlType);
+
+    assertEquals(hiveDataTypeSchemaString, expectedHiveDataTypeSchemaString);
+  }
+
+  @Test
+  public void testSingleUniontypeStructRelDataType() {
+    String expectedHiveDataTypeSchemaString = "uniontype<string>";
+
+    List<RelDataTypeField> fields = new ArrayList<>();
+    fields.add(new RelDataTypeFieldImpl("tag", 0, new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.INTEGER)));
+    fields.add(new RelDataTypeFieldImpl("field0", 0, new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.VARCHAR)));
+
+    RelRecordType relRecordType = new RelRecordType(fields);
+    String hiveDataTypeSchemaString = new RelDataTypeToHiveTypeStringConverter(true).convertRelDataType(relRecordType);
 
     assertEquals(hiveDataTypeSchemaString, expectedHiveDataTypeSchemaString);
   }
