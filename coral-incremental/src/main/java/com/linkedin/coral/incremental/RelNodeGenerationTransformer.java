@@ -70,7 +70,6 @@ public class RelNodeGenerationTransformer {
     Map<String, RelNode> snapshotRelNodes = getSnapshotRelNodes();
     Map<String, RelNode> deltaRelNodes = getDeltaRelNodes();
     List<List<RelNode>> combinedLists = generateCombinedLists(deltaRelNodes, snapshotRelNodes);
-    combinedLists.add(Arrays.asList(relNode));
     return combinedLists;
   }
 
@@ -145,7 +144,7 @@ public class RelNodeGenerationTransformer {
     assert (deltaRelNodes.size() == snapshotRelNodes.size());
     int n = deltaRelNodes.size();
 
-    for (int i = 0; i < n; i++) {
+    for (int i = -1; i < n; i++) {
       List<RelNode> tempList = new ArrayList<>();
       for (int j = 0; j < n; j++) {
         if (j <= i) {

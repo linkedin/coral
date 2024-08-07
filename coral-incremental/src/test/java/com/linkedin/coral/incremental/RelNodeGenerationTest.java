@@ -121,13 +121,13 @@ public class RelNodeGenerationTest {
             + "INNER JOIN test.gamma_prev AS gamma_prev ON Table#0_delta.a2 = gamma_prev.g2) AS t\n" + "UNION ALL\n"
             + "SELECT *\n" + "FROM Table#0_delta AS Table#0_delta0\n"
             + "INNER JOIN test.gamma_delta AS gamma_delta0 ON Table#0_delta0.a2 = gamma_delta0.g2) AS t0";
-    List<String> combined = Arrays.asList(Table0_delta,
-        "SELECT *\n" + "FROM Table#0 AS Table#0\n" + "INNER JOIN test.gamma AS gamma ON Table#0.a2 = gamma.g2");
+    String Table0 = "SELECT *\n" + "FROM test.alpha AS alpha\n" + "INNER JOIN test.beta AS beta ON alpha.a1 = beta.b1";
+    String Table1 =
+        "SELECT *\n" + "FROM Table#0 AS Table#0\n" + "INNER JOIN test.gamma AS gamma ON Table#0.a2 = gamma.g2";
+    List<String> combined = Arrays.asList(Table0_delta, Table1);
     List<String> incremental = Arrays.asList(Table0_delta, Table1_delta);
-    List<String> batch = Arrays.asList("SELECT t.a2, gamma.g1\n" + "FROM (SELECT alpha.a1, alpha.a2\n"
-        + "FROM test.alpha AS alpha\n" + "INNER JOIN test.beta AS beta ON alpha.a1 = beta.b1) AS t\n"
-        + "INNER JOIN test.gamma AS gamma ON t.a2 = gamma.g2");
-    List<List<String>> expected = Arrays.asList(combined, incremental, batch);
+    List<String> batch = Arrays.asList(Table0, Table1);
+    List<List<String>> expected = Arrays.asList(batch, combined, incremental);
     checkAllPlans(sql, expected);
   }
 
@@ -148,13 +148,13 @@ public class RelNodeGenerationTest {
             + "INNER JOIN test.gamma_prev AS gamma_prev ON Table#0_delta.a2 = gamma_prev.g2) AS t\n" + "UNION ALL\n"
             + "SELECT *\n" + "FROM Table#0_delta AS Table#0_delta0\n"
             + "INNER JOIN test.gamma_delta AS gamma_delta0 ON Table#0_delta0.a2 = gamma_delta0.g2) AS t0";
-    List<String> combined = Arrays.asList(Table0_delta,
-        "SELECT *\n" + "FROM Table#0 AS Table#0\n" + "INNER JOIN test.gamma AS gamma ON Table#0.a2 = gamma.g2");
+    String Table0 = "SELECT *\n" + "FROM test.alpha AS alpha\n" + "INNER JOIN test.beta AS beta ON alpha.a1 = beta.b1";
+    String Table1 =
+        "SELECT *\n" + "FROM Table#0 AS Table#0\n" + "INNER JOIN test.gamma AS gamma ON Table#0.a2 = gamma.g2";
+    List<String> combined = Arrays.asList(Table0_delta, Table1);
     List<String> incremental = Arrays.asList(Table0_delta, Table1_delta);
-    List<String> batch = Arrays.asList("SELECT alpha.a1, alpha.a2, gamma.g1\n" + "FROM test.alpha AS alpha\n"
-        + "INNER JOIN test.beta AS beta ON alpha.a1 = beta.b1\n"
-        + "INNER JOIN test.gamma AS gamma ON alpha.a2 = gamma.g2");
-    List<List<String>> expected = Arrays.asList(combined, incremental, batch);
+    List<String> batch = Arrays.asList(Table0, Table1);
+    List<List<String>> expected = Arrays.asList(batch, combined, incremental);
     checkAllPlans(sql, expected);
   }
 
@@ -184,18 +184,16 @@ public class RelNodeGenerationTest {
             + "INNER JOIN test.epsilon_prev AS epsilon_prev ON Table#1_delta.g1 = epsilon_prev.e1) AS t\n"
             + "UNION ALL\n" + "SELECT *\n" + "FROM Table#1_delta AS Table#1_delta0\n"
             + "INNER JOIN test.epsilon_delta AS epsilon_delta0 ON Table#1_delta0.g1 = epsilon_delta0.e1) AS t0";
-    List<String> combined1 = Arrays.asList(Table0_delta,
-        "SELECT *\n" + "FROM Table#0 AS Table#0\n" + "INNER JOIN test.gamma AS gamma ON Table#0.a2 = gamma.g2",
-        "SELECT *\n" + "FROM Table#1 AS Table#1\n" + "INNER JOIN test.epsilon AS epsilon ON Table#1.g1 = epsilon.e1");
-    List<String> combined2 = Arrays.asList(Table0_delta, Table1_delta,
-        "SELECT *\n" + "FROM Table#1 AS Table#1\n" + "INNER JOIN test.epsilon AS epsilon ON Table#1.g1 = epsilon.e1");
+    String Table0 = "SELECT *\n" + "FROM test.alpha AS alpha\n" + "INNER JOIN test.beta AS beta ON alpha.a1 = beta.b1";
+    String Table1 =
+        "SELECT *\n" + "FROM Table#0 AS Table#0\n" + "INNER JOIN test.gamma AS gamma ON Table#0.a2 = gamma.g2";
+    String Table2 =
+        "SELECT *\n" + "FROM Table#1 AS Table#1\n" + "INNER JOIN test.epsilon AS epsilon ON Table#1.g1 = epsilon.e1";
+    List<String> combined1 = Arrays.asList(Table0_delta, Table1, Table2);
+    List<String> combined2 = Arrays.asList(Table0_delta, Table1_delta, Table2);
     List<String> incremental = Arrays.asList(Table0_delta, Table1_delta, Table2_delta);
-    List<String> batch = Arrays
-        .asList("SELECT t0.g1, epsilon.e2\n" + "FROM (SELECT t.a2, gamma.g1\n" + "FROM (SELECT alpha.a1, alpha.a2\n"
-            + "FROM test.alpha AS alpha\n" + "INNER JOIN test.beta AS beta ON alpha.a1 = beta.b1) AS t\n"
-            + "INNER JOIN test.gamma AS gamma ON t.a2 = gamma.g2) AS t0\n"
-            + "INNER JOIN test.epsilon AS epsilon ON t0.g1 = epsilon.e1");
-    List<List<String>> expected = Arrays.asList(combined1, combined2, incremental, batch);
+    List<String> batch = Arrays.asList(Table0, Table1, Table2);
+    List<List<String>> expected = Arrays.asList(batch, combined1, combined2, incremental);
     checkAllPlans(sql, expected);
   }
 }
