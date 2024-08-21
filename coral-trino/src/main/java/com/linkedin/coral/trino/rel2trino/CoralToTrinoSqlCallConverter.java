@@ -122,6 +122,15 @@ public class CoralToTrinoSqlCallConverter extends SqlShuttle {
             "com.linkedin.stdudfs.urnextractor.hive.UrnExtractorFunctionWrapper", 1, "urn_extractor"),
         new CoralRegistryOperatorRenameSqlCallTransformer(
             "com.linkedin.stdudfs.hive.daliudfs.UrnExtractorFunctionWrapper", 1, "urn_extractor"),
+        new CoralRegistryOperatorRenameSqlCallTransformer("com.linkedin.groot.runtime.udf.spark.HasMemberConsentUDF", 3,
+            "has_member_consent"),
+        new CoralRegistryOperatorRenameSqlCallTransformer("com.linkedin.groot.runtime.udf.spark.RedactFieldIfUDF", 4,
+            "urn_extractor"),
+        new CoralRegistryOperatorRenameSqlCallTransformer(
+            "com.linkedin.groot.runtime.udf.spark.RedactSecondarySchemaFieldIfUDF", 5,
+            "redact_secondary_schema_field_if"),
+        new CoralRegistryOperatorRenameSqlCallTransformer("com.linkedin.groot.runtime.udf.spark.GetMappedValueUDF", 2,
+            "get_mapped_value"),
         new GenericCoralRegistryOperatorRenameSqlCallTransformer(),
 
         new ReturnTypeAdjustmentTransformer(configs), new UnnestOperatorTransformer(), new AsOperatorTransformer(),
