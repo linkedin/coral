@@ -125,7 +125,7 @@ public class CoralToTrinoSqlCallConverter extends SqlShuttle {
         new CoralRegistryOperatorRenameSqlCallTransformer("com.linkedin.groot.runtime.udf.spark.HasMemberConsentUDF", 3,
             "has_member_consent"),
         new CoralRegistryOperatorRenameSqlCallTransformer("com.linkedin.groot.runtime.udf.spark.RedactFieldIfUDF", 4,
-            "urn_extractor"),
+            "redact_field_if"),
         new CoralRegistryOperatorRenameSqlCallTransformer(
             "com.linkedin.groot.runtime.udf.spark.RedactSecondarySchemaFieldIfUDF", 5,
             "redact_secondary_schema_field_if"),
