@@ -68,8 +68,8 @@ public class HiveUDFTransformer extends SqlCallTransformer {
     List<URI> listOfUris = dependencies.stream().map(URI::create).collect(Collectors.toList());
     LOG.info("Function: {} is not a Builtin UDF or Transport UDF. We fall back to its Hive "
         + "function with ivy dependency: {}", operatorName, String.join(",", dependencies));
-    final SparkUDFInfo sparkUDFInfo =
-        new SparkUDFInfo(operatorName, viewDependentFunctionName, listOfUris, SparkUDFInfo.UDFTYPE.HIVE_CUSTOM_UDF);
+    final SparkUDFInfo sparkUDFInfo = new SparkUDFInfo(operator.getUDFClassName(), viewDependentFunctionName,
+        listOfUris, SparkUDFInfo.UDFTYPE.HIVE_CUSTOM_UDF);
     sparkUDFInfos.add(sparkUDFInfo);
     final SqlOperator convertedFunction =
         createSqlOperator(viewDependentFunctionName, operator.getReturnTypeInference());

@@ -48,6 +48,8 @@ public class CoralSparkTest {
     // add the following 3 test UDF to StaticHiveFunctionRegistry for testing purpose.
     StaticHiveFunctionRegistry.createAddUserDefinedFunction("com.linkedin.coral.hive.hive2rel.CoralTestUDF",
         ReturnTypes.BOOLEAN, family(SqlTypeFamily.INTEGER));
+    StaticHiveFunctionRegistry.createAddUserDefinedFunction("com.linkedin.coral.hive.hive2rel.CoralTestVersionedUDF",
+        ReturnTypes.BOOLEAN, family(SqlTypeFamily.INTEGER));
     StaticHiveFunctionRegistry.createAddUserDefinedFunction("com.linkedin.coral.hive.hive2rel.CoralTestUDF2",
         ReturnTypes.BOOLEAN, family(SqlTypeFamily.INTEGER));
     StaticHiveFunctionRegistry.createAddUserDefinedFunction("com.linkedin.coral.hive.hive2rel.CoralTestUdfSquare",
@@ -176,7 +178,7 @@ public class CoralSparkTest {
     // Shaded UDF class name should be returned for UDF registration, otherwise
     // Spark can't find the unversioned UDF name in the shaded Jar.
     String udfClassName = udfJars.get(0).getClassName();
-    String targetClassName = "coral_udf_version_0_1_x.com.linkedin.coral.hive.hive2rel.CoralTestUDF";
+    String targetClassName = "coral_udf_version_0_1_x.com.linkedin.coral.hive.hive2rel.CoralTestVersionedUDF";
     assertEquals(udfClassName, targetClassName);
 
     String udfFunctionName = udfJars.get(0).getFunctionName();

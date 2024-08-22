@@ -28,14 +28,12 @@ import org.apache.calcite.sql.validate.SqlValidatorScope;
 import com.linkedin.coral.com.google.common.base.CaseFormat;
 import com.linkedin.coral.com.google.common.base.Converter;
 
-import static com.linkedin.coral.hive.hive2rel.functions.utils.FunctionUtils.*;
-
 
 /**
  * Class that represents Dali versioned UDFs
  */
 public class VersionedSqlUserDefinedFunction extends SqlUserDefinedFunction {
-  private static final Map<String, String> TRINO_FUNC_NAME_MAP = ImmutableMap.<String, String> builder()
+  private static final Map<String, String> SHORT_FUNC_NAME_MAP = ImmutableMap.<String, String> builder()
       .put("com.linkedin.dali.udf.watbotcrawlerlookup.hive.WATBotCrawlerLookup", "wat_bot_crawler_lookup")
       .put("com.linkedin.stdudfs.parsing.hive.Ip2Str", "ip2str")
       .put("com.linkedin.stdudfs.parsing.hive.UserAgentParser", "useragentparser")
@@ -57,27 +55,24 @@ public class VersionedSqlUserDefinedFunction extends SqlUserDefinedFunction {
   // where functionName is defined in the "functions" property of the view.
   private final String viewDependentFunctionName;
 
+  private final String udfClassName;
+
   private VersionedSqlUserDefinedFunction(SqlIdentifier opName, SqlReturnTypeInference returnTypeInference,
       SqlOperandTypeInference operandTypeInference, SqlOperandTypeChecker operandTypeChecker,
-      List<RelDataType> paramTypes, Function function, List<String> ivyDependencies, String viewDependentFunctionName) {
+      List<RelDataType> paramTypes, Function function, List<String> ivyDependencies, String viewDependentFunctionName,
+      String udfClassName) {
     super(opName, returnTypeInference, operandTypeInference, operandTypeChecker, paramTypes, function,
         SqlFunctionCategory.USER_DEFINED_FUNCTION);
     this.ivyDependencies = ivyDependencies;
     this.viewDependentFunctionName = viewDependentFunctionName;
-  }
-
-  public VersionedSqlUserDefinedFunction(String name, SqlReturnTypeInference returnTypeInference,
-      SqlOperandTypeChecker operandTypeChecker, List<RelDataType> paramTypes, Function function,
-      List<String> ivyDependencies, String viewDependentFunctionName) {
-    this(new SqlIdentifier(ImmutableList.of(name), SqlParserPos.ZERO), returnTypeInference, null, operandTypeChecker,
-        paramTypes, function, ivyDependencies, viewDependentFunctionName);
+    this.udfClassName = udfClassName;
   }
 
   public VersionedSqlUserDefinedFunction(SqlUserDefinedFunction sqlUdf, List<String> ivyDependencies,
-      String viewDependentFunctionName) {
+      String viewDependentFunctionName, String udfClassName) {
     this(new SqlIdentifier(ImmutableList.of(sqlUdf.getName()), SqlParserPos.ZERO), sqlUdf.getReturnTypeInference(),
         null, sqlUdf.getOperandTypeChecker(), sqlUdf.getParamTypes(), sqlUdf.getFunction(), ivyDependencies,
-        viewDependentFunctionName);
+        viewDependentFunctionName, udfClassName);
   }
 
   public List<String> getIvyDependencies() {
@@ -88,14 +83,18 @@ public class VersionedSqlUserDefinedFunction extends SqlUserDefinedFunction {
     return viewDependentFunctionName;
   }
 
-  public String getTrinoFunctionName() {
-    final String unversionedClassName = removeVersioningPrefix(getName());
-    if (TRINO_FUNC_NAME_MAP.containsKey(unversionedClassName)) {
-      return TRINO_FUNC_NAME_MAP.get(unversionedClassName);
+  public String getShortFunctionName() {
+    String unversionedClassName = getName();
+    if (SHORT_FUNC_NAME_MAP.containsKey(unversionedClassName)) {
+      return SHORT_FUNC_NAME_MAP.get(unversionedClassName);
     }
     Converter<String, String> caseConverter = CaseFormat.UPPER_CAMEL.converterTo(CaseFormat.LOWER_UNDERSCORE);
     String[] nameSplit = unversionedClassName.split("\\.");
     return caseConverter.convert(nameSplit[nameSplit.length - 1]);
+  }
+
+  public String getUDFClassName() {
+    return udfClassName;
   }
 
   // This method is called during SQL validation. The super-class implementation resets the call's sqlOperator to one
@@ -107,7 +106,7 @@ public class VersionedSqlUserDefinedFunction extends SqlUserDefinedFunction {
   public RelDataType deriveType(SqlValidator validator, SqlValidatorScope scope, SqlCall call) {
     RelDataType relDataType = super.deriveType(validator, scope, call);
     ((SqlBasicCall) call).setOperator(new VersionedSqlUserDefinedFunction((SqlUserDefinedFunction) (call.getOperator()),
-        ivyDependencies, viewDependentFunctionName));
+        ivyDependencies, viewDependentFunctionName, udfClassName));
     return relDataType;
   }
 }

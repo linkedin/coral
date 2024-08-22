@@ -32,7 +32,7 @@ public class HiveUDFTransformer extends SqlCallTransformer {
   @Override
   protected SqlCall transform(SqlCall sqlCall) {
     final SqlOperator operator = sqlCall.getOperator();
-    final String trinoFunctionName = ((VersionedSqlUserDefinedFunction) operator).getTrinoFunctionName();
+    final String trinoFunctionName = ((VersionedSqlUserDefinedFunction) operator).getShortFunctionName();
     return createSqlOperator(trinoFunctionName, operator.getReturnTypeInference())
         .createCall(new SqlNodeList(sqlCall.getOperandList(), SqlParserPos.ZERO));
   }
