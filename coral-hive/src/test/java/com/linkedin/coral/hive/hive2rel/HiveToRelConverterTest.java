@@ -356,6 +356,15 @@ public class HiveToRelConverterTest {
     assertEquals(RelOptUtil.toString(rel), expectedPlan);
   }
 
+  @Test
+  public void testUDFWithVersioningClassName() {
+    RelNode rel = converter.convertView("test", "tableOneViewShadePrefixUDF");
+    String expectedPlan =
+        "LogicalProject(EXPR$0=[coral_udf_version_0_1_x.com.linkedin.coral.hive.hive2rel.CoralTestUDF($0)])\n"
+            + "  LogicalTableScan(table=[[hive, test, tableone]])\n";
+    assertEquals(RelOptUtil.toString(rel), expectedPlan);
+  }
+
   @Test(expectedExceptions = UnknownSqlFunctionException.class)
   public void testUnresolvedUdfError() {
     final String sql = "SELECT default_foo_IsTestMemberId(a) from foo";

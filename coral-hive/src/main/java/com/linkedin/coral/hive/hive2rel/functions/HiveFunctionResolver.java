@@ -1,5 +1,5 @@
 /**
- * Copyright 2018-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2018-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -23,6 +23,7 @@ import org.apache.calcite.sql.SqlPrefixOperator;
 import org.apache.calcite.sql.SqlSpecialOperator;
 import org.apache.calcite.sql.SqlUnresolvedFunction;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
+import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.type.SqlOperandTypeChecker;
 import org.apache.calcite.sql.type.SqlTypeFamily;
 import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
@@ -36,6 +37,7 @@ import com.linkedin.coral.common.functions.FunctionRegistry;
 import com.linkedin.coral.common.functions.UnknownSqlFunctionException;
 
 import static com.google.common.base.Preconditions.*;
+import static com.linkedin.coral.hive.hive2rel.functions.utils.FunctionUtils.*;
 import static org.apache.calcite.sql.parser.SqlParserPos.*;
 import static org.apache.calcite.sql.type.OperandTypes.*;
 
@@ -143,9 +145,22 @@ public class HiveFunctionResolver {
    * @return list of matching Functions or empty list if there is no match
    */
   public Collection<Function> resolve(String functionName) {
-    Collection<Function> staticLookup = registry.lookup(functionName);
+    Collection<Function> staticLookup = registry.lookup(removeVersioningPrefix(functionName));
     if (!staticLookup.isEmpty()) {
-      return staticLookup;
+      if (isVersioningUDF(functionName)) {
+        // If the UDF class name is versioned, we need to return the function
+        // in registry with versioned class name to let Calcite know that the
+        // versioned UDF is legitimate.
+        return staticLookup.stream().map(f -> {
+          SqlOperator sqlOperator = f.getSqlOperator();
+          SqlUserDefinedFunction sqlUserDefinedFunction =
+              new SqlUserDefinedFunction(new SqlIdentifier(functionName, SqlParserPos.ZERO),
+                  sqlOperator.getReturnTypeInference(), null, sqlOperator.getOperandTypeChecker(), null, null);
+          return new Function(functionName, sqlUserDefinedFunction);
+        }).collect(Collectors.toList());
+      } else {
+        return staticLookup;
+      }
     } else {
       Collection<Function> dynamicLookup = ImmutableList.of();
       Function Function = dynamicFunctionRegistry.get(functionName);
@@ -182,24 +197,39 @@ public class HiveFunctionResolver {
     if (funcClassName == null) {
       return ImmutableList.of();
     }
-    final Collection<Function> Functions = registry.lookup(funcClassName);
-    if (Functions.size() == 0) {
+    // If the UDF class name is versioned, remove the versioning prefix, which allows user to
+    // register the unversioned UDF once and use different versioning prefix in the view
+    final Collection<Function> functions = registry.lookup(removeVersioningPrefix(funcClassName));
+    if (functions.isEmpty()) {
       Collection<Function> dynamicResolvedFunctions =
           resolveDaliFunctionDynamically(functionName, funcClassName, hiveTable, numOfOperands);
 
-      if (dynamicResolvedFunctions.size() == 0) {
+      if (dynamicResolvedFunctions.isEmpty()) {
         // we want to see class name in the exception message for coverage testing
         // so throw exception here
         throw new UnknownSqlFunctionException(funcClassName);
       }
 
       return dynamicResolvedFunctions;
+    } else {
+      if (isVersioningUDF(funcClassName)) {
+        // If the UDF class name is versioned, we need to return the function in registry
+        // with versioned class name. Note that the original function in registry is unversioned.
+        return functions.stream().map(f -> {
+          SqlUserDefinedFunction sqlUserDefinedFunction = (SqlUserDefinedFunction) f.getSqlOperator();
+          VersionedSqlUserDefinedFunction versionedSqlUserDefinedFunction =
+              new VersionedSqlUserDefinedFunction(funcClassName, sqlUserDefinedFunction.getReturnTypeInference(),
+                  sqlUserDefinedFunction.getOperandTypeChecker(), sqlUserDefinedFunction.getParamTypes(),
+                  sqlUserDefinedFunction.getFunction(), hiveTable.getDaliUdfDependencies(), functionName);
+          return new Function(functionName, versionedSqlUserDefinedFunction);
+        }).collect(Collectors.toList());
+      } else {
+        return functions.stream()
+            .map(f -> new Function(f.getFunctionName(), new VersionedSqlUserDefinedFunction(
+                (SqlUserDefinedFunction) f.getSqlOperator(), hiveTable.getDaliUdfDependencies(), functionName)))
+            .collect(Collectors.toList());
+      }
     }
-
-    return Functions.stream()
-        .map(f -> new Function(f.getFunctionName(), new VersionedSqlUserDefinedFunction(
-            (SqlUserDefinedFunction) f.getSqlOperator(), hiveTable.getDaliUdfDependencies(), functionName)))
-        .collect(Collectors.toList());
   }
 
   public void addDynamicFunctionToTheRegistry(String funcClassName, Function function) {

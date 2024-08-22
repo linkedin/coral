@@ -28,7 +28,7 @@ import com.linkedin.coral.trino.rel2trino.transformers.CollectListOrSetFunctionT
 import com.linkedin.coral.trino.rel2trino.transformers.CoralRegistryOperatorRenameSqlCallTransformer;
 import com.linkedin.coral.trino.rel2trino.transformers.CurrentTimestampTransformer;
 import com.linkedin.coral.trino.rel2trino.transformers.FromUnixtimeOperatorTransformer;
-import com.linkedin.coral.trino.rel2trino.transformers.GenericCoralRegistryOperatorRenameSqlCallTransformer;
+import com.linkedin.coral.trino.rel2trino.transformers.HiveUDFTransformer;
 import com.linkedin.coral.trino.rel2trino.transformers.JoinSqlCallTransformer;
 import com.linkedin.coral.trino.rel2trino.transformers.MapValueConstructorTransformer;
 import com.linkedin.coral.trino.rel2trino.transformers.NullOrderingTransformer;
@@ -107,31 +107,7 @@ public class CoralToTrinoSqlCallConverter extends SqlShuttle {
         new ToDateOperatorTransformer(configs.getOrDefault(AVOID_TRANSFORM_TO_DATE_UDF, false)),
         new CurrentTimestampTransformer(), new FromUnixtimeOperatorTransformer(),
 
-        // LinkedIn specific functions
-        new CoralRegistryOperatorRenameSqlCallTransformer(
-            "com.linkedin.dali.udf.watbotcrawlerlookup.hive.WATBotCrawlerLookup", 3, "wat_bot_crawler_lookup"),
-        new CoralRegistryOperatorRenameSqlCallTransformer("com.linkedin.stdudfs.parsing.hive.Ip2Str", 1, "ip2str"),
-        new CoralRegistryOperatorRenameSqlCallTransformer("com.linkedin.stdudfs.parsing.hive.Ip2Str", 3, "ip2str"),
-        new CoralRegistryOperatorRenameSqlCallTransformer("com.linkedin.stdudfs.parsing.hive.UserAgentParser", 2,
-            "useragentparser"),
-        new CoralRegistryOperatorRenameSqlCallTransformer("com.linkedin.stdudfs.lookup.hive.BrowserLookup", 3,
-            "browserlookup"),
-        new CoralRegistryOperatorRenameSqlCallTransformer("com.linkedin.jobs.udf.hive.ConvertIndustryCode", 1,
-            "converttoindustryv1"),
-        new CoralRegistryOperatorRenameSqlCallTransformer(
-            "com.linkedin.stdudfs.urnextractor.hive.UrnExtractorFunctionWrapper", 1, "urn_extractor"),
-        new CoralRegistryOperatorRenameSqlCallTransformer(
-            "com.linkedin.stdudfs.hive.daliudfs.UrnExtractorFunctionWrapper", 1, "urn_extractor"),
-        new CoralRegistryOperatorRenameSqlCallTransformer("com.linkedin.groot.runtime.udf.spark.HasMemberConsentUDF", 3,
-            "has_member_consent"),
-        new CoralRegistryOperatorRenameSqlCallTransformer("com.linkedin.groot.runtime.udf.spark.RedactFieldIfUDF", 4,
-            "redact_field_if"),
-        new CoralRegistryOperatorRenameSqlCallTransformer(
-            "com.linkedin.groot.runtime.udf.spark.RedactSecondarySchemaFieldIfUDF", 5,
-            "redact_secondary_schema_field_if"),
-        new CoralRegistryOperatorRenameSqlCallTransformer("com.linkedin.groot.runtime.udf.spark.GetMappedValueUDF", 2,
-            "get_mapped_value"),
-        new GenericCoralRegistryOperatorRenameSqlCallTransformer(),
+        new HiveUDFTransformer(),
 
         new ReturnTypeAdjustmentTransformer(configs), new UnnestOperatorTransformer(), new AsOperatorTransformer(),
         new JoinSqlCallTransformer(), new NullOrderingTransformer(), new SubstrIndexTransformer());

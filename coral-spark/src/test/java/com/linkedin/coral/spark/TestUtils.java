@@ -83,6 +83,9 @@ public class TestUtils {
         "create function default_foo_duplicate_udf_LessThanHundred as 'com.linkedin.coral.hive.hive2rel.CoralTestUDF'");
     run(driver, "CREATE FUNCTION LessThanHundred as 'com.linkedin.coral.hive.hive2rel.CoralTestUDF'");
 
+    run(driver,
+        "CREATE FUNCTION LessThanHundred_versioning_prefix_0_1_x as 'coral_udf_version_0_1_x.com.linkedin.coral.hive.hive2rel.CoralTestUDF'");
+
     run(driver, String.join("\n", "", "CREATE VIEW IF NOT EXISTS foo_view", "AS", "SELECT b AS bcol, sum(c) AS sum_c",
         "FROM foo", "GROUP BY b"));
     run(driver, "DROP VIEW IF EXISTS foo_v1");
@@ -235,6 +238,11 @@ public class TestUtils {
             "              'dependencies' = 'ivy://com.linkedin:udf:1.0')", "AS",
             "SELECT default_foo_duplicate_udf_LessThanHundred(a), default_foo_duplicate_udf_LessThanHundred(a)",
             "FROM foo"));
+
+    run(driver, String.join("\n", "", "CREATE VIEW IF NOT EXISTS foo_udf_with_versioning_prefix",
+        "tblproperties('functions' = 'LessThanHundred_versioning_prefix_0_1_x:coral_udf_version_0_1_x.com.linkedin.coral.hive.hive2rel.CoralTestUDF',",
+        "              'dependencies' = 'ivy://com.linkedin:udf-shaded:1.0')", "AS",
+        "SELECT LessThanHundred_versioning_prefix_0_1_x(a)", "FROM foo"));
   }
 
   private static void executeCreateTableQuery(Driver driver, String dbName, String tableName, String schema) {

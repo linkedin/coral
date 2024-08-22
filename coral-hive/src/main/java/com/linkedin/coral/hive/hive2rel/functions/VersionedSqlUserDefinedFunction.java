@@ -1,13 +1,15 @@
 /**
- * Copyright 2019-2022 LinkedIn Corporation. All rights reserved.
+ * Copyright 2019-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
 package com.linkedin.coral.hive.hive2rel.functions;
 
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.schema.Function;
@@ -23,11 +25,29 @@ import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
 import org.apache.calcite.sql.validate.SqlValidator;
 import org.apache.calcite.sql.validate.SqlValidatorScope;
 
+import com.linkedin.coral.com.google.common.base.CaseFormat;
+import com.linkedin.coral.com.google.common.base.Converter;
+
+import static com.linkedin.coral.hive.hive2rel.functions.utils.FunctionUtils.*;
+
 
 /**
  * Class that represents Dali versioned UDFs
  */
 public class VersionedSqlUserDefinedFunction extends SqlUserDefinedFunction {
+  private static final Map<String, String> TRINO_FUNC_NAME_MAP = ImmutableMap.<String, String> builder()
+      .put("com.linkedin.dali.udf.watbotcrawlerlookup.hive.WATBotCrawlerLookup", "wat_bot_crawler_lookup")
+      .put("com.linkedin.stdudfs.parsing.hive.Ip2Str", "ip2str")
+      .put("com.linkedin.stdudfs.parsing.hive.UserAgentParser", "useragentparser")
+      .put("com.linkedin.stdudfs.lookup.hive.BrowserLookup", "browserlookup")
+      .put("com.linkedin.jobs.udf.hive.ConvertIndustryCode", "converttoindustryv1")
+      .put("com.linkedin.stdudfs.urnextractor.hive.UrnExtractorFunctionWrapper", "urn_extractor")
+      .put("com.linkedin.stdudfs.hive.daliudfs.UrnExtractorFunctionWrapper", "urn_extractor")
+      .put("com.linkedin.groot.runtime.udf.spark.HasMemberConsentUDF", "has_member_consent")
+      .put("com.linkedin.groot.runtime.udf.spark.RedactFieldIfUDF", "redact_field_if")
+      .put("com.linkedin.groot.runtime.udf.spark.RedactSecondarySchemaFieldIfUDF", "redact_secondary_schema_field_if")
+      .put("com.linkedin.groot.runtime.udf.spark.GetMappedValueUDF", "get_mapped_value")
+      .put("com.linkedin.coral.hive.hive2rel.CoralTestUDF", "coral_test").build();
 
   // The list of dependencies specified found in the view's "dependencies" property.
   // Example: "ivy://com.linkedin.udf-group:udf-artifact:0.1.8"
@@ -66,6 +86,16 @@ public class VersionedSqlUserDefinedFunction extends SqlUserDefinedFunction {
 
   public String getViewDependentFunctionName() {
     return viewDependentFunctionName;
+  }
+
+  public String getTrinoFunctionName() {
+    final String unversionedClassName = removeVersioningPrefix(getName());
+    if (TRINO_FUNC_NAME_MAP.containsKey(unversionedClassName)) {
+      return TRINO_FUNC_NAME_MAP.get(unversionedClassName);
+    }
+    Converter<String, String> caseConverter = CaseFormat.UPPER_CAMEL.converterTo(CaseFormat.LOWER_UNDERSCORE);
+    String[] nameSplit = unversionedClassName.split("\\.");
+    return caseConverter.convert(nameSplit[nameSplit.length - 1]);
   }
 
   // This method is called during SQL validation. The super-class implementation resets the call's sqlOperator to one
