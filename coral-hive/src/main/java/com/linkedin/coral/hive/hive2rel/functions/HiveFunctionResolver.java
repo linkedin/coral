@@ -195,14 +195,15 @@ public class HiveFunctionResolver {
         // so throw exception here
         throw new UnknownSqlFunctionException(funcClassName);
       }
+
       return dynamicResolvedFunctions;
-    } else {
-      return functions.stream()
-          .map(f -> new Function(f.getFunctionName(),
-              new VersionedSqlUserDefinedFunction((SqlUserDefinedFunction) f.getSqlOperator(),
-                  hiveTable.getDaliUdfDependencies(), functionName, funcClassName)))
-          .collect(Collectors.toList());
     }
+
+    return functions.stream()
+        .map(f -> new Function(f.getFunctionName(),
+            new VersionedSqlUserDefinedFunction((SqlUserDefinedFunction) f.getSqlOperator(),
+                hiveTable.getDaliUdfDependencies(), functionName, funcClassName)))
+        .collect(Collectors.toList());
   }
 
   public void addDynamicFunctionToTheRegistry(String funcClassName, Function function) {
@@ -242,6 +243,11 @@ public class HiveFunctionResolver {
     return sqlOperandTypeChecker;
   }
 
+  /**
+   * Removes the versioning prefix from a given UDF class name if it is present.
+   * A class name is considered versioned if the prefix before the first dot
+   * follows {@link HiveFunctionResolver#CORAL_VERSIONED_UDF_PREFIX} format
+   */
   private String removeVersioningPrefix(String className) {
     if (className != null && !className.isEmpty()) {
       int firstDotIndex = className.indexOf('.');

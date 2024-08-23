@@ -33,6 +33,8 @@ import com.linkedin.coral.com.google.common.base.Converter;
  * Class that represents Dali versioned UDFs
  */
 public class VersionedSqlUserDefinedFunction extends SqlUserDefinedFunction {
+
+  // Predefined map that associates class names with their corresponding short function names.
   private static final Map<String, String> SHORT_FUNC_NAME_MAP = ImmutableMap.<String, String> builder()
       .put("com.linkedin.dali.udf.watbotcrawlerlookup.hive.WATBotCrawlerLookup", "wat_bot_crawler_lookup")
       .put("com.linkedin.stdudfs.parsing.hive.Ip2Str", "ip2str")
@@ -55,6 +57,8 @@ public class VersionedSqlUserDefinedFunction extends SqlUserDefinedFunction {
   // where functionName is defined in the "functions" property of the view.
   private final String viewDependentFunctionName;
 
+  // The UDF class name value defined in the "functions" property of the view.
+  // i.e. "functions = <viewDependentFunctionName> : <udfClassName>"
   private final String udfClassName;
 
   private VersionedSqlUserDefinedFunction(SqlIdentifier opName, SqlReturnTypeInference returnTypeInference,
@@ -83,6 +87,13 @@ public class VersionedSqlUserDefinedFunction extends SqlUserDefinedFunction {
     return viewDependentFunctionName;
   }
 
+  /**
+   * Retrieves the short function name based on the class name. If the class name is found
+   * in the predefined {@link VersionedSqlUserDefinedFunction#SHORT_FUNC_NAME_MAP},
+   * the corresponding short name is returned. Otherwise, the method converts the last
+   * segment of the class name from UPPER_CAMEL to LOWER_UNDERSCORE format to generate
+   * the short function name.
+   */
   public String getShortFunctionName() {
     String unversionedClassName = getName();
     if (SHORT_FUNC_NAME_MAP.containsKey(unversionedClassName)) {
