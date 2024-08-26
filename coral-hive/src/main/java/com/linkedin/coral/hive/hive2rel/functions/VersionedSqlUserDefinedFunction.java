@@ -58,25 +58,25 @@ public class VersionedSqlUserDefinedFunction extends SqlUserDefinedFunction {
   private final String viewDependentFunctionName;
 
   // The UDF class name value defined in the "functions" property of the view.
-  // i.e. "functions = <viewDependentFunctionName> : <udfClassName>"
-  private final String udfClassName;
+  // i.e. "functions = <viewDependentFunctionName> : <funcClassName>"
+  private final String funcClassName;
 
   private VersionedSqlUserDefinedFunction(SqlIdentifier opName, SqlReturnTypeInference returnTypeInference,
       SqlOperandTypeInference operandTypeInference, SqlOperandTypeChecker operandTypeChecker,
       List<RelDataType> paramTypes, Function function, List<String> ivyDependencies, String viewDependentFunctionName,
-      String udfClassName) {
+      String funcClassName) {
     super(opName, returnTypeInference, operandTypeInference, operandTypeChecker, paramTypes, function,
         SqlFunctionCategory.USER_DEFINED_FUNCTION);
     this.ivyDependencies = ivyDependencies;
     this.viewDependentFunctionName = viewDependentFunctionName;
-    this.udfClassName = udfClassName;
+    this.funcClassName = funcClassName;
   }
 
   public VersionedSqlUserDefinedFunction(SqlUserDefinedFunction sqlUdf, List<String> ivyDependencies,
-      String viewDependentFunctionName, String udfClassName) {
+      String viewDependentFunctionName, String funcClassName) {
     this(new SqlIdentifier(ImmutableList.of(sqlUdf.getName()), SqlParserPos.ZERO), sqlUdf.getReturnTypeInference(),
         null, sqlUdf.getOperandTypeChecker(), sqlUdf.getParamTypes(), sqlUdf.getFunction(), ivyDependencies,
-        viewDependentFunctionName, udfClassName);
+        viewDependentFunctionName, funcClassName);
   }
 
   public List<String> getIvyDependencies() {
@@ -95,6 +95,8 @@ public class VersionedSqlUserDefinedFunction extends SqlUserDefinedFunction {
    * the short function name.
    */
   public String getShortFunctionName() {
+    // getName() returns the unversioned function class, which we use to identify the type inference.
+    // It's just a convention and other naming approaches are valid as long as they identify the type inference.
     String unversionedClassName = getName();
     if (SHORT_FUNC_NAME_MAP.containsKey(unversionedClassName)) {
       return SHORT_FUNC_NAME_MAP.get(unversionedClassName);
@@ -104,8 +106,8 @@ public class VersionedSqlUserDefinedFunction extends SqlUserDefinedFunction {
     return caseConverter.convert(nameSplit[nameSplit.length - 1]);
   }
 
-  public String getUDFClassName() {
-    return udfClassName;
+  public String getFuncClassName() {
+    return funcClassName;
   }
 
   // This method is called during SQL validation. The super-class implementation resets the call's sqlOperator to one
@@ -117,7 +119,7 @@ public class VersionedSqlUserDefinedFunction extends SqlUserDefinedFunction {
   public RelDataType deriveType(SqlValidator validator, SqlValidatorScope scope, SqlCall call) {
     RelDataType relDataType = super.deriveType(validator, scope, call);
     ((SqlBasicCall) call).setOperator(new VersionedSqlUserDefinedFunction((SqlUserDefinedFunction) (call.getOperator()),
-        ivyDependencies, viewDependentFunctionName, udfClassName));
+        ivyDependencies, viewDependentFunctionName, funcClassName));
     return relDataType;
   }
 }

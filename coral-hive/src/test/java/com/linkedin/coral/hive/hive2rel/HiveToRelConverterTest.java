@@ -357,7 +357,7 @@ public class HiveToRelConverterTest {
   }
 
   @Test
-  public void testUDFWithVersioningClassName() {
+  public void testVersioningUDF() {
     RelNode rel = converter.convertView("test", "tableOneViewShadePrefixUDF");
     String expectedPlan = "LogicalProject(EXPR$0=[com.linkedin.coral.hive.hive2rel.CoralTestUDF($0)])\n"
         + "  LogicalTableScan(table=[[hive, test, tableone]])\n";

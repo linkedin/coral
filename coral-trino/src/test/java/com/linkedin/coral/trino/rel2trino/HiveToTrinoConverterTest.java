@@ -1003,7 +1003,7 @@ public class HiveToTrinoConverterTest {
   }
 
   @Test
-  public void testUDFWithVersioningClassName() {
+  public void testVersioningUDF() {
     RelNode relNode = TestUtils.getHiveToRelConverter().convertView("test", "udf_with_versioning_prefix");
     RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
     String expandedSql = relToTrinoConverter.convert(relNode);

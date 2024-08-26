@@ -167,7 +167,7 @@ public class CoralSparkTest {
   }
 
   @Test
-  public void testUDFWithVersioningClassName() {
+  public void testVersioningUDF() {
     // After registering unversioned UDF "com.linkedin.coral.hive.hive2rel.CoralTestUDF",
     // Coral should be able to translate the view with the corresponding versioned UDF class
     // "coral_udf_version_0_1_x.com.linkedin.coral.hive.hive2rel.CoralTestUDF"
