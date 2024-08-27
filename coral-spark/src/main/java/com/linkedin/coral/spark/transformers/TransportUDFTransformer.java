@@ -1,5 +1,5 @@
 /**
- * Copyright 2018-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2018-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -73,13 +73,13 @@ public class TransportUDFTransformer extends SqlCallTransformer {
   @Override
   protected SqlCall transform(SqlCall sqlCall) {
     final VersionedSqlUserDefinedFunction operator = (VersionedSqlUserDefinedFunction) sqlCall.getOperator();
-    final String viewDependentFunctionName = operator.getViewDependentFunctionName();
-    sparkUDFInfos.add(new SparkUDFInfo(sparkUDFClassName, viewDependentFunctionName,
+    final String originalViewTextFunctionName = operator.getOriginalViewTextFunctionName();
+    sparkUDFInfos.add(new SparkUDFInfo(sparkUDFClassName, originalViewTextFunctionName,
         Collections.singletonList(
             URI.create(scalaVersion == ScalaVersion.SCALA_2_11 ? artifactoryUrlSpark211 : artifactoryUrlSpark212)),
         SparkUDFInfo.UDFTYPE.TRANSPORTABLE_UDF));
     final SqlOperator convertedFunction =
-        createSqlOperator(viewDependentFunctionName, operator.getReturnTypeInference());
+        createSqlOperator(originalViewTextFunctionName, operator.getReturnTypeInference());
     return convertedFunction.createCall(sqlCall.getParserPosition(), sqlCall.getOperandList());
   }
 

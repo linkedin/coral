@@ -55,36 +55,36 @@ public class VersionedSqlUserDefinedFunction extends SqlUserDefinedFunction {
 
   // The view-dependent function name in the format of "dbName_viewName_functionName",
   // where functionName is defined in the "functions" property of the view.
-  private final String viewDependentFunctionName;
+  private final String originalViewTextFunctionName;
 
   // The UDF class name value defined in the "functions" property of the view.
-  // i.e. "functions = <viewDependentFunctionName> : <funcClassName>"
-  private final String funcClassName;
+  // i.e. "functions = <originalViewTextFunctionName> : <functionClassName>"
+  private final String functionClassName;
 
   private VersionedSqlUserDefinedFunction(SqlIdentifier opName, SqlReturnTypeInference returnTypeInference,
       SqlOperandTypeInference operandTypeInference, SqlOperandTypeChecker operandTypeChecker,
-      List<RelDataType> paramTypes, Function function, List<String> ivyDependencies, String viewDependentFunctionName,
-      String funcClassName) {
+      List<RelDataType> paramTypes, Function function, List<String> ivyDependencies,
+      String originalViewTextFunctionName, String functionClassName) {
     super(opName, returnTypeInference, operandTypeInference, operandTypeChecker, paramTypes, function,
         SqlFunctionCategory.USER_DEFINED_FUNCTION);
     this.ivyDependencies = ivyDependencies;
-    this.viewDependentFunctionName = viewDependentFunctionName;
-    this.funcClassName = funcClassName;
+    this.originalViewTextFunctionName = originalViewTextFunctionName;
+    this.functionClassName = functionClassName;
   }
 
   public VersionedSqlUserDefinedFunction(SqlUserDefinedFunction sqlUdf, List<String> ivyDependencies,
-      String viewDependentFunctionName, String funcClassName) {
+      String originalViewTextFunctionName, String functionClassName) {
     this(new SqlIdentifier(ImmutableList.of(sqlUdf.getName()), SqlParserPos.ZERO), sqlUdf.getReturnTypeInference(),
         null, sqlUdf.getOperandTypeChecker(), sqlUdf.getParamTypes(), sqlUdf.getFunction(), ivyDependencies,
-        viewDependentFunctionName, funcClassName);
+        originalViewTextFunctionName, functionClassName);
   }
 
   public List<String> getIvyDependencies() {
     return ivyDependencies;
   }
 
-  public String getViewDependentFunctionName() {
-    return viewDependentFunctionName;
+  public String getOriginalViewTextFunctionName() {
+    return originalViewTextFunctionName;
   }
 
   /**
@@ -106,20 +106,20 @@ public class VersionedSqlUserDefinedFunction extends SqlUserDefinedFunction {
     return caseConverter.convert(nameSplit[nameSplit.length - 1]);
   }
 
-  public String getFuncClassName() {
-    return funcClassName;
+  public String getFunctionClassName() {
+    return functionClassName;
   }
 
   // This method is called during SQL validation. The super-class implementation resets the call's sqlOperator to one
   // that is looked up from the StaticHiveFunctionRegistry or inferred dynamically if it's a Dali UDF. Since UDFs in the StaticHiveFunctionRegistry are not
   // versioned, this method overrides the super-class implementation to properly restore the call's operator as
   // a VersionedSqlUserDefinedFunction based on the already existing call's sqlOperator obtained from the
-  // StaticHiveFunctionRegistry, and hence preserve ivyDependencies and viewDependentFunctionName.
+  // StaticHiveFunctionRegistry, and hence preserve ivyDependencies and originalViewTextFunctionName.
   @Override
   public RelDataType deriveType(SqlValidator validator, SqlValidatorScope scope, SqlCall call) {
     RelDataType relDataType = super.deriveType(validator, scope, call);
     ((SqlBasicCall) call).setOperator(new VersionedSqlUserDefinedFunction((SqlUserDefinedFunction) (call.getOperator()),
-        ivyDependencies, viewDependentFunctionName, funcClassName));
+        ivyDependencies, originalViewTextFunctionName, functionClassName));
     return relDataType;
   }
 }

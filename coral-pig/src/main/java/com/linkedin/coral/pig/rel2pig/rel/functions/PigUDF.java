@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2021 LinkedIn Corporation. All rights reserved.
+ * Copyright 2019-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -166,7 +166,7 @@ public class PigUDF extends Function {
     }
 
     final VersionedSqlUserDefinedFunction versionedFunction = (VersionedSqlUserDefinedFunction) rexCall.getOperator();
-    return String.join("_", PIG_UDF_ALIAS_TEMPLATE, versionedFunction.getViewDependentFunctionName())
+    return String.join("_", PIG_UDF_ALIAS_TEMPLATE, versionedFunction.getOriginalViewTextFunctionName())
         .replace(NOT_ALPHA_NUMERIC_UNDERSCORE_REGEX, "_");
   }
 
