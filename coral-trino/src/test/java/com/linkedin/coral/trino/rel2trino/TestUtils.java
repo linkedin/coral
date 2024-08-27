@@ -413,6 +413,14 @@ public class TestUtils {
             + "UNION ALL\n"
             + "SELECT a_tinyint, a_smallint, a_integer, a_bigint, a_float FROM test.table_with_mixed_columns");
 
+    run(driver, "CREATE TABLE test.table_join_view_scenario_simple_table (key string)");
+    run(driver,
+        "CREATE TABLE test.table_join_view_scenario_table_nested_columns (studentid struct<idtype:string,id:string>, details struct<lastupdated:timestamp,name:string, misc:struct<enrollmentdate:date,major:string>>)");
+    run(driver,
+        "CREATE VIEW test.view_table_join_view_scenario_table_nested_columns AS SELECT studentid.id student_id, details.name as student_name, details.misc.major major, details.lastUpdated details_last_updated FROM test.table_join_view_scenario_table_nested_columns");
+    run(driver,
+        "CREATE VIEW test.view_table_join_with_view_table_with_nested_columns AS SELECT v.student_id, v.student_name, v.details_last_updated FROM test.view_table_join_view_scenario_table_nested_columns v INNER JOIN test.table_join_view_scenario_simple_table t ON concat('U', v.student_id) = t.key");
+
     // Tables used in RelToTrinoConverterTest
     run(driver,
         "CREATE TABLE IF NOT EXISTS test.tableOne(icol int, dcol double, scol string, tcol timestamp, acol array<string>)");
