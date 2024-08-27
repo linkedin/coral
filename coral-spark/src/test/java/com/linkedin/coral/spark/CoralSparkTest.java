@@ -48,6 +48,8 @@ public class CoralSparkTest {
     // add the following 3 test UDF to StaticHiveFunctionRegistry for testing purpose.
     StaticHiveFunctionRegistry.createAddUserDefinedFunction("com.linkedin.coral.hive.hive2rel.CoralTestUDF",
         ReturnTypes.BOOLEAN, family(SqlTypeFamily.INTEGER));
+    StaticHiveFunctionRegistry.createAddUserDefinedFunction("com.linkedin.coral.hive.hive2rel.CoralTestVersionedUDF",
+        ReturnTypes.BOOLEAN, family(SqlTypeFamily.INTEGER));
     StaticHiveFunctionRegistry.createAddUserDefinedFunction("com.linkedin.coral.hive.hive2rel.CoralTestUDF2",
         ReturnTypes.BOOLEAN, family(SqlTypeFamily.INTEGER));
     StaticHiveFunctionRegistry.createAddUserDefinedFunction("com.linkedin.coral.hive.hive2rel.CoralTestUdfSquare",
@@ -161,6 +163,38 @@ public class CoralSparkTest {
     assertEquals(testUdfType, targetUdfType);
     String sparkSqlStmt = coralSpark.getSparkSql();
     String targetSqlStmt = "SELECT default_foo_dali_udf2_GreaterThanHundred(foo.a)\n" + "FROM default.foo foo";
+    assertEquals(sparkSqlStmt, targetSqlStmt);
+  }
+
+  @Test
+  public void testVersioningUDF() {
+    // After registering unversioned UDF "com.linkedin.coral.hive.hive2rel.CoralTestUDF",
+    // Coral should be able to translate the view with the corresponding versioned UDF class
+    // "coral_udf_version_0_1_x.com.linkedin.coral.hive.hive2rel.CoralTestUDF"
+    RelNode relNode = TestUtils.toRelNode("default", "foo_udf_with_versioning_prefix");
+    CoralSpark coralSpark = createCoralSpark(relNode);
+    List<SparkUDFInfo> udfJars = coralSpark.getSparkUDFInfoList();
+
+    // Shaded UDF class name should be returned for UDF registration, otherwise
+    // Spark can't find the unversioned UDF name in the shaded Jar.
+    String udfClassName = udfJars.get(0).getClassName();
+    String targetClassName = "coral_udf_version_0_1_x.com.linkedin.coral.hive.hive2rel.CoralTestVersionedUDF";
+    assertEquals(udfClassName, targetClassName);
+
+    String udfFunctionName = udfJars.get(0).getFunctionName();
+    String targetFunctionName = "LessThanHundred_versioning_prefix_0_1_x";
+    assertEquals(udfFunctionName, targetFunctionName);
+
+    List<String> listOfUriStrings = convertToListOfUriStrings(udfJars.get(0).getArtifactoryUrls());
+    String targetArtifactoryUrl = "ivy://com.linkedin:udf-shaded:1.0";
+    assertTrue(listOfUriStrings.contains(targetArtifactoryUrl));
+
+    SparkUDFInfo.UDFTYPE testUdfType = udfJars.get(0).getUdfType();
+    SparkUDFInfo.UDFTYPE targetUdfType = SparkUDFInfo.UDFTYPE.HIVE_CUSTOM_UDF;
+    assertEquals(testUdfType, targetUdfType);
+
+    String sparkSqlStmt = coralSpark.getSparkSql();
+    String targetSqlStmt = "SELECT LessThanHundred_versioning_prefix_0_1_x(foo.a)\n" + "FROM default.foo foo";
     assertEquals(sparkSqlStmt, targetSqlStmt);
   }
 

@@ -1,5 +1,5 @@
 /**
- * Copyright 2018-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2018-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -44,6 +44,7 @@ import static org.apache.calcite.sql.type.OperandTypes.*;
  * Class to resolve hive function names in SQL to Function.
  */
 public class HiveFunctionResolver {
+  private static final String VERSIONED_UDF_CLASS_NAME_PREFIX = "coral_udf_version_(\\d+|x)_(\\d+|x)_(\\d+|x)";
 
   public final FunctionRegistry registry;
   private final ConcurrentHashMap<String, Function> dynamicFunctionRegistry;
@@ -111,7 +112,7 @@ public class HiveFunctionResolver {
    * this attempts to match dali-style function names (DB_TABLE_VERSION_FUNCTION).
    * Right now, this method does not validate parameters leaving it to
    * the subsequent validator and analyzer phases to validate parameter types.
-   * @param functionName hive function name
+   * @param originalViewTextFunctionName original function name in view text to resolve
    * @param hiveTable handle to Hive table representing metastore information. This is used for resolving
    *                  Dali function names, which are resolved using table parameters
    * @param numOfOperands number of operands this function takes. This is needed to
@@ -119,14 +120,15 @@ public class HiveFunctionResolver {
    * @return resolved hive functions
    * @throws UnknownSqlFunctionException if the function name can not be resolved.
    */
-  public Function tryResolve(@Nonnull String functionName, @Nullable Table hiveTable, int numOfOperands) {
-    checkNotNull(functionName);
-    Collection<Function> functions = registry.lookup(functionName);
+  public Function tryResolve(@Nonnull String originalViewTextFunctionName, @Nullable Table hiveTable,
+      int numOfOperands) {
+    checkNotNull(originalViewTextFunctionName);
+    Collection<Function> functions = registry.lookup(originalViewTextFunctionName);
     if (functions.isEmpty() && hiveTable != null) {
-      functions = tryResolveAsDaliFunction(functionName, hiveTable, numOfOperands);
+      functions = tryResolveAsDaliFunction(originalViewTextFunctionName, hiveTable, numOfOperands);
     }
     if (functions.isEmpty()) {
-      throw new UnknownSqlFunctionException(functionName);
+      throw new UnknownSqlFunctionException(originalViewTextFunctionName);
     }
     if (functions.size() == 1) {
       return functions.iterator().next();
@@ -160,7 +162,7 @@ public class HiveFunctionResolver {
   /**
    * Tries to resolve function name as Dali function name using the provided Hive table catalog information.
    * This uses table parameters 'function' property to resolve the function name to the implementing class.
-   * @param functionName function name to resolve
+   * @param originalViewTextFunctionName original function name in view text to resolve
    * @param table Hive metastore table handle
    * @param numOfOperands number of operands this function takes. This is needed to
    *                      create SqlOperandTypeChecker to resolve Dali function dynamically
@@ -168,58 +170,62 @@ public class HiveFunctionResolver {
    * of `databaseName_tableName_udfName` or `udfName` (without `databaseName_tableName_` prefix)
    * @throws UnknownSqlFunctionException if the function name is in Dali function name format but there is no mapping
    */
-  public Collection<Function> tryResolveAsDaliFunction(String functionName, @Nonnull Table table, int numOfOperands) {
+  public Collection<Function> tryResolveAsDaliFunction(String originalViewTextFunctionName, @Nonnull Table table,
+      int numOfOperands) {
     Preconditions.checkNotNull(table);
     String functionPrefix = String.format("%s_%s_", table.getDbName(), table.getTableName());
-    if (!functionName.toLowerCase().startsWith(functionPrefix.toLowerCase())) {
-      // if functionName is not in `databaseName_tableName_udfName` format, we don't require the `databaseName_tableName_` prefix
+    if (!originalViewTextFunctionName.toLowerCase().startsWith(functionPrefix.toLowerCase())) {
+      // if originalViewTextFunctionName is not in `databaseName_tableName_udfName` format, we don't require the `databaseName_tableName_` prefix
       functionPrefix = "";
     }
-    String funcBaseName = functionName.substring(functionPrefix.length());
+    String funcBaseName = originalViewTextFunctionName.substring(functionPrefix.length());
     HiveTable hiveTable = new HiveTable(table);
     Map<String, String> functionParams = hiveTable.getDaliFunctionParams();
-    String funcClassName = functionParams.get(funcBaseName);
-    if (funcClassName == null) {
+    String functionClassName = functionParams.get(funcBaseName);
+    if (functionClassName == null) {
       return ImmutableList.of();
     }
-    final Collection<Function> Functions = registry.lookup(funcClassName);
-    if (Functions.size() == 0) {
+    // If the UDF class name is versioned, remove the versioning prefix, which allows user to
+    // register the unversioned UDF once and use different versioning prefix in the view
+    final Collection<Function> functions = registry.lookup(removeVersioningPrefix(functionClassName));
+    if (functions.isEmpty()) {
       Collection<Function> dynamicResolvedFunctions =
-          resolveDaliFunctionDynamically(functionName, funcClassName, hiveTable, numOfOperands);
+          resolveDaliFunctionDynamically(originalViewTextFunctionName, functionClassName, hiveTable, numOfOperands);
 
-      if (dynamicResolvedFunctions.size() == 0) {
+      if (dynamicResolvedFunctions.isEmpty()) {
         // we want to see class name in the exception message for coverage testing
         // so throw exception here
-        throw new UnknownSqlFunctionException(funcClassName);
+        throw new UnknownSqlFunctionException(functionClassName);
       }
 
       return dynamicResolvedFunctions;
     }
 
-    return Functions.stream()
-        .map(f -> new Function(f.getFunctionName(), new VersionedSqlUserDefinedFunction(
-            (SqlUserDefinedFunction) f.getSqlOperator(), hiveTable.getDaliUdfDependencies(), functionName)))
+    return functions.stream()
+        .map(f -> new Function(f.getFunctionName(),
+            new VersionedSqlUserDefinedFunction((SqlUserDefinedFunction) f.getSqlOperator(),
+                hiveTable.getDaliUdfDependencies(), originalViewTextFunctionName, functionClassName)))
         .collect(Collectors.toList());
   }
 
-  public void addDynamicFunctionToTheRegistry(String funcClassName, Function function) {
-    if (!dynamicFunctionRegistry.contains(funcClassName)) {
-      dynamicFunctionRegistry.put(funcClassName, function);
+  public void addDynamicFunctionToTheRegistry(String functionClassName, Function function) {
+    if (!dynamicFunctionRegistry.contains(functionClassName)) {
+      dynamicFunctionRegistry.put(functionClassName, function);
     }
   }
 
-  private @Nonnull Collection<Function> resolveDaliFunctionDynamically(String functionName, String funcClassName,
-      HiveTable hiveTable, int numOfOperands) {
-    if (dynamicFunctionRegistry.contains(funcClassName)) {
-      return ImmutableList.of(dynamicFunctionRegistry.get(functionName));
+  private @Nonnull Collection<Function> resolveDaliFunctionDynamically(String originalViewTextFunctionName,
+      String functionClassName, HiveTable hiveTable, int numOfOperands) {
+    if (dynamicFunctionRegistry.contains(functionClassName)) {
+      return ImmutableList.of(dynamicFunctionRegistry.get(originalViewTextFunctionName));
     }
-    Function function = new Function(funcClassName,
+    Function function = new Function(functionClassName,
         new VersionedSqlUserDefinedFunction(
-            new SqlUserDefinedFunction(new SqlIdentifier(funcClassName, ZERO),
-                new HiveGenericUDFReturnTypeInference(funcClassName, hiveTable.getDaliUdfDependencies()), null,
+            new SqlUserDefinedFunction(new SqlIdentifier(functionClassName, ZERO),
+                new HiveGenericUDFReturnTypeInference(functionClassName, hiveTable.getDaliUdfDependencies()), null,
                 createSqlOperandTypeChecker(numOfOperands), null, null),
-            hiveTable.getDaliUdfDependencies(), functionName));
-    dynamicFunctionRegistry.put(funcClassName, function);
+            hiveTable.getDaliUdfDependencies(), originalViewTextFunctionName, functionClassName));
+    dynamicFunctionRegistry.put(functionClassName, function);
     return ImmutableList.of(function);
   }
 
@@ -237,5 +243,23 @@ public class HiveFunctionResolver {
     SqlOperandTypeChecker sqlOperandTypeChecker = family(families);
 
     return sqlOperandTypeChecker;
+  }
+
+  /**
+   * Removes the versioning prefix from a given UDF class name if it is present.
+   * A class name is considered versioned if the prefix before the first dot
+   * follows {@link HiveFunctionResolver#VERSIONED_UDF_CLASS_NAME_PREFIX} format
+   */
+  private String removeVersioningPrefix(String className) {
+    if (className != null && !className.isEmpty()) {
+      int firstDotIndex = className.indexOf('.');
+      if (firstDotIndex != -1) {
+        String prefix = className.substring(0, firstDotIndex);
+        if (prefix.matches(VERSIONED_UDF_CLASS_NAME_PREFIX)) {
+          return className.substring(firstDotIndex + 1);
+        }
+      }
+    }
+    return className;
   }
 }
