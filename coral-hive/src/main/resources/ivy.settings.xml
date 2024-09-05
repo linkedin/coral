@@ -6,6 +6,30 @@
 
 -->
 <ivysettings>
+
+  <!-- Define timeouts for resolvers
+    Reference: https://ant.apache.org/ivy/history/2.5.0-rc1/settings/timeout-constraint.html
+
+    The <timeout-constraint> element allows you to define named timeout constraints that can be referenced 
+    in other parts of the Ivy settings file, such as resolvers.
+
+    Attributes:
+    - name: (Required) The name of the timeout constraint.
+    - connectionTimeout: (Optional) Specifies the time, in milliseconds, to wait for a connection to be established.
+      - A value greater than 0 is used literally as the timeout.
+      - A value of 0 indicates no timeout (wait-forever).
+      - A value less than 0 lets the users of this timeout constraint decide what semantics to use.
+    - readTimeout: (Optional) Specifies the time, in milliseconds, to wait when reading content from a resource after a connection is established.
+      - A value greater than 0 is used literally as the timeout.
+      - A value of 0 indicates no timeout (wait-forever).
+      - A value less than 0 lets the users of this timeout constraint decide what semantics to use.
+      
+    For large files, this setting helps avoid premature timeouts during the download process. The `readTimeout` is 
+    applied between receiving data packets, not for the entire download process. If the server continuously sends data, 
+    this timeout won't be triggered.
+  -->
+  <timeout-constraint name="default-timeout" connect-timeout="10000" read-timeout="30000" />
+
   <property name="artifactory.base.url" value="http://artifactory.corp.linkedin.com:8081/artifactory"/>
   <property name="artifactory.failover.url" value="http://artifactory-failover.corp.linkedin.com:8081/artifactory"/>
   <caches lockStrategy="artifact-lock" />
@@ -14,28 +38,28 @@
     <chain name="downloadGrapes" returnFirst="true">
 
       <dual name="artifactory-release-resolver">
-        <url name="public" m2compatible="true">
+        <url name="public" m2compatible="true" timeout-constraint="default-timeout">
           <ivy pattern="${artifactory.base.url}/release/[organization]/[module]/[revision]/[module]-[revision](-[classifier]).ivy" />
         </url>
         <ibiblio name="public" m2compatible="true" root="${artifactory.base.url}/release" />
       </dual>
 
       <dual name="artifactory-release-failover-resolver">
-        <url name="public" m2compatible="true">
+        <url name="public" m2compatible="true" timeout-constraint="default-timeout">
           <ivy pattern="${artifactory.failover.url}/release/[organization]/[module]/[revision]/[module]-[revision](-[classifier]).ivy" />
         </url>
         <ibiblio name="public" m2compatible="true" root="${artifactory.failover.url}/release" />
       </dual>
 
       <dual name="artifactory-snapshot-resolver">
-        <url name="public" m2compatible="true">
+        <url name="public" m2compatible="true" timeout-constraint="default-timeout">
           <ivy pattern="${artifactory.base.url}/snapshot/[organization]/[module]/[revision]/[module]-[revision](-[classifier]).ivy" />
         </url>
         <ibiblio name="public" m2compatible="true" root="${artifactory.base.url}/snapshot" />
       </dual>
 
       <dual name="artifactory-snapshot-failover-resolver">
-        <url name="public" m2compatible="true">
+        <url name="public" m2compatible="true" timeout-constraint="default-timeout">
           <ivy pattern="${artifactory.failover.url}/snapshot/[organization]/[module]/[revision]/[module]-[revision](-[classifier]).ivy" />
         </url>
         <ibiblio name="public" m2compatible="true" root="${artifactory.failover.url}/snapshot" />
