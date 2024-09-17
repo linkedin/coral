@@ -1,0 +1,53 @@
+# GitHub Actions workflow for Codecov integration
+# This workflow builds the project, generates a coverage report, and uploads it to Codecov
+
+name: Codecov
+
+# Define when this workflow should run
+on:
+  push:
+    branches: ['master']  # Run on every push to the master branch
+  pull_request:
+    branches: ['**']  # Run on every pull request, regardless of target branch
+
+# Define the jobs to run
+jobs:
+  codecov:
+    runs-on: ubuntu-latest  # Use the latest Ubuntu runner
+    steps:
+      # Check out the repository code
+      - name: Checkout code
+        uses: actions/checkout@v2  # Use v2 of the checkout action
+        with:
+          fetch-depth: '0'  # Fetch all history for all branches and tags
+
+      # Set up Java Development Kit
+      - name: Set up JDK
+        uses: actions/setup-java@v1  # Use v1 of the setup-java action
+        with:
+          java-version: 1.8  # Use Java 8 (adjust if your project uses a different version)
+
+      # Build the project and generate coverage report
+      - name: Build and generate coverage report
+        run: ./gradlew -i build
+
+      # TODO remove, debugging-only
+      - name: List jacoco directory
+        run: ls -R ${{ github.workspace }}/build/reports/jacoco
+
+      # TODO remove, debugging-only
+      - uses: actions/upload-artifact@v4
+        with:
+          name: build-reports
+          path: ${{ github.workspace }}/build/reports
+
+      # Upload the coverage report to Codecov
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3  # Use v3 of the Codecov GitHub Action
+        with:
+          file: ${{ github.workspace }}/build/reports/jacoco/jacocoRootReport/jacocoRootReport.xml  # Path to the coverage report
+          flags: unittests  # Label these results as coming from unit tests
+          fail_ci_if_error: true  # Fail the workflow if there's an error uploading to Codecov
+
+# Note: No token is required for public repositories
+# Codecov will automatically detect that this is a public repo and process the report

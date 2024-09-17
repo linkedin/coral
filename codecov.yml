@@ -1,0 +1,47 @@
+# Codecov configuration file
+# This file controls how Codecov behaves when processing coverage reports
+
+codecov:
+  # Require all other CI tasks to pass before considering Codecov status
+  require_ci_to_pass: yes
+
+  coverage:
+    status:
+      # Settings for overall project coverage
+      project:
+        default:
+          # 'auto' sets the target to the coverage of the base commit
+          target: auto
+          # Coverage can drop up to 1% without failing
+          threshold: 1%
+          # Compare coverage to the base branch (usually master)
+          base: auto
+      
+      # Settings for coverage of new/changed code in PRs
+      patch:
+        default:
+          # 'auto' requires new/changed code to match the base branch coverage
+          target: auto
+          # New/changed code coverage can be up to 1% lower without failing
+          threshold: 1%
+          # Compare to the base branch of the PR
+          base: auto
+
+  # Configuration for Codecov comments on PRs
+  comment:
+    # Elements to include in the comment
+    # reach: overall coverage
+    # diff: coverage diff to base
+    # flags: coverage for specific flags
+    # files: file-level coverage
+    # footer: links to more details
+    layout: "reach,diff,flags,files,footer"
+    # Use default comment behavior
+    behavior: default
+    # Comment even if coverage hasn't changed
+    require_changes: no
+
+# Ignore these directories/files when calculating coverage
+ignore:
+  - "coral-common"
+  - "coral-hive"
