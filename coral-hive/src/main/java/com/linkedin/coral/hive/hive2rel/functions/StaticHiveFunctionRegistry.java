@@ -681,6 +681,8 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
         SqlTypeFamily.BOOLEAN, SqlTypeFamily.ANY, SqlTypeFamily.ARRAY, SqlTypeFamily.STRING, SqlTypeFamily.STRING));
     createAddUserDefinedFunction("com.linkedin.groot.runtime.udf.spark.GetMappedValueUDF", FunctionReturnTypes.STRING,
         family(SqlTypeFamily.STRING, SqlTypeFamily.STRING));
+    createAddUserDefinedFunction("com.linkedin.groot.runtime.udf.spark.ExtractCollectionUDF",
+        FunctionReturnTypes.arrayOfType(SqlTypeName.VARCHAR, true), family(SqlTypeFamily.ANY, SqlTypeFamily.STRING));
 
     // UDTFs
     addFunctionEntry("explode", new CoralSqlUnnestOperator(false));
