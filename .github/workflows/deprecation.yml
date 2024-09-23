@@ -1,0 +1,114 @@
+name: Version Deprecation
+
+on:
+  workflow_dispatch:
+    inputs:
+      deprecate_versions:
+        description: 'Versions to deprecate (comma-separated, e.g., 1.0.0,1.1.0)'
+        required: true
+        type: string
+      auto_deprecate:
+        description: 'Run auto-deprecation'
+        required: false
+        type: boolean
+        default: false
+      deprecation_age_months:
+        description: 'Minimum age in months for auto-deprecation'
+        required: false
+        type: number
+        default: 12
+      deprecation_minor_version_diff:
+        description: 'Minimum minor version difference for auto-deprecation'
+        required: false
+        type: number
+        default: 10
+
+jobs:
+  deprecate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Check permissions
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const permission = await github.rest.repos.getCollaboratorPermissionLevel({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              username: context.actor
+            })
+            if (!['admin', 'maintain'].includes(permission.data.permission)) {
+              core.setFailed('This workflow can only be run by repository maintainers or admins.')
+            }
+
+      - name: Check out code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: '0'
+
+      - name: Set up Java
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.8
+
+      - name: Manual version deprecation
+        if: github.event.inputs.deprecate_versions
+        run: |
+          IFS=',' read -ra VERSIONS <<< "${{ github.event.inputs.deprecate_versions }}"
+          for VERSION in "${VERSIONS[@]}"; do
+            ./gradlew deprecateVersion -PversionToDeprecate=$VERSION
+          done
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONATYPE_TOKEN_USERNAME: ${{ secrets.SONATYPE_TOKEN_USERNAME }}
+          SONATYPE_TOKEN_PASSWORD: ${{ secrets.SONATYPE_TOKEN_PASSWORD }}
+          PGP_KEY: ${{ secrets.PGP_KEY }}
+          PGP_PWD: ${{ secrets.PGP_PWD }}
+
+      - name: Auto-deprecate old versions
+        if: github.event.inputs.auto_deprecate == 'true'
+        run: |
+          # Install necessary tools
+          sudo apt-get update && sudo apt-get install -y jq
+
+          # Set deprecation criteria
+          DEPRECATION_AGE_MONTHS=${{ github.event.inputs.deprecation_age_months || 12 }}
+          DEPRECATION_MINOR_VERSION_DIFF=${{ github.event.inputs.deprecation_minor_version_diff || 10 }}
+
+          # Get all releases
+          RELEASES=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                     "https://api.github.com/repos/${{ github.repository }}/releases")
+
+          # Get the latest release version
+          LATEST_VERSION=$(echo "$RELEASES" | jq -r '.[0].tag_name' | sed 's/v//')
+
+          # Function to compare versions
+          version_gt() { test "$(printf '%s\n' "$@" | sort -V | head -n 1)" != "$1"; }
+
+          # Loop through releases and deprecate old ones
+          echo "$RELEASES" | jq -c '.[]' | while read -r release; do
+            VERSION=$(echo "$release" | jq -r '.tag_name' | sed 's/v//')
+            RELEASE_DATE=$(echo "$release" | jq -r '.published_at')
+            
+            # Calculate age in months
+            AGE_MONTHS=$(( ($(date +%s) - $(date -d "$RELEASE_DATE" +%s)) / (30*24*60*60) ))
+            
+            # Calculate version difference
+            IFS='.' read -ra LATEST_PARTS <<< "$LATEST_VERSION"
+            IFS='.' read -ra VERSION_PARTS <<< "$VERSION"
+            MINOR_DIFF=$((LATEST_PARTS[1] - VERSION_PARTS[1]))
+
+            if [ "$AGE_MONTHS" -ge "$DEPRECATION_AGE_MONTHS" ] && [ "$MINOR_DIFF" -ge "$DEPRECATION_MINOR_VERSION_DIFF" ]; then
+              if ! echo "$release" | jq -e '.name | contains("[DEPRECATED]")' > /dev/null; then
+                echo "Deprecating version $VERSION"
+                ./gradlew deprecateVersion -PversionToDeprecate="$VERSION"
+              fi
+            fi
+          done
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONATYPE_TOKEN_USERNAME: ${{ secrets.SONATYPE_TOKEN_USERNAME }}
+          SONATYPE_TOKEN_PASSWORD: ${{ secrets.SONATYPE_TOKEN_PASSWORD }}
+          PGP_KEY: ${{ secrets.PGP_KEY }}
+          PGP_PWD: ${{ secrets.PGP_PWD }}

@@ -79,3 +79,20 @@ subprojects {
   apply from: "${rootDir}/gradle/dependencies.gradle"
   apply from: "${rootDir}/gradle/java-publication.gradle"
 }
+
+task deprecateVersion {
+  doLast {
+    if (project.hasProperty('versionToDeprecate')) {
+      def version = project.property('versionToDeprecate')
+      println "Deprecating version $version across all subprojects"
+
+      subprojects {
+        tasks.findByName('deprecateVersion')?.execute()
+      }
+
+      println "Completed deprecation of version $version across all subprojects"
+    } else {
+      println "No version specified for deprecation"
+    }
+  }
+}
