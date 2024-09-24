@@ -246,6 +246,38 @@ public class ViewToAvroSchemaConverterTests {
     ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
     Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "innerfield_with_udf");
     System.out.println(actualSchema);
+    /*
+    {
+  "type": "record",
+  "name": "innerfield_with_udf",
+  "namespace": "default.innerfield_with_udf",
+  "fields": [
+    {
+      "name": "innerRecord",
+      "type": [
+        "null",
+        {
+          "type": "record",
+          "name": "innerRecord",
+          "namespace": "default.innerfield_with_udf.innerfield_with_udf",
+          "fields": [
+            {
+              "name": "f1",
+              "type": [
+                "null",
+                "string"
+              ]
+            }
+          ]
+        }
+      ],
+      "doc": "Field created in view by applying UDF 'com.linkedin.coral.hive.hive2rel.CoralTestUDFReturnSecondArg' with argument(s): \"foo\", OuterRecord.innerRecord"
+    }
+  ]
+}
+     */
+
+    // see above that the f1 becomes nullable after applying the UDF, but in the table's base schema f1 is not nullable
   }
 
   @Test
