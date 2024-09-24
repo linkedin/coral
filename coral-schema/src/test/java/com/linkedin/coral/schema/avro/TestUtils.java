@@ -81,6 +81,9 @@ public class TestUtils {
         "com.linkedin.coral.hive.hive2rel.CoralTestUDFReturnStruct", FunctionReturnTypes
             .rowOf(ImmutableList.of("isEven", "number"), ImmutableList.of(SqlTypeName.BOOLEAN, SqlTypeName.INTEGER)),
         family(SqlTypeFamily.INTEGER));
+    StaticHiveFunctionRegistry.createAddUserDefinedFunction(
+        "com.linkedin.coral.hive.hive2rel.CoralTestUDFReturnSecondArg", ReturnTypes.ARG1,
+        family(SqlTypeFamily.STRING, SqlTypeFamily.ANY));
   }
 
   private static void initializeTables() {
@@ -104,6 +107,7 @@ public class TestUtils {
     String baseComplexNullableWithDefaults = loadSchema("base-complex-nullable-with-defaults.avsc");
     String basePrimitive = loadSchema("base-primitive.avsc");
     String baseComplexNestedStructSameName = loadSchema("base-complex-nested-struct-same-name.avsc");
+    String testNestedStructSchema = loadSchema("testNestedStructInnerField.avsc");
 
     executeCreateTableQuery("default", "basecomplex", baseComplexSchema);
     executeCreateTableQuery("default", "basecomplexunioncompatible", baseComplexUnionCompatible);
@@ -125,6 +129,7 @@ public class TestUtils {
     executeCreateTableWithPartitionQuery("default", "basenestedcomplex", baseNestedComplexSchema);
     executeCreateTableWithPartitionQuery("default", "basecomplexnullablewithdefaults", baseComplexNullableWithDefaults);
     executeCreateTableWithPartitionQuery("default", "basecomplexnonnullable", baseComplexNonNullable);
+    executeCreateTableWithPartitionQuery("default", "nestedStructInnerField", testNestedStructSchema);
 
     String baseComplexSchemaWithDoc = loadSchema("docTestResources/base-complex-with-doc.avsc");
     String baseEnumSchemaWithDoc = loadSchema("docTestResources/base-enum-with-doc.avsc");
@@ -170,6 +175,9 @@ public class TestUtils {
 
     executeCreateFunctionQuery("default", Collections.singletonList("foo_udf_return_struct"), "FuncIsEven",
         "com.linkedin.coral.hive.hive2rel.CoralTestUDFReturnStruct");
+
+    executeCreateFunctionQuery("default", Collections.singletonList("innerfield_with_udf"), "ReturnInnerStuct",
+        "com.linkedin.coral.hive.hive2rel.CoralTestUDFReturnSecondArg");
   }
 
   private static void executeCreateTableQuery(String dbName, String tableName, String schema) {
