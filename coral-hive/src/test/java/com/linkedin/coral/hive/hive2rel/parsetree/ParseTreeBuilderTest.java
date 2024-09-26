@@ -236,12 +236,12 @@ public class ParseTreeBuilderTest {
   }
 
   /**
-   * Validates if coral-hive can translate views with unquoted reserved keywords when the views are created using spark.
+   * Validates if coral-hive can translate views with unquoted reserved keywords as column names.
    */
   @Test
   public void testUnquotedKeywordAsColumnName() {
     HiveToRelConverter hiveToRelConverter = new HiveToRelConverter(msc);
-    Table table = msc.getTable("test", "spark_created_view");
+    Table table = msc.getTable("test", "quoted_reserved_keyword_view");
     // Remove the backquotes associated with the view text
     String input = table.getViewExpandedText().replaceAll("`", "");
     SqlNode sqlNode = hiveToRelConverter.toSqlNode(input, table);

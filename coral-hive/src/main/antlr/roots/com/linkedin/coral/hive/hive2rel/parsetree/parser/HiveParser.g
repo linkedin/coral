@@ -657,6 +657,12 @@ import org.slf4j.LoggerFactory;
     this.hiveConf = hiveConf;
   }
   protected boolean useSQL11ReservedKeywordsForIdentifier() {
+    /*
+     * This enables the translation of keywords as column names without adding backquotes. This is required for translating views
+     * created using spark engine as certain keywords in hive like timestamp are not keywords in spark. This will
+     * result in creation of views without backquoting those keywords. This should return false when coral-spark becomes
+     * a supported LHS for translations.
+     */
     return true;
   }
 }
