@@ -19,6 +19,7 @@ buildscript {
 
 plugins {
   id "com.diffplug.spotless" version "5.9.0"
+  id "jacoco"
 }
 
 apply from: "gradle/shipkit.gradle"
@@ -30,6 +31,7 @@ configurations {
 allprojects {
   group = "com.linkedin.coral"
   apply plugin: "com.diffplug.spotless"
+  apply plugin: "jacoco"
 
   repositories {
     mavenCentral()
@@ -52,11 +54,29 @@ allprojects {
       target '**/*.md'
       targetExclude 'docs/release-notes.md'
       endWithNewline()
-      // Disabling Prettier since it causes TravisCI to barf
-      // prettier()
     }
   }
+
+  jacoco {
+    toolVersion = "0.8.7"
+  }
 }
+
+ext.moduleCoverageThresholds = [
+  // Default coverage applied unless overridden
+  'coral-dbt': 0.95,
+  'coral-incremental': 0.95,
+  'coral-pig': 0.85,
+  'coral-schema': 0.80,
+  'coral-service': 0.95,
+  'coral-spark': 0.90,
+  'coral-spark-plan': 0.74,
+  'coral-trino': 0.80,
+  'coral-visualization': 0.75,
+  // Explicit exclusions
+  'coral-common': 0.00,
+  'coral-hive': 0.00,
+]
 
 subprojects {
   plugins.withType(JavaPlugin) {
@@ -65,7 +85,51 @@ subprojects {
     }
     test {
       useTestNG()
+      finalizedBy jacocoTestReport
+      jacoco {
+        excludes = [
+          'com.linkedin.coral.hive.hive2rel.parsetree.parser.*',
+          // Jacoco method too large
+          'org.apache.hadoop.hive.ql.parse.HiveParser_IdentifiersParser',
+          // Jacoco method too large
+          'org.apache.hadoop.hive.ql.parse.HiveParser_IdentifiersParser$*'  // Jacoco method too large
+        ]
+      }
     }
+    jacocoTestReport {
+      reports {
+        xml.enabled true
+        csv.enabled false
+        html.destination file("${buildDir}/jacocoHtml")
+      }
+      executionData.from = files(fileTree(dir: project.buildDir, includes: ['jacoco/*.exec']).files.findAll { it.exists() })
+    }
+
+    def moduleName = project.name
+    def threshold = moduleCoverageThresholds.containsKey(moduleName)
+        ? moduleCoverageThresholds[moduleName]
+        : 0.95 // Default to 100% if not specified
+
+    jacocoTestCoverageVerification {
+      violationRules {
+        rule {
+          element = 'BUNDLE'
+          limit {
+            counter = 'INSTRUCTION'
+            value = 'COVEREDRATIO'
+            minimum = threshold
+          }
+          excludes = [
+            'com.linkedin.coral.hive.hive2rel.parsetree.parser.*',
+            // Jacoco method too large
+            'org.apache.hadoop.hive.ql.parse.HiveParser_IdentifiersParser',
+            // Jacoco method too large
+            'org.apache.hadoop.hive.ql.parse.HiveParser_IdentifiersParser$*'  // Jacoco method too large
+          ]
+        }
+      }
+    }
+    check.dependsOn jacocoTestCoverageVerification
     spotless {
       java {
         importOrder('java', 'javax', 'com', 'org', 'com.linkedin.coral', '\\#')
@@ -79,3 +143,27 @@ subprojects {
   apply from: "${rootDir}/gradle/dependencies.gradle"
   apply from: "${rootDir}/gradle/java-publication.gradle"
 }
+
+task jacocoRootReport(type: JacocoReport) {
+  dependsOn = subprojects.test
+  additionalSourceDirs.from = subprojects.sourceSets.main.allSource.srcDirs
+  sourceDirectories.from = subprojects.sourceSets.main.allSource.srcDirs
+  classDirectories.from = subprojects.sourceSets.main.output
+
+  executionData.from = files(subprojects.findAll { p ->
+    p.plugins.hasPlugin(JavaPlugin)
+  }.collect { p ->
+    p.file("${p.buildDir}/jacoco/test.exec")
+  }.findAll { file ->
+    file.exists()
+  })
+
+  reports {
+    html.enabled = true
+    xml.enabled = true
+    csv.enabled = false
+    html.destination file("${buildDir}/reports/jacoco")
+  }
+}
+
+check.dependsOn jacocoRootReport
