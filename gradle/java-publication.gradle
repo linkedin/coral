@@ -93,3 +93,43 @@ signing {
     sign publishing.publications.javaLibrary
   }
 }
+
+task deprecateVersion {
+  doLast {
+    if (project.hasProperty('versionToDeprecate')) {
+      def version = project.property('versionToDeprecate')
+
+      // Update GitHub release
+      updateGitHubRelease(version)
+
+      // Update Maven Central metadata
+      publishing.publications.javaLibrary.pom.withXml {
+        def root = asNode()
+        def properties = root.properties
+        if (properties.isEmpty()) {
+          properties = root.appendNode('properties')
+        }
+        properties.appendNode('coral.deprecated', 'true')
+        properties.appendNode('coral.deprecationDate', new Date().format("yyyy-MM-dd"))
+        root.description[0].value = "[DEPRECATED] ${root.description[0].text()}"
+      }
+      tasks.publishToMavenLocal.execute()
+
+      println "Deprecated version $version for ${project.name} in GitHub and Maven Central"
+    } else {
+      println "No version specified for deprecation"
+    }
+  }
+}
+
+def updateGitHubRelease(version) {
+  def github = org.kohsuke.github.GitHub.connectUsingOAuth(System.getenv('GITHUB_TOKEN'))
+  def repo = github.getRepository("linkedin/coral")
+  def release = repo.listReleases().find { it.getTagName() == version }
+  if (release) {
+    release.update().name("[DEPRECATED] ${release.getName()}").update()
+    println "Updated GitHub release for version $version"
+  } else {
+    println "No GitHub release found for version $version"
+  }
+}
