@@ -1,0 +1,45 @@
+{
+  "type": "record",
+  "name": "OuterRecord",
+  "fields": [
+    {
+      "name": "innerRecord",
+      "type": {
+        "type": "record",
+        "name": "InnerRecord",
+        "fields": [
+          {
+            "name": "String_Field_Non_Nullable",
+            "type": "string"
+          },
+          {
+            "name": "String_Field_Nullable",
+            "type": [ "string", "null" ]
+          },
+          {
+            "name" : "Int_Field_Non_Nullable",
+            "type" : "int"
+          },
+          {
+            "name" : "Int_Field_Nullable",
+            "type" : [ "int", "null" ]
+          },
+          {
+            "name" : "Array_Col_Non_Nullable",
+            "type" :  {
+              "type" : "array",
+              "items" : "string"
+            }
+          },
+          {
+            "name" : "Array_Col_Nullable",
+            "type" : [ "null", {
+              "type" : "array",
+              "items" : [ "null", "string" ]
+            } ]
+          }
+        ]
+      }
+    }
+  ]
+}
