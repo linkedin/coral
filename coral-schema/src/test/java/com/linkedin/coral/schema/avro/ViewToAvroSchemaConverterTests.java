@@ -234,18 +234,22 @@ public class ViewToAvroSchemaConverterTests {
   }
 
   @Test
-  public void testInnerFieldNullabilityAfterApplyingUDF() {
+  public void testPreserveNullabilitiesAfterApplyingOrdinalReturnTypeUDF() {
     String viewSql = "CREATE VIEW innerfield_with_udf "
         + "tblproperties('functions' = 'ReturnInnerStuct:com.linkedin.coral.hive.hive2rel.CoralTestUDFReturnSecondArg', "
         + "              'dependencies' = 'ivy://com.linkedin:udf:1.0') " + "AS "
         + "SELECT default_innerfield_with_udf_ReturnInnerStuct('foo', innerRecord) AS innerRecord "
-        + "FROM nestedStructInnerField";
+        + "FROM basecomplexmixednullabilities";
 
     TestUtils.executeCreateViewQuery("default", "innerfield_with_udf", viewSql);
 
     ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
     Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "innerfield_with_udf");
-    System.out.println(actualSchema);
+
+    // Expect all fields to retain their nullability after applying the UDF, CoralTestUDFReturnSecondArg, that simply
+    // returns the second argument as is
+    Assert.assertEquals(actualSchema.toString(true),
+        TestUtils.loadSchema("testPreserveNullabilitiesAfterApplyingOrdinalReturnTypeUDF-expected.avsc"));
   }
 
   @Test
