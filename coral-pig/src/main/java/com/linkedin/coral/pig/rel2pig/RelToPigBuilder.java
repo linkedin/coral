@@ -45,7 +45,7 @@ class RelToPigBuilder {
   }
 
   /**
-   * Gets the the generated Pig Latin script.
+   * Gets the generated Pig Latin script.
    *
    * @return The derived Pig Latin script
    */
