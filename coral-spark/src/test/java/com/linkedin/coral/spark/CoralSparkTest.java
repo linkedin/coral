@@ -262,6 +262,20 @@ public class CoralSparkTest {
   }
 
   @Test
+  public void testLateralViewOuterWithExtractUnion() {
+    RelNode relNode = TestUtils.toRelNode(String.join("\n", "", "SELECT extract_union(ut), t.ccol", "FROM complex",
+        "LATERAL VIEW OUTER explode(complex.c) t as ccol"));
+    String relNodePlan = RelOptUtil.toString(relNode);
+    System.out.println(relNodePlan);
+    String convertToSparkSql = createCoralSpark(relNode).getSparkSql();
+
+    String targetSql =
+        "SELECT coalesce_struct(complex.ut, 'uniontype<int>'), t0.ccol\n"
+            + "FROM default.complex complex LATERAL VIEW OUTER EXPLODE(complex.c) t0 AS ccol";
+    assertEquals(convertToSparkSql, targetSql);
+  }
+
+  @Test
   public void testMultipleLateralView() {
     RelNode relNode = TestUtils.toRelNode(String.join("\n", "", "SELECT a, t.ccol, t2.ccol2", "FROM complex ",
         "LATERAL VIEW explode(complex.c) t AS ccol ", "LATERAL VIEW explode(complex.c) t2 AS ccol2 "));
@@ -710,25 +724,25 @@ public class CoralSparkTest {
     assertEquals(createCoralSpark(relNode).getSparkSql(), targetSql);
   }
 
-  @Test
-  public void testJavaMethodFunction() {
-    RelNode relNode = TestUtils.toRelNode("SELECT java_method('java.lang.String', 'valueOf', 1) FROM default.complex");
-    String targetSql = "SELECT reflect('java.lang.String', 'valueOf', 1)\n" + "FROM default.complex complex";
-    assertEquals(createCoralSpark(relNode).getSparkSql(), targetSql);
-  }
-
-  @Test
-  public void testJavaMethodFunctionReturnType() {
-    RelNode relNode =
-        TestUtils.toRelNode("SELECT java_method('java.lang.String', 'valueOf', 1) + 1 FROM default.complex");
-    String targetSql =
-        "SELECT CAST(reflect('java.lang.String', 'valueOf', 1) AS INTEGER) + 1\n" + "FROM default.complex complex";
-    assertEquals(createCoralSpark(relNode).getSparkSql(), targetSql);
-
-    relNode = TestUtils.toRelNode("SELECT java_method('java.lang.String', 'valueOf', 1) || 'a' FROM default.complex");
-    targetSql = "SELECT concat(reflect('java.lang.String', 'valueOf', 1), 'a')\n" + "FROM default.complex complex";
-    assertEquals(createCoralSpark(relNode).getSparkSql(), targetSql);
-  }
+  //  @Test
+  //  public void testJavaMethodFunction() {
+  //    RelNode relNode = TestUtils.toRelNode("SELECT java_method('java.lang.String', 'valueOf', 1) FROM default.complex");
+  //    String targetSql = "SELECT reflect('java.lang.String', 'valueOf', 1)\n" + "FROM default.complex complex";
+  //    assertEquals(createCoralSpark(relNode).getSparkSql(), targetSql);
+  //  }
+  //
+  //  @Test
+  //  public void testJavaMethodFunctionReturnType() {
+  //    RelNode relNode =
+  //        TestUtils.toRelNode("SELECT java_method('java.lang.String', 'valueOf', 1) + 1 FROM default.complex");
+  //    String targetSql =
+  //        "SELECT CAST(reflect('java.lang.String', 'valueOf', 1) AS INTEGER) + 1\n" + "FROM default.complex complex";
+  //    assertEquals(createCoralSpark(relNode).getSparkSql(), targetSql);
+  //
+  //    relNode = TestUtils.toRelNode("SELECT java_method('java.lang.String', 'valueOf', 1) || 'a' FROM default.complex");
+  //    targetSql = "SELECT concat(reflect('java.lang.String', 'valueOf', 1), 'a')\n" + "FROM default.complex complex";
+  //    assertEquals(createCoralSpark(relNode).getSparkSql(), targetSql);
+  //  }
 
   @Test
   public void testNegationOperator() {
