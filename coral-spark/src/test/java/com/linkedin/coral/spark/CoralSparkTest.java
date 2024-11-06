@@ -269,9 +269,8 @@ public class CoralSparkTest {
     System.out.println(relNodePlan);
     String convertToSparkSql = createCoralSpark(relNode).getSparkSql();
 
-    String targetSql =
-        "SELECT coalesce_struct(complex.ut, 'uniontype<int>'), t0.ccol\n"
-            + "FROM default.complex complex LATERAL VIEW OUTER EXPLODE(complex.c) t0 AS ccol";
+    String targetSql = "SELECT coalesce_struct(complex.ut, 'uniontype<int>'), t0.ccol\n"
+        + "FROM default.complex complex LATERAL VIEW OUTER EXPLODE(complex.c) t0 AS ccol";
     assertEquals(convertToSparkSql, targetSql);
   }
 
