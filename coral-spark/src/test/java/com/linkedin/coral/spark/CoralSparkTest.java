@@ -266,7 +266,6 @@ public class CoralSparkTest {
     RelNode relNode = TestUtils.toRelNode(String.join("\n", "", "SELECT extract_union(ut), t.ccol", "FROM complex",
         "LATERAL VIEW OUTER explode(complex.c) t as ccol"));
     String relNodePlan = RelOptUtil.toString(relNode);
-    System.out.println(relNodePlan);
     String convertToSparkSql = createCoralSpark(relNode).getSparkSql();
 
     String targetSql = "SELECT coalesce_struct(complex.ut, 'uniontype<int>'), t0.ccol\n"
