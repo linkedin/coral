@@ -60,7 +60,7 @@ public class TestUtils {
     run(driver, "CREATE TABLE IF NOT EXISTS baz(`timestamp` int, `select` double)");
     run(driver, "CREATE VIEW IF NOT EXISTS baz_view as select `select`, `timestamp` from baz");
     run(driver,
-        "CREATE TABLE IF NOT EXISTS complex(a int, b string, c array<double>, s struct<name:string, age:int>, m map<string, int>, sarr array<struct<name:string, age:int>>)");
+        "CREATE TABLE IF NOT EXISTS complex(a int, b string, c array<double>, s struct<name:string, age:int>, m map<string, int>, sarr array<struct<name:string, age:int>>, ut uniontype<int>)");
 
     String baseComplexSchema = loadSchema("base-complex.avsc");
     executeCreateTableQuery(driver, "default", "basecomplex", baseComplexSchema);

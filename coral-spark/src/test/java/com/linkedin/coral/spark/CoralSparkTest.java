@@ -262,6 +262,17 @@ public class CoralSparkTest {
   }
 
   @Test
+  public void testLateralViewOuterWithExtractUnion() {
+    RelNode relNode = TestUtils.toRelNode(String.join("\n", "", "SELECT extract_union(ut), t.ccol", "FROM complex",
+        "LATERAL VIEW OUTER explode(complex.c) t as ccol"));
+    String convertToSparkSql = createCoralSpark(relNode).getSparkSql();
+
+    String targetSql = "SELECT coalesce_struct(complex.ut, 'uniontype<int>'), t0.ccol\n"
+        + "FROM default.complex complex LATERAL VIEW OUTER EXPLODE(complex.c) t0 AS ccol";
+    assertEquals(convertToSparkSql, targetSql);
+  }
+
+  @Test
   public void testMultipleLateralView() {
     RelNode relNode = TestUtils.toRelNode(String.join("\n", "", "SELECT a, t.ccol, t2.ccol2", "FROM complex ",
         "LATERAL VIEW explode(complex.c) t AS ccol ", "LATERAL VIEW explode(complex.c) t2 AS ccol2 "));
