@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -14,6 +14,7 @@ import org.apache.calcite.sql.SqlWriter;
 import org.apache.calcite.sql.parser.SqlParserPos;
 
 import static com.linkedin.coral.hive.hive2rel.functions.TimestampFromUnixtime.TIMESTAMP_FROM_UNIXTIME;
+import static com.linkedin.coral.trino.rel2trino.functions.TrinoTryCastFunction.TRY_CAST;
 
 
 public class TrinoSqlDialect extends SqlDialect {
@@ -76,8 +77,11 @@ public class TrinoSqlDialect extends SqlDialect {
         unparseMapValueConstructor(writer, call, leftPrec, rightPrec);
         break;
       default:
-        if (call.getOperator().getName().equals("timestamp_from_unixtime")) {
+        String operateName = call.getOperator().getName();
+        if (operateName.equals("timestamp_from_unixtime")) {
           TIMESTAMP_FROM_UNIXTIME.unparse(writer, call, leftPrec, rightPrec);
+        } else if (operateName.equalsIgnoreCase("cast")) {
+          TRY_CAST.unparse(writer, call, leftPrec, rightPrec);
         } else {
           super.unparseCall(writer, call, leftPrec, rightPrec);
         }

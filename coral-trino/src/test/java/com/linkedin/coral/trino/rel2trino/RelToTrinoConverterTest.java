@@ -297,7 +297,7 @@ public class RelToTrinoConverterTest {
   public void testCast() {
     String sql = "SELECT cast(dcol as int) as d, cast(icol as double) as i FROM test.tableOne";
     String expectedSql =
-        "SELECT CAST(\"tableone\".\"dcol\" AS INTEGER) AS \"d\", CAST(\"tableone\".\"icol\" AS DOUBLE) AS \"i\"\n"
+        "SELECT TRY_CAST(\"tableone\".\"dcol\" AS INTEGER) AS \"d\", TRY_CAST(\"tableone\".\"icol\" AS DOUBLE) AS \"i\"\n"
             + "FROM \"test\".\"tableone\" AS \"tableone\"";
     testConversion(sql, expectedSql);
   }
@@ -306,7 +306,7 @@ public class RelToTrinoConverterTest {
   public void testVarcharCast() {
     final String sql = "SELECT cast(icol as varchar(1000)) FROM test.tableOne";
     testConversion(sql,
-        "SELECT CAST(\"tableone\".\"icol\" AS VARCHAR(65535))\n" + "FROM \"test\".\"tableone\" AS \"tableone\"");
+        "SELECT TRY_CAST(\"tableone\".\"icol\" AS VARCHAR(65535))\n" + "FROM \"test\".\"tableone\" AS \"tableone\"");
   }
 
   @Test
@@ -325,19 +325,19 @@ public class RelToTrinoConverterTest {
   @Test
   public void testRandInteger() {
     String sql1 = "SELECT floor(rand() * (icol - 2 + 1) + 2) FROM test.tableOne";
-    String expectedSql1 = "SELECT CAST(FLOOR(\"RANDOM\"() * (\"tableone\".\"icol\" - 2 + 1) + 2) AS BIGINT)\n"
+    String expectedSql1 = "SELECT TRY_CAST(FLOOR(\"RANDOM\"() * (\"tableone\".\"icol\" - 2 + 1) + 2) AS BIGINT)\n"
         + "FROM \"test\".\"tableone\" AS \"tableone\"";
     testConversion(sql1, expectedSql1);
 
     String sql2 = "SELECT floor(rand() * icol) FROM test.tableOne";
-    String expectedSql2 = "SELECT CAST(FLOOR(\"RANDOM\"() * \"tableone\".\"icol\") AS BIGINT)\n"
+    String expectedSql2 = "SELECT TRY_CAST(FLOOR(\"RANDOM\"() * \"tableone\".\"icol\") AS BIGINT)\n"
         + "FROM \"test\".\"tableone\" AS \"tableone\"";
     testConversion(sql2, expectedSql2);
     {
       final String sql = "SELECT icol FROM test.tableOne" + " WHERE floor(rand() * icol) > 10";
       final String expected =
           "SELECT \"tableone\".\"icol\" AS \"icol\"\n" + "FROM \"test\".\"tableone\" AS \"tableone\"\n"
-              + "WHERE CAST(FLOOR(\"RANDOM\"() * \"tableone\".\"icol\") AS BIGINT) > 10";
+              + "WHERE TRY_CAST(FLOOR(\"RANDOM\"() * \"tableone\".\"icol\") AS BIGINT) > 10";
       testConversion(sql, expected);
     }
   }
@@ -346,12 +346,12 @@ public class RelToTrinoConverterTest {
   public void testTruncate() {
     String sql1 = "SELECT floor(dcol) FROM test.tableOne";
     String expectedSql1 =
-        "SELECT CAST(FLOOR(\"tableone\".\"dcol\") AS BIGINT)\n" + "FROM \"test\".\"tableone\" AS \"tableone\"";
+        "SELECT TRY_CAST(FLOOR(\"tableone\".\"dcol\") AS BIGINT)\n" + "FROM \"test\".\"tableone\" AS \"tableone\"";
     testConversion(sql1, expectedSql1);
 
     String sql2 = "SELECT round(dcol, 2 - floor(log10(abs(dcol))) - 1) FROM test.tableOne";
     String expectedSql2 =
-        "SELECT ROUND(\"tableone\".\"dcol\", 2 - CAST(FLOOR(LOG10(ABS(\"tableone\".\"dcol\"))) AS BIGINT) - 1)\n"
+        "SELECT ROUND(\"tableone\".\"dcol\", 2 - TRY_CAST(FLOOR(LOG10(ABS(\"tableone\".\"dcol\"))) AS BIGINT) - 1)\n"
             + "FROM \"test\".\"tableone\" AS \"tableone\"";
     testConversion(sql2, expectedSql2);
   }
@@ -487,8 +487,8 @@ public class RelToTrinoConverterTest {
   public void testTryCastIntTrino() {
     String sql = "SELECT CASE WHEN a.scol= 0 THEN TRUE ELSE FALSE END AS testcol FROM test.tableOne a WHERE a.scol = 1";
     String expectedSql =
-        "SELECT CASE WHEN CAST(\"tableone\".\"scol\" AS INTEGER) = 0 THEN TRUE ELSE FALSE END AS \"testcol\"\n"
-            + "FROM \"test\".\"tableone\" AS \"tableone\"\n" + "WHERE CAST(\"tableone\".\"scol\" AS INTEGER) = 1";
+        "SELECT CASE WHEN TRY_CAST(\"tableone\".\"scol\" AS INTEGER) = 0 THEN TRUE ELSE FALSE END AS \"testcol\"\n"
+            + "FROM \"test\".\"tableone\" AS \"tableone\"\n" + "WHERE TRY_CAST(\"tableone\".\"scol\" AS INTEGER) = 1";
     testConversion(sql, expectedSql);
   }
 
@@ -497,8 +497,9 @@ public class RelToTrinoConverterTest {
     String sql = "SELECT CASE WHEN a.scol= TRUE THEN TRUE ELSE FALSE END AS testcol FROM test.tableOne"
         + " a WHERE a.scol = FALSE";
     String expectedSql =
-        "SELECT CASE WHEN CAST(\"tableone\".\"scol\" AS BOOLEAN) = TRUE THEN TRUE ELSE FALSE END AS \"testcol\"\n"
-            + "FROM \"test\".\"tableone\" AS \"tableone\"\n" + "WHERE CAST(\"tableone\".\"scol\" AS BOOLEAN) = FALSE";
+        "SELECT CASE WHEN TRY_CAST(\"tableone\".\"scol\" AS BOOLEAN) = TRUE THEN TRUE ELSE FALSE END AS \"testcol\"\n"
+            + "FROM \"test\".\"tableone\" AS \"tableone\"\n"
+            + "WHERE TRY_CAST(\"tableone\".\"scol\" AS BOOLEAN) = FALSE";
     testConversion(sql, expectedSql);
   }
 
@@ -518,16 +519,17 @@ public class RelToTrinoConverterTest {
   @Test
   public void testDataTypeSpecRewrite() {
     String sql1 = "SELECT CAST(icol AS FLOAT) FROM test.tableOne";
-    String expectedSql1 = "SELECT CAST(\"tableone\".\"icol\" AS REAL)\n" + "FROM \"test\".\"tableone\" AS \"tableone\"";
+    String expectedSql1 =
+        "SELECT TRY_CAST(\"tableone\".\"icol\" AS REAL)\n" + "FROM \"test\".\"tableone\" AS \"tableone\"";
     testConversion(sql1, expectedSql1);
 
     String sql2 = "SELECT CAST(binaryfield AS BINARY) FROM test.tableThree";
-    String expectedSql2 =
-        "SELECT CAST(\"tablethree\".\"binaryfield\" AS VARBINARY)\n" + "FROM \"test\".\"tablethree\" AS \"tablethree\"";
+    String expectedSql2 = "SELECT TRY_CAST(\"tablethree\".\"binaryfield\" AS VARBINARY)\n"
+        + "FROM \"test\".\"tablethree\" AS \"tablethree\"";
     testConversion(sql2, expectedSql2);
 
     String sql3 = "SELECT CAST(varbinaryfield AS BINARY) FROM test.tableThree";
-    String expectedSql3 = "SELECT CAST(\"tablethree\".\"varbinaryfield\" AS VARBINARY)\n"
+    String expectedSql3 = "SELECT TRY_CAST(\"tablethree\".\"varbinaryfield\" AS VARBINARY)\n"
         + "FROM \"test\".\"tablethree\" AS \"tablethree\"";
     testConversion(sql3, expectedSql3);
   }
@@ -543,7 +545,7 @@ public class RelToTrinoConverterTest {
   public void testCurrentTimestamp() {
     String sql = "SELECT current_timestamp";
     String expected =
-        formatSql("SELECT CAST(CURRENT_TIMESTAMP AS TIMESTAMP(3))\nFROM (VALUES  (0)) AS \"t\" (\"ZERO\")");
+        formatSql("SELECT TRY_CAST(CURRENT_TIMESTAMP AS TIMESTAMP(3))\nFROM (VALUES  (0)) AS \"t\" (\"ZERO\")");
     testConversion(sql, expected);
   }
 
