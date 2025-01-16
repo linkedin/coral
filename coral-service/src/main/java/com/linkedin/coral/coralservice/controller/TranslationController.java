@@ -1,5 +1,5 @@
 /**
- * Copyright 2022-2025 LinkedIn Corporation. All rights reserved.
+ * Copyright 2022-2023 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -26,9 +26,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.linkedin.coral.coralservice.entity.IncrementalRequestBody;
 import com.linkedin.coral.coralservice.entity.IncrementalResponseBody;
 import com.linkedin.coral.coralservice.entity.TranslateRequestBody;
-import com.linkedin.coral.coralservice.entity.WhereClauseRequestBody;
-import com.linkedin.coral.coralservice.entity.WhereClauseResponseBody;
-import com.linkedin.coral.coralservice.utils.AddWhereClauseUtils;
 import com.linkedin.coral.coralservice.utils.RewriteType;
 
 import static com.linkedin.coral.coralservice.utils.CommonUtils.*;
@@ -163,53 +160,6 @@ public class TranslationController implements ApplicationListener<ContextRefresh
       response.put("underscore_delimited_table_names", incrementalResponseBody.getUnderscoreDelimitedTableNames());
       response.put("incremental_table_names", incrementalResponseBody.getIncrementalTableNames());
 
-      message = response.toString();
-    }
-    return ResponseEntity.status(HttpStatus.OK).body(message);
-  }
-
-  @PostMapping("/api/AddWhereClause")
-  public ResponseEntity addWhereClause(@RequestBody WhereClauseRequestBody requestBody) throws JSONException {
-    // Response will contain incremental query and incremental table names
-    WhereClauseResponseBody responseBody = new WhereClauseResponseBody();
-    try {
-      // Parse the request body
-      String query = requestBody.getQuery();
-      String tableName = requestBody.getTableName();
-      String columnName = requestBody.getColumnName();
-      String columnValue = requestBody.getColumnName();
-
-      // Validate inputs
-      if (query == null || query.trim().isEmpty()) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Query cannot be null or empty.\n");
-      }
-      if (tableName == null || tableName.trim().isEmpty()) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Table name cannot be null or empty.\n");
-      }
-      if (columnName == null || columnName.trim().isEmpty()) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Column name cannot be null or empty.\n");
-      }
-      if (columnValue == null || columnValue.trim().isEmpty()) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Column value cannot be null or empty.\n");
-      }
-
-      String queryWithWhereClause = AddWhereClauseUtils.addWhereClause(query, tableName, columnName, columnValue);
-      // Replace newlines with spaces for compatibility with code generation
-      queryWithWhereClause = queryWithWhereClause.replace('\n', ' ');
-
-      responseBody.setQuery(queryWithWhereClause);
-    } catch (Throwable t) {
-      t.printStackTrace();
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-          .body("An unexpected error occurred: " + t.getMessage());
-    }
-    String message;
-    if (responseBody.getQuery() == null) {
-      message = "Where Clause rewrite functionality is not currently working";
-    } else {
-      // Create JSON object from response body
-      JSONObject response = new JSONObject();
-      response.put("whereClauseQuery", responseBody.getQuery());
       message = response.toString();
     }
     return ResponseEntity.status(HttpStatus.OK).body(message);

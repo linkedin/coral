@@ -1,5 +1,5 @@
 /**
- * Copyright 2023-2025 LinkedIn Corporation. All rights reserved.
+ * Copyright 2023 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -47,22 +47,9 @@ public class RelToIncrementalSqlConverterTest {
     return sqlNode.toSqlString(converter.INSTANCE).getSql();
   }
 
-  public String convert2(RelNode relNode, String tbl_name, String column_name, String column_value) {
-    RelNode incrementalRelNode =
-        RelNodeIncrementalTransformer.addWhereClause(relNode, tbl_name, column_name, column_value);
-    CoralRelToSqlNodeConverter converter = new CoralRelToSqlNodeConverter();
-    SqlNode sqlNode = converter.convert(incrementalRelNode);
-    return sqlNode.toSqlString(converter.INSTANCE).getSql();
-  }
-
   public String getIncrementalModification(String sql) {
     RelNode originalRelNode = hiveToRelConverter.convertSql(sql);
     return convert(originalRelNode);
-  }
-
-  public String addWhereClause(String sql, String tableName, String columnName, String columnValue) {
-    RelNode originalRelNode = hiveToRelConverter.convertSql(sql);
-    return convert2(originalRelNode, tableName, columnName, columnValue);
   }
 
   @Test
@@ -155,27 +142,5 @@ public class RelToIncrementalSqlConverterTest {
         + "UNION ALL\n" + "SELECT *\n" + "FROM test.bar1_delta AS bar1_delta0\n"
         + "INNER JOIN test.bar2_delta AS bar2_delta0 ON bar1_delta0.x = bar2_delta0.x) AS t0";
     assertEquals(getIncrementalModification(sql), expected);
-  }
-
-  @Test
-  public void testSimplyAddWhereClause() {
-    String sql = "SELECT * FROM test.bar1 JOIN test.bar2 ON test.bar1.x = test.bar2.x";
-    String tbl_name = "test.bar1";
-    String column_name = "x";
-    String column_value = "foo";
-    String expected = "SELECT *\n" + "FROM (SELECT *\n" + "FROM test.bar1 AS bar1\n" + "WHERE bar1.x = 'foo') AS t\n"
-        + "INNER JOIN test.bar2 AS bar2 ON t.x = bar2.x";
-    assertEquals(addWhereClause(sql, tbl_name, column_name, column_value), expected);
-  }
-
-  @Test
-  public void testAddWhereClauseExistingWhereClause() {
-    String sql = "SELECT * FROM test.bar1 JOIN test.bar2 ON test.bar1.x = test.bar2.x where test.bar1.y = 10";
-    String tbl_name = "test.bar1";
-    String column_name = "x";
-    String column_value = "foo";
-    String expected = "SELECT *\n" + "FROM (SELECT *\n" + "FROM test.bar1 AS bar1\n" + "WHERE bar1.x = 'foo') AS t\n"
-        + "INNER JOIN test.bar2 AS bar2 ON t.x = bar2.x\n" + "WHERE t.y = 10";
-    assertEquals(addWhereClause(sql, tbl_name, column_name, column_value), expected);
   }
 }
