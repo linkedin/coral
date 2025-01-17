@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.prepare.RelOptTableImpl;
@@ -89,6 +88,7 @@ public class RelNodeIncrementalTransformer {
         return LogicalAggregate.create(transformedChild, aggregate.getGroupSet(), aggregate.getGroupSets(),
             aggregate.getAggCallList());
       }
+
     };
     return originalNode.accept(converter);
   }
@@ -99,11 +99,31 @@ public class RelNodeIncrementalTransformer {
         LogicalJoin.create(left, right, join.getCondition(), join.getVariablesSet(), join.getJoinType());
     ArrayList<RexNode> projects = new ArrayList<>();
     ArrayList<String> names = new ArrayList<>();
-    IntStream.range(0, incrementalJoin.getRowType().getFieldList().size()).forEach(i -> {
+    // Apply the projection based on the specific columns used in the query
+    int leftSize = left.getRowType().getFieldCount();
+    int rightSize = right.getRowType().getFieldCount();
+    // For left table's projected columns
+    for (int i = 0; i < leftSize; i++) {
       projects.add(rexBuilder.makeInputRef(incrementalJoin, i));
-      names.add(incrementalJoin.getRowType().getFieldNames().get(i));
-    });
+      names.add(left.getRowType().getFieldNames().get(i));
+    }
+    // For right table's projected columns
+    for (int i = 0; i < rightSize; i++) {
+      projects.add(rexBuilder.makeInputRef(incrementalJoin, leftSize + i));
+      names.add(right.getRowType().getFieldNames().get(i));
+    }
+//    IntStream.range(0, incrementalJoin.getRowType().getFieldList().size()).forEach(i -> {
+//      projects.add(rexBuilder.makeInputRef(incrementalJoin, i));
+//      names.add(incrementalJoin.getRowType().getFieldNames().get(i));
+//    });
     return LogicalProject.create(incrementalJoin, projects, names);
+  }
+
+  public static List<String> getOutputPIIFields(RelNode queryRelNode, List<String> inputPIIFields) {
+    PIIContext context = new PIIContext(inputPIIFields);
+    RelShuttle propagator = PIIFieldPropagatorFactory.createPropagator(context);
+    queryRelNode.accept(propagator);
+    return context.getOutputPIIFields();
   }
 
 }
