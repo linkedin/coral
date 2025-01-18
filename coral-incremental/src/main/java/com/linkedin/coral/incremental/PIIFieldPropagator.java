@@ -7,6 +7,7 @@ package com.linkedin.coral.incremental;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import org.apache.calcite.plan.volcano.RelSubset;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelShuttle;
@@ -42,45 +43,34 @@ public class PIIFieldPropagator implements RelShuttle {
 
   @Override
   public RelNode visit(LogicalProject project) {
-    System.out.println("Visiting LogicalProject");
     List<RelNode> inputs = project.getInputs();
     inputs.forEach(input -> input.accept(this));
-    System.out.println("Processing LogicalProject");
     propagatePIILineage(project);
-    System.out.println("Finished processing LogicalProject");
-    System.out.println("Input PII fields: " + context.getInputPIIFields());
-    System.out.println("Output PII fields: " + context.getOutputPIIFields());
     return project;
   }
 
   private void propagatePIILineage(RelNode relNode) {
     if (relNode instanceof LogicalProject) {
-      System.out.println("getPIImapping LogicalProject");
       LogicalProject project = (LogicalProject) relNode;
       List<RexNode> projections = project.getProjects();
-      System.out.println("Projections: " + projections);
       List<String> outputFields = project.getRowType().getFieldNames();
-      System.out.println("Output fields: " + outputFields);
       List<String> inputFields = project.getInput().getRowType().getFieldNames();
-      System.out.println("Input fields: " + inputFields);
       for (int i = 0; i < projections.size(); i++) {
         String outputField = outputFields.get(i);
         RexNode rexNode = projections.get(i);
         if (rexNode instanceof RexInputRef) {
           String inputField = inputFields.get(((RexInputRef) rexNode).getIndex());
           String fullyQualifiedField = context.getFieldToFullyQualifiedMap().get(inputField);
-          System.out.println("Fully qualified field: " + fullyQualifiedField);
-          if (context.getInputPIIFields().contains(fullyQualifiedField.toLowerCase()) && !context.getOutputPIIFields().contains(outputField)) {
-            System.out.println("Adding output PII field " + outputField + " for input field " + fullyQualifiedField);
+          if (context.getInputPIIFields().contains(fullyQualifiedField.toLowerCase())
+              && !context.getOutputPIIFields().contains(outputField)) {
             context.addOutputPIIField(outputField);
           }
         } else if (rexNode instanceof RexFieldAccess) {
           RexFieldAccess fieldAccess = (RexFieldAccess) rexNode;
           String flattenedFieldPath = resolveNestedField(fieldAccess, inputFields);
           String fullyQualifiedField = context.getFieldToFullyQualifiedMap().get(flattenedFieldPath);
-          System.out.println("Fully qualified field: " + fullyQualifiedField);
-          if (context.getInputPIIFields().contains(fullyQualifiedField.toLowerCase()) && !context.getOutputPIIFields().contains(outputField)) {
-            System.out.println("Adding output PII field " + outputField + " for input field " + fullyQualifiedField);
+          if (context.getInputPIIFields().contains(fullyQualifiedField.toLowerCase())
+              && !context.getOutputPIIFields().contains(outputField)) {
             context.addOutputPIIField(outputField);
           }
         } else if (rexNode instanceof RexCall) {
@@ -88,9 +78,8 @@ public class PIIFieldPropagator implements RelShuttle {
           if (call.getOperands().get(0) instanceof RexInputRef) {
             String inputField = inputFields.get(((RexInputRef) call.getOperands().get(0)).getIndex());
             String fullyQualifiedField = context.getFieldToFullyQualifiedMap().get(inputField);
-            System.out.println("Fully qualified field: " + fullyQualifiedField);
-            if (context.getInputPIIFields().contains(fullyQualifiedField.toLowerCase()) && !context.getOutputPIIFields().contains(outputField)) {
-              System.out.println("Adding output PII field " + outputField + " for input field " + fullyQualifiedField);
+            if (context.getInputPIIFields().contains(fullyQualifiedField.toLowerCase())
+                && !context.getOutputPIIFields().contains(outputField)) {
               context.addOutputPIIField(outputField);
             }
           }
@@ -99,11 +88,9 @@ public class PIIFieldPropagator implements RelShuttle {
         }
       }
     } else {
-      System.out.println("getPIImapping for Other " + relNode.getClass().getName());
       relNode.accept(this);
     }
   }
-
 
   // Recursive function to resolve nested fields
   private String resolveNestedField(RexFieldAccess fieldAccess, List<String> inputFields) {
@@ -126,47 +113,35 @@ public class PIIFieldPropagator implements RelShuttle {
 
   private String getFullyQualifiedTableName(RelNode relNode) {
     if (relNode instanceof LogicalTableScan) {
-      System.out.println("LogicalTableScan");
       LogicalTableScan tableScan = (LogicalTableScan) relNode;
       String[] tableParts = tableScan.getTable().getQualifiedName().toArray(new String[0]);
-      System.out.println("Table parts: " + String.join(", ", tableParts));
       if (tableParts.length == 1) {
         return tableParts[0];
       }
       return String.join(".", tableParts[tableParts.length - 2], tableParts[tableParts.length - 1]);
     } else if (relNode instanceof RelSubset) {
-      System.out.println("RelSubset");
       return getFullyQualifiedTableName(((RelSubset) relNode).getOriginal());
     } else {
-      System.out.println("Unhandled RelNode type: " + relNode.getClass().getSimpleName());
     }
     throw new IllegalArgumentException("Unable to extract fully qualified table name");
   }
 
   @Override
   public RelNode visit(TableScan tableScan) {
-    System.out.println("Visiting TableScan: " + tableScan.getTable());
-    System.out.println("getFieldMappings TableScan");
     String tableAlias = getFullyQualifiedTableName(tableScan);
     List<String> flattenedFields = flattenFields(tableScan.getRowType(), "");
-    System.out.println("Flattened fields: " + flattenedFields);
     for (String field : flattenedFields) {
       context.addFieldToFullyQualifiedMap(field, tableAlias + "." + field);
     }
-    System.out.println("Field mappings: " + context.getFieldToFullyQualifiedMap());
     return tableScan;
   }
 
   public void visit(LogicalTableScan logicalTableScan) {
-    System.out.println("Visiting LogicalTableScan: " + logicalTableScan.getTable());
-    System.out.println("getFieldMappings LogicalTableScan");
     String tableAlias = getFullyQualifiedTableName(logicalTableScan);
     List<String> flattenedFields = flattenFields(logicalTableScan.getRowType(), "");
-    System.out.println("Flattened fields: " + flattenedFields);
     for (String field : flattenedFields) {
       context.addFieldToFullyQualifiedMap(field, tableAlias + "." + field);
     }
-    System.out.println("Field mappings: " + context.getFieldToFullyQualifiedMap());
   }
 
   @Override
@@ -186,8 +161,6 @@ public class PIIFieldPropagator implements RelShuttle {
 
   @Override
   public RelNode visit(LogicalJoin join) {
-    System.out.println("Visiting LogicalJoin");
-
     // Check the left input
     RelNode left = join.getLeft();
     if (left instanceof LogicalTableScan) {

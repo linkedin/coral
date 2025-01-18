@@ -1,5 +1,5 @@
 /**
- * Copyright 2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2023-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -112,10 +112,10 @@ public class RelNodeIncrementalTransformer {
       projects.add(rexBuilder.makeInputRef(incrementalJoin, leftSize + i));
       names.add(right.getRowType().getFieldNames().get(i));
     }
-//    IntStream.range(0, incrementalJoin.getRowType().getFieldList().size()).forEach(i -> {
-//      projects.add(rexBuilder.makeInputRef(incrementalJoin, i));
-//      names.add(incrementalJoin.getRowType().getFieldNames().get(i));
-//    });
+    //    IntStream.range(0, incrementalJoin.getRowType().getFieldList().size()).forEach(i -> {
+    //      projects.add(rexBuilder.makeInputRef(incrementalJoin, i));
+    //      names.add(incrementalJoin.getRowType().getFieldNames().get(i));
+    //    });
     return LogicalProject.create(incrementalJoin, projects, names);
   }
 

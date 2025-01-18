@@ -19,8 +19,7 @@ public class PIIContext {
   private final ConcurrentHashMap<String, String> fieldToFullyQualifiedMap;
 
   public PIIContext(List<String> inputPIIFields) {
-    this.inputPIIFields = inputPIIFields.stream()
-        .map(String::toLowerCase).collect(Collectors.toList());
+    this.inputPIIFields = inputPIIFields.stream().map(String::toLowerCase).collect(Collectors.toList());
     this.outputPIIFields = new ArrayList<>();
     this.fieldToFullyQualifiedMap = new ConcurrentHashMap<>();
   }
@@ -38,44 +37,32 @@ public class PIIContext {
   }
 
   public void addFieldToFullyQualifiedMap(String field, String fullyQualifiedField) {
-    System.out.println("Adding field: " + field + " with fully qualified field: " + fullyQualifiedField);
 
     // Check if the field already exists with the same fully qualified value
-    if (fieldToFullyQualifiedMap.containsKey(field) &&
-        fieldToFullyQualifiedMap.get(field).equals(fullyQualifiedField)) {
-      System.out.println("Field: " + field + " already exists in the map with the same fully qualified field: "
-          + fullyQualifiedField);
+    if (fieldToFullyQualifiedMap.containsKey(field)
+        && fieldToFullyQualifiedMap.get(field).equals(fullyQualifiedField)) {
       return;
     }
     // If the field exists but with a different fully qualified field, resolve the conflict
     if (fieldToFullyQualifiedMap.containsKey(field)) {
       String[] fieldParts = field.split("\\.");
-      for (int i = 0; i < 10 ; i++) { // Infinite loop, explicitly broken when a unique alias is found
+      for (int i = 0; i < 10; i++) { // Infinite loop, explicitly broken when a unique alias is found
         final int currentIndex = i; // Effectively final variable for the lambda
         String newField = IntStream.range(0, fieldParts.length)
-            .mapToObj(j -> j == fieldParts.length - 1 && fieldParts.length > 1
-                ? fieldParts[j]
-                : fieldParts[j] + currentIndex
-            ).collect(Collectors.joining("."));
-        System.out.println("Generated alias: " + newField);
+            .mapToObj(
+                j -> j == fieldParts.length - 1 && fieldParts.length > 1 ? fieldParts[j] : fieldParts[j] + currentIndex)
+            .collect(Collectors.joining("."));
         // If the generated alias is not already in the map, add it and return
         if (!fieldToFullyQualifiedMap.containsKey(newField)) {
           fieldToFullyQualifiedMap.put(newField, fullyQualifiedField);
-          System.out.println("Field: " + field + " already exists in the map with a different fully qualified field: "
-              + fieldToFullyQualifiedMap.get(field) + ". Resolved conflict by adding field: " + newField
-              + " with fully qualified field: " + fullyQualifiedField);
           return;
         }
-        System.out.println("Field: " + field + " already exists in the map with a different fully qualified field: "
-            + fieldToFullyQualifiedMap.get(field) + ". Generated alias: " + newField + " already exists in the map.");
       }
       throw new IllegalStateException("Could not resolve the conflict for field: " + field);
     }
     // Add the field to the map if it doesn't already exist
-    System.out.println("Adding field: " + field + " with fully qualified field: " + fullyQualifiedField);
     fieldToFullyQualifiedMap.put(field, fullyQualifiedField);
   }
-
 
   public Map<String, String> getFieldToFullyQualifiedMap() {
     return fieldToFullyQualifiedMap;
