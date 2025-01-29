@@ -448,8 +448,11 @@ public class RelToAvroSchemaConverter {
 
         if (operand instanceof RexInputRef) {
           appendRexInputRefField((RexInputRef) operand);
-          return rexCall;
+        } else if (operand instanceof RexCall) {
+          // If the operand is a call, we need to visit the call to get the field schema
+          visitCall((RexCall) operand);
         }
+        return rexCall;
       }
 
       RelDataType fieldType = rexCall.getType();
