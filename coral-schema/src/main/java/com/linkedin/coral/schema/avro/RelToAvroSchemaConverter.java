@@ -433,7 +433,7 @@ public class RelToAvroSchemaConverter {
     @Override
     public RexNode visitCall(RexCall rexCall) {
       /**
-       * For SqlUserDefinedFunction and SqlOperator RexCall, no need to handle it recursively
+       * For SqlUserDefinedFunction and SqlOperator RexCall, no need to handle it recursively (in most cases)
        * and only return type of udf or sql operator is relevant
        */
 
@@ -445,13 +445,13 @@ public class RelToAvroSchemaConverter {
       if (rexCall.getOperator().getReturnTypeInference() instanceof OrdinalReturnTypeInferenceV2) {
         int index = ((OrdinalReturnTypeInferenceV2) rexCall.getOperator().getReturnTypeInference()).getOrdinal();
         RexNode operand = rexCall.operands.get(index);
-
-        if (operand instanceof RexInputRef) {
-          appendRexInputRefField((RexInputRef) operand);
-        } else if (operand instanceof RexCall) {
-          // If the operand is a call, we need to visit the call to get the field schema
-          visitCall((RexCall) operand);
-        }
+        operand.accept(this);
+        //        if (operand instanceof RexInputRef) {
+        //          appendRexInputRefField((RexInputRef) operand);
+        //        } else if (operand instanceof RexCall) {
+        //          // If the operand is another call, we need to visit the call to get the field schema
+        //          visitCall((RexCall) operand);
+        //        }
         return rexCall;
       }
 
