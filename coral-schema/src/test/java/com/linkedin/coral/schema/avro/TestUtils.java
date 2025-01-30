@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2024 LinkedIn Corporation. All rights reserved.
+ * Copyright 2019-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -177,7 +177,7 @@ public class TestUtils {
     executeCreateFunctionQuery("default", Collections.singletonList("foo_udf_return_struct"), "FuncIsEven",
         "com.linkedin.coral.hive.hive2rel.CoralTestUDFReturnStruct");
 
-    executeCreateFunctionQuery("default", Collections.singletonList("innerfield_with_udf"), "ReturnInnerStuct",
+    executeCreateFunctionQuery("default", Collections.singletonList("innerfield_with_udf"), "ReturnInnerStruct",
         "com.linkedin.coral.hive.hive2rel.CoralTestUDFReturnSecondArg");
   }
 

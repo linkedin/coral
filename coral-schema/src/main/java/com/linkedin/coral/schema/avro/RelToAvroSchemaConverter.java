@@ -433,28 +433,20 @@ public class RelToAvroSchemaConverter {
     @Override
     public RexNode visitCall(RexCall rexCall) {
       /**
-       * For SqlUserDefinedFunction and SqlOperator RexCall, no need to handle it recursively (in most cases)
-       * and only return type of udf or sql operator is relevant
-       */
-
-      /**
-       * If the return type of RexCall is based on the ordinal of its input argument
-       * and the corresponding input argument refers to a field from the input schema,
-       * use the field's schema as is.
+       * If the return type of RexCall is based on an ordinal of its input arguments, then leverage SchemaRexShuttle
+       * to visit the input argument and use the argument's schema as is to infer the return type of the call
        */
       if (rexCall.getOperator().getReturnTypeInference() instanceof OrdinalReturnTypeInferenceV2) {
         int index = ((OrdinalReturnTypeInferenceV2) rexCall.getOperator().getReturnTypeInference()).getOrdinal();
         RexNode operand = rexCall.operands.get(index);
         operand.accept(this);
-        //        if (operand instanceof RexInputRef) {
-        //          appendRexInputRefField((RexInputRef) operand);
-        //        } else if (operand instanceof RexCall) {
-        //          // If the operand is another call, we need to visit the call to get the field schema
-        //          visitCall((RexCall) operand);
-        //        }
         return rexCall;
       }
 
+      /**
+       * For SqlUserDefinedFunction and SqlOperator RexCall, no need to handle it recursively
+       * and just directly use the return type of udf or sql operator as the field's schema
+       */
       RelDataType fieldType = rexCall.getType();
       boolean isNullable = SchemaUtilities.isFieldNullable(rexCall, inputSchema);
 
