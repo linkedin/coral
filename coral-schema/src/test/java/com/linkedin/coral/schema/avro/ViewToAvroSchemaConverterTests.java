@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2024 LinkedIn Corporation. All rights reserved.
+ * Copyright 2019-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -236,9 +236,9 @@ public class ViewToAvroSchemaConverterTests {
   @Test
   public void testPreserveNullabilitiesAfterApplyingOrdinalReturnTypeUDF() {
     String viewSql = "CREATE VIEW innerfield_with_udf "
-        + "tblproperties('functions' = 'ReturnInnerStuct:com.linkedin.coral.hive.hive2rel.CoralTestUDFReturnSecondArg', "
+        + "tblproperties('functions' = 'ReturnInnerStruct:com.linkedin.coral.hive.hive2rel.CoralTestUDFReturnSecondArg', "
         + "              'dependencies' = 'ivy://com.linkedin:udf:1.0') " + "AS "
-        + "SELECT default_innerfield_with_udf_ReturnInnerStuct('foo', innerRecord) AS innerRecord "
+        + "SELECT default_innerfield_with_udf_ReturnInnerStruct('foo', innerRecord) AS innerRecord "
         + "FROM basecomplexmixednullabilities";
 
     TestUtils.executeCreateViewQuery("default", "innerfield_with_udf", viewSql);
@@ -248,6 +248,28 @@ public class ViewToAvroSchemaConverterTests {
 
     // Expect all fields to retain their nullability after applying the UDF, CoralTestUDFReturnSecondArg, that simply
     // returns the second argument as is
+    Assert.assertEquals(actualSchema.toString(true),
+        TestUtils.loadSchema("testPreserveNullabilitiesAfterApplyingOrdinalReturnTypeUDF-expected.avsc"));
+  }
+
+  @Test
+  public void testPreserveNullabilitiesAfterApplyingOrdinalReturnTypeUDFForNestedCalls() {
+    String viewSql = "CREATE VIEW innerfield_with_udf "
+        + "tblproperties('functions' = 'ReturnInnerStruct:com.linkedin.coral.hive.hive2rel.CoralTestUDFReturnSecondArg', "
+        + "              'dependencies' = 'ivy://com.linkedin:udf:1.0') " + "AS "
+        + "SELECT default_innerfield_with_udf_ReturnInnerStruct('foo', default_innerfield_with_udf_ReturnInnerStruct('foo', innerRecord)) AS innerRecord "
+        + "FROM basecomplexmixednullabilities";
+
+    TestUtils.executeCreateViewQuery("default", "innerfield_with_udf", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "innerfield_with_udf");
+
+    // Inner ReturnInnerStruct call return type == Return type of it's second argument, innerRecord
+    // Outer ReturnInnerStruct call return type == Return type of it's second argument, Inner ReturnInnerStruct call return type
+    // Therefore, Outer ReturnInnerStruct call return type == Return type of innerRecord
+    //
+    // We also expect all fields to retain their nullability after applying the UDF calls
     Assert.assertEquals(actualSchema.toString(true),
         TestUtils.loadSchema("testPreserveNullabilitiesAfterApplyingOrdinalReturnTypeUDF-expected.avsc"));
   }
