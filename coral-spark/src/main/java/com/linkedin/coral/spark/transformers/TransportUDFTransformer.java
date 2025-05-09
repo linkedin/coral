@@ -88,7 +88,7 @@ public class TransportUDFTransformer extends SqlCallTransformer {
       String sparkVersion = SparkSession.active().version();
       if (sparkVersion.matches("2\\.[\\d\\.]*")) {
         return ScalaVersion.SCALA_2_11;
-      } else if (sparkVersion.matches("3\\.[\\d\\.]*")) {
+      } else if (sparkVersion.matches("3\\d*\\.[\\d\\.]*")) {
         return ScalaVersion.SCALA_2_12;
       } else {
         throw new IllegalStateException(String.format("Unsupported Spark Version %s", sparkVersion));
