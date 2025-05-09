@@ -1,5 +1,5 @@
 /**
- * Copyright 2018-2024 LinkedIn Corporation. All rights reserved.
+ * Copyright 2018-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -88,7 +88,7 @@ public class TransportUDFTransformer extends SqlCallTransformer {
       String sparkVersion = SparkSession.active().version();
       if (sparkVersion.matches("2\\.[\\d\\.]*")) {
         return ScalaVersion.SCALA_2_11;
-      } else if (sparkVersion.matches("3\\.[\\d\\.]*")) {
+      } else if (sparkVersion.matches("3\\d*\\.[\\d\\.]*")) {
         return ScalaVersion.SCALA_2_12;
       } else {
         throw new IllegalStateException(String.format("Unsupported Spark Version %s", sparkVersion));
