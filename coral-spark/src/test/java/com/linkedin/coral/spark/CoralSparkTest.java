@@ -485,7 +485,7 @@ public class CoralSparkTest {
 
     RelNode relNode3 = TestUtils.toRelNode("SELECT extract_union(baz).single.tag_0 from union_table");
     String targetSql4 =
-        "SELECT (coalesce_struct(union_table.baz, 'struct<single:uniontype<array<string>>>').single).tag_0\n"
+        "SELECT coalesce_struct(union_table.baz, 'struct<single:uniontype<array<string>>>').single.tag_0\n"
             + "FROM default.union_table union_table";
     assertEquals(createCoralSpark(relNode3).getSparkSql(), targetSql4);
   }
@@ -921,9 +921,17 @@ public class CoralSparkTest {
 
   @Test
   public void testConvertFieldAccessOnFunctionCall() {
+    RelNode relNode = TestUtils.toRelNode("SELECT named_struct('a', 1).a");
+
+    String targetSql = "SELECT named_struct('a', 1).a\n" + "FROM (VALUES  (0)) t (ZERO)";
+    assertEquals(createCoralSpark(relNode).getSparkSql(), targetSql);
+  }
+
+  @Test
+  public void testConvertNestedFieldAccessOnFunctionCall() {
     RelNode relNode = TestUtils.toRelNode("SELECT named_struct('a', named_struct('b', 1)).a.b");
 
-    String targetSql = "SELECT (named_struct('a', named_struct('b', 1)).a).b\n" + "FROM (VALUES  (0)) t (ZERO)";
+    String targetSql = "SELECT named_struct('a', named_struct('b', 1)).a.b\n" + "FROM (VALUES  (0)) t (ZERO)";
     assertEquals(createCoralSpark(relNode).getSparkSql(), targetSql);
   }
 
