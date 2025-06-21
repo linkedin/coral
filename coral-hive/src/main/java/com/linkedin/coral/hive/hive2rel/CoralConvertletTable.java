@@ -16,8 +16,6 @@ import org.apache.calcite.sql2rel.SqlRexContext;
 import org.apache.calcite.sql2rel.SqlRexConvertlet;
 import org.apache.calcite.sql2rel.StandardConvertletTable;
 
-import com.linkedin.coral.common.functions.FunctionFieldReferenceOperator;
-
 
 /**
  * ConvertletTable for transformations only relevant to Coral's Intermediate Representation, not specific
@@ -25,14 +23,6 @@ import com.linkedin.coral.common.functions.FunctionFieldReferenceOperator;
  * @see ReflectiveConvertletTable documentation for method naming and visibility rules
  */
 public class CoralConvertletTable extends ReflectiveConvertletTable {
-
-  @SuppressWarnings("unused")
-  public RexNode convertFunctionFieldReferenceOperator(SqlRexContext cx, FunctionFieldReferenceOperator op,
-      SqlCall call) {
-    RexNode funcExpr = cx.convertExpression(call.operand(0));
-    String fieldName = FunctionFieldReferenceOperator.fieldNameStripQuotes(call.operand(1));
-    return cx.getRexBuilder().makeFieldAccess(funcExpr, fieldName, false);
-  }
 
   /**
    * Override {@link StandardConvertletTable#convertCast} to avoid cast optimizations that remove the cast.

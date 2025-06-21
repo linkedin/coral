@@ -31,7 +31,6 @@ import org.apache.calcite.sql.type.SqlTypeName;
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import com.linkedin.coral.common.HiveMetastoreClient;
 import com.linkedin.coral.common.functions.CoralSqlUnnestOperator;
-import com.linkedin.coral.common.functions.FunctionFieldReferenceOperator;
 import com.linkedin.coral.transformers.CoralRelToSqlNodeConverter;
 
 import static com.google.common.base.Preconditions.*;
@@ -441,7 +440,7 @@ public class RelToTrinoConverter extends RelToSqlConverter {
             SqlNode functionCall = toSql(program, referencedExpr);
             Collections.reverse(accessNames);
             for (String accessName : accessNames) {
-              functionCall = FunctionFieldReferenceOperator.DOT.createCall(SqlParserPos.ZERO, functionCall,
+              functionCall = SqlStdOperatorTable.DOT.createCall(SqlParserPos.ZERO, functionCall,
                   new SqlIdentifier(accessName, POS));
             }
             return functionCall;
