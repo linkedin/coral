@@ -1,5 +1,5 @@
 /**
- * Copyright 2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2023-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -8,9 +8,9 @@ package com.linkedin.coral.spark.transformers;
 import java.net.URI;
 import java.util.Set;
 
-import org.apache.calcite.sql.SqlCall;
+import com.google.common.collect.ImmutableList;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlCall;
 
-import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import com.linkedin.coral.common.functions.GenericProjectFunction;
 import com.linkedin.coral.common.transformers.SqlCallTransformer;
 import com.linkedin.coral.spark.containers.SparkUDFInfo;

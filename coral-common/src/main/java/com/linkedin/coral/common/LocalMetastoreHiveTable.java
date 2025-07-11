@@ -8,20 +8,20 @@ package com.linkedin.coral.common;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.linkedin.relocated.org.apache.calcite.DataContext;
+import com.linkedin.relocated.org.apache.calcite.config.CalciteConnectionConfig;
+import com.linkedin.relocated.org.apache.calcite.linq4j.Enumerable;
+import com.linkedin.relocated.org.apache.calcite.rel.type.RelDataType;
+import com.linkedin.relocated.org.apache.calcite.rel.type.RelDataTypeFactory;
+import com.linkedin.relocated.org.apache.calcite.schema.ScannableTable;
+import com.linkedin.relocated.org.apache.calcite.schema.Schema;
+import com.linkedin.relocated.org.apache.calcite.schema.Statistic;
+import com.linkedin.relocated.org.apache.calcite.schema.Statistics;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlCall;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlNode;
+
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
-
-import com.linkedin.coral.relocated.org.apache.calcite.DataContext;
-import com.linkedin.coral.relocated.org.apache.calcite.config.CalciteConnectionConfig;
-import com.linkedin.coral.relocated.org.apache.calcite.linq4j.Enumerable;
-import com.linkedin.coral.relocated.org.apache.calcite.rel.type.RelDataType;
-import com.linkedin.coral.relocated.org.apache.calcite.rel.type.RelDataTypeFactory;
-import com.linkedin.coral.relocated.org.apache.calcite.schema.ScannableTable;
-import com.linkedin.coral.relocated.org.apache.calcite.schema.Schema;
-import com.linkedin.coral.relocated.org.apache.calcite.schema.Statistic;
-import com.linkedin.coral.relocated.org.apache.calcite.schema.Statistics;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.SqlCall;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.SqlNode;
 
 
 /**

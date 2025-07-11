@@ -1,20 +1,20 @@
 /**
- * Copyright 2018-2024 LinkedIn Corporation. All rights reserved.
+ * Copyright 2018-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
 package com.linkedin.coral.hive.hive2rel;
 
-import org.apache.calcite.rel.type.RelDataType;
-import org.apache.calcite.rex.RexNode;
-import org.apache.calcite.sql.SqlCall;
-import org.apache.calcite.sql.SqlDataTypeSpec;
-import org.apache.calcite.sql.SqlNode;
-import org.apache.calcite.sql.fun.SqlCastFunction;
-import org.apache.calcite.sql2rel.ReflectiveConvertletTable;
-import org.apache.calcite.sql2rel.SqlRexContext;
-import org.apache.calcite.sql2rel.SqlRexConvertlet;
-import org.apache.calcite.sql2rel.StandardConvertletTable;
+import com.linkedin.relocated.org.apache.calcite.rel.type.RelDataType;
+import com.linkedin.relocated.org.apache.calcite.rex.RexNode;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlCall;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlDataTypeSpec;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlNode;
+import com.linkedin.relocated.org.apache.calcite.sql.fun.SqlCastFunction;
+import com.linkedin.relocated.org.apache.calcite.sql2rel.ReflectiveConvertletTable;
+import com.linkedin.relocated.org.apache.calcite.sql2rel.SqlRexContext;
+import com.linkedin.relocated.org.apache.calcite.sql2rel.SqlRexConvertlet;
+import com.linkedin.relocated.org.apache.calcite.sql2rel.StandardConvertletTable;
 
 import com.linkedin.coral.common.functions.FunctionFieldReferenceOperator;
 

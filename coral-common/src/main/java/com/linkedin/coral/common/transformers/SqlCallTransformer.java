@@ -8,16 +8,16 @@ package com.linkedin.coral.common.transformers;
 import java.util.List;
 
 import com.google.common.collect.ImmutableList;
+import com.linkedin.relocated.org.apache.calcite.rel.type.RelDataType;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlCall;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlIdentifier;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlNode;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlOperator;
+import com.linkedin.relocated.org.apache.calcite.sql.parser.SqlParserPos;
+import com.linkedin.relocated.org.apache.calcite.sql.type.SqlReturnTypeInference;
+import com.linkedin.relocated.org.apache.calcite.sql.validate.SqlUserDefinedFunction;
 
 import com.linkedin.coral.common.utils.TypeDerivationUtil;
-import com.linkedin.coral.relocated.org.apache.calcite.rel.type.RelDataType;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.SqlCall;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.SqlIdentifier;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.SqlNode;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.SqlOperator;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.parser.SqlParserPos;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.type.SqlReturnTypeInference;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.validate.SqlUserDefinedFunction;
 
 
 /**

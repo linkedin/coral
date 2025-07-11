@@ -9,15 +9,15 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import com.linkedin.coral.relocated.org.apache.calcite.rel.type.RelDataType;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.SqlCall;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.SqlIdentifier;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.SqlNode;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.SqlNodeList;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.SqlSelect;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.parser.SqlParserPos;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.util.SqlShuttle;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.validate.SqlValidator;
+import com.linkedin.relocated.org.apache.calcite.rel.type.RelDataType;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlCall;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlIdentifier;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlNode;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlNodeList;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlSelect;
+import com.linkedin.relocated.org.apache.calcite.sql.parser.SqlParserPos;
+import com.linkedin.relocated.org.apache.calcite.sql.util.SqlShuttle;
+import com.linkedin.relocated.org.apache.calcite.sql.validate.SqlValidator;
 
 
 /**

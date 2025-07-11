@@ -1,5 +1,3 @@
-apply plugin: 'com.palantir.revapi'
-
 dependencies {
   api(deps.'linkedin-calcite-core')
 

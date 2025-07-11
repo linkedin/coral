@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2024 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -12,14 +12,14 @@ import java.util.Map;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.linkedin.relocated.org.apache.calcite.plan.RelOptUtil;
+import com.linkedin.relocated.org.apache.calcite.rel.RelNode;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlNode;
+import com.linkedin.relocated.org.apache.calcite.sql.type.ReturnTypes;
+import com.linkedin.relocated.org.apache.calcite.sql.type.SqlTypeFamily;
+import com.linkedin.relocated.org.apache.calcite.sql.type.SqlTypeName;
+import com.linkedin.relocated.org.apache.calcite.tools.RelBuilder;
 
-import org.apache.calcite.plan.RelOptUtil;
-import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.sql.SqlNode;
-import org.apache.calcite.sql.type.ReturnTypes;
-import org.apache.calcite.sql.type.SqlTypeFamily;
-import org.apache.calcite.sql.type.SqlTypeName;
-import org.apache.calcite.tools.RelBuilder;
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.MetaException;
@@ -33,7 +33,7 @@ import com.linkedin.coral.common.functions.UnknownSqlFunctionException;
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 
 import static com.linkedin.coral.common.ToRelConverterTestUtils.*;
-import static org.apache.calcite.sql.type.OperandTypes.*;
+import static com.linkedin.relocated.org.apache.calcite.sql.type.OperandTypes.*;
 import static org.testng.Assert.*;
 
 

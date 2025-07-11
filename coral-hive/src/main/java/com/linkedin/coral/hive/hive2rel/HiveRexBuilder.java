@@ -1,13 +1,13 @@
 /**
- * Copyright 2022-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2022-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
 package com.linkedin.coral.hive.hive2rel;
 
-import org.apache.calcite.rel.type.RelDataTypeFactory;
-import org.apache.calcite.rex.RexBuilder;
-import org.apache.calcite.rex.RexNode;
+import com.linkedin.relocated.org.apache.calcite.rel.type.RelDataTypeFactory;
+import com.linkedin.relocated.org.apache.calcite.rex.RexBuilder;
+import com.linkedin.relocated.org.apache.calcite.rex.RexNode;
 
 
 public class HiveRexBuilder extends RexBuilder {

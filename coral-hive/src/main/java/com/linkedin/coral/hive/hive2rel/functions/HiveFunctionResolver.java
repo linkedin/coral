@@ -1,5 +1,5 @@
 /**
- * Copyright 2018-2024 LinkedIn Corporation. All rights reserved.
+ * Copyright 2018-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -15,29 +15,30 @@ import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import org.apache.calcite.sql.SqlBinaryOperator;
-import org.apache.calcite.sql.SqlFunctionCategory;
-import org.apache.calcite.sql.SqlIdentifier;
-import org.apache.calcite.sql.SqlOperator;
-import org.apache.calcite.sql.SqlPrefixOperator;
-import org.apache.calcite.sql.SqlSpecialOperator;
-import org.apache.calcite.sql.SqlUnresolvedFunction;
-import org.apache.calcite.sql.fun.SqlStdOperatorTable;
-import org.apache.calcite.sql.type.SqlOperandTypeChecker;
-import org.apache.calcite.sql.type.SqlTypeFamily;
-import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlBinaryOperator;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlFunctionCategory;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlIdentifier;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlOperator;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlPrefixOperator;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlSpecialOperator;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlUnresolvedFunction;
+import com.linkedin.relocated.org.apache.calcite.sql.fun.SqlStdOperatorTable;
+import com.linkedin.relocated.org.apache.calcite.sql.type.SqlOperandTypeChecker;
+import com.linkedin.relocated.org.apache.calcite.sql.type.SqlTypeFamily;
+import com.linkedin.relocated.org.apache.calcite.sql.validate.SqlUserDefinedFunction;
+
 import org.apache.hadoop.hive.metastore.api.Table;
 
-import com.linkedin.coral.com.google.common.base.Preconditions;
-import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import com.linkedin.coral.common.HiveTable;
 import com.linkedin.coral.common.functions.Function;
 import com.linkedin.coral.common.functions.FunctionRegistry;
 import com.linkedin.coral.common.functions.UnknownSqlFunctionException;
 
 import static com.google.common.base.Preconditions.*;
-import static org.apache.calcite.sql.parser.SqlParserPos.*;
-import static org.apache.calcite.sql.type.OperandTypes.*;
+import static com.linkedin.relocated.org.apache.calcite.sql.parser.SqlParserPos.*;
+import static com.linkedin.relocated.org.apache.calcite.sql.type.OperandTypes.*;
 
 
 /**

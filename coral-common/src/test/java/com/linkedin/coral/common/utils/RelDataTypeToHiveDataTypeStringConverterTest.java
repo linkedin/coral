@@ -11,18 +11,17 @@ import java.util.Map;
 
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
+import com.linkedin.relocated.org.apache.calcite.rel.type.RelDataType;
+import com.linkedin.relocated.org.apache.calcite.rel.type.RelDataTypeField;
+import com.linkedin.relocated.org.apache.calcite.rel.type.RelDataTypeFieldImpl;
+import com.linkedin.relocated.org.apache.calcite.rel.type.RelDataTypeSystem;
+import com.linkedin.relocated.org.apache.calcite.rel.type.RelRecordType;
+import com.linkedin.relocated.org.apache.calcite.sql.type.ArraySqlType;
+import com.linkedin.relocated.org.apache.calcite.sql.type.BasicSqlType;
+import com.linkedin.relocated.org.apache.calcite.sql.type.MapSqlType;
+import com.linkedin.relocated.org.apache.calcite.sql.type.SqlTypeName;
 
 import org.testng.annotations.Test;
-
-import com.linkedin.coral.relocated.org.apache.calcite.rel.type.RelDataType;
-import com.linkedin.coral.relocated.org.apache.calcite.rel.type.RelDataTypeField;
-import com.linkedin.coral.relocated.org.apache.calcite.rel.type.RelDataTypeFieldImpl;
-import com.linkedin.coral.relocated.org.apache.calcite.rel.type.RelDataTypeSystem;
-import com.linkedin.coral.relocated.org.apache.calcite.rel.type.RelRecordType;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.type.ArraySqlType;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.type.BasicSqlType;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.type.MapSqlType;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.type.SqlTypeName;
 
 import static org.testng.Assert.*;
 

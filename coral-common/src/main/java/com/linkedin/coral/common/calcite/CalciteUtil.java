@@ -7,17 +7,17 @@ package com.linkedin.coral.common.calcite;
 
 import java.util.*;
 
+import com.linkedin.relocated.org.apache.calcite.avatica.util.Casing;
+import com.linkedin.relocated.org.apache.calcite.sql.*;
+import com.linkedin.relocated.org.apache.calcite.sql.parser.SqlParseException;
+import com.linkedin.relocated.org.apache.calcite.sql.parser.SqlParser;
+import com.linkedin.relocated.org.apache.calcite.sql.parser.SqlParserPos;
+import com.linkedin.relocated.org.apache.calcite.sql.validate.SqlConformanceEnum;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.linkedin.coral.relocated.org.apache.calcite.avatica.util.Casing;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.*;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.parser.SqlParseException;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.parser.SqlParser;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.parser.SqlParserPos;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.validate.SqlConformanceEnum;
-
-import static com.linkedin.coral.relocated.org.apache.calcite.sql.parser.SqlParserPos.ZERO;
+import static com.linkedin.relocated.org.apache.calcite.sql.parser.SqlParserPos.ZERO;
 import static java.lang.String.format;
 
 

@@ -10,15 +10,14 @@ import java.util.List;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-
-import com.linkedin.coral.relocated.org.apache.calcite.rel.type.RelDataType;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.SqlCallBinding;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.SqlOperator;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.SqlOperatorBinding;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.SqlUtil;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.type.SameOperandTypeChecker;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.type.SqlTypeName;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.type.SqlTypeUtil;
+import com.linkedin.relocated.org.apache.calcite.rel.type.RelDataType;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlCallBinding;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlOperator;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlOperatorBinding;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlUtil;
+import com.linkedin.relocated.org.apache.calcite.sql.type.SameOperandTypeChecker;
+import com.linkedin.relocated.org.apache.calcite.sql.type.SqlTypeName;
+import com.linkedin.relocated.org.apache.calcite.sql.type.SqlTypeUtil;
 
 
 /**

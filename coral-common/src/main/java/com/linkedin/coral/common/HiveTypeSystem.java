@@ -5,11 +5,11 @@
  */
 package com.linkedin.coral.common;
 
-import com.linkedin.coral.relocated.org.apache.calcite.rel.type.RelDataType;
-import com.linkedin.coral.relocated.org.apache.calcite.rel.type.RelDataTypeFactory;
-import com.linkedin.coral.relocated.org.apache.calcite.rel.type.RelDataTypeSystemImpl;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.type.SqlTypeName;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.type.SqlTypeUtil;
+import com.linkedin.relocated.org.apache.calcite.rel.type.RelDataType;
+import com.linkedin.relocated.org.apache.calcite.rel.type.RelDataTypeFactory;
+import com.linkedin.relocated.org.apache.calcite.rel.type.RelDataTypeSystemImpl;
+import com.linkedin.relocated.org.apache.calcite.sql.type.SqlTypeName;
+import com.linkedin.relocated.org.apache.calcite.sql.type.SqlTypeUtil;
 
 
 // Precision and scale values copied from Hive source code

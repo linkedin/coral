@@ -8,12 +8,11 @@ package com.linkedin.coral.common.functions;
 import java.util.List;
 
 import com.google.common.base.Preconditions;
-
-import com.linkedin.coral.relocated.org.apache.calcite.rel.type.RelDataType;
-import com.linkedin.coral.relocated.org.apache.calcite.rel.type.RelDataTypeFactory;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.SqlNode;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.type.SqlOperandTypeInference;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.type.SqlTypeName;
+import com.linkedin.relocated.org.apache.calcite.rel.type.RelDataType;
+import com.linkedin.relocated.org.apache.calcite.rel.type.RelDataTypeFactory;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlNode;
+import com.linkedin.relocated.org.apache.calcite.sql.type.SqlOperandTypeInference;
+import com.linkedin.relocated.org.apache.calcite.sql.type.SqlTypeName;
 
 
 public class OperandTypeInference {

@@ -10,13 +10,12 @@ import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-
-import com.linkedin.coral.relocated.org.apache.calcite.rel.type.RelDataType;
-import com.linkedin.coral.relocated.org.apache.calcite.rel.type.RelDataTypeFactory;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.type.ReturnTypes;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.type.SqlReturnTypeInference;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.type.SqlTypeName;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.type.SqlTypeTransforms;
+import com.linkedin.relocated.org.apache.calcite.rel.type.RelDataType;
+import com.linkedin.relocated.org.apache.calcite.rel.type.RelDataTypeFactory;
+import com.linkedin.relocated.org.apache.calcite.sql.type.ReturnTypes;
+import com.linkedin.relocated.org.apache.calcite.sql.type.SqlReturnTypeInference;
+import com.linkedin.relocated.org.apache.calcite.sql.type.SqlTypeName;
+import com.linkedin.relocated.org.apache.calcite.sql.type.SqlTypeTransforms;
 
 
 /**

@@ -5,10 +5,10 @@
  */
 package com.linkedin.coral.common.transformers;
 
-import com.linkedin.coral.relocated.org.apache.calcite.sql.SqlCall;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.SqlNodeList;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.SqlOperator;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.parser.SqlParserPos;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlCall;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlNodeList;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlOperator;
+import com.linkedin.relocated.org.apache.calcite.sql.parser.SqlParserPos;
 
 
 /**

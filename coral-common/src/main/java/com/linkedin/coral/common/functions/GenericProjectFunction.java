@@ -5,16 +5,16 @@
  */
 package com.linkedin.coral.common.functions;
 
-import com.linkedin.coral.relocated.org.apache.calcite.rel.type.RelDataType;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.*;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.parser.SqlParserPos;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.type.SqlOperandCountRanges;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.type.SqlOperandTypeChecker;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.type.SqlTypeFamily;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.validate.SqlUserDefinedFunction;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.validate.SqlValidator;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.validate.SqlValidatorScope;
-import com.linkedin.coral.relocated.org.apache.calcite.util.Static;
+import com.linkedin.relocated.org.apache.calcite.rel.type.RelDataType;
+import com.linkedin.relocated.org.apache.calcite.sql.*;
+import com.linkedin.relocated.org.apache.calcite.sql.parser.SqlParserPos;
+import com.linkedin.relocated.org.apache.calcite.sql.type.SqlOperandCountRanges;
+import com.linkedin.relocated.org.apache.calcite.sql.type.SqlOperandTypeChecker;
+import com.linkedin.relocated.org.apache.calcite.sql.type.SqlTypeFamily;
+import com.linkedin.relocated.org.apache.calcite.sql.validate.SqlUserDefinedFunction;
+import com.linkedin.relocated.org.apache.calcite.sql.validate.SqlValidator;
+import com.linkedin.relocated.org.apache.calcite.sql.validate.SqlValidatorScope;
+import com.linkedin.relocated.org.apache.calcite.util.Static;
 
 
 /**

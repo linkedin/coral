@@ -9,35 +9,34 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.google.common.base.Preconditions;
+import com.linkedin.relocated.org.apache.calcite.plan.Context;
+import com.linkedin.relocated.org.apache.calcite.plan.Contexts;
+import com.linkedin.relocated.org.apache.calcite.plan.RelOptCluster;
+import com.linkedin.relocated.org.apache.calcite.plan.RelOptSchema;
+import com.linkedin.relocated.org.apache.calcite.rel.core.Values;
+import com.linkedin.relocated.org.apache.calcite.rel.type.RelDataTypeFactory;
+import com.linkedin.relocated.org.apache.calcite.rel.type.RelDataTypeField;
+import com.linkedin.relocated.org.apache.calcite.rex.RexBuilder;
+import com.linkedin.relocated.org.apache.calcite.tools.FrameworkConfig;
+import com.linkedin.relocated.org.apache.calcite.tools.Frameworks;
+import com.linkedin.relocated.org.apache.calcite.tools.RelBuilder;
+import com.linkedin.relocated.org.apache.calcite.tools.RelBuilderFactory;
+import com.linkedin.relocated.org.apache.calcite.util.Pair;
 
-import com.linkedin.coral.relocated.org.apache.calcite.plan.Context;
-import com.linkedin.coral.relocated.org.apache.calcite.plan.Contexts;
-import com.linkedin.coral.relocated.org.apache.calcite.plan.RelOptCluster;
-import com.linkedin.coral.relocated.org.apache.calcite.plan.RelOptSchema;
-import com.linkedin.coral.relocated.org.apache.calcite.rel.core.Values;
-import com.linkedin.coral.relocated.org.apache.calcite.rel.type.RelDataTypeFactory;
-import com.linkedin.coral.relocated.org.apache.calcite.rel.type.RelDataTypeField;
-import com.linkedin.coral.relocated.org.apache.calcite.rex.RexBuilder;
-import com.linkedin.coral.relocated.org.apache.calcite.tools.FrameworkConfig;
-import com.linkedin.coral.relocated.org.apache.calcite.tools.Frameworks;
-import com.linkedin.coral.relocated.org.apache.calcite.tools.RelBuilder;
-import com.linkedin.coral.relocated.org.apache.calcite.tools.RelBuilderFactory;
-import com.linkedin.coral.relocated.org.apache.calcite.util.Pair;
-
-import static com.linkedin.coral.relocated.org.apache.calcite.rel.core.RelFactories.DEFAULT_AGGREGATE_FACTORY;
-import static com.linkedin.coral.relocated.org.apache.calcite.rel.core.RelFactories.DEFAULT_EXCHANGE_FACTORY;
-import static com.linkedin.coral.relocated.org.apache.calcite.rel.core.RelFactories.DEFAULT_FILTER_FACTORY;
-import static com.linkedin.coral.relocated.org.apache.calcite.rel.core.RelFactories.DEFAULT_JOIN_FACTORY;
-import static com.linkedin.coral.relocated.org.apache.calcite.rel.core.RelFactories.DEFAULT_MATCH_FACTORY;
-import static com.linkedin.coral.relocated.org.apache.calcite.rel.core.RelFactories.DEFAULT_PROJECT_FACTORY;
-import static com.linkedin.coral.relocated.org.apache.calcite.rel.core.RelFactories.DEFAULT_REPEAT_UNION_FACTORY;
-import static com.linkedin.coral.relocated.org.apache.calcite.rel.core.RelFactories.DEFAULT_SET_OP_FACTORY;
-import static com.linkedin.coral.relocated.org.apache.calcite.rel.core.RelFactories.DEFAULT_SNAPSHOT_FACTORY;
-import static com.linkedin.coral.relocated.org.apache.calcite.rel.core.RelFactories.DEFAULT_SORT_EXCHANGE_FACTORY;
-import static com.linkedin.coral.relocated.org.apache.calcite.rel.core.RelFactories.DEFAULT_SORT_FACTORY;
-import static com.linkedin.coral.relocated.org.apache.calcite.rel.core.RelFactories.DEFAULT_SPOOL_FACTORY;
-import static com.linkedin.coral.relocated.org.apache.calcite.rel.core.RelFactories.DEFAULT_TABLE_SCAN_FACTORY;
-import static com.linkedin.coral.relocated.org.apache.calcite.rel.core.RelFactories.DEFAULT_VALUES_FACTORY;
+import static com.linkedin.relocated.org.apache.calcite.rel.core.RelFactories.DEFAULT_AGGREGATE_FACTORY;
+import static com.linkedin.relocated.org.apache.calcite.rel.core.RelFactories.DEFAULT_EXCHANGE_FACTORY;
+import static com.linkedin.relocated.org.apache.calcite.rel.core.RelFactories.DEFAULT_FILTER_FACTORY;
+import static com.linkedin.relocated.org.apache.calcite.rel.core.RelFactories.DEFAULT_JOIN_FACTORY;
+import static com.linkedin.relocated.org.apache.calcite.rel.core.RelFactories.DEFAULT_MATCH_FACTORY;
+import static com.linkedin.relocated.org.apache.calcite.rel.core.RelFactories.DEFAULT_PROJECT_FACTORY;
+import static com.linkedin.relocated.org.apache.calcite.rel.core.RelFactories.DEFAULT_REPEAT_UNION_FACTORY;
+import static com.linkedin.relocated.org.apache.calcite.rel.core.RelFactories.DEFAULT_SET_OP_FACTORY;
+import static com.linkedin.relocated.org.apache.calcite.rel.core.RelFactories.DEFAULT_SNAPSHOT_FACTORY;
+import static com.linkedin.relocated.org.apache.calcite.rel.core.RelFactories.DEFAULT_SORT_EXCHANGE_FACTORY;
+import static com.linkedin.relocated.org.apache.calcite.rel.core.RelFactories.DEFAULT_SORT_FACTORY;
+import static com.linkedin.relocated.org.apache.calcite.rel.core.RelFactories.DEFAULT_SPOOL_FACTORY;
+import static com.linkedin.relocated.org.apache.calcite.rel.core.RelFactories.DEFAULT_TABLE_SCAN_FACTORY;
+import static com.linkedin.relocated.org.apache.calcite.rel.core.RelFactories.DEFAULT_VALUES_FACTORY;
 
 
 /**

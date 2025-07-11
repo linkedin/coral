@@ -7,10 +7,10 @@ package com.linkedin.coral.common;
 
 import java.util.List;
 
-import com.linkedin.coral.relocated.org.apache.calcite.jdbc.JavaTypeFactoryImpl;
-import com.linkedin.coral.relocated.org.apache.calcite.rel.type.RelDataType;
-import com.linkedin.coral.relocated.org.apache.calcite.rel.type.RelDataTypeSystem;
-import com.linkedin.coral.relocated.org.apache.calcite.rel.type.StructKind;
+import com.linkedin.relocated.org.apache.calcite.jdbc.JavaTypeFactoryImpl;
+import com.linkedin.relocated.org.apache.calcite.rel.type.RelDataType;
+import com.linkedin.relocated.org.apache.calcite.rel.type.RelDataTypeSystem;
+import com.linkedin.relocated.org.apache.calcite.rel.type.StructKind;
 
 
 /**

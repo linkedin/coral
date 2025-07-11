@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2024 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -15,36 +15,37 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
-import org.apache.calcite.avatica.util.TimeUnit;
-import org.apache.calcite.sql.JoinConditionType;
-import org.apache.calcite.sql.JoinType;
-import org.apache.calcite.sql.SqlAsOperator;
-import org.apache.calcite.sql.SqlBasicCall;
-import org.apache.calcite.sql.SqlBasicTypeNameSpec;
-import org.apache.calcite.sql.SqlCall;
-import org.apache.calcite.sql.SqlDataTypeSpec;
-import org.apache.calcite.sql.SqlIdentifier;
-import org.apache.calcite.sql.SqlIntervalQualifier;
-import org.apache.calcite.sql.SqlJoin;
-import org.apache.calcite.sql.SqlKind;
-import org.apache.calcite.sql.SqlLateralOperator;
-import org.apache.calcite.sql.SqlLiteral;
-import org.apache.calcite.sql.SqlNode;
-import org.apache.calcite.sql.SqlNodeList;
-import org.apache.calcite.sql.SqlOperator;
-import org.apache.calcite.sql.SqlSelect;
-import org.apache.calcite.sql.SqlSelectKeyword;
-import org.apache.calcite.sql.SqlTypeNameSpec;
-import org.apache.calcite.sql.SqlWindow;
-import org.apache.calcite.sql.SqlWith;
-import org.apache.calcite.sql.SqlWithItem;
-import org.apache.calcite.sql.fun.SqlStdOperatorTable;
-import org.apache.calcite.sql.parser.SqlParserPos;
-import org.apache.calcite.sql.type.SqlTypeName;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
+import com.linkedin.relocated.org.apache.calcite.avatica.util.TimeUnit;
+import com.linkedin.relocated.org.apache.calcite.sql.JoinConditionType;
+import com.linkedin.relocated.org.apache.calcite.sql.JoinType;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlAsOperator;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlBasicCall;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlBasicTypeNameSpec;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlCall;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlDataTypeSpec;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlIdentifier;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlIntervalQualifier;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlJoin;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlKind;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlLateralOperator;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlLiteral;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlNode;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlNodeList;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlOperator;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlSelect;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlSelectKeyword;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlTypeNameSpec;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlWindow;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlWith;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlWithItem;
+import com.linkedin.relocated.org.apache.calcite.sql.fun.SqlStdOperatorTable;
+import com.linkedin.relocated.org.apache.calcite.sql.parser.SqlParserPos;
+import com.linkedin.relocated.org.apache.calcite.sql.type.SqlTypeName;
+
 import org.apache.hadoop.hive.metastore.api.Table;
 
-import com.linkedin.coral.com.google.common.collect.ImmutableList;
-import com.linkedin.coral.com.google.common.collect.Iterables;
 import com.linkedin.coral.common.functions.CoralSqlUnnestOperator;
 import com.linkedin.coral.common.functions.Function;
 import com.linkedin.coral.common.functions.FunctionFieldReferenceOperator;
@@ -61,8 +62,8 @@ import com.linkedin.coral.hive.hive2rel.parsetree.parser.ParseDriver;
 import com.linkedin.coral.hive.hive2rel.parsetree.parser.ParseException;
 
 import static com.google.common.base.Preconditions.checkState;
+import static com.linkedin.relocated.org.apache.calcite.sql.parser.SqlParserPos.ZERO;
 import static java.lang.String.format;
-import static org.apache.calcite.sql.parser.SqlParserPos.ZERO;
 
 
 /**

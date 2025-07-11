@@ -11,7 +11,7 @@ for (String itest : itests) {
   }
 
   configurations {
-    getByName("${itest}testCompile").extendsFrom(testCompile)
+    getByName("${itest}testImplementation").extendsFrom(testImplementation)
     getByName("${itest}testRuntime").extendsFrom(testRuntime)
   }
 

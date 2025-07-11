@@ -12,10 +12,9 @@ import java.util.Set;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
-import com.linkedin.coral.relocated.org.apache.calcite.linq4j.tree.Expression;
-import com.linkedin.coral.relocated.org.apache.calcite.rel.type.RelProtoDataType;
-import com.linkedin.coral.relocated.org.apache.calcite.schema.*;
+import com.linkedin.relocated.org.apache.calcite.linq4j.tree.Expression;
+import com.linkedin.relocated.org.apache.calcite.rel.type.RelProtoDataType;
+import com.linkedin.relocated.org.apache.calcite.schema.*;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 

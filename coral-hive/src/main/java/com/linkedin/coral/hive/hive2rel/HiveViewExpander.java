@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2022 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -10,12 +10,11 @@ import java.util.List;
 import javax.annotation.Nonnull;
 
 import com.google.common.base.Preconditions;
-
-import org.apache.calcite.plan.RelOptTable;
-import org.apache.calcite.rel.RelRoot;
-import org.apache.calcite.rel.type.RelDataType;
-import org.apache.calcite.sql.SqlNode;
-import org.apache.calcite.util.Util;
+import com.linkedin.relocated.org.apache.calcite.plan.RelOptTable;
+import com.linkedin.relocated.org.apache.calcite.rel.RelRoot;
+import com.linkedin.relocated.org.apache.calcite.rel.type.RelDataType;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlNode;
+import com.linkedin.relocated.org.apache.calcite.util.Util;
 
 import com.linkedin.coral.common.FuzzyUnionSqlRewriter;
 

@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2024 LinkedIn Corporation. All rights reserved.
+ * Copyright 2019-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -8,25 +8,23 @@ package com.linkedin.coral.hive.hive2rel.functions;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.base.CaseFormat;
+import com.google.common.base.Converter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
-import org.apache.calcite.rel.type.RelDataType;
-import org.apache.calcite.schema.Function;
-import org.apache.calcite.sql.SqlBasicCall;
-import org.apache.calcite.sql.SqlCall;
-import org.apache.calcite.sql.SqlFunctionCategory;
-import org.apache.calcite.sql.SqlIdentifier;
-import org.apache.calcite.sql.parser.SqlParserPos;
-import org.apache.calcite.sql.type.SqlOperandTypeChecker;
-import org.apache.calcite.sql.type.SqlOperandTypeInference;
-import org.apache.calcite.sql.type.SqlReturnTypeInference;
-import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
-import org.apache.calcite.sql.validate.SqlValidator;
-import org.apache.calcite.sql.validate.SqlValidatorScope;
-
-import com.linkedin.coral.com.google.common.base.CaseFormat;
-import com.linkedin.coral.com.google.common.base.Converter;
+import com.linkedin.relocated.org.apache.calcite.rel.type.RelDataType;
+import com.linkedin.relocated.org.apache.calcite.schema.Function;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlBasicCall;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlCall;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlFunctionCategory;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlIdentifier;
+import com.linkedin.relocated.org.apache.calcite.sql.parser.SqlParserPos;
+import com.linkedin.relocated.org.apache.calcite.sql.type.SqlOperandTypeChecker;
+import com.linkedin.relocated.org.apache.calcite.sql.type.SqlOperandTypeInference;
+import com.linkedin.relocated.org.apache.calcite.sql.type.SqlReturnTypeInference;
+import com.linkedin.relocated.org.apache.calcite.sql.validate.SqlUserDefinedFunction;
+import com.linkedin.relocated.org.apache.calcite.sql.validate.SqlValidator;
+import com.linkedin.relocated.org.apache.calcite.sql.validate.SqlValidatorScope;
 
 
 /**

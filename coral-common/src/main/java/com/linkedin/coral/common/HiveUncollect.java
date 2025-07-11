@@ -7,21 +7,21 @@ package com.linkedin.coral.common;
 
 import java.util.List;
 
+import com.linkedin.relocated.org.apache.calcite.plan.Convention;
+import com.linkedin.relocated.org.apache.calcite.plan.RelOptCluster;
+import com.linkedin.relocated.org.apache.calcite.plan.RelTraitSet;
+import com.linkedin.relocated.org.apache.calcite.rel.RelInput;
+import com.linkedin.relocated.org.apache.calcite.rel.RelNode;
+import com.linkedin.relocated.org.apache.calcite.rel.core.Uncollect;
+import com.linkedin.relocated.org.apache.calcite.rel.type.RelDataType;
+import com.linkedin.relocated.org.apache.calcite.rel.type.RelDataTypeFactory;
+import com.linkedin.relocated.org.apache.calcite.rel.type.RelDataTypeField;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlUnnestOperator;
+import com.linkedin.relocated.org.apache.calcite.sql.type.MapSqlType;
+import com.linkedin.relocated.org.apache.calcite.sql.type.SqlTypeName;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.linkedin.coral.relocated.org.apache.calcite.plan.Convention;
-import com.linkedin.coral.relocated.org.apache.calcite.plan.RelOptCluster;
-import com.linkedin.coral.relocated.org.apache.calcite.plan.RelTraitSet;
-import com.linkedin.coral.relocated.org.apache.calcite.rel.RelInput;
-import com.linkedin.coral.relocated.org.apache.calcite.rel.RelNode;
-import com.linkedin.coral.relocated.org.apache.calcite.rel.core.Uncollect;
-import com.linkedin.coral.relocated.org.apache.calcite.rel.type.RelDataType;
-import com.linkedin.coral.relocated.org.apache.calcite.rel.type.RelDataTypeFactory;
-import com.linkedin.coral.relocated.org.apache.calcite.rel.type.RelDataTypeField;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.SqlUnnestOperator;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.type.MapSqlType;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.type.SqlTypeName;
 
 
 /**

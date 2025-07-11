@@ -7,9 +7,9 @@ package com.linkedin.coral.common.functions;
 
 import java.util.List;
 
-import com.linkedin.coral.relocated.org.apache.calcite.sql.*;
+import com.linkedin.relocated.org.apache.calcite.sql.*;
 
-import static com.linkedin.coral.relocated.org.apache.calcite.sql.parser.SqlParserPos.ZERO;
+import static com.linkedin.relocated.org.apache.calcite.sql.parser.SqlParserPos.ZERO;
 
 
 /**

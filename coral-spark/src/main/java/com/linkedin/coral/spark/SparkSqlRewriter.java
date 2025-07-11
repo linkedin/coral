@@ -1,24 +1,24 @@
 /**
- * Copyright 2018-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2018-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
 package com.linkedin.coral.spark;
 
-import org.apache.calcite.sql.SqlArrayTypeSpec;
-import org.apache.calcite.sql.SqlBasicTypeNameSpec;
-import org.apache.calcite.sql.SqlCall;
-import org.apache.calcite.sql.SqlDataTypeSpec;
-import org.apache.calcite.sql.SqlIntervalLiteral;
-import org.apache.calcite.sql.SqlKind;
-import org.apache.calcite.sql.SqlLiteral;
-import org.apache.calcite.sql.SqlMapTypeSpec;
-import org.apache.calcite.sql.SqlNode;
-import org.apache.calcite.sql.SqlRowTypeSpec;
-import org.apache.calcite.sql.SqlTypeNameSpec;
-import org.apache.calcite.sql.parser.SqlParserPos;
-import org.apache.calcite.sql.type.SqlTypeName;
-import org.apache.calcite.sql.util.SqlShuttle;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlArrayTypeSpec;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlBasicTypeNameSpec;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlCall;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlDataTypeSpec;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlIntervalLiteral;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlKind;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlLiteral;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlMapTypeSpec;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlNode;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlRowTypeSpec;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlTypeNameSpec;
+import com.linkedin.relocated.org.apache.calcite.sql.parser.SqlParserPos;
+import com.linkedin.relocated.org.apache.calcite.sql.type.SqlTypeName;
+import com.linkedin.relocated.org.apache.calcite.sql.util.SqlShuttle;
 
 
 /**

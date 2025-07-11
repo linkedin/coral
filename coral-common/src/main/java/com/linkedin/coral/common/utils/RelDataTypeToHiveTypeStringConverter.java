@@ -8,11 +8,11 @@ package com.linkedin.coral.common.utils;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.linkedin.coral.relocated.org.apache.calcite.rel.type.RelDataType;
-import com.linkedin.coral.relocated.org.apache.calcite.rel.type.RelDataTypeField;
-import com.linkedin.coral.relocated.org.apache.calcite.rel.type.RelRecordType;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.type.ArraySqlType;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.type.MapSqlType;
+import com.linkedin.relocated.org.apache.calcite.rel.type.RelDataType;
+import com.linkedin.relocated.org.apache.calcite.rel.type.RelDataTypeField;
+import com.linkedin.relocated.org.apache.calcite.rel.type.RelRecordType;
+import com.linkedin.relocated.org.apache.calcite.sql.type.ArraySqlType;
+import com.linkedin.relocated.org.apache.calcite.sql.type.MapSqlType;
 
 
 /**

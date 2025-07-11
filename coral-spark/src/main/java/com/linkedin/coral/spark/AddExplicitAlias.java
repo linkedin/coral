@@ -1,5 +1,5 @@
 /**
- * Copyright 2022 LinkedIn Corporation. All rights reserved.
+ * Copyright 2022-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -10,13 +10,12 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import com.google.common.base.Preconditions;
+import com.linkedin.relocated.org.apache.calcite.sql.*;
+import com.linkedin.relocated.org.apache.calcite.sql.fun.SqlStdOperatorTable;
+import com.linkedin.relocated.org.apache.calcite.sql.parser.SqlParserPos;
+import com.linkedin.relocated.org.apache.calcite.sql.util.SqlShuttle;
 
-import org.apache.calcite.sql.*;
-import org.apache.calcite.sql.fun.SqlStdOperatorTable;
-import org.apache.calcite.sql.parser.SqlParserPos;
-import org.apache.calcite.sql.util.SqlShuttle;
-
-import static org.apache.calcite.rel.rel2sql.SqlImplementor.POS;
+import static com.linkedin.relocated.org.apache.calcite.rel.rel2sql.SqlImplementor.POS;
 
 
 public class AddExplicitAlias extends SqlShuttle {

@@ -9,15 +9,14 @@ import java.util.List;
 
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
+import com.linkedin.relocated.org.apache.calcite.plan.RelOptTable;
+import com.linkedin.relocated.org.apache.calcite.rel.RelNode;
+import com.linkedin.relocated.org.apache.calcite.rel.RelRoot;
+import com.linkedin.relocated.org.apache.calcite.schema.TranslatableTable;
 
 import org.apache.hadoop.hive.metastore.api.Table;
 
-import com.linkedin.coral.relocated.org.apache.calcite.plan.RelOptTable;
-import com.linkedin.coral.relocated.org.apache.calcite.rel.RelNode;
-import com.linkedin.coral.relocated.org.apache.calcite.rel.RelRoot;
-import com.linkedin.coral.relocated.org.apache.calcite.schema.TranslatableTable;
-
-import static com.linkedin.coral.relocated.org.apache.calcite.sql.type.SqlTypeName.*;
+import static com.linkedin.relocated.org.apache.calcite.sql.type.SqlTypeName.*;
 
 
 /**

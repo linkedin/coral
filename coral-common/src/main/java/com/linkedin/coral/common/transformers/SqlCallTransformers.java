@@ -8,8 +8,7 @@ package com.linkedin.coral.common.transformers;
 import java.util.Arrays;
 
 import com.google.common.collect.ImmutableList;
-
-import com.linkedin.coral.relocated.org.apache.calcite.sql.SqlCall;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlCall;
 
 
 /**

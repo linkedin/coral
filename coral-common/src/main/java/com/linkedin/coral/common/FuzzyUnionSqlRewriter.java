@@ -14,16 +14,16 @@ import javax.annotation.Nonnull;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
+import com.linkedin.relocated.org.apache.calcite.rel.type.RelDataType;
+import com.linkedin.relocated.org.apache.calcite.rel.type.RelDataTypeFactory;
+import com.linkedin.relocated.org.apache.calcite.rel.type.RelDataTypeField;
+import com.linkedin.relocated.org.apache.calcite.sql.*;
+import com.linkedin.relocated.org.apache.calcite.sql.parser.SqlParserPos;
+import com.linkedin.relocated.org.apache.calcite.sql.type.SqlTypeName;
+import com.linkedin.relocated.org.apache.calcite.sql.util.SqlShuttle;
 
 import com.linkedin.coral.common.functions.GenericProjectFunction;
 import com.linkedin.coral.common.utils.RelDataTypeToHiveTypeStringConverter;
-import com.linkedin.coral.relocated.org.apache.calcite.rel.type.RelDataType;
-import com.linkedin.coral.relocated.org.apache.calcite.rel.type.RelDataTypeFactory;
-import com.linkedin.coral.relocated.org.apache.calcite.rel.type.RelDataTypeField;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.*;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.parser.SqlParserPos;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.type.SqlTypeName;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.util.SqlShuttle;
 
 
 /**

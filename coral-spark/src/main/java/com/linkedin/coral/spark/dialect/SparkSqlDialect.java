@@ -1,5 +1,5 @@
 /**
- * Copyright 2018-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2018-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -10,16 +10,15 @@ import java.util.List;
 import java.util.Locale;
 
 import com.google.common.collect.ImmutableList;
-
-import org.apache.calcite.avatica.util.Casing;
-import org.apache.calcite.config.NullCollation;
-import org.apache.calcite.sql.SqlCall;
-import org.apache.calcite.sql.SqlDialect;
-import org.apache.calcite.sql.SqlNode;
-import org.apache.calcite.sql.SqlUnnestOperator;
-import org.apache.calcite.sql.SqlWriter;
-import org.apache.calcite.sql.fun.SqlMultisetValueConstructor;
-import org.apache.calcite.sql.fun.SqlSubstringFunction;
+import com.linkedin.relocated.org.apache.calcite.avatica.util.Casing;
+import com.linkedin.relocated.org.apache.calcite.config.NullCollation;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlCall;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlDialect;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlNode;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlUnnestOperator;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlWriter;
+import com.linkedin.relocated.org.apache.calcite.sql.fun.SqlMultisetValueConstructor;
+import com.linkedin.relocated.org.apache.calcite.sql.fun.SqlSubstringFunction;
 
 import com.linkedin.coral.common.functions.CoralSqlUnnestOperator;
 

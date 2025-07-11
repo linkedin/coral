@@ -6,23 +6,22 @@
 package com.linkedin.coral.common.functions;
 
 import com.google.common.base.Preconditions;
-
-import com.linkedin.coral.relocated.org.apache.calcite.rel.type.RelDataType;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.SqlBasicCall;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.SqlBinaryOperator;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.SqlCall;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.SqlCharStringLiteral;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.SqlIdentifier;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.SqlKind;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.SqlLiteral;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.SqlNode;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.SqlWriter;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.parser.SqlParserPos;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.type.OperandTypes;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.util.SqlBasicVisitor;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.util.SqlVisitor;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.validate.SqlValidator;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.validate.SqlValidatorScope;
+import com.linkedin.relocated.org.apache.calcite.rel.type.RelDataType;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlBasicCall;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlBinaryOperator;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlCall;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlCharStringLiteral;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlIdentifier;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlKind;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlLiteral;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlNode;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlWriter;
+import com.linkedin.relocated.org.apache.calcite.sql.parser.SqlParserPos;
+import com.linkedin.relocated.org.apache.calcite.sql.type.OperandTypes;
+import com.linkedin.relocated.org.apache.calcite.sql.util.SqlBasicVisitor;
+import com.linkedin.relocated.org.apache.calcite.sql.util.SqlVisitor;
+import com.linkedin.relocated.org.apache.calcite.sql.validate.SqlValidator;
+import com.linkedin.relocated.org.apache.calcite.sql.validate.SqlValidatorScope;
 
 
 /**

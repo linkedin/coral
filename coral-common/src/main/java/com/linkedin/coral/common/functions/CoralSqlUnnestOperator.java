@@ -5,14 +5,14 @@
  */
 package com.linkedin.coral.common.functions;
 
-import com.linkedin.coral.relocated.org.apache.calcite.rel.type.RelDataType;
-import com.linkedin.coral.relocated.org.apache.calcite.rel.type.RelDataTypeFactory;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.SqlOperandCountRange;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.SqlOperatorBinding;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.SqlUnnestOperator;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.type.ArraySqlType;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.type.SqlOperandCountRanges;
-import com.linkedin.coral.relocated.org.apache.calcite.sql.type.SqlTypeName;
+import com.linkedin.relocated.org.apache.calcite.rel.type.RelDataType;
+import com.linkedin.relocated.org.apache.calcite.rel.type.RelDataTypeFactory;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlOperandCountRange;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlOperatorBinding;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlUnnestOperator;
+import com.linkedin.relocated.org.apache.calcite.sql.type.ArraySqlType;
+import com.linkedin.relocated.org.apache.calcite.sql.type.SqlOperandCountRanges;
+import com.linkedin.relocated.org.apache.calcite.sql.type.SqlTypeName;
 
 
 /**
