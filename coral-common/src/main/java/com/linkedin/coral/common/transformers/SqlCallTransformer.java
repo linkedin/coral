@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -9,16 +9,15 @@ import java.util.List;
 
 import com.google.common.collect.ImmutableList;
 
-import org.apache.calcite.rel.type.RelDataType;
-import org.apache.calcite.sql.SqlCall;
-import org.apache.calcite.sql.SqlIdentifier;
-import org.apache.calcite.sql.SqlNode;
-import org.apache.calcite.sql.SqlOperator;
-import org.apache.calcite.sql.parser.SqlParserPos;
-import org.apache.calcite.sql.type.SqlReturnTypeInference;
-import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
-
 import com.linkedin.coral.common.utils.TypeDerivationUtil;
+import com.linkedin.coral.relocated.org.apache.calcite.rel.type.RelDataType;
+import com.linkedin.coral.relocated.org.apache.calcite.sql.SqlCall;
+import com.linkedin.coral.relocated.org.apache.calcite.sql.SqlIdentifier;
+import com.linkedin.coral.relocated.org.apache.calcite.sql.SqlNode;
+import com.linkedin.coral.relocated.org.apache.calcite.sql.SqlOperator;
+import com.linkedin.coral.relocated.org.apache.calcite.sql.parser.SqlParserPos;
+import com.linkedin.coral.relocated.org.apache.calcite.sql.type.SqlReturnTypeInference;
+import com.linkedin.coral.relocated.org.apache.calcite.sql.validate.SqlUserDefinedFunction;
 
 
 /**

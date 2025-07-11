@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2022 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -13,9 +13,9 @@ import java.util.Set;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
-import org.apache.calcite.linq4j.tree.Expression;
-import org.apache.calcite.rel.type.RelProtoDataType;
-import org.apache.calcite.schema.*;
+import com.linkedin.coral.relocated.org.apache.calcite.linq4j.tree.Expression;
+import com.linkedin.coral.relocated.org.apache.calcite.rel.type.RelProtoDataType;
+import com.linkedin.coral.relocated.org.apache.calcite.schema.*;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 

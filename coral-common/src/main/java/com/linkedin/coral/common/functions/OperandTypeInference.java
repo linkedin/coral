@@ -1,5 +1,5 @@
 /**
- * Copyright 2018-2022 LinkedIn Corporation. All rights reserved.
+ * Copyright 2018-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -9,11 +9,11 @@ import java.util.List;
 
 import com.google.common.base.Preconditions;
 
-import org.apache.calcite.rel.type.RelDataType;
-import org.apache.calcite.rel.type.RelDataTypeFactory;
-import org.apache.calcite.sql.SqlNode;
-import org.apache.calcite.sql.type.SqlOperandTypeInference;
-import org.apache.calcite.sql.type.SqlTypeName;
+import com.linkedin.coral.relocated.org.apache.calcite.rel.type.RelDataType;
+import com.linkedin.coral.relocated.org.apache.calcite.rel.type.RelDataTypeFactory;
+import com.linkedin.coral.relocated.org.apache.calcite.sql.SqlNode;
+import com.linkedin.coral.relocated.org.apache.calcite.sql.type.SqlOperandTypeInference;
+import com.linkedin.coral.relocated.org.apache.calcite.sql.type.SqlTypeName;
 
 
 public class OperandTypeInference {

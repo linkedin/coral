@@ -1,5 +1,5 @@
 /**
- * Copyright 2021-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2021-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -7,17 +7,18 @@ package com.linkedin.coral.common.calcite;
 
 import java.util.*;
 
-import org.apache.calcite.avatica.util.Casing;
-import org.apache.calcite.sql.*;
-import org.apache.calcite.sql.parser.SqlParseException;
-import org.apache.calcite.sql.parser.SqlParser;
-import org.apache.calcite.sql.parser.SqlParserPos;
-import org.apache.calcite.sql.validate.SqlConformanceEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.linkedin.coral.relocated.org.apache.calcite.avatica.util.Casing;
+import com.linkedin.coral.relocated.org.apache.calcite.sql.*;
+import com.linkedin.coral.relocated.org.apache.calcite.sql.parser.SqlParseException;
+import com.linkedin.coral.relocated.org.apache.calcite.sql.parser.SqlParser;
+import com.linkedin.coral.relocated.org.apache.calcite.sql.parser.SqlParserPos;
+import com.linkedin.coral.relocated.org.apache.calcite.sql.validate.SqlConformanceEnum;
+
+import static com.linkedin.coral.relocated.org.apache.calcite.sql.parser.SqlParserPos.ZERO;
 import static java.lang.String.format;
-import static org.apache.calcite.sql.parser.SqlParserPos.ZERO;
 
 
 public class CalciteUtil {

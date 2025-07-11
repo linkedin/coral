@@ -1,5 +1,5 @@
 /**
- * Copyright 2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2023-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -9,7 +9,7 @@ import java.util.Arrays;
 
 import com.google.common.collect.ImmutableList;
 
-import org.apache.calcite.sql.SqlCall;
+import com.linkedin.coral.relocated.org.apache.calcite.sql.SqlCall;
 
 
 /**

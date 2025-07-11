@@ -1,18 +1,18 @@
 /**
- * Copyright 2022-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2022-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
 package com.linkedin.coral.common.functions;
 
-import org.apache.calcite.rel.type.RelDataType;
-import org.apache.calcite.rel.type.RelDataTypeFactory;
-import org.apache.calcite.sql.SqlOperandCountRange;
-import org.apache.calcite.sql.SqlOperatorBinding;
-import org.apache.calcite.sql.SqlUnnestOperator;
-import org.apache.calcite.sql.type.ArraySqlType;
-import org.apache.calcite.sql.type.SqlOperandCountRanges;
-import org.apache.calcite.sql.type.SqlTypeName;
+import com.linkedin.coral.relocated.org.apache.calcite.rel.type.RelDataType;
+import com.linkedin.coral.relocated.org.apache.calcite.rel.type.RelDataTypeFactory;
+import com.linkedin.coral.relocated.org.apache.calcite.sql.SqlOperandCountRange;
+import com.linkedin.coral.relocated.org.apache.calcite.sql.SqlOperatorBinding;
+import com.linkedin.coral.relocated.org.apache.calcite.sql.SqlUnnestOperator;
+import com.linkedin.coral.relocated.org.apache.calcite.sql.type.ArraySqlType;
+import com.linkedin.coral.relocated.org.apache.calcite.sql.type.SqlOperandCountRanges;
+import com.linkedin.coral.relocated.org.apache.calcite.sql.type.SqlTypeName;
 
 
 /**
