@@ -1,11 +1,10 @@
 dependencies {
+  api (deps.'linkedin-calcite-core')
   compile project(':coral-hive')
 
-  testCompile(deps.'hive'.'hive-exec-core') {
-    // This exclusion is required to prevent duplicate classes since we include
-    // shaded 'calcite-core' transitively
-    exclude group: 'org.apache.calcite', module: 'calcite-core'
-  }
+  testImplementation('org.apache.commons:commons-lang3:3.12.0')
+  testImplementation(deps.'hive'.'hive-exec-core')
+  testImplementation project(':coral-common')
 
   testCompile deps.'hadoop'.'hadoop-mapreduce-client-core'
   testCompile deps.'kryo'
