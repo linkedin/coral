@@ -1,5 +1,5 @@
 /**
- * Copyright 2022-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2022-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -9,8 +9,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.UUID;
 
-import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.sql.SqlNode;
+import com.linkedin.relocated.org.apache.calcite.rel.RelNode;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlNode;
 
 import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
 import com.linkedin.coral.incremental.RelNodeIncrementalTransformer;
