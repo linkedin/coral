@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2022 LinkedIn Corporation. All rights reserved.
+ * Copyright 2020-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -25,10 +25,10 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import com.google.gson.Gson;
+import com.linkedin.relocated.org.apache.calcite.rel.RelNode;
+import com.linkedin.relocated.org.apache.calcite.rex.RexCall;
+import com.linkedin.relocated.org.apache.calcite.rex.RexNode;
 
-import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rex.RexCall;
-import org.apache.calcite.rex.RexNode;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import com.linkedin.coral.common.HiveMetastoreClient;
