@@ -1,5 +1,5 @@
 /**
- * Copyright 2018-2021 LinkedIn Corporation. All rights reserved.
+ * Copyright 2018-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -9,22 +9,22 @@ import java.util.AbstractList;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.calcite.rel.type.RelDataType;
-import org.apache.calcite.sql.SqlCall;
-import org.apache.calcite.sql.SqlCallBinding;
-import org.apache.calcite.sql.SqlIdentifier;
-import org.apache.calcite.sql.SqlNode;
-import org.apache.calcite.sql.SqlOperandCountRange;
-import org.apache.calcite.sql.SqlOperatorBinding;
-import org.apache.calcite.sql.SqlUtil;
-import org.apache.calcite.sql.parser.SqlParserPos;
-import org.apache.calcite.sql.type.SqlOperandCountRanges;
-import org.apache.calcite.sql.type.SqlOperandTypeChecker;
-import org.apache.calcite.sql.type.SqlTypeFamily;
-import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
-import org.apache.calcite.sql.validate.SqlValidator;
-import org.apache.calcite.util.Pair;
-import org.apache.calcite.util.Static;
+import com.linkedin.relocated.org.apache.calcite.rel.type.RelDataType;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlCall;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlCallBinding;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlIdentifier;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlNode;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlOperandCountRange;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlOperatorBinding;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlUtil;
+import com.linkedin.relocated.org.apache.calcite.sql.parser.SqlParserPos;
+import com.linkedin.relocated.org.apache.calcite.sql.type.SqlOperandCountRanges;
+import com.linkedin.relocated.org.apache.calcite.sql.type.SqlOperandTypeChecker;
+import com.linkedin.relocated.org.apache.calcite.sql.type.SqlTypeFamily;
+import com.linkedin.relocated.org.apache.calcite.sql.validate.SqlUserDefinedFunction;
+import com.linkedin.relocated.org.apache.calcite.sql.validate.SqlValidator;
+import com.linkedin.relocated.org.apache.calcite.util.Pair;
+import com.linkedin.relocated.org.apache.calcite.util.Static;
 
 import static com.google.common.base.Preconditions.*;
 

@@ -1,5 +1,5 @@
 /**
- * Copyright 2021-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2021-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -11,10 +11,10 @@ import java.util.Iterator;
 import java.util.Map;
 
 import com.google.common.collect.ImmutableList;
+import com.linkedin.relocated.org.apache.calcite.plan.RelOptUtil;
+import com.linkedin.relocated.org.apache.calcite.rel.RelNode;
+import com.linkedin.relocated.org.apache.calcite.sql.type.ReturnTypes;
 
-import org.apache.calcite.plan.RelOptUtil;
-import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.sql.type.ReturnTypes;
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.MetaException;
@@ -30,7 +30,7 @@ import com.linkedin.coral.trino.rel2trino.RelToTrinoConverter;
 
 import static com.linkedin.coral.trino.trino2rel.ToRelTestUtils.*;
 import static com.linkedin.coral.trino.trino2rel.Trino2CoralOperatorTransformerMapUtils.*;
-import static org.apache.calcite.sql.type.OperandTypes.*;
+import static com.linkedin.relocated.org.apache.calcite.sql.type.OperandTypes.*;
 import static org.testng.AssertJUnit.assertEquals;
 
 

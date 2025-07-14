@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -10,44 +10,44 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.calcite.config.NullCollation;
-import org.apache.calcite.rel.BiRel;
-import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rel.core.Correlate;
-import org.apache.calcite.rel.core.Join;
-import org.apache.calcite.rel.core.JoinRelType;
-import org.apache.calcite.rel.core.Project;
-import org.apache.calcite.rel.core.TableScan;
-import org.apache.calcite.rel.core.Uncollect;
-import org.apache.calcite.rel.core.Values;
-import org.apache.calcite.rel.logical.LogicalTableFunctionScan;
-import org.apache.calcite.rel.rel2sql.RelToSqlConverter;
-import org.apache.calcite.rel.type.RelDataType;
-import org.apache.calcite.rel.type.RelDataTypeField;
-import org.apache.calcite.rex.RexCall;
-import org.apache.calcite.rex.RexCorrelVariable;
-import org.apache.calcite.rex.RexFieldAccess;
-import org.apache.calcite.rex.RexNode;
-import org.apache.calcite.rex.RexProgram;
-import org.apache.calcite.sql.JoinConditionType;
-import org.apache.calcite.sql.JoinType;
-import org.apache.calcite.sql.SqlCall;
-import org.apache.calcite.sql.SqlDialect;
-import org.apache.calcite.sql.SqlIdentifier;
-import org.apache.calcite.sql.SqlJoin;
-import org.apache.calcite.sql.SqlKind;
-import org.apache.calcite.sql.SqlLateralOperator;
-import org.apache.calcite.sql.SqlLiteral;
-import org.apache.calcite.sql.SqlNode;
-import org.apache.calcite.sql.SqlNodeList;
-import org.apache.calcite.sql.SqlOperator;
-import org.apache.calcite.sql.SqlUtil;
-import org.apache.calcite.sql.fun.SqlStdOperatorTable;
-import org.apache.calcite.sql.parser.SqlParserPos;
-import org.apache.calcite.sql.type.SqlTypeName;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.linkedin.relocated.org.apache.calcite.config.NullCollation;
+import com.linkedin.relocated.org.apache.calcite.rel.BiRel;
+import com.linkedin.relocated.org.apache.calcite.rel.RelNode;
+import com.linkedin.relocated.org.apache.calcite.rel.core.Correlate;
+import com.linkedin.relocated.org.apache.calcite.rel.core.Join;
+import com.linkedin.relocated.org.apache.calcite.rel.core.JoinRelType;
+import com.linkedin.relocated.org.apache.calcite.rel.core.Project;
+import com.linkedin.relocated.org.apache.calcite.rel.core.TableScan;
+import com.linkedin.relocated.org.apache.calcite.rel.core.Uncollect;
+import com.linkedin.relocated.org.apache.calcite.rel.core.Values;
+import com.linkedin.relocated.org.apache.calcite.rel.logical.LogicalTableFunctionScan;
+import com.linkedin.relocated.org.apache.calcite.rel.rel2sql.RelToSqlConverter;
+import com.linkedin.relocated.org.apache.calcite.rel.type.RelDataType;
+import com.linkedin.relocated.org.apache.calcite.rel.type.RelDataTypeField;
+import com.linkedin.relocated.org.apache.calcite.rex.RexCall;
+import com.linkedin.relocated.org.apache.calcite.rex.RexCorrelVariable;
+import com.linkedin.relocated.org.apache.calcite.rex.RexFieldAccess;
+import com.linkedin.relocated.org.apache.calcite.rex.RexNode;
+import com.linkedin.relocated.org.apache.calcite.rex.RexProgram;
+import com.linkedin.relocated.org.apache.calcite.sql.JoinConditionType;
+import com.linkedin.relocated.org.apache.calcite.sql.JoinType;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlCall;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlDialect;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlIdentifier;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlJoin;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlKind;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlLateralOperator;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlLiteral;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlNode;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlNodeList;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlOperator;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlUtil;
+import com.linkedin.relocated.org.apache.calcite.sql.fun.SqlStdOperatorTable;
+import com.linkedin.relocated.org.apache.calcite.sql.parser.SqlParserPos;
+import com.linkedin.relocated.org.apache.calcite.sql.type.SqlTypeName;
 
-import com.linkedin.coral.com.google.common.collect.ImmutableList;
-import com.linkedin.coral.com.google.common.collect.ImmutableMap;
 import com.linkedin.coral.common.functions.CoralSqlUnnestOperator;
 import com.linkedin.coral.common.functions.FunctionFieldReferenceOperator;
 

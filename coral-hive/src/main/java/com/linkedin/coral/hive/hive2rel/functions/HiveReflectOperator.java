@@ -1,24 +1,25 @@
 /**
- * Copyright 2018-2022 LinkedIn Corporation. All rights reserved.
+ * Copyright 2018-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
 package com.linkedin.coral.hive.hive2rel.functions;
 
-import org.apache.calcite.rel.type.RelDataType;
-import org.apache.calcite.sql.SqlCallBinding;
-import org.apache.calcite.sql.SqlFunctionalOperator;
-import org.apache.calcite.sql.SqlKind;
-import org.apache.calcite.sql.SqlOperandCountRange;
-import org.apache.calcite.sql.SqlOperatorBinding;
-import org.apache.calcite.sql.type.SqlOperandCountRanges;
-import org.apache.calcite.sql.type.SqlTypeName;
+import com.google.common.collect.ImmutableList;
+import com.linkedin.relocated.org.apache.calcite.rel.type.RelDataType;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlCallBinding;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlFunctionalOperator;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlKind;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlOperandCountRange;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlOperatorBinding;
+import com.linkedin.relocated.org.apache.calcite.sql.type.SqlOperandCountRanges;
+import com.linkedin.relocated.org.apache.calcite.sql.type.SqlTypeName;
+
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.PrimitiveObjectInspectorFactory;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
 
-import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import com.linkedin.coral.common.TypeConverter;
 
 

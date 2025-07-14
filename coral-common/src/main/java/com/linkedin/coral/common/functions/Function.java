@@ -1,5 +1,5 @@
 /**
- * Copyright 2018-2022 LinkedIn Corporation. All rights reserved.
+ * Copyright 2018-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -7,9 +7,9 @@ package com.linkedin.coral.common.functions;
 
 import java.util.List;
 
-import org.apache.calcite.sql.*;
+import com.linkedin.relocated.org.apache.calcite.sql.*;
 
-import static org.apache.calcite.sql.parser.SqlParserPos.ZERO;
+import static com.linkedin.relocated.org.apache.calcite.sql.parser.SqlParserPos.ZERO;
 
 
 /**

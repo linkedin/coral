@@ -1,5 +1,5 @@
 /**
- * Copyright 2023-2024 LinkedIn Corporation. All rights reserved.
+ * Copyright 2023-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -8,15 +8,15 @@ package com.linkedin.coral.trino.rel2trino.transformers;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.calcite.sql.SqlBasicCall;
-import org.apache.calcite.sql.SqlCall;
-import org.apache.calcite.sql.SqlKind;
-import org.apache.calcite.sql.SqlNode;
-import org.apache.calcite.sql.fun.SqlStdOperatorTable;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlBasicCall;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlCall;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlKind;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlNode;
+import com.linkedin.relocated.org.apache.calcite.sql.fun.SqlStdOperatorTable;
 
 import com.linkedin.coral.common.transformers.SqlCallTransformer;
 
-import static org.apache.calcite.sql.parser.SqlParserPos.*;
+import static com.linkedin.relocated.org.apache.calcite.sql.parser.SqlParserPos.*;
 
 
 /**

@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2024 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -12,23 +12,24 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.calcite.rel.BiRel;
-import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rel.core.*;
-import org.apache.calcite.rel.logical.LogicalTableFunctionScan;
-import org.apache.calcite.rel.rel2sql.RelToSqlConverter;
-import org.apache.calcite.rel.type.RelDataType;
-import org.apache.calcite.rel.type.RelDataTypeField;
-import org.apache.calcite.rex.RexFieldAccess;
-import org.apache.calcite.rex.RexLiteral;
-import org.apache.calcite.rex.RexNode;
-import org.apache.calcite.rex.RexProgram;
-import org.apache.calcite.sql.*;
-import org.apache.calcite.sql.fun.SqlStdOperatorTable;
-import org.apache.calcite.sql.parser.SqlParserPos;
-import org.apache.calcite.sql.type.SqlTypeName;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.linkedin.relocated.org.apache.calcite.rel.BiRel;
+import com.linkedin.relocated.org.apache.calcite.rel.RelNode;
+import com.linkedin.relocated.org.apache.calcite.rel.core.*;
+import com.linkedin.relocated.org.apache.calcite.rel.logical.LogicalTableFunctionScan;
+import com.linkedin.relocated.org.apache.calcite.rel.rel2sql.RelToSqlConverter;
+import com.linkedin.relocated.org.apache.calcite.rel.type.RelDataType;
+import com.linkedin.relocated.org.apache.calcite.rel.type.RelDataTypeField;
+import com.linkedin.relocated.org.apache.calcite.rex.RexFieldAccess;
+import com.linkedin.relocated.org.apache.calcite.rex.RexLiteral;
+import com.linkedin.relocated.org.apache.calcite.rex.RexNode;
+import com.linkedin.relocated.org.apache.calcite.rex.RexProgram;
+import com.linkedin.relocated.org.apache.calcite.sql.*;
+import com.linkedin.relocated.org.apache.calcite.sql.fun.SqlStdOperatorTable;
+import com.linkedin.relocated.org.apache.calcite.sql.parser.SqlParserPos;
+import com.linkedin.relocated.org.apache.calcite.sql.type.SqlTypeName;
 
-import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import com.linkedin.coral.common.HiveMetastoreClient;
 import com.linkedin.coral.common.functions.CoralSqlUnnestOperator;
 import com.linkedin.coral.common.functions.FunctionFieldReferenceOperator;
@@ -217,7 +218,7 @@ public class RelToTrinoConverter extends RelToSqlConverter {
     // instead of calling super.result(...), which will generate a new table alias and cause an extra
     // "AS" to be added to the generated SQL statement and make it invalid.
     return new Result(unnestCall, ImmutableList.of(Clause.FROM), null, e.getRowType(),
-        com.linkedin.coral.com.google.common.collect.ImmutableMap.of(projectResult.neededAlias, e.getRowType()));
+        ImmutableMap.of(projectResult.neededAlias, e.getRowType()));
   }
 
   /**

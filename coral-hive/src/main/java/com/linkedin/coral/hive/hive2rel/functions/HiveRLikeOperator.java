@@ -1,21 +1,21 @@
 /**
- * Copyright 2018-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2018-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
 package com.linkedin.coral.hive.hive2rel.functions;
 
-import org.apache.calcite.sql.SqlCall;
-import org.apache.calcite.sql.SqlCallBinding;
-import org.apache.calcite.sql.SqlKind;
-import org.apache.calcite.sql.SqlOperandCountRange;
-import org.apache.calcite.sql.SqlSpecialOperator;
-import org.apache.calcite.sql.SqlWriter;
-import org.apache.calcite.sql.type.InferTypes;
-import org.apache.calcite.sql.type.OperandTypes;
-import org.apache.calcite.sql.type.ReturnTypes;
-import org.apache.calcite.sql.type.SqlOperandCountRanges;
-import org.apache.calcite.sql.type.SqlTypeUtil;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlCall;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlCallBinding;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlKind;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlOperandCountRange;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlSpecialOperator;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlWriter;
+import com.linkedin.relocated.org.apache.calcite.sql.type.InferTypes;
+import com.linkedin.relocated.org.apache.calcite.sql.type.OperandTypes;
+import com.linkedin.relocated.org.apache.calcite.sql.type.ReturnTypes;
+import com.linkedin.relocated.org.apache.calcite.sql.type.SqlOperandCountRanges;
+import com.linkedin.relocated.org.apache.calcite.sql.type.SqlTypeUtil;
 
 
 public class HiveRLikeOperator extends SqlSpecialOperator {

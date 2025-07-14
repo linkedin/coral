@@ -1,4 +1,4 @@
-apply plugin: "java"
+apply plugin: "java-library"
 
 def licenseSpec = copySpec {
   from project.rootDir

@@ -2,19 +2,21 @@ apply plugin: 'antlr'
 
 dependencies {
   antlr deps.'antlr'
-  compile project(path: ':coral-common')
+  implementation project(path: ':coral-common')
+  implementation(deps.'hive'.'hive-metastore')
   compile deps.'ivy'
 
   // required for hiveSQL parser code
   compile deps.'antlr-runtime'
 
-  testCompile(deps.'hive'.'hive-exec-core') {
+  testImplementation(deps.'hive'.'hive-exec-core') {
     exclude group: 'org.apache.avro', module: 'avro-tools'
     // These exclusions are required to prevent duplicate classes since we include
     // shaded jar above
-    exclude group: 'org.apache.calcite', module: 'calcite-core'
-    exclude group: 'org.apache.calcite', module: 'calcite-avatica'
+    //    exclude group: 'org.apache.calcite', module: 'calcite-core'
+    //    exclude group: 'org.apache.calcite', module: 'calcite-avatica'
   }
+  testImplementation("org.apache.commons:commons-lang3:3.17.0")
 
   testCompile deps.'hadoop'.'hadoop-mapreduce-client-core'
   testCompile deps.'kryo'

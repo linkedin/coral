@@ -1,5 +1,5 @@
 /**
- * Copyright 2018-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2018-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -10,32 +10,32 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
-import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rel.RelShuttle;
-import org.apache.calcite.rel.RelShuttleImpl;
-import org.apache.calcite.rel.core.TableFunctionScan;
-import org.apache.calcite.rel.core.TableScan;
-import org.apache.calcite.rel.logical.LogicalAggregate;
-import org.apache.calcite.rel.logical.LogicalCorrelate;
-import org.apache.calcite.rel.logical.LogicalExchange;
-import org.apache.calcite.rel.logical.LogicalFilter;
-import org.apache.calcite.rel.logical.LogicalIntersect;
-import org.apache.calcite.rel.logical.LogicalJoin;
-import org.apache.calcite.rel.logical.LogicalMatch;
-import org.apache.calcite.rel.logical.LogicalMinus;
-import org.apache.calcite.rel.logical.LogicalProject;
-import org.apache.calcite.rel.logical.LogicalSort;
-import org.apache.calcite.rel.logical.LogicalUnion;
-import org.apache.calcite.rel.logical.LogicalValues;
-import org.apache.calcite.rex.RexBuilder;
-import org.apache.calcite.rex.RexCall;
-import org.apache.calcite.rex.RexLiteral;
-import org.apache.calcite.rex.RexNode;
-import org.apache.calcite.rex.RexShuttle;
-import org.apache.calcite.sql.SqlKind;
-import org.apache.calcite.sql.fun.SqlStdOperatorTable;
-import org.apache.calcite.sql.type.ArraySqlType;
-import org.apache.calcite.sql.type.SqlTypeName;
+import com.linkedin.relocated.org.apache.calcite.rel.RelNode;
+import com.linkedin.relocated.org.apache.calcite.rel.RelShuttle;
+import com.linkedin.relocated.org.apache.calcite.rel.RelShuttleImpl;
+import com.linkedin.relocated.org.apache.calcite.rel.core.TableFunctionScan;
+import com.linkedin.relocated.org.apache.calcite.rel.core.TableScan;
+import com.linkedin.relocated.org.apache.calcite.rel.logical.LogicalAggregate;
+import com.linkedin.relocated.org.apache.calcite.rel.logical.LogicalCorrelate;
+import com.linkedin.relocated.org.apache.calcite.rel.logical.LogicalExchange;
+import com.linkedin.relocated.org.apache.calcite.rel.logical.LogicalFilter;
+import com.linkedin.relocated.org.apache.calcite.rel.logical.LogicalIntersect;
+import com.linkedin.relocated.org.apache.calcite.rel.logical.LogicalJoin;
+import com.linkedin.relocated.org.apache.calcite.rel.logical.LogicalMatch;
+import com.linkedin.relocated.org.apache.calcite.rel.logical.LogicalMinus;
+import com.linkedin.relocated.org.apache.calcite.rel.logical.LogicalProject;
+import com.linkedin.relocated.org.apache.calcite.rel.logical.LogicalSort;
+import com.linkedin.relocated.org.apache.calcite.rel.logical.LogicalUnion;
+import com.linkedin.relocated.org.apache.calcite.rel.logical.LogicalValues;
+import com.linkedin.relocated.org.apache.calcite.rex.RexBuilder;
+import com.linkedin.relocated.org.apache.calcite.rex.RexCall;
+import com.linkedin.relocated.org.apache.calcite.rex.RexLiteral;
+import com.linkedin.relocated.org.apache.calcite.rex.RexNode;
+import com.linkedin.relocated.org.apache.calcite.rex.RexShuttle;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlKind;
+import com.linkedin.relocated.org.apache.calcite.sql.fun.SqlStdOperatorTable;
+import com.linkedin.relocated.org.apache.calcite.sql.type.ArraySqlType;
+import com.linkedin.relocated.org.apache.calcite.sql.type.SqlTypeName;
 
 import com.linkedin.coral.spark.containers.SparkRelInfo;
 import com.linkedin.coral.spark.containers.SparkUDFInfo;

@@ -1,5 +1,5 @@
 /**
- * Copyright 2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2023-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -7,9 +7,9 @@ package com.linkedin.coral.vis;
 
 import java.io.File;
 
-import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.sql.SqlNode;
-import org.apache.calcite.sql.util.SqlVisitor;
+import com.linkedin.relocated.org.apache.calcite.rel.RelNode;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlNode;
+import com.linkedin.relocated.org.apache.calcite.sql.util.SqlVisitor;
 
 import guru.nidi.graphviz.attribute.Font;
 import guru.nidi.graphviz.attribute.Shape;

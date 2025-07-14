@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2024 LinkedIn Corporation. All rights reserved.
+ * Copyright 2019-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -11,23 +11,22 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
 
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.google.common.base.Preconditions;
 import com.linkedin.avroutil1.compatibility.AvroCompatibilityHelper;
-import com.linkedin.avroutil1.compatibility.Jackson1Utils;
+import com.linkedin.avroutil1.compatibility.Jackson2Utils;
+import com.linkedin.relocated.org.apache.calcite.rel.type.DynamicRecordType;
+import com.linkedin.relocated.org.apache.calcite.rel.type.RelDataType;
+import com.linkedin.relocated.org.apache.calcite.rel.type.RelDataTypeField;
+import com.linkedin.relocated.org.apache.calcite.rel.type.RelRecordType;
+import com.linkedin.relocated.org.apache.calcite.sql.type.ArraySqlType;
+import com.linkedin.relocated.org.apache.calcite.sql.type.BasicSqlType;
+import com.linkedin.relocated.org.apache.calcite.sql.type.MapSqlType;
+import com.linkedin.relocated.org.apache.calcite.sql.type.MultisetSqlType;
+import com.linkedin.relocated.org.apache.calcite.sql.type.SqlTypeName;
 
 import org.apache.avro.Schema;
-import org.apache.calcite.rel.type.DynamicRecordType;
-import org.apache.calcite.rel.type.RelDataType;
-import org.apache.calcite.rel.type.RelDataTypeField;
-import org.apache.calcite.rel.type.RelRecordType;
-import org.apache.calcite.sql.type.ArraySqlType;
-import org.apache.calcite.sql.type.BasicSqlType;
-import org.apache.calcite.sql.type.MapSqlType;
-import org.apache.calcite.sql.type.MultisetSqlType;
-import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.hadoop.hive.serde2.avro.AvroSerDe;
-import org.codehaus.jackson.node.JsonNodeFactory;
-
-import com.linkedin.coral.com.google.common.base.Preconditions;
 
 
 /**
@@ -124,9 +123,9 @@ class RelDataTypeToAvroType {
         Schema decimalSchema = Schema.create(Schema.Type.BYTES);
         decimalSchema.addProp(AvroSerDe.AVRO_PROP_LOGICAL_TYPE, AvroSerDe.DECIMAL_TYPE_NAME);
         AvroCompatibilityHelper.setSchemaPropFromJsonString(decimalSchema, AvroSerDe.AVRO_PROP_PRECISION,
-            Jackson1Utils.toJsonString(factory.numberNode(relDataType.getPrecision())), false);
+            Jackson2Utils.toJsonString(factory.numberNode(relDataType.getPrecision())), false);
         AvroCompatibilityHelper.setSchemaPropFromJsonString(decimalSchema, AvroSerDe.AVRO_PROP_SCALE,
-            Jackson1Utils.toJsonString(factory.numberNode(relDataType.getScale())), false);
+            Jackson2Utils.toJsonString(factory.numberNode(relDataType.getScale())), false);
         return decimalSchema;
       default:
         throw new UnsupportedOperationException(relDataType.getSqlTypeName() + " is not supported.");

@@ -9,8 +9,9 @@ import java.net.URI;
 import java.util.Collections;
 import java.util.Set;
 
-import org.apache.calcite.sql.SqlCall;
-import org.apache.calcite.sql.SqlOperator;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlCall;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlOperator;
+
 import org.apache.spark.sql.SparkSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

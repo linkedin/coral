@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -11,14 +11,14 @@ import java.util.Map;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.linkedin.relocated.org.apache.calcite.jdbc.JavaTypeFactoryImpl;
+import com.linkedin.relocated.org.apache.calcite.rel.type.RelDataType;
+import com.linkedin.relocated.org.apache.calcite.rel.type.RelDataTypeFactory;
+import com.linkedin.relocated.org.apache.calcite.rel.type.RelDataTypeField;
+import com.linkedin.relocated.org.apache.calcite.schema.Schema;
+import com.linkedin.relocated.org.apache.calcite.schema.Table;
+import com.linkedin.relocated.org.apache.calcite.sql.type.SqlTypeName;
 
-import org.apache.calcite.jdbc.JavaTypeFactoryImpl;
-import org.apache.calcite.rel.type.RelDataType;
-import org.apache.calcite.rel.type.RelDataTypeFactory;
-import org.apache.calcite.rel.type.RelDataTypeField;
-import org.apache.calcite.schema.Schema;
-import org.apache.calcite.schema.Table;
-import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.IMetaStoreClient;

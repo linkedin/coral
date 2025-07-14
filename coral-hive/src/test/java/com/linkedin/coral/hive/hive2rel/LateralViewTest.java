@@ -1,5 +1,5 @@
 /**
- * Copyright 2018-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2018-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -8,10 +8,12 @@ package com.linkedin.coral.hive.hive2rel;
 import java.io.File;
 import java.io.IOException;
 
-import org.apache.calcite.plan.RelOptUtil;
-import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.sql.type.SqlTypeFamily;
-import org.apache.calcite.sql.type.SqlTypeName;
+import com.google.common.collect.ImmutableList;
+import com.linkedin.relocated.org.apache.calcite.plan.RelOptUtil;
+import com.linkedin.relocated.org.apache.calcite.rel.RelNode;
+import com.linkedin.relocated.org.apache.calcite.sql.type.SqlTypeFamily;
+import com.linkedin.relocated.org.apache.calcite.sql.type.SqlTypeName;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.MetaException;
@@ -20,13 +22,12 @@ import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import com.linkedin.coral.common.HiveMscAdapter;
 import com.linkedin.coral.common.ToRelConverterTestUtils;
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 
 import static com.linkedin.coral.common.ToRelConverterTestUtils.*;
-import static org.apache.calcite.sql.type.OperandTypes.*;
+import static com.linkedin.relocated.org.apache.calcite.sql.type.OperandTypes.*;
 import static org.testng.Assert.*;
 
 

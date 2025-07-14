@@ -1,20 +1,20 @@
 /**
- * Copyright 2019-2022 LinkedIn Corporation. All rights reserved.
+ * Copyright 2019-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
 package com.linkedin.coral.common.functions;
 
-import org.apache.calcite.rel.type.RelDataType;
-import org.apache.calcite.sql.*;
-import org.apache.calcite.sql.parser.SqlParserPos;
-import org.apache.calcite.sql.type.SqlOperandCountRanges;
-import org.apache.calcite.sql.type.SqlOperandTypeChecker;
-import org.apache.calcite.sql.type.SqlTypeFamily;
-import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
-import org.apache.calcite.sql.validate.SqlValidator;
-import org.apache.calcite.sql.validate.SqlValidatorScope;
-import org.apache.calcite.util.Static;
+import com.linkedin.relocated.org.apache.calcite.rel.type.RelDataType;
+import com.linkedin.relocated.org.apache.calcite.sql.*;
+import com.linkedin.relocated.org.apache.calcite.sql.parser.SqlParserPos;
+import com.linkedin.relocated.org.apache.calcite.sql.type.SqlOperandCountRanges;
+import com.linkedin.relocated.org.apache.calcite.sql.type.SqlOperandTypeChecker;
+import com.linkedin.relocated.org.apache.calcite.sql.type.SqlTypeFamily;
+import com.linkedin.relocated.org.apache.calcite.sql.validate.SqlUserDefinedFunction;
+import com.linkedin.relocated.org.apache.calcite.sql.validate.SqlValidator;
+import com.linkedin.relocated.org.apache.calcite.sql.validate.SqlValidatorScope;
+import com.linkedin.relocated.org.apache.calcite.util.Static;
 
 
 /**

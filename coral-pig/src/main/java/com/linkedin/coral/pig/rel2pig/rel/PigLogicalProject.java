@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2021 LinkedIn Corporation. All rights reserved.
+ * Copyright 2019-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -8,8 +8,8 @@ package com.linkedin.coral.pig.rel2pig.rel;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.calcite.rel.logical.LogicalProject;
-import org.apache.calcite.rex.RexNode;
+import com.linkedin.relocated.org.apache.calcite.rel.logical.LogicalProject;
+import com.linkedin.relocated.org.apache.calcite.rex.RexNode;
 
 
 /**

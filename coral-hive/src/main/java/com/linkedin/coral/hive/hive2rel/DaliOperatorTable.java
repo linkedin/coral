@@ -1,5 +1,5 @@
 /**
- * Copyright 2018-2022 LinkedIn Corporation. All rights reserved.
+ * Copyright 2018-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -10,14 +10,13 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.common.collect.ImmutableList;
-
-import org.apache.calcite.sql.SqlFunctionCategory;
-import org.apache.calcite.sql.SqlIdentifier;
-import org.apache.calcite.sql.SqlOperator;
-import org.apache.calcite.sql.SqlOperatorTable;
-import org.apache.calcite.sql.SqlSyntax;
-import org.apache.calcite.sql.validate.SqlNameMatcher;
-import org.apache.calcite.util.Util;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlFunctionCategory;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlIdentifier;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlOperator;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlOperatorTable;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlSyntax;
+import com.linkedin.relocated.org.apache.calcite.sql.validate.SqlNameMatcher;
+import com.linkedin.relocated.org.apache.calcite.util.Util;
 
 import com.linkedin.coral.common.functions.Function;
 import com.linkedin.coral.hive.hive2rel.functions.HiveFunctionResolver;

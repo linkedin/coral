@@ -34,10 +34,10 @@ allprojects {
   repositories {
     mavenCentral()
     maven {
-      url 'https://linkedin.jfrog.io/artifactory/avro-util/'
+      url 'https://linkedin.jfrog.io/artifactory/dependency-overrides'
     }
     maven {
-      url 'https://linkedin.bintray.com/maven/'
+      url 'https://linkedin.jfrog.io/artifactory/open-source/'
     }
   }
 
@@ -78,4 +78,8 @@ subprojects {
 
   apply from: "${rootDir}/gradle/dependencies.gradle"
   apply from: "${rootDir}/gradle/java-publication.gradle"
+
+  tasks.named('javadoc') {
+    enabled = false
+  }
 }

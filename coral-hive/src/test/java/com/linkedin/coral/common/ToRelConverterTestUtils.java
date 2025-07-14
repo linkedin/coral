@@ -1,5 +1,5 @@
 /**
- * Copyright 2018-2022 LinkedIn Corporation. All rights reserved.
+ * Copyright 2018-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -7,12 +7,13 @@ package com.linkedin.coral.common;
 
 import java.io.IOException;
 
-import org.apache.calcite.plan.RelOptUtil;
-import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rel.rel2sql.RelToSqlConverter;
-import org.apache.calcite.sql.SqlDialect;
-import org.apache.calcite.sql.SqlNode;
-import org.apache.calcite.tools.RelBuilder;
+import com.linkedin.relocated.org.apache.calcite.plan.RelOptUtil;
+import com.linkedin.relocated.org.apache.calcite.rel.RelNode;
+import com.linkedin.relocated.org.apache.calcite.rel.rel2sql.RelToSqlConverter;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlDialect;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlNode;
+import com.linkedin.relocated.org.apache.calcite.tools.RelBuilder;
+
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.IMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.MetaException;

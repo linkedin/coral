@@ -1,5 +1,5 @@
 /**
- * Copyright 2023-2024 LinkedIn Corporation. All rights reserved.
+ * Copyright 2023-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -9,18 +9,18 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.calcite.sql.SqlCall;
-import org.apache.calcite.sql.SqlIdentifier;
-import org.apache.calcite.sql.SqlNode;
-import org.apache.calcite.sql.SqlNumericLiteral;
-import org.apache.calcite.sql.fun.SqlStdOperatorTable;
+import com.google.common.collect.ImmutableSet;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlCall;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlIdentifier;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlNode;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlNumericLiteral;
+import com.linkedin.relocated.org.apache.calcite.sql.fun.SqlStdOperatorTable;
 
-import com.linkedin.coral.com.google.common.collect.ImmutableSet;
 import com.linkedin.coral.common.calcite.CalciteUtil;
 import com.linkedin.coral.common.transformers.SqlCallTransformer;
 
-import static org.apache.calcite.rel.rel2sql.SqlImplementor.*;
-import static org.apache.calcite.sql.fun.SqlStdOperatorTable.*;
+import static com.linkedin.relocated.org.apache.calcite.rel.rel2sql.SqlImplementor.*;
+import static com.linkedin.relocated.org.apache.calcite.sql.fun.SqlStdOperatorTable.*;
 
 
 /**

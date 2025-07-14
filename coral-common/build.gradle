@@ -1,14 +1,7 @@
 dependencies {
-  compile(deps.'linkedin-calcite-core') {
-    artifact {
-      name = 'calcite-core'
-      extension = 'jar'
-      type = 'jar'
-      classifier = 'shaded'
-    }
-  }
+  api(deps.'linkedin-calcite-core')
 
-  compile(deps.'hive'.'hive-metastore') {
+  implementation(deps.'hive'.'hive-metastore') {
     exclude group: 'com.linkedin.metastore-autometrics', module: 'autometrics-reporter'
     exclude group: 'com.linkedin.metastore-audit', module: 'metastore-audit-logging'
     // avro-tools brings in whole bunch of hadoop classes causing duplicates and conflicts

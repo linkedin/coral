@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -8,31 +8,31 @@ package com.linkedin.coral.hive.hive2rel;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.calcite.linq4j.Ord;
-import org.apache.calcite.plan.Convention;
-import org.apache.calcite.plan.RelOptCluster;
-import org.apache.calcite.plan.RelOptTable;
-import org.apache.calcite.plan.RelOptUtil;
-import org.apache.calcite.prepare.Prepare;
-import org.apache.calcite.rel.RelCollation;
-import org.apache.calcite.rel.RelCollations;
-import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rel.RelRoot;
-import org.apache.calcite.rel.core.Uncollect;
-import org.apache.calcite.rel.logical.LogicalValues;
-import org.apache.calcite.rel.metadata.JaninoRelMetadataProvider;
-import org.apache.calcite.rel.metadata.RelMetadataQuery;
-import org.apache.calcite.rel.type.RelDataType;
-import org.apache.calcite.rex.RexNode;
-import org.apache.calcite.sql.SqlCall;
-import org.apache.calcite.sql.SqlExplainFormat;
-import org.apache.calcite.sql.SqlExplainLevel;
-import org.apache.calcite.sql.SqlKind;
-import org.apache.calcite.sql.SqlNode;
-import org.apache.calcite.sql.SqlUnnestOperator;
-import org.apache.calcite.sql.validate.SqlValidator;
-import org.apache.calcite.sql2rel.SqlRexConvertletTable;
-import org.apache.calcite.sql2rel.SqlToRelConverter;
+import com.linkedin.relocated.org.apache.calcite.linq4j.Ord;
+import com.linkedin.relocated.org.apache.calcite.plan.Convention;
+import com.linkedin.relocated.org.apache.calcite.plan.RelOptCluster;
+import com.linkedin.relocated.org.apache.calcite.plan.RelOptTable;
+import com.linkedin.relocated.org.apache.calcite.plan.RelOptUtil;
+import com.linkedin.relocated.org.apache.calcite.prepare.Prepare;
+import com.linkedin.relocated.org.apache.calcite.rel.RelCollation;
+import com.linkedin.relocated.org.apache.calcite.rel.RelCollations;
+import com.linkedin.relocated.org.apache.calcite.rel.RelNode;
+import com.linkedin.relocated.org.apache.calcite.rel.RelRoot;
+import com.linkedin.relocated.org.apache.calcite.rel.core.Uncollect;
+import com.linkedin.relocated.org.apache.calcite.rel.logical.LogicalValues;
+import com.linkedin.relocated.org.apache.calcite.rel.metadata.JaninoRelMetadataProvider;
+import com.linkedin.relocated.org.apache.calcite.rel.metadata.RelMetadataQuery;
+import com.linkedin.relocated.org.apache.calcite.rel.type.RelDataType;
+import com.linkedin.relocated.org.apache.calcite.rex.RexNode;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlCall;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlExplainFormat;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlExplainLevel;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlKind;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlNode;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlUnnestOperator;
+import com.linkedin.relocated.org.apache.calcite.sql.validate.SqlValidator;
+import com.linkedin.relocated.org.apache.calcite.sql2rel.SqlRexConvertletTable;
+import com.linkedin.relocated.org.apache.calcite.sql2rel.SqlToRelConverter;
 
 import com.linkedin.coral.common.HiveUncollect;
 import com.linkedin.coral.common.functions.CoralSqlUnnestOperator;

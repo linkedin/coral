@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2024 LinkedIn Corporation. All rights reserved.
+ * Copyright 2019-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -14,22 +14,21 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.Multimap;
+import com.linkedin.relocated.org.apache.calcite.rel.type.RelDataType;
+import com.linkedin.relocated.org.apache.calcite.rel.type.RelDataTypeFactory;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlCallBinding;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlIdentifier;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlOperandCountRange;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlOperator;
+import com.linkedin.relocated.org.apache.calcite.sql.fun.SqlStdOperatorTable;
+import com.linkedin.relocated.org.apache.calcite.sql.parser.SqlParserPos;
+import com.linkedin.relocated.org.apache.calcite.sql.type.*;
+import com.linkedin.relocated.org.apache.calcite.sql.validate.SqlUserDefinedFunction;
 
-import org.apache.calcite.rel.type.RelDataType;
-import org.apache.calcite.rel.type.RelDataTypeFactory;
-import org.apache.calcite.sql.SqlCallBinding;
-import org.apache.calcite.sql.SqlIdentifier;
-import org.apache.calcite.sql.SqlOperandCountRange;
-import org.apache.calcite.sql.SqlOperator;
-import org.apache.calcite.sql.fun.SqlStdOperatorTable;
-import org.apache.calcite.sql.parser.SqlParserPos;
-import org.apache.calcite.sql.type.*;
-import org.apache.calcite.sql.validate.SqlUserDefinedFunction;
-
-import com.linkedin.coral.com.google.common.collect.HashMultimap;
-import com.linkedin.coral.com.google.common.collect.ImmutableList;
-import com.linkedin.coral.com.google.common.collect.ImmutableMultimap;
-import com.linkedin.coral.com.google.common.collect.Multimap;
 import com.linkedin.coral.common.functions.CoralSqlUnnestOperator;
 import com.linkedin.coral.common.functions.Function;
 import com.linkedin.coral.common.functions.FunctionRegistry;
@@ -40,10 +39,10 @@ import com.linkedin.coral.common.functions.SameOperandTypeExceptFirstOperandChec
 
 import static com.linkedin.coral.hive.hive2rel.functions.CoalesceStructUtility.*;
 import static com.linkedin.coral.hive.hive2rel.functions.TimestampFromUnixtime.TIMESTAMP_FROM_UNIXTIME;
-import static org.apache.calcite.sql.fun.SqlLibraryOperators.*;
-import static org.apache.calcite.sql.fun.SqlStdOperatorTable.*;
-import static org.apache.calcite.sql.type.OperandTypes.*;
-import static org.apache.calcite.sql.type.ReturnTypes.*;
+import static com.linkedin.relocated.org.apache.calcite.sql.fun.SqlLibraryOperators.*;
+import static com.linkedin.relocated.org.apache.calcite.sql.fun.SqlStdOperatorTable.*;
+import static com.linkedin.relocated.org.apache.calcite.sql.type.OperandTypes.*;
+import static com.linkedin.relocated.org.apache.calcite.sql.type.ReturnTypes.*;
 
 
 /**

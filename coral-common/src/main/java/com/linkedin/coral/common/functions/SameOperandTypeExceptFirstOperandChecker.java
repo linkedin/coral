@@ -1,5 +1,5 @@
 /**
- * Copyright 2018-2022 LinkedIn Corporation. All rights reserved.
+ * Copyright 2018-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -10,15 +10,14 @@ import java.util.List;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-
-import org.apache.calcite.rel.type.RelDataType;
-import org.apache.calcite.sql.SqlCallBinding;
-import org.apache.calcite.sql.SqlOperator;
-import org.apache.calcite.sql.SqlOperatorBinding;
-import org.apache.calcite.sql.SqlUtil;
-import org.apache.calcite.sql.type.SameOperandTypeChecker;
-import org.apache.calcite.sql.type.SqlTypeName;
-import org.apache.calcite.sql.type.SqlTypeUtil;
+import com.linkedin.relocated.org.apache.calcite.rel.type.RelDataType;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlCallBinding;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlOperator;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlOperatorBinding;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlUtil;
+import com.linkedin.relocated.org.apache.calcite.sql.type.SameOperandTypeChecker;
+import com.linkedin.relocated.org.apache.calcite.sql.type.SqlTypeName;
+import com.linkedin.relocated.org.apache.calcite.sql.type.SqlTypeUtil;
 
 
 /**

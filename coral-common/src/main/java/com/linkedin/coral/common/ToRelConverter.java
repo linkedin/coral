@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2024 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -11,33 +11,31 @@ import java.util.Properties;
 
 import javax.annotation.Nonnull;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
-
-import org.apache.calcite.config.CalciteConnectionConfig;
-import org.apache.calcite.config.CalciteConnectionConfigImpl;
-import org.apache.calcite.config.CalciteConnectionProperty;
-import org.apache.calcite.jdbc.CalciteSchema;
-import org.apache.calcite.jdbc.Driver;
-import org.apache.calcite.plan.RelTraitDef;
-import org.apache.calcite.prepare.CalciteCatalogReader;
-import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rel.RelRoot;
-import org.apache.calcite.rel.type.RelDataTypeFactory;
-import org.apache.calcite.runtime.Hook;
-import org.apache.calcite.schema.SchemaPlus;
-import org.apache.calcite.sql.SqlNode;
-import org.apache.calcite.sql.SqlOperatorTable;
-import org.apache.calcite.sql.validate.SqlNameMatchers;
-import org.apache.calcite.sql.validate.SqlValidator;
-import org.apache.calcite.sql2rel.SqlRexConvertletTable;
-import org.apache.calcite.sql2rel.SqlToRelConverter;
-import org.apache.calcite.tools.FrameworkConfig;
-import org.apache.calcite.tools.Frameworks;
-import org.apache.calcite.tools.Programs;
-import org.apache.calcite.tools.RelBuilder;
-import org.apache.calcite.util.Util;
-
-import com.linkedin.coral.com.google.common.annotations.VisibleForTesting;
+import com.linkedin.relocated.org.apache.calcite.config.CalciteConnectionConfig;
+import com.linkedin.relocated.org.apache.calcite.config.CalciteConnectionConfigImpl;
+import com.linkedin.relocated.org.apache.calcite.config.CalciteConnectionProperty;
+import com.linkedin.relocated.org.apache.calcite.jdbc.CalciteSchema;
+import com.linkedin.relocated.org.apache.calcite.jdbc.Driver;
+import com.linkedin.relocated.org.apache.calcite.plan.RelTraitDef;
+import com.linkedin.relocated.org.apache.calcite.prepare.CalciteCatalogReader;
+import com.linkedin.relocated.org.apache.calcite.rel.RelNode;
+import com.linkedin.relocated.org.apache.calcite.rel.RelRoot;
+import com.linkedin.relocated.org.apache.calcite.rel.type.RelDataTypeFactory;
+import com.linkedin.relocated.org.apache.calcite.runtime.Hook;
+import com.linkedin.relocated.org.apache.calcite.schema.SchemaPlus;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlNode;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlOperatorTable;
+import com.linkedin.relocated.org.apache.calcite.sql.validate.SqlNameMatchers;
+import com.linkedin.relocated.org.apache.calcite.sql.validate.SqlValidator;
+import com.linkedin.relocated.org.apache.calcite.sql2rel.SqlRexConvertletTable;
+import com.linkedin.relocated.org.apache.calcite.sql2rel.SqlToRelConverter;
+import com.linkedin.relocated.org.apache.calcite.tools.FrameworkConfig;
+import com.linkedin.relocated.org.apache.calcite.tools.Frameworks;
+import com.linkedin.relocated.org.apache.calcite.tools.Programs;
+import com.linkedin.relocated.org.apache.calcite.tools.RelBuilder;
+import com.linkedin.relocated.org.apache.calcite.util.Util;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 

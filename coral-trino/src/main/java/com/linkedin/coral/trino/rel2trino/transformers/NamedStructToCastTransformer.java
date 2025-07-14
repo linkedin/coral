@@ -1,5 +1,5 @@
 /**
- * Copyright 2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2023-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -8,28 +8,28 @@ package com.linkedin.coral.trino.rel2trino.transformers;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.calcite.rel.type.RelDataType;
-import org.apache.calcite.sql.SqlArrayTypeSpec;
-import org.apache.calcite.sql.SqlBasicTypeNameSpec;
-import org.apache.calcite.sql.SqlCall;
-import org.apache.calcite.sql.SqlCallBinding;
-import org.apache.calcite.sql.SqlDataTypeSpec;
-import org.apache.calcite.sql.SqlLiteral;
-import org.apache.calcite.sql.SqlNode;
-import org.apache.calcite.sql.SqlRowTypeSpec;
-import org.apache.calcite.sql.fun.SqlCastFunction;
-import org.apache.calcite.sql.fun.SqlStdOperatorTable;
-import org.apache.calcite.sql.type.SqlTypeName;
-import org.apache.calcite.sql.type.SqlTypeUtil;
-import org.apache.calcite.sql.validate.SqlValidator;
-import org.apache.calcite.sql.validate.SqlValidatorScope;
+import com.linkedin.relocated.org.apache.calcite.rel.type.RelDataType;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlArrayTypeSpec;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlBasicTypeNameSpec;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlCall;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlCallBinding;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlDataTypeSpec;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlLiteral;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlNode;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlRowTypeSpec;
+import com.linkedin.relocated.org.apache.calcite.sql.fun.SqlCastFunction;
+import com.linkedin.relocated.org.apache.calcite.sql.fun.SqlStdOperatorTable;
+import com.linkedin.relocated.org.apache.calcite.sql.type.SqlTypeName;
+import com.linkedin.relocated.org.apache.calcite.sql.type.SqlTypeUtil;
+import com.linkedin.relocated.org.apache.calcite.sql.validate.SqlValidator;
+import com.linkedin.relocated.org.apache.calcite.sql.validate.SqlValidatorScope;
 
 import com.linkedin.coral.common.HiveTypeSystem;
 import com.linkedin.coral.common.transformers.SqlCallTransformer;
 import com.linkedin.coral.common.utils.TypeDerivationUtil;
 import com.linkedin.coral.hive.hive2rel.functions.HiveNamedStructFunction;
 
-import static org.apache.calcite.sql.parser.SqlParserPos.ZERO;
+import static com.linkedin.relocated.org.apache.calcite.sql.parser.SqlParserPos.ZERO;
 
 
 /**

@@ -1,5 +1,5 @@
 /**
- * Copyright 2023-2024 LinkedIn Corporation. All rights reserved.
+ * Copyright 2023-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -10,18 +10,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.calcite.rel.type.RelDataType;
-import org.apache.calcite.rel.type.RelDataTypeFactory;
-import org.apache.calcite.rel.type.RelDataTypeField;
-import org.apache.calcite.sql.SqlCall;
-import org.apache.calcite.sql.SqlLiteral;
-import org.apache.calcite.sql.SqlNode;
-import org.apache.calcite.sql.SqlNumericLiteral;
-import org.apache.calcite.sql.SqlOperator;
-import org.apache.calcite.sql.parser.SqlParserPos;
-import org.apache.hadoop.hive.serde2.typeinfo.UnionTypeInfo;
+import com.google.common.collect.ImmutableList;
+import com.linkedin.relocated.org.apache.calcite.rel.type.RelDataType;
+import com.linkedin.relocated.org.apache.calcite.rel.type.RelDataTypeField;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlCall;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlLiteral;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlNode;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlNumericLiteral;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlOperator;
+import com.linkedin.relocated.org.apache.calcite.sql.parser.SqlParserPos;
 
-import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import com.linkedin.coral.common.TypeConverter;
 import com.linkedin.coral.common.transformers.SqlCallTransformer;
 import com.linkedin.coral.common.utils.RelDataTypeToHiveTypeStringConverter;
@@ -137,7 +135,7 @@ public class ExtractUnionFunctionTransformer extends SqlCallTransformer {
 
   /**
    * Check if the given RelDataType is a single union type in Coral IR representation, the conversion to which happens in
-   * {@link TypeConverter#convert(UnionTypeInfo, RelDataTypeFactory)}
+   * {@link TypeConverter#convert}
    */
   private boolean isSingleUnionType(RelDataType relDataType) {
     return relDataType.isStruct() && relDataType.getFieldList().size() == 2

@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2021 LinkedIn Corporation. All rights reserved.
+ * Copyright 2019-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -7,18 +7,18 @@ package com.linkedin.coral.pig.rel2pig.rel;
 
 import java.util.List;
 
-import org.apache.calcite.rex.RexCall;
-import org.apache.calcite.rex.RexFieldAccess;
-import org.apache.calcite.rex.RexInputRef;
-import org.apache.calcite.rex.RexLiteral;
-import org.apache.calcite.rex.RexNode;
-import org.apache.calcite.sql.SqlBinaryOperator;
-import org.apache.calcite.sql.SqlPostfixOperator;
-import org.apache.calcite.sql.SqlPrefixOperator;
-import org.apache.calcite.sql.SqlSpecialOperator;
-import org.apache.calcite.sql.fun.SqlCaseOperator;
-import org.apache.calcite.sql.fun.SqlCastFunction;
-import org.apache.calcite.util.NlsString;
+import com.linkedin.relocated.org.apache.calcite.rex.RexCall;
+import com.linkedin.relocated.org.apache.calcite.rex.RexFieldAccess;
+import com.linkedin.relocated.org.apache.calcite.rex.RexInputRef;
+import com.linkedin.relocated.org.apache.calcite.rex.RexLiteral;
+import com.linkedin.relocated.org.apache.calcite.rex.RexNode;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlBinaryOperator;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlPostfixOperator;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlPrefixOperator;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlSpecialOperator;
+import com.linkedin.relocated.org.apache.calcite.sql.fun.SqlCaseOperator;
+import com.linkedin.relocated.org.apache.calcite.sql.fun.SqlCastFunction;
+import com.linkedin.relocated.org.apache.calcite.util.NlsString;
 
 import com.linkedin.coral.pig.rel2pig.exceptions.UnsupportedRexNodeException;
 import com.linkedin.coral.pig.rel2pig.rel.operators.PigBinaryOperator;

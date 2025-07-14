@@ -1,5 +1,5 @@
 /**
- * Copyright 2023-2024 LinkedIn Corporation. All rights reserved.
+ * Copyright 2023-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -10,12 +10,13 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.apache.calcite.sql.SqlCall;
-import org.apache.calcite.sql.SqlOperator;
+import com.google.common.collect.ImmutableSet;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlCall;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlOperator;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.linkedin.coral.com.google.common.collect.ImmutableSet;
 import com.linkedin.coral.common.transformers.SqlCallTransformer;
 import com.linkedin.coral.hive.hive2rel.functions.VersionedSqlUserDefinedFunction;
 import com.linkedin.coral.spark.containers.SparkUDFInfo;

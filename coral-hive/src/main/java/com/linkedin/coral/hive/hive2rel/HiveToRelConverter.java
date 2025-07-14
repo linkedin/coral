@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2024 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -9,16 +9,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.calcite.adapter.java.JavaTypeFactory;
-import org.apache.calcite.plan.RelOptCluster;
-import org.apache.calcite.plan.volcano.VolcanoPlanner;
-import org.apache.calcite.sql.SqlNode;
-import org.apache.calcite.sql.SqlOperatorTable;
-import org.apache.calcite.sql.fun.SqlStdOperatorTable;
-import org.apache.calcite.sql.util.ChainedSqlOperatorTable;
-import org.apache.calcite.sql.validate.SqlValidator;
-import org.apache.calcite.sql2rel.SqlRexConvertletTable;
-import org.apache.calcite.sql2rel.SqlToRelConverter;
+import com.linkedin.relocated.org.apache.calcite.adapter.java.JavaTypeFactory;
+import com.linkedin.relocated.org.apache.calcite.plan.RelOptCluster;
+import com.linkedin.relocated.org.apache.calcite.plan.volcano.VolcanoPlanner;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlNode;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlOperatorTable;
+import com.linkedin.relocated.org.apache.calcite.sql.fun.SqlStdOperatorTable;
+import com.linkedin.relocated.org.apache.calcite.sql.util.ChainedSqlOperatorTable;
+import com.linkedin.relocated.org.apache.calcite.sql.validate.SqlValidator;
+import com.linkedin.relocated.org.apache.calcite.sql2rel.SqlRexConvertletTable;
+import com.linkedin.relocated.org.apache.calcite.sql2rel.SqlToRelConverter;
+
 import org.apache.hadoop.hive.metastore.api.Table;
 
 import com.linkedin.coral.common.FuzzyUnionSqlRewriter;

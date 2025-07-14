@@ -1,4 +1,8 @@
 dependencies {
+  api(deps.'linkedin-calcite-core')
+  implementation project(':coral-common')
+  implementation("com.google.guava:guava:16.0.1")
+  implementation("org.apache.commons:commons-lang3:3.12.0")
   // NOTE: jline is needed as testCompile for PigUnit tests because it is missing from Pig runtime
   testCompile deps.'jline'
 
@@ -14,10 +18,6 @@ dependencies {
   // conflicts with DaliStorage/PiggyBank.
   testCompile(deps.'hive'.'hive-exec-core') {
     exclude group: 'org.apache.avro', module: 'avro-tools'
-    // These exclusions are required to prevent duplicate classes since we include
-    // shaded coral-calcite jar above
-    exclude group: 'org.apache.calcite', module: 'calcite-core'
-    exclude group: 'org.apache.calcite', module: 'calcite-avatica'
     exclude group: 'jline', module: 'jline'
     exclude group: 'org.codehaus.groovy', module: 'groovy-all'
   }

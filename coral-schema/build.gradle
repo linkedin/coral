@@ -1,13 +1,21 @@
 dependencies {
+  implementation("com.google.code.findbugs:jsr305:3.0.2")
+  implementation("com.google.guava:guava:16.0.1")
+  // https://mvnrepository.com/artifact/org.apache.avro/avro
+  implementation("org.apache.avro:avro:1.12.0")
+  api(deps.'linkedin-calcite-core')
+  implementation(deps.hive.'hive-serde') {
+    transitive = false
+  }
+  implementation(deps.hive.'hive-metastore')
+  implementation("org.apache.commons:commons-lang3:3.12.0")
+  implementation project(':coral-common')
   compile project(path: ':coral-hive')
   compile deps.'avroCompatHelper'
-
   testCompile(deps.'hive'.'hive-exec-core') {
     exclude group: 'org.apache.avro', module: 'avro-tools'
     // These exclusions are required to prevent duplicate classes since we include
     // shaded jar above
-    exclude group: 'org.apache.calcite', module: 'calcite-core'
-    exclude group: 'org.apache.calcite', module: 'calcite-avatica'
   }
 
   testCompile deps.'hadoop'.'hadoop-mapreduce-client-core'

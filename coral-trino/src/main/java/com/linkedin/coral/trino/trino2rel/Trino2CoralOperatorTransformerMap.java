@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -8,10 +8,10 @@ package com.linkedin.coral.trino.trino2rel;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.calcite.sql.type.ReturnTypes;
+import com.linkedin.relocated.org.apache.calcite.sql.type.ReturnTypes;
 
 import static com.linkedin.coral.trino.trino2rel.Trino2CoralOperatorTransformerMapUtils.*;
-import static org.apache.calcite.sql.type.OperandTypes.*;
+import static com.linkedin.relocated.org.apache.calcite.sql.type.OperandTypes.*;
 
 
 public class Trino2CoralOperatorTransformerMap {

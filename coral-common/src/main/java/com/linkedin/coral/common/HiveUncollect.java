@@ -1,5 +1,5 @@
 /**
- * Copyright 2018-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2018-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -7,18 +7,19 @@ package com.linkedin.coral.common;
 
 import java.util.List;
 
-import org.apache.calcite.plan.Convention;
-import org.apache.calcite.plan.RelOptCluster;
-import org.apache.calcite.plan.RelTraitSet;
-import org.apache.calcite.rel.RelInput;
-import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rel.core.Uncollect;
-import org.apache.calcite.rel.type.RelDataType;
-import org.apache.calcite.rel.type.RelDataTypeFactory;
-import org.apache.calcite.rel.type.RelDataTypeField;
-import org.apache.calcite.sql.SqlUnnestOperator;
-import org.apache.calcite.sql.type.MapSqlType;
-import org.apache.calcite.sql.type.SqlTypeName;
+import com.linkedin.relocated.org.apache.calcite.plan.Convention;
+import com.linkedin.relocated.org.apache.calcite.plan.RelOptCluster;
+import com.linkedin.relocated.org.apache.calcite.plan.RelTraitSet;
+import com.linkedin.relocated.org.apache.calcite.rel.RelInput;
+import com.linkedin.relocated.org.apache.calcite.rel.RelNode;
+import com.linkedin.relocated.org.apache.calcite.rel.core.Uncollect;
+import com.linkedin.relocated.org.apache.calcite.rel.type.RelDataType;
+import com.linkedin.relocated.org.apache.calcite.rel.type.RelDataTypeFactory;
+import com.linkedin.relocated.org.apache.calcite.rel.type.RelDataTypeField;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlUnnestOperator;
+import com.linkedin.relocated.org.apache.calcite.sql.type.MapSqlType;
+import com.linkedin.relocated.org.apache.calcite.sql.type.SqlTypeName;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

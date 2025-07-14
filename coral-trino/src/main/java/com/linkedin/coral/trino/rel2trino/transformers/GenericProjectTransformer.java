@@ -1,5 +1,5 @@
 /**
- * Copyright 2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2023-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -8,17 +8,17 @@ package com.linkedin.coral.trino.rel2trino.transformers;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.calcite.rel.type.RelDataType;
-import org.apache.calcite.rel.type.RelDataTypeField;
-import org.apache.calcite.rel.type.RelRecordType;
-import org.apache.calcite.sql.SqlCall;
-import org.apache.calcite.sql.SqlIdentifier;
-import org.apache.calcite.sql.SqlNode;
-import org.apache.calcite.sql.SqlOperator;
-import org.apache.calcite.sql.type.ArraySqlType;
-import org.apache.calcite.sql.type.MapSqlType;
+import com.google.common.collect.ImmutableList;
+import com.linkedin.relocated.org.apache.calcite.rel.type.RelDataType;
+import com.linkedin.relocated.org.apache.calcite.rel.type.RelDataTypeField;
+import com.linkedin.relocated.org.apache.calcite.rel.type.RelRecordType;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlCall;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlIdentifier;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlNode;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlOperator;
+import com.linkedin.relocated.org.apache.calcite.sql.type.ArraySqlType;
+import com.linkedin.relocated.org.apache.calcite.sql.type.MapSqlType;
 
-import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import com.linkedin.coral.common.functions.GenericProjectFunction;
 import com.linkedin.coral.common.transformers.SqlCallTransformer;
 import com.linkedin.coral.common.utils.TypeDerivationUtil;
@@ -28,7 +28,7 @@ import com.linkedin.coral.trino.rel2trino.functions.TrinoKeywordsConverter;
 import com.linkedin.coral.trino.rel2trino.functions.TrinoMapTransformValuesFunction;
 import com.linkedin.coral.trino.rel2trino.functions.TrinoStructCastRowFunction;
 
-import static org.apache.calcite.sql.parser.SqlParserPos.*;
+import static com.linkedin.relocated.org.apache.calcite.sql.parser.SqlParserPos.*;
 
 
 /**
@@ -199,7 +199,7 @@ public class GenericProjectTransformer extends SqlCallTransformer {
     // The resolved SQL string will look like:
     //   'transform_values(col1, (k, v) -> transform(v , x -> cast(row(x.a) as row(a int))))'
     final SqlNode transformColumn = call.getOperandList().get(0);
-    ImmutableList<String> transformColumnFieldFullName = ((SqlIdentifier) transformColumn).names;
+    ImmutableList<String> transformColumnFieldFullName = ImmutableList.copyOf(((SqlIdentifier) transformColumn).names);
     String transformColumnFieldName = transformColumnFieldFullName.get(transformColumnFieldFullName.size() - 1);
 
     RelDataType fromDataType = deriveRelDatatype(transformColumn);

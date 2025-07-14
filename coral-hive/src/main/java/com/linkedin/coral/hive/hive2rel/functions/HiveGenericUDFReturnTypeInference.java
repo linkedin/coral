@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2020-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -14,10 +14,11 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.List;
 
-import org.apache.calcite.rel.type.RelDataType;
-import org.apache.calcite.rel.type.RelDataTypeFactory;
-import org.apache.calcite.sql.SqlOperatorBinding;
-import org.apache.calcite.sql.type.SqlReturnTypeInference;
+import com.linkedin.relocated.org.apache.calcite.rel.type.RelDataType;
+import com.linkedin.relocated.org.apache.calcite.rel.type.RelDataTypeFactory;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlOperatorBinding;
+import com.linkedin.relocated.org.apache.calcite.sql.type.SqlReturnTypeInference;
+
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;

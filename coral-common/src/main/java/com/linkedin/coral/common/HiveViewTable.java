@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -7,16 +7,16 @@ package com.linkedin.coral.common;
 
 import java.util.List;
 
-import org.apache.calcite.plan.RelOptTable;
-import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rel.RelRoot;
-import org.apache.calcite.schema.TranslatableTable;
+import com.google.common.base.Throwables;
+import com.google.common.collect.ImmutableList;
+import com.linkedin.relocated.org.apache.calcite.plan.RelOptTable;
+import com.linkedin.relocated.org.apache.calcite.rel.RelNode;
+import com.linkedin.relocated.org.apache.calcite.rel.RelRoot;
+import com.linkedin.relocated.org.apache.calcite.schema.TranslatableTable;
+
 import org.apache.hadoop.hive.metastore.api.Table;
 
-import com.linkedin.coral.com.google.common.base.Throwables;
-import com.linkedin.coral.com.google.common.collect.ImmutableList;
-
-import static org.apache.calcite.sql.type.SqlTypeName.*;
+import static com.linkedin.relocated.org.apache.calcite.sql.type.SqlTypeName.*;
 
 
 /**
