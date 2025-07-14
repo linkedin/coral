@@ -1,5 +1,5 @@
 /**
- * Copyright 2021-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2021-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -12,16 +12,16 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.linkedin.relocated.org.apache.calcite.avatica.util.TimeUnit;
+import com.linkedin.relocated.org.apache.calcite.sql.*;
+import com.linkedin.relocated.org.apache.calcite.sql.parser.SqlParseException;
+import com.linkedin.relocated.org.apache.calcite.sql.parser.SqlParserPos;
+import com.linkedin.relocated.org.apache.calcite.sql.type.SqlTypeFactoryImpl;
+import com.linkedin.relocated.org.apache.calcite.sql.type.SqlTypeName;
+import com.linkedin.relocated.org.apache.calcite.sql.type.SqlTypeUtil;
+import com.linkedin.relocated.org.apache.calcite.util.TimeString;
+import com.linkedin.relocated.org.apache.calcite.util.TimestampString;
 
-import org.apache.calcite.avatica.util.TimeUnit;
-import org.apache.calcite.sql.*;
-import org.apache.calcite.sql.parser.SqlParseException;
-import org.apache.calcite.sql.parser.SqlParserPos;
-import org.apache.calcite.sql.type.SqlTypeFactoryImpl;
-import org.apache.calcite.sql.type.SqlTypeName;
-import org.apache.calcite.sql.type.SqlTypeUtil;
-import org.apache.calcite.util.TimeString;
-import org.apache.calcite.util.TimestampString;
 import org.apache.commons.lang3.ObjectUtils;
 
 import com.linkedin.coral.common.HiveTypeSystem;
@@ -30,10 +30,10 @@ import com.linkedin.coral.common.calcite.CalciteUtil;
 import coral.shading.io.trino.sql.tree.*;
 
 import static com.linkedin.coral.common.calcite.CalciteUtil.*;
+import static com.linkedin.relocated.org.apache.calcite.sql.SqlFunctionCategory.USER_DEFINED_FUNCTION;
+import static com.linkedin.relocated.org.apache.calcite.sql.fun.SqlStdOperatorTable.*;
+import static com.linkedin.relocated.org.apache.calcite.sql.parser.SqlParserPos.ZERO;
 import static java.lang.String.format;
-import static org.apache.calcite.sql.SqlFunctionCategory.USER_DEFINED_FUNCTION;
-import static org.apache.calcite.sql.fun.SqlStdOperatorTable.*;
-import static org.apache.calcite.sql.parser.SqlParserPos.ZERO;
 
 
 public class ParseTreeBuilder extends AstVisitor<SqlNode, ParserVisitorContext> {

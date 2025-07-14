@@ -1,14 +1,16 @@
 dependencies {
+  api deps.'linkedin-calcite-core'
   compile deps.'gson'
-  compile project(path: ':coral-hive')
+  implementation project(':coral-hive')
+  implementation project(':coral-common')
+  implementation("com.google.code.findbugs:jsr305:3.0.2")
+  implementation("org.apache.commons:commons-lang3:3.12.0")
+  implementation(deps.'hive'.'hive-metastore')
+  //  implementation("com.google.guava:guava:16.0.1")
   compile project(path: ':shading:coral-trino-parser', configuration: 'shadow')
 
   testCompile(deps.'hive'.'hive-exec-core') {
     exclude group: 'org.apache.avro', module: 'avro-tools'
-    // These exclusions are required to prevent duplicate classes since we include
-    // shaded jar above
-    exclude group: 'org.apache.calcite', module: 'calcite-core'
-    exclude group: 'org.apache.calcite', module: 'calcite-avatica'
   }
 
   testCompile deps.'hadoop'.'hadoop-mapreduce-client-common'

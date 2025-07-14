@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2024 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -17,19 +17,19 @@ import java.util.regex.Pattern;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.linkedin.relocated.org.apache.calcite.plan.RelTraitDef;
+import com.linkedin.relocated.org.apache.calcite.rel.RelNode;
+import com.linkedin.relocated.org.apache.calcite.rel.RelRoot;
+import com.linkedin.relocated.org.apache.calcite.runtime.Hook;
+import com.linkedin.relocated.org.apache.calcite.schema.SchemaPlus;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlNode;
+import com.linkedin.relocated.org.apache.calcite.sql.parser.SqlParser;
+import com.linkedin.relocated.org.apache.calcite.sql.validate.SqlConformanceEnum;
+import com.linkedin.relocated.org.apache.calcite.tools.FrameworkConfig;
+import com.linkedin.relocated.org.apache.calcite.tools.Frameworks;
+import com.linkedin.relocated.org.apache.calcite.tools.Planner;
+import com.linkedin.relocated.org.apache.calcite.tools.Programs;
 
-import org.apache.calcite.plan.RelTraitDef;
-import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rel.RelRoot;
-import org.apache.calcite.runtime.Hook;
-import org.apache.calcite.schema.SchemaPlus;
-import org.apache.calcite.sql.SqlNode;
-import org.apache.calcite.sql.parser.SqlParser;
-import org.apache.calcite.sql.validate.SqlConformanceEnum;
-import org.apache.calcite.tools.FrameworkConfig;
-import org.apache.calcite.tools.Frameworks;
-import org.apache.calcite.tools.Planner;
-import org.apache.calcite.tools.Programs;
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.MetaException;

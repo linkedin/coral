@@ -1,5 +1,5 @@
 /**
- * Copyright 2021-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2021-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -8,13 +8,13 @@ package com.linkedin.coral.trino.trino2rel.parsetree;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.calcite.sql.*;
-import org.apache.calcite.sql.parser.SqlParserPos;
+import com.linkedin.relocated.org.apache.calcite.sql.*;
+import com.linkedin.relocated.org.apache.calcite.sql.parser.SqlParserPos;
 
 import com.linkedin.coral.common.calcite.CalciteUtil;
 
-import static org.apache.calcite.sql.fun.SqlStdOperatorTable.CASE;
-import static org.apache.calcite.sql.parser.SqlParserPos.ZERO;
+import static com.linkedin.relocated.org.apache.calcite.sql.fun.SqlStdOperatorTable.CASE;
+import static com.linkedin.relocated.org.apache.calcite.sql.parser.SqlParserPos.ZERO;
 
 
 public class ParserVisitorContext {

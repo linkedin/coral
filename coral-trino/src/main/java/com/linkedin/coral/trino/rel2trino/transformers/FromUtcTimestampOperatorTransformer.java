@@ -1,5 +1,5 @@
 /**
- * Copyright 2023-2024 LinkedIn Corporation. All rights reserved.
+ * Copyright 2023-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -10,28 +10,28 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.calcite.rel.type.RelDataType;
-import org.apache.calcite.sql.SqlCall;
-import org.apache.calcite.sql.SqlNode;
-import org.apache.calcite.sql.SqlOperator;
-import org.apache.calcite.sql.fun.SqlStdOperatorTable;
-import org.apache.calcite.sql.type.BasicSqlType;
-import org.apache.calcite.sql.type.SqlTypeName;
-import org.apache.calcite.sql.type.SqlTypeUtil;
+import com.linkedin.relocated.org.apache.calcite.rel.type.RelDataType;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlCall;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlNode;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlOperator;
+import com.linkedin.relocated.org.apache.calcite.sql.fun.SqlStdOperatorTable;
+import com.linkedin.relocated.org.apache.calcite.sql.type.BasicSqlType;
+import com.linkedin.relocated.org.apache.calcite.sql.type.SqlTypeName;
+import com.linkedin.relocated.org.apache.calcite.sql.type.SqlTypeUtil;
 
 import com.linkedin.coral.common.HiveTypeSystem;
 import com.linkedin.coral.common.calcite.CalciteUtil;
 import com.linkedin.coral.common.transformers.SqlCallTransformer;
 import com.linkedin.coral.common.utils.TypeDerivationUtil;
 
-import static org.apache.calcite.sql.fun.SqlStdOperatorTable.*;
-import static org.apache.calcite.sql.parser.SqlParserPos.*;
-import static org.apache.calcite.sql.type.ReturnTypes.*;
-import static org.apache.calcite.sql.type.SqlTypeName.*;
-import static org.apache.calcite.sql.type.SqlTypeName.BIGINT;
-import static org.apache.calcite.sql.type.SqlTypeName.DATE;
-import static org.apache.calcite.sql.type.SqlTypeName.DOUBLE;
-import static org.apache.calcite.sql.type.SqlTypeName.INTEGER;
+import static com.linkedin.relocated.org.apache.calcite.sql.fun.SqlStdOperatorTable.*;
+import static com.linkedin.relocated.org.apache.calcite.sql.parser.SqlParserPos.*;
+import static com.linkedin.relocated.org.apache.calcite.sql.type.ReturnTypes.*;
+import static com.linkedin.relocated.org.apache.calcite.sql.type.SqlTypeName.*;
+import static com.linkedin.relocated.org.apache.calcite.sql.type.SqlTypeName.BIGINT;
+import static com.linkedin.relocated.org.apache.calcite.sql.type.SqlTypeName.DATE;
+import static com.linkedin.relocated.org.apache.calcite.sql.type.SqlTypeName.DOUBLE;
+import static com.linkedin.relocated.org.apache.calcite.sql.type.SqlTypeName.INTEGER;
 
 
 /**

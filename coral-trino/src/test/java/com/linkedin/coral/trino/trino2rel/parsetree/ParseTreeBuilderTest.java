@@ -1,5 +1,5 @@
 /**
- * Copyright 2021-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2021-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -10,8 +10,8 @@ import java.util.Iterator;
 import java.util.List;
 
 import com.google.common.collect.ImmutableList;
+import com.linkedin.relocated.org.apache.calcite.sql.SqlNode;
 
-import org.apache.calcite.sql.SqlNode;
 import org.apache.commons.io.IOUtils;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
