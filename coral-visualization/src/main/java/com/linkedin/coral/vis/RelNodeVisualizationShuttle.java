@@ -1,5 +1,5 @@
 /**
- * Copyright 2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2023-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -11,20 +11,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rel.RelShuttleImpl;
-import org.apache.calcite.rel.core.TableFunctionScan;
-import org.apache.calcite.rel.core.TableScan;
-import org.apache.calcite.rel.logical.LogicalAggregate;
-import org.apache.calcite.rel.logical.LogicalCorrelate;
-import org.apache.calcite.rel.logical.LogicalFilter;
-import org.apache.calcite.rel.logical.LogicalIntersect;
-import org.apache.calcite.rel.logical.LogicalJoin;
-import org.apache.calcite.rel.logical.LogicalMinus;
-import org.apache.calcite.rel.logical.LogicalProject;
-import org.apache.calcite.rel.logical.LogicalSort;
-import org.apache.calcite.rel.logical.LogicalUnion;
-import org.apache.calcite.rel.logical.LogicalValues;
+import com.linkedin.relocated.org.apache.calcite.rel.RelNode;
+import com.linkedin.relocated.org.apache.calcite.rel.RelShuttleImpl;
+import com.linkedin.relocated.org.apache.calcite.rel.core.TableFunctionScan;
+import com.linkedin.relocated.org.apache.calcite.rel.core.TableScan;
+import com.linkedin.relocated.org.apache.calcite.rel.logical.LogicalAggregate;
+import com.linkedin.relocated.org.apache.calcite.rel.logical.LogicalCorrelate;
+import com.linkedin.relocated.org.apache.calcite.rel.logical.LogicalFilter;
+import com.linkedin.relocated.org.apache.calcite.rel.logical.LogicalIntersect;
+import com.linkedin.relocated.org.apache.calcite.rel.logical.LogicalJoin;
+import com.linkedin.relocated.org.apache.calcite.rel.logical.LogicalMinus;
+import com.linkedin.relocated.org.apache.calcite.rel.logical.LogicalProject;
+import com.linkedin.relocated.org.apache.calcite.rel.logical.LogicalSort;
+import com.linkedin.relocated.org.apache.calcite.rel.logical.LogicalUnion;
+import com.linkedin.relocated.org.apache.calcite.rel.logical.LogicalValues;
 
 import com.linkedin.coral.common.HiveUncollect;
 
