@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2022 LinkedIn Corporation. All rights reserved.
+ * Copyright 2019-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -8,21 +8,21 @@ package com.linkedin.coral.pig.rel2pig;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rel.core.TableFunctionScan;
-import org.apache.calcite.rel.core.TableScan;
-import org.apache.calcite.rel.logical.LogicalAggregate;
-import org.apache.calcite.rel.logical.LogicalCorrelate;
-import org.apache.calcite.rel.logical.LogicalExchange;
-import org.apache.calcite.rel.logical.LogicalFilter;
-import org.apache.calcite.rel.logical.LogicalIntersect;
-import org.apache.calcite.rel.logical.LogicalJoin;
-import org.apache.calcite.rel.logical.LogicalMatch;
-import org.apache.calcite.rel.logical.LogicalMinus;
-import org.apache.calcite.rel.logical.LogicalProject;
-import org.apache.calcite.rel.logical.LogicalSort;
-import org.apache.calcite.rel.logical.LogicalUnion;
-import org.apache.calcite.rel.logical.LogicalValues;
+import com.linkedin.relocated.org.apache.calcite.rel.RelNode;
+import com.linkedin.relocated.org.apache.calcite.rel.core.TableFunctionScan;
+import com.linkedin.relocated.org.apache.calcite.rel.core.TableScan;
+import com.linkedin.relocated.org.apache.calcite.rel.logical.LogicalAggregate;
+import com.linkedin.relocated.org.apache.calcite.rel.logical.LogicalCorrelate;
+import com.linkedin.relocated.org.apache.calcite.rel.logical.LogicalExchange;
+import com.linkedin.relocated.org.apache.calcite.rel.logical.LogicalFilter;
+import com.linkedin.relocated.org.apache.calcite.rel.logical.LogicalIntersect;
+import com.linkedin.relocated.org.apache.calcite.rel.logical.LogicalJoin;
+import com.linkedin.relocated.org.apache.calcite.rel.logical.LogicalMatch;
+import com.linkedin.relocated.org.apache.calcite.rel.logical.LogicalMinus;
+import com.linkedin.relocated.org.apache.calcite.rel.logical.LogicalProject;
+import com.linkedin.relocated.org.apache.calcite.rel.logical.LogicalSort;
+import com.linkedin.relocated.org.apache.calcite.rel.logical.LogicalUnion;
+import com.linkedin.relocated.org.apache.calcite.rel.logical.LogicalValues;
 
 import com.linkedin.coral.pig.rel2pig.exceptions.UnsupportedRelNodeException;
 import com.linkedin.coral.pig.rel2pig.rel.PigLogicalAggregate;

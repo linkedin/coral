@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2022 LinkedIn Corporation. All rights reserved.
+ * Copyright 2019-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -9,8 +9,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.apache.calcite.rel.core.AggregateCall;
-import org.apache.calcite.rel.logical.LogicalAggregate;
+import com.linkedin.relocated.org.apache.calcite.rel.core.AggregateCall;
+import com.linkedin.relocated.org.apache.calcite.rel.logical.LogicalAggregate;
 
 import com.linkedin.coral.pig.rel2pig.exceptions.UnsupportedRexCallException;
 
