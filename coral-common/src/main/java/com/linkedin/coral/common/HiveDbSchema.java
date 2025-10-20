@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2022 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -17,46 +17,80 @@ import org.apache.calcite.linq4j.tree.Expression;
 import org.apache.calcite.rel.type.RelProtoDataType;
 import org.apache.calcite.schema.*;
 
+import com.linkedin.coral.common.catalog.CoralCatalog;
+import com.linkedin.coral.common.catalog.Dataset;
+import com.linkedin.coral.common.catalog.HiveDataset;
+import com.linkedin.coral.common.catalog.IcebergDataset;
+import com.linkedin.coral.common.catalog.TableType;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 
 
 /**
- * Adaptor from Hive catalog providing database and table names
- * to Calcite {@link Schema}
+ * Adaptor from catalog providing database and table names to Calcite {@link Schema}.
+ * Uses CoralCatalog to provide unified access to different table formats
+ * (Hive, Iceberg, etc.).
  */
 public class HiveDbSchema implements Schema {
 
   public static final String DEFAULT_DB = "default";
 
-  private final HiveMetastoreClient msc;
+  private final CoralCatalog catalog;
   private final String dbName;
 
+  HiveDbSchema(@Nonnull CoralCatalog catalog, @Nonnull String dbName) {
+    this.catalog = checkNotNull(catalog);
+    this.dbName = checkNotNull(dbName);
+  }
+  
+  /**
+   * Constructor for backward compatibility with HiveMetastoreClient.
+   */
   HiveDbSchema(@Nonnull HiveMetastoreClient msc, @Nonnull String dbName) {
-    checkNotNull(msc);
-    checkNotNull(dbName);
-    this.msc = msc;
-    this.dbName = dbName;
+    this((CoralCatalog) checkNotNull(msc), checkNotNull(dbName));
   }
 
   @Override
   public Table getTable(String name) {
-    org.apache.hadoop.hive.metastore.api.Table table = msc.getTable(dbName, name);
-    if (table == null) {
+    // Get unified Dataset from CoralCatalog
+    Dataset dataset = catalog.getDataset(dbName, name);
+    if (dataset == null) {
       return null;
     }
-    org.apache.hadoop.hive.metastore.TableType tableType =
-        Enum.valueOf(org.apache.hadoop.hive.metastore.TableType.class, table.getTableType());
-    switch (tableType) {
-      case VIRTUAL_VIEW:
-        return new HiveViewTable(table, ImmutableList.of(HiveSchema.ROOT_SCHEMA, dbName));
-      default:
-        return new HiveTable(table);
+    
+    // Handle views - still need Hive Table object for view expansion
+    if (dataset.tableType() == com.linkedin.coral.common.catalog.TableType.VIEW) {
+      org.apache.hadoop.hive.metastore.api.Table hiveTable = getHiveTableForView(dbName, name);
+      if (hiveTable != null) {
+        return new HiveViewTable(hiveTable, ImmutableList.of(HiveSchema.ROOT_SCHEMA, dbName));
+      }
+    }
+    
+    // Dispatch based on Dataset implementation type
+    if (dataset instanceof IcebergDataset) {
+      return new IcebergTable((IcebergDataset) dataset);
+    } else if (dataset instanceof HiveDataset) {
+      return new HiveTable((HiveDataset) dataset);
+    } else {
+      throw new UnsupportedOperationException("Unknown dataset type: " + dataset.getClass().getName());
     }
   }
 
   @Override
   public Set<String> getTableNames() {
-    return ImmutableSet.copyOf(msc.getAllTables(dbName));
+    return ImmutableSet.copyOf(catalog.getAllDatasets(dbName));
+  }
+  
+  /**
+   * Helper method to get Hive Table object for views.
+   * Views require the Hive Table object for view expansion logic.
+   */
+  private org.apache.hadoop.hive.metastore.api.Table getHiveTableForView(String dbName, String tableName) {
+    if (catalog instanceof HiveMetastoreClient) {
+      return ((HiveMetastoreClient) catalog).getTable(dbName, tableName);
+    }
+    throw new RuntimeException("Cannot get Hive table for view from non-Hive catalog: " + 
+                               dbName + "." + tableName);
   }
 
   @Override

@@ -43,6 +43,7 @@ import com.linkedin.coral.common.types.CoralDataType;
 import com.linkedin.coral.common.types.CoralTypeToRelDataTypeConverter;
 import com.linkedin.coral.common.types.StructField;
 import com.linkedin.coral.common.types.StructType;
+import com.linkedin.coral.common.catalog.HiveDataset;
 
 
 /**
@@ -91,6 +92,15 @@ public class HiveTable implements ScannableTable {
   public HiveTable(org.apache.hadoop.hive.metastore.api.Table hiveTable) {
     Preconditions.checkNotNull(hiveTable);
     this.hiveTable = hiveTable;
+  }
+
+  /**
+   * Constructor accepting HiveDataset for unified catalog integration.
+   * @param dataset HiveDataset from catalog
+   */
+  public HiveTable(HiveDataset dataset) {
+    Preconditions.checkNotNull(dataset);
+    this.hiveTable = dataset.getHiveTable();
   }
 
   /**

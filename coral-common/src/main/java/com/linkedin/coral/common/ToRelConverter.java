@@ -38,6 +38,7 @@ import org.apache.calcite.tools.RelBuilder;
 import org.apache.calcite.util.Util;
 
 import com.linkedin.coral.com.google.common.annotations.VisibleForTesting;
+import com.linkedin.coral.common.catalog.CoralCatalog;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -46,10 +47,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Public class to convert SQL dialects to Calcite relational algebra.
  * This class should serve as the main entry point for clients to convert
  * SQL queries.
+ * 
+ * Uses CoralCatalog for unified access to different table formats.
  */
 public abstract class ToRelConverter {
 
-  private final HiveMetastoreClient hiveMetastoreClient;
+  private final CoralCatalog catalog;
   private final FrameworkConfig config;
   private final SqlRexConvertletTable convertletTable = getConvertletTable();
   private CalciteCatalogReader catalogReader;
@@ -65,11 +68,16 @@ public abstract class ToRelConverter {
 
   protected abstract SqlNode toSqlNode(String sql, org.apache.hadoop.hive.metastore.api.Table hiveView);
 
-  protected ToRelConverter(@Nonnull HiveMetastoreClient hiveMetastoreClient) {
-    checkNotNull(hiveMetastoreClient);
-    this.hiveMetastoreClient = hiveMetastoreClient;
+  /**
+   * Constructor accepting CoralCatalog for unified catalog access.
+   * 
+   * @param catalog Coral catalog providing access to table metadata
+   */
+  protected ToRelConverter(@Nonnull CoralCatalog catalog) {
+    checkNotNull(catalog);
+    this.catalog = catalog;
     SchemaPlus schemaPlus = Frameworks.createRootSchema(false);
-    schemaPlus.add(HiveSchema.ROOT_SCHEMA, new HiveSchema(hiveMetastoreClient));
+    schemaPlus.add(HiveSchema.ROOT_SCHEMA, new HiveSchema(catalog));
     // this is to ensure that jdbc:calcite driver is correctly registered
     // before initializing framework (which needs it)
     // We don't want each engine to register the driver. It may not also load correctly
@@ -80,9 +88,23 @@ public abstract class ToRelConverter {
         .programs(Programs.ofRules(Programs.RULE_SET)).build();
 
   }
+  
+  /**
+   * Constructor for backward compatibility with HiveMetastoreClient.
+   * 
+   * @param hiveMetastoreClient Hive metastore client
+   */
+  protected ToRelConverter(@Nonnull HiveMetastoreClient hiveMetastoreClient) {
+    this((CoralCatalog) checkNotNull(hiveMetastoreClient));
+  }
 
+  /**
+   * Constructor for local metastore (testing/development).
+   * 
+   * @param localMetaStore Local metastore map
+   */
   protected ToRelConverter(Map<String, Map<String, List<String>>> localMetaStore) {
-    this.hiveMetastoreClient = null;
+    this.catalog = null;
     SchemaPlus schemaPlus = Frameworks.createRootSchema(false);
     schemaPlus.add(HiveSchema.ROOT_SCHEMA, new LocalMetastoreHiveSchema(localMetaStore));
     // this is to ensure that jdbc:calcite driver is correctly registered
@@ -138,7 +160,18 @@ public abstract class ToRelConverter {
    */
   @VisibleForTesting
   public SqlNode processView(String dbName, String tableName) {
-    org.apache.hadoop.hive.metastore.api.Table table = hiveMetastoreClient.getTable(dbName, tableName);
+    // Views require Hive Table object for view expansion
+    if (catalog == null) {
+      throw new RuntimeException("Cannot process view without catalog: " + dbName + "." + tableName);
+    }
+    
+    org.apache.hadoop.hive.metastore.api.Table table = null;
+    if (catalog instanceof HiveMetastoreClient) {
+      table = ((HiveMetastoreClient) catalog).getTable(dbName, tableName);
+    } else {
+      throw new RuntimeException("View processing requires HiveMetastoreClient, got: " + catalog.getClass().getName());
+    }
+    
     if (table == null) {
       throw new RuntimeException(String.format("Unknown table %s.%s", dbName, tableName));
     }

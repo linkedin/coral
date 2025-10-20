@@ -5,6 +5,7 @@ def versions = [
   'gson': '2.9.0',
   'hadoop': '2.7.0',
   'hive': '1.2.2',
+  'linkedin-iceberg': '1.2.0.4',
   'ivy': '2.5.1',
   'jetbrains': '16.0.2',
   'jline': '0.9.94',
@@ -30,6 +31,11 @@ ext.deps = [
   'hive':[
     'hive-metastore': "org.apache.hive:hive-metastore:${versions['hive']}",
     'hive-exec-core': "org.apache.hive:hive-exec:${versions['hive']}:core"
+  ],
+  'linkedin-iceberg': [
+    'iceberg-core': "com.linkedin.iceberg:iceberg-core:${versions['linkedin-iceberg']}",
+    'iceberg-api': "com.linkedin.iceberg:iceberg-api:${versions['linkedin-iceberg']}",
+    'iceberg-hive-metastore': "com.linkedin.iceberg:iceberg-hive-metastore:${versions['linkedin-iceberg']}"
   ],
   'ivy': "org.apache.ivy:ivy:${versions['ivy']}",
   'jetbrains': "org.jetbrains:annotations:${versions['jetbrains']}",
