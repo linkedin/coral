@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2019-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -202,5 +202,29 @@ public class RelDataTypeToTrinoTypeStringConverterTest {
     RelRecordType relRecordType = new RelRecordType(fields);
     String trinoTypeCastString = RelDataTypeToTrinoTypeStringConverter.buildTrinoTypeString(relRecordType);
     assertEquals(trinoTypeCastString, expectedTrinoTypeCastString);
+  }
+
+  @Test
+  public void testTimestampWithPrecision() {
+    // Test timestamp(3) - Hive default
+    BasicSqlType timestamp3 = new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.TIMESTAMP, 3);
+    String trinoTypeString3 = RelDataTypeToTrinoTypeStringConverter.buildTrinoTypeString(timestamp3);
+    assertEquals(trinoTypeString3, "timestamp(3)");
+
+    // Test timestamp(6) - Iceberg default
+    BasicSqlType timestamp6 = new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.TIMESTAMP, 6);
+    String trinoTypeString6 = RelDataTypeToTrinoTypeStringConverter.buildTrinoTypeString(timestamp6);
+    assertEquals(trinoTypeString6, "timestamp(6)");
+
+    // Test timestamp(9) - Max precision
+    BasicSqlType timestamp9 = new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.TIMESTAMP, 9);
+    String trinoTypeString9 = RelDataTypeToTrinoTypeStringConverter.buildTrinoTypeString(timestamp9);
+    assertEquals(trinoTypeString9, "timestamp(9)");
+
+    // Test timestamp without precision
+    BasicSqlType timestampNoPrecision = new BasicSqlType(RelDataTypeSystem.DEFAULT, SqlTypeName.TIMESTAMP);
+    String trinoTypeStringNoPrecision =
+        RelDataTypeToTrinoTypeStringConverter.buildTrinoTypeString(timestampNoPrecision);
+    assertEquals(trinoTypeStringNoPrecision, "timestamp");
   }
 }

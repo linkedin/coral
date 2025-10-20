@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2024 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -361,6 +361,14 @@ public class TestUtils {
 
     run(driver, "CREATE VIEW IF NOT EXISTS test.cast_decimal_view AS \n"
         + "SELECT CAST(t.a as DECIMAL(6,2)) as casted_decimal FROM test.table_ints_strings t");
+
+    // Test tables and views for timestamp precision (Iceberg support)
+    run(driver, "CREATE TABLE test.table_timestamp_precision_3(id int, ts3 timestamp(3))");
+    run(driver, "CREATE TABLE test.table_timestamp_precision_6(id int, ts6 timestamp(6))");
+    run(driver, "CREATE TABLE test.table_timestamp_precision_9(id int, ts9 timestamp(9))");
+    run(driver, "CREATE VIEW test.view_timestamp_precision_3 AS SELECT * FROM test.table_timestamp_precision_3");
+    run(driver, "CREATE VIEW test.view_timestamp_precision_6 AS SELECT * FROM test.table_timestamp_precision_6");
+    run(driver, "CREATE VIEW test.view_timestamp_precision_9 AS SELECT * FROM test.table_timestamp_precision_9");
 
     run(driver, "CREATE TABLE IF NOT EXISTS test.tableS (structCol struct<a:int>)");
     run(driver, "CREATE TABLE IF NOT EXISTS test.tableT (structCol struct<a:int>)");

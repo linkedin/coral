@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2024 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -80,7 +80,14 @@ public class TypeConverter {
         convertedType = dtFactory.createSqlType(SqlTypeName.DATE);
         break;
       case TIMESTAMP:
-        convertedType = dtFactory.createSqlType(SqlTypeName.TIMESTAMP);
+        // Parse timestamp precision from type string (e.g., "timestamp(6)" for Iceberg)
+        // Hive default is timestamp(3), but Iceberg uses timestamp(6)
+        int precision = parseTimestampPrecision(type.getTypeName());
+        if (precision >= 0) {
+          convertedType = dtFactory.createSqlType(SqlTypeName.TIMESTAMP, precision);
+        } else {
+          convertedType = dtFactory.createSqlType(SqlTypeName.TIMESTAMP);
+        }
         break;
       case BINARY:
         convertedType = dtFactory.createSqlType(SqlTypeName.BINARY);
@@ -107,6 +114,39 @@ public class TypeConverter {
     }
 
     return dtFactory.createTypeWithNullability(convertedType, true);
+  }
+
+  /**
+   * Parse timestamp precision from type string.
+   * Examples:
+   *   - "timestamp" returns -1 (no precision specified)
+   *   - "timestamp(3)" returns 3
+   *   - "timestamp(6)" returns 6
+   *   - "timestamp(9)" returns 9
+   *
+   * @param typeString the type string from Hive metastore
+   * @return the precision value, or -1 if not specified
+   */
+  private static int parseTimestampPrecision(String typeString) {
+    if (typeString == null || !typeString.startsWith("timestamp")) {
+      return -1;
+    }
+
+    // Check if precision is specified in the format timestamp(n)
+    int openParen = typeString.indexOf('(');
+    int closeParen = typeString.indexOf(')');
+
+    if (openParen > 0 && closeParen > openParen) {
+      try {
+        String precisionStr = typeString.substring(openParen + 1, closeParen).trim();
+        return Integer.parseInt(precisionStr);
+      } catch (NumberFormatException e) {
+        // If parsing fails, return -1 to indicate no precision
+        return -1;
+      }
+    }
+
+    return -1;
   }
 
   public static RelDataType convert(ListTypeInfo lstType, RelDataTypeFactory dtFactory) {

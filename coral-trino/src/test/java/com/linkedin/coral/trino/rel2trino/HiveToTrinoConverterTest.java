@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2024 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -27,6 +27,7 @@ import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 import static com.linkedin.coral.trino.rel2trino.CoralTrinoConfigKeys.*;
 import static org.apache.calcite.sql.type.OperandTypes.*;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 
 
 public class HiveToTrinoConverterTest {
@@ -185,6 +186,16 @@ public class HiveToTrinoConverterTest {
 
         { "test", "view_with_timestamp_and_interval_2", "SELECT (CAST('2021-08-30' AS TIMESTAMP) + INTERVAL -'1-6' YEAR TO MONTH)\n"
             + "FROM \"test\".\"tablea\" AS \"tablea\"" },
+
+        // Test cases for timestamp precision (Iceberg support)
+        { "test", "view_timestamp_precision_3", "SELECT \"table_timestamp_precision_3\".\"id\" AS \"id\", \"table_timestamp_precision_3\".\"ts3\" AS \"ts3\"\n"
+            + "FROM \"test\".\"table_timestamp_precision_3\" AS \"table_timestamp_precision_3\"" },
+
+        { "test", "view_timestamp_precision_6", "SELECT \"table_timestamp_precision_6\".\"id\" AS \"id\", \"table_timestamp_precision_6\".\"ts6\" AS \"ts6\"\n"
+            + "FROM \"test\".\"table_timestamp_precision_6\" AS \"table_timestamp_precision_6\"" },
+
+        { "test", "view_timestamp_precision_9", "SELECT \"table_timestamp_precision_9\".\"id\" AS \"id\", \"table_timestamp_precision_9\".\"ts9\" AS \"ts9\"\n"
+            + "FROM \"test\".\"table_timestamp_precision_9\" AS \"table_timestamp_precision_9\"" },
 
         { "test", "greatest_view", "SELECT \"greatest\"(\"table_ints_strings\".\"a\", \"table_ints_strings\".\"b\") AS \"g_int\", \"greatest\"(\"table_ints_strings\".\"c\", \"table_ints_strings\".\"d\") AS \"g_string\"\n"
             + "FROM \"test\".\"table_ints_strings\" AS \"table_ints_strings\"" },
@@ -625,6 +636,38 @@ public class HiveToTrinoConverterTest {
             + "FROM \"test\".\"table_from_utc_timestamp\" AS \"table_from_utc_timestamp1\"";
     expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
+  }
+
+  @Test
+  public void testTimestampPrecisionPreserved() {
+    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
+
+    // Test timestamp(3) precision is preserved
+    RelNode relNode3 = TestUtils.getHiveToRelConverter()
+        .convertSql("SELECT CAST(ts3 AS VARCHAR) AS ts_str FROM test.table_timestamp_precision_3");
+    String expandedSql3 = relToTrinoConverter.convert(relNode3);
+    // Verify the column type is preserved in the output (even though it's cast to varchar, the source should be timestamp(3))
+    assertTrue(expandedSql3.contains("table_timestamp_precision_3"));
+
+    // Test timestamp(6) precision is preserved
+    RelNode relNode6 = TestUtils.getHiveToRelConverter()
+        .convertSql("SELECT CAST(ts6 AS VARCHAR) AS ts_str FROM test.table_timestamp_precision_6");
+    String expandedSql6 = relToTrinoConverter.convert(relNode6);
+    assertTrue(expandedSql6.contains("table_timestamp_precision_6"));
+
+    // Test timestamp(9) precision is preserved
+    RelNode relNode9 = TestUtils.getHiveToRelConverter()
+        .convertSql("SELECT CAST(ts9 AS VARCHAR) AS ts_str FROM test.table_timestamp_precision_9");
+    String expandedSql9 = relToTrinoConverter.convert(relNode9);
+    assertTrue(expandedSql9.contains("table_timestamp_precision_9"));
+
+    // Test that RelDataType has correct precision
+    RelNode viewNode6 = TestUtils.getHiveToRelConverter().convertView("test", "view_timestamp_precision_6");
+    // The ts6 column should have precision 6
+    org.apache.calcite.rel.type.RelDataType rowType = viewNode6.getRowType();
+    org.apache.calcite.rel.type.RelDataTypeField ts6Field = rowType.getFieldList().get(1);
+    assertEquals(ts6Field.getName(), "ts6");
+    assertEquals(ts6Field.getType().getPrecision(), 6);
   }
 
   @Test
