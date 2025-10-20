@@ -18,6 +18,9 @@ dependencies {
 
   testCompile deps.'hadoop'.'hadoop-mapreduce-client-core'
   testCompile deps.'kryo'
+
+  // Mockito for mocking in tests
+  testCompile 'org.mockito:mockito-core:2.28.2'
 }
 
 sourceSets.main.antlr.srcDirs = ['src/main/antlr/roots']
