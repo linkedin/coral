@@ -16,6 +16,29 @@ import static org.testng.Assert.*;
 public class IcebergIntegrationTest extends SparkIcebergTestBase {
 
   @Test
+  public void testShowDatabases() {
+    // Test showing databases in default Hive catalog
+    Dataset<Row> hiveDatabases = spark.sql("SHOW DATABASES");
+    System.out.println("Hive Catalog - Databases:");
+    hiveDatabases.show();
+    assertTrue(hiveDatabases.count() > 0, "Hive catalog should have at least one database (default)");
+
+    // Verify default database exists in Hive catalog
+    Dataset<Row> defaultDb = spark.sql("SHOW DATABASES LIKE 'default'");
+    assertEquals(defaultDb.count(), 1, "Default database should exist in Hive catalog");
+
+    // Test showing databases in Iceberg catalog
+    Dataset<Row> icebergDatabases = spark.sql("SHOW DATABASES IN iceberg_catalog");
+    System.out.println("Iceberg Catalog - Databases:");
+    icebergDatabases.show();
+    assertTrue(icebergDatabases.count() > 0, "Iceberg catalog should have at least one database (default)");
+
+    // Verify default database exists in Iceberg catalog
+    Dataset<Row> icebergDefaultDb = spark.sql("SHOW DATABASES IN iceberg_catalog LIKE 'default'");
+    assertEquals(icebergDefaultDb.count(), 1, "Default database should exist in Iceberg catalog");
+  }
+
+  @Test
   public void testCreateIcebergTable() {
     // Create an Iceberg table using Spark3
     executeSql("CREATE TABLE IF NOT EXISTS iceberg_catalog.default.test_table " + "(id BIGINT, name STRING, age INT) "

@@ -36,17 +36,35 @@ public class HiveMetastoreTestBase {
     warehouseDir = Files.createTempDirectory("hive-warehouse");
     metastoreDbDir = Files.createTempDirectory("hive-metastore-db");
 
-    // Configure HiveConf for standalone metastore
+    // Configure HiveConf for embedded metastore (no external service required)
     hiveConf = new HiveConf();
-    hiveConf.set("hive.metastore.uris", "thrift://localhost:9083");  // Connect to standalone metastore
+    hiveConf.set("hive.metastore.uris", "");  // Empty to use embedded metastore
     hiveConf.set("javax.jdo.option.ConnectionURL",
-        "jdbc:derby:;databaseName=" + metastoreDbDir.toString() + "/metastore_db;create=true");
+        "jdbc:derby:;databaseName=" + metastoreDbDir.toAbsolutePath().toString() + "/metastore_db;create=true");
     hiveConf.set("javax.jdo.option.ConnectionDriverName", "org.apache.derby.jdbc.EmbeddedDriver");
-    hiveConf.set("hive.metastore.warehouse.dir", warehouseDir.toString());
+    hiveConf.set("hive.metastore.warehouse.dir", warehouseDir.toAbsolutePath().toUri().toString());
     hiveConf.set("hive.metastore.schema.verification", "false");
     hiveConf.set("datanucleus.schema.autoCreateAll", "true");
     hiveConf.set("hive.metastore.schema.verification.record.version", "false");
 
+    // Only create metastore client if not overridden by subclass
+    if (shouldCreateMetastoreClient()) {
+      createMetastoreClient();
+    }
+  }
+
+  /**
+   * Override this method to prevent metastore client creation in subclasses
+   * that use their own metastore access (e.g., through Spark)
+   */
+  protected boolean shouldCreateMetastoreClient() {
+    return true;
+  }
+
+  /**
+   * Create the HiveMetaStoreClient
+   */
+  protected void createMetastoreClient() throws TException {
     // Create metastore client
     try {
       metastoreClient = new HiveMetaStoreClient(hiveConf);
@@ -71,6 +89,23 @@ public class HiveMetastoreTestBase {
     // Close metastore client
     if (metastoreClient != null) {
       metastoreClient.close();
+    }
+
+    // Shutdown Derby database
+    try {
+      java.sql.DriverManager.getConnection("jdbc:derby:;shutdown=true");
+    } catch (java.sql.SQLException e) {
+      // Derby throws SQLException on successful shutdown, ignore it
+      if (e.getSQLState() != null && !e.getSQLState().equals("XJ015")) {
+        System.err.println("Derby shutdown warning: " + e.getMessage());
+      }
+    }
+
+    // Wait a bit for Derby to fully release locks
+    try {
+      Thread.sleep(500);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
     }
 
     // Clean up temporary directories
@@ -102,12 +137,12 @@ public class HiveMetastoreTestBase {
   }
 
   /**
-   * Get the warehouse directory path.
+   * Get the warehouse directory path as absolute URI.
    *
-   * @return Path to warehouse directory
+   * @return Absolute URI to warehouse directory
    */
   protected String getWarehouseDir() {
-    return warehouseDir.toString();
+    return warehouseDir.toAbsolutePath().toUri().toString();
   }
 }
 

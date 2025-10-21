@@ -19,6 +19,14 @@ public class SparkIcebergTestBase extends HiveMetastoreTestBase {
 
   protected SparkSession spark;
 
+  /**
+   * Don't create a separate HiveMetaStoreClient - Spark will manage its own
+   */
+  @Override
+  protected boolean shouldCreateMetastoreClient() {
+    return false;
+  }
+
   @BeforeClass
   public void setupSpark() throws IOException, TException {
     // Setup Hive Metastore first
@@ -33,7 +41,7 @@ public class SparkIcebergTestBase extends HiveMetastoreTestBase {
         .config("spark.sql.catalog.iceberg_catalog.warehouse", getWarehouseDir())
         .config("spark.sql.warehouse.dir", getWarehouseDir())
         .config("hive.metastore.warehouse.dir", getWarehouseDir())
-        .config("hive.metastore.uris", "thrift://localhost:9083")  // Connect to standalone metastore
+        .config("hive.metastore.uris", "")  // Empty for embedded metastore
         .config("javax.jdo.option.ConnectionURL", hiveConf.get("javax.jdo.option.ConnectionURL"))
         .config("javax.jdo.option.ConnectionDriverName", hiveConf.get("javax.jdo.option.ConnectionDriverName"))
         // Use Hive catalog implementation for default catalog
