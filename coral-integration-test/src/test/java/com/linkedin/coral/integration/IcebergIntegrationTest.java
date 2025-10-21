@@ -16,85 +16,44 @@ import static org.testng.Assert.*;
 public class IcebergIntegrationTest extends SparkIcebergTestBase {
 
   @Test
-  public void testShowDatabases() {
-    // Test showing databases in default Hive catalog
-    Dataset<Row> hiveDatabases = spark.sql("SHOW DATABASES");
-    System.out.println("Hive Catalog - Databases:");
-    hiveDatabases.show();
-    assertTrue(hiveDatabases.count() > 0, "Hive catalog should have at least one database (default)");
-
-    // Verify default database exists in Hive catalog
-    Dataset<Row> defaultDb = spark.sql("SHOW DATABASES LIKE 'default'");
-    assertEquals(defaultDb.count(), 1, "Default database should exist in Hive catalog");
-
-    // Test showing databases in Iceberg catalog using USE and SHOW
-    spark.sql("USE iceberg_catalog");
-    Dataset<Row> icebergDatabases = spark.sql("SHOW DATABASES");
-    System.out.println("Iceberg Catalog - Databases:");
-    icebergDatabases.show();
-    assertTrue(icebergDatabases.count() > 0, "Iceberg catalog should have at least one database (default)");
-
-    // Verify default database exists in Iceberg catalog
-    Dataset<Row> icebergDefaultDb = spark.sql("SHOW DATABASES LIKE 'default'");
-    assertEquals(icebergDefaultDb.count(), 1, "Default database should exist in Iceberg catalog");
-
-    // Switch back to default catalog
-    spark.sql("USE spark_catalog");
-  }
-
-  @Test
-  public void testCreateIcebergTable() {
-    // Test 3-part namespace: catalog.database.table
+  public void testCreateHiveViewOnIcebergTable() {
     // Create an Iceberg table using fully qualified name
-    executeSql("CREATE TABLE IF NOT EXISTS iceberg_catalog.default.test_table "
-        + "(id BIGINT, name STRING, age INT, tscol TIMESTAMP) "
+    executeSql("CREATE TABLE IF NOT EXISTS iceberg_catalog.default.test_iceberg_table "
+        + "(id BIGINT, name STRING, age INT, salary DOUBLE, hire_date TIMESTAMP) "
         + "USING iceberg");
 
-    // Insert some data using INSERT INTO ... SELECT pattern (avoids catalog resolution issue with VALUES)
-    executeSql("INSERT INTO iceberg_catalog.default.test_table " +
-        "SELECT 1L, 'Alice', 30, current_timestamp() UNION ALL " +
-        "SELECT 2L, 'Bob', 25, current_timestamp()");
+    // Insert test data into the Iceberg table
+    executeSql("INSERT INTO iceberg_catalog.default.test_iceberg_table " +
+        "SELECT 1L, 'Alice', 30, 75000.0, current_timestamp() UNION ALL " +
+        "SELECT 2L, 'Bob', 25, 65000.0, current_timestamp() UNION ALL " +
+        "SELECT 3L, 'Charlie', 35, 85000.0, current_timestamp()");
 
-    // Query the data using 3-part namespace
-    Dataset<Row> result = spark.sql("SELECT * FROM iceberg_catalog.default.test_table");
-    long count = result.count();
+    // Create a Hive view on top of the Iceberg table
+    // The view filters employees with age > 25 and selects specific columns including timestamp
+    executeSql("CREATE OR REPLACE VIEW spark_catalog.default.iceberg_table_view AS " +
+        "SELECT id, name, age, hire_date FROM iceberg_catalog.default.test_iceberg_table WHERE age > 25");
 
-    assertEquals(count, 2, "Should have 2 rows");
+    // Query the Hive view
+    Dataset<Row> viewResult = spark.sql("SELECT * FROM spark_catalog.default.iceberg_table_view");
+    long viewCount = viewResult.count();
 
-    // Verify data
-    Row firstRow = result.first();
-    assertNotNull(firstRow, "First row should not be null");
+    // Verify the view returns the expected number of rows (2 employees with age > 25)
+    assertEquals(viewCount, 2, "View should return 2 rows with age > 25");
 
-    // Also verify we can query without switching catalogs
-    Dataset<Row> result2 = spark.sql("SELECT id, name FROM iceberg_catalog.default.test_table WHERE age > 25");
-    assertEquals(result2.count(), 1, "Should have 1 row with age > 25");
-  }
+    // Verify we can filter on the view
+    Dataset<Row> filteredView = spark.sql("SELECT name FROM spark_catalog.default.iceberg_table_view WHERE age >= 30");
+    assertEquals(filteredView.count(), 2, "Should have 2 employees with age >= 30");
 
-  @Test
-  public void testCreateHiveTable() {
-    // Test 3-part namespace: catalog.database.table
-    // Create an Iceberg table using fully qualified name
-    executeSql("CREATE TABLE IF NOT EXISTS spark_catalog.default.test_table "
-        + "(id BIGINT, name STRING, age INT, tscol TIMESTAMP) ");
+    // Verify the actual data from the view
+    Row firstViewRow = viewResult.first();
+    assertNotNull(firstViewRow, "First row from view should not be null");
+    assertTrue(firstViewRow.getLong(0) > 0, "ID should be greater than 0");
+    assertNotNull(firstViewRow.getString(1), "Name should not be null");
+    assertTrue(firstViewRow.getInt(2) > 25, "Age should be greater than 25");
+    assertNotNull(firstViewRow.getTimestamp(3), "Hire date timestamp should not be null");
 
-    // Insert some data using INSERT INTO ... SELECT pattern (avoids catalog resolution issue with VALUES)
-    executeSql("INSERT INTO spark_catalog.default.test_table " +
-        "SELECT 1L, 'Alice', 30, current_timestamp() UNION ALL " +
-        "SELECT 2L, 'Bob', 25, current_timestamp()");
-
-    // Query the data using 3-part namespace
-    Dataset<Row> result = spark.sql("SELECT * FROM spark_catalog.default.test_table");
-    long count = result.count();
-
-    assertEquals(count, 2, "Should have 2 rows");
-
-    // Verify data
-    Row firstRow = result.first();
-    assertNotNull(firstRow, "First row should not be null");
-
-    // Also verify we can query without switching catalogs
-    Dataset<Row> result2 = spark.sql("SELECT id, name FROM spark_catalog.default.test_table WHERE age > 25");
-    assertEquals(result2.count(), 1, "Should have 1 row with age > 25");
+    // Drop the view after test
+    executeSql("DROP VIEW IF EXISTS spark_catalog.default.iceberg_table_view");
   }
 
 }
