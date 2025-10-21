@@ -62,6 +62,12 @@ dependencies {
     exclude group: 'com.fasterxml.jackson.core', module: 'jackson-core'
     exclude group: 'com.fasterxml.jackson.core', module: 'jackson-annotations'
   }
+  // Add Iceberg test utilities for TestHiveMetastore
+  testCompile(deps.'iceberg'.'iceberg-hive-metastore' + ':tests') {
+    exclude group: 'com.fasterxml.jackson.core', module: 'jackson-databind'
+    exclude group: 'com.fasterxml.jackson.core', module: 'jackson-core'
+    exclude group: 'com.fasterxml.jackson.core', module: 'jackson-annotations'
+  }
 
   // Hadoop dependencies
   testCompile deps.'hadoop'.'hadoop-common'
@@ -98,7 +104,7 @@ test {
   systemProperty 'derby.stream.error.file', 'build/derby.log'
   systemProperty 'java.io.tmpdir', 'build/tmp'
   
-  // Run tests sequentially to avoid Derby locking issues
+  // Run tests sequentially to avoid resource contention
   maxParallelForks = 1
   
   testLogging {

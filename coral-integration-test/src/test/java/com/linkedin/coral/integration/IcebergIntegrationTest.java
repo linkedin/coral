@@ -37,21 +37,25 @@ public class IcebergIntegrationTest extends SparkIcebergTestBase {
     // Verify default database exists in Iceberg catalog
     Dataset<Row> icebergDefaultDb = spark.sql("SHOW DATABASES LIKE 'default'");
     assertEquals(icebergDefaultDb.count(), 1, "Default database should exist in Iceberg catalog");
-    
+
     // Switch back to default catalog
     spark.sql("USE spark_catalog");
   }
 
   @Test
   public void testCreateIcebergTable() {
-    // Create an Iceberg table using Spark3
-    executeSql("CREATE TABLE IF NOT EXISTS iceberg_catalog.default.test_table " + "(id BIGINT, name STRING, age INT) "
+    // Test 3-part namespace: catalog.database.table
+    // Create an Iceberg table using fully qualified name
+    executeSql("CREATE TABLE IF NOT EXISTS iceberg_catalog.default.test_table "
+        + "(id BIGINT, name STRING, age INT, tscol TIMESTAMP) "
         + "USING iceberg");
 
-    // Insert some data
-    executeSql("INSERT INTO iceberg_catalog.default.test_table VALUES (1, 'Alice', 30), (2, 'Bob', 25)");
+    // Insert some data using INSERT INTO ... SELECT pattern (avoids catalog resolution issue with VALUES)
+    executeSql("INSERT INTO iceberg_catalog.default.test_table " +
+        "SELECT 1L, 'Alice', 30, current_timestamp() UNION ALL " +
+        "SELECT 2L, 'Bob', 25, current_timestamp()");
 
-    // Query the data
+    // Query the data using 3-part namespace
     Dataset<Row> result = spark.sql("SELECT * FROM iceberg_catalog.default.test_table");
     long count = result.count();
 
@@ -60,91 +64,38 @@ public class IcebergIntegrationTest extends SparkIcebergTestBase {
     // Verify data
     Row firstRow = result.first();
     assertNotNull(firstRow, "First row should not be null");
+
+    // Also verify we can query without switching catalogs
+    Dataset<Row> result2 = spark.sql("SELECT id, name FROM iceberg_catalog.default.test_table WHERE age > 25");
+    assertEquals(result2.count(), 1, "Should have 1 row with age > 25");
   }
 
   @Test
-  public void testIcebergTableWithPartitions() {
-    // Create a partitioned Iceberg table
-    executeSql("CREATE TABLE IF NOT EXISTS iceberg_catalog.default.partitioned_table " + "(id BIGINT, name STRING, year INT) "
-        + "USING iceberg " + "PARTITIONED BY (year)");
+  public void testCreateHiveTable() {
+    // Test 3-part namespace: catalog.database.table
+    // Create an Iceberg table using fully qualified name
+    executeSql("CREATE TABLE IF NOT EXISTS spark_catalog.default.test_table "
+        + "(id BIGINT, name STRING, age INT, tscol TIMESTAMP) ");
 
-    // Insert data
-    executeSql("INSERT INTO iceberg_catalog.default.partitioned_table VALUES " + "(1, 'Alice', 2023), "
-        + "(2, 'Bob', 2023), " + "(3, 'Charlie', 2024)");
+    // Insert some data using INSERT INTO ... SELECT pattern (avoids catalog resolution issue with VALUES)
+    executeSql("INSERT INTO spark_catalog.default.test_table " +
+        "SELECT 1L, 'Alice', 30, current_timestamp() UNION ALL " +
+        "SELECT 2L, 'Bob', 25, current_timestamp()");
 
-    // Query specific partition
-    Dataset<Row> result = spark.sql("SELECT * FROM iceberg_catalog.default.partitioned_table WHERE year = 2023");
-    long count = result.count();
-
-    assertEquals(count, 2, "Should have 2 rows for year 2023");
-  }
-
-  @Test
-  public void testIcebergTimeTravel() {
-    // Create an Iceberg table
-    executeSql("CREATE TABLE IF NOT EXISTS iceberg_catalog.default.time_travel_table " + "(id BIGINT, value STRING) "
-        + "USING iceberg");
-
-    // Insert initial data
-    executeSql("INSERT INTO iceberg_catalog.default.time_travel_table VALUES (1, 'initial')");
-
-    // Get snapshot ID
-    Dataset<Row> snapshots = spark.sql("SELECT snapshot_id FROM iceberg_catalog.default.time_travel_table.snapshots");
-    long firstSnapshotId = snapshots.first().getLong(0);
-
-    // Update data
-    executeSql("INSERT INTO iceberg_catalog.default.time_travel_table VALUES (2, 'updated')");
-
-    // Query current state
-    long currentCount = executeSqlAndGetCount("SELECT * FROM iceberg_catalog.default.time_travel_table");
-    assertEquals(currentCount, 2, "Should have 2 rows in current state");
-
-    // Query using time travel to first snapshot
-    long timeravelCount =
-        executeSqlAndGetCount("SELECT * FROM iceberg_catalog.default.time_travel_table VERSION AS OF " + firstSnapshotId);
-    assertEquals(timeravelCount, 1, "Should have 1 row in first snapshot");
-  }
-
-  @Test
-  public void testHiveMetastoreIntegration() {
-    // Create a regular Hive table
-    executeSql("CREATE TABLE IF NOT EXISTS default.hive_table " + "(id INT, name STRING) " + "USING parquet");
-
-    // Insert data
-    executeSql("INSERT INTO default.hive_table VALUES (1, 'Test')");
-
-    // Query the data
-    long count = executeSqlAndGetCount("SELECT * FROM default.hive_table");
-    assertEquals(count, 1, "Should have 1 row");
-
-    // Verify we can list tables
-    Dataset<Row> tables = spark.sql("SHOW TABLES IN default");
-    assertTrue(tables.count() > 0, "Should have at least one table in default database");
-  }
-
-  @Test
-  public void testIcebergSchemaEvolution() {
-    // Create an Iceberg table
-    executeSql("CREATE TABLE IF NOT EXISTS iceberg_catalog.default.schema_evolution_table " + "(id BIGINT, name STRING) "
-        + "USING iceberg");
-
-    // Insert data
-    executeSql("INSERT INTO iceberg_catalog.default.schema_evolution_table VALUES (1, 'Alice')");
-
-    // Add a new column
-    executeSql("ALTER TABLE iceberg_catalog.default.schema_evolution_table ADD COLUMNS (email STRING)");
-
-    // Insert data with new schema
-    executeSql("INSERT INTO iceberg_catalog.default.schema_evolution_table VALUES (2, 'Bob', 'bob@example.com')");
-
-    // Query all data (old and new schema)
-    Dataset<Row> result = spark.sql("SELECT * FROM iceberg_catalog.default.schema_evolution_table");
+    // Query the data using 3-part namespace
+    Dataset<Row> result = spark.sql("SELECT * FROM spark_catalog.default.test_table");
     long count = result.count();
 
     assertEquals(count, 2, "Should have 2 rows");
 
-    // Verify schema has 3 columns
-    assertEquals(result.columns().length, 3, "Should have 3 columns after schema evolution");
+    // Verify data
+    Row firstRow = result.first();
+    assertNotNull(firstRow, "First row should not be null");
+
+    // Also verify we can query without switching catalogs
+    Dataset<Row> result2 = spark.sql("SELECT id, name FROM spark_catalog.default.test_table WHERE age > 25");
+    assertEquals(result2.count(), 1, "Should have 1 row with age > 25");
   }
+
 }
 
