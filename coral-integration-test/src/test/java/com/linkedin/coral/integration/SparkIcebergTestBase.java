@@ -28,23 +28,39 @@ public class SparkIcebergTestBase extends HiveMetastoreTestBase {
   }
 
   @BeforeClass
-  public void setupSpark() throws IOException, TException {
-    // Setup Hive Metastore first
+  public void setupSpark() throws Exception {
+    // Setup Hive Metastore configurations (creates two separate HiveConf instances with different URIs)
     super.setupHiveMetastore();
 
-    // Create SparkSession configured with Iceberg and Hive Metastore
-    // Use default Hive catalog for Hive tables, and add Iceberg catalog for Iceberg tables
+    // Create SparkSession with TWO separate embedded metastores
+    // Each catalog uses its own URI and HiveConf with separate Derby databases
     spark = SparkSession.builder().appName("CoralIntegrationTest").master("local[2]")
         .config("spark.sql.extensions", "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions")
+
+        // Iceberg catalog with its OWN URI and embedded metastore
         .config("spark.sql.catalog.iceberg_catalog", "org.apache.iceberg.spark.SparkCatalog")
         .config("spark.sql.catalog.iceberg_catalog.type", "hive")
-        .config("spark.sql.catalog.iceberg_catalog.warehouse", getWarehouseDir())
+        .config("spark.sql.catalog.iceberg_catalog.uri", getIcebergMetastoreUri())  // Iceberg-specific URI
+        .config("spark.sql.catalog.iceberg_catalog.warehouse", getIcebergWarehouseDir())
+        // Use Iceberg-specific HiveConf settings (separate Derby database)
+        .config("spark.sql.catalog.iceberg_catalog.javax.jdo.option.ConnectionURL",
+            icebergHiveConf.get("javax.jdo.option.ConnectionURL"))
+        .config("spark.sql.catalog.iceberg_catalog.javax.jdo.option.ConnectionDriverName",
+            icebergHiveConf.get("javax.jdo.option.ConnectionDriverName"))
+        .config("spark.sql.catalog.iceberg_catalog.datanucleus.schema.autoCreateAll", "true")
+        .config("spark.sql.catalog.iceberg_catalog.hive.metastore.schema.verification", "false")
+
+        // Default Hive catalog with its OWN URI and embedded metastore
         .config("spark.sql.warehouse.dir", getWarehouseDir())
         .config("hive.metastore.warehouse.dir", getWarehouseDir())
-        .config("hive.metastore.uris", "")  // Empty for embedded metastore
+        .config("hive.metastore.uris", getHiveMetastoreUri())  // Hive-specific URI
+        // Use Hive-specific HiveConf settings (separate Derby database)
         .config("javax.jdo.option.ConnectionURL", hiveConf.get("javax.jdo.option.ConnectionURL"))
         .config("javax.jdo.option.ConnectionDriverName", hiveConf.get("javax.jdo.option.ConnectionDriverName"))
-        // Use Hive catalog implementation for default catalog
+        .config("datanucleus.schema.autoCreateAll", "true")
+        .config("hive.metastore.schema.verification", "false")
+
+        // Spark configuration
         .config("spark.sql.catalogImplementation", "hive")
         .config("spark.sql.shuffle.partitions", "4")
         .config("spark.ui.enabled", "false")  // Disable UI for tests
@@ -56,12 +72,20 @@ public class SparkIcebergTestBase extends HiveMetastoreTestBase {
 
   @AfterClass
   public void tearDownSpark() throws IOException {
-    // Stop Spark session
+    // Stop Spark session first
     if (spark != null) {
       spark.stop();
+      spark = null;
     }
 
-    // Cleanup Hive Metastore
+    // Give Spark time to fully release Derby
+    try {
+      Thread.sleep(1000);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+    }
+
+    // Cleanup Hive Metastore (includes Derby shutdown)
     super.tearDownHiveMetastore();
   }
 
