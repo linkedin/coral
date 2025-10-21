@@ -25,19 +25,20 @@ public class SparkIcebergTestBase extends HiveMetastoreTestBase {
     super.setupHiveMetastore();
 
     // Create SparkSession configured with Iceberg and Hive Metastore
+    // Use default Hive catalog for Hive tables, and add Iceberg catalog for Iceberg tables
     spark = SparkSession.builder().appName("CoralIntegrationTest").master("local[2]")
         .config("spark.sql.extensions", "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions")
         .config("spark.sql.catalog.iceberg_catalog", "org.apache.iceberg.spark.SparkCatalog")
         .config("spark.sql.catalog.iceberg_catalog.type", "hive")
         .config("spark.sql.catalog.iceberg_catalog.warehouse", getWarehouseDir())
-        .config("spark.sql.catalog.hive_catalog", "org.apache.iceberg.spark.SparkCatalog")
-        .config("spark.sql.catalog.hive_catalog.type", "hive")
-        .config("spark.sql.catalog.hive_catalog.uri", "")  // Empty for embedded metastore
         .config("spark.sql.warehouse.dir", getWarehouseDir())
         .config("hive.metastore.warehouse.dir", getWarehouseDir())
+        .config("hive.metastore.uris", "thrift://localhost:9083")  // Connect to standalone metastore
         .config("javax.jdo.option.ConnectionURL", hiveConf.get("javax.jdo.option.ConnectionURL"))
         .config("javax.jdo.option.ConnectionDriverName", hiveConf.get("javax.jdo.option.ConnectionDriverName"))
-        .config("spark.sql.catalogImplementation", "hive").config("spark.sql.shuffle.partitions", "4")
+        // Use Hive catalog implementation for default catalog
+        .config("spark.sql.catalogImplementation", "hive")
+        .config("spark.sql.shuffle.partitions", "4")
         .config("spark.ui.enabled", "false")  // Disable UI for tests
         .enableHiveSupport().getOrCreate();
 

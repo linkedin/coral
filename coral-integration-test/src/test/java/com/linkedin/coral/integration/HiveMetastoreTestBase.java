@@ -38,7 +38,7 @@ public class HiveMetastoreTestBase {
 
     // Configure HiveConf for standalone metastore
     hiveConf = new HiveConf();
-    hiveConf.set("hive.metastore.uris", "");  // Empty to use embedded metastore
+    hiveConf.set("hive.metastore.uris", "thrift://localhost:9083");  // Connect to standalone metastore
     hiveConf.set("javax.jdo.option.ConnectionURL",
         "jdbc:derby:;databaseName=" + metastoreDbDir.toString() + "/metastore_db;create=true");
     hiveConf.set("javax.jdo.option.ConnectionDriverName", "org.apache.derby.jdbc.EmbeddedDriver");
