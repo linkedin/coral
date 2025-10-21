@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2024 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -80,7 +80,7 @@ public class HiveDataset implements Dataset {
   public TableType tableType() {
     return HiveTableUtil.tableType(table.getTableType());
   }
-  
+
   /**
    * Returns the underlying Hive Table object.
    * Used by Calcite integration layer (HiveTable).
@@ -91,4 +91,3 @@ public class HiveDataset implements Dataset {
     return table;
   }
 }
-

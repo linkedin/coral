@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2024 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -94,7 +94,7 @@ public class IcebergDataset implements Dataset {
   public TableType tableType() {
     return TableType.TABLE;
   }
-  
+
   /**
    * Returns the underlying Iceberg Table object.
    * Used by Calcite integration layer (IcebergTable).
@@ -105,4 +105,3 @@ public class IcebergDataset implements Dataset {
     return table;
   }
 }
-

@@ -769,4 +769,3 @@ This improved design:
 - ✅ Minimal code changes (~500 lines total)
 
 **The key insight**: Use `CoralCatalog.getDataset()` to get format information, then create the appropriate Calcite `Table` implementation (`HiveTable` or `IcebergTable`) that knows how to convert its format's schema to Calcite's `RelDataType`.
-

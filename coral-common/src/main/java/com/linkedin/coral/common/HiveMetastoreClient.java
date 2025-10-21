@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2024 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -56,6 +56,19 @@ public interface HiveMetastoreClient extends CoralCatalog {
    * @return Hive Table object, or null if not found
    */
   Table getTable(String dbName, String tableName);
+
+  /**
+   * Checks if a namespace (database) exists in the metastore.
+   * Default implementation delegates to {@link #getDatabase(String)}.
+   *
+   * @param dbName Database name
+   * @return true if database exists, false otherwise
+   */
+  @Override
+  default boolean namespaceExists(String dbName) {
+    Database db = getDatabase(dbName);
+    return db != null;
+  }
 
   /**
    * Retrieves a dataset by database and table name.

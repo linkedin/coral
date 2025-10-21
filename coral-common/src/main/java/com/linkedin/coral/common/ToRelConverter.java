@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2024 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -69,6 +69,15 @@ public abstract class ToRelConverter {
   protected abstract SqlNode toSqlNode(String sql, org.apache.hadoop.hive.metastore.api.Table hiveView);
 
   /**
+   * Constructor for backward compatibility with HiveMetastoreClient.
+   * 
+   * @param hiveMetastoreClient Hive metastore client
+   */
+  protected ToRelConverter(@Nonnull HiveMetastoreClient hiveMetastoreClient) {
+    this((CoralCatalog) checkNotNull(hiveMetastoreClient));
+  }
+
+  /**
    * Constructor accepting CoralCatalog for unified catalog access.
    * 
    * @param catalog Coral catalog providing access to table metadata
@@ -87,15 +96,6 @@ public abstract class ToRelConverter {
         .typeSystem(new HiveTypeSystem()).traitDefs((List<RelTraitDef>) null).operatorTable(getOperatorTable())
         .programs(Programs.ofRules(Programs.RULE_SET)).build();
 
-  }
-  
-  /**
-   * Constructor for backward compatibility with HiveMetastoreClient.
-   * 
-   * @param hiveMetastoreClient Hive metastore client
-   */
-  protected ToRelConverter(@Nonnull HiveMetastoreClient hiveMetastoreClient) {
-    this((CoralCatalog) checkNotNull(hiveMetastoreClient));
   }
 
   /**
@@ -164,14 +164,14 @@ public abstract class ToRelConverter {
     if (catalog == null) {
       throw new RuntimeException("Cannot process view without catalog: " + dbName + "." + tableName);
     }
-    
+
     org.apache.hadoop.hive.metastore.api.Table table = null;
     if (catalog instanceof HiveMetastoreClient) {
       table = ((HiveMetastoreClient) catalog).getTable(dbName, tableName);
     } else {
       throw new RuntimeException("View processing requires HiveMetastoreClient, got: " + catalog.getClass().getName());
     }
-    
+
     if (table == null) {
       throw new RuntimeException(String.format("Unknown table %s.%s", dbName, tableName));
     }

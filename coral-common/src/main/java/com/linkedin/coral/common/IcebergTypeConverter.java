@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2024 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -92,10 +92,8 @@ public class IcebergTypeConverter {
         return typeFactory.createSqlType(SqlTypeName.TIME);
 
       case TIMESTAMP:
-        // Iceberg has timestamptz (with timezone) and timestamp (without timezone)
-        Types.TimestampType tsType = (Types.TimestampType) icebergType;
-        return tsType.shouldAdjustToUTC() ? typeFactory.createSqlType(SqlTypeName.TIMESTAMP_WITH_LOCAL_TIME_ZONE)
-            : typeFactory.createSqlType(SqlTypeName.TIMESTAMP);
+        // Iceberg timestamp type
+        return typeFactory.createSqlType(SqlTypeName.TIMESTAMP, 6);
 
       case STRING:
         return typeFactory.createSqlType(SqlTypeName.VARCHAR, Integer.MAX_VALUE);
@@ -120,8 +118,7 @@ public class IcebergTypeConverter {
 
       case LIST:
         Types.ListType listType = (Types.ListType) icebergType;
-        RelDataType elementType =
-            convertIcebergType(listType.elementType(), fieldName + "_element", typeFactory);
+        RelDataType elementType = convertIcebergType(listType.elementType(), fieldName + "_element", typeFactory);
         // Handle list element nullability
         elementType = typeFactory.createTypeWithNullability(elementType, listType.isElementOptional());
         return typeFactory.createArrayType(elementType, -1);
@@ -135,7 +132,8 @@ public class IcebergTypeConverter {
         return typeFactory.createMapType(keyType, valueType);
 
       default:
-        throw new UnsupportedOperationException("Unsupported Iceberg type: " + icebergType + " (TypeID: " + typeId + ")");
+        throw new UnsupportedOperationException(
+            "Unsupported Iceberg type: " + icebergType + " (TypeID: " + typeId + ")");
     }
   }
 
@@ -168,4 +166,3 @@ public class IcebergTypeConverter {
     return typeFactory.createStructType(fieldTypes, fieldNames);
   }
 }
-

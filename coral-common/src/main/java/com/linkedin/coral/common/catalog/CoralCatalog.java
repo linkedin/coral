@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2024 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -35,6 +35,16 @@ public interface CoralCatalog {
   Dataset getDataset(String dbName, String tableName);
 
   /**
+   * Checks if a namespace (database) exists in the catalog.
+   * This provides a lightweight way to verify namespace existence
+   * without retrieving full metadata.
+   *
+   * @param dbName Database or namespace name
+   * @return true if the namespace exists, false otherwise
+   */
+  boolean namespaceExists(String dbName);
+
+  /**
    * Retrieves all dataset (table/view) names in a database.
    *
    * @param dbName Database name
@@ -49,4 +59,3 @@ public interface CoralCatalog {
    */
   List<String> getAllDatabases();
 }
-

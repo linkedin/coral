@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2024 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -21,7 +21,6 @@ import com.linkedin.coral.common.catalog.CoralCatalog;
 import com.linkedin.coral.common.catalog.Dataset;
 import com.linkedin.coral.common.catalog.HiveDataset;
 import com.linkedin.coral.common.catalog.IcebergDataset;
-import com.linkedin.coral.common.catalog.TableType;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -42,7 +41,7 @@ public class HiveDbSchema implements Schema {
     this.catalog = checkNotNull(catalog);
     this.dbName = checkNotNull(dbName);
   }
-  
+
   /**
    * Constructor for backward compatibility with HiveMetastoreClient.
    */
@@ -57,22 +56,22 @@ public class HiveDbSchema implements Schema {
     if (dataset == null) {
       return null;
     }
-    
+
     // Handle views - still need Hive Table object for view expansion
     if (dataset.tableType() == com.linkedin.coral.common.catalog.TableType.VIEW) {
       org.apache.hadoop.hive.metastore.api.Table hiveTable = getHiveTableForView(dbName, name);
       if (hiveTable != null) {
         return new HiveViewTable(hiveTable, ImmutableList.of(HiveSchema.ROOT_SCHEMA, dbName));
       }
+      return null;
     }
-    
+
     // Dispatch based on Dataset implementation type
     if (dataset instanceof IcebergDataset) {
       return new IcebergTable((IcebergDataset) dataset);
-    } else if (dataset instanceof HiveDataset) {
-      return new HiveTable((HiveDataset) dataset);
     } else {
-      throw new UnsupportedOperationException("Unknown dataset type: " + dataset.getClass().getName());
+      // Default: treat as HiveDataset (includes HiveDataset and any unknown types)
+      return new HiveTable((HiveDataset) dataset);
     }
   }
 
@@ -80,17 +79,17 @@ public class HiveDbSchema implements Schema {
   public Set<String> getTableNames() {
     return ImmutableSet.copyOf(catalog.getAllDatasets(dbName));
   }
-  
+
   /**
    * Helper method to get Hive Table object for views.
    * Views require the Hive Table object for view expansion logic.
+   * Returns null if not available from a Hive catalog.
    */
   private org.apache.hadoop.hive.metastore.api.Table getHiveTableForView(String dbName, String tableName) {
     if (catalog instanceof HiveMetastoreClient) {
       return ((HiveMetastoreClient) catalog).getTable(dbName, tableName);
     }
-    throw new RuntimeException("Cannot get Hive table for view from non-Hive catalog: " + 
-                               dbName + "." + tableName);
+    return null;
   }
 
   @Override

@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2024 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -17,7 +17,6 @@ import com.google.common.collect.ImmutableSet;
 import org.apache.calcite.linq4j.tree.Expression;
 import org.apache.calcite.rel.type.RelProtoDataType;
 import org.apache.calcite.schema.*;
-import org.apache.hadoop.hive.metastore.api.Database;
 
 import com.linkedin.coral.common.catalog.CoralCatalog;
 
@@ -47,7 +46,7 @@ public class HiveSchema implements Schema {
   public HiveSchema(@Nonnull CoralCatalog catalog) {
     this.catalog = checkNotNull(catalog);
   }
-  
+
   /**
    * Create HiveSchema using HiveMetastoreClient (backward compatibility).
    * 
@@ -94,16 +93,9 @@ public class HiveSchema implements Schema {
 
   @Override
   public Schema getSubSchema(String name) {
-    // Check if database exists by checking if it has any datasets
-    List<String> datasets = catalog.getAllDatasets(name);
-    if (datasets == null || datasets.isEmpty()) {
-      // Could be empty database, check via HiveMetastoreClient if available
-      if (catalog instanceof HiveMetastoreClient) {
-        Database database = ((HiveMetastoreClient) catalog).getDatabase(name);
-        if (database == null) {
-          return null;
-        }
-      }
+    // Check if namespace (database) exists using the catalog API
+    if (!catalog.namespaceExists(name)) {
+      return null;
     }
     return new HiveDbSchema(catalog, name);
   }
