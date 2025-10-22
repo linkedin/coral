@@ -19,7 +19,6 @@ dependencies {
   // Coral dependencies
   testCompile project(':coral-hive')
   testCompile project(':coral-spark')
-  testCompile project(':coral-trino')
   testCompile project(':coral-schema')
 
   // Spark3 dependencies

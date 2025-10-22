@@ -4,6 +4,7 @@
 package com.linkedin.coral.integration;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -12,6 +13,7 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.Database;
+import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.iceberg.hive.TestHiveMetastore;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.catalyst.parser.ParseException;
@@ -22,11 +24,6 @@ import com.linkedin.coral.common.HiveMetastoreClient;
 import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
 import com.linkedin.coral.schema.avro.ViewToAvroSchemaConverter;
 import com.linkedin.coral.spark.CoralSpark;
-import com.linkedin.coral.trino.rel2trino.RelToTrinoConverter;
-
-import coral.shading.io.trino.sql.parser.ParsingOptions;
-import coral.shading.io.trino.sql.parser.SqlParser;
-import coral.shading.io.trino.sql.tree.Statement;
 
 
 /**
@@ -35,7 +32,7 @@ import coral.shading.io.trino.sql.tree.Statement;
  * - Iceberg's TestHiveMetastore for iceberg_catalog (optimized for Iceberg)
  * - Derby-based HMS from HiveMetastoreTestBase for spark_catalog (regular Hive tables)
  */
-public class IcebergTestBase extends HiveMetastoreTestBase {
+public class SparkIcebergTestBase extends HiveMetastoreTestBase {
 
   protected SparkSession spark;
   protected static TestHiveMetastore icebergTestHms;
@@ -259,6 +256,7 @@ public class IcebergTestBase extends HiveMetastoreTestBase {
     } catch (ParseException e) {
       throw new RuntimeException("Validation failed, failed to parse the translated spark sql: ", e);
     }
+    return false;
   }
 
   /**
@@ -270,47 +268,9 @@ public class IcebergTestBase extends HiveMetastoreTestBase {
    * @return CoralSpark translation object
    */
   protected CoralSpark getCoralSparkTranslation(String db, String table, HiveMetastoreClient hiveMetastoreClient) {
-    final RelNode rel = getRelNode(db, table, hiveMetastoreClient);
-    Schema coralSchema = ViewToAvroSchemaConverter.create(hiveMetastoreClient).toAvroSchema(db, table);
-    return CoralSpark.create(rel, coralSchema, hiveMetastoreClient);
-  }
-
-  protected static RelNode getRelNode(String db, String table, HiveMetastoreClient hiveMetastoreClient) {
     final HiveToRelConverter hiveToRelConverter = new HiveToRelConverter(hiveMetastoreClient);
     final RelNode rel = hiveToRelConverter.convertView(db, table);
-    return rel;
-  }
-
-  /**
-   * Validate Trino SQL syntax by parsing with Trino's SqlParser.
-   * This ensures the SQL is syntactically valid according to Trino's grammar.
-   *
-   * @param trinoSql Trino SQL string
-   * @return true if SQL is syntactically valid
-   * @throws RuntimeException if SQL is invalid
-   */
-  protected Statement validateTrinoSql(String trinoSql) {
-    try {
-      SqlParser trinoParser = new SqlParser();
-      Statement statement = trinoParser.createStatement(trinoSql,
-          new ParsingOptions(ParsingOptions.DecimalLiteralTreatment.AS_DECIMAL));
-      return statement;
-    } catch (Exception e) {
-      throw new RuntimeException("Validation failed, failed to parse the translated Trino SQL: " + trinoSql, e);
-    }
-  }
-
-  /**
-   * Get Coral Trino translation for a given view.
-   *
-   * @param db Database name
-   * @param table Table/view name
-   * @param hiveMetastoreClient HiveMetastoreClient for Coral
-   * @return Trino SQL string
-   */
-  protected String getCoralTrinoTranslation(String db, String table, HiveMetastoreClient hiveMetastoreClient) {
-    final RelNode rel = getRelNode(db, table, hiveMetastoreClient);
-    RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter(hiveMetastoreClient);
-    return relToTrinoConverter.convert(rel);
+    Schema coralSchema = ViewToAvroSchemaConverter.create(hiveMetastoreClient).toAvroSchema(db, table);
+    return CoralSpark.create(rel, coralSchema, hiveMetastoreClient);
   }
 }
