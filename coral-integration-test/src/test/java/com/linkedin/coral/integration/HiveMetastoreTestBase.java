@@ -1,6 +1,8 @@
-// Copyright 2019-2020 LinkedIn Corporation. All rights reserved.
-// Licensed under the BSD-2 Clause license.
-// See LICENSE in the project root for license information.
+/**
+ * Copyright 2019-2025 LinkedIn Corporation. All rights reserved.
+ * Licensed under the BSD-2 Clause license.
+ * See LICENSE in the project root for license information.
+ */
 package com.linkedin.coral.integration;
 
 import java.io.File;
@@ -42,7 +44,7 @@ public class HiveMetastoreTestBase {
   protected Path metastoreDbDir;
   protected String hiveMetastoreUri;
   private int hiveMetastorePort = 9085;
-  
+
   // Thrift server components for in-memory HMS
   private TServer hiveMetastoreServer;
   private ExecutorService hiveExecutorService;
@@ -53,16 +55,16 @@ public class HiveMetastoreTestBase {
     // Create temporary directories for Hive catalog
     warehouseDir = Files.createTempDirectory("hive-warehouse");
     metastoreDbDir = Files.createTempDirectory("hive-metastore-db");
-    
+
     // Create HiveConf for Hive catalog
     hiveConf = createHiveConf("hive", metastoreDbDir, warehouseDir);
 
     // Start in-memory HiveMetaStore service (use port 0 for auto-assignment)
     hiveMetastorePort = startInMemoryMetastoreService(hiveConf);
-    
+
     // Set the actual URI after server is started (with dynamic port)
     hiveMetastoreUri = "thrift://localhost:" + hiveMetastorePort;
-    
+
     // Update config with actual URI
     hiveConf.set("hive.metastore.uris", hiveMetastoreUri);
 
@@ -71,7 +73,7 @@ public class HiveMetastoreTestBase {
       createHiveMetastoreClient();
     }
   }
-  
+
   /**
    * Start an in-memory HiveMetaStore Thrift service.
    * This starts a real HMS service listening on a dynamically assigned port, running within the test JVM.
@@ -83,40 +85,37 @@ public class HiveMetastoreTestBase {
     // Create server socket with port 0 (auto-assign available port)
     TServerSocket socket = new TServerSocket(0);
     int port = socket.getServerSocket().getLocalPort();
-    
+
     // Set metastore URI in config
     conf.set(HiveConf.ConfVars.METASTOREURIS.varname, "thrift://localhost:" + port);
     conf.set(HiveConf.ConfVars.METASTORE_TRY_DIRECT_SQL.varname, "false");
-    
+
     // Create HMS handler
     hiveBaseHandler = new HiveMetaStore.HMSHandler("metastore", conf);
     IHMSHandler handler = RetryingHMSHandler.getProxy(conf, hiveBaseHandler, false);
-    
+
     // Create Thrift server
-    TThreadPoolServer.Args args = new TThreadPoolServer.Args(socket)
-        .processor(new TSetIpAddressProcessor<>(handler))
-        .transportFactory(new TTransportFactory())
-        .protocolFactory(new TBinaryProtocol.Factory())
-        .minWorkerThreads(2)
+    TThreadPoolServer.Args args = new TThreadPoolServer.Args(socket).processor(new TSetIpAddressProcessor<>(handler))
+        .transportFactory(new TTransportFactory()).protocolFactory(new TBinaryProtocol.Factory()).minWorkerThreads(2)
         .maxWorkerThreads(2);
-    
+
     hiveMetastoreServer = new TThreadPoolServer(args);
-    
+
     // Start server in background thread
     hiveExecutorService = Executors.newSingleThreadExecutor();
     hiveExecutorService.submit(() -> hiveMetastoreServer.serve());
-    
+
     // Wait for the service to start
     Thread.sleep(2000);
-    
+
     System.out.println("Started in-memory HiveMetaStore on port " + port + " for Hive catalog");
-    
+
     // Create default database using the started service
     createDefaultDatabase(conf);
-    
+
     return port;
   }
-  
+
   /**
    * Create default database in the metastore
    */
@@ -141,7 +140,7 @@ public class HiveMetastoreTestBase {
       e.printStackTrace();
     }
   }
-  
+
   /**
    * Create a HiveConf with embedded metastore configuration.
    *
@@ -202,7 +201,7 @@ public class HiveMetastoreTestBase {
       }
       metastoreClient = null;
     }
-    
+
     // Stop Hive Thrift server
     if (hiveMetastoreServer != null) {
       hiveMetastoreServer.stop();
@@ -224,8 +223,7 @@ public class HiveMetastoreTestBase {
     } catch (java.sql.SQLException e) {
       // Derby throws SQLException on successful shutdown
       // SQLState 08006 or XJ015 indicates successful shutdown
-      if (e.getSQLState() != null && 
-          (e.getSQLState().equals("XJ015") || e.getSQLState().equals("08006"))) {
+      if (e.getSQLState() != null && (e.getSQLState().equals("XJ015") || e.getSQLState().equals("08006"))) {
         // Expected - Derby shut down successfully
       } else {
         System.err.println("Derby shutdown warning (SQLState " + e.getSQLState() + "): " + e.getMessage());
