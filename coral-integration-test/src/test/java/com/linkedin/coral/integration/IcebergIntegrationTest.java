@@ -7,6 +7,9 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.testng.annotations.Test;
 
+import com.linkedin.coral.common.HiveMetastoreClient;
+import com.linkedin.coral.spark.CoralSpark;
+
 import static org.testng.Assert.*;
 
 
@@ -16,7 +19,7 @@ import static org.testng.Assert.*;
 public class IcebergIntegrationTest extends SparkIcebergTestBase {
 
   @Test
-  public void testCreateHiveViewOnIcebergTable() {
+  public void testCreateHiveViewOnIcebergTable() throws Exception {
     // Create an Iceberg table using fully qualified name
     executeSql("CREATE TABLE IF NOT EXISTS iceberg_catalog.default.test_iceberg_table "
         + "(id BIGINT, name STRING, age INT, salary DOUBLE, hire_date TIMESTAMP) "
@@ -30,8 +33,10 @@ public class IcebergIntegrationTest extends SparkIcebergTestBase {
 
     // Create a Hive view on top of the Iceberg table
     // The view filters employees with age > 25 and selects specific columns including timestamp
+    executeSql("USE iceberg_catalog");
     executeSql("CREATE OR REPLACE VIEW spark_catalog.default.iceberg_table_view AS " +
-        "SELECT id, name, age, hire_date FROM iceberg_catalog.default.test_iceberg_table WHERE age > 25");
+        "SELECT id, name, age, hire_date FROM default.test_iceberg_table WHERE age > 25");
+    executeSql("USE spark_catalog");
 
     // Query the Hive view
     Dataset<Row> viewResult = spark.sql("SELECT * FROM spark_catalog.default.iceberg_table_view");
@@ -52,9 +57,17 @@ public class IcebergIntegrationTest extends SparkIcebergTestBase {
     assertTrue(firstViewRow.getInt(2) > 25, "Age should be greater than 25");
     assertNotNull(firstViewRow.getTimestamp(3), "Hire date timestamp should not be null");
 
+    // Test Coral Spark translation
+    String db = "default";
+    String table = "iceberg_table_view";
+
+    CoralSpark coralSparkTranslation = getCoralSparkTranslation(db, table, createCoralHiveMetastoreClient());
+
+    // Validate that Coral Spark translation is parseable by Spark (will fail test if it throws)
+    assertTrue(validateSparkSql(spark, coralSparkTranslation));
+
     // Drop the view after test
     executeSql("DROP VIEW IF EXISTS spark_catalog.default.iceberg_table_view");
+    executeSql("DROP TABLE IF EXISTS iceberg_catalog.default.test_iceberg_table");
   }
-
 }
-
