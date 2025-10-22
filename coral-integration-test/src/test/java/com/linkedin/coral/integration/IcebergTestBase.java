@@ -9,10 +9,17 @@ import java.util.List;
 import java.util.Set;
 import org.apache.avro.Schema;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.Database;
+import org.apache.iceberg.Table;
+import org.apache.iceberg.catalog.TableIdentifier;
+import org.apache.iceberg.hive.HiveCatalog;
 import org.apache.iceberg.hive.TestHiveMetastore;
+import org.apache.iceberg.types.Type;
+import org.apache.iceberg.types.Types;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.catalyst.parser.ParseException;
 import org.testng.annotations.AfterClass;
@@ -27,6 +34,8 @@ import com.linkedin.coral.trino.rel2trino.RelToTrinoConverter;
 import coral.shading.io.trino.sql.parser.ParsingOptions;
 import coral.shading.io.trino.sql.parser.SqlParser;
 import coral.shading.io.trino.sql.tree.Statement;
+
+import static org.testng.Assert.*;
 
 
 /**
@@ -312,5 +321,95 @@ public class IcebergTestBase extends HiveMetastoreTestBase {
     final RelNode rel = getRelNode(db, table, hiveMetastoreClient);
     RelToTrinoConverter relToTrinoConverter = new RelToTrinoConverter(hiveMetastoreClient);
     return relToTrinoConverter.convert(rel);
+  }
+
+  /**
+   * Helper method to load an Iceberg table using HiveCatalog.
+   *
+   * @param database Database name
+   * @param tableName Table name
+   * @return Iceberg Table object
+   */
+  protected Table loadIcebergTable(String database, String tableName) {
+    HiveCatalog icebergCatalog = new HiveCatalog();
+    icebergCatalog.setConf(icebergHiveConf);
+    icebergCatalog.initialize("iceberg_catalog", java.util.Collections.emptyMap());
+    TableIdentifier tableId = TableIdentifier.of(database, tableName);
+    return icebergCatalog.loadTable(tableId);
+  }
+
+  /**
+   * Helper method to get a field's type from an Iceberg table.
+   *
+   * @param table Iceberg Table object
+   * @param fieldName Name of the field to retrieve
+   * @return Iceberg Type for the specified field
+   */
+  protected Type getIcebergFieldType(Table table, String fieldName) {
+    Types.NestedField field = table.schema().findField(fieldName);
+    assertNotNull(field, fieldName + " field should exist in Iceberg table");
+    return field.type();
+  }
+
+  /**
+   * Helper method to get a field's RelDataType from Coral's RelNode.
+   *
+   * @param relNode Coral RelNode
+   * @param fieldName Name of the field to retrieve
+   * @return RelDataType for the specified field
+   */
+  protected RelDataType getCoralFieldType(RelNode relNode, String fieldName) {
+    RelDataType fieldType = relNode.getRowType().getFieldList().stream()
+        .filter(field -> field.getName().equals(fieldName))
+        .map(field -> field.getType())
+        .findFirst()
+        .orElse(null);
+    assertNotNull(fieldType, fieldName + " field should exist in Coral translation");
+    return fieldType;
+  }
+
+  /**
+   * Helper method to get timestamp precision from Iceberg.
+   * Iceberg timestamps are always stored with microsecond precision (6).
+   *
+   * @param icebergType Iceberg Type (should be TimestampType)
+   * @return Precision value (always 6 for timestamps)
+   */
+  protected int getIcebergTimestampPrecision(Type icebergType) {
+    assertTrue(icebergType instanceof Types.TimestampType,
+        "Type should be TimestampType in Iceberg");
+    // Iceberg timestamps are always stored as microseconds (precision 6)
+    // The TimestampType class doesn't expose a precision() method because
+    // precision is fixed by the Iceberg specification.
+    return 6;
+  }
+
+  /**
+   * Helper method to test timestamp precision comparison between Iceberg and Coral.
+   *
+   * @param icebergTableName Iceberg table name
+   * @param relNode Coral RelNode
+   * @param fieldName Name of the timestamp field to test
+   */
+  protected void assertTimestampTypeMatches(String icebergTableName, RelNode relNode, String fieldName) {
+    // Get timestamp type from Coral's RelDataType
+    RelDataType coralFieldType = getCoralFieldType(relNode, fieldName);
+    assertEquals(coralFieldType.getSqlTypeName(), SqlTypeName.TIMESTAMP,
+        fieldName + " should be TIMESTAMP type in Coral");
+
+    int coralPrecision = coralFieldType.getPrecision();
+    System.out.println("Coral timestamp precision for " + fieldName + ": " + coralPrecision);
+
+    // Get timestamp type from Iceberg table
+    Table icebergTable = loadIcebergTable("default", icebergTableName);
+    Type icebergFieldType = getIcebergFieldType(icebergTable, fieldName);
+    int icebergPrecision = getIcebergTimestampPrecision(icebergFieldType);
+    System.out.println("Iceberg timestamp precision for " + fieldName + ": " + icebergPrecision);
+
+    // Compare the precisions between Iceberg and Coral
+    // Note: This test documents the current behavior. If Coral is not preserving precision,
+    // the assertion will fail and should be fixed.
+    assertEquals(coralPrecision, icebergPrecision,
+        "Coral should preserve the timestamp precision from Iceberg table (microsecond precision = 6)");
   }
 }
