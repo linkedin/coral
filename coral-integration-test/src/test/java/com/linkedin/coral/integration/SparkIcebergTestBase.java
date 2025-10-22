@@ -24,6 +24,8 @@ import com.linkedin.coral.common.HiveMetastoreClient;
 import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
 import com.linkedin.coral.schema.avro.ViewToAvroSchemaConverter;
 import com.linkedin.coral.spark.CoralSpark;
+import com.linkedin.coral.trino.trino2rel.parsetree.TrinoParserDriver;
+import coral.shading.io.trino.sql.tree.Statement;
 
 
 /**
@@ -101,7 +103,6 @@ public class SparkIcebergTestBase extends HiveMetastoreTestBase {
         .config("spark.sql.catalogImplementation", "hive")
         .config("hive.metastore.uris", getHiveMetastoreUri())
         .config("spark.sql.warehouse.dir", getWarehouseDir())
-        .config("hive.metastore.warehouse.dir", getWarehouseDir())
 
         // Spark configuration
         .config("spark.sql.shuffle.partitions", "4")
@@ -256,7 +257,21 @@ public class SparkIcebergTestBase extends HiveMetastoreTestBase {
     } catch (ParseException e) {
       throw new RuntimeException("Validation failed, failed to parse the translated spark sql: ", e);
     }
-    return false;
+  }
+
+  /**
+   * Validate that the translated Trino SQL can be parsed by Trino's SQL parser.
+   *
+   * @param trinoSql Trino SQL string to validate
+   * @return true if the SQL is valid and can be parsed
+   */
+  protected boolean validateTrinoSql(String trinoSql) {
+    try {
+      Statement parsedStatement = TrinoParserDriver.parse(trinoSql);
+      return parsedStatement != null;
+    } catch (Exception e) {
+      throw new RuntimeException("Validation failed, failed to parse the translated Trino SQL: " + trinoSql, e);
+    }
   }
 
   /**

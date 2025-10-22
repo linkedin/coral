@@ -20,6 +20,7 @@ dependencies {
   testCompile project(':coral-hive')
   testCompile project(':coral-spark')
   testCompile project(':coral-schema')
+  testCompile project(':coral-trino')
 
   // Spark3 dependencies
   testCompile(deps.'spark3'.'hive') {
@@ -77,7 +78,7 @@ dependencies {
   testCompile 'org.apache.derby:derby:10.14.2.0'
   testCompile 'org.slf4j:slf4j-api:1.7.30'
   testCompile 'org.slf4j:slf4j-log4j12:1.7.30'
-  
+
   // Force consistent Jackson version (Spark 3.1.1 uses 2.10.0)
   testCompile 'com.fasterxml.jackson.core:jackson-databind:2.10.0'
   testCompile 'com.fasterxml.jackson.core:jackson-core:2.10.0'
@@ -103,10 +104,10 @@ configurations.all {
 test {
   systemProperty 'derby.stream.error.file', 'build/derby.log'
   systemProperty 'java.io.tmpdir', 'build/tmp'
-  
+
   // Run tests sequentially to avoid resource contention
   maxParallelForks = 1
-  
+
   testLogging {
     events "passed", "skipped", "failed"
     exceptionFormat "full"

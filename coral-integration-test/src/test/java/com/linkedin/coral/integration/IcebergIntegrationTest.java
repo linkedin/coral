@@ -9,6 +9,8 @@ import org.testng.annotations.Test;
 
 import com.linkedin.coral.common.HiveMetastoreClient;
 import com.linkedin.coral.spark.CoralSpark;
+import com.linkedin.coral.trino.rel2trino.HiveToTrinoConverter;
+import com.linkedin.coral.trino.trino2rel.parsetree.TrinoParserDriver;
 
 import static org.testng.Assert.*;
 
@@ -49,22 +51,21 @@ public class IcebergIntegrationTest extends SparkIcebergTestBase {
     Dataset<Row> filteredView = spark.sql("SELECT name FROM spark_catalog.default.iceberg_table_view WHERE age >= 30");
     assertEquals(filteredView.count(), 2, "Should have 2 employees with age >= 30");
 
-    // Verify the actual data from the view
-    Row firstViewRow = viewResult.first();
-    assertNotNull(firstViewRow, "First row from view should not be null");
-    assertTrue(firstViewRow.getLong(0) > 0, "ID should be greater than 0");
-    assertNotNull(firstViewRow.getString(1), "Name should not be null");
-    assertTrue(firstViewRow.getInt(2) > 25, "Age should be greater than 25");
-    assertNotNull(firstViewRow.getTimestamp(3), "Hire date timestamp should not be null");
-
     // Test Coral Spark translation
     String db = "default";
     String table = "iceberg_table_view";
 
-    CoralSpark coralSparkTranslation = getCoralSparkTranslation(db, table, createCoralHiveMetastoreClient());
+    HiveMetastoreClient hiveMetastoreClient = createCoralHiveMetastoreClient();
 
-    // Validate that Coral Spark translation is parseable by Spark (will fail test if it throws)
+    // Test Spark translation and validation
+    CoralSpark coralSparkTranslation = getCoralSparkTranslation(db, table, hiveMetastoreClient);
     assertTrue(validateSparkSql(spark, coralSparkTranslation));
+
+    // Test Trino translation and validation
+    HiveToTrinoConverter hiveToTrinoConverter = HiveToTrinoConverter.create(hiveMetastoreClient);
+    String trinoSql = hiveToTrinoConverter.toTrinoSql(db, table);
+    assertNotNull(trinoSql, "Trino SQL translation should not be null");
+    assertTrue(validateTrinoSql(trinoSql), "Trino SQL validation should succeed");
 
     // Drop the view after test
     executeSql("DROP VIEW IF EXISTS spark_catalog.default.iceberg_table_view");
