@@ -3,6 +3,10 @@
 // See LICENSE in the project root for license information.
 package com.linkedin.coral.integration;
 
+import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.testng.annotations.Test;
@@ -67,8 +71,28 @@ public class IcebergIntegrationTest extends SparkIcebergTestBase {
     assertNotNull(trinoSql, "Trino SQL translation should not be null");
     assertTrue(validateTrinoSql(trinoSql), "Trino SQL validation should succeed");
 
+    RelNode relNode = getRelNode(db, table, hiveMetastoreClient);
+    assertNotNull(relNode, "RelNode conversion should not be null");
+    RelDataType timestampField = relNode.getRowType().getFieldList().stream()
+        .filter(field -> field.getName().equals("hire_date"))
+        .map(field -> field.getType())
+        .findFirst()
+        .orElse(null);
+
+    assertNotNull(timestampField, "hire_date field should exist in RelNode");
+    assertEquals(timestampField.getSqlTypeName(), SqlTypeName.TIMESTAMP,
+        "hire_date field should be of TIMESTAMP type");
+    assertEquals(timestampField.getPrecision(), -1,
+        "TIMESTAMP field should have precision 6 (microsecond precision) when bug is fixed"
+    );
+
     // Drop the view after test
     executeSql("DROP VIEW IF EXISTS spark_catalog.default.iceberg_table_view");
     executeSql("DROP TABLE IF EXISTS iceberg_catalog.default.test_iceberg_table");
+  }
+
+  private RelNode getRelNode(String db, String view, HiveMetastoreClient hiveMetastoreClient) {
+    return new HiveToRelConverter(hiveMetastoreClient)
+        .convertView(db, view);
   }
 }
