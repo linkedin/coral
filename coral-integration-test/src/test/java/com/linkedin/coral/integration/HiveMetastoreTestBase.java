@@ -32,9 +32,8 @@ import org.testng.annotations.BeforeClass;
 
 
 /**
- * Base class for integration tests that require a standalone HiveMetastore 2.0.
- * This class sets up a single embedded Derby database and HMS for Hive tables.
- * For Iceberg tables, use SparkIcebergTestBase which adds TestHiveMetastore.
+ * Abstract base class for integration tests requiring a standalone Hive Metastore
+ * backed by a single embedded Derby database for Hive tables only.
  */
 public class HiveMetastoreTestBase {
 

@@ -21,9 +21,9 @@ import static org.testng.Assert.*;
 
 
 /**
- * Sample integration test demonstrating Coral interoperability with Spark, Trino and Iceberg, and Hive Tables/Views.
+ * Sample integration test demonstrating Coral interoperability with Spark, Trino, Iceberg, and Hive Tables/Views.
  */
-public class IcebergIntegrationTest extends SparkIcebergTestBase {
+public class CoralInteropIntegrationTest extends IcebergIntegrationTestBase {
 
   @Test
   public void testCreateHiveViewOnIcebergTable() throws Exception {
@@ -66,6 +66,8 @@ public class IcebergIntegrationTest extends SparkIcebergTestBase {
     assertTrue(validateSparkSql(spark, coralSparkTranslation));
 
     // Test Trino translation and validation
+    // Ideally we run this against a trino server in unit test, like we did for Spark.
+    // But trino testcontainers require a local docker daemon to spin up which may not be available in all environments.
     HiveToTrinoConverter hiveToTrinoConverter = HiveToTrinoConverter.create(hiveMetastoreClient);
     String trinoSql = hiveToTrinoConverter.toTrinoSql(db, table);
     assertNotNull(trinoSql, "Trino SQL translation should not be null");

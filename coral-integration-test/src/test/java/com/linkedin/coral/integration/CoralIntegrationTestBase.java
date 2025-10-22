@@ -31,12 +31,13 @@ import coral.shading.io.trino.sql.tree.Statement;
 
 
 /**
- * Base class for integration tests that require Spark3 with Iceberg and HiveMetastore.
- * This class uses:
- * - Iceberg's TestHiveMetastore for iceberg_catalog (optimized for Iceberg)
- * - Derby-based HMS from HiveMetastoreTestBase for spark_catalog (regular Hive tables)
+/**
+ * Abstract base class for integration tests using Coral with Spark 3, Iceberg, and Hive Metastore.
+ * Utilizes Iceberg's TestHiveMetastore for the Iceberg catalog and the Derby-based Hive Metastore from
+ * HiveMetastoreTestBase for the Spark catalog to simulate real-world table configurations.
+ * Also provides utilities to check if a query conforms to Coral translations.
  */
-public class SparkIcebergTestBase extends HiveMetastoreTestBase {
+public class CoralIntegrationTestBase extends HiveMetastoreTestBase {
 
   protected SparkSession spark;
   protected static TestHiveMetastore icebergTestHms;
