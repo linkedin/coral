@@ -20,7 +20,7 @@ import static org.testng.Assert.*;
 
 
 /**
- * Sample integration test demonstrating Spark3 with Iceberg and HiveMetastore 2.0.
+ * Sample integration test demonstrating Coral interoperability with Spark, Trino and Iceberg, and Hive Tables/Views.
  */
 public class IcebergIntegrationTest extends SparkIcebergTestBase {
 
