@@ -23,7 +23,7 @@ import static org.testng.Assert.*;
 /**
  * Sample integration test demonstrating Coral interoperability with Spark, Trino, Iceberg, and Hive Tables/Views.
  */
-public class CoralInteropIntegrationTest extends IcebergIntegrationTestBase {
+public class CoralInteropIntegrationTest extends CoralIntegrationTestBase {
 
   @Test
   public void testCreateHiveViewOnIcebergTable() throws Exception {
