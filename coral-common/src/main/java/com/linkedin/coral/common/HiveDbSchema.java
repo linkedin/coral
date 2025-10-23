@@ -57,39 +57,26 @@ public class HiveDbSchema implements Schema {
       return null;
     }
 
-    // Handle views - still need Hive Table object for view expansion
-    if (dataset.tableType() == com.linkedin.coral.common.catalog.TableType.VIEW) {
-      org.apache.hadoop.hive.metastore.api.Table hiveTable = getHiveTableForView(dbName, name);
-      if (hiveTable != null) {
-        return new HiveViewTable(hiveTable, ImmutableList.of(HiveSchema.ROOT_SCHEMA, dbName));
-      }
-      return null;
-    }
-
     // Dispatch based on Dataset implementation type
     if (dataset instanceof IcebergDataset) {
       return new IcebergTable((IcebergDataset) dataset);
-    } else {
-      // Default: treat as HiveDataset (includes HiveDataset and any unknown types)
-      return new HiveTable((HiveDataset) dataset);
+    } else if (dataset instanceof HiveDataset) {
+      HiveDataset hiveDataset = (HiveDataset) dataset;
+      // Check if it's a view
+      if (hiveDataset.tableType() == com.linkedin.coral.common.catalog.TableType.VIEW) {
+        return new HiveViewTable(hiveDataset, ImmutableList.of(HiveSchema.ROOT_SCHEMA, dbName));
+      } else {
+        return new HiveTable(hiveDataset);
+      }
     }
+
+    // Unknown dataset type - return null
+    return null;
   }
 
   @Override
   public Set<String> getTableNames() {
     return ImmutableSet.copyOf(catalog.getAllDatasets(dbName));
-  }
-
-  /**
-   * Helper method to get Hive Table object for views.
-   * Views require the Hive Table object for view expansion logic.
-   * Returns null if not available from a Hive catalog.
-   */
-  private org.apache.hadoop.hive.metastore.api.Table getHiveTableForView(String dbName, String tableName) {
-    if (catalog instanceof HiveMetastoreClient) {
-      return ((HiveMetastoreClient) catalog).getTable(dbName, tableName);
-    }
-    return null;
   }
 
   @Override

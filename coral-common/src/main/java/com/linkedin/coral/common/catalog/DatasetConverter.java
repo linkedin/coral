@@ -44,15 +44,13 @@ public class DatasetConverter {
    * This creates an IcebergDataset wrapper around the table.
    *
    * @param table Iceberg Table object
-   * @param database Database name
-   * @param tableName Table name
    * @return Dataset representing the Iceberg table, or null if input is null
    */
-  public static Dataset fromIcebergTable(org.apache.iceberg.Table table, String database, String tableName) {
+  public static Dataset fromIcebergTable(org.apache.iceberg.Table table) {
     if (table == null) {
       return null;
     }
-    return new IcebergDataset(table, database, tableName);
+    return new IcebergDataset(table);
   }
 
   /**

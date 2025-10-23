@@ -165,22 +165,35 @@ public abstract class ToRelConverter {
       throw new RuntimeException("Cannot process view without catalog: " + dbName + "." + tableName);
     }
 
-    org.apache.hadoop.hive.metastore.api.Table table = null;
-    if (catalog instanceof HiveMetastoreClient) {
-      table = ((HiveMetastoreClient) catalog).getTable(dbName, tableName);
-    } else {
-      throw new RuntimeException("View processing requires HiveMetastoreClient, got: " + catalog.getClass().getName());
+    // Get dataset from catalog
+    com.linkedin.coral.common.catalog.Dataset dataset = catalog.getDataset(dbName, tableName);
+
+    if (dataset == null) {
+      throw new RuntimeException("Table/view not found: " + dbName + "." + tableName);
     }
 
-    if (table == null) {
-      throw new RuntimeException(String.format("Unknown table %s.%s", dbName, tableName));
-    }
     String stringViewExpandedText = null;
-    if (table.getTableType().equals("VIRTUAL_VIEW")) {
-      stringViewExpandedText = table.getViewExpandedText();
-    } else {
-      // It is a table, not a view.
+    org.apache.hadoop.hive.metastore.api.Table table = null;
+
+    if (dataset instanceof com.linkedin.coral.common.catalog.HiveDataset) {
+      // Hive dataset: can be TABLE or VIEW
+      com.linkedin.coral.common.catalog.HiveDataset hiveDataset =
+          (com.linkedin.coral.common.catalog.HiveDataset) dataset;
+      table = hiveDataset.getHiveTable();
+
+      if (table.getTableType().equals("VIRTUAL_VIEW")) {
+        // It's a view - use expanded view text
+        stringViewExpandedText = table.getViewExpandedText();
+      } else {
+        // It's a Hive table
+        stringViewExpandedText = "SELECT * FROM " + dbName + "." + tableName;
+      }
+    } else if (dataset instanceof com.linkedin.coral.common.catalog.IcebergDataset) {
+      // Iceberg dataset: always a table (Iceberg doesn't have views)
       stringViewExpandedText = "SELECT * FROM " + dbName + "." + tableName;
+      // Note: table remains null for Iceberg tables
+    } else {
+      throw new RuntimeException("Unsupported dataset type for: " + dbName + "." + tableName);
     }
     return toSqlNode(stringViewExpandedText, table);
   }

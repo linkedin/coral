@@ -5,12 +5,10 @@
  */
 package com.linkedin.coral.common.catalog;
 
+import java.util.Collections;
 import java.util.Map;
 
-import org.apache.avro.Schema;
 import org.apache.hadoop.hive.metastore.api.Table;
-
-import com.linkedin.coral.common.HiveTableUtil;
 
 import static com.google.common.base.Preconditions.*;
 
@@ -19,6 +17,8 @@ import static com.google.common.base.Preconditions.*;
  * Implementation of {@link Dataset} interface for Hive tables.
  * This class wraps a Hive metastore Table object and provides
  * a unified Dataset API for accessing table metadata.
+ *
+ * Used by Calcite integration to dispatch to HiveTable.
  */
 public class HiveDataset implements Dataset {
 
@@ -44,22 +44,6 @@ public class HiveDataset implements Dataset {
   }
 
   /**
-   * Returns the Avro schema representation of this Hive table.
-   * The schema is derived from the Hive table's column definitions
-   * and includes both regular columns and partition columns.
-   *
-   * If the table has an Avro schema stored in its properties
-   * (avro.schema.literal), that schema is used. Otherwise, the
-   * schema is converted from Hive column types.
-   *
-   * @return Avro Schema representation of the table
-   */
-  @Override
-  public Schema avroSchema() {
-    return HiveTableUtil.getAvroSchema(table);
-  }
-
-  /**
    * Returns the table properties/parameters.
    * This includes Hive table properties, SerDe properties,
    * and any custom properties set on the table.
@@ -68,7 +52,7 @@ public class HiveDataset implements Dataset {
    */
   @Override
   public Map<String, String> properties() {
-    return HiveTableUtil.properties(table);
+    return table.getParameters() != null ? table.getParameters() : Collections.emptyMap();
   }
 
   /**
@@ -78,7 +62,7 @@ public class HiveDataset implements Dataset {
    */
   @Override
   public TableType tableType() {
-    return HiveTableUtil.tableType(table.getTableType());
+    return TableType.fromHiveTableType(table.getTableType());
   }
 
   /**

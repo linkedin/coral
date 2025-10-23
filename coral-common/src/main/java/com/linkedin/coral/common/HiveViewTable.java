@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -34,6 +34,17 @@ public class HiveViewTable extends HiveTable implements TranslatableTable {
    */
   public HiveViewTable(Table hiveTable, List<String> schemaPath) {
     super(hiveTable);
+    this.schemaPath = schemaPath;
+  }
+
+  /**
+   * Constructor accepting HiveDataset for unified catalog integration.
+   *
+   * @param dataset HiveDataset from catalog
+   * @param schemaPath Calcite schema path
+   */
+  public HiveViewTable(com.linkedin.coral.common.catalog.HiveDataset dataset, List<String> schemaPath) {
+    super(dataset);
     this.schemaPath = schemaPath;
   }
 

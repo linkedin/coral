@@ -45,7 +45,7 @@ public class IcebergTableConverterTest {
 
     // Create mock Iceberg table with timestamp(6) column using Mockito
     org.apache.iceberg.Table mockIcebergTable = createMockIcebergTable();
-    IcebergDataset icebergDataset = new IcebergDataset(mockIcebergTable, TEST_DB, TEST_TABLE);
+    IcebergDataset icebergDataset = new IcebergDataset(mockIcebergTable);
 
     testCatalog.addDataset(TEST_DB, TEST_TABLE, icebergDataset);
 
@@ -67,6 +67,7 @@ public class IcebergTableConverterTest {
     org.apache.iceberg.Table mockTable = mock(org.apache.iceberg.Table.class);
     when(mockTable.schema()).thenReturn(icebergSchema);
     when(mockTable.properties()).thenReturn(Collections.emptyMap());
+    when(mockTable.name()).thenReturn(TEST_DB + "." + TEST_TABLE);
 
     return mockTable;
   }
@@ -142,7 +143,7 @@ public class IcebergTableConverterTest {
 
   @Test
   public void testIcebergDatasetConversion() {
-    // Direct test of IcebergDataset to verify schema conversion
+    // Direct test of IcebergDataset to verify metadata
     Dataset dataset = testCatalog.getDataset(TEST_DB, TEST_TABLE);
 
     assertNotNull(dataset, "Dataset should not be null");
@@ -150,20 +151,9 @@ public class IcebergTableConverterTest {
     assertEquals(dataset.name(), TEST_DB + "." + TEST_TABLE);
     assertEquals(dataset.tableType(), com.linkedin.coral.common.catalog.TableType.TABLE);
 
-    // Verify Avro schema can be generated
-    org.apache.avro.Schema avroSchema = dataset.avroSchema();
-    assertNotNull(avroSchema, "Avro schema should not be null");
-    assertEquals(avroSchema.getType(), org.apache.avro.Schema.Type.RECORD);
-
-    // Verify fields in Avro schema
-    List<org.apache.avro.Schema.Field> avroFields = avroSchema.getFields();
-    assertEquals(avroFields.size(), 3, "Should have 3 fields in Avro schema");
-
-    // Find timestamp field
-    org.apache.avro.Schema.Field timestampField =
-        avroFields.stream().filter(f -> f.name().equals("event_time")).findFirst().orElse(null);
-
-    assertNotNull(timestampField, "Timestamp field should exist in Avro schema");
+    // Verify properties
+    Map<String, String> properties = dataset.properties();
+    assertNotNull(properties, "Properties should not be null");
   }
 
   /**
