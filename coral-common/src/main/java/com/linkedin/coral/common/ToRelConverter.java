@@ -11,8 +11,6 @@ import java.util.Properties;
 
 import javax.annotation.Nonnull;
 
-import org.apache.commons.lang3.StringUtils;
-
 import com.google.common.collect.ImmutableList;
 
 import org.apache.calcite.config.CalciteConnectionConfig;
@@ -41,6 +39,10 @@ import org.apache.calcite.util.Util;
 
 import com.linkedin.coral.com.google.common.annotations.VisibleForTesting;
 import com.linkedin.coral.common.catalog.CoralCatalog;
+import com.linkedin.coral.common.catalog.Dataset;
+import com.linkedin.coral.common.catalog.HiveDataset;
+import com.linkedin.coral.common.catalog.IcebergDataset;
+import com.linkedin.coral.common.catalog.IcebergHiveTableConverter;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -168,7 +170,7 @@ public abstract class ToRelConverter {
     }
 
     // Get dataset from catalog
-    com.linkedin.coral.common.catalog.Dataset dataset = catalog.getDataset(dbName, tableName);
+    Dataset dataset = catalog.getDataset(dbName, tableName);
 
     if (dataset == null) {
       throw new RuntimeException("Table/view not found: " + dbName + "." + tableName);
@@ -177,10 +179,9 @@ public abstract class ToRelConverter {
     String stringViewExpandedText = null;
     org.apache.hadoop.hive.metastore.api.Table table = null;
 
-    if (dataset instanceof com.linkedin.coral.common.catalog.HiveDataset) {
+    if (dataset instanceof HiveDataset) {
       // Hive dataset: can be TABLE or VIEW
-      com.linkedin.coral.common.catalog.HiveDataset hiveDataset =
-          (com.linkedin.coral.common.catalog.HiveDataset) dataset;
+      HiveDataset hiveDataset = (HiveDataset) dataset;
       table = hiveDataset.getHiveTable();
 
       if (table.getTableType().equals("VIRTUAL_VIEW")) {
@@ -190,111 +191,19 @@ public abstract class ToRelConverter {
         // It's a Hive table
         stringViewExpandedText = "SELECT * FROM " + dbName + "." + tableName;
       }
-    } else if (dataset instanceof com.linkedin.coral.common.catalog.IcebergDataset) {
+    } else if (dataset instanceof IcebergDataset) {
       // Iceberg dataset: always a table (Iceberg doesn't have views)
-      com.linkedin.coral.common.catalog.IcebergDataset icebergDataset =
-          (com.linkedin.coral.common.catalog.IcebergDataset) dataset;
+      IcebergDataset icebergDataset = (IcebergDataset) dataset;
 
       // Convert Iceberg dataset to minimal Hive Table for backward compatibility
       // This is needed because downstream code (ParseTreeBuilder, HiveFunctionResolver)
       // expects a Hive Table object for Dali UDF resolution
-      table = convertToHiveTableForFunctionResolution(icebergDataset);
+      table = IcebergHiveTableConverter.toHiveTable(icebergDataset);
       stringViewExpandedText = "SELECT * FROM " + dbName + "." + tableName;
     } else {
       throw new RuntimeException("Unsupported dataset type for: " + dbName + "." + tableName);
     }
     return toSqlNode(stringViewExpandedText, table);
-  }
-
-  /**
-   * Converts IcebergDataset to a Hive Table object for backward compatibility with function resolution.
-   *
-   * <p>This method creates a complete Hive Table object from an Iceberg table, including schema conversion
-   * using {@code HiveSchemaUtil}. While the table object acts as "glue code" for backward compatibility,
-   * it populates all standard Hive table metadata to ensure broad compatibility with downstream code paths.
-   *
-   * <p><b>Why this exists:</b> The existing {@link com.linkedin.coral.hive.hive2rel.parsetree.ParseTreeBuilder}
-   * and {@link com.linkedin.coral.hive.hive2rel.functions.HiveFunctionResolver} infrastructure expects a
-   * Hive {@code org.apache.hadoop.hive.metastore.api.Table} object for:
-   * <ul>
-   *   <li>Dali UDF resolution (extracting "functions" and "dependencies" from table properties)</li>
-   *   <li>Table identification (database name, table name)</li>
-   *   <li>Ownership and permission checks (owner field)</li>
-   * </ul>
-   *
-   * <p>Rather than refactoring the entire call chain to accept {@link com.linkedin.coral.common.catalog.Dataset},
-   * this converter provides a pragmatic bridge that allows Iceberg tables to work seamlessly with the existing
-   * Hive-based infrastructure.
-   *
-   * <p><b>What gets converted:</b>
-   * <ul>
-   *   <li>Iceberg schema → Hive columns (via {@code HiveSchemaUtil.convert()})</li>
-   *   <li>All Iceberg table properties → Hive table parameters (including Dali UDF metadata)</li>
-   *   <li>Table metadata (name, owner, timestamps, table type)</li>
-   *   <li>Storage descriptor with SerDe info (for compatibility)</li>
-   * </ul>
-   *
-   * @param icebergDataset Iceberg dataset to convert
-   * @return Hive Table object with complete metadata and schema
-   */
-  private org.apache.hadoop.hive.metastore.api.Table convertToHiveTableForFunctionResolution(
-      com.linkedin.coral.common.catalog.IcebergDataset icebergDataset) {
-
-    org.apache.iceberg.Table icebergTable = icebergDataset.getIcebergTable();
-
-    // Parse db.table name (format: "dbname.tablename")
-    String fullName = icebergDataset.name();
-    String dbName;
-    String tableName;
-    int dotIndex = fullName.indexOf('.');
-    if (dotIndex > 0) {
-      dbName = fullName.substring(0, dotIndex);
-      tableName = fullName.substring(dotIndex + 1);
-    } else {
-      // Fallback if no dot (shouldn't happen in practice)
-      dbName = "default";
-      tableName = fullName;
-    }
-
-    // Convert Iceberg schema to Hive columns using HiveSchemaUtil
-    org.apache.hadoop.hive.metastore.api.StorageDescriptor storageDescriptor =
-        new org.apache.hadoop.hive.metastore.api.StorageDescriptor();
-    org.apache.hadoop.hive.metastore.api.SerDeInfo serDeInfo =
-        new org.apache.hadoop.hive.metastore.api.SerDeInfo();
-
-    // Copy all Iceberg table properties to Hive table parameters
-    // This includes Dali UDF metadata ("functions", "dependencies") and any other custom properties
-    java.util.Map<String, String> hiveParameters = new java.util.HashMap<>(icebergDataset.properties());
-
-    // Set SerDe parameters (include avro.schema.literal if present)
-    java.util.Map<String, String> serdeParams = new java.util.HashMap<>();
-    if (hiveParameters.containsKey("avro.schema.literal")) {
-      serdeParams.put("avro.schema.literal", hiveParameters.get("avro.schema.literal"));
-    }
-    serDeInfo.setParameters(serdeParams);
-    storageDescriptor.setSerdeInfo(serDeInfo);
-
-    // Convert Iceberg schema to Hive columns
-    try {
-      storageDescriptor.setCols(org.apache.iceberg.hive.HiveSchemaUtil.convert(icebergTable.schema()));
-    } catch (Exception e) {
-      // If schema conversion fails, set empty columns list
-      // This shouldn't break function resolution as it only needs properties
-      storageDescriptor.setCols(new java.util.ArrayList<>());
-    }
-
-    // Create Hive Table object with all metadata
-    org.apache.hadoop.hive.metastore.api.Table hiveTable = new org.apache.hadoop.hive.metastore.api.Table(
-        tableName, dbName, StringUtils.EMPTY, // owner
-        0, // createTime
-        0, // lastModifiedTime
-        0, // retention
-        storageDescriptor, new java.util.ArrayList<>(), // partition keys
-        hiveParameters, StringUtils.EMPTY, // viewOriginalText
-        StringUtils.EMPTY, // viewExpandedText
-        org.apache.hadoop.hive.metastore.TableType.MANAGED_TABLE.name());
-
-    return hiveTable;
   }
 
   @VisibleForTesting

@@ -15,6 +15,7 @@ import org.apache.hadoop.hive.metastore.api.Table;
 
 import com.linkedin.coral.com.google.common.base.Throwables;
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
+import com.linkedin.coral.common.catalog.HiveDataset;
 
 import static org.apache.calcite.sql.type.SqlTypeName.*;
 
@@ -43,7 +44,7 @@ public class HiveViewTable extends HiveTable implements TranslatableTable {
    * @param dataset HiveDataset from catalog
    * @param schemaPath Calcite schema path
    */
-  public HiveViewTable(com.linkedin.coral.common.catalog.HiveDataset dataset, List<String> schemaPath) {
+  public HiveViewTable(HiveDataset dataset, List<String> schemaPath) {
     super(dataset);
     this.schemaPath = schemaPath;
   }

@@ -23,6 +23,7 @@ import com.linkedin.coral.common.catalog.HiveDataset;
 import com.linkedin.coral.common.catalog.IcebergDataset;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.linkedin.coral.common.catalog.TableType.VIEW;
 
 
 /**
@@ -63,7 +64,7 @@ public class HiveDbSchema implements Schema {
     } else if (dataset instanceof HiveDataset) {
       HiveDataset hiveDataset = (HiveDataset) dataset;
       // Check if it's a view
-      if (hiveDataset.tableType() == com.linkedin.coral.common.catalog.TableType.VIEW) {
+      if (hiveDataset.tableType() == VIEW) {
         return new HiveViewTable(hiveDataset, ImmutableList.of(HiveSchema.ROOT_SCHEMA, dbName));
       } else {
         return new HiveTable(hiveDataset);

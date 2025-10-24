@@ -34,7 +34,6 @@ import com.linkedin.coral.common.catalog.TableType;
 public class IcebergTable implements ScannableTable {
 
   private final IcebergDataset dataset;
-  private final Table icebergTable;
 
   /**
    * Creates IcebergTable from IcebergDataset.
@@ -44,9 +43,7 @@ public class IcebergTable implements ScannableTable {
   public IcebergTable(IcebergDataset dataset) {
     Preconditions.checkNotNull(dataset);
     this.dataset = dataset;
-    // Get the underlying Iceberg table
-    this.icebergTable = dataset.getIcebergTable();
-    if (this.icebergTable == null) {
+    if (dataset.getIcebergTable() == null) {
       throw new IllegalArgumentException("IcebergDataset must have an Iceberg Table");
     }
   }
@@ -57,7 +54,7 @@ public class IcebergTable implements ScannableTable {
    */
   @Override
   public RelDataType getRowType(RelDataTypeFactory typeFactory) {
-    return IcebergTypeConverter.convert(icebergTable.schema(), dataset.name(), typeFactory);
+    return IcebergTypeConverter.convert(dataset.getIcebergTable().schema(), dataset.name(), typeFactory);
   }
 
   @Override
@@ -94,6 +91,6 @@ public class IcebergTable implements ScannableTable {
    * @return Iceberg Table object
    */
   public Table getIcebergTable() {
-    return icebergTable;
+    return dataset.getIcebergTable();
   }
 }

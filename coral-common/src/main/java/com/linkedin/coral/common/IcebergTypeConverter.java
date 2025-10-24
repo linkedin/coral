@@ -22,6 +22,8 @@ import org.apache.iceberg.types.Types;
  * 
  * This converter provides native Iceberg schema support for Calcite, avoiding
  * lossy conversions through Hive type system.
+ * 
+ * Copied structure from TypeConverter for consistency.
  */
 public class IcebergTypeConverter {
 
@@ -45,8 +47,8 @@ public class IcebergTypeConverter {
     for (Types.NestedField field : columns) {
       fieldNames.add(field.name());
 
-      // Convert field type
-      RelDataType fieldType = convertIcebergType(field.type(), field.name(), typeFactory);
+      // Convert field type using the main dispatcher
+      RelDataType fieldType = convert(field.type(), typeFactory);
 
       // Handle nullability - Iceberg has explicit required/optional
       fieldType = typeFactory.createTypeWithNullability(fieldType, field.isOptional());
@@ -58,96 +60,143 @@ public class IcebergTypeConverter {
   }
 
   /**
-   * Converts Iceberg Type to Calcite RelDataType.
+   * Main dispatcher - converts Iceberg Type to Calcite RelDataType based on type category.
+   * Similar to TypeConverter.convert(TypeInfo, RelDataTypeFactory).
    * 
    * @param icebergType Iceberg type
-   * @param fieldName Field name (for nested type naming)
    * @param typeFactory Calcite type factory
    * @return RelDataType representing the Iceberg type
    */
-  private static RelDataType convertIcebergType(Type icebergType, String fieldName, RelDataTypeFactory typeFactory) {
+  public static RelDataType convert(Type icebergType, RelDataTypeFactory typeFactory) {
+    Type.TypeID typeId = icebergType.typeId();
 
+    switch (typeId) {
+      case STRUCT:
+        return convert((Types.StructType) icebergType, typeFactory);
+      case LIST:
+        return convert((Types.ListType) icebergType, typeFactory);
+      case MAP:
+        return convert((Types.MapType) icebergType, typeFactory);
+      default:
+        // Handle all primitive types
+        return convertPrimitive(icebergType, typeFactory);
+    }
+  }
+
+  /**
+   * Converts Iceberg primitive types to Calcite RelDataType.
+   * Handles all atomic types: BOOLEAN, INTEGER, LONG, FLOAT, DOUBLE, DATE, TIME, TIMESTAMP,
+   * STRING, UUID, FIXED, BINARY, DECIMAL.
+   * 
+   * @param icebergType Iceberg primitive type
+   * @param typeFactory Calcite type factory
+   * @return RelDataType representing the primitive type
+   */
+  public static RelDataType convertPrimitive(Type icebergType, RelDataTypeFactory typeFactory) {
+    RelDataType convertedType = null;
     Type.TypeID typeId = icebergType.typeId();
 
     switch (typeId) {
       case BOOLEAN:
-        return typeFactory.createSqlType(SqlTypeName.BOOLEAN);
-
+        convertedType = typeFactory.createSqlType(SqlTypeName.BOOLEAN);
+        break;
       case INTEGER:
-        return typeFactory.createSqlType(SqlTypeName.INTEGER);
-
+        convertedType = typeFactory.createSqlType(SqlTypeName.INTEGER);
+        break;
       case LONG:
-        return typeFactory.createSqlType(SqlTypeName.BIGINT);
-
+        convertedType = typeFactory.createSqlType(SqlTypeName.BIGINT);
+        break;
       case FLOAT:
-        return typeFactory.createSqlType(SqlTypeName.FLOAT);
-
+        convertedType = typeFactory.createSqlType(SqlTypeName.FLOAT);
+        break;
       case DOUBLE:
-        return typeFactory.createSqlType(SqlTypeName.DOUBLE);
-
+        convertedType = typeFactory.createSqlType(SqlTypeName.DOUBLE);
+        break;
       case DATE:
-        return typeFactory.createSqlType(SqlTypeName.DATE);
-
+        convertedType = typeFactory.createSqlType(SqlTypeName.DATE);
+        break;
       case TIME:
-        return typeFactory.createSqlType(SqlTypeName.TIME);
-
+        convertedType = typeFactory.createSqlType(SqlTypeName.TIME);
+        break;
       case TIMESTAMP:
-        // Iceberg timestamp type
-        return typeFactory.createSqlType(SqlTypeName.TIMESTAMP, 6);
-
+        // Iceberg timestamp type - microsecond precision (6 digits)
+        convertedType = typeFactory.createSqlType(SqlTypeName.TIMESTAMP, 6);
+        break;
       case STRING:
-        return typeFactory.createSqlType(SqlTypeName.VARCHAR, Integer.MAX_VALUE);
-
+        convertedType = typeFactory.createSqlType(SqlTypeName.VARCHAR, Integer.MAX_VALUE);
+        break;
       case UUID:
         // Represent UUID as CHAR(36) to preserve UUID semantics
-        return typeFactory.createSqlType(SqlTypeName.CHAR, 36);
-
+        convertedType = typeFactory.createSqlType(SqlTypeName.CHAR, 36);
+        break;
       case FIXED:
         Types.FixedType fixedType = (Types.FixedType) icebergType;
-        return typeFactory.createSqlType(SqlTypeName.BINARY, fixedType.length());
-
+        convertedType = typeFactory.createSqlType(SqlTypeName.BINARY, fixedType.length());
+        break;
       case BINARY:
-        return typeFactory.createSqlType(SqlTypeName.VARBINARY, Integer.MAX_VALUE);
-
+        convertedType = typeFactory.createSqlType(SqlTypeName.VARBINARY, Integer.MAX_VALUE);
+        break;
       case DECIMAL:
         Types.DecimalType decimalType = (Types.DecimalType) icebergType;
-        return typeFactory.createSqlType(SqlTypeName.DECIMAL, decimalType.precision(), decimalType.scale());
-
-      case STRUCT:
-        return convertIcebergStruct((Types.StructType) icebergType, fieldName, typeFactory);
-
-      case LIST:
-        Types.ListType listType = (Types.ListType) icebergType;
-        RelDataType elementType = convertIcebergType(listType.elementType(), fieldName + "_element", typeFactory);
-        // Handle list element nullability
-        elementType = typeFactory.createTypeWithNullability(elementType, listType.isElementOptional());
-        return typeFactory.createArrayType(elementType, -1);
-
-      case MAP:
-        Types.MapType mapType = (Types.MapType) icebergType;
-        RelDataType keyType = convertIcebergType(mapType.keyType(), fieldName + "_key", typeFactory);
-        RelDataType valueType = convertIcebergType(mapType.valueType(), fieldName + "_value", typeFactory);
-        // Iceberg map values can be required or optional
-        valueType = typeFactory.createTypeWithNullability(valueType, mapType.isValueOptional());
-        return typeFactory.createMapType(keyType, valueType);
-
+        convertedType = typeFactory.createSqlType(SqlTypeName.DECIMAL, decimalType.precision(), decimalType.scale());
+        break;
       default:
         throw new UnsupportedOperationException(
-            "Unsupported Iceberg type: " + icebergType + " (TypeID: " + typeId + ")");
+            "Unsupported Iceberg primitive type: " + icebergType + " (TypeID: " + typeId + ")");
     }
+
+    if (null == convertedType) {
+      throw new RuntimeException("Unsupported Type : " + icebergType);
+    }
+
+    // Note: Unlike Hive's TypeConverter, we don't apply nullability here.
+    // Nullability is handled at the field level based on Iceberg's required/optional flags.
+    return convertedType;
+  }
+
+  /**
+   * Converts Iceberg ListType to Calcite RelDataType.
+   * 
+   * @param listType Iceberg list type
+   * @param typeFactory Calcite type factory
+   * @return RelDataType representing the list/array
+   */
+  public static RelDataType convert(Types.ListType listType, RelDataTypeFactory typeFactory) {
+    // Recursively convert element type
+    RelDataType elementType = convert(listType.elementType(), typeFactory);
+
+    // Handle list element nullability - Iceberg has explicit element nullability
+    elementType = typeFactory.createTypeWithNullability(elementType, listType.isElementOptional());
+
+    return typeFactory.createArrayType(elementType, -1);
+  }
+
+  /**
+   * Converts Iceberg MapType to Calcite RelDataType.
+   * 
+   * @param mapType Iceberg map type
+   * @param typeFactory Calcite type factory
+   * @return RelDataType representing the map
+   */
+  public static RelDataType convert(Types.MapType mapType, RelDataTypeFactory typeFactory) {
+    // Recursively convert key and value types
+    RelDataType keyType = convert(mapType.keyType(), typeFactory);
+    RelDataType valueType = convert(mapType.valueType(), typeFactory);
+
+    // Iceberg map values can be required or optional
+    valueType = typeFactory.createTypeWithNullability(valueType, mapType.isValueOptional());
+
+    return typeFactory.createMapType(keyType, valueType);
   }
 
   /**
    * Converts Iceberg StructType to Calcite RelDataType.
    * 
    * @param structType Iceberg struct type
-   * @param structName Name for the struct (for nested type naming)
    * @param typeFactory Calcite type factory
    * @return RelDataType representing the struct
    */
-  private static RelDataType convertIcebergStruct(Types.StructType structType, String structName,
-      RelDataTypeFactory typeFactory) {
-
+  public static RelDataType convert(Types.StructType structType, RelDataTypeFactory typeFactory) {
     List<Types.NestedField> fields = structType.fields();
     List<RelDataType> fieldTypes = new ArrayList<>(fields.size());
     List<String> fieldNames = new ArrayList<>(fields.size());
@@ -155,9 +204,10 @@ public class IcebergTypeConverter {
     for (Types.NestedField field : fields) {
       fieldNames.add(field.name());
 
-      RelDataType fieldType = convertIcebergType(field.type(), structName + "_" + field.name(), typeFactory);
+      // Recursively convert field type using main dispatcher
+      RelDataType fieldType = convert(field.type(), typeFactory);
 
-      // Handle field nullability
+      // Handle field nullability - Iceberg has explicit required/optional
       fieldType = typeFactory.createTypeWithNullability(fieldType, field.isOptional());
 
       fieldTypes.add(fieldType);
