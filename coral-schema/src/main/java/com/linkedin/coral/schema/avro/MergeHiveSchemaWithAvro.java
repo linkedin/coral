@@ -157,6 +157,27 @@ class MergeHiveSchemaWithAvro extends HiveSchemaWithPartnerVisitor<Schema, Schem
 
     private static final Schema MAP_KEY = Schema.create(Schema.Type.STRING);
 
+    /**
+     * Extracts the actual type from a schema that may be a union.
+     * Handles two cases:
+     * 1. Single-element unions like [{"type":"record",...}] - extracts the single type
+     * 2. Nullable unions like ["null", "string"] - extracts the non-null type
+     *
+     * @param schema The schema to extract from
+     * @return The extracted schema
+     */
+    private static Schema extractFromUnion(Schema schema) {
+      if (schema.getType() == Schema.Type.UNION) {
+        List<Schema> types = schema.getTypes();
+        if (types.size() == 1) {
+          // Single-element union: just extract that single type
+          return types.get(0);
+        }
+      }
+      // Extract the non-null type from nullable unions like ["null", "string"]
+      return SchemaUtilities.extractIfOption(schema);
+    }
+
     @Override
     public Schema.Field fieldPartner(Schema partner, String fieldName) {
       Schema schema = SchemaUtilities.extractIfOption(partner);
@@ -180,18 +201,7 @@ class MergeHiveSchemaWithAvro extends HiveSchemaWithPartnerVisitor<Schema, Schem
       if (schema.getType() != Schema.Type.MAP) {
         return null;
       }
-      Schema valueType = schema.getValueType();
-      // Handle single-element unions like [{"type":"record",...}]
-      // These are not typical nullable unions but still valid Avro unions
-      if (valueType.getType() == Schema.Type.UNION) {
-        List<Schema> types = valueType.getTypes();
-        if (types.size() == 1) {
-          // Single-element union: just extract that single type
-          return types.get(0);
-        }
-      }
-      // Extract the non-null type from nullable unions like ["null", "string"]
-      return SchemaUtilities.extractIfOption(valueType);
+      return extractFromUnion(schema.getValueType());
     }
 
     @Override
@@ -200,18 +210,7 @@ class MergeHiveSchemaWithAvro extends HiveSchemaWithPartnerVisitor<Schema, Schem
       if (schema.getType() != Schema.Type.ARRAY) {
         return null;
       }
-      Schema elementType = schema.getElementType();
-      // Handle single-element unions like [{"type":"record",...}]
-      // These are not typical nullable unions but still valid Avro unions
-      if (elementType.getType() == Schema.Type.UNION) {
-        List<Schema> types = elementType.getTypes();
-        if (types.size() == 1) {
-          // Single-element union: just extract that single type
-          return types.get(0);
-        }
-      }
-      // Extract the non-null type from nullable unions like ["null", "string"]
-      return SchemaUtilities.extractIfOption(elementType);
+      return extractFromUnion(schema.getElementType());
     }
 
     @Override
