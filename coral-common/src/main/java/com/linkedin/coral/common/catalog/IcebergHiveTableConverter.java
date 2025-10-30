@@ -13,7 +13,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.hive.metastore.api.SerDeInfo;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
 import org.apache.hadoop.hive.metastore.api.Table;
-import org.apache.hadoop.hive.metastore.api.TableType;
 import org.apache.iceberg.hive.HiveSchemaUtil;
 
 
@@ -24,8 +23,8 @@ import org.apache.iceberg.hive.HiveSchemaUtil;
  * using {@code HiveSchemaUtil}. While the table object acts as "glue code" for backward compatibility,
  * it populates all standard Hive table metadata to ensure broad compatibility with downstream code paths.
  *
- * <p><b>Why this exists:</b> The existing {@link com.linkedin.coral.hive.hive2rel.parsetree.ParseTreeBuilder}
- * and {@link com.linkedin.coral.hive.hive2rel.functions.HiveFunctionResolver} infrastructure expects a
+ * <p><b>Why this exists:</b> The existing {com.linkedin.coral.hive.hive2rel.parsetree.ParseTreeBuilder}
+ * and {com.linkedin.coral.hive.hive2rel.functions.HiveFunctionResolver} infrastructure expects a
  * Hive {@code org.apache.hadoop.hive.metastore.api.Table} object for:
  * <ul>
  *   <li>Dali UDF resolution (extracting "functions" and "dependencies" from table properties)</li>
@@ -33,7 +32,7 @@ import org.apache.iceberg.hive.HiveSchemaUtil;
  *   <li>Ownership and permission checks (owner field)</li>
  * </ul>
  *
- * <p>Rather than refactoring the entire call chain to accept {@link Dataset},
+ * <p>Rather than refactoring the entire call chain to accept {@link CoralTable},
  * this converter provides a pragmatic bridge that allows Iceberg tables to work seamlessly with the existing
  * Hive-based infrastructure.
  *
@@ -52,16 +51,16 @@ public class IcebergHiveTableConverter {
   }
 
   /**
-   * Converts IcebergDataset to a Hive Table object for backward compatibility with function resolution.
+   * Converts IcebergCoralTable to a Hive Table object for backward compatibility with function resolution.
    *
-   * @param icebergDataset Iceberg dataset to convert
+   * @param icebergCoralTable Iceberg coral table to convert
    * @return Hive Table object with complete metadata and schema
    */
-  public static Table toHiveTable(IcebergDataset icebergDataset) {
-    org.apache.iceberg.Table icebergTable = icebergDataset.getIcebergTable();
+  public static Table toHiveTable(IcebergCoralTable icebergCoralTable) {
+    org.apache.iceberg.Table icebergTable = icebergCoralTable.getIcebergTable();
 
     // Parse db.table name (format: "dbname.tablename")
-    String fullName = icebergDataset.name();
+    String fullName = icebergCoralTable.name();
     String dbName;
     String tableName;
     int dotIndex = fullName.indexOf('.');
@@ -80,7 +79,7 @@ public class IcebergHiveTableConverter {
 
     // Copy all Iceberg table properties to Hive table parameters
     // This includes Dali UDF metadata ("functions", "dependencies") and any other custom properties
-    Map<String, String> hiveParameters = new HashMap<>(icebergDataset.properties());
+    Map<String, String> hiveParameters = new HashMap<>(icebergCoralTable.properties());
 
     // Set SerDe parameters (include avro.schema.literal if present)
     Map<String, String> serdeParams = new HashMap<>();
@@ -107,7 +106,7 @@ public class IcebergHiveTableConverter {
         storageDescriptor, new ArrayList<>(), // partition keys
         hiveParameters, StringUtils.EMPTY, // viewOriginalText
         StringUtils.EMPTY, // viewExpandedText
-        TableType.MANAGED_TABLE.name());
+        "MANAGED_TABLE"); // tableType
 
     return hiveTable;
   }

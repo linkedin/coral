@@ -19,10 +19,10 @@ import org.apache.iceberg.types.Types;
 /**
  * Converts Iceberg Schema and Types to Calcite RelDataType.
  * Preserves Iceberg type semantics including nullability and nested structures.
- * 
+ *
  * This converter provides native Iceberg schema support for Calcite, avoiding
  * lossy conversions through Hive type system.
- * 
+ *
  * Copied structure from TypeConverter for consistency.
  */
 public class IcebergTypeConverter {
@@ -33,7 +33,7 @@ public class IcebergTypeConverter {
 
   /**
    * Converts Iceberg Schema to Calcite RelDataType.
-   * 
+   *
    * @param icebergSchema Iceberg table schema
    * @param tableName Table name for naming nested types
    * @param typeFactory Calcite type factory
@@ -62,7 +62,7 @@ public class IcebergTypeConverter {
   /**
    * Main dispatcher - converts Iceberg Type to Calcite RelDataType based on type category.
    * Similar to TypeConverter.convert(TypeInfo, RelDataTypeFactory).
-   * 
+   *
    * @param icebergType Iceberg type
    * @param typeFactory Calcite type factory
    * @return RelDataType representing the Iceberg type
@@ -87,7 +87,7 @@ public class IcebergTypeConverter {
    * Converts Iceberg primitive types to Calcite RelDataType.
    * Handles all atomic types: BOOLEAN, INTEGER, LONG, FLOAT, DOUBLE, DATE, TIME, TIMESTAMP,
    * STRING, UUID, FIXED, BINARY, DECIMAL.
-   * 
+   *
    * @param icebergType Iceberg primitive type
    * @param typeFactory Calcite type factory
    * @return RelDataType representing the primitive type
@@ -134,7 +134,7 @@ public class IcebergTypeConverter {
         convertedType = typeFactory.createSqlType(SqlTypeName.BINARY, fixedType.length());
         break;
       case BINARY:
-        convertedType = typeFactory.createSqlType(SqlTypeName.VARBINARY, Integer.MAX_VALUE);
+        convertedType = typeFactory.createSqlType(SqlTypeName.BINARY);
         break;
       case DECIMAL:
         Types.DecimalType decimalType = (Types.DecimalType) icebergType;
@@ -156,7 +156,7 @@ public class IcebergTypeConverter {
 
   /**
    * Converts Iceberg ListType to Calcite RelDataType.
-   * 
+   *
    * @param listType Iceberg list type
    * @param typeFactory Calcite type factory
    * @return RelDataType representing the list/array
@@ -173,7 +173,7 @@ public class IcebergTypeConverter {
 
   /**
    * Converts Iceberg MapType to Calcite RelDataType.
-   * 
+   *
    * @param mapType Iceberg map type
    * @param typeFactory Calcite type factory
    * @return RelDataType representing the map
@@ -191,7 +191,7 @@ public class IcebergTypeConverter {
 
   /**
    * Converts Iceberg StructType to Calcite RelDataType.
-   * 
+   *
    * @param structType Iceberg struct type
    * @param typeFactory Calcite type factory
    * @return RelDataType representing the struct

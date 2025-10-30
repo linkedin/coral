@@ -14,22 +14,22 @@ import static com.google.common.base.Preconditions.*;
 
 
 /**
- * Implementation of {@link Dataset} interface for Hive tables.
+ * Implementation of {@link CoralTable} interface for Hive tables.
  * This class wraps a Hive metastore Table object and provides
- * a unified Dataset API for accessing table metadata.
+ * a unified CoralTable API for accessing table metadata.
  *
  * Used by Calcite integration to dispatch to HiveTable.
  */
-public class HiveDataset implements Dataset {
+public class HiveCoralTable implements CoralTable {
 
   private final Table table;
 
   /**
-   * Creates a new HiveDataset wrapping the given Hive table.
+   * Creates a new HiveCoralTable wrapping the given Hive table.
    *
    * @param table Hive metastore Table object (must not be null)
    */
-  public HiveDataset(Table table) {
+  public HiveCoralTable(Table table) {
     this.table = checkNotNull(table, "Hive table cannot be null");
   }
 
@@ -57,12 +57,18 @@ public class HiveDataset implements Dataset {
 
   /**
    * Returns the table type (TABLE or VIEW).
+   * Hive table types like MANAGED_TABLE, EXTERNAL_TABLE map to TABLE.
+   * VIRTUAL_VIEW and MATERIALIZED_VIEW map to VIEW.
    *
    * @return TableType enum value
    */
   @Override
   public TableType tableType() {
-    return TableType.fromHiveTableType(table.getTableType());
+    String hiveTableType = table.getTableType();
+    if (hiveTableType != null && hiveTableType.toUpperCase().contains("VIEW")) {
+      return TableType.VIEW;
+    }
+    return TableType.TABLE;
   }
 
   /**

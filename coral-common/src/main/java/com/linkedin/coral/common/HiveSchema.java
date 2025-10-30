@@ -6,7 +6,6 @@
 package com.linkedin.coral.common;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Set;
 
 import javax.annotation.Nonnull;
@@ -28,23 +27,25 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * to Calcite {@link Schema}. This class represents the "root" schema
  * that holds all hive databases as subschema and no tables.
  * 
- * Uses CoralCatalog for unified access to different table formats
- * (Hive, Iceberg, etc.).
+ * Can use either CoralCatalog for unified access to different table formats
+ * or HiveMetastoreClient for Hive-specific access.
  */
 public class HiveSchema implements Schema {
 
   public static final String ROOT_SCHEMA = "hive";
   public static final String DEFAULT_DB = "default";
 
-  private final CoralCatalog catalog;
+  private final CoralCatalog coralCatalog;
+  private final HiveMetastoreClient msc;
 
   /**
    * Create HiveSchema using CoralCatalog to read catalog information.
    * 
-   * @param catalog Coral catalog providing unified access to tables
+   * @param coralCatalog Coral catalog providing unified access to tables
    */
-  public HiveSchema(@Nonnull CoralCatalog catalog) {
-    this.catalog = checkNotNull(catalog);
+  public HiveSchema(@Nonnull CoralCatalog coralCatalog) {
+    this.coralCatalog = checkNotNull(coralCatalog);
+    this.msc = null;
   }
 
   /**
@@ -53,7 +54,8 @@ public class HiveSchema implements Schema {
    * @param msc Hive metastore client
    */
   public HiveSchema(@Nonnull HiveMetastoreClient msc) {
-    this((CoralCatalog) checkNotNull(msc));
+    this.msc = checkNotNull(msc);
+    this.coralCatalog = null;
   }
 
   /**
@@ -93,17 +95,27 @@ public class HiveSchema implements Schema {
 
   @Override
   public Schema getSubSchema(String name) {
-    // Check if namespace (database) exists using the catalog API
-    if (!catalog.namespaceExists(name)) {
-      return null;
+    // Check if database exists
+    if (coralCatalog != null) {
+      if (!coralCatalog.namespaceExists(name)) {
+        return null;
+      }
+      return new HiveDbSchema(coralCatalog, null, name);
+    } else {
+      if (msc.getDatabase(name) == null) {
+        return null;
+      }
+      return new HiveDbSchema(null, msc, name);
     }
-    return new HiveDbSchema(catalog, name);
   }
 
   @Override
   public Set<String> getSubSchemaNames() {
-    List<String> dbNames = catalog.getAllDatabases();
-    return ImmutableSet.copyOf(dbNames);
+    if (coralCatalog != null) {
+      return ImmutableSet.copyOf(coralCatalog.getAllNamespaces());
+    } else {
+      return ImmutableSet.copyOf(msc.getAllDatabases());
+    }
   }
 
   @Override

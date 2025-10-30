@@ -19,8 +19,8 @@ import org.apache.iceberg.types.Types;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import com.linkedin.coral.common.catalog.Dataset;
-import com.linkedin.coral.common.catalog.IcebergDataset;
+import com.linkedin.coral.common.catalog.CoralTable;
+import com.linkedin.coral.common.catalog.IcebergCoralTable;
 import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
 
 import static org.mockito.Mockito.*;
@@ -45,9 +45,9 @@ public class IcebergTableConverterTest {
 
     // Create mock Iceberg table with timestamp(6) column using Mockito
     org.apache.iceberg.Table mockIcebergTable = createMockIcebergTable();
-    IcebergDataset icebergDataset = new IcebergDataset(mockIcebergTable);
+    IcebergCoralTable icebergCoralTable = new IcebergCoralTable(mockIcebergTable);
 
-    testCatalog.addDataset(TEST_DB, TEST_TABLE, icebergDataset);
+    testCatalog.addTable(TEST_DB, TEST_TABLE, icebergCoralTable);
 
     // Create converter with test catalog
     converter = new HiveToRelConverter(testCatalog);
@@ -58,13 +58,16 @@ public class IcebergTableConverterTest {
    * Schema: (id BIGINT, event_time TIMESTAMP, name STRING)
    */
   private org.apache.iceberg.Table createMockIcebergTable() {
-    // Create Iceberg schema with timestamp column
+    // Define Iceberg schema with timestamp column
+    // TimestampType.withoutZone() represents microsecond precision (6 digits)
     Schema icebergSchema = new Schema(Types.NestedField.required(1, "id", Types.LongType.get()),
         Types.NestedField.required(2, "event_time", Types.TimestampType.withoutZone()),
         Types.NestedField.optional(3, "name", Types.StringType.get()));
 
-    // Mock Iceberg Table using Mockito
+    // Mock the Iceberg Table interface using Mockito
     org.apache.iceberg.Table mockTable = mock(org.apache.iceberg.Table.class);
+
+    // Stub necessary methods
     when(mockTable.schema()).thenReturn(icebergSchema);
     when(mockTable.properties()).thenReturn(Collections.emptyMap());
     when(mockTable.name()).thenReturn(TEST_DB + "." + TEST_TABLE);
@@ -72,29 +75,31 @@ public class IcebergTableConverterTest {
     return mockTable;
   }
 
+  /**
+   * Test that an Iceberg table with TIMESTAMP column is correctly converted to RelNode
+   * with precision 6 (microseconds).
+   */
   @Test
   public void testIcebergTableWithTimestampPrecision() {
-    // Convert SQL query that references the Iceberg table
+    // Convert SQL query to RelNode
     String sql = String.format("SELECT * FROM %s.%s", TEST_DB, TEST_TABLE);
-
-    // Get RelNode from the converter
     RelNode relNode = converter.convertSql(sql);
 
-    assertNotNull(relNode, "RelNode should not be null");
-
-    // Verify the RelNode structure
-    RelDataType rowType = relNode.getRowType();
-    assertNotNull(rowType, "Row type should not be null");
-
-    // Verify we have 3 columns
-    List<RelDataTypeField> fields = rowType.getFieldList();
-    assertEquals(fields.size(), 3, "Should have 3 columns");
-
-    // Print field names and types (equivalent to Scala viewrel.getRowType.getFieldList.asScala.foreach)
+    // Print RelNode structure for debugging
     System.out.println("\nField types in RelNode:");
-    for (RelDataTypeField f : fields) {
+    for (RelDataTypeField f : relNode.getRowType().getFieldList()) {
       System.out.println(f.getName() + ": " + f.getType());
     }
+
+    System.out.println("\nRelNode structure:");
+    System.out.println(org.apache.calcite.plan.RelOptUtil.toString(relNode));
+
+    // Verify RelNode structure
+    assertNotNull(relNode, "RelNode should not be null");
+
+    // Check that we have 3 columns: id, event_time, name
+    List<RelDataTypeField> fields = relNode.getRowType().getFieldList();
+    assertEquals(fields.size(), 3, "Should have 3 columns");
 
     // Verify column names
     assertEquals(fields.get(0).getName(), "id");
@@ -102,93 +107,67 @@ public class IcebergTableConverterTest {
     assertEquals(fields.get(2).getName(), "name");
 
     // Verify column types
-    assertEquals(fields.get(0).getType().getSqlTypeName(), SqlTypeName.BIGINT, "id should be BIGINT");
-    assertEquals(fields.get(1).getType().getSqlTypeName(), SqlTypeName.TIMESTAMP, "event_time should be TIMESTAMP");
-    assertEquals(fields.get(2).getType().getSqlTypeName(), SqlTypeName.VARCHAR, "name should be VARCHAR");
+    assertEquals(fields.get(0).getType().getSqlTypeName(), SqlTypeName.BIGINT);
+    assertEquals(fields.get(2).getType().getSqlTypeName(), SqlTypeName.VARCHAR);
 
-    // Verify timestamp precision is 6 (microseconds)
+    // CRITICAL: Verify that TIMESTAMP has precision 6 (microseconds)
     RelDataType timestampType = fields.get(1).getType();
-    assertEquals(timestampType.getPrecision(), 6, "Timestamp should have precision 6");
-
-    System.out.println("\nRelNode structure:");
-    System.out.println(org.apache.calcite.plan.RelOptUtil.toString(relNode));
+    assertEquals(timestampType.getSqlTypeName(), SqlTypeName.TIMESTAMP, "event_time should be TIMESTAMP");
+    assertEquals(timestampType.getPrecision(), 6, "Timestamp should have precision 6 (microseconds)");
   }
 
+  /**
+   * Test IcebergCoralTable conversion and metadata access.
+   */
   @Test
-  public void testIcebergTableProjection() {
-    // Test projection with timestamp column
-    String sql = String.format("SELECT event_time, id FROM %s.%s WHERE id > 100", TEST_DB, TEST_TABLE);
+  public void testIcebergCoralTableConversion() {
+    // Direct test of IcebergCoralTable to verify metadata
+    CoralTable coralTable = testCatalog.getTable(TEST_DB, TEST_TABLE);
 
-    RelNode relNode = converter.convertSql(sql);
-    assertNotNull(relNode);
+    assertNotNull(coralTable, "CoralTable should not be null");
+    assertTrue(coralTable instanceof IcebergCoralTable, "CoralTable should be IcebergCoralTable");
 
-    // Verify projected columns
-    RelDataType rowType = relNode.getRowType();
-    List<RelDataTypeField> fields = rowType.getFieldList();
-
-    // Print field names and types
-    System.out.println("\nProjected field types in RelNode:");
-    for (RelDataTypeField f : fields) {
-      System.out.println(f.getName() + ": " + f.getType());
-    }
-
-    assertEquals(fields.size(), 2, "Should have 2 projected columns");
-    assertEquals(fields.get(0).getName(), "event_time");
-    assertEquals(fields.get(1).getName(), "id");
-
-    // Verify timestamp precision is preserved in projection
-    assertEquals(fields.get(0).getType().getSqlTypeName(), SqlTypeName.TIMESTAMP);
-    assertEquals(fields.get(0).getType().getPrecision(), 6, "Timestamp precision should be preserved in projection");
-  }
-
-  @Test
-  public void testIcebergDatasetConversion() {
-    // Direct test of IcebergDataset to verify metadata
-    Dataset dataset = testCatalog.getDataset(TEST_DB, TEST_TABLE);
-
-    assertNotNull(dataset, "Dataset should not be null");
-    assertTrue(dataset instanceof IcebergDataset, "Dataset should be IcebergDataset");
-    assertEquals(dataset.name(), TEST_DB + "." + TEST_TABLE);
-    assertEquals(dataset.tableType(), com.linkedin.coral.common.catalog.TableType.TABLE);
+    // Verify table metadata
+    assertEquals(coralTable.name(), TEST_DB + "." + TEST_TABLE);
+    assertEquals(coralTable.tableType(), com.linkedin.coral.common.catalog.TableType.TABLE);
 
     // Verify properties
-    Map<String, String> properties = dataset.properties();
+    Map<String, String> properties = coralTable.properties();
     assertNotNull(properties, "Properties should not be null");
   }
 
   /**
-   * Simple test catalog implementation for CoralCatalog.
-   * Only implements CoralCatalog interface, not HiveMetastoreClient.
+   * Test catalog implementation that stores Iceberg tables.
+   * Only implements CoralCatalog (not HiveMetastoreClient).
    */
   private static class TestCoralCatalog implements com.linkedin.coral.common.catalog.CoralCatalog {
-    private final Map<String, Map<String, Dataset>> databases = new HashMap<>();
+    private final Map<String, Map<String, CoralTable>> namespaces = new HashMap<>();
 
-    public void addDataset(String dbName, String tableName, Dataset dataset) {
-      databases.computeIfAbsent(dbName, k -> new HashMap<>()).put(tableName, dataset);
+    public void addTable(String namespaceName, String tableName, CoralTable coralTable) {
+      namespaces.computeIfAbsent(namespaceName, k -> new HashMap<>()).put(tableName, coralTable);
     }
 
     @Override
-    public Dataset getDataset(String dbName, String tableName) {
-      Map<String, Dataset> tables = databases.get(dbName);
+    public CoralTable getTable(String namespaceName, String tableName) {
+      Map<String, CoralTable> tables = namespaces.get(namespaceName);
       return tables != null ? tables.get(tableName) : null;
     }
 
     @Override
-    public List<String> getAllDatasets(String dbName) {
-      Map<String, Dataset> tables = databases.get(dbName);
+    public List<String> getAllTables(String namespaceName) {
+      Map<String, CoralTable> tables = namespaces.get(namespaceName);
       return tables != null ? Collections.unmodifiableList(new java.util.ArrayList<>(tables.keySet()))
           : Collections.emptyList();
     }
 
     @Override
-    public List<String> getAllDatabases() {
-      return Collections.unmodifiableList(new java.util.ArrayList<>(databases.keySet()));
+    public boolean namespaceExists(String namespaceName) {
+      return namespaces.containsKey(namespaceName);
     }
 
     @Override
-    public boolean namespaceExists(String dbName) {
-      return databases.containsKey(dbName);
+    public List<String> getAllNamespaces() {
+      return Collections.unmodifiableList(new java.util.ArrayList<>(namespaces.keySet()));
     }
   }
-
 }

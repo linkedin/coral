@@ -9,53 +9,53 @@ import java.util.List;
 
 
 /**
- * Top-level catalog interface for accessing datasets in Coral.
+ * Top-level catalog interface for accessing tables in Coral.
  * This interface provides a unified API for querying table metadata
  * across different table formats (Hive, Iceberg, etc.).
  *
  * CoralCatalog abstracts away the differences between various table formats
- * and provides a consistent way to access dataset information through
- * the {@link Dataset} interface.
+ * and provides a consistent way to access table information through
+ * the {@link CoralTable} interface.
  *
  * Implementations of this interface handle the details of connecting to
  * metadata stores and converting format-specific table representations
- * into the unified Dataset abstraction.
+ * into the unified CoralTable abstraction.
  */
 public interface CoralCatalog {
 
   /**
-   * Retrieves a dataset by database and table name.
-   * This method returns a unified Dataset abstraction that works
+   * Retrieves a table by namespace and table name.
+   * This method returns a unified CoralTable abstraction that works
    * across different table formats (Hive, Iceberg, etc.).
    *
-   * @param dbName Database name
+   * @param namespaceName Namespace (database) name
    * @param tableName Table name
-   * @return Dataset object representing the table, or null if not found
+   * @return CoralTable object representing the table, or null if not found
    */
-  Dataset getDataset(String dbName, String tableName);
+  CoralTable getTable(String namespaceName, String tableName);
 
   /**
    * Checks if a namespace (database) exists in the catalog.
    * This provides a lightweight way to verify namespace existence
    * without retrieving full metadata.
    *
-   * @param dbName Database or namespace name
+   * @param namespaceName Namespace (database) name
    * @return true if the namespace exists, false otherwise
    */
-  boolean namespaceExists(String dbName);
+  boolean namespaceExists(String namespaceName);
 
   /**
-   * Retrieves all dataset (table/view) names in a database.
+   * Retrieves all table (table/view) names in a namespace.
    *
-   * @param dbName Database name
-   * @return List of dataset names in the database, empty list if database doesn't exist
+   * @param namespaceName Namespace (database) name
+   * @return List of table names in the namespace, empty list if namespace doesn't exist
    */
-  List<String> getAllDatasets(String dbName);
+  List<String> getAllTables(String namespaceName);
 
   /**
-   * Retrieves all database names accessible through this catalog.
+   * Retrieves all namespace (database) names accessible through this catalog.
    *
-   * @return List of database names, empty list if no databases are accessible
+   * @return List of namespace names, empty list if no namespaces are accessible
    */
-  List<String> getAllDatabases();
+  List<String> getAllNamespaces();
 }

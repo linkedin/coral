@@ -20,31 +20,31 @@ import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.iceberg.Table;
 
-import com.linkedin.coral.common.catalog.IcebergDataset;
+import com.linkedin.coral.common.catalog.IcebergCoralTable;
 import com.linkedin.coral.common.catalog.TableType;
 
 
 /**
  * Calcite Table implementation for Apache Iceberg tables.
  * Provides native Iceberg schema to Calcite instead of going through Hive metastore representation.
- * 
- * This class uses IcebergDataset to access Iceberg table metadata and IcebergTypeConverter
+ *
+ * This class uses IcebergCoralTable to access Iceberg table metadata and IcebergTypeConverter
  * to convert Iceberg schema to Calcite's RelDataType, preserving Iceberg type semantics.
  */
 public class IcebergTable implements ScannableTable {
 
-  private final IcebergDataset dataset;
+  private final IcebergCoralTable coralTable;
 
   /**
-   * Creates IcebergTable from IcebergDataset.
-   * 
-   * @param dataset IcebergDataset from catalog
+   * Creates IcebergTable from IcebergCoralTable.
+   *
+   * @param coralTable IcebergCoralTable from catalog
    */
-  public IcebergTable(IcebergDataset dataset) {
-    Preconditions.checkNotNull(dataset);
-    this.dataset = dataset;
-    if (dataset.getIcebergTable() == null) {
-      throw new IllegalArgumentException("IcebergDataset must have an Iceberg Table");
+  public IcebergTable(IcebergCoralTable coralTable) {
+    Preconditions.checkNotNull(coralTable);
+    this.coralTable = coralTable;
+    if (coralTable.getIcebergTable() == null) {
+      throw new IllegalArgumentException("IcebergCoralTable must have an Iceberg Table");
     }
   }
 
@@ -54,7 +54,7 @@ public class IcebergTable implements ScannableTable {
    */
   @Override
   public RelDataType getRowType(RelDataTypeFactory typeFactory) {
-    return IcebergTypeConverter.convert(dataset.getIcebergTable().schema(), dataset.name(), typeFactory);
+    return IcebergTypeConverter.convert(coralTable.getIcebergTable().schema(), coralTable.name(), typeFactory);
   }
 
   @Override
@@ -66,7 +66,7 @@ public class IcebergTable implements ScannableTable {
 
   @Override
   public Schema.TableType getJdbcTableType() {
-    return dataset.tableType() == TableType.VIEW ? Schema.TableType.VIEW : Schema.TableType.TABLE;
+    return coralTable.tableType() == TableType.VIEW ? Schema.TableType.VIEW : Schema.TableType.TABLE;
   }
 
   @Override
@@ -87,10 +87,10 @@ public class IcebergTable implements ScannableTable {
 
   /**
    * Returns the underlying Iceberg Table for advanced operations.
-   * 
-   * @return Iceberg Table object
+   *
+   * @return org.apache.iceberg.Table instance
    */
   public Table getIcebergTable() {
-    return dataset.getIcebergTable();
+    return coralTable.getIcebergTable();
   }
 }

@@ -10,20 +10,13 @@ import java.util.List;
 import org.apache.hadoop.hive.metastore.api.Database;
 import org.apache.hadoop.hive.metastore.api.Table;
 
-import com.linkedin.coral.common.catalog.CoralCatalog;
-import com.linkedin.coral.common.catalog.Dataset;
-import com.linkedin.coral.common.catalog.DatasetConverter;
-
 
 /**
  * Interface for accessing Hive Metastore.
- * This interface extends {@link CoralCatalog} to provide unified Dataset access
- * while maintaining backward compatibility with existing Hive-specific methods.
- *
  * Implementations of this interface handle connections to Hive metastore
  * and provide access to database and table metadata.
  */
-public interface HiveMetastoreClient extends CoralCatalog {
+public interface HiveMetastoreClient {
 
   /**
    * Retrieves all database names from the metastore.
@@ -56,51 +49,4 @@ public interface HiveMetastoreClient extends CoralCatalog {
    * @return Hive Table object, or null if not found
    */
   Table getTable(String dbName, String tableName);
-
-  /**
-   * Checks if a namespace (database) exists in the metastore.
-   * Default implementation delegates to {@link #getDatabase(String)}.
-   *
-   * @param dbName Database name
-   * @return true if database exists, false otherwise
-   */
-  @Override
-  default boolean namespaceExists(String dbName) {
-    Database db = getDatabase(dbName);
-    return db != null;
-  }
-
-  /**
-   * Retrieves a dataset by database and table name.
-   * This method provides unified access to tables through the Dataset abstraction.
-   *
-   * Default implementation uses {@link #getTable(String, String)} and
-   * {@link DatasetConverter#autoConvert(Table)} to provide Dataset access.
-   *
-   * @param dbName Database name
-   * @param tableName Table name
-   * @return Dataset object, or null if table not found
-   */
-  @Override
-  default Dataset getDataset(String dbName, String tableName) {
-    Table table = getTable(dbName, tableName);
-    if (table == null) {
-      return null;
-    }
-    return DatasetConverter.autoConvert(table);
-  }
-
-  /**
-   * Retrieves all dataset names in a database.
-   * Default implementation delegates to {@link #getAllTables(String)}.
-   *
-   * @param dbName Database name
-   * @return List of dataset (table) names
-   */
-  @Override
-  default List<String> getAllDatasets(String dbName) {
-    return getAllTables(dbName);
-  }
-
-  // Note: getAllDatabases() already satisfies CoralCatalog.getAllDatabases()
 }

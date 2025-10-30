@@ -39,9 +39,9 @@ import org.apache.calcite.util.Util;
 
 import com.linkedin.coral.com.google.common.annotations.VisibleForTesting;
 import com.linkedin.coral.common.catalog.CoralCatalog;
-import com.linkedin.coral.common.catalog.Dataset;
-import com.linkedin.coral.common.catalog.HiveDataset;
-import com.linkedin.coral.common.catalog.IcebergDataset;
+import com.linkedin.coral.common.catalog.CoralTable;
+import com.linkedin.coral.common.catalog.HiveCoralTable;
+import com.linkedin.coral.common.catalog.IcebergCoralTable;
 import com.linkedin.coral.common.catalog.IcebergHiveTableConverter;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -56,7 +56,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 public abstract class ToRelConverter {
 
-  private final CoralCatalog catalog;
+  private final CoralCatalog coralCatalog;
+  private final HiveMetastoreClient msc;
   private final FrameworkConfig config;
   private final SqlRexConvertletTable convertletTable = getConvertletTable();
   private CalciteCatalogReader catalogReader;
@@ -78,19 +79,32 @@ public abstract class ToRelConverter {
    * @param hiveMetastoreClient Hive metastore client
    */
   protected ToRelConverter(@Nonnull HiveMetastoreClient hiveMetastoreClient) {
-    this((CoralCatalog) checkNotNull(hiveMetastoreClient));
+    checkNotNull(hiveMetastoreClient);
+    this.msc = hiveMetastoreClient;
+    this.coralCatalog = null;
+    SchemaPlus schemaPlus = Frameworks.createRootSchema(false);
+    schemaPlus.add(HiveSchema.ROOT_SCHEMA, new HiveSchema(hiveMetastoreClient));
+    // this is to ensure that jdbc:calcite driver is correctly registered
+    // before initializing framework (which needs it)
+    // We don't want each engine to register the driver. It may not also load correctly
+    // if the service uses its own service loader (see Trino)
+    new Driver();
+    config = Frameworks.newConfigBuilder().convertletTable(convertletTable).defaultSchema(schemaPlus)
+        .typeSystem(new HiveTypeSystem()).traitDefs((List<RelTraitDef>) null).operatorTable(getOperatorTable())
+        .programs(Programs.ofRules(Programs.RULE_SET)).build();
   }
 
   /**
    * Constructor accepting CoralCatalog for unified catalog access.
    * 
-   * @param catalog Coral catalog providing access to table metadata
+   * @param coralCatalog Coral catalog providing access to table metadata
    */
-  protected ToRelConverter(@Nonnull CoralCatalog catalog) {
-    checkNotNull(catalog);
-    this.catalog = catalog;
+  protected ToRelConverter(@Nonnull CoralCatalog coralCatalog) {
+    checkNotNull(coralCatalog);
+    this.coralCatalog = coralCatalog;
+    this.msc = null;
     SchemaPlus schemaPlus = Frameworks.createRootSchema(false);
-    schemaPlus.add(HiveSchema.ROOT_SCHEMA, new HiveSchema(catalog));
+    schemaPlus.add(HiveSchema.ROOT_SCHEMA, new HiveSchema(coralCatalog));
     // this is to ensure that jdbc:calcite driver is correctly registered
     // before initializing framework (which needs it)
     // We don't want each engine to register the driver. It may not also load correctly
@@ -108,7 +122,8 @@ public abstract class ToRelConverter {
    * @param localMetaStore Local metastore map
    */
   protected ToRelConverter(Map<String, Map<String, List<String>>> localMetaStore) {
-    this.catalog = null;
+    this.coralCatalog = null;
+    this.msc = null;
     SchemaPlus schemaPlus = Frameworks.createRootSchema(false);
     schemaPlus.add(HiveSchema.ROOT_SCHEMA, new LocalMetastoreHiveSchema(localMetaStore));
     // this is to ensure that jdbc:calcite driver is correctly registered
@@ -164,25 +179,31 @@ public abstract class ToRelConverter {
    */
   @VisibleForTesting
   public SqlNode processView(String dbName, String tableName) {
-    // Views require Hive Table object for view expansion
-    if (catalog == null) {
-      throw new RuntimeException("Cannot process view without catalog: " + dbName + "." + tableName);
+    if (coralCatalog != null) {
+      return processViewWithCatalog(dbName, tableName);
+    } else if (msc != null) {
+      return processViewWithMsc(dbName, tableName);
+    } else {
+      throw new RuntimeException("Cannot process view without catalog or msc: " + dbName + "." + tableName);
     }
+  }
 
-    // Get dataset from catalog
-    Dataset dataset = catalog.getDataset(dbName, tableName);
-
-    if (dataset == null) {
+  /**
+   * Processes a table/view using CoralCatalog (supports Hive and Iceberg tables).
+   */
+  private SqlNode processViewWithCatalog(String dbName, String tableName) {
+    CoralTable coralTable = coralCatalog.getTable(dbName, tableName);
+    if (coralTable == null) {
       throw new RuntimeException("Table/view not found: " + dbName + "." + tableName);
     }
 
-    String stringViewExpandedText = null;
-    org.apache.hadoop.hive.metastore.api.Table table = null;
+    String stringViewExpandedText;
+    org.apache.hadoop.hive.metastore.api.Table table;
 
-    if (dataset instanceof HiveDataset) {
-      // Hive dataset: can be TABLE or VIEW
-      HiveDataset hiveDataset = (HiveDataset) dataset;
-      table = hiveDataset.getHiveTable();
+    if (coralTable instanceof HiveCoralTable) {
+      // Hive coral table: can be TABLE or VIEW
+      HiveCoralTable hiveCoralTable = (HiveCoralTable) coralTable;
+      table = hiveCoralTable.getHiveTable();
 
       if (table.getTableType().equals("VIRTUAL_VIEW")) {
         // It's a view - use expanded view text
@@ -191,19 +212,41 @@ public abstract class ToRelConverter {
         // It's a Hive table
         stringViewExpandedText = "SELECT * FROM " + dbName + "." + tableName;
       }
-    } else if (dataset instanceof IcebergDataset) {
-      // Iceberg dataset: always a table (Iceberg doesn't have views)
-      IcebergDataset icebergDataset = (IcebergDataset) dataset;
+    } else if (coralTable instanceof IcebergCoralTable) {
+      // Iceberg coral table: always a table (Iceberg doesn't have views)
+      IcebergCoralTable icebergCoralTable = (IcebergCoralTable) coralTable;
 
-      // Convert Iceberg dataset to minimal Hive Table for backward compatibility
+      // Convert Iceberg coral table to minimal Hive Table for backward compatibility
       // This is needed because downstream code (ParseTreeBuilder, HiveFunctionResolver)
       // expects a Hive Table object for Dali UDF resolution
-      table = IcebergHiveTableConverter.toHiveTable(icebergDataset);
+      table = IcebergHiveTableConverter.toHiveTable(icebergCoralTable);
       stringViewExpandedText = "SELECT * FROM " + dbName + "." + tableName;
     } else {
-      throw new RuntimeException("Unsupported dataset type for: " + dbName + "." + tableName);
+      throw new RuntimeException("Unsupported coral table type for: " + dbName + "." + tableName);
     }
+
     return toSqlNode(stringViewExpandedText, table);
+  }
+
+  /**
+   * Processes a table/view using HiveMetastoreClient (backward compatible, Hive-only path).
+   */
+  private SqlNode processViewWithMsc(String dbName, String tableName) {
+    org.apache.hadoop.hive.metastore.api.Table hiveTable = msc.getTable(dbName, tableName);
+    if (hiveTable == null) {
+      throw new RuntimeException("Table/view not found: " + dbName + "." + tableName);
+    }
+
+    String stringViewExpandedText;
+    if (hiveTable.getTableType().equals("VIRTUAL_VIEW")) {
+      // It's a view - use expanded view text
+      stringViewExpandedText = hiveTable.getViewExpandedText();
+    } else {
+      // It's a Hive table
+      stringViewExpandedText = "SELECT * FROM " + dbName + "." + tableName;
+    }
+
+    return toSqlNode(stringViewExpandedText, hiveTable);
   }
 
   @VisibleForTesting

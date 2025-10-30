@@ -14,22 +14,22 @@ import static com.google.common.base.Preconditions.*;
 
 
 /**
- * Implementation of {@link Dataset} interface for Apache Iceberg tables.
+ * Implementation of {@link CoralTable} interface for Apache Iceberg tables.
  * This class wraps an Iceberg Table object and provides a unified
- * Dataset API for accessing table metadata.
+ * CoralTable API for accessing table metadata.
  *
  * Used by Calcite integration to dispatch to IcebergTable.
  */
-public class IcebergDataset implements Dataset {
+public class IcebergCoralTable implements CoralTable {
 
   private final Table table;
 
   /**
-   * Creates a new IcebergDataset wrapping the given Iceberg table.
+   * Creates a new IcebergCoralTable wrapping the given Iceberg table.
    *
    * @param table Iceberg Table object (must not be null)
    */
-  public IcebergDataset(Table table) {
+  public IcebergCoralTable(Table table) {
     this.table = checkNotNull(table, "Iceberg table cannot be null");
   }
 

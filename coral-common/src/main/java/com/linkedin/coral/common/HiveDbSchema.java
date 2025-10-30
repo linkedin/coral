@@ -18,9 +18,9 @@ import org.apache.calcite.rel.type.RelProtoDataType;
 import org.apache.calcite.schema.*;
 
 import com.linkedin.coral.common.catalog.CoralCatalog;
-import com.linkedin.coral.common.catalog.Dataset;
-import com.linkedin.coral.common.catalog.HiveDataset;
-import com.linkedin.coral.common.catalog.IcebergDataset;
+import com.linkedin.coral.common.catalog.CoralTable;
+import com.linkedin.coral.common.catalog.HiveCoralTable;
+import com.linkedin.coral.common.catalog.IcebergCoralTable;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.linkedin.coral.common.catalog.TableType.VIEW;
@@ -28,56 +28,71 @@ import static com.linkedin.coral.common.catalog.TableType.VIEW;
 
 /**
  * Adaptor from catalog providing database and table names to Calcite {@link Schema}.
- * Uses CoralCatalog to provide unified access to different table formats
- * (Hive, Iceberg, etc.).
+ * Can use either CoralCatalog for unified access or HiveMetastoreClient for Hive-specific access.
  */
 public class HiveDbSchema implements Schema {
 
   public static final String DEFAULT_DB = "default";
 
-  private final CoralCatalog catalog;
+  private final CoralCatalog coralCatalog;
+  private final HiveMetastoreClient msc;
   private final String dbName;
 
-  HiveDbSchema(@Nonnull CoralCatalog catalog, @Nonnull String dbName) {
-    this.catalog = checkNotNull(catalog);
-    this.dbName = checkNotNull(dbName);
-  }
-
   /**
-   * Constructor for backward compatibility with HiveMetastoreClient.
+   * Constructor using CoralCatalog for unified table access.
    */
-  HiveDbSchema(@Nonnull HiveMetastoreClient msc, @Nonnull String dbName) {
-    this((CoralCatalog) checkNotNull(msc), checkNotNull(dbName));
+  HiveDbSchema(CoralCatalog coralCatalog, HiveMetastoreClient msc, @Nonnull String dbName) {
+    this.coralCatalog = coralCatalog;
+    this.msc = msc;
+    this.dbName = checkNotNull(dbName);
   }
 
   @Override
   public Table getTable(String name) {
-    // Get unified Dataset from CoralCatalog
-    Dataset dataset = catalog.getDataset(dbName, name);
-    if (dataset == null) {
-      return null;
-    }
+    if (coralCatalog != null) {
+      // Use CoralCatalog for unified table access
+      CoralTable coralTable = coralCatalog.getTable(dbName, name);
+      if (coralTable == null) {
+        return null;
+      }
 
-    // Dispatch based on Dataset implementation type
-    if (dataset instanceof IcebergDataset) {
-      return new IcebergTable((IcebergDataset) dataset);
-    } else if (dataset instanceof HiveDataset) {
-      HiveDataset hiveDataset = (HiveDataset) dataset;
-      // Check if it's a view
-      if (hiveDataset.tableType() == VIEW) {
-        return new HiveViewTable(hiveDataset, ImmutableList.of(HiveSchema.ROOT_SCHEMA, dbName));
+      // Dispatch based on CoralTable implementation type
+      if (coralTable instanceof IcebergCoralTable) {
+        return new IcebergTable((IcebergCoralTable) coralTable);
+      } else if (coralTable instanceof HiveCoralTable) {
+        HiveCoralTable hiveCoralTable = (HiveCoralTable) coralTable;
+        // Check if it's a view
+        if (hiveCoralTable.tableType() == VIEW) {
+          return new HiveViewTable(hiveCoralTable, ImmutableList.of(HiveSchema.ROOT_SCHEMA, dbName));
+        } else {
+          return new HiveTable(hiveCoralTable);
+        }
+      }
+      return null;
+    } else {
+      // Use HiveMetastoreClient for Hive-specific access
+      org.apache.hadoop.hive.metastore.api.Table hiveTable = msc.getTable(dbName, name);
+      if (hiveTable == null) {
+        return null;
+      }
+
+      // Wrap in HiveCoralTable and dispatch
+      HiveCoralTable hiveCoralTable = new HiveCoralTable(hiveTable);
+      if (hiveCoralTable.tableType() == VIEW) {
+        return new HiveViewTable(hiveCoralTable, ImmutableList.of(HiveSchema.ROOT_SCHEMA, dbName));
       } else {
-        return new HiveTable(hiveDataset);
+        return new HiveTable(hiveCoralTable);
       }
     }
-
-    // Unknown dataset type - return null
-    return null;
   }
 
   @Override
   public Set<String> getTableNames() {
-    return ImmutableSet.copyOf(catalog.getAllDatasets(dbName));
+    if (coralCatalog != null) {
+      return ImmutableSet.copyOf(coralCatalog.getAllTables(dbName));
+    } else {
+      return ImmutableSet.copyOf(msc.getAllTables(dbName));
+    }
   }
 
   @Override

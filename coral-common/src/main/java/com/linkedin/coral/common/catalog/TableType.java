@@ -18,23 +18,5 @@ public enum TableType {
   /**
    * Virtual view (query definition without data storage)
    */
-  VIEW;
-
-  /**
-   * Converts Hive table type string to TableType enum.
-   *
-   * @param hiveTableType Hive table type string (e.g., "MANAGED_TABLE", "EXTERNAL_TABLE", "VIRTUAL_VIEW")
-   * @return Corresponding TableType enum value (TABLE or VIEW)
-   */
-  public static TableType fromHiveTableType(String hiveTableType) {
-    if (hiveTableType == null) {
-      return TABLE;
-    }
-
-    String upperType = hiveTableType.toUpperCase();
-    if (upperType.contains("VIEW")) {
-      return VIEW;
-    }
-    return TABLE;
-  }
+  VIEW
 }
