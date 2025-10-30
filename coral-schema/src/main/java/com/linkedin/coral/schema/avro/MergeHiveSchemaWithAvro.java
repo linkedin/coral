@@ -177,13 +177,41 @@ class MergeHiveSchemaWithAvro extends HiveSchemaWithPartnerVisitor<Schema, Schem
     @Override
     public Schema mapValuePartner(Schema partner) {
       Schema schema = SchemaUtilities.extractIfOption(partner);
-      return (schema.getType() == Schema.Type.MAP) ? schema.getValueType() : null;
+      if (schema.getType() != Schema.Type.MAP) {
+        return null;
+      }
+      Schema valueType = schema.getValueType();
+      // Handle single-element unions like [{"type":"record",...}]
+      // These are not typical nullable unions but still valid Avro unions
+      if (valueType.getType() == Schema.Type.UNION) {
+        List<Schema> types = valueType.getTypes();
+        if (types.size() == 1) {
+          // Single-element union: just extract that single type
+          return types.get(0);
+        }
+      }
+      // Extract the non-null type from nullable unions like ["null", "string"]
+      return SchemaUtilities.extractIfOption(valueType);
     }
 
     @Override
     public Schema listElementPartner(Schema partner) {
       Schema schema = SchemaUtilities.extractIfOption(partner);
-      return (schema.getType() == Schema.Type.ARRAY) ? schema.getElementType() : null;
+      if (schema.getType() != Schema.Type.ARRAY) {
+        return null;
+      }
+      Schema elementType = schema.getElementType();
+      // Handle single-element unions like [{"type":"record",...}]
+      // These are not typical nullable unions but still valid Avro unions
+      if (elementType.getType() == Schema.Type.UNION) {
+        List<Schema> types = elementType.getTypes();
+        if (types.size() == 1) {
+          // Single-element union: just extract that single type
+          return types.get(0);
+        }
+      }
+      // Extract the non-null type from nullable unions like ["null", "string"]
+      return SchemaUtilities.extractIfOption(elementType);
     }
 
     @Override
