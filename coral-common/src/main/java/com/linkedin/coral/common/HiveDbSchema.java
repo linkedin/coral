@@ -39,7 +39,11 @@ public class HiveDbSchema implements Schema {
   private final String dbName;
 
   /**
-   * Constructor using CoralCatalog for unified table access.
+   * Constructor for HiveDbSchema. Exactly one of coralCatalog or msc must be non-null.
+   * 
+   * @param coralCatalog Coral catalog for unified access (can be null if msc is provided)
+   * @param msc Hive metastore client for Hive-specific access (can be null if coralCatalog is provided)
+   * @param dbName Database name (must not be null)
    */
   HiveDbSchema(CoralCatalog coralCatalog, HiveMetastoreClient msc, @Nonnull String dbName) {
     this.coralCatalog = coralCatalog;

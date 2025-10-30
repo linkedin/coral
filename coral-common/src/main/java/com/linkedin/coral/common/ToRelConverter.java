@@ -52,7 +52,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * This class should serve as the main entry point for clients to convert
  * SQL queries.
  * 
- * Uses CoralCatalog for unified access to different table formats.
+ * Supports both {@link com.linkedin.coral.common.catalog.CoralCatalog} (for unified
+ * multi-format access to Hive/Iceberg tables) and {@link HiveMetastoreClient}
+ * (for backward compatibility with Hive-only workflows).
  */
 public abstract class ToRelConverter {
 
