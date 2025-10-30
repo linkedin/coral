@@ -240,6 +240,87 @@ public class MergeHiveSchemaWithAvroTests {
     assertSchema(expected, merge(hive, avro));
   }
 
+  @Test
+  public void shouldHandleSingleElementUnionsInArraysAndMaps() {
+    // This test verifies that single-element unions in array items and map values are properly unwrapped
+    // and the nested field nullability is preserved during schema merging.
+    // This reproduces the fix for handling avro.schema.literal with single-element unions like:
+    // - Array items: "items": [{"type":"record",...}]
+    // - Map values: "values": [{"type":"record",...}]
+    // These single-element unions appear in real-world Avro schemas stored as avro.schema.literal
+
+    String hive = "struct<id:bigint,items:array<struct<fooconfiguration:struct<name:string,urlvalue:string,source:string>,"
+        + "barconfiguration:struct<name:string,domain:string>>>,"
+        + "metadata:map<string,struct<category:string,priority:int>>>";
+
+    // Define an Avro schema literal similar to what would be stored in avro.schema.literal table property
+    // Note the single-element unions in array items and map values: [{"type":"record",...}]
+    String avroSchemaLiteral =
+        "{\"type\":\"record\",\"name\":\"test_complex_array_table\",\"namespace\":\"com.example.test\",\"fields\":["
+            + "{\"name\":\"id\",\"type\":[\"null\",\"long\"],\"default\":null},"
+            + "{\"name\":\"items\",\"type\":[\"null\",{\"type\":\"array\",\"items\":[{\"type\":\"record\",\"name\":\"ItemConfig\",\"namespace\":\"com.example.data\",\"fields\":["
+            + "{\"name\":\"fooConfiguration\",\"type\":[\"null\",{\"type\":\"record\",\"name\":\"FooConfiguration\",\"fields\":["
+            + "{\"name\":\"name\",\"type\":\"string\"},"
+            + "{\"name\":\"urlValue\",\"type\":\"string\"},"
+            + "{\"name\":\"source\",\"type\":\"string\"}"
+            + "]}],\"default\":null},"
+            + "{\"name\":\"barConfiguration\",\"type\":[\"null\",{\"type\":\"record\",\"name\":\"BarConfiguration\",\"fields\":["
+            + "{\"name\":\"name\",\"type\":\"string\"},"
+            + "{\"name\":\"domain\",\"type\":\"string\"}"
+            + "]}],\"default\":null}"
+            + "]}]}],\"default\":null},"
+            + "{\"name\":\"metadata\",\"type\":[\"null\",{\"type\":\"map\",\"values\":[{\"type\":\"record\",\"name\":\"MetadataValue\",\"namespace\":\"com.example.data\",\"fields\":["
+            + "{\"name\":\"category\",\"type\":\"string\"},"
+            + "{\"name\":\"priority\",\"type\":\"int\"}"
+            + "]}]}],\"default\":null}"
+            + "]}";
+
+    Schema avro = new Schema.Parser().parse(avroSchemaLiteral);
+    Schema merged = merge(hive, avro);
+
+    // Verify that single-element unions were properly handled
+    // Extract items array
+    Schema mergedItemsArray = SchemaUtilities.extractIfOption(merged.getField("items").schema());
+    Schema mergedItemConfig = mergedItemsArray.getElementType();
+
+    // The fix ensures that single-element union [ItemConfig] is unwrapped to ItemConfig
+    // Without the fix, this would fail because the union wouldn't be unwrapped
+    assertEquals(mergedItemConfig.getType(), Schema.Type.RECORD, "Array element should be a record, not a union");
+
+    // Extract fooConfiguration and verify nested field nullability is preserved
+    Schema mergedFooConfig =
+        SchemaUtilities.extractIfOption(mergedItemConfig.getField("fooConfiguration").schema());
+
+    // Nested fields should be non-nullable (required) as defined in the avro.schema.literal
+    assertEquals(mergedFooConfig.getField("name").schema().getType(), Schema.Type.STRING,
+        "name field should be non-nullable string");
+    assertEquals(mergedFooConfig.getField("urlValue").schema().getType(), Schema.Type.STRING,
+        "urlValue field should be non-nullable string");
+    assertEquals(mergedFooConfig.getField("source").schema().getType(), Schema.Type.STRING,
+        "source field should be non-nullable string");
+
+    // Verify barConfiguration nested fields
+    Schema mergedBarConfig =
+        SchemaUtilities.extractIfOption(mergedItemConfig.getField("barConfiguration").schema());
+    assertEquals(mergedBarConfig.getField("name").schema().getType(), Schema.Type.STRING,
+        "bar name field should be non-nullable string");
+    assertEquals(mergedBarConfig.getField("domain").schema().getType(), Schema.Type.STRING,
+        "domain field should be non-nullable string");
+
+    // Extract metadata map value and verify
+    // Ensures that single-element union [MetadataValue] is unwrapped to MetadataValue
+    Schema mergedMetadataMap = SchemaUtilities.extractIfOption(merged.getField("metadata").schema());
+    Schema mergedMetadataValue = mergedMetadataMap.getValueType();
+
+    assertEquals(mergedMetadataValue.getType(), Schema.Type.RECORD, "Map value should be a record, not a union");
+
+    // Fields in MetadataValue should be non-nullable as defined in avro.schema.literal
+    assertEquals(mergedMetadataValue.getField("category").schema().getType(), Schema.Type.STRING,
+        "category field should be non-nullable string");
+    assertEquals(mergedMetadataValue.getField("priority").schema().getType(), Schema.Type.INT,
+        "priority field should be non-nullable int");
+  }
+
   // TODO: tests to retain schema props
   // TODO: tests for explicit type compatibility check between hive and avro primitives, once we implement it
   // TODO: tests for error case => default value in Avro does not match with type from hive
