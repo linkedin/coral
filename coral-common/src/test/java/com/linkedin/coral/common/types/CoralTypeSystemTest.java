@@ -203,7 +203,6 @@ public class CoralTypeSystemTest {
     PrimitiveType intType1 = PrimitiveType.of(CoralTypeKind.INT, false);
     PrimitiveType intType2 = PrimitiveType.of(CoralTypeKind.INT, false);
     PrimitiveType nullableIntType = PrimitiveType.of(CoralTypeKind.INT, true);
-
     assertEquals(intType1, intType2);
     assertNotEquals(intType1, nullableIntType);
     assertEquals(intType1.hashCode(), intType2.hashCode());
