@@ -5,6 +5,7 @@ def modules = [
   'coral-incremental',
   'coral-pig',
   'coral-spark',
+  'coral-spark-catalog',
   'coral-schema',
   'coral-spark-plan',
   'coral-trino',

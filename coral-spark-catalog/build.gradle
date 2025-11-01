@@ -1,0 +1,13 @@
+dependencies {
+  implementation project(':coral-hive')
+  implementation project(':coral-spark')
+  implementation project(':coral-schema')
+
+
+  compileOnly deps.'spark3.5'.'avro'
+  compileOnly deps.'spark3.5'.'sql'
+
+  testImplementation deps.'spark3.5'.'sql'
+  testImplementation deps.'hive'.'hive-metastore'
+  testImplementation deps.'hive'.'hive-exec-core'
+}

@@ -13,6 +13,7 @@ def versions = [
   'pig': '0.15.0',
   'spark': '2.4.0',
   'spark3': '3.1.1',
+  'spark3.5': '3.5.0',
   'testing': '6.4'
 ]
 
@@ -46,6 +47,10 @@ ext.deps = [
   ],
   'spark3': [
     'hive': "org.apache.spark:spark-hive_2.12:${versions['spark3']}"
+  ],
+  'spark3.5': [
+      'avro': "org.apache.spark:spark-avro_2.12:${versions['spark3.5']}",
+      'sql': "org.apache.spark:spark-sql_2.12:${versions['spark3.5']}"
   ],
   'testing': "org.testng:testng:${versions['testing']}"
 ]
