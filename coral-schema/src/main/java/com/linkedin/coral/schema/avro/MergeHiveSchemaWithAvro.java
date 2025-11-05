@@ -49,6 +49,10 @@ class MergeHiveSchemaWithAvro extends HiveSchemaWithPartnerVisitor<Schema, Schem
 
   @Override
   public Schema struct(StructTypeInfo struct, Schema partner, List<Schema.Field> fieldResults) {
+    // Check if this is a union-encoded-as-struct by looking for "tag" field in fieldResults
+    boolean isUnionEncodedAsStruct = fieldResults.stream()
+        .anyMatch(f -> f.name().equalsIgnoreCase("tag"));
+    
     boolean shouldResultBeOptional = partner == null || isNullableType(partner);
     Schema result;
     if (partner == null || SchemaUtilities.extractIfOption(partner).getType() != Schema.Type.RECORD) {
@@ -61,8 +65,36 @@ class MergeHiveSchemaWithAvro extends HiveSchemaWithPartnerVisitor<Schema, Schem
     }
     // While calling `makeNullable`, we should respect the option order of `partner`
     // i.e. if the schema of `partner` is [int, null], the resultant schema should also be [int, null] rather than [null, int]
-    return shouldResultBeOptional ? SchemaUtilities.makeNullable(result, SchemaUtilities.isNullSecond(partner))
+    // However, if this is a union-encoded-as-struct, don't make it nullable - it represents the union structure itself
+    return (shouldResultBeOptional && !isUnionEncodedAsStruct) 
+        ? SchemaUtilities.makeNullable(result, SchemaUtilities.isNullSecond(partner))
         : result;
+  }
+
+  /**
+   * Helper method to get an appropriate default value for a schema type.
+   * Used for union-encoded-as-struct fields that need non-null defaults.
+   *
+   * @param schema The schema to get a default value for
+   * @return An appropriate default value, or null if none can be determined
+   */
+  private Object getDefaultValueForSchema(Schema schema) {
+    switch (schema.getType()) {
+      case INT:
+        return 0;
+      case LONG:
+        return 0L;
+      case FLOAT:
+        return 0.0f;
+      case DOUBLE:
+        return 0.0;
+      case BOOLEAN:
+        return false;
+      case STRING:
+        return "";
+      default:
+        return null;
+    }
   }
 
   @Override
@@ -70,9 +102,20 @@ class MergeHiveSchemaWithAvro extends HiveSchemaWithPartnerVisitor<Schema, Schem
     // No need to infer `shouldResultBeOptional`. We expect other visitor methods to return optional schemas
     // in their field results if required
     if (partner == null) {
-      // if there was no matching Avro field, use name form the Hive schema and set a null default
-      return AvroCompatibilityHelper.createSchemaField(SchemaUtilities.makeCompatibleName(name), fieldResult, null,
-          null);
+      // if there was no matching Avro field, use name from the Hive schema
+      // Special case: for union-encoded-as-struct fields (tag, field0, field1, ...), keep them non-nullable
+      // even though they don't have Avro partners, because they're part of the union encoding structure
+      boolean isUnionEncodingField = name.equals("tag") || name.matches("field\\d+");
+      if (isUnionEncodingField && !AvroSerdeUtils.isNullableType(fieldResult)) {
+        // For union encoding fields, use a non-null default appropriate for the type
+        Object defaultValue = getDefaultValueForSchema(fieldResult);
+        return AvroCompatibilityHelper.createSchemaField(SchemaUtilities.makeCompatibleName(name), fieldResult, null,
+            defaultValue);
+      } else {
+        // For regular fields not found in Avro, make them optional with null default
+        return AvroCompatibilityHelper.createSchemaField(SchemaUtilities.makeCompatibleName(name), fieldResult, null,
+            null);
+      }
     } else {
       // TODO: How to ensure that field default value is compatible with new field type generated from Hive?
       // Copy field type from the visitor result, copy everything else from the partner
@@ -181,6 +224,37 @@ class MergeHiveSchemaWithAvro extends HiveSchemaWithPartnerVisitor<Schema, Schem
     @Override
     public Schema.Field fieldPartner(Schema partner, String fieldName) {
       Schema schema = SchemaUtilities.extractIfOption(partner);
+      
+      // Special case: If the partner is a union and the field name matches the union-encoded-as-struct pattern,
+      // this is a Hive union-encoded-as-struct. We need to return a synthetic field that wraps the corresponding union branch.
+      // Check the ORIGINAL partner, not the extracted schema, because extractIfOption may unwrap 2-way unions
+      if (partner.getType() == Schema.Type.UNION) {
+        // Handle "tag" field - this is the discriminator for the union, should be non-nullable int
+        if (fieldName.equalsIgnoreCase("tag")) {
+          // Return a synthetic non-nullable int field for the tag
+          // This ensures primitive() gets a non-null partner and doesn't make it nullable
+          Schema intSchema = Schema.create(Schema.Type.INT);
+          return AvroCompatibilityHelper.createSchemaField(fieldName, intSchema, "Union tag discriminator", 0);
+        }
+        
+        // Handle "fieldN" fields - these correspond to union branches
+        if (fieldName.matches("field\\d+")) {
+          try {
+            int fieldIndex = Integer.parseInt(fieldName.substring(5)); // Extract number from "fieldN"
+            // Use the original partner (which is the union), not the extracted schema
+            Schema unionWithoutNull = SchemaUtilities.discardNullFromUnionIfExist(partner);
+            List<Schema> branches = unionWithoutNull.getTypes();
+            if (fieldIndex < branches.size()) {
+              // Create a synthetic field that wraps the union branch schema
+              Schema branchSchema = branches.get(fieldIndex);
+              return AvroCompatibilityHelper.createSchemaField(fieldName, branchSchema, null, null);
+            }
+          } catch (NumberFormatException e) {
+            // Not a valid field index, fall through to regular logic
+          }
+        }
+      }
+      
       return (schema.getType() == Schema.Type.RECORD) ? findCaseInsensitive(schema, fieldName) : null;
     }
 
