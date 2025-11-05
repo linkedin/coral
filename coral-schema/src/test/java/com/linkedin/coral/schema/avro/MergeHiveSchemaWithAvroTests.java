@@ -321,6 +321,95 @@ public class MergeHiveSchemaWithAvroTests {
         "priority field should be non-nullable int");
   }
 
+  @Test
+  public void shouldHandleUnionEncodedAsStruct() {
+    // This test verifies that when Hive has unions encoded as structs with tag/field0/field1/...
+    // and the Avro partner has the unions in their original form,
+    // the merged schema correctly preserves nullability from the Avro union branches.
+    // Tests both 2-way unions ["null", T] and 3-way unions ["null", T1, T2].
+    // Expected: tag should be non-nullable, array items should be non-nullable,
+    // and nested field nullability should be preserved from Avro.
+
+    String hive = "struct<"
+        + "twowayunion:struct<tag:int,field0:array<struct<name:string,value:bigint>>>,"
+        + "threewayunion:struct<tag:int,field0:bigint,field1:array<struct<description:string,metadata:string>>>"
+        + ">";
+
+    // Avro partner schema with both 2-way and 3-way unions
+    String avroSchemaLiteral = "{\"type\":\"record\",\"name\":\"TestRecord\",\"namespace\":\"test\",\"fields\":["
+        // 2-way union: null or array
+        + "{\"name\":\"twoWayUnion\",\"type\":[\"null\",{\"type\":\"array\",\"items\":{\"type\":\"record\",\"name\":\"TwoWayItem\",\"fields\":["
+        + "{\"name\":\"name\",\"type\":\"string\"},"
+        + "{\"name\":\"value\",\"type\":[\"null\",\"long\"]}"
+        + "]}}]},"
+        // 3-way union: null, long, or array
+        + "{\"name\":\"threeWayUnion\",\"type\":[\"null\",\"long\",{\"type\":\"array\",\"items\":{\"type\":\"record\",\"name\":\"ThreeWayItem\",\"fields\":["
+        + "{\"name\":\"description\",\"type\":\"string\"},"
+        + "{\"name\":\"metadata\",\"type\":[\"null\",\"string\"]}"
+        + "]}}]}"
+        + "]}";
+
+    Schema avro = new Schema.Parser().parse(avroSchemaLiteral);
+    Schema merged = merge(hive, avro);
+
+    // ===== Test 2-way union =====
+    Schema.Field twoWayField = merged.getField("twoWayUnion");
+    assertNotNull(twoWayField, "twoWayUnion field should exist");
+    Schema twoWayStruct = twoWayField.schema();
+    assertEquals(twoWayStruct.getType(), Schema.Type.RECORD, "twoWayUnion should be a record (union encoded as struct)");
+
+    // Verify tag field is non-nullable int
+    Schema.Field twoWayTagField = twoWayStruct.getField("tag");
+    assertNotNull(twoWayTagField, "tag field should exist in twoWayUnion");
+    assertEquals(twoWayTagField.schema().getType(), Schema.Type.INT, "tag should be non-nullable int");
+
+    // Extract field0 (the array branch)
+    Schema.Field twoWayField0 = twoWayStruct.getField("field0");
+    assertNotNull(twoWayField0, "field0 should exist in twoWayUnion");
+    Schema twoWayArraySchema = SchemaUtilities.extractIfOption(twoWayField0.schema());
+    assertEquals(twoWayArraySchema.getType(), Schema.Type.ARRAY, "field0 should be an array");
+
+    // Verify array items are records (not ["null", record])
+    Schema twoWayItemSchema = twoWayArraySchema.getElementType();
+    assertEquals(twoWayItemSchema.getType(), Schema.Type.RECORD,
+        "Array items should be records, not unions with null");
+
+    // Verify nested field nullability: name is non-nullable, value is nullable
+    assertEquals(twoWayItemSchema.getField("name").schema().getType(), Schema.Type.STRING,
+        "name field should be non-nullable string");
+    assertTrue(AvroSerdeUtils.isNullableType(twoWayItemSchema.getField("value").schema()),
+        "value field should be nullable");
+
+    // ===== Test 3-way union =====
+    Schema.Field threeWayField = merged.getField("threeWayUnion");
+    assertNotNull(threeWayField, "threeWayUnion field should exist");
+    Schema threeWayStruct = threeWayField.schema();
+    assertEquals(threeWayStruct.getType(), Schema.Type.RECORD,
+        "threeWayUnion should be a record (union encoded as struct)");
+
+    // Verify tag field is non-nullable int
+    Schema.Field threeWayTagField = threeWayStruct.getField("tag");
+    assertNotNull(threeWayTagField, "tag field should exist in threeWayUnion");
+    assertEquals(threeWayTagField.schema().getType(), Schema.Type.INT, "tag should be non-nullable int");
+
+    // Extract field1 (the array branch - field0 is the long branch)
+    Schema.Field threeWayField1 = threeWayStruct.getField("field1");
+    assertNotNull(threeWayField1, "field1 should exist in threeWayUnion");
+    Schema threeWayArraySchema = SchemaUtilities.extractIfOption(threeWayField1.schema());
+    assertEquals(threeWayArraySchema.getType(), Schema.Type.ARRAY, "field1 should be an array");
+
+    // Verify array items are records (not ["null", record])
+    Schema threeWayItemSchema = threeWayArraySchema.getElementType();
+    assertEquals(threeWayItemSchema.getType(), Schema.Type.RECORD,
+        "Array items should be records, not unions with null");
+
+    // Verify nested field nullability: description is non-nullable, metadata is nullable
+    assertEquals(threeWayItemSchema.getField("description").schema().getType(), Schema.Type.STRING,
+        "description field should be non-nullable string");
+    assertTrue(AvroSerdeUtils.isNullableType(threeWayItemSchema.getField("metadata").schema()),
+        "metadata field should be nullable");
+  }
+
   // TODO: tests to retain schema props
   // TODO: tests for explicit type compatibility check between hive and avro primitives, once we implement it
   // TODO: tests for error case => default value in Avro does not match with type from hive
