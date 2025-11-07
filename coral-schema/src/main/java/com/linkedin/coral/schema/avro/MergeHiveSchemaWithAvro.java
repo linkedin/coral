@@ -177,19 +177,13 @@ class MergeHiveSchemaWithAvro extends HiveSchemaWithPartnerVisitor<Schema, Schem
     @Override
     public Schema mapValuePartner(Schema partner) {
       Schema schema = SchemaUtilities.extractIfOption(partner);
-      if (schema.getType() != Schema.Type.MAP) {
-        return null;
-      }
-      return schema.getValueType();
+      return (schema.getType() == Schema.Type.MAP) ? schema.getValueType() : null;
     }
 
     @Override
     public Schema listElementPartner(Schema partner) {
       Schema schema = SchemaUtilities.extractIfOption(partner);
-      if (schema.getType() != Schema.Type.ARRAY) {
-        return null;
-      }
-      return schema.getElementType();
+      return (schema.getType() == Schema.Type.ARRAY) ? schema.getElementType() : null;
     }
 
     @Override
