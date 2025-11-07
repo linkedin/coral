@@ -273,11 +273,11 @@ public class MergeHiveSchemaWithAvroTests {
 
     // Construct Avro schema with single-element unions for primitives, array items, and map values
     Schema avro = struct("test_complex_array_table", "doc-test", "com.example.test", optional("id", Schema.Type.LONG),
-        field("name", singleElementUnion(Schema.create(Schema.Type.STRING)), null, "unknown", null),
-        field("active", singleElementUnion(Schema.create(Schema.Type.BOOLEAN)), null, false, null),
-        optional("items", array(singleElementUnion(seu_arrayItemConfigSchema))),
-        optional("metadata", map(singleElementUnion(seu_mapValueMetadataSchema))),
-        optional("tags", array(singleElementUnion(Schema.create(Schema.Type.STRING)))));
+        field("name", SchemaUtilities.wrapInSingleElementUnion(Schema.create(Schema.Type.STRING)), null, "unknown", null),
+        field("active", SchemaUtilities.wrapInSingleElementUnion(Schema.create(Schema.Type.BOOLEAN)), null, false, null),
+        optional("items", array(SchemaUtilities.wrapInSingleElementUnion(seu_arrayItemConfigSchema))),
+        optional("metadata", map(SchemaUtilities.wrapInSingleElementUnion(seu_mapValueMetadataSchema))),
+        optional("tags", array(SchemaUtilities.wrapInSingleElementUnion(Schema.create(Schema.Type.STRING)))));
 
     // Expected schema after merge: single-element unions should be preserved
     // The structure of the Avro schema is maintained, including single-element unions
@@ -285,14 +285,6 @@ public class MergeHiveSchemaWithAvroTests {
     Schema expected = avro;
 
     Schema actual = merge(hive, avro);
-    
-    System.out.println("\n=== INPUT AVRO SCHEMA ===");
-    System.out.println(avro.toString(true));
-    System.out.println("\n=== EXPECTED OUTPUT SCHEMA ===");
-    System.out.println(expected.toString(true));
-    System.out.println("\n=== ACTUAL OUTPUT SCHEMA ===");
-    System.out.println(actual.toString(true));
-    System.out.println("\n=== END ===\n");
 
     assertSchema(expected, actual);
   }
@@ -322,8 +314,8 @@ public class MergeHiveSchemaWithAvroTests {
     // Also includes a regular union for the status field (to test Hive uniontype compatibility)
     Schema avro = struct("test_union_compat", "doc-test", "com.example.test", optional("id", Schema.Type.LONG),
         required("status", union(Schema.Type.NULL, Schema.Type.STRING, Schema.Type.INT)),
-        optional("items", array(singleElementUnion(seu_arrayItemSchema))),
-        optional("metadata", map(singleElementUnion(seu_mapValueMetadataSchema))));
+        optional("items", array(SchemaUtilities.wrapInSingleElementUnion(seu_arrayItemSchema))),
+        optional("metadata", map(SchemaUtilities.wrapInSingleElementUnion(seu_mapValueMetadataSchema))));
 
     // Expected schema: single-element unions should be preserved, regular union preserved
     // The Avro schema structure is maintained
@@ -331,14 +323,6 @@ public class MergeHiveSchemaWithAvroTests {
     Schema expected = avro;
 
     Schema actual = merge(hive, avro);
-    
-    System.out.println("\n=== INPUT AVRO SCHEMA (HiveUnionType test) ===");
-    System.out.println(avro.toString(true));
-    System.out.println("\n=== EXPECTED OUTPUT SCHEMA (HiveUnionType test) ===");
-    System.out.println(expected.toString(true));
-    System.out.println("\n=== ACTUAL OUTPUT SCHEMA (HiveUnionType test) ===");
-    System.out.println(actual.toString(true));
-    System.out.println("\n=== END ===\n");
 
     assertSchema(expected, actual);
   }
@@ -351,10 +335,6 @@ public class MergeHiveSchemaWithAvroTests {
 
   private Schema union(Schema.Type... types) {
     return Schema.createUnion(Arrays.stream(types).map(Schema::create).collect(Collectors.toList()));
-  }
-
-  private Schema singleElementUnion(Schema schema) {
-    return Schema.createUnion(Arrays.asList(schema));
   }
 
   private void assertSchema(Schema expected, Schema actual) {
