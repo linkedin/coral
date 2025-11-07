@@ -7,6 +7,7 @@ package com.linkedin.coral.schema.avro;
 
 import java.util.List;
 
+import org.apache.avro.Schema;
 import org.apache.hadoop.hive.serde2.typeinfo.ListTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.MapTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.PrimitiveTypeInfo;
@@ -57,6 +58,12 @@ public abstract class HiveSchemaWithPartnerVisitor<P, FP, R, FR> {
   @SuppressWarnings("MethodTypeParameterName")
   public static <P, FP, R, FR> R visit(TypeInfo typeInfo, P partner, HiveSchemaWithPartnerVisitor<P, FP, R, FR> visitor,
       PartnerAccessor<P, FP> accessor) {
+
+    boolean partnerWrapped = shouldUnwrapPartner(partner, typeInfo);
+    if (partnerWrapped) {
+      partner = (P) SchemaUtilities.extractSingleElementUnion((Schema) partner);
+    }
+    R resultSchema;
     switch (typeInfo.getCategory()) {
       case STRUCT:
         StructTypeInfo structTypeInfo = (StructTypeInfo) typeInfo;
@@ -69,14 +76,16 @@ public abstract class HiveSchemaWithPartnerVisitor<P, FP, R, FR> {
           R result = visit(fieldTypeInfo, fieldPartnerType, visitor, accessor);
           results.add(visitor.field(name, fieldTypeInfo, fieldPartner, result));
         }
-        return visitor.struct(structTypeInfo, partner, results);
+        resultSchema = visitor.struct(structTypeInfo, partner, results);
+        break;
 
       case LIST:
         ListTypeInfo listTypeInfo = (ListTypeInfo) typeInfo;
         TypeInfo elementTypeInfo = listTypeInfo.getListElementTypeInfo();
         P elementPartner = partner != null ? accessor.listElementPartner(partner) : null;
         R elementResult = visit(elementTypeInfo, elementPartner, visitor, accessor);
-        return visitor.list(listTypeInfo, partner, elementResult);
+        resultSchema = visitor.list(listTypeInfo, partner, elementResult);
+        break;
 
       case MAP:
         MapTypeInfo mapTypeInfo = (MapTypeInfo) typeInfo;
@@ -84,10 +93,12 @@ public abstract class HiveSchemaWithPartnerVisitor<P, FP, R, FR> {
         R keyResult = visit(mapTypeInfo.getMapKeyTypeInfo(), keyPartner, visitor, accessor);
         P valuePartner = partner != null ? accessor.mapValuePartner(partner) : null;
         R valueResult = visit(mapTypeInfo.getMapValueTypeInfo(), valuePartner, visitor, accessor);
-        return visitor.map(mapTypeInfo, partner, keyResult, valueResult);
+        resultSchema = visitor.map(mapTypeInfo, partner, keyResult, valueResult);
+        break;
 
       case PRIMITIVE:
-        return visitor.primitive((PrimitiveTypeInfo) typeInfo, partner);
+        resultSchema = visitor.primitive((PrimitiveTypeInfo) typeInfo, partner);
+        break;
 
       case UNION:
         UnionTypeInfo unionTypeInfo = (UnionTypeInfo) typeInfo;
@@ -98,11 +109,19 @@ public abstract class HiveSchemaWithPartnerVisitor<P, FP, R, FR> {
           R result = visit(allAlternatives.get(i), unionObjectPartner, visitor, accessor);
           unionResults.add(result);
         }
-        return visitor.union(unionTypeInfo, partner, unionResults);
+        resultSchema = visitor.union(unionTypeInfo, partner, unionResults);
+        break;
 
       default:
         throw new UnsupportedOperationException(typeInfo + " not supported");
     }
+    
+    // Rewrap in single-element union if the partner was originally wrapped
+    if (partnerWrapped) {
+      resultSchema = (R) SchemaUtilities.wrapInSingleElementUnion((Schema) resultSchema);
+    }
+    
+    return resultSchema;
   }
 
   public R struct(StructTypeInfo struct, P partner, List<FR> fieldResults) {
@@ -127,5 +146,20 @@ public abstract class HiveSchemaWithPartnerVisitor<P, FP, R, FR> {
 
   public R union(UnionTypeInfo union, P partner, List<R> results) {
     return null;
+  }
+
+  /**
+   * Checks if a partner schema is a single-element union that needs unwrapping for matching.
+   * Returns true when the Avro partner has a single-element union but the Hive type does not declare a union.
+   *
+   * @param partner The partner schema (may be a single-element union)
+   * @param hiveTypeInfo The Hive type info for comparison
+   * @param <P> The partner schema type
+   * @return true if unwrapping (and later rewrapping) is needed, false otherwise
+   */
+  private static <P> boolean shouldUnwrapPartner(P partner, TypeInfo hiveTypeInfo) {
+    return partner != null && partner instanceof org.apache.avro.Schema
+        && SchemaUtilities.isSingleElementUnion((org.apache.avro.Schema) partner)
+        && !(hiveTypeInfo instanceof UnionTypeInfo);
   }
 }
