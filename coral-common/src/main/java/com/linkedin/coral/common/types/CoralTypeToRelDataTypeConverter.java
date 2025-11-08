@@ -27,37 +27,43 @@ public final class CoralTypeToRelDataTypeConverter {
   /**
    * Converts a Coral data type to a Calcite RelDataType.
    * @param type the Coral data type to convert
-   * @param factory the Calcite type factory to use for creating RelDataType instances
    * @return the corresponding Calcite RelDataType
    */
   public static RelDataType convert(CoralDataType type, RelDataTypeFactory factory) {
     RelDataType relType;
 
-    if (type instanceof CoralPrimitiveType) {
-      relType = convertPrimitive((CoralPrimitiveType) type, factory);
-    } else if (type instanceof CoralTimestampType) {
-      CoralTimestampType ts = (CoralTimestampType) type;
+    if (type instanceof PrimitiveType) {
+      relType = convertPrimitive((PrimitiveType) type, factory);
+    } else if (type instanceof TimestampType) {
+      TimestampType ts = (TimestampType) type;
       relType = factory.createSqlType(SqlTypeName.TIMESTAMP, ts.getPrecision());
-    } else if (type instanceof CoralDecimalType) {
-      CoralDecimalType dec = (CoralDecimalType) type;
+    } else if (type instanceof DecimalType) {
+      DecimalType dec = (DecimalType) type;
       relType = factory.createSqlType(SqlTypeName.DECIMAL, dec.getPrecision(), dec.getScale());
-    } else if (type instanceof CoralCharType) {
-      CoralCharType c = (CoralCharType) type;
+    } else if (type instanceof CharType) {
+      CharType c = (CharType) type;
       relType = factory.createSqlType(SqlTypeName.CHAR, c.getLength());
-    } else if (type instanceof CoralVarcharType) {
-      CoralVarcharType v = (CoralVarcharType) type;
+    } else if (type instanceof VarcharType) {
+      VarcharType v = (VarcharType) type;
       relType = factory.createSqlType(SqlTypeName.VARCHAR, v.getLength());
-    } else if (type instanceof CoralArrayType) {
-      CoralArrayType arr = (CoralArrayType) type;
-      RelDataType elementType = convert(arr.getElementType(), factory);
+    } else if (type instanceof ArrayType) {
+      ArrayType arrayType = (ArrayType) type;
+      RelDataType elementType = convert(arrayType.getElementType(), factory);
       relType = factory.createArrayType(elementType, -1);
-    } else if (type instanceof CoralMapType) {
-      CoralMapType map = (CoralMapType) type;
-      RelDataType keyType = convert(map.getKeyType(), factory);
-      RelDataType valType = convert(map.getValueType(), factory);
-      relType = factory.createMapType(keyType, valType);
-    } else if (type instanceof CoralStructType) {
-      relType = convertStruct((CoralStructType) type, factory);
+    } else if (type instanceof MapType) {
+      MapType mapType = (MapType) type;
+      RelDataType keyType = convert(mapType.getKeyType(), factory);
+      RelDataType valueType = convert(mapType.getValueType(), factory);
+      relType = factory.createMapType(keyType, valueType);
+    } else if (type instanceof StructType) {
+      StructType structType = (StructType) type;
+      List<RelDataType> fieldTypes = new ArrayList<>();
+      List<String> fieldNames = new ArrayList<>();
+      for (StructField field : structType.getFields()) {
+        fieldTypes.add(convert(field.getType(), factory));
+        fieldNames.add(field.getName());
+      }
+      relType = factory.createStructType(fieldTypes, fieldNames);
     } else {
       // Fallback for unknown types
       relType = factory.createSqlType(SqlTypeName.ANY);
@@ -76,7 +82,7 @@ public final class CoralTypeToRelDataTypeConverter {
   /**
    * Converts a primitive Coral type to a Calcite RelDataType.
    */
-  private static RelDataType convertPrimitive(CoralPrimitiveType prim, RelDataTypeFactory factory) {
+  private static RelDataType convertPrimitive(PrimitiveType prim, RelDataTypeFactory factory) {
     switch (prim.getKind()) {
       case BOOLEAN:
         return factory.createSqlType(SqlTypeName.BOOLEAN);
@@ -110,11 +116,11 @@ public final class CoralTypeToRelDataTypeConverter {
   /**
    * Converts a struct Coral type to a Calcite RelDataType.
    */
-  private static RelDataType convertStruct(CoralStructType struct, RelDataTypeFactory factory) {
+  private static RelDataType convertStruct(StructType struct, RelDataTypeFactory factory) {
     List<String> names = new ArrayList<>();
     List<RelDataType> types = new ArrayList<>();
 
-    for (CoralStructField field : struct.getFields()) {
+    for (StructField field : struct.getFields()) {
       names.add(field.getName());
       types.add(convert(field.getType(), factory));
     }

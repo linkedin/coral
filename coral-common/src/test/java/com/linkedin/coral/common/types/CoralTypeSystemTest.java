@@ -35,11 +35,11 @@ public class CoralTypeSystemTest {
   @Test
   public void testPrimitiveTypes() {
     // Test basic primitive types
-    CoralPrimitiveType intType = new CoralPrimitiveType(CoralTypeKind.INT, false);
+    PrimitiveType intType = PrimitiveType.of(CoralTypeKind.INT, false);
     assertEquals(intType.getKind(), CoralTypeKind.INT);
     assertFalse(intType.isNullable());
 
-    CoralPrimitiveType nullableStringType = new CoralPrimitiveType(CoralTypeKind.STRING, true);
+    PrimitiveType nullableStringType = PrimitiveType.of(CoralTypeKind.STRING, true);
     assertEquals(nullableStringType.getKind(), CoralTypeKind.STRING);
     assertTrue(nullableStringType.isNullable());
 
@@ -55,7 +55,7 @@ public class CoralTypeSystemTest {
 
   @Test
   public void testDecimalType() {
-    CoralDecimalType decimalType = new CoralDecimalType(10, 2, true);
+    DecimalType decimalType = DecimalType.of(10, 2, true);
     assertEquals(decimalType.getPrecision(), 10);
     assertEquals(decimalType.getScale(), 2);
     assertTrue(decimalType.isNullable());
@@ -70,12 +70,12 @@ public class CoralTypeSystemTest {
 
   @Test
   public void testCharAndVarcharTypes() {
-    CoralCharType charType = new CoralCharType(10, false);
+    CharType charType = CharType.of(10, false);
     assertEquals(charType.getLength(), 10);
     assertFalse(charType.isNullable());
     assertEquals(charType.getKind(), CoralTypeKind.CHAR);
 
-    CoralVarcharType varcharType = new CoralVarcharType(255, true);
+    VarcharType varcharType = VarcharType.of(255, true);
     assertEquals(varcharType.getLength(), 255);
     assertTrue(varcharType.isNullable());
     assertEquals(varcharType.getKind(), CoralTypeKind.VARCHAR);
@@ -93,8 +93,8 @@ public class CoralTypeSystemTest {
 
   @Test
   public void testArrayType() {
-    CoralPrimitiveType elementType = new CoralPrimitiveType(CoralTypeKind.INT, false);
-    CoralArrayType arrayType = new CoralArrayType(elementType, true);
+    PrimitiveType elementType = PrimitiveType.of(CoralTypeKind.INT, false);
+    ArrayType arrayType = ArrayType.of(elementType, true);
 
     assertEquals(arrayType.getKind(), CoralTypeKind.ARRAY);
     assertTrue(arrayType.isNullable());
@@ -108,9 +108,9 @@ public class CoralTypeSystemTest {
 
   @Test
   public void testMapType() {
-    CoralPrimitiveType keyType = new CoralPrimitiveType(CoralTypeKind.STRING, false);
-    CoralPrimitiveType valueType = new CoralPrimitiveType(CoralTypeKind.INT, true);
-    CoralMapType mapType = new CoralMapType(keyType, valueType, false);
+    PrimitiveType keyType = PrimitiveType.of(CoralTypeKind.STRING, false);
+    PrimitiveType valueType = PrimitiveType.of(CoralTypeKind.INT, true);
+    MapType mapType = MapType.of(keyType, valueType, false);
 
     assertEquals(mapType.getKind(), CoralTypeKind.MAP);
     assertFalse(mapType.isNullable());
@@ -126,13 +126,12 @@ public class CoralTypeSystemTest {
 
   @Test
   public void testStructType() {
-    CoralPrimitiveType intType = new CoralPrimitiveType(CoralTypeKind.INT, false);
-    CoralPrimitiveType stringType = new CoralPrimitiveType(CoralTypeKind.STRING, true);
+    PrimitiveType intType = PrimitiveType.of(CoralTypeKind.INT, false);
+    PrimitiveType stringType = PrimitiveType.of(CoralTypeKind.STRING, true);
 
-    List<CoralStructField> fields =
-        Arrays.asList(new CoralStructField("id", intType), new CoralStructField("name", stringType));
+    List<StructField> fields = Arrays.asList(StructField.of("id", intType), StructField.of("name", stringType));
 
-    CoralStructType structType = new CoralStructType(fields, false);
+    StructType structType = StructType.of(fields, false);
     assertEquals(structType.getKind(), CoralTypeKind.STRUCT);
     assertFalse(structType.isNullable());
     assertEquals(structType.getFields().size(), 2);
@@ -152,15 +151,15 @@ public class CoralTypeSystemTest {
   @Test
   public void testComplexNestedType() {
     // Create a complex nested type: STRUCT<id: INT, tags: ARRAY<STRING>, metadata: MAP<STRING, STRING>>
-    CoralPrimitiveType intType = new CoralPrimitiveType(CoralTypeKind.INT, false);
-    CoralPrimitiveType stringType = new CoralPrimitiveType(CoralTypeKind.STRING, false);
-    CoralArrayType stringArrayType = new CoralArrayType(stringType, true);
-    CoralMapType stringMapType = new CoralMapType(stringType, stringType, true);
+    PrimitiveType intType = PrimitiveType.of(CoralTypeKind.INT, false);
+    PrimitiveType stringType = PrimitiveType.of(CoralTypeKind.STRING, false);
+    ArrayType stringArrayType = ArrayType.of(stringType, true);
+    MapType stringMapType = MapType.of(stringType, stringType, true);
 
-    List<CoralStructField> fields = Arrays.asList(new CoralStructField("id", intType),
-        new CoralStructField("tags", stringArrayType), new CoralStructField("metadata", stringMapType));
+    List<StructField> fields = Arrays.asList(StructField.of("id", intType), StructField.of("tags", stringArrayType),
+        StructField.of("metadata", stringMapType));
 
-    CoralStructType complexType = new CoralStructType(fields, false);
+    StructType complexType = StructType.of(fields, false);
 
     RelDataType relComplexType = CoralTypeToRelDataTypeConverter.convert(complexType, typeFactory);
     assertEquals(relComplexType.getSqlTypeName(), SqlTypeName.ROW);
@@ -180,19 +179,19 @@ public class CoralTypeSystemTest {
 
   @Test
   public void testTimestampPrecisionMapping() {
-    CoralTimestampType tsSec = new CoralTimestampType(0, false);
+    TimestampType tsSec = TimestampType.of(0, false);
     RelDataType relSec = CoralTypeToRelDataTypeConverter.convert(tsSec, typeFactory);
     assertEquals(relSec.getSqlTypeName(), SqlTypeName.TIMESTAMP);
     assertEquals(relSec.getPrecision(), 0);
     assertFalse(relSec.isNullable());
 
-    CoralTimestampType tsMillis = new CoralTimestampType(3, true);
+    TimestampType tsMillis = TimestampType.of(3, true);
     RelDataType relMillis = CoralTypeToRelDataTypeConverter.convert(tsMillis, typeFactory);
     assertEquals(relMillis.getSqlTypeName(), SqlTypeName.TIMESTAMP);
     assertEquals(relMillis.getPrecision(), 3);
     assertTrue(relMillis.isNullable());
 
-    CoralTimestampType tsMicros = new CoralTimestampType(6, false);
+    TimestampType tsMicros = TimestampType.of(6, false);
     RelDataType relMicros = CoralTypeToRelDataTypeConverter.convert(tsMicros, typeFactory);
     assertEquals(relMicros.getSqlTypeName(), SqlTypeName.TIMESTAMP);
     assertEquals(relMicros.getPrecision(), 6);
@@ -201,9 +200,9 @@ public class CoralTypeSystemTest {
 
   @Test
   public void testTypeEquality() {
-    CoralPrimitiveType intType1 = new CoralPrimitiveType(CoralTypeKind.INT, false);
-    CoralPrimitiveType intType2 = new CoralPrimitiveType(CoralTypeKind.INT, false);
-    CoralPrimitiveType nullableIntType = new CoralPrimitiveType(CoralTypeKind.INT, true);
+    PrimitiveType intType1 = PrimitiveType.of(CoralTypeKind.INT, false);
+    PrimitiveType intType2 = PrimitiveType.of(CoralTypeKind.INT, false);
+    PrimitiveType nullableIntType = PrimitiveType.of(CoralTypeKind.INT, true);
 
     assertEquals(intType1, intType2);
     assertNotEquals(intType1, nullableIntType);
