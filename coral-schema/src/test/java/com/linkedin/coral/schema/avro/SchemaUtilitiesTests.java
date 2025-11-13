@@ -194,4 +194,67 @@ public class SchemaUtilitiesTests {
     Assert.assertTrue(namespace2.endsWith("-0") || namespace2.endsWith("-1"),
         "Second record namespace should have numeric suffix. Got: " + namespace2);
   }
+
+  /**
+   * Test to verify that collision detection works for deeply nested records.
+   * This reproduces the real-world scenario where a record with the same name appears twice with different namespaces,
+   * but both are nested inside an intermediate record, which is itself nested in the parent.
+   * 
+   * Schema structure:
+   * ParentRecord (top-level)
+   *   └─ intermediateField (IntermediateRecord - contains the colliding records)
+   *       ├─ collidingField1 (CollidingRecord from com.foo.v1 namespace)
+   *       └─ collidingField2 (CollidingRecord from com.bar.v2 namespace)
+   */
+  @Test
+  public void testSetupNameAndNamespaceDetectsDeeplyNestedCollisions() {
+    // Create two "CollidingRecord" records with the same name but different namespaces
+    // These represent the deeply nested records that will collide
+    Schema collidingRecord1 = SchemaBuilder.record("CollidingRecord").namespace("com.foo.v1").fields().name("field1")
+        .type().stringType().noDefault().endRecord();
+
+    Schema collidingRecord2 = SchemaBuilder.record("CollidingRecord").namespace("com.bar.v2").fields().name("field2")
+        .type().intType().noDefault().endRecord();
+
+    // Create an intermediate record that contains both colliding records
+    // This represents the middle layer in the nesting hierarchy
+    Schema intermediateRecord = SchemaBuilder.record("IntermediateRecord").namespace("com.intermediate").fields()
+        .name("collidingField1").type(collidingRecord1).noDefault().name("collidingField2").type(collidingRecord2)
+        .noDefault().endRecord();
+
+    // Create top-level parent schema that contains the intermediate record
+    Schema parentSchema = SchemaBuilder.record("ParentRecord").namespace("com.parent").fields().name("intermediateField")
+        .type(intermediateRecord).noDefault().endRecord();
+
+    // Apply setupNameAndNamespace
+    Schema resultSchema = SchemaUtilities.setupNameAndNamespace(parentSchema, "ParentRecord", "com.result");
+
+    // Navigate to the deeply nested colliding records
+    Schema.Field intermediateField = resultSchema.getField("intermediateField");
+    Schema intermediateSchema = intermediateField.schema();
+
+    Schema.Field collidingField1 = intermediateSchema.getField("collidingField1");
+    Schema.Field collidingField2 = intermediateSchema.getField("collidingField2");
+
+    Schema resultColliding1 = collidingField1.schema();
+    Schema resultColliding2 = collidingField2.schema();
+
+    String namespace1 = resultColliding1.getNamespace();
+    String namespace2 = resultColliding2.getNamespace();
+
+    // Both records have the same name
+    Assert.assertEquals(resultColliding1.getName(), "CollidingRecord");
+    Assert.assertEquals(resultColliding2.getName(), "CollidingRecord");
+
+    // But they should have different namespaces with numeric suffixes because collision was detected
+    Assert.assertNotEquals(namespace1, namespace2,
+        "Namespaces should be different when collision is detected in deeply nested records. Got namespace1: "
+            + namespace1 + ", namespace2: " + namespace2);
+
+    // Verify that numeric suffixes are appended to distinguish the colliding records
+    Assert.assertTrue(namespace1.endsWith("-0") || namespace1.endsWith("-1"),
+        "First colliding record namespace should have numeric suffix. Got: " + namespace1);
+    Assert.assertTrue(namespace2.endsWith("-0") || namespace2.endsWith("-1"),
+        "Second colliding record namespace should have numeric suffix. Got: " + namespace2);
+  }
 }

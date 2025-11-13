@@ -782,6 +782,10 @@ class SchemaUtilities {
       case RECORD:
         String originalNamespace = schema.getNamespace() != null ? schema.getNamespace() : "";
         recordNameToNamespaces.computeIfAbsent(schema.getName(), k -> new ArrayList<>()).add(originalNamespace);
+        // Recursively collect records from this record's fields to detect deeply nested collisions
+        for (Schema.Field field : schema.getFields()) {
+          collectRecordTypes(field.schema(), recordNameToNamespaces);
+        }
         break;
       case UNION:
         for (Schema type : schema.getTypes()) {
