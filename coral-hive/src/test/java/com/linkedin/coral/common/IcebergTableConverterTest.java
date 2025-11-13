@@ -62,7 +62,8 @@ public class IcebergTableConverterTest {
     // TimestampType.withoutZone() represents microsecond precision (6 digits)
     Schema icebergSchema = new Schema(Types.NestedField.required(1, "id", Types.LongType.get()),
         Types.NestedField.required(2, "event_time", Types.TimestampType.withoutZone()),
-        Types.NestedField.optional(3, "name", Types.StringType.get()));
+        Types.NestedField.optional(3, "name", Types.StringType.get()),
+        Types.NestedField.optional(4, "binaryfield", Types.BinaryType.get()));
 
     // Mock the Iceberg Table interface using Mockito
     org.apache.iceberg.Table mockTable = mock(org.apache.iceberg.Table.class);
@@ -99,7 +100,7 @@ public class IcebergTableConverterTest {
 
     // Check that we have 3 columns: id, event_time, name
     List<RelDataTypeField> fields = relNode.getRowType().getFieldList();
-    assertEquals(fields.size(), 3, "Should have 3 columns");
+    assertEquals(fields.size(), 4, "Should have 3 columns");
 
     // Verify column names
     assertEquals(fields.get(0).getName(), "id");

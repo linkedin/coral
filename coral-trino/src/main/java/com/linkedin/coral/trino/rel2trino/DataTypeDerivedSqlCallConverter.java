@@ -1,5 +1,5 @@
 /**
- * Copyright 2022-2024 LinkedIn Corporation. All rights reserved.
+ * Copyright 2022-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -11,6 +11,7 @@ import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.util.SqlShuttle;
 
 import com.linkedin.coral.common.HiveMetastoreClient;
+import com.linkedin.coral.common.catalog.CoralCatalog;
 import com.linkedin.coral.common.functions.Function;
 import com.linkedin.coral.common.transformers.SqlCallTransformers;
 import com.linkedin.coral.common.utils.TypeDerivationUtil;
@@ -39,6 +40,17 @@ public class DataTypeDerivedSqlCallConverter extends SqlShuttle {
 
   public DataTypeDerivedSqlCallConverter(HiveMetastoreClient mscClient, SqlNode topSqlNode) {
     toRelConverter = new HiveToRelConverter(mscClient);
+    topSqlNode.accept(new RegisterDynamicFunctionsForTypeDerivation());
+
+    TypeDerivationUtil typeDerivationUtil = new TypeDerivationUtil(toRelConverter.getSqlValidator(), topSqlNode);
+    operatorTransformerList = SqlCallTransformers.of(new FromUtcTimestampOperatorTransformer(typeDerivationUtil),
+        new GenericProjectTransformer(typeDerivationUtil), new NamedStructToCastTransformer(typeDerivationUtil),
+        new ConcatOperatorTransformer(typeDerivationUtil), new SubstrOperatorTransformer(typeDerivationUtil),
+        new CastOperatorTransformer(typeDerivationUtil), new UnionSqlCallTransformer(typeDerivationUtil));
+  }
+
+  public DataTypeDerivedSqlCallConverter(CoralCatalog coralCatalog, SqlNode topSqlNode) {
+    toRelConverter = new HiveToRelConverter(coralCatalog);
     topSqlNode.accept(new RegisterDynamicFunctionsForTypeDerivation());
 
     TypeDerivationUtil typeDerivationUtil = new TypeDerivationUtil(toRelConverter.getSqlValidator(), topSqlNode);

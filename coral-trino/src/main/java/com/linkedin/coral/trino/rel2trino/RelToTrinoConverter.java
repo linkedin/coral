@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2024 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -30,6 +30,7 @@ import org.apache.calcite.sql.type.SqlTypeName;
 
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import com.linkedin.coral.common.HiveMetastoreClient;
+import com.linkedin.coral.common.catalog.CoralCatalog;
 import com.linkedin.coral.common.functions.CoralSqlUnnestOperator;
 import com.linkedin.coral.common.functions.FunctionFieldReferenceOperator;
 import com.linkedin.coral.transformers.CoralRelToSqlNodeConverter;
@@ -55,6 +56,7 @@ public class RelToTrinoConverter extends RelToSqlConverter {
    */
   private Map<String, Boolean> configs = new HashMap<>();
   private HiveMetastoreClient _hiveMetastoreClient;
+  private CoralCatalog _coralCatalog;
 
   /**
    * Creates a RelToTrinoConverter.
@@ -63,6 +65,12 @@ public class RelToTrinoConverter extends RelToSqlConverter {
   public RelToTrinoConverter(HiveMetastoreClient mscClient) {
     super(CoralRelToSqlNodeConverter.INSTANCE);
     _hiveMetastoreClient = mscClient;
+  }
+
+  public RelToTrinoConverter(CoralCatalog coralCatalog) {
+    super(CoralRelToSqlNodeConverter.INSTANCE);
+    _coralCatalog = coralCatalog;
+    ;
   }
 
   /**
@@ -84,9 +92,15 @@ public class RelToTrinoConverter extends RelToSqlConverter {
    */
   public String convert(RelNode relNode) {
     SqlNode sqlNode = convertToSqlNode(relNode);
+    SqlNode sqlNodeWithRelDataTypeDerivedConversions;
 
-    SqlNode sqlNodeWithRelDataTypeDerivedConversions =
-        sqlNode.accept(new DataTypeDerivedSqlCallConverter(_hiveMetastoreClient, sqlNode));
+    if (_coralCatalog != null) {
+      sqlNodeWithRelDataTypeDerivedConversions =
+          sqlNode.accept(new DataTypeDerivedSqlCallConverter(_coralCatalog, sqlNode));
+    } else {
+      sqlNodeWithRelDataTypeDerivedConversions =
+          sqlNode.accept(new DataTypeDerivedSqlCallConverter(_hiveMetastoreClient, sqlNode));
+    }
 
     SqlNode sqlNodeWithUDFOperatorConverted =
         sqlNodeWithRelDataTypeDerivedConversions.accept(new CoralToTrinoSqlCallConverter(configs));
