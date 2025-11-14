@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2019-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -98,12 +98,12 @@ public class SchemaUtilitiesTests {
   @Test
   public void testSetupNameAndNamespacePreservesOriginalNamespace() {
     // Create first nested record with namespace "com.foo.bar"
-    Schema nestedRecord1 = SchemaBuilder.record("FooRecord").namespace("com.foo.bar").fields().name("field1")
-        .type().intType().noDefault().endRecord();
+    Schema nestedRecord1 = SchemaBuilder.record("FooRecord").namespace("com.foo.bar").fields().name("field1").type()
+        .intType().noDefault().endRecord();
 
     // Create second nested record with the same name but different namespace "com.baz.qux"
-    Schema nestedRecord2 = SchemaBuilder.record("FooRecord").namespace("com.baz.qux").fields().name("field2")
-        .type().stringType().noDefault().endRecord();
+    Schema nestedRecord2 = SchemaBuilder.record("FooRecord").namespace("com.baz.qux").fields().name("field2").type()
+        .stringType().noDefault().endRecord();
 
     // Create nullable unions for both nested records
     Schema nullableRecord1 = Schema.createUnion(Schema.create(Schema.Type.NULL), nestedRecord1);
@@ -134,9 +134,8 @@ public class SchemaUtilitiesTests {
     Assert.assertEquals(resultRecord2.getName(), "FooRecord");
 
     // But they should have different namespaces with numeric suffixes to avoid conflicts
-    Assert.assertNotEquals(namespace1, namespace2,
-        "Namespaces should be different to avoid conflicts. Got namespace1: " + namespace1 + ", namespace2: "
-            + namespace2);
+    Assert.assertNotEquals(namespace1, namespace2, "Namespaces should be different to avoid conflicts. Got namespace1: "
+        + namespace1 + ", namespace2: " + namespace2);
 
     // Verify that numeric suffixes are appended to distinguish the colliding records
     Assert.assertTrue(namespace1.endsWith("-0") || namespace1.endsWith("-1"),
@@ -165,8 +164,7 @@ public class SchemaUtilitiesTests {
         .type(nestedRecord1).noDefault().name("serviceConfig2").type(nestedRecord2).noDefault().endRecord();
 
     // Apply setupNameAndNamespace
-    Schema resultSchema =
-        SchemaUtilities.setupNameAndNamespace(parentSchema, "ApplicationConfig", "com.app.config");
+    Schema resultSchema = SchemaUtilities.setupNameAndNamespace(parentSchema, "ApplicationConfig", "com.app.config");
 
     // Extract the nested record schemas from the result
     Schema.Field config1Field = resultSchema.getField("serviceConfig1");
@@ -218,13 +216,13 @@ public class SchemaUtilitiesTests {
 
     // Create an intermediate record that contains both colliding records
     // This represents the middle layer in the nesting hierarchy
-    Schema intermediateRecord = SchemaBuilder.record("IntermediateRecord").namespace("com.intermediate").fields()
-        .name("collidingField1").type(collidingRecord1).noDefault().name("collidingField2").type(collidingRecord2)
-        .noDefault().endRecord();
+    Schema intermediateRecord =
+        SchemaBuilder.record("IntermediateRecord").namespace("com.intermediate").fields().name("collidingField1")
+            .type(collidingRecord1).noDefault().name("collidingField2").type(collidingRecord2).noDefault().endRecord();
 
     // Create top-level parent schema that contains the intermediate record
-    Schema parentSchema = SchemaBuilder.record("ParentRecord").namespace("com.parent").fields().name("intermediateField")
-        .type(intermediateRecord).noDefault().endRecord();
+    Schema parentSchema = SchemaBuilder.record("ParentRecord").namespace("com.parent").fields()
+        .name("intermediateField").type(intermediateRecord).noDefault().endRecord();
 
     // Apply setupNameAndNamespace
     Schema resultSchema = SchemaUtilities.setupNameAndNamespace(parentSchema, "ParentRecord", "com.result");
