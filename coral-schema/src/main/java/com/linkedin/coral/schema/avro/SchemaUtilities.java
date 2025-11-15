@@ -748,20 +748,23 @@ class SchemaUtilities {
    * @return Map from record name -> ordered list of original namespaces (only for records with collisions)
    */
   private static Map<String, List<String>> detectNamespaceCollisions(@Nonnull Schema schema) {
-    Map<String, List<String>> recordNameToOriginalNamespaces = new LinkedHashMap<>();
+    Map<String, List<String>> recordKeyToOriginalNamespaces = new LinkedHashMap<>();
 
-    // Scan all fields to collect record types and their original namespaces in order
+    // Scan all fields to collect record types with their parent paths
     for (Schema.Field field : schema.getFields()) {
-      collectRecordTypes(field.schema(), recordNameToOriginalNamespaces);
+      collectRecordTypes(field.schema(), "", recordKeyToOriginalNamespaces);
     }
 
-    // Filter to only records that have collisions (multiple different original namespaces)
+    // Build collision map: record name -> list of original namespaces (only for actual collisions)
     Map<String, List<String>> collisions = new LinkedHashMap<>();
-    for (Map.Entry<String, List<String>> entry : recordNameToOriginalNamespaces.entrySet()) {
+    for (Map.Entry<String, List<String>> entry : recordKeyToOriginalNamespaces.entrySet()) {
       // Use a Set to check uniqueness while preserving order in List
       Set<String> uniqueNamespaces = new LinkedHashSet<>(entry.getValue());
       if (uniqueNamespaces.size() > 1) {
-        collisions.put(entry.getKey(), entry.getValue());
+        // Extract just the record name from the key (format: "parentPath::recordName")
+        String key = entry.getKey();
+        String recordName = key.substring(key.lastIndexOf("::") + 2);
+        collisions.put(recordName, entry.getValue());
       }
     }
 
@@ -771,32 +774,40 @@ class SchemaUtilities {
   /**
    * Recursively collects all record types and their original namespaces from a schema.
    * This traverses through unions, arrays, and maps to find all nested record types.
-   * The order of collection matches the order records appear in the schema.
+   * Records are keyed by their parent path to ensure only records at the same hierarchical
+   * level are considered for collision detection.
    * 
    * @param schema The schema to scan
-   * @param recordNameToNamespaces Map to populate with record name -> ordered list of original namespaces
+   * @param parentPath The hierarchical path to this schema element (e.g., "Parent.Child")
+   * @param recordKeyToNamespaces Map to populate with (parentPath::recordName) -> ordered list of original namespaces
    */
-  private static void collectRecordTypes(@Nonnull Schema schema,
-      @Nonnull Map<String, List<String>> recordNameToNamespaces) {
+  private static void collectRecordTypes(@Nonnull Schema schema, @Nonnull String parentPath,
+      @Nonnull Map<String, List<String>> recordKeyToNamespaces) {
     switch (schema.getType()) {
       case RECORD:
         String originalNamespace = schema.getNamespace() != null ? schema.getNamespace() : "";
-        recordNameToNamespaces.computeIfAbsent(schema.getName(), k -> new ArrayList<>()).add(originalNamespace);
-        // Recursively collect records from this record's fields to detect deeply nested collisions
+        String recordName = schema.getName();
+        // Create a unique key combining parent path and record name
+        String key = parentPath + "::" + recordName;
+        recordKeyToNamespaces.computeIfAbsent(key, k -> new ArrayList<>()).add(originalNamespace);
+
+        // Recursively collect records from this record's fields
+        // Update parent path to include this record
+        String newParentPath = parentPath.isEmpty() ? recordName : parentPath + "." + recordName;
         for (Schema.Field field : schema.getFields()) {
-          collectRecordTypes(field.schema(), recordNameToNamespaces);
+          collectRecordTypes(field.schema(), newParentPath, recordKeyToNamespaces);
         }
         break;
       case UNION:
         for (Schema type : schema.getTypes()) {
-          collectRecordTypes(type, recordNameToNamespaces);
+          collectRecordTypes(type, parentPath, recordKeyToNamespaces);
         }
         break;
       case ARRAY:
-        collectRecordTypes(schema.getElementType(), recordNameToNamespaces);
+        collectRecordTypes(schema.getElementType(), parentPath, recordKeyToNamespaces);
         break;
       case MAP:
-        collectRecordTypes(schema.getValueType(), recordNameToNamespaces);
+        collectRecordTypes(schema.getValueType(), parentPath, recordKeyToNamespaces);
         break;
       case ENUM:
       case BOOLEAN:

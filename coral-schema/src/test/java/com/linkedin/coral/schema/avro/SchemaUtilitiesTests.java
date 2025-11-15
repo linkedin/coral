@@ -214,11 +214,16 @@ public class SchemaUtilitiesTests {
     Schema collidingRecord2 = SchemaBuilder.record("CollidingRecord").namespace("com.bar.v2").fields().name("field2")
         .type().intType().noDefault().endRecord();
 
+    // Create a "Metadata" record that appears at a different hierarchical level
+    // This should NOT get a suffix since it's not colliding with anything at its level
+    Schema metadataRecord = SchemaBuilder.record("Metadata").namespace("com.original").fields().name("version").type()
+        .stringType().noDefault().endRecord();
+
     // Create an intermediate record that contains both colliding records
     // This represents the middle layer in the nesting hierarchy
-    Schema intermediateRecord =
-        SchemaBuilder.record("IntermediateRecord").namespace("com.intermediate").fields().name("collidingField1")
-            .type(collidingRecord1).noDefault().name("collidingField2").type(collidingRecord2).noDefault().endRecord();
+    Schema intermediateRecord = SchemaBuilder.record("IntermediateRecord").namespace("com.intermediate").fields()
+        .name("collidingField1").type(collidingRecord1).noDefault().name("collidingField2").type(collidingRecord2)
+        .noDefault().name("metadata").type(metadataRecord).noDefault().endRecord();
 
     // Create top-level parent schema that contains the intermediate record
     Schema parentSchema = SchemaBuilder.record("ParentRecord").namespace("com.parent").fields()
@@ -233,14 +238,17 @@ public class SchemaUtilitiesTests {
 
     Schema.Field collidingField1 = intermediateSchema.getField("collidingField1");
     Schema.Field collidingField2 = intermediateSchema.getField("collidingField2");
+    Schema.Field metadataField = intermediateSchema.getField("metadata");
 
     Schema resultColliding1 = collidingField1.schema();
     Schema resultColliding2 = collidingField2.schema();
+    Schema resultMetadata = metadataField.schema();
 
     String namespace1 = resultColliding1.getNamespace();
     String namespace2 = resultColliding2.getNamespace();
+    String metadataNamespace = resultMetadata.getNamespace();
 
-    // Both records have the same name
+    // Both colliding records have the same name
     Assert.assertEquals(resultColliding1.getName(), "CollidingRecord");
     Assert.assertEquals(resultColliding2.getName(), "CollidingRecord");
 
@@ -254,5 +262,13 @@ public class SchemaUtilitiesTests {
         "First colliding record namespace should have numeric suffix. Got: " + namespace1);
     Assert.assertTrue(namespace2.endsWith("-0") || namespace2.endsWith("-1"),
         "Second colliding record namespace should have numeric suffix. Got: " + namespace2);
+
+    // Verify that the non-colliding Metadata record does NOT have a numeric suffix
+    Assert.assertEquals(resultMetadata.getName(), "Metadata");
+    Assert.assertFalse(metadataNamespace.matches(".*-\\d+$"),
+        "Metadata record should NOT have numeric suffix since it's not colliding at its level. Got: "
+            + metadataNamespace);
+    Assert.assertTrue(metadataNamespace.contains("IntermediateRecord"),
+        "Metadata namespace should follow hierarchical naming. Got: " + metadataNamespace);
   }
 }
