@@ -16,7 +16,10 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-
+import com.linkedin.coral.common.types.CoralDataType;
+import com.linkedin.coral.common.types.CoralTypeToRelDataTypeConverter;
+import com.linkedin.coral.common.types.StructField;
+import com.linkedin.coral.common.types.StructType;
 import org.apache.calcite.DataContext;
 import org.apache.calcite.config.CalciteConnectionConfig;
 import org.apache.calcite.linq4j.Enumerable;
@@ -134,12 +137,70 @@ public class HiveTable implements ScannableTable {
     // Preconditions.checkState(isDaliTable());
   }
 
+  /**
+   * Returns the row type (schema) for this table.
+   *
+   * Two conversion paths are supported:
+   * 1. Two-stage (preferred): Hive → Coral → Calcite
+   * 2. Direct (legacy): Hive → Calcite (for backward compatibility)
+   *
+   * The two-stage conversion enables using Coral type system as an intermediary,
+   * allowing better type system unification and testing.
+   *
+   * @param typeFactory Calcite type factory
+   * @return RelDataType representing the table schema
+   */
   @Override
   public RelDataType getRowType(RelDataTypeFactory typeFactory) {
+    // Use two-stage conversion if HiveCoralTable is available
+    try {
+      return getRowTypeViaCoralTypeSystem(typeFactory);
+    } catch (Exception e) {
+      // Fall back to direct conversion if two-stage conversion fails
+      LOG.warn("Two-stage type conversion failed for table {}, falling back to direct conversion. Error: {}",
+          hiveTable.getTableName(), e.getMessage(), e);
+      return getRowTypeDirectConversion(typeFactory);
+    }
+  }
+
+  /**
+   * Two-stage conversion: Hive → Coral → Calcite.
+   * This is the preferred path when using CoralCatalog.
+   */
+  private RelDataType getRowTypeViaCoralTypeSystem(RelDataTypeFactory typeFactory) {
+    // Stage 1: Hive → Coral
+    CoralDataType coralSchema = getCoralSchema();
+
+    // Stage 2: Coral → Calcite
+    if (!(coralSchema instanceof StructType)) {
+      throw new IllegalStateException("Expected StructType from getCoralSchema(), got: " + coralSchema.getClass());
+    }
+
+    StructType structType = (StructType) coralSchema;
+    List<StructField> fields = structType.getFields();
+
+    List<RelDataType> fieldTypes = new ArrayList<>(fields.size());
+    List<String> fieldNames = new ArrayList<>(fields.size());
+
+    for (StructField field : fields) {
+      fieldNames.add(field.getName());
+      RelDataType fieldType = CoralTypeToRelDataTypeConverter.convert(field.getType(), typeFactory);
+      fieldTypes.add(fieldType);
+    }
+
+    return typeFactory.createStructType(fieldTypes, fieldNames);
+  }
+
+  /**
+   * Direct conversion: Hive → Calcite.
+   * This is the legacy path for backward compatibility.
+   */
+  private RelDataType getRowTypeDirectConversion(RelDataTypeFactory typeFactory) {
     final List<FieldSchema> cols = getColumns();
     final List<RelDataType> fieldTypes = new ArrayList<>(cols.size());
     final List<String> fieldNames = new ArrayList<>(cols.size());
     final Iterable<FieldSchema> allCols = Iterables.concat(cols, hiveTable.getPartitionKeys());
+
     allCols.forEach(col -> {
       final TypeInfo typeInfo = TypeInfoUtils.getTypeInfoFromTypeString(col.getType());
       final RelDataType relType = TypeConverter.convert(typeInfo, typeFactory);
@@ -151,6 +212,41 @@ public class HiveTable implements ScannableTable {
     });
 
     return typeFactory.createStructType(fieldTypes, fieldNames);
+  }
+
+  /**
+   * Returns the table schema in Coral type system.
+   * This includes both regular columns (from StorageDescriptor) and partition columns.
+   * Converts Hive TypeInfo to Coral types using HiveToCoralTypeConverter.
+   *
+   * @return StructType representing the full table schema (columns + partitions)
+   */
+  @Override
+  public CoralDataType getCoralSchema() {
+    final List<FieldSchema> cols = getColumns();
+    final List<StructField> fields = new ArrayList<>();
+    final List<String> fieldNames = new ArrayList<>();
+
+    // Combine regular columns and partition keys (same as HiveTable.getRowType)
+    final Iterable<FieldSchema> allCols = Iterables.concat(cols, hiveTable.getPartitionKeys());
+
+    for (FieldSchema col : allCols) {
+      final String colName = col.getName();
+
+      // Skip duplicate columns (partition keys might overlap with regular columns)
+      if (!fieldNames.contains(colName)) {
+        // Convert Hive type string to TypeInfo, then to CoralDataType
+        final TypeInfo typeInfo = TypeInfoUtils.getTypeInfoFromTypeString(col.getType());
+        final CoralDataType coralType = HiveToCoralTypeConverter.convert(typeInfo);
+
+        fields.add(StructField.of(colName, coralType));
+        fieldNames.add(colName);
+      }
+    }
+
+    // Return struct type representing the table schema
+    // Table-level struct is nullable (Hive convention)
+    return StructType.of(fields, true);
   }
 
   private List<FieldSchema> getColumns() {

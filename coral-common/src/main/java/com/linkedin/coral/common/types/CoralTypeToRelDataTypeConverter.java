@@ -36,7 +36,13 @@ public final class CoralTypeToRelDataTypeConverter {
       relType = convertPrimitive((PrimitiveType) type, factory);
     } else if (type instanceof TimestampType) {
       TimestampType ts = (TimestampType) type;
-      relType = factory.createSqlType(SqlTypeName.TIMESTAMP, ts.getPrecision());
+      // Handle unspecified precision (Hive compatibility)
+      if (ts.hasPrecision()) {
+        relType = factory.createSqlType(SqlTypeName.TIMESTAMP, ts.getPrecision());
+      } else {
+        // No precision specified - matches TypeConverter behavior
+        relType = factory.createSqlType(SqlTypeName.TIMESTAMP);
+      }
     } else if (type instanceof DecimalType) {
       DecimalType dec = (DecimalType) type;
       relType = factory.createSqlType(SqlTypeName.DECIMAL, dec.getPrecision(), dec.getScale());
@@ -107,6 +113,8 @@ public final class CoralTypeToRelDataTypeConverter {
         return factory.createSqlType(SqlTypeName.TIME);
       case BINARY:
         return factory.createSqlType(SqlTypeName.BINARY);
+      case NULL:
+        return factory.createSqlType(SqlTypeName.NULL);
       default:
         // Fallback for unsupported primitive types
         return factory.createSqlType(SqlTypeName.ANY);
