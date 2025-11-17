@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -16,10 +16,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-import com.linkedin.coral.common.types.CoralDataType;
-import com.linkedin.coral.common.types.CoralTypeToRelDataTypeConverter;
-import com.linkedin.coral.common.types.StructField;
-import com.linkedin.coral.common.types.StructType;
+
 import org.apache.calcite.DataContext;
 import org.apache.calcite.config.CalciteConnectionConfig;
 import org.apache.calcite.linq4j.Enumerable;
@@ -41,6 +38,11 @@ import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.linkedin.coral.common.types.CoralDataType;
+import com.linkedin.coral.common.types.CoralTypeToRelDataTypeConverter;
+import com.linkedin.coral.common.types.StructField;
+import com.linkedin.coral.common.types.StructType;
 
 
 /**
@@ -221,7 +223,6 @@ public class HiveTable implements ScannableTable {
    *
    * @return StructType representing the full table schema (columns + partitions)
    */
-  @Override
   public CoralDataType getCoralSchema() {
     final List<FieldSchema> cols = getColumns();
     final List<StructField> fields = new ArrayList<>();
