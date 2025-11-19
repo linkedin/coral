@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -15,6 +15,7 @@ import org.apache.hadoop.hive.metastore.api.Table;
 
 import com.linkedin.coral.com.google.common.base.Throwables;
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
+import com.linkedin.coral.common.catalog.HiveCoralTable;
 
 import static org.apache.calcite.sql.type.SqlTypeName.*;
 
@@ -34,6 +35,17 @@ public class HiveViewTable extends HiveTable implements TranslatableTable {
    */
   public HiveViewTable(Table hiveTable, List<String> schemaPath) {
     super(hiveTable);
+    this.schemaPath = schemaPath;
+  }
+
+  /**
+   * Constructor accepting HiveCoralTable for unified catalog integration.
+   *
+   * @param coralTable HiveCoralTable from catalog
+   * @param schemaPath Calcite schema path
+   */
+  public HiveViewTable(HiveCoralTable coralTable, List<String> schemaPath) {
+    super(coralTable);
     this.schemaPath = schemaPath;
   }
 

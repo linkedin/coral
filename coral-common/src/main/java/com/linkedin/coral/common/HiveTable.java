@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -38,6 +38,8 @@ import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.linkedin.coral.common.catalog.HiveCoralTable;
 
 
 /**
@@ -86,6 +88,15 @@ public class HiveTable implements ScannableTable {
   public HiveTable(org.apache.hadoop.hive.metastore.api.Table hiveTable) {
     Preconditions.checkNotNull(hiveTable);
     this.hiveTable = hiveTable;
+  }
+
+  /**
+   * Constructor accepting HiveCoralTable for unified catalog integration.
+   * @param coralTable HiveCoralTable from catalog
+   */
+  public HiveTable(HiveCoralTable coralTable) {
+    Preconditions.checkNotNull(coralTable);
+    this.hiveTable = coralTable.getHiveTable();
   }
 
   /**

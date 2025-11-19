@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -17,6 +17,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
+/**
+ * Adapter implementation of {@link HiveMetastoreClient} that wraps
+ * Hadoop's {@link IMetaStoreClient}.
+ *
+ * @deprecated Use {@link com.linkedin.coral.common.catalog.CoralCatalog} instead.
+ *             This class is Hive-specific. For multi-format support (Hive, Iceberg),
+ *             implement CoralCatalog directly. Existing code continues to work.
+ */
+@Deprecated
 public class HiveMscAdapter implements HiveMetastoreClient {
 
   private final static Logger LOG = LoggerFactory.getLogger(HiveMscAdapter.class);

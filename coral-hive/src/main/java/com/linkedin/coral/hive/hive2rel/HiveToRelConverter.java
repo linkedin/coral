@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2024 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -25,6 +25,7 @@ import com.linkedin.coral.common.FuzzyUnionSqlRewriter;
 import com.linkedin.coral.common.HiveMetastoreClient;
 import com.linkedin.coral.common.HiveRelBuilder;
 import com.linkedin.coral.common.ToRelConverter;
+import com.linkedin.coral.common.catalog.CoralCatalog;
 import com.linkedin.coral.hive.hive2rel.functions.HiveFunctionResolver;
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 import com.linkedin.coral.hive.hive2rel.parsetree.ParseTreeBuilder;
@@ -54,11 +55,32 @@ public class HiveToRelConverter extends ToRelConverter {
   SqlValidator sqlValidator = new HiveSqlValidator(getOperatorTable(), getCalciteCatalogReader(),
       ((JavaTypeFactory) getRelBuilder().getTypeFactory()), HIVE_SQL);
 
+  /**
+   * Constructor accepting HiveMetastoreClient for backward compatibility.
+   * 
+   * @param hiveMetastoreClient Hive metastore client
+   */
   public HiveToRelConverter(HiveMetastoreClient hiveMetastoreClient) {
     super(hiveMetastoreClient);
     this.parseTreeBuilder = new ParseTreeBuilder(functionResolver);
   }
 
+  /**
+   * Constructor accepting CoralCatalog for unified catalog access.
+   * This allows using Iceberg and other catalog implementations.
+   * 
+   * @param catalog Coral catalog providing unified access to tables
+   */
+  public HiveToRelConverter(CoralCatalog catalog) {
+    super(catalog);
+    this.parseTreeBuilder = new ParseTreeBuilder(functionResolver);
+  }
+
+  /**
+   * Constructor for local metastore (testing/development).
+   * 
+   * @param localMetaStore Local metastore map
+   */
   public HiveToRelConverter(Map<String, Map<String, List<String>>> localMetaStore) {
     super(localMetaStore);
     this.parseTreeBuilder = new ParseTreeBuilder(functionResolver);
