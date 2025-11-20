@@ -90,4 +90,22 @@ public class SchemaUtilitiesTests {
 
     Assert.assertEquals(outputSchema.toString(true), TestUtils.loadSchema("testToNullableSchema-expected.avsc"));
   }
+
+  /**
+   * Test that ToLowercaseSchemaVisitor properly lowercases field names in default values.
+   * This test demonstrates the bug where complex default values (records, maps, arrays)
+   * retain their original casing while the schema itself is lowercased.
+   */
+  @Test
+  public void testLowercaseSchemaWithComplexDefaultValues() {
+    Schema inputSchema =
+        AvroCompatibilityHelper.parse(TestUtils.loadSchema("testLowercaseSchemaWithDefaultValues-input.avsc"));
+    Schema outputSchema = ToLowercaseSchemaVisitor.visit(inputSchema);
+
+    // Compare with expected output, trimming whitespace for comparison
+    String expected = TestUtils.loadSchema("testLowercaseSchemaWithDefaultValues-expected.avsc").trim();
+    String actual = outputSchema.toString(true).trim();
+    
+    Assert.assertEquals(actual, expected);
+  }
 }
