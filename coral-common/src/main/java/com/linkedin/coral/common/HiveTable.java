@@ -142,27 +142,39 @@ public class HiveTable implements ScannableTable {
   /**
    * Returns the row type (schema) for this table.
    *
-   * Two conversion paths are supported:
-   * 1. Two-stage (preferred): Hive → Coral → Calcite
-   * 2. Direct (legacy): Hive → Calcite (for backward compatibility)
+   * Current behavior (validation/shadow mode):
+   * - Always returns the legacy Hive → Calcite direct conversion
+   * - Validates against the new Hive → Coral → Calcite two-stage conversion
+   * - Logs warnings if conversions don't match or if validation fails
    *
-   * The two-stage conversion enables using Coral type system as an intermediary,
-   * allowing better type system unification and testing.
+   * This allows safe validation of the new conversion path in production
+   * before switching to use it as the primary path.
    *
    * @param typeFactory Calcite type factory
    * @return RelDataType representing the table schema
    */
   @Override
   public RelDataType getRowType(RelDataTypeFactory typeFactory) {
-    // Use two-stage conversion if HiveCoralTable is available
+    // Always compute and return the legacy Hive direct conversion (production path)
+    RelDataType hiveType = getRowTypeFromHiveType(typeFactory);
+
+    // Validate against new two-stage Coral conversion (shadow/validation mode)
     try {
-      return getRowTypeFromCoralType(typeFactory);
+      RelDataType coralType = getRowTypeFromCoralType(typeFactory);
+
+      // Compare the two type representations
+      if (!hiveType.equals(coralType)) {
+        LOG.warn("Hive and Coral type conversion mismatch for table {}.{}. Hive: {}, Coral: {}", hiveTable.getDbName(),
+            hiveTable.getTableName(), hiveType, coralType);
+      }
     } catch (Exception e) {
-      // Fall back to direct conversion if two-stage conversion fails
-      LOG.warn("Two-stage type conversion failed for table {}, falling back to direct conversion. Error: {}",
-          hiveTable.getTableName(), e.getMessage(), e);
-      return getRowTypeFromHiveType(typeFactory);
+      // Log validation failure but continue with Hive type (zero production impact)
+      LOG.warn("Coral type validation failed for table {}.{}. Proceeding with Hive type. Error: {}",
+          hiveTable.getDbName(), hiveTable.getTableName(), e.getMessage(), e);
     }
+
+    // Always return the battle-tested Hive conversion result
+    return hiveType;
   }
 
   /**
