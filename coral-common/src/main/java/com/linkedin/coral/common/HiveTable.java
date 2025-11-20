@@ -156,12 +156,12 @@ public class HiveTable implements ScannableTable {
   public RelDataType getRowType(RelDataTypeFactory typeFactory) {
     // Use two-stage conversion if HiveCoralTable is available
     try {
-      return getRowTypeViaCoralTypeSystem(typeFactory);
+      return getRowTypeFromCoralType(typeFactory);
     } catch (Exception e) {
       // Fall back to direct conversion if two-stage conversion fails
       LOG.warn("Two-stage type conversion failed for table {}, falling back to direct conversion. Error: {}",
           hiveTable.getTableName(), e.getMessage(), e);
-      return getRowTypeDirectConversion(typeFactory);
+      return getRowTypeFromHiveType(typeFactory);
     }
   }
 
@@ -169,7 +169,7 @@ public class HiveTable implements ScannableTable {
    * Two-stage conversion: Hive → Coral → Calcite.
    * This is the preferred path when using CoralCatalog.
    */
-  private RelDataType getRowTypeViaCoralTypeSystem(RelDataTypeFactory typeFactory) {
+  private RelDataType getRowTypeFromCoralType(RelDataTypeFactory typeFactory) {
     // Stage 1: Hive → Coral
     CoralDataType coralSchema = getCoralSchema();
 
@@ -197,7 +197,7 @@ public class HiveTable implements ScannableTable {
    * Direct conversion: Hive → Calcite.
    * This is the legacy path for backward compatibility.
    */
-  private RelDataType getRowTypeDirectConversion(RelDataTypeFactory typeFactory) {
+  private RelDataType getRowTypeFromHiveType(RelDataTypeFactory typeFactory) {
     final List<FieldSchema> cols = getColumns();
     final List<RelDataType> fieldTypes = new ArrayList<>(cols.size());
     final List<String> fieldNames = new ArrayList<>(cols.size());
