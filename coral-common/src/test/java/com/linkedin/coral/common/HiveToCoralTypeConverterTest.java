@@ -23,6 +23,9 @@ public class HiveToCoralTypeConverterTest {
 
   @Test
   public void testPrimitiveTypes() {
+    // Test void/null type
+    testPrimitiveType(TypeInfoFactory.voidTypeInfo, CoralTypeKind.NULL, true, null, null);
+
     // Test boolean
     testPrimitiveType(TypeInfoFactory.booleanTypeInfo, CoralTypeKind.BOOLEAN, true, null, null);
 
@@ -39,7 +42,8 @@ public class HiveToCoralTypeConverterTest {
 
     // Test date/time types
     testPrimitiveType(TypeInfoFactory.dateTypeInfo, CoralTypeKind.DATE, true, null, null);
-    testPrimitiveType(TypeInfoFactory.timestampTypeInfo, CoralTypeKind.TIMESTAMP, true, 3, null);
+    // TIMESTAMP has PRECISION_NOT_SPECIFIED (-1) to match legacy TypeConverter behavior
+    testPrimitiveType(TypeInfoFactory.timestampTypeInfo, CoralTypeKind.TIMESTAMP, true, -1, null);
 
     // Test binary
     testPrimitiveType(TypeInfoFactory.binaryTypeInfo, CoralTypeKind.BINARY, true, null, null);
@@ -193,13 +197,16 @@ public class HiveToCoralTypeConverterTest {
     assertTrue(result instanceof StructType);
     StructType structType = (StructType) result;
 
-    // Union is converted to a struct with fields for each possible type
+    // Union is converted to a struct with "tag" field first, then fields for each possible type
+    // This matches the Trino union representation: {tag, field0, field1, ...}
     List<StructField> fields = structType.getFields();
-    assertEquals(fields.size(), 2);
-    assertEquals(fields.get(0).getName(), "field0");
+    assertEquals(fields.size(), 3); // tag + 2 union member fields
+    assertEquals(fields.get(0).getName(), "tag");
     assertEquals(fields.get(0).getType().getKind(), CoralTypeKind.INT);
-    assertEquals(fields.get(1).getName(), "field1");
-    assertEquals(fields.get(1).getType().getKind(), CoralTypeKind.STRING);
+    assertEquals(fields.get(1).getName(), "field0");
+    assertEquals(fields.get(1).getType().getKind(), CoralTypeKind.INT);
+    assertEquals(fields.get(2).getName(), "field1");
+    assertEquals(fields.get(2).getType().getKind(), CoralTypeKind.STRING);
   }
 
   @Test(expectedExceptions = IllegalArgumentException.class)

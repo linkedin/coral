@@ -12,23 +12,28 @@ import java.util.Objects;
  * Represents a TIMESTAMP type with fractional second precision in the Coral type system.
  *
  * Precision indicates the number of fractional digits of seconds, e.g.:
+ *  - -1: unspecified (PRECISION_NOT_SPECIFIED, for Hive compatibility)
  *  - 0: seconds
  *  - 3: milliseconds
  *  - 6: microseconds
  *  - 9: nanoseconds
  */
 public final class TimestampType implements CoralDataType {
+  /** Constant for unspecified precision (matches Calcite's RelDataType.PRECISION_NOT_SPECIFIED) */
+  public static final int PRECISION_NOT_SPECIFIED = -1;
+
   private final int precision;
   private final boolean nullable;
 
   /**
    * Create a TIMESTAMP type with the given precision and nullability.
-   * @param precision fractional second precision (0-9)
+   * @param precision fractional second precision (-1 for unspecified, or 0-9)
    * @param nullable whether this type allows null values
    */
   public static TimestampType of(int precision, boolean nullable) {
-    if (precision < 0 || precision > 9) {
-      throw new IllegalArgumentException("Timestamp precision must be in range [0, 9], got: " + precision);
+    if (precision != PRECISION_NOT_SPECIFIED && (precision < 0 || precision > 9)) {
+      throw new IllegalArgumentException(
+          "Timestamp precision must be -1 (unspecified) or in range [0, 9], got: " + precision);
     }
     return new TimestampType(precision, nullable);
   }
@@ -39,10 +44,17 @@ public final class TimestampType implements CoralDataType {
   }
 
   /**
-   * @return the fractional second precision (0-9)
+   * @return the fractional second precision (-1 for unspecified, or 0-9)
    */
   public int getPrecision() {
     return precision;
+  }
+
+  /**
+   * @return true if precision is explicitly specified, false if unspecified
+   */
+  public boolean hasPrecision() {
+    return precision != PRECISION_NOT_SPECIFIED;
   }
 
   @Override
@@ -72,6 +84,7 @@ public final class TimestampType implements CoralDataType {
 
   @Override
   public String toString() {
-    return "TIMESTAMP(" + precision + ")" + (nullable ? " NULL" : " NOT NULL");
+    String precisionStr = precision == PRECISION_NOT_SPECIFIED ? "" : "(" + precision + ")";
+    return "TIMESTAMP" + precisionStr + (nullable ? " NULL" : " NOT NULL");
   }
 }

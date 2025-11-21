@@ -34,6 +34,9 @@ public enum CoralTypeKind {
   // Binary types
   BINARY,
 
+  // Special types
+  NULL,
+
   // Complex types
   ARRAY,
   MAP,

@@ -72,8 +72,9 @@ public final class HiveToCoralTypeConverter {
       case DATE:
         return PrimitiveType.of(CoralTypeKind.DATE, nullable);
       case TIMESTAMP:
-        // Default to microsecond precision (6)
-        return TimestampType.of(3, nullable);
+        // Hive TIMESTAMP has no explicit precision (matches TypeConverter behavior)
+        // Use PRECISION_NOT_SPECIFIED (-1) to match Calcite's behavior
+        return TimestampType.of(TimestampType.PRECISION_NOT_SPECIFIED, nullable);
       case BINARY:
         return PrimitiveType.of(CoralTypeKind.BINARY, nullable);
       case DECIMAL:
@@ -86,6 +87,7 @@ public final class HiveToCoralTypeConverter {
         CharTypeInfo charType = (CharTypeInfo) type;
         return CharType.of(charType.getLength(), nullable);
       case VOID:
+        return PrimitiveType.of(CoralTypeKind.NULL, true);
       case UNKNOWN:
         return PrimitiveType.of(CoralTypeKind.STRING, true); // Map to nullable string as a fallback
       default:
@@ -118,12 +120,18 @@ public final class HiveToCoralTypeConverter {
   }
 
   private static CoralDataType convertUnion(UnionTypeInfo unionType) {
-    // For UNION types, we'll create a struct with all possible fields
-    // This is similar to how some systems handle union types
+    // For UNION types, create a struct conforming to Trino's union representation
+    // Schema: {tag, field0, field1, ..., fieldN}
+    // See: https://github.com/trinodb/trino/pull/3483
     List<TypeInfo> memberTypes = unionType.getAllUnionObjectTypeInfos();
 
-    // Create fields for each possible type in the union
+    // Create fields: "tag" field first (INTEGER), then "field0", "field1", etc.
     List<StructField> fields = new ArrayList<>();
+
+    // Add "tag" field (INTEGER) to indicate which union member is active
+    fields.add(StructField.of("tag", PrimitiveType.of(CoralTypeKind.INT, true)));
+
+    // Add fields for each possible type in the union
     for (int i = 0; i < memberTypes.size(); i++) {
       CoralDataType fieldType = convert(memberTypes.get(i));
       fields.add(StructField.of("field" + i, fieldType));
