@@ -39,12 +39,11 @@ import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.linkedin.coral.common.catalog.HiveCoralTable;
 import com.linkedin.coral.common.types.CoralDataType;
 import com.linkedin.coral.common.types.CoralTypeToRelDataTypeConverter;
 import com.linkedin.coral.common.types.StructField;
 import com.linkedin.coral.common.types.StructType;
-import com.linkedin.coral.common.catalog.HiveDataset;
-import com.linkedin.coral.common.catalog.HiveCoralTable;
 
 
 /**
