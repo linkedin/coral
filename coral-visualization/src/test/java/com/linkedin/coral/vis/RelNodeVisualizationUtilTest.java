@@ -88,7 +88,7 @@ public class RelNodeVisualizationUtilTest {
     }
   }
 
-  @Test(enabled = false) // Disabled due to UnsatisfiedLinkError with native library dependencies
+  @Test
   public void testRenderToFile() {
     if (graphvizUnavailable) {
       throw new SkipException("Skipping visualization render test: Graphviz engine not available on this platform");
