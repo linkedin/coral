@@ -20,6 +20,7 @@ import com.google.common.collect.Iterables;
 import org.apache.calcite.DataContext;
 import org.apache.calcite.config.CalciteConnectionConfig;
 import org.apache.calcite.linq4j.Enumerable;
+import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.schema.ScannableTable;
@@ -172,8 +173,8 @@ public class HiveTable implements ScannableTable {
     try {
       RelDataType coralType = getRowTypeFromCoralType(typeFactory);
 
-      // Compare the two type representations
-      if (!hiveType.equals(coralType)) {
+      // Compare using structural equality (not reference equality)
+      if (!RelOptUtil.areRowTypesEqual(hiveType, coralType, false)) {
         LOG.warn("Hive and Coral type conversion mismatch for table {}.{}. Hive: {}, Coral: {}", hiveTable.getDbName(),
             hiveTable.getTableName(), hiveType, coralType);
       }
@@ -193,26 +194,10 @@ public class HiveTable implements ScannableTable {
    */
   private RelDataType getRowTypeFromCoralType(RelDataTypeFactory typeFactory) {
     // Stage 1: Hive → Coral
-    CoralDataType coralSchema = getCoralSchema();
+    StructType structType = (StructType) getCoralSchema();
 
     // Stage 2: Coral → Calcite
-    if (!(coralSchema instanceof StructType)) {
-      throw new IllegalStateException("Expected StructType from getCoralSchema(), got: " + coralSchema.getClass());
-    }
-
-    StructType structType = (StructType) coralSchema;
-    List<StructField> fields = structType.getFields();
-
-    List<RelDataType> fieldTypes = new ArrayList<>(fields.size());
-    List<String> fieldNames = new ArrayList<>(fields.size());
-
-    for (StructField field : fields) {
-      fieldNames.add(field.getName());
-      RelDataType fieldType = CoralTypeToRelDataTypeConverter.convert(field.getType(), typeFactory);
-      fieldTypes.add(fieldType);
-    }
-
-    return typeFactory.createStructType(fieldTypes, fieldNames);
+    return CoralTypeToRelDataTypeConverter.convert(structType, typeFactory);
   }
 
   /**

@@ -10,6 +10,9 @@ import java.util.Map;
 
 import org.apache.iceberg.Table;
 
+import com.linkedin.coral.common.IcebergToCoralTypeConverter;
+import com.linkedin.coral.common.types.CoralDataType;
+
 import static com.google.common.base.Preconditions.*;
 
 
@@ -77,5 +80,16 @@ public class IcebergCoralTable implements CoralTable {
    */
   public org.apache.iceberg.Table getIcebergTable() {
     return table;
+  }
+
+  /**
+   * Returns the table schema in Coral type system.
+   * Converts Iceberg schema to Coral types using IcebergToCoralTypeConverter.
+   *
+   * @return StructType representing the Iceberg table schema
+   */
+  @Override
+  public CoralDataType getSchema() {
+    return IcebergToCoralTypeConverter.convert(table.schema());
   }
 }

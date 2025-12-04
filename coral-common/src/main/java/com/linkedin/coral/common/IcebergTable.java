@@ -22,14 +22,17 @@ import org.apache.iceberg.Table;
 
 import com.linkedin.coral.common.catalog.IcebergCoralTable;
 import com.linkedin.coral.common.catalog.TableType;
+import com.linkedin.coral.common.types.CoralTypeToRelDataTypeConverter;
+import com.linkedin.coral.common.types.StructType;
 
 
 /**
  * Calcite Table implementation for Apache Iceberg tables.
- * Provides native Iceberg schema to Calcite instead of going through Hive metastore representation.
+ * Provides native Iceberg schema to Calcite using two-stage conversion:
+ * Iceberg → Coral → Calcite.
  *
- * This class uses IcebergCoralTable to access Iceberg table metadata and IcebergTypeConverter
- * to convert Iceberg schema to Calcite's RelDataType, preserving Iceberg type semantics.
+ * This class uses IcebergCoralTable to access Iceberg table metadata and converts
+ * through the Coral type system for better abstraction and consistency with HiveTable.
  */
 public class IcebergTable implements ScannableTable {
 
@@ -49,12 +52,21 @@ public class IcebergTable implements ScannableTable {
   }
 
   /**
-   * Returns the Calcite RelDataType for this Iceberg table.
-   * Uses IcebergTypeConverter to convert native Iceberg schema to Calcite types.
+   * Returns the row type (schema) for this Iceberg table.
+   *
+   * Uses two-stage conversion: Iceberg → Coral → Calcite.
+   * This provides a unified type system abstraction across table formats.
+   *
+   * @param typeFactory Calcite type factory
+   * @return RelDataType representing the table schema
    */
   @Override
   public RelDataType getRowType(RelDataTypeFactory typeFactory) {
-    return IcebergTypeConverter.convert(coralTable.getIcebergTable().schema(), coralTable.name(), typeFactory);
+    // Stage 1: Iceberg → Coral
+    StructType structType = (StructType) coralTable.getSchema();
+
+    // Stage 2: Coral → Calcite
+    return CoralTypeToRelDataTypeConverter.convert(structType, typeFactory);
   }
 
   @Override

@@ -76,7 +76,8 @@ public final class HiveToCoralTypeConverter {
         // Use PRECISION_NOT_SPECIFIED (-1) to match Calcite's behavior
         return TimestampType.of(TimestampType.PRECISION_NOT_SPECIFIED, nullable);
       case BINARY:
-        return PrimitiveType.of(CoralTypeKind.BINARY, nullable);
+        // Hive BINARY is unbounded/variable-length
+        return BinaryType.of(BinaryType.LENGTH_UNBOUNDED, nullable);
       case DECIMAL:
         DecimalTypeInfo decimalType = (DecimalTypeInfo) type;
         return DecimalType.of(decimalType.precision(), decimalType.scale(), nullable);

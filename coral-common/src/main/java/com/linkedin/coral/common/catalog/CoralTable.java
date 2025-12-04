@@ -7,6 +7,8 @@ package com.linkedin.coral.common.catalog;
 
 import java.util.Map;
 
+import com.linkedin.coral.common.types.CoralDataType;
+
 
 /**
  * A unified abstraction representing a table or view in Coral.
@@ -40,4 +42,13 @@ public interface CoralTable {
    * @return TableType enum value
    */
   TableType tableType();
+
+  /**
+   * Returns the table schema in Coral type system.
+   * This provides a unified type representation across different table formats
+   * (Hive, Iceberg, etc.) that can be converted to Calcite RelDataType.
+   *
+   * @return CoralDataType representing the table schema (typically a StructType)
+   */
+  CoralDataType getSchema();
 }
