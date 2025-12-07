@@ -1,19 +1,32 @@
 package com.linkedin.coral.datagen.domain;
 
-import java.util.List;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
-import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 
-public class TimesTransformer implements DomainTransformer {
+/**
+ * Integer domain transformer for PLUS (addition) operations.
+ * 
+ * Inverts x + literal = output_value
+ * to produce input constraint x = output_value - literal
+ * 
+ * Example:
+ * x + 5 = 25
+ * produces input constraint: x = 20
+ * which becomes domain: {20}
+ *
+ * For interval constraints:
+ * x + 5 in [20, 30]
+ * produces: x in [15, 25]
+ */
+public class PlusRegexTransformer implements DomainTransformer {
 
     @Override
     public boolean canHandle(RexNode expr) {
         return expr instanceof RexCall
-            && ((RexCall) expr).getOperator() == SqlStdOperatorTable.MULTIPLY;
+            && ((RexCall) expr).getOperator() == SqlStdOperatorTable.PLUS;
     }
 
     @Override
@@ -41,27 +54,23 @@ public class TimesTransformer implements DomainTransformer {
     }
 
     @Override
-    public Domain deriveChildDomain(RexNode expr, Domain outputDomain) {
+    public Domain<?, ?> refineInputDomain(RexNode expr, Domain<?, ?> outputDomain) {
+        if (!(outputDomain instanceof IntegerDomain)) {
+            throw new IllegalArgumentException(
+                "PlusRegexTransformer expects IntegerDomain but got " + outputDomain.getClass().getSimpleName());
+        }
+        
+        IntegerDomain intDomain = (IntegerDomain) outputDomain;
         RexCall call = (RexCall) expr;
         RexNode left = call.getOperands().get(0);
         RexNode right = call.getOperands().get(1);
         boolean leftVar = (left instanceof RexInputRef || left instanceof RexCall);
-        int literal = ((RexLiteral) (leftVar ? right : left)).getValueAs(Integer.class);
-
-        return new Domain() {
-            @Override
-            public String sample() {
-                int out = Integer.parseInt(outputDomain.sample());
-                int x = out / literal;
-                return String.valueOf(x);
-            }
-
-            @Override
-            public boolean contains(String value) {
-                int x = Integer.parseInt(value);
-                int result = leftVar ? x * literal : literal * x;
-                return result == Integer.parseInt(outputDomain.sample());
-            }
-        };
+        
+        // Get the literal value
+        RexLiteral literalNode = (RexLiteral) (leftVar ? right : left);
+        long literal = literalNode.getValueAs(Long.class);
+        
+        // Invert the addition: x + literal = output => x = output - literal
+        return intDomain.add(-literal);
     }
 }
