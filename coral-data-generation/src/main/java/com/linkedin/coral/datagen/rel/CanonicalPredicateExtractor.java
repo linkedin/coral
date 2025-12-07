@@ -1,11 +1,18 @@
+/**
+ * Copyright 2025 LinkedIn Corporation. All rights reserved.
+ * Licensed under the BSD-2 Clause license.
+ * See LICENSE in the project root for license information.
+ */
 package com.linkedin.coral.datagen.rel;
+
+import java.util.*;
 
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Filter;
 import org.apache.calcite.rel.core.Join;
 import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rex.*;
-import java.util.*;
+
 
 /**
  * Extracts a canonical set of predicates and sequential scans from a relational tree.
@@ -21,14 +28,14 @@ public final class CanonicalPredicateExtractor {
   public static final class Output {
     public final List<RelNode> sequentialScans;
     public final List<RexNode> canonicalPredicates;
-    public Output(List<RelNode> sequentialScans,
-        List<RexNode> canonicalPredicates) {
+    public Output(List<RelNode> sequentialScans, List<RexNode> canonicalPredicates) {
       this.sequentialScans = sequentialScans;
       this.canonicalPredicates = canonicalPredicates;
     }
   }
 
-  private CanonicalPredicateExtractor() {}
+  private CanonicalPredicateExtractor() {
+  }
 
   public static Output extract(RelNode root) {
     // Reset state for this extraction
@@ -110,9 +117,7 @@ public final class CanonicalPredicateExtractor {
     }
   }
 
-  private static int computeStartScan(RelNode node,
-      Map<RelNode, Integer> scanIndex,
-      Map<RelNode, Integer> nodeStart) {
+  private static int computeStartScan(RelNode node, Map<RelNode, Integer> scanIndex, Map<RelNode, Integer> nodeStart) {
 
     if (node instanceof Filter) {
       Filter f = (Filter) node;

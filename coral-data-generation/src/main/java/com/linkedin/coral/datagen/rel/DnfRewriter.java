@@ -1,3 +1,8 @@
+/**
+ * Copyright 2025 LinkedIn Corporation. All rights reserved.
+ * Licensed under the BSD-2 Clause license.
+ * See LICENSE in the project root for license information.
+ */
 package com.linkedin.coral.datagen.rel;
 
 import java.util.ArrayList;
@@ -9,6 +14,7 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexUtil;
+
 
 /**
  * Utility to convert the predicates produced by {@link CanonicalPredicateExtractor}
@@ -24,7 +30,8 @@ import org.apache.calcite.rex.RexUtil;
  **/
 public final class DnfRewriter {
 
-  private DnfRewriter() {}
+  private DnfRewriter() {
+  }
 
   public static final class Output {
     public final List<RelNode> sequentialScans;
