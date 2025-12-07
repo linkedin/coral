@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright 2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 import org.apache.calcite.rel.RelNode;
@@ -28,13 +27,14 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import static org.testng.Assert.*;
-
 import com.linkedin.coral.common.HiveMscAdapter;
 import com.linkedin.coral.datagen.rel.CanonicalPredicateExtractor;
 import com.linkedin.coral.datagen.rel.DnfRewriter;
 import com.linkedin.coral.datagen.rel.ProjectPullUpController;
 import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
+
+import static org.testng.Assert.*;
+
 
 /**
  * Integration tests for RegexDomainInferenceProgram using real Hive/Calcite infrastructure.
@@ -72,13 +72,8 @@ public class RegexDomainInferenceProgramTest {
     converter = new HiveToRelConverter(createMscAdapter(conf));
 
     // Initialize generic domain inference program with all transformers
-    program = new DomainInferenceProgram(
-        Arrays.asList(
-            new LowerRegexTransformer(),
-            new SubstringRegexTransformer(),
-            new PlusRegexTransformer(),
-            new TimesRegexTransformer(),
-            new CastRegexTransformer()));
+    program = new DomainInferenceProgram(Arrays.asList(new LowerRegexTransformer(), new SubstringRegexTransformer(),
+        new PlusRegexTransformer(), new TimesRegexTransformer(), new CastRegexTransformer()));
   }
 
   @AfterClass
@@ -216,9 +211,7 @@ public class RegexDomainInferenceProgramTest {
 
   @Test
   public void testSimpleSubstring() {
-    testDomainInference(
-        "Simple SUBSTRING Test",
-        "SELECT * FROM test.T WHERE SUBSTRING(name, 1, 4) = '2000'",
+    testDomainInference("Simple SUBSTRING Test", "SELECT * FROM test.T WHERE SUBSTRING(name, 1, 4) = '2000'",
         inputDomain -> {
           assertTrue(inputDomain instanceof RegexDomain, "Should be RegexDomain");
           RegexDomain regex = (RegexDomain) inputDomain;
@@ -234,25 +227,20 @@ public class RegexDomainInferenceProgramTest {
 
   @Test
   public void testSimpleLower() {
-    testDomainInference(
-        "Simple LOWER Test",
-        "SELECT * FROM test.T WHERE LOWER(name) = 'abc'",
-        inputDomain -> {
-          assertTrue(inputDomain instanceof RegexDomain, "Should be RegexDomain");
-          List<?> examples = inputDomain.sample(5);
-          assertEquals(5, examples.size(), "Should generate 5 examples");
-          for (Object ex : examples) {
-            String s = ex.toString().replaceAll("^\\^", "").replaceAll("\\$$", "");
-            assertEquals("abc", s.toLowerCase(), "Should be case-insensitive 'abc': " + s);
-          }
-        });
+    testDomainInference("Simple LOWER Test", "SELECT * FROM test.T WHERE LOWER(name) = 'abc'", inputDomain -> {
+      assertTrue(inputDomain instanceof RegexDomain, "Should be RegexDomain");
+      List<?> examples = inputDomain.sample(5);
+      assertEquals(5, examples.size(), "Should generate 5 examples");
+      for (Object ex : examples) {
+        String s = ex.toString().replaceAll("^\\^", "").replaceAll("\\$$", "");
+        assertEquals("abc", s.toLowerCase(), "Should be case-insensitive 'abc': " + s);
+      }
+    });
   }
 
   @Test
   public void testSimpleCastIntToString() {
-    testDomainInference(
-        "Simple CAST INT to STRING Test",
-        "SELECT * FROM test.T WHERE CAST(age AS STRING) = '25'",
+    testDomainInference("Simple CAST INT to STRING Test", "SELECT * FROM test.T WHERE CAST(age AS STRING) = '25'",
         inputDomain -> {
           assertTrue(inputDomain instanceof IntegerDomain, "Should be IntegerDomain");
           IntegerDomain intDomain = (IntegerDomain) inputDomain;
@@ -263,10 +251,8 @@ public class RegexDomainInferenceProgramTest {
 
   @Test
   public void testNestedLowerSubstring() {
-    testDomainInference(
-        "Nested LOWER(SUBSTRING) Test",
-        "SELECT * FROM test.T WHERE LOWER(SUBSTRING(name, 1, 3)) = 'abc'",
-        inputDomain -> {
+    testDomainInference("Nested LOWER(SUBSTRING) Test",
+        "SELECT * FROM test.T WHERE LOWER(SUBSTRING(name, 1, 3)) = 'abc'", inputDomain -> {
           assertTrue(inputDomain instanceof RegexDomain, "Should be RegexDomain");
           List<?> examples = inputDomain.sample(3);
           for (Object ex : examples) {
@@ -279,10 +265,8 @@ public class RegexDomainInferenceProgramTest {
 
   @Test
   public void testSubstringOfCastDate() {
-    testDomainInference(
-        "SUBSTRING(CAST(DATE)) Test",
-        "SELECT * FROM test.T WHERE SUBSTRING(CAST(birthdate AS STRING), 1, 4) = '2000'",
-        inputDomain -> {
+    testDomainInference("SUBSTRING(CAST(DATE)) Test",
+        "SELECT * FROM test.T WHERE SUBSTRING(CAST(birthdate AS STRING), 1, 4) = '2000'", inputDomain -> {
           assertTrue(inputDomain instanceof RegexDomain, "Should be RegexDomain");
           List<?> examples = inputDomain.sample(5);
           for (Object ex : examples) {
@@ -295,10 +279,8 @@ public class RegexDomainInferenceProgramTest {
 
   @Test
   public void testSubstringOfCastInteger() {
-    testDomainInference(
-        "Substring of Cast Integer Test",
-        "SELECT * FROM test.T WHERE SUBSTRING(CAST(age AS STRING), 1, 2) = '25'",
-        inputDomain -> {
+    testDomainInference("Substring of Cast Integer Test",
+        "SELECT * FROM test.T WHERE SUBSTRING(CAST(age AS STRING), 1, 2) = '25'", inputDomain -> {
           assertTrue(inputDomain instanceof RegexDomain, "Should be RegexDomain");
           List<?> examples = inputDomain.sample(5);
           for (Object ex : examples) {
@@ -311,23 +293,18 @@ public class RegexDomainInferenceProgramTest {
 
   @Test
   public void testArithmeticExpression() {
-    testDomainInference(
-        "Arithmetic Expression Test",
-        "SELECT * FROM test.T WHERE age * 2 + 5 = 25",
-        inputDomain -> {
-          assertTrue(inputDomain instanceof IntegerDomain, "Should be IntegerDomain");
-          IntegerDomain intDomain = (IntegerDomain) inputDomain;
-          assertTrue(intDomain.contains(10), "Should contain 10 (since 10 * 2 + 5 = 25)");
-          assertTrue(intDomain.isSingleton(), "Should be singleton");
-        });
+    testDomainInference("Arithmetic Expression Test", "SELECT * FROM test.T WHERE age * 2 + 5 = 25", inputDomain -> {
+      assertTrue(inputDomain instanceof IntegerDomain, "Should be IntegerDomain");
+      IntegerDomain intDomain = (IntegerDomain) inputDomain;
+      assertTrue(intDomain.contains(10), "Should contain 10 (since 10 * 2 + 5 = 25)");
+      assertTrue(intDomain.isSingleton(), "Should be singleton");
+    });
   }
 
   @Test
   public void testCastWithArithmetic() {
     // This test demonstrates cross-domain inference: String → Integer → through arithmetic
-    testDomainInference(
-        "CAST with Arithmetic Test",
-        "SELECT * FROM test.T WHERE CAST(age * 2 AS STRING) = '50'",
+    testDomainInference("CAST with Arithmetic Test", "SELECT * FROM test.T WHERE CAST(age * 2 AS STRING) = '50'",
         inputDomain -> {
           // The result should be IntegerDomain since age is an integer
           System.out.println("Domain type: " + inputDomain.getClass().getSimpleName());
@@ -335,7 +312,7 @@ public class RegexDomainInferenceProgramTest {
             IntegerDomain intDomain = (IntegerDomain) inputDomain;
             System.out.println("Contains 25: " + intDomain.contains(25)); // Should be true (25 * 2 = 50)
             System.out.println("Contains 30: " + intDomain.contains(30)); // Should be false
-            
+
             // Verify the constraint is correct
             assertTrue(intDomain.contains(25), "Domain should contain 25 (since 25 * 2 = 50)");
             assertFalse(intDomain.contains(30), "Domain should not contain 30");
@@ -347,10 +324,8 @@ public class RegexDomainInferenceProgramTest {
 
   @Test
   public void testSimpleCastStringToDate() {
-    testDomainInference(
-        "Simple Cast String to Date Test",
-        "SELECT * FROM test.T WHERE CAST(name AS DATE) = DATE '2024-01-15'",
-        inputDomain -> {
+    testDomainInference("Simple Cast String to Date Test",
+        "SELECT * FROM test.T WHERE CAST(name AS DATE) = DATE '2024-01-15'", inputDomain -> {
           assertTrue(inputDomain instanceof RegexDomain, "Should be RegexDomain");
           RegexDomain regex = (RegexDomain) inputDomain;
           assertTrue(regex.isLiteral(), "Should be literal");
@@ -361,9 +336,7 @@ public class RegexDomainInferenceProgramTest {
 
   @Test
   public void testSimpleCastStringToInteger() {
-    testDomainInference(
-        "Simple Cast String to Integer Test",
-        "SELECT * FROM test.T WHERE CAST(name AS INT) = 42",
+    testDomainInference("Simple Cast String to Integer Test", "SELECT * FROM test.T WHERE CAST(name AS INT) = 42",
         inputDomain -> {
           assertTrue(inputDomain instanceof RegexDomain, "Should be RegexDomain");
           List<?> examples = inputDomain.sample(1);
@@ -374,10 +347,8 @@ public class RegexDomainInferenceProgramTest {
 
   @Test
   public void testCastStringToIntegerWithArithmetic() {
-    testDomainInference(
-        "Cast String to Integer with Arithmetic Test",
-        "SELECT * FROM test.T WHERE CAST(name AS INT) + 10 = 50",
-        inputDomain -> {
+    testDomainInference("Cast String to Integer with Arithmetic Test",
+        "SELECT * FROM test.T WHERE CAST(name AS INT) + 10 = 50", inputDomain -> {
           assertTrue(inputDomain instanceof RegexDomain, "Should be RegexDomain");
           List<?> examples = inputDomain.sample(1);
           String s = examples.get(0).toString().replaceAll("^\\^", "").replaceAll("\\$$", "");
@@ -390,10 +361,8 @@ public class RegexDomainInferenceProgramTest {
     // Nested substring where ranges overlap
     // SUBSTRING(SUBSTRING(name, 1, 10), 3, 5) extracts positions 3-7 of substring at positions 1-10
     // This is equivalent to extracting positions 3-7 of the original string (overlapping ranges)
-    testDomainInference(
-        "Nested Substring Overlapping Test",
-        "SELECT * FROM test.T WHERE SUBSTRING(SUBSTRING(name, 1, 10), 3, 5) = 'hello'",
-        inputDomain -> {
+    testDomainInference("Nested Substring Overlapping Test",
+        "SELECT * FROM test.T WHERE SUBSTRING(SUBSTRING(name, 1, 10), 3, 5) = 'hello'", inputDomain -> {
           assertTrue(inputDomain instanceof RegexDomain, "Should be RegexDomain");
           List<?> examples = inputDomain.sample(3);
           for (Object ex : examples) {
@@ -409,10 +378,8 @@ public class RegexDomainInferenceProgramTest {
     // Nested substring where ranges are disjoint from the beginning
     // SUBSTRING(SUBSTRING(name, 5, 15), 1, 3) extracts positions 1-3 of substring at positions 5-19
     // This is equivalent to extracting positions 5-7 of the original string (disjoint from positions 1-4)
-    testDomainInference(
-        "Nested Substring Disjoint Test",
-        "SELECT * FROM test.T WHERE SUBSTRING(SUBSTRING(name, 5, 15), 1, 3) = 'xyz'",
-        inputDomain -> {
+    testDomainInference("Nested Substring Disjoint Test",
+        "SELECT * FROM test.T WHERE SUBSTRING(SUBSTRING(name, 5, 15), 1, 3) = 'xyz'", inputDomain -> {
           assertTrue(inputDomain instanceof RegexDomain, "Should be RegexDomain");
           List<?> examples = inputDomain.sample(3);
           for (Object ex : examples) {

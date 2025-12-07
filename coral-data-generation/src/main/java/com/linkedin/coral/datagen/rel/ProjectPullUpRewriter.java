@@ -1,4 +1,12 @@
+/**
+ * Copyright 2025 LinkedIn Corporation. All rights reserved.
+ * Licensed under the BSD-2 Clause license.
+ * See LICENSE in the project root for license information.
+ */
 package com.linkedin.coral.datagen.rel;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Filter;
@@ -8,8 +16,6 @@ import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexShuttle;
 
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Single-Step Project Pull-Up Rewriter
@@ -62,21 +68,17 @@ public final class ProjectPullUpRewriter {
     if (node instanceof Filter) {
       Filter filter = (Filter) node;
       RelNode child = filter.getInput();
-      
+
       if (child instanceof Project) {
         // Found it! Pull the Project above the Filter
         RelNode pulled = pullProjectAboveFilter(filter, (Project) child);
         return new RewriteResult(pulled, true);
       }
-      
+
       // No Project child, recurse
       RewriteResult childResult = findAndPullUp(child);
       if (childResult.changed) {
-        Filter newFilter = filter.copy(
-            filter.getTraitSet(),
-            childResult.node,
-            filter.getCondition()
-        );
+        Filter newFilter = filter.copy(filter.getTraitSet(), childResult.node, filter.getCondition());
         return new RewriteResult(newFilter, true);
       }
       return new RewriteResult(filter, false);
@@ -87,46 +89,33 @@ public final class ProjectPullUpRewriter {
       Join join = (Join) node;
       RelNode left = join.getLeft();
       RelNode right = join.getRight();
-      
+
       boolean leftIsProject = left instanceof Project;
       boolean rightIsProject = right instanceof Project;
-      
+
       if (leftIsProject || rightIsProject) {
         // Found it! Pull the Project(s) above the Join
-        RelNode pulled = pullProjectsAboveJoin(join, 
-            leftIsProject ? (Project) left : null,
-            rightIsProject ? (Project) right : null);
+        RelNode pulled =
+            pullProjectsAboveJoin(join, leftIsProject ? (Project) left : null, rightIsProject ? (Project) right : null);
         return new RewriteResult(pulled, true);
       }
-      
+
       // No Project children, recurse on left first
       RewriteResult leftResult = findAndPullUp(left);
       if (leftResult.changed) {
-        Join newJoin = join.copy(
-            join.getTraitSet(),
-            join.getCondition(),
-            leftResult.node,
-            right,
-            join.getJoinType(),
-            join.isSemiJoinDone()
-        );
+        Join newJoin = join.copy(join.getTraitSet(), join.getCondition(), leftResult.node, right, join.getJoinType(),
+            join.isSemiJoinDone());
         return new RewriteResult(newJoin, true);
       }
-      
+
       // Recurse on right
       RewriteResult rightResult = findAndPullUp(right);
       if (rightResult.changed) {
-        Join newJoin = join.copy(
-            join.getTraitSet(),
-            join.getCondition(),
-            left,
-            rightResult.node,
-            join.getJoinType(),
-            join.isSemiJoinDone()
-        );
+        Join newJoin = join.copy(join.getTraitSet(), join.getCondition(), left, rightResult.node, join.getJoinType(),
+            join.isSemiJoinDone());
         return new RewriteResult(newJoin, true);
       }
-      
+
       return new RewriteResult(join, false);
     }
 
@@ -134,20 +123,16 @@ public final class ProjectPullUpRewriter {
     if (node instanceof Project) {
       Project project = (Project) node;
       RelNode child = project.getInput();
-      
-      // Recurse to find Filter->Project or Join->Project patterns below
+
+      // Recurse to find {@code Filter->Project} or {@code Join->Project} patterns below
       RewriteResult childResult = findAndPullUp(child);
       if (childResult.changed) {
         // Rebuild Project with new child
-        Project newProject = project.copy(
-            project.getTraitSet(),
-            childResult.node,
-            project.getProjects(),
-            project.getRowType()
-        );
+        Project newProject =
+            project.copy(project.getTraitSet(), childResult.node, project.getProjects(), project.getRowType());
         return new RewriteResult(newProject, true);
       }
-      
+
       return new RewriteResult(project, false);
     }
 
@@ -156,10 +141,10 @@ public final class ProjectPullUpRewriter {
     if (oldInputs.isEmpty()) {
       return new RewriteResult(node, false);
     }
-    
+
     List<RelNode> newInputs = new ArrayList<>();
     boolean anyChanged = false;
-    
+
     for (RelNode input : oldInputs) {
       RewriteResult inputResult = findAndPullUp(input);
       newInputs.add(inputResult.node);
@@ -174,7 +159,7 @@ public final class ProjectPullUpRewriter {
         return new RewriteResult(newNode, true);
       }
     }
-    
+
     return new RewriteResult(node, false);
   }
 
@@ -182,32 +167,20 @@ public final class ProjectPullUpRewriter {
    * Pulls a Project above a Filter by inlining the Project's expressions
    * into the Filter's condition.
    * 
-   * Before: Filter(cond) -> Project(exprs) -> child
-   * After:  Project(exprs) -> Filter(cond') -> child
+   * Before: {@code Filter(cond) -> Project(exprs) -> child}
+   * After:  {@code Project(exprs) -> Filter(cond') -> child}
    * 
    * where cond' has Project expressions inlined.
    */
   private static RelNode pullProjectAboveFilter(Filter filter, Project project) {
     // 1) Inline project expressions into filter condition
-    RexNode inlinedCondition = inlineExpressions(
-        filter.getCondition(),
-        project.getProjects()
-    );
+    RexNode inlinedCondition = inlineExpressions(filter.getCondition(), project.getProjects());
 
     // 2) Create new Filter over project's input
-    Filter newFilter = filter.copy(
-        filter.getTraitSet(),
-        project.getInput(),
-        inlinedCondition
-    );
+    Filter newFilter = filter.copy(filter.getTraitSet(), project.getInput(), inlinedCondition);
 
     // 3) Pull Project above the new Filter
-    Project pulledProject = project.copy(
-        project.getTraitSet(),
-        newFilter,
-        project.getProjects(),
-        project.getRowType()
-    );
+    Project pulledProject = project.copy(project.getTraitSet(), newFilter, project.getProjects(), project.getRowType());
 
     return pulledProject;
   }
@@ -217,7 +190,7 @@ public final class ProjectPullUpRewriter {
    * into the Join's condition.
    * 
    * Before: Join(cond) with leftProj and/or rightProj as children
-   * After:  Project (combined or single) -> Join(cond') -> children's inputs
+   * After:  {@code Project (combined or single) -> Join(cond') -> children's inputs}
    * 
    * where cond' has Project expressions inlined.
    */
@@ -228,96 +201,65 @@ public final class ProjectPullUpRewriter {
 
     // Inline left Project if present
     if (leftProj != null) {
-      newCondition = inlineLeftSide(
-          newCondition,
-          leftProj.getProjects(),
-          leftProj.getRowType().getFieldCount()
-      );
+      newCondition = inlineLeftSide(newCondition, leftProj.getProjects(), leftProj.getRowType().getFieldCount());
       newLeft = leftProj.getInput();
     }
 
     // Inline right Project if present
     if (rightProj != null) {
       int leftFieldCount = newLeft.getRowType().getFieldCount();
-      newCondition = inlineRightSide(
-          newCondition,
-          rightProj.getProjects(),
-          leftFieldCount
-      );
+      newCondition = inlineRightSide(newCondition, rightProj.getProjects(), leftFieldCount);
       newRight = rightProj.getInput();
     }
 
     // Create new Join with inlined condition
-    Join newJoin = join.copy(
-        join.getTraitSet(),
-        newCondition,
-        newLeft,
-        newRight,
-        join.getJoinType(),
-        join.isSemiJoinDone()
-    );
+    Join newJoin =
+        join.copy(join.getTraitSet(), newCondition, newLeft, newRight, join.getJoinType(), join.isSemiJoinDone());
 
     // Pull Project(s) above the Join
     if (leftProj != null && rightProj != null) {
       // Both sides had Projects - create combined Project
       List<RexNode> combinedExprs = new ArrayList<>();
-      
+
       // Left side expressions (unchanged)
       combinedExprs.addAll(leftProj.getProjects());
-      
+
       // Right side expressions (with offset adjusted)
       int leftCount = leftProj.getRowType().getFieldCount();
       for (RexNode expr : rightProj.getProjects()) {
         combinedExprs.add(adjustOffsets(expr, leftCount));
       }
-      
-      return leftProj.copy(
-          leftProj.getTraitSet(),
-          newJoin,
-          combinedExprs,
-          join.getRowType()
-      );
+
+      return leftProj.copy(leftProj.getTraitSet(), newJoin, combinedExprs, join.getRowType());
     } else if (leftProj != null) {
       // Only left had Project
       List<RexNode> exprs = new ArrayList<>();
       exprs.addAll(leftProj.getProjects());
-      
+
       // Add pass-through for right side
       int leftCount = leftProj.getRowType().getFieldCount();
       int rightCount = join.getRowType().getFieldCount() - leftCount;
       for (int i = 0; i < rightCount; i++) {
-        exprs.add(new RexInputRef(leftCount + i,
-            join.getRowType().getFieldList().get(leftCount + i).getType()));
+        exprs.add(new RexInputRef(leftCount + i, join.getRowType().getFieldList().get(leftCount + i).getType()));
       }
-      
-      return leftProj.copy(
-          leftProj.getTraitSet(),
-          newJoin,
-          exprs,
-          join.getRowType()
-      );
+
+      return leftProj.copy(leftProj.getTraitSet(), newJoin, exprs, join.getRowType());
     } else {
       // Only right had Project
       List<RexNode> exprs = new ArrayList<>();
       int leftCount = newLeft.getRowType().getFieldCount();
-      
+
       // Add pass-through for left side
       for (int i = 0; i < leftCount; i++) {
-        exprs.add(new RexInputRef(i,
-            join.getRowType().getFieldList().get(i).getType()));
+        exprs.add(new RexInputRef(i, join.getRowType().getFieldList().get(i).getType()));
       }
-      
+
       // Add right side expressions (with offset adjusted)
       for (RexNode expr : rightProj.getProjects()) {
         exprs.add(adjustOffsets(expr, leftCount));
       }
-      
-      return rightProj.copy(
-          rightProj.getTraitSet(),
-          newJoin,
-          exprs,
-          join.getRowType()
-      );
+
+      return rightProj.copy(rightProj.getTraitSet(), newJoin, exprs, join.getRowType());
     }
   }
 

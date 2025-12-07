@@ -1,6 +1,12 @@
+/**
+ * Copyright 2025 LinkedIn Corporation. All rights reserved.
+ * Licensed under the BSD-2 Clause license.
+ * See LICENSE in the project root for license information.
+ */
 package com.linkedin.coral.datagen.rel;
 
 import org.apache.calcite.rel.RelNode;
+
 
 /**
  * Controller for iteratively applying Project pull-up until a fixed point is reached.
@@ -16,7 +22,7 @@ public final class ProjectPullUpController {
   /**
    * Applies Project pull-up repeatedly until reaching a fixed point.
    * 
-   * A fixed point is reached when no more Filter->Project or Join->Project
+   * A fixed point is reached when no more {@code Filter->Project} or {@code Join->Project}
    * patterns exist in the tree (all Projects have been pulled to the top).
    * 
    * @param root The root of the relational tree to rewrite
@@ -52,10 +58,8 @@ public final class ProjectPullUpController {
       current = next;
     }
 
-    throw new IllegalStateException(
-        "Failed to reach fixed point after " + maxIterations + " iterations. " +
-        "This may indicate a bug in the rewrite logic or an unexpectedly complex tree."
-    );
+    throw new IllegalStateException("Failed to reach fixed point after " + maxIterations + " iterations. "
+        + "This may indicate a bug in the rewrite logic or an unexpectedly complex tree.");
   }
 
   /**
@@ -99,10 +103,8 @@ public final class ProjectPullUpController {
       callback.onIteration(iteration, current);
     }
 
-    throw new IllegalStateException(
-        "Failed to reach fixed point after " + maxIterations + " iterations. " +
-        "This may indicate a bug in the rewrite logic or an unexpectedly complex tree."
-    );
+    throw new IllegalStateException("Failed to reach fixed point after " + maxIterations + " iterations. "
+        + "This may indicate a bug in the rewrite logic or an unexpectedly complex tree.");
   }
 
   /**

@@ -1,9 +1,15 @@
+/**
+ * Copyright 2025 LinkedIn Corporation. All rights reserved.
+ * Licensed under the BSD-2 Clause license.
+ * See LICENSE in the project root for license information.
+ */
 package com.linkedin.coral.datagen.domain;
 
 import java.util.List;
+
 import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexNode;
-import org.apache.calcite.sql.type.SqlTypeName;
+
 
 /**
  * Generic domain inference program supporting multiple domain types.
@@ -30,90 +36,87 @@ import org.apache.calcite.sql.type.SqlTypeName;
  *   Result: IntegerDomain([25])
  */
 public class DomainInferenceProgram {
-    private final List<DomainTransformer> transformers;
+  private final List<DomainTransformer> transformers;
 
-    public DomainInferenceProgram(List<DomainTransformer> transformers) {
-        this.transformers = transformers;
+  public DomainInferenceProgram(List<DomainTransformer> transformers) {
+    this.transformers = transformers;
+  }
+
+  /**
+   * Derives the domain constraint on the input variable given an expression
+   * and a constraint on the output.
+   * 
+   * @param expr the expression tree
+   * @param outputDomain the domain constraint on the output (RegexDomain or IntegerDomain)
+   * @return the refined domain constraint on the input variable
+   */
+  public Domain<?, ?> deriveInputDomain(RexNode expr, Domain<?, ?> outputDomain) {
+    // Base case: if we've reached the input variable, return the output constraint
+    if (expr instanceof RexInputRef) {
+      return outputDomain;
     }
 
-    /**
-     * Derives the domain constraint on the input variable given an expression
-     * and a constraint on the output.
-     * 
-     * @param expr the expression tree
-     * @param outputDomain the domain constraint on the output (RegexDomain or IntegerDomain)
-     * @return the refined domain constraint on the input variable
-     */
-    public Domain<?, ?> deriveInputDomain(RexNode expr, Domain<?, ?> outputDomain) {
-        // Base case: if we've reached the input variable, return the output constraint
-        if (expr instanceof RexInputRef) {
-            return outputDomain;
+    // Find a transformer that can handle this expression
+    for (DomainTransformer transformer : transformers) {
+      if (transformer.canHandle(expr) && transformer.isVariableOperandPositionValid(expr)) {
+        // Refine the domain for the child expression
+        Domain<?, ?> childDomain = transformer.refineInputDomain(expr, outputDomain);
+
+        // Check for empty domain (contradiction)
+        if (childDomain.isEmpty()) {
+          return createEmptyDomain(outputDomain);
         }
 
-        // Find a transformer that can handle this expression
-        for (DomainTransformer transformer : transformers) {
-            if (transformer.canHandle(expr) && transformer.isVariableOperandPositionValid(expr)) {
-                // Refine the domain for the child expression
-                Domain<?, ?> childDomain = transformer.refineInputDomain(expr, outputDomain);
+        // Recursively derive the domain for the child
+        RexNode child = transformer.getChildForVariable(expr);
+        return deriveInputDomain(child, childDomain);
+      }
+    }
 
-                // Check for empty domain (contradiction)
-                if (childDomain.isEmpty()) {
-                    return createEmptyDomain(outputDomain);
-                }
+    // No applicable transformer found
+    throw new IllegalStateException("No applicable transformer for expression: " + expr);
+  }
 
-                // Recursively derive the domain for the child
-                RexNode child = transformer.getChildForVariable(expr);
-                return deriveInputDomain(child, childDomain);
-            }
-        }
+  /**
+   * Convenience method for deriving RegexDomain constraints.
+   * Throws if the result is not a RegexDomain.
+   */
+  public RegexDomain deriveInputRegex(RexNode expr, RegexDomain outputRegex) {
+    Domain<?, ?> result = deriveInputDomain(expr, outputRegex);
 
-        // No applicable transformer found
-        throw new IllegalStateException("No applicable transformer for expression: " + expr);
+    if (!(result instanceof RegexDomain)) {
+      throw new IllegalStateException(
+          "Expected RegexDomain but got " + result.getClass().getSimpleName() + " for expression: " + expr);
     }
-    
-    /**
-     * Convenience method for deriving RegexDomain constraints.
-     * Throws if the result is not a RegexDomain.
-     */
-    public RegexDomain deriveInputRegex(RexNode expr, RegexDomain outputRegex) {
-        Domain<?, ?> result = deriveInputDomain(expr, outputRegex);
-        
-        if (!(result instanceof RegexDomain)) {
-            throw new IllegalStateException(
-                "Expected RegexDomain but got " + result.getClass().getSimpleName() + 
-                " for expression: " + expr);
-        }
-        
-        return (RegexDomain) result;
+
+    return (RegexDomain) result;
+  }
+
+  /**
+   * Convenience method for deriving IntegerDomain constraints.
+   * Throws if the result is not an IntegerDomain.
+   */
+  public IntegerDomain deriveInputInteger(RexNode expr, IntegerDomain outputInteger) {
+    Domain<?, ?> result = deriveInputDomain(expr, outputInteger);
+
+    if (!(result instanceof IntegerDomain)) {
+      throw new IllegalStateException(
+          "Expected IntegerDomain but got " + result.getClass().getSimpleName() + " for expression: " + expr);
     }
-    
-    /**
-     * Convenience method for deriving IntegerDomain constraints.
-     * Throws if the result is not an IntegerDomain.
-     */
-    public IntegerDomain deriveInputInteger(RexNode expr, IntegerDomain outputInteger) {
-        Domain<?, ?> result = deriveInputDomain(expr, outputInteger);
-        
-        if (!(result instanceof IntegerDomain)) {
-            throw new IllegalStateException(
-                "Expected IntegerDomain but got " + result.getClass().getSimpleName() + 
-                " for expression: " + expr);
-        }
-        
-        return (IntegerDomain) result;
+
+    return (IntegerDomain) result;
+  }
+
+  /**
+   * Creates an empty domain matching the type of the given domain.
+   */
+  private Domain<?, ?> createEmptyDomain(Domain<?, ?> referenceDomain) {
+    if (referenceDomain instanceof RegexDomain) {
+      return RegexDomain.empty();
+    } else if (referenceDomain instanceof IntegerDomain) {
+      return IntegerDomain.empty();
+    } else {
+      throw new IllegalArgumentException("Unknown domain type: " + referenceDomain.getClass().getSimpleName());
     }
-    
-    /**
-     * Creates an empty domain matching the type of the given domain.
-     */
-    private Domain<?, ?> createEmptyDomain(Domain<?, ?> referenceDomain) {
-        if (referenceDomain instanceof RegexDomain) {
-            return RegexDomain.empty();
-        } else if (referenceDomain instanceof IntegerDomain) {
-            return IntegerDomain.empty();
-        } else {
-            throw new IllegalArgumentException(
-                "Unknown domain type: " + referenceDomain.getClass().getSimpleName());
-        }
-    }
+  }
 }
