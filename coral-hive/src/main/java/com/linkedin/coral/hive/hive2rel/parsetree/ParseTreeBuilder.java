@@ -59,6 +59,8 @@ import com.linkedin.coral.hive.hive2rel.parsetree.parser.HiveParser;
 import com.linkedin.coral.hive.hive2rel.parsetree.parser.Node;
 import com.linkedin.coral.hive.hive2rel.parsetree.parser.ParseDriver;
 import com.linkedin.coral.hive.hive2rel.parsetree.parser.ParseException;
+import com.linkedin.coral.hive.hive2rel.sql.RichSqlInsert;
+import com.linkedin.coral.hive.hive2rel.sql.RichSqlInsertKeyword;
 
 import static com.google.common.base.Preconditions.checkState;
 import static java.lang.String.format;
@@ -758,6 +760,10 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
       // Calcite uses "SqlWith(SqlNodeList of SqlWithItem, SqlSelect)" to represent queries with WITH
       /** See {@link #visitCTE(ASTNode, ParseContext) visitCTE} for details */
       return new SqlWith(ZERO, (SqlNodeList) cte, select);
+    } else if (qc.insert != null) {
+      RichSqlInsert insert = (RichSqlInsert) qc.insert;
+      insert.setOperand(2, select);
+      return insert;
     } else {
       return select;
     }
@@ -1062,9 +1068,80 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     return SqlLiteral.createInterval(1, unquotedText, intervalQualifier, ZERO);
   }
 
+  @Override
+  protected SqlNode visitDestination(ASTNode node, ParseContext ctx) {
+    SqlNodeList tableAndPartition = (SqlNodeList) visitChildren(node, ctx).get(0);
+    if (tableAndPartition == null) {
+      // TODO: support TOK_DIR
+      return null;
+    }
+    SqlNode table = tableAndPartition.get(0);
+    SqlNodeList partitionSpec = null;
+    if (tableAndPartition.size() > 1) {
+      partitionSpec = (SqlNodeList) tableAndPartition.get(1);
+    }
+    ctx.insert = new RichSqlInsert(ZERO, SqlNodeList.EMPTY, table, null, null,
+        SqlNodeList.of(RichSqlInsertKeyword.OVERWRITE.symbol(ZERO)), partitionSpec);
+    return ctx.insert;
+  }
+
+  @Override
+  protected SqlNode visitInsertInto(ASTNode node, ParseContext ctx) {
+    List<SqlNode> insertIntoNode = visitChildren(node, ctx);
+    SqlNodeList tableAndPartition = (SqlNodeList) insertIntoNode.get(0);
+    SqlNodeList columnList = null;
+    if (insertIntoNode.size() > 1) {
+      columnList = (SqlNodeList) insertIntoNode.get(1);
+    }
+    SqlNode table = tableAndPartition.get(0);
+    SqlNodeList partitionSpec = null;
+    if (tableAndPartition.size() > 1) {
+      partitionSpec = (SqlNodeList) tableAndPartition.get(1);
+    }
+
+    ctx.insert = new RichSqlInsert(ZERO, SqlNodeList.EMPTY, table, null, columnList, SqlNodeList.EMPTY, partitionSpec);
+    return ctx.insert;
+  }
+
+  @Override
+  protected SqlNode visitTableOrPartitionNode(ASTNode node, ParseContext ctx) {
+    final List<SqlNode> sqlNodes = new ArrayList<>();
+    SqlNode tableName = visitOptionalChildByType(node, ctx, HiveParser.TOK_TABNAME);
+    sqlNodes.add(tableName);
+    SqlNode partitionSpec = visitOptionalChildByType(node, ctx, HiveParser.TOK_PARTSPEC);
+    if (partitionSpec != null) {
+      sqlNodes.add(partitionSpec);
+    }
+    return new SqlNodeList(sqlNodes, ZERO);
+  }
+
+  @Override
+  protected SqlNode visitPartitionSpecNode(ASTNode node, ParseContext ctx) {
+    List<SqlNode> sqlNodes = visitChildren(node, ctx);
+    return new SqlNodeList(sqlNodes, ZERO);
+  }
+
+  @Override
+  protected SqlNode visitPartitionVal(ASTNode node, ParseContext ctx) {
+    List<SqlNode> sqlNodes = visitChildren(node, ctx);
+    if (sqlNodes.size() == 1) {
+      return sqlNodes.get(0);
+    }
+    if (sqlNodes.size() == 2) {
+      return SqlStdOperatorTable.EQUALS.createCall(ZERO, sqlNodes);
+    }
+    throw new UnhandledASTTokenException(node);
+  }
+
+  @Override
+  protected SqlNode visitTableColumnName(ASTNode node, ParseContext ctx) {
+    return new SqlNodeList(visitChildren(node, ctx), ZERO);
+  }
+
   static class ParseContext {
     @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
     private final Optional<Table> hiveTable;
+    SqlNode insert;
     SqlNodeList keywords;
     SqlNode from;
     SqlNodeList selects;
