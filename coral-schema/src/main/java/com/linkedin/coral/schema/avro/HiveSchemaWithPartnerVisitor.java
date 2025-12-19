@@ -1,5 +1,5 @@
 /**
- * Copyright 2021-2022 LinkedIn Corporation. All rights reserved.
+ * Copyright 2021-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -115,12 +115,12 @@ public abstract class HiveSchemaWithPartnerVisitor<P, FP, R, FR> {
       default:
         throw new UnsupportedOperationException(typeInfo + " not supported");
     }
-    
+
     // Rewrap in single-element union if the partner was originally wrapped
     if (partnerWrapped) {
       resultSchema = (R) SchemaUtilities.wrapInSingleElementUnion((Schema) resultSchema);
     }
-    
+
     return resultSchema;
   }
 

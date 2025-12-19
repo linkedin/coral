@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2020-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -254,13 +254,12 @@ public class MergeHiveSchemaWithAvroTests {
     String hive = "struct<id:bigint,name:string,active:boolean,"
         + "items:array<struct<fooconfiguration:struct<name:string,urlvalue:string,source:string>,"
         + "barconfiguration:struct<name:string,domain:string>>>,"
-        + "metadata:map<string,struct<category:string,priority:int>>,"
-        + "tags:array<string>>";
+        + "metadata:map<string,struct<category:string,priority:int>>," + "tags:array<string>>";
 
     // Nested record schemas
-    Schema fooConfigSchema = struct("FooConfiguration", "doc-foo", "com.example.data",
-        required("name", Schema.Type.STRING), required("urlValue", Schema.Type.STRING),
-        required("source", Schema.Type.STRING));
+    Schema fooConfigSchema =
+        struct("FooConfiguration", "doc-foo", "com.example.data", required("name", Schema.Type.STRING),
+            required("urlValue", Schema.Type.STRING), required("source", Schema.Type.STRING));
 
     Schema barConfigSchema = struct("BarConfiguration", "doc-bar", "com.example.data",
         required("name", Schema.Type.STRING), required("domain", Schema.Type.STRING));
@@ -273,8 +272,10 @@ public class MergeHiveSchemaWithAvroTests {
 
     // Construct Avro schema with single-element unions for primitives, array items, and map values
     Schema avro = struct("test_complex_array_table", "doc-test", "com.example.test", optional("id", Schema.Type.LONG),
-        field("name", SchemaUtilities.wrapInSingleElementUnion(Schema.create(Schema.Type.STRING)), null, "unknown", null),
-        field("active", SchemaUtilities.wrapInSingleElementUnion(Schema.create(Schema.Type.BOOLEAN)), null, false, null),
+        field("name", SchemaUtilities.wrapInSingleElementUnion(Schema.create(Schema.Type.STRING)), null, "unknown",
+            null),
+        field("active", SchemaUtilities.wrapInSingleElementUnion(Schema.create(Schema.Type.BOOLEAN)), null, false,
+            null),
         optional("items", array(SchemaUtilities.wrapInSingleElementUnion(seu_arrayItemConfigSchema))),
         optional("metadata", map(SchemaUtilities.wrapInSingleElementUnion(seu_mapValueMetadataSchema))),
         optional("tags", array(SchemaUtilities.wrapInSingleElementUnion(Schema.create(Schema.Type.STRING)))));
@@ -299,13 +300,10 @@ public class MergeHiveSchemaWithAvroTests {
     // in nested structures even when the Hive schema uses uniontype format.
 
     // seu = single-element union
-    String hive = "struct<id:bigint,"
-        + "status:uniontype<string,int>,"
-        + "items:array<uniontype<struct<value:string>>>,"
-        + "metadata:map<string,uniontype<struct<priority:int>>>>";
+    String hive = "struct<id:bigint," + "status:uniontype<string,int>,"
+        + "items:array<uniontype<struct<value:string>>>," + "metadata:map<string,uniontype<struct<priority:int>>>>";
 
-    Schema seu_arrayItemSchema =
-        struct("Item", "doc-item", "com.example.data", required("value", Schema.Type.STRING));
+    Schema seu_arrayItemSchema = struct("Item", "doc-item", "com.example.data", required("value", Schema.Type.STRING));
 
     Schema seu_mapValueMetadataSchema =
         struct("MetadataInfo", "doc-metadata", "com.example.data", required("priority", Schema.Type.INT));
