@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2019-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -558,6 +558,32 @@ class SchemaUtilities {
     } else {
       return schema;
     }
+  }
+
+  /**
+   * Checks if a schema is a single-element union.
+   * Single-element unions are unions with exactly one type, like [{"type":"record",...}]
+   *
+   * @param schema The schema to check
+   * @return true if the schema is a single-element union, false otherwise
+   */
+  static boolean isSingleElementUnion(Schema schema) {
+    return schema != null && schema.getType() == Schema.Type.UNION && schema.getTypes().size() == 1;
+  }
+
+  /**
+   * Extracts the actual type from a single-element union.
+   * Assumes the schema is a single-element union (caller should check with isSingleElementUnion first).
+   *
+   * @param schema The single-element union schema
+   * @return The extracted schema (the single type from the union)
+   */
+  static Schema extractSingleElementUnion(Schema schema) {
+    return schema.getTypes().get(0);
+  }
+
+  static Schema wrapInSingleElementUnion(Schema schema) {
+    return Schema.createUnion(Arrays.asList(schema));
   }
 
   private static Schema getUnionFieldSchema(@Nonnull Schema leftSchema, @Nonnull Schema rightSchema,
