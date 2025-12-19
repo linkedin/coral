@@ -55,12 +55,20 @@ public class HiveToRelConverter extends ToRelConverter {
       ((JavaTypeFactory) getRelBuilder().getTypeFactory()), HIVE_SQL);
 
   public HiveToRelConverter(HiveMetastoreClient hiveMetastoreClient) {
-    super(hiveMetastoreClient);
+    this(hiveMetastoreClient, null);
+  }
+
+  public HiveToRelConverter(HiveMetastoreClient hiveMetastoreClient, String defaultDbName) {
+    super(hiveMetastoreClient, defaultDbName);
     this.parseTreeBuilder = new ParseTreeBuilder(functionResolver);
   }
 
   public HiveToRelConverter(Map<String, Map<String, List<String>>> localMetaStore) {
-    super(localMetaStore);
+    this(localMetaStore, null);
+  }
+
+  public HiveToRelConverter(Map<String, Map<String, List<String>>> localMetaStore, String defaultDbName) {
+    super(localMetaStore, defaultDbName);
     this.parseTreeBuilder = new ParseTreeBuilder(functionResolver);
   }
 

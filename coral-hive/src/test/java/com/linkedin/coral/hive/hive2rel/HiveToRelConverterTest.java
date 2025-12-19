@@ -13,6 +13,8 @@ import java.util.Map;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
+import com.linkedin.coral.common.HiveMscAdapter;
+import com.linkedin.coral.hive.hive2rel.sql.SqlUseDatabase;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.sql.SqlNode;
@@ -666,6 +668,25 @@ public class HiveToRelConverterTest {
         + "  LogicalTableScan(table=[[hive, test, tableint]])\n";
 
     assertEquals(relToString(sql), expected);
+  }
+
+  @Test
+  public void testChangeDefaultDatabase() {
+    String useSql = "USE test";
+    SqlNode useSqlNode = converter.toSqlNode(useSql);
+    assertTrue(useSqlNode instanceof SqlUseDatabase);
+    SqlUseDatabase useDbNode = ((SqlUseDatabase) useSqlNode);
+    assertTrue(useDbNode.getDatabaseName().isSimple());
+    String dbName = useDbNode.getDatabaseName().getSimple();
+    assertEquals(dbName, "test");
+
+    HiveMscAdapter mscAdapter = new HiveMscAdapter(getMsc());
+    HiveToRelConverter newConverter = new HiveToRelConverter(mscAdapter, dbName);
+
+    String sql = "SELECT a FROM tableOne";
+    String expected = "LogicalProject(a=[$0])\n" +
+            "  LogicalTableScan(table=[[hive, test, tableone]])\n";
+    assertEquals(RelOptUtil.toString(newConverter.convertSql(sql)), expected);
   }
 
   private String relToString(String sql) {

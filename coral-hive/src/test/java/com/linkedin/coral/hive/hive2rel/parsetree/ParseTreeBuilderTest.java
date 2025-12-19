@@ -248,4 +248,12 @@ public class ParseTreeBuilderTest {
     // Validate if the translation is successful
     assertEquals(sqlNode.toString().replaceAll("\\r?\\n", " "), table.getViewExpandedText());
   }
+
+  @Test
+  public void testUseDatabase() {
+    String input = "use test_db";
+    String expected = "use `test_db`";
+    SqlNode sqlNode = convert(input);
+    assertEquals(sqlNode.toString().toLowerCase(), expected.toLowerCase());
+  }
 }

@@ -50,6 +50,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public abstract class ToRelConverter {
 
   private final HiveMetastoreClient hiveMetastoreClient;
+  private final String defaultDbName;
   private final FrameworkConfig config;
   private final SqlRexConvertletTable convertletTable = getConvertletTable();
   private CalciteCatalogReader catalogReader;
@@ -66,8 +67,17 @@ public abstract class ToRelConverter {
   protected abstract SqlNode toSqlNode(String sql, org.apache.hadoop.hive.metastore.api.Table hiveView);
 
   protected ToRelConverter(@Nonnull HiveMetastoreClient hiveMetastoreClient) {
+    this(hiveMetastoreClient, null);
+  }
+
+  protected ToRelConverter(@Nonnull HiveMetastoreClient hiveMetastoreClient, String defaultDbName) {
     checkNotNull(hiveMetastoreClient);
     this.hiveMetastoreClient = hiveMetastoreClient;
+    if (defaultDbName != null) {
+      this.defaultDbName = defaultDbName;
+    } else {
+      this.defaultDbName = HiveSchema.DEFAULT_DB;
+    }
     SchemaPlus schemaPlus = Frameworks.createRootSchema(false);
     schemaPlus.add(HiveSchema.ROOT_SCHEMA, new HiveSchema(hiveMetastoreClient));
     // this is to ensure that jdbc:calcite driver is correctly registered
@@ -82,7 +92,16 @@ public abstract class ToRelConverter {
   }
 
   protected ToRelConverter(Map<String, Map<String, List<String>>> localMetaStore) {
+    this(localMetaStore, null);
+  }
+
+  protected ToRelConverter(Map<String, Map<String, List<String>>> localMetaStore, String defaultDbName) {
     this.hiveMetastoreClient = null;
+    if (defaultDbName != null) {
+      this.defaultDbName = defaultDbName;
+    } else {
+      this.defaultDbName = HiveSchema.DEFAULT_DB;
+    }
     SchemaPlus schemaPlus = Frameworks.createRootSchema(false);
     schemaPlus.add(HiveSchema.ROOT_SCHEMA, new LocalMetastoreHiveSchema(localMetaStore));
     // this is to ensure that jdbc:calcite driver is correctly registered
@@ -204,7 +223,7 @@ public abstract class ToRelConverter {
     }
     if (catalogReader == null) {
       catalogReader = new MultiSchemaPathCalciteCatalogReader(config.getDefaultSchema().unwrap(CalciteSchema.class),
-          ImmutableList.of(ImmutableList.of(HiveSchema.ROOT_SCHEMA, HiveSchema.DEFAULT_DB),
+          ImmutableList.of(ImmutableList.of(HiveSchema.ROOT_SCHEMA, defaultDbName),
               ImmutableList.of(HiveSchema.ROOT_SCHEMA), ImmutableList.of()),
           getRelBuilder().getTypeFactory(), connectionConfig);
     }

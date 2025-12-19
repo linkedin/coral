@@ -302,6 +302,9 @@ public abstract class AbstractASTVisitor<R, C> {
       case HiveParser.KW_CURRENT:
         return visitCurrentRow(node, ctx);
 
+      case HiveParser.TOK_SWITCHDATABASE:
+        return visitSwitchDatabase(node, ctx);
+
       default:
         // return visitChildren(node, ctx);
         throw new UnhandledASTTokenException(node);
@@ -631,6 +634,10 @@ public abstract class AbstractASTVisitor<R, C> {
   }
 
   protected R visitIntervalLiteral(ASTNode node, C ctx) {
+    return visitChildren(node, ctx).get(0);
+  }
+
+  protected R visitSwitchDatabase(ASTNode node, C ctx) {
     return visitChildren(node, ctx).get(0);
   }
 }

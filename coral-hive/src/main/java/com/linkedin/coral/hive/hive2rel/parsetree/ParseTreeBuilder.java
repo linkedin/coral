@@ -59,6 +59,7 @@ import com.linkedin.coral.hive.hive2rel.parsetree.parser.HiveParser;
 import com.linkedin.coral.hive.hive2rel.parsetree.parser.Node;
 import com.linkedin.coral.hive.hive2rel.parsetree.parser.ParseDriver;
 import com.linkedin.coral.hive.hive2rel.parsetree.parser.ParseException;
+import com.linkedin.coral.hive.hive2rel.sql.SqlUseDatabase;
 
 import static com.google.common.base.Preconditions.checkState;
 import static java.lang.String.format;
@@ -1060,6 +1061,14 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     String unquotedText = text.replaceAll("['\"]", "");
 
     return SqlLiteral.createInterval(1, unquotedText, intervalQualifier, ZERO);
+  }
+
+  @Override
+  protected SqlNode visitSwitchDatabase(ASTNode node, ParseContext ctx) {
+    List<SqlNode> sqlNodes = visitChildren(node, ctx);
+    assert sqlNodes.size() == 1;
+    SqlIdentifier dbName = (SqlIdentifier) sqlNodes.get(0);
+    return new SqlUseDatabase(ZERO, dbName);
   }
 
   static class ParseContext {
