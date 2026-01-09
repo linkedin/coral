@@ -668,6 +668,24 @@ public class HiveToRelConverterTest {
     assertEquals(relToString(sql), expected);
   }
 
+  @Test
+  public void testInsertInto() {
+    String input = "INSERT INTO table test.tableTwoPart PARTITION(p1='p1', p2=2) SELECT x, y FROM test.tableTwo";
+    String expected = "LogicalTableModify(table=[[hive, test, tabletwopart]], operation=[INSERT], flattened=[false])\n"
+        + "  LogicalProject(x=[$0], y=[$1], p1=[null:VARCHAR(2147483647)], p2=[null:INTEGER])\n"
+        + "    LogicalTableScan(table=[[hive, test, tabletwo]])\n";
+    assertEquals(relToString(input), expected);
+  }
+
+  @Test
+  public void testInsertOverwrite() {
+    String input = "INSERT OVERWRITE table test.tableTwoPart PARTITION(p1='p1', p2=2) SELECT x, y FROM test.tableTwo";
+    String expected = "LogicalTableModify(table=[[hive, test, tabletwopart]], operation=[INSERT], flattened=[false])\n"
+        + "  LogicalProject(x=[$0], y=[$1], p1=[null:VARCHAR(2147483647)], p2=[null:INTEGER])\n"
+        + "    LogicalTableScan(table=[[hive, test, tabletwo]])\n";
+    assertEquals(relToString(input), expected);
+  }
+
   private String relToString(String sql) {
     return RelOptUtil.toString(converter.convertSql(sql));
   }

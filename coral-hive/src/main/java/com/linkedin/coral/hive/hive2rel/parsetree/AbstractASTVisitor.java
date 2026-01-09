@@ -65,11 +65,23 @@ public abstract class AbstractASTVisitor<R, C> {
       case HiveParser.TOK_QUERY:
         return visitQueryNode(node, ctx);
 
+      case HiveParser.TOK_TAB:
+        return visitTableOrPartitionNode(node, ctx);
+
       case HiveParser.TOK_TABREF:
         return visitTabRefNode(node, ctx);
 
       case HiveParser.TOK_TABNAME:
         return visitTabnameNode(node, ctx);
+
+      case HiveParser.TOK_PARTSPEC:
+        return visitPartitionSpecNode(node, ctx);
+
+      case HiveParser.TOK_PARTVAL:
+        return visitPartitionVal(node, ctx);
+
+      case HiveParser.TOK_TABCOLNAME:
+        return visitTableColumnName(node, ctx);
 
       case HiveParser.KW_CURRENT_DATE:
       case HiveParser.KW_CURRENT_TIMESTAMP:
@@ -84,6 +96,9 @@ public abstract class AbstractASTVisitor<R, C> {
 
       case HiveParser.TOK_INSERT:
         return visitInsert(node, ctx);
+
+      case HiveParser.TOK_INSERT_INTO:
+        return visitInsertInto(node, ctx);
 
       case HiveParser.TOK_SELECTDI:
         return visitSelectDistinct(node, ctx);
@@ -173,6 +188,8 @@ public abstract class AbstractASTVisitor<R, C> {
         return visitTableTokOrCol(node, ctx);
 
       case HiveParser.TOK_DESTINATION:
+        return visitDestination(node, ctx);
+      case HiveParser.TOK_DIR:
       case HiveParser.EOF:
         return null;
 
@@ -474,11 +491,27 @@ public abstract class AbstractASTVisitor<R, C> {
     return visitChildren(node, ctx).get(0);
   }
 
+  protected R visitTableOrPartitionNode(ASTNode node, C ctx) {
+    return visitChildren(node, ctx).get(0);
+  }
+
   protected R visitTabRefNode(ASTNode node, C ctx) {
     return visitChildren(node, ctx).get(0);
   }
 
   protected R visitTabnameNode(ASTNode node, C ctx) {
+    return visitChildren(node, ctx).get(0);
+  }
+
+  protected R visitPartitionSpecNode(ASTNode node, C ctx) {
+    return visitChildren(node, ctx).get(0);
+  }
+
+  protected R visitPartitionVal(ASTNode node, C ctx) {
+    return visitChildren(node, ctx).get(0);
+  }
+
+  protected R visitTableColumnName(ASTNode node, C ctx) {
     return visitChildren(node, ctx).get(0);
   }
 
@@ -583,6 +616,14 @@ public abstract class AbstractASTVisitor<R, C> {
   }
 
   protected R visitInsert(ASTNode node, C ctx) {
+    return visitChildren(node, ctx).get(0);
+  }
+
+  protected R visitInsertInto(ASTNode node, C ctx) {
+    return visitChildren(node, ctx).get(0);
+  }
+
+  protected R visitDestination(ASTNode node, C ctx) {
     return visitChildren(node, ctx).get(0);
   }
 

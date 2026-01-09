@@ -248,4 +248,22 @@ public class ParseTreeBuilderTest {
     // Validate if the translation is successful
     assertEquals(sqlNode.toString().replaceAll("\\r?\\n", " "), table.getViewExpandedText());
   }
+
+  @Test
+  public void testInsertInto() {
+    String input = "INSERT INTO db.table PARTITION(dt='2025-12-11', hour) SELECT a, b, hour FROM t";
+    String expected =
+        "insert into `db`.`table` partition (`dt` = '2025-12-11', `hour`)  (select `a`, `b`, `hour` from `t`)";
+    SqlNode sqlNode = convert(input);
+    assertEquals(sqlNode.toString().toLowerCase().replaceAll("\n", " "), expected.toLowerCase());
+  }
+
+  @Test
+  public void testInsertOverwrite() {
+    String input = "INSERT OVERWRITE table db.table PARTITION(dt='2025-12-11', hour) SELECT a, b, hour FROM t";
+    String expected =
+        "insert overwrite `db`.`table` partition (`dt` = '2025-12-11', `hour`)  (select `a`, `b`, `hour` from `t`)";
+    SqlNode sqlNode = convert(input);
+    assertEquals(sqlNode.toString().toLowerCase().replaceAll("\n", " "), expected.toLowerCase());
+  }
 }
