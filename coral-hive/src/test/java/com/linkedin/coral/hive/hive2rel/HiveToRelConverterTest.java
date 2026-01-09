@@ -668,6 +668,19 @@ public class HiveToRelConverterTest {
     assertEquals(relToString(sql), expected);
   }
 
+  @Test
+  public void testHiveUDAFs() {
+    String input1 = "SELECT x, collect_set(y) FROM test.tableTwo group by x";
+    String expected1 = "LogicalAggregate(group=[{0}], EXPR$1=[collect_set($1)])\n" +
+            "  LogicalTableScan(table=[[hive, test, tabletwo]])\n";
+    assertEquals(relToString(input1), expected1);
+
+    String input2 = "SELECT x, collect_list(y) FROM test.tableTwo group by x";
+    String expected2 = "LogicalAggregate(group=[{0}], EXPR$1=[collect_list($1)])\n" +
+            "  LogicalTableScan(table=[[hive, test, tabletwo]])\n";
+    assertEquals(relToString(input2), expected2);
+  }
+
   private String relToString(String sql) {
     return RelOptUtil.toString(converter.convertSql(sql));
   }

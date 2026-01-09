@@ -37,6 +37,7 @@ import com.linkedin.coral.common.functions.FunctionReturnTypes;
 import com.linkedin.coral.common.functions.GenericProjectFunction;
 import com.linkedin.coral.common.functions.OperandTypeInference;
 import com.linkedin.coral.common.functions.SameOperandTypeExceptFirstOperandChecker;
+import org.apache.calcite.util.Optionality;
 
 import static com.linkedin.coral.hive.hive2rel.functions.CoalesceStructUtility.*;
 import static com.linkedin.coral.hive.hive2rel.functions.TimestampFromUnixtime.TIMESTAMP_FROM_UNIXTIME;
@@ -76,8 +77,8 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
     addFunctionEntry("avg", AVG);
     addFunctionEntry("min", MIN);
     addFunctionEntry("max", MAX);
-    createAddUserDefinedFunction("collect_list", FunctionReturnTypes.ARRAY_OF_ARG0_TYPE, ANY);
-    createAddUserDefinedFunction("collect_set", FunctionReturnTypes.ARRAY_OF_ARG0_TYPE, ANY);
+    createAddUserDefinedAggFunction("collect_list", FunctionReturnTypes.ARRAY_OF_ARG0_TYPE, ANY);
+    createAddUserDefinedAggFunction("collect_set", FunctionReturnTypes.ARRAY_OF_ARG0_TYPE, ANY);
 
     // window functions
     addFunctionEntry("row_number", ROW_NUMBER);
@@ -737,6 +738,11 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
     addFunctionEntry(functionName, createCalciteUDF(functionName, returnTypeInference, operandTypeChecker));
   }
 
+  public static void createAddUserDefinedAggFunction(String functionName, SqlReturnTypeInference returnTypeInference,
+                                                  SqlOperandTypeChecker operandTypeChecker) {
+    addFunctionEntry(functionName, createCalciteUDAF(functionName, returnTypeInference, operandTypeChecker));
+  }
+
   public static void createAddUserDefinedFunction(String functionName, SqlReturnTypeInference returnTypeInference,
       SqlOperandTypeChecker operandTypeChecker, String dependency) {
     String depPrefix = dependency.substring(0, 6).toLowerCase();
@@ -787,6 +793,12 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
       SqlOperandTypeChecker operandTypeChecker) {
     return new SqlUserDefinedFunction(new SqlIdentifier(functionName, SqlParserPos.ZERO), returnTypeInference, null,
         operandTypeChecker, null, null);
+  }
+
+  private static SqlOperator createCalciteUDAF(String functionName, SqlReturnTypeInference returnTypeInference,
+                                              SqlOperandTypeChecker operandTypeChecker) {
+    return new HiveSqlUserDefinedAggFunction(new SqlIdentifier(functionName, SqlParserPos.ZERO), returnTypeInference, null,
+            operandTypeChecker, false, false, Optionality.FORBIDDEN, null);
   }
 
   private static SqlOperator createCalciteUDF(String functionName, SqlReturnTypeInference returnTypeInference) {
