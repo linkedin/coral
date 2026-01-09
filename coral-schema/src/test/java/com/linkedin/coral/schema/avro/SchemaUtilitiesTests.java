@@ -286,7 +286,7 @@ public class SchemaUtilitiesTests {
     // Compare with expected output, trimming whitespace for comparison
     String expected = TestUtils.loadSchema("testLowercaseSchemaWithDefaultValues-expected.avsc").trim();
     String actual = outputSchema.toString(true).trim();
-    
+
     Assert.assertEquals(actual, expected);
   }
 }

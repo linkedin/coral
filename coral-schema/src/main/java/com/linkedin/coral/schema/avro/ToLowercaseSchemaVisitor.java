@@ -1,5 +1,5 @@
 /**
- * Copyright 2022-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2022-2026 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -143,7 +143,7 @@ public class ToLowercaseSchemaVisitor extends AvroSchemaVisitor<Schema> {
           Map<?, ?> mapValue = (Map<?, ?>) fieldDefaultValue; // Use wildcards to handle Utf8 keys
           Map<String, Object> lowercasedMap = new LinkedHashMap<>();
           Schema valueSchema = actualSchema.getValueType();
-          
+
           for (Map.Entry<?, ?> entry : mapValue.entrySet()) {
             String originalKey = entry.getKey().toString(); // Handle both String and Utf8
             String lowercasedKey = originalKey.toLowerCase();
@@ -159,9 +159,8 @@ public class ToLowercaseSchemaVisitor extends AvroSchemaVisitor<Schema> {
         if (fieldDefaultValue instanceof List) {
           List<Object> arrayValue = (List<Object>) fieldDefaultValue;
           Schema elementSchema = actualSchema.getElementType();
-          
-          return arrayValue.stream()
-              .map(element -> lowercaseDefaultValue(element, elementSchema))
+
+          return arrayValue.stream().map(element -> lowercaseDefaultValue(element, elementSchema))
               .collect(Collectors.toList());
         }
         return fieldDefaultValue;
@@ -193,18 +192,18 @@ public class ToLowercaseSchemaVisitor extends AvroSchemaVisitor<Schema> {
   private Map<String, Object> lowercaseRecordDefaultValue(Schema actualSchema,
       Function<String, Object> valueExtractor) {
     Map<String, Object> lowercasedRecordMap = new LinkedHashMap<>();
-    
+
     // Iterate through the lowercased schema fields
     for (Schema.Field field : actualSchema.getFields()) {
       String lowercasedFieldName = field.name();
       Object fieldValue = valueExtractor.apply(lowercasedFieldName);
-      
+
       if (fieldValue != null) {
         Object lowercasedFieldValue = lowercaseDefaultValue(fieldValue, field.schema());
         lowercasedRecordMap.put(lowercasedFieldName, lowercasedFieldValue);
       }
     }
-    
+
     return lowercasedRecordMap;
   }
 
@@ -224,7 +223,7 @@ public class ToLowercaseSchemaVisitor extends AvroSchemaVisitor<Schema> {
         return key;
       }
     }
-    
+
     return null;
   }
 }
