@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2025 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2026 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -19,22 +19,23 @@ import org.apache.iceberg.hive.HiveSchemaUtil;
 /**
  * Utility class to convert Iceberg datasets to Hive Table objects for backward compatibility.
  *
- * <p>This converter creates complete Hive Table objects from Iceberg tables, including schema conversion
- * using {@code HiveSchemaUtil}. While the table object acts as "glue code" for backward compatibility,
- * it populates all standard Hive table metadata to ensure broad compatibility with downstream code paths.
+ * <p><b>TEMPORARY BRIDGE CODE:</b> This converter exists as a temporary workaround and will be removed
+ * once the refactoring in <a href="https://github.com/linkedin/coral/issues/575">issue #575</a> is complete.
  *
- * <p><b>Why this exists:</b> The existing {com.linkedin.coral.hive.hive2rel.parsetree.ParseTreeBuilder}
- * and {com.linkedin.coral.hive.hive2rel.functions.HiveFunctionResolver} infrastructure expects a
- * Hive {@code org.apache.hadoop.hive.metastore.api.Table} object for:
+ * <p><b>Why this exists:</b> The existing ParseTreeBuilder
+ * and HiveFunctionResolver are currently tightly coupled
+ * to Hive's {@code org.apache.hadoop.hive.metastore.api.Table} class and cannot work directly with
+ * {@link CoralTable} or {@link IcebergCoralTable}. This converter bridges the gap by converting
+ * Iceberg tables to Hive Table objects for:
  * <ul>
  *   <li>Dali UDF resolution (extracting "functions" and "dependencies" from table properties)</li>
  *   <li>Table identification (database name, table name)</li>
  *   <li>Ownership and permission checks (owner field)</li>
  * </ul>
  *
- * <p>Rather than refactoring the entire call chain to accept {@link CoralTable},
- * this converter provides a pragmatic bridge that allows Iceberg tables to work seamlessly with the existing
- * Hive-based infrastructure.
+ * <p><b>Future:</b> Once ParseTreeBuilder and HiveFunctionResolver are refactored to accept {@link CoralTable}
+ * instead of Hive Table (see <a href="https://github.com/linkedin/coral/issues/575">issue #575</a>),
+ * this converter will no longer be needed and should be removed. IcebergCoralTable will be passable directly.
  *
  * <p><b>What gets converted:</b>
  * <ul>
@@ -43,6 +44,8 @@ import org.apache.iceberg.hive.HiveSchemaUtil;
  *   <li>Table metadata (name, owner, timestamps, table type)</li>
  *   <li>Storage descriptor with SerDe info (for compatibility)</li>
  * </ul>
+ *
+ * @see <a href="https://github.com/linkedin/coral/issues/575">Issue #575: Refactor ParseTreeBuilder to Use CoralTable</a>
  */
 public class IcebergHiveTableConverter {
 
@@ -52,6 +55,9 @@ public class IcebergHiveTableConverter {
 
   /**
    * Converts IcebergCoralTable to a Hive Table object for backward compatibility with function resolution.
+   *
+   * <p><b>NOTE:</b> This is temporary glue code that will be removed after
+   * <a href="https://github.com/linkedin/coral/issues/575">issue #575</a> is resolved.
    *
    * @param icebergCoralTable Iceberg coral table to convert
    * @return Hive Table object with complete metadata and schema

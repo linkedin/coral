@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2025 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2026 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -99,6 +99,9 @@ public abstract class ToRelConverter {
   /**
    * Constructor accepting CoralCatalog for unified catalog access.
    * 
+   * <p>This constructor uses the modern {@link CoralRootSchema} adapter for CoralCatalog integration,
+   * which supports multiple table formats (Hive, Iceberg, etc.) through the unified catalog interface.
+   * 
    * @param coralCatalog Coral catalog providing access to table metadata
    */
   protected ToRelConverter(@Nonnull CoralCatalog coralCatalog) {
@@ -106,7 +109,7 @@ public abstract class ToRelConverter {
     this.coralCatalog = coralCatalog;
     this.msc = null;
     SchemaPlus schemaPlus = Frameworks.createRootSchema(false);
-    schemaPlus.add(HiveSchema.ROOT_SCHEMA, new HiveSchema(coralCatalog));
+    schemaPlus.add(CoralRootSchema.ROOT_SCHEMA, new CoralRootSchema(coralCatalog));
     // this is to ensure that jdbc:calcite driver is correctly registered
     // before initializing framework (which needs it)
     // We don't want each engine to register the driver. It may not also load correctly
@@ -302,9 +305,13 @@ public abstract class ToRelConverter {
       connectionConfig = new CalciteConnectionConfigImpl(properties);
     }
     if (catalogReader == null) {
-      catalogReader = new MultiSchemaPathCalciteCatalogReader(config.getDefaultSchema().unwrap(CalciteSchema.class),
-          ImmutableList.of(ImmutableList.of(HiveSchema.ROOT_SCHEMA, HiveSchema.DEFAULT_DB),
-              ImmutableList.of(HiveSchema.ROOT_SCHEMA), ImmutableList.of()),
+      // Use CoralRootSchema constants if using CoralCatalog, otherwise use HiveSchema constants
+      String rootSchemaName = coralCatalog != null ? CoralRootSchema.ROOT_SCHEMA : HiveSchema.ROOT_SCHEMA;
+      String defaultDb = coralCatalog != null ? CoralRootSchema.DEFAULT_DB : HiveSchema.DEFAULT_DB;
+
+      catalogReader = new MultiSchemaPathCalciteCatalogReader(
+          config.getDefaultSchema().unwrap(CalciteSchema.class), ImmutableList
+              .of(ImmutableList.of(rootSchemaName, defaultDb), ImmutableList.of(rootSchemaName), ImmutableList.of()),
           getRelBuilder().getTypeFactory(), connectionConfig);
     }
     return catalogReader;

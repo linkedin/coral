@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2025 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2026 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -48,15 +48,18 @@ import com.linkedin.coral.common.types.StructType;
 
 
 /**
- * Adaptor class from Hive {@link org.apache.hadoop.hive.metastore.api.Table} representation to
- * Calcite {@link ScannableTable}
+ * Calcite adapter for Hive tables, bridging Hive metadata to Calcite's ScannableTable interface.
  *
- * Implementing this as a ScannableTable, instead of Table, is hacky approach to make calcite
+ * <p>This adapter converts Hive {@link org.apache.hadoop.hive.metastore.api.Table} representations
+ * into Calcite's {@link ScannableTable}, enabling Hive tables to be queried through Calcite's
+ * SQL processing engine.
+ *
+ * <p>Implementing this as a ScannableTable, instead of Table, is hacky approach to make calcite
  * correctly generate relational algebra. This will have to go away gradually.
  */
-public class HiveTable implements ScannableTable {
+public class HiveCalciteTableAdapter implements ScannableTable {
 
-  private static final Logger LOG = LoggerFactory.getLogger(HiveTable.class);
+  private static final Logger LOG = LoggerFactory.getLogger(HiveCalciteTableAdapter.class);
   protected final org.apache.hadoop.hive.metastore.api.Table hiveTable;
   private Deserializer deserializer;
 
@@ -90,7 +93,7 @@ public class HiveTable implements ScannableTable {
    * Constructor to create bridge from hive table to calcite table
    * @param hiveTable Hive table
    */
-  public HiveTable(org.apache.hadoop.hive.metastore.api.Table hiveTable) {
+  public HiveCalciteTableAdapter(org.apache.hadoop.hive.metastore.api.Table hiveTable) {
     Preconditions.checkNotNull(hiveTable);
     this.hiveTable = hiveTable;
   }
@@ -99,7 +102,7 @@ public class HiveTable implements ScannableTable {
    * Constructor accepting HiveCoralTable for unified catalog integration.
    * @param coralTable HiveCoralTable from catalog
    */
-  public HiveTable(HiveCoralTable coralTable) {
+  public HiveCalciteTableAdapter(HiveCoralTable coralTable) {
     Preconditions.checkNotNull(coralTable);
     this.hiveTable = coralTable.getHiveTable();
   }
@@ -235,7 +238,7 @@ public class HiveTable implements ScannableTable {
     final List<StructField> fields = new ArrayList<>();
     final List<String> fieldNames = new ArrayList<>();
 
-    // Combine regular columns and partition keys (same as HiveTable.getRowType)
+    // Combine regular columns and partition keys (same as HiveCalciteTableAdapter.getRowType)
     final Iterable<FieldSchema> allCols = Iterables.concat(cols, hiveTable.getPartitionKeys());
 
     for (FieldSchema col : allCols) {

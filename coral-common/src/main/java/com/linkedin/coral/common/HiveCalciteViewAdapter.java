@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2025 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2026 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -21,10 +21,13 @@ import static org.apache.calcite.sql.type.SqlTypeName.*;
 
 
 /**
- * A TranslatableTable (ViewTable) version of HiveTable that supports
- * recursive expansion of view definitions
+ * Calcite adapter for Hive views, extending HiveCalciteTableAdapter with TranslatableTable support
+ * for recursive expansion of view definitions.
+ *
+ * <p>This adapter enables Calcite to process Hive views by implementing the TranslatableTable interface,
+ * which allows the view definition to be expanded and converted into a relational algebra tree.
  */
-public class HiveViewTable extends HiveTable implements TranslatableTable {
+public class HiveCalciteViewAdapter extends HiveCalciteTableAdapter implements TranslatableTable {
   private final List<String> schemaPath;
 
   /**
@@ -33,7 +36,7 @@ public class HiveViewTable extends HiveTable implements TranslatableTable {
    * @param hiveTable Hive table
    * @param schemaPath Calcite schema path
    */
-  public HiveViewTable(Table hiveTable, List<String> schemaPath) {
+  public HiveCalciteViewAdapter(Table hiveTable, List<String> schemaPath) {
     super(hiveTable);
     this.schemaPath = schemaPath;
   }
@@ -44,7 +47,7 @@ public class HiveViewTable extends HiveTable implements TranslatableTable {
    * @param coralTable HiveCoralTable from catalog
    * @param schemaPath Calcite schema path
    */
-  public HiveViewTable(HiveCoralTable coralTable, List<String> schemaPath) {
+  public HiveCalciteViewAdapter(HiveCoralTable coralTable, List<String> schemaPath) {
     super(coralTable);
     this.schemaPath = schemaPath;
   }

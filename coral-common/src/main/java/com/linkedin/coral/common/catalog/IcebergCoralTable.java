@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2025 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2026 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -21,7 +21,7 @@ import static com.google.common.base.Preconditions.*;
  * This class wraps an Iceberg Table object and provides a unified
  * CoralTable API for accessing table metadata.
  *
- * Used by Calcite integration to dispatch to IcebergTable.
+ * Used by Calcite integration to dispatch to IcebergCalciteTableAdapter.
  */
 public class IcebergCoralTable implements CoralTable {
 
@@ -74,7 +74,7 @@ public class IcebergCoralTable implements CoralTable {
 
   /**
    * Returns the underlying Iceberg Table object.
-   * Used by Calcite integration layer (IcebergTable).
+   * Used by Calcite integration layer (IcebergCalciteTableAdapter).
    *
    * @return Iceberg Table object
    */

@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2025 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2026 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -16,7 +16,7 @@ import com.linkedin.coral.common.types.CoralDataType;
  * of the underlying table format (Hive, Iceberg, etc.).
  *
  * This abstraction is used by Calcite integration layer to dispatch to
- * the appropriate table implementation (HiveTable or IcebergTable).
+ * the appropriate table implementation (HiveCalciteTableAdapter or IcebergCalciteTableAdapter).
  */
 public interface CoralTable {
 

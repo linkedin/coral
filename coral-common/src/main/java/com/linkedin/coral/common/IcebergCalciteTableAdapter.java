@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2025 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2026 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -27,23 +27,24 @@ import com.linkedin.coral.common.types.StructType;
 
 
 /**
- * Calcite Table implementation for Apache Iceberg tables.
- * Provides native Iceberg schema to Calcite using two-stage conversion:
+ * Calcite adapter for Apache Iceberg tables, bridging Iceberg metadata to Calcite's ScannableTable interface.
+ *
+ * <p>This adapter provides native Iceberg schema to Calcite using two-stage conversion:
  * Iceberg → Coral → Calcite.
  *
- * This class uses IcebergCoralTable to access Iceberg table metadata and converts
- * through the Coral type system for better abstraction and consistency with HiveTable.
+ * <p>This class uses IcebergCoralTable to access Iceberg table metadata and converts
+ * through the Coral type system for better abstraction and consistency with HiveCalciteTableAdapter.
  */
-public class IcebergTable implements ScannableTable {
+public class IcebergCalciteTableAdapter implements ScannableTable {
 
   private final IcebergCoralTable coralTable;
 
   /**
-   * Creates IcebergTable from IcebergCoralTable.
+   * Creates IcebergCalciteTableAdapter from IcebergCoralTable.
    *
    * @param coralTable IcebergCoralTable from catalog
    */
-  public IcebergTable(IcebergCoralTable coralTable) {
+  public IcebergCalciteTableAdapter(IcebergCoralTable coralTable) {
     Preconditions.checkNotNull(coralTable);
     this.coralTable = coralTable;
     if (coralTable.getIcebergTable() == null) {

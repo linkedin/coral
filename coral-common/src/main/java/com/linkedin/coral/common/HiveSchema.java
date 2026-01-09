@@ -1,11 +1,12 @@
 /**
- * Copyright 2017-2025 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2026 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
 package com.linkedin.coral.common;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 import javax.annotation.Nonnull;
@@ -16,8 +17,7 @@ import com.google.common.collect.ImmutableSet;
 import org.apache.calcite.linq4j.tree.Expression;
 import org.apache.calcite.rel.type.RelProtoDataType;
 import org.apache.calcite.schema.*;
-
-import com.linkedin.coral.common.catalog.CoralCatalog;
+import org.apache.hadoop.hive.metastore.api.Database;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -26,7 +26,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Adaptor from Hive catalog providing database and table names
  * to Calcite {@link Schema}. This class represents the "root" schema
  * that holds all hive databases as subschema and no tables.
- * 
+ *
  * Can use either CoralCatalog for unified access to different table formats
  * or HiveMetastoreClient for Hive-specific access.
  */
@@ -35,27 +35,15 @@ public class HiveSchema implements Schema {
   public static final String ROOT_SCHEMA = "hive";
   public static final String DEFAULT_DB = "default";
 
-  private final CoralCatalog coralCatalog;
   private final HiveMetastoreClient msc;
 
   /**
-   * Create HiveSchema using CoralCatalog to read catalog information.
-   * 
-   * @param coralCatalog Coral catalog providing unified access to tables
-   */
-  public HiveSchema(@Nonnull CoralCatalog coralCatalog) {
-    this.coralCatalog = checkNotNull(coralCatalog);
-    this.msc = null;
-  }
-
-  /**
    * Create HiveSchema using HiveMetastoreClient (backward compatibility).
-   * 
+   *
    * @param msc Hive metastore client
    */
   public HiveSchema(@Nonnull HiveMetastoreClient msc) {
     this.msc = checkNotNull(msc);
-    this.coralCatalog = null;
   }
 
   /**
@@ -95,27 +83,14 @@ public class HiveSchema implements Schema {
 
   @Override
   public Schema getSubSchema(String name) {
-    // Check if database exists
-    if (coralCatalog != null) {
-      if (!coralCatalog.namespaceExists(name)) {
-        return null;
-      }
-      return new HiveDbSchema(coralCatalog, null, name);
-    } else {
-      if (msc.getDatabase(name) == null) {
-        return null;
-      }
-      return new HiveDbSchema(null, msc, name);
-    }
+    Database database = msc.getDatabase(name);
+    return (database == null) ? null : new HiveDbSchema(msc, database.getName());
   }
 
   @Override
   public Set<String> getSubSchemaNames() {
-    if (coralCatalog != null) {
-      return ImmutableSet.copyOf(coralCatalog.getAllNamespaces());
-    } else {
-      return ImmutableSet.copyOf(msc.getAllDatabases());
-    }
+    List<String> dbNames = msc.getAllDatabases();
+    return ImmutableSet.copyOf(dbNames);
   }
 
   @Override

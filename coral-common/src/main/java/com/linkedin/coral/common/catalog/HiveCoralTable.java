@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2025 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2026 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -30,7 +30,7 @@ import static com.google.common.base.Preconditions.*;
  * This class wraps a Hive metastore Table object and provides
  * a unified CoralTable API for accessing table metadata.
  *
- * Used by Calcite integration to dispatch to HiveTable.
+ * Used by Calcite integration to dispatch to HiveCalciteTableAdapter.
  */
 public class HiveCoralTable implements CoralTable {
 
@@ -85,7 +85,7 @@ public class HiveCoralTable implements CoralTable {
 
   /**
    * Returns the underlying Hive Table object.
-   * Used by Calcite integration layer (HiveTable).
+   * Used by Calcite integration layer (HiveCalciteTableAdapter).
    *
    * @return Hive metastore Table object
    */
@@ -106,7 +106,7 @@ public class HiveCoralTable implements CoralTable {
     final List<StructField> fields = new ArrayList<>();
     final List<String> fieldNames = new ArrayList<>();
 
-    // Combine regular columns and partition keys (same as HiveTable.getCoralSchema)
+    // Combine regular columns and partition keys (same as HiveCalciteTableAdapter.getCoralSchema)
     final Iterable<FieldSchema> allCols = Iterables.concat(cols, table.getPartitionKeys());
 
     for (FieldSchema col : allCols) {
