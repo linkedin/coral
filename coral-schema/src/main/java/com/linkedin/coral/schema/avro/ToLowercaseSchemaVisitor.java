@@ -89,29 +89,30 @@ public class ToLowercaseSchemaVisitor extends AvroSchemaVisitor<Schema> {
    * Recursively lowercases field names within default values based on the schema structure.
    * This handles complex types like records, maps, and arrays where field names appear in default values.
    * 
-   * @param defaultValue The original default value (can be null, primitive, Map, List, etc.)
-   * @param schema The schema that describes the structure of this default value
+   * @param fieldDefaultValue The original default value for a field (can be null, primitive, Map, List, etc.)
+   * @param fieldSchema The schema that describes the structure of this field's default value
    * @return The default value with all field names lowercased
    */
   @SuppressWarnings("unchecked")
-  private Object lowercaseDefaultValue(Object defaultValue, Schema schema) {
-    if (defaultValue == null) {
+  private Object lowercaseDefaultValue(Object fieldDefaultValue, Schema fieldSchema) {
+    if (fieldDefaultValue == null) {
       return null;
     }
 
-    Schema actualSchema = schema;
-    
-    // Handle union types - get the actual schema based on the default value type
-    if (schema.getType() == Schema.Type.UNION) {
-      // For unions, the default value corresponds to the first type in the union
-      actualSchema = schema.getTypes().get(0);
+    // Handle union types to get the actual schema for processing the default value
+    // For nullable unions, extract the non-null type since we know defaultValue is non-null
+    Schema actualSchema = SchemaUtilities.extractIfOption(fieldSchema);
+    // If still a union after extracting nullable option (i.e., multi-type non-nullable union),
+    // the default value corresponds to the first type per Avro specification
+    if (actualSchema.getType() == Schema.Type.UNION) {
+      actualSchema = actualSchema.getTypes().get(0);
     }
 
     switch (actualSchema.getType()) {
       case RECORD:
         // For records, the default value can be either a Map or GenericData.Record
-        if (defaultValue instanceof GenericData.Record) {
-          GenericData.Record record = (GenericData.Record) defaultValue;
+        if (fieldDefaultValue instanceof GenericData.Record) {
+          GenericData.Record record = (GenericData.Record) fieldDefaultValue;
           return lowercaseRecordDefaultValue(actualSchema, lowercasedFieldName -> {
             // Find the matching field in the original record's schema (case-insensitive)
             Schema.Field originalField = record.getSchema().getField(lowercasedFieldName);
@@ -125,8 +126,8 @@ public class ToLowercaseSchemaVisitor extends AvroSchemaVisitor<Schema> {
             }
             return originalField != null ? record.get(originalField.pos()) : null;
           });
-        } else if (defaultValue instanceof Map) {
-          Map<?, ?> recordMap = (Map<?, ?>) defaultValue;
+        } else if (fieldDefaultValue instanceof Map) {
+          Map<?, ?> recordMap = (Map<?, ?>) fieldDefaultValue;
           return lowercaseRecordDefaultValue(actualSchema, lowercasedFieldName -> {
             // Find the matching key in the original map (case-insensitive)
             String matchingKey = findMatchingKeyForLowercased(recordMap, lowercasedFieldName);
@@ -134,12 +135,12 @@ public class ToLowercaseSchemaVisitor extends AvroSchemaVisitor<Schema> {
           });
         }
         // If neither Map nor GenericData.Record, return as-is
-        return defaultValue;
+        return fieldDefaultValue;
 
       case MAP:
         // For maps, lowercase the keys and recursively process values
-        if (defaultValue instanceof Map) {
-          Map<?, ?> mapValue = (Map<?, ?>) defaultValue; // Use wildcards to handle Utf8 keys
+        if (fieldDefaultValue instanceof Map) {
+          Map<?, ?> mapValue = (Map<?, ?>) fieldDefaultValue; // Use wildcards to handle Utf8 keys
           Map<String, Object> lowercasedMap = new LinkedHashMap<>();
           Schema valueSchema = actualSchema.getValueType();
           
@@ -151,19 +152,19 @@ public class ToLowercaseSchemaVisitor extends AvroSchemaVisitor<Schema> {
           }
           return lowercasedMap;
         }
-        return defaultValue;
+        return fieldDefaultValue;
 
       case ARRAY:
         // For arrays, recursively process each element
-        if (defaultValue instanceof List) {
-          List<Object> arrayValue = (List<Object>) defaultValue;
+        if (fieldDefaultValue instanceof List) {
+          List<Object> arrayValue = (List<Object>) fieldDefaultValue;
           Schema elementSchema = actualSchema.getElementType();
           
           return arrayValue.stream()
               .map(element -> lowercaseDefaultValue(element, elementSchema))
               .collect(Collectors.toList());
         }
-        return defaultValue;
+        return fieldDefaultValue;
 
       case NULL:
       case BOOLEAN:
@@ -177,7 +178,7 @@ public class ToLowercaseSchemaVisitor extends AvroSchemaVisitor<Schema> {
       case FIXED:
       default:
         // Primitive types and others: return as-is
-        return defaultValue;
+        return fieldDefaultValue;
     }
   }
 
