@@ -15,9 +15,7 @@ import org.apache.hadoop.hive.metastore.api.Table;
 
 import com.linkedin.coral.com.google.common.base.Throwables;
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
-import com.linkedin.coral.common.catalog.HiveCoralTable;
-
-import static org.apache.calcite.sql.type.SqlTypeName.*;
+import com.linkedin.coral.common.catalog.HiveTable;
 
 
 /**
@@ -59,7 +57,7 @@ public class HiveCalciteViewAdapter extends HiveCalciteTableAdapter implements T
    * @param coralTable HiveCoralTable from catalog
    * @param schemaPath Calcite schema path
    */
-  public HiveCalciteViewAdapter(HiveCoralTable coralTable, List<String> schemaPath) {
+  public HiveCalciteViewAdapter(HiveTable coralTable, List<String> schemaPath) {
     super(coralTable);
     this.schemaPath = schemaPath;
   }

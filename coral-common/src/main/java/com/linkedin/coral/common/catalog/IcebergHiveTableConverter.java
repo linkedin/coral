@@ -25,7 +25,7 @@ import org.apache.iceberg.hive.HiveSchemaUtil;
  * <p><b>Why this exists:</b> The existing ParseTreeBuilder
  * and HiveFunctionResolver are currently tightly coupled
  * to Hive's {@code org.apache.hadoop.hive.metastore.api.Table} class and cannot work directly with
- * {@link CoralTable} or {@link IcebergCoralTable}. This converter bridges the gap by converting
+ * {@link CoralTable} or {@link IcebergTable}. This converter bridges the gap by converting
  * Iceberg tables to Hive Table objects for:
  * <ul>
  *   <li>Dali UDF resolution (extracting "functions" and "dependencies" from table properties)</li>
@@ -62,7 +62,7 @@ public class IcebergHiveTableConverter {
    * @param icebergCoralTable Iceberg coral table to convert
    * @return Hive Table object with complete metadata and schema
    */
-  public static Table toHiveTable(IcebergCoralTable icebergCoralTable) {
+  public static Table toHiveTable(IcebergTable icebergCoralTable) {
     org.apache.iceberg.Table icebergTable = icebergCoralTable.getIcebergTable();
 
     // Parse db.table name (format: "dbname.tablename")

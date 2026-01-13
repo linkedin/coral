@@ -14,9 +14,6 @@ import com.linkedin.coral.common.types.CoralDataType;
  * A unified abstraction representing a table or view in Coral.
  * This interface provides a common way to access table metadata regardless
  * of the underlying table format (Hive, Iceberg, etc.).
- *
- * This abstraction is used by Calcite integration layer to dispatch to
- * the appropriate table implementation (HiveCalciteTableAdapter or IcebergCalciteTableAdapter).
  */
 public interface CoralTable {
 
@@ -46,7 +43,7 @@ public interface CoralTable {
   /**
    * Returns the table schema in Coral type system.
    * This provides a unified type representation across different table formats
-   * (Hive, Iceberg, etc.) that can be converted to Calcite RelDataType.
+   * (Hive, Iceberg, etc.)
    *
    * @return CoralDataType representing the table schema (typically a StructType)
    */

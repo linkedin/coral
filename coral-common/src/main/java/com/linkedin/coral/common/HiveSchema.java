@@ -54,8 +54,7 @@ public class HiveSchema implements Schema {
   private final HiveMetastoreClient msc;
 
   /**
-   * Create HiveSchema using HiveMetastoreClient (backward compatibility).
-   *
+   * Create HiveSchema using input metastore client to read hive catalog
    * @param msc Hive metastore client
    */
   public HiveSchema(@Nonnull HiveMetastoreClient msc) {

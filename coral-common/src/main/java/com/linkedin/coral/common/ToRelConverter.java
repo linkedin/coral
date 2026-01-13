@@ -40,9 +40,9 @@ import org.apache.calcite.util.Util;
 import com.linkedin.coral.com.google.common.annotations.VisibleForTesting;
 import com.linkedin.coral.common.catalog.CoralCatalog;
 import com.linkedin.coral.common.catalog.CoralTable;
-import com.linkedin.coral.common.catalog.HiveCoralTable;
-import com.linkedin.coral.common.catalog.IcebergCoralTable;
+import com.linkedin.coral.common.catalog.HiveTable;
 import com.linkedin.coral.common.catalog.IcebergHiveTableConverter;
+import com.linkedin.coral.common.catalog.IcebergTable;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -51,7 +51,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Public class to convert SQL dialects to Calcite relational algebra.
  * This class should serve as the main entry point for clients to convert
  * SQL queries.
- * 
+ *
  * Supports both {@link com.linkedin.coral.common.catalog.CoralCatalog} (for unified
  * multi-format access to Hive/Iceberg tables) and {@link HiveMetastoreClient}
  * (for backward compatibility with Hive-only workflows).
@@ -77,7 +77,7 @@ public abstract class ToRelConverter {
 
   /**
    * Constructor for backward compatibility with HiveMetastoreClient.
-   * 
+   *
    * @param hiveMetastoreClient Hive metastore client
    */
   protected ToRelConverter(@Nonnull HiveMetastoreClient hiveMetastoreClient) {
@@ -98,10 +98,10 @@ public abstract class ToRelConverter {
 
   /**
    * Constructor accepting CoralCatalog for unified catalog access.
-   * 
+   *
    * <p>This constructor uses the modern {@link CoralRootSchema} adapter for CoralCatalog integration,
    * which supports multiple table formats (Hive, Iceberg, etc.) through the unified catalog interface.
-   * 
+   *
    * @param coralCatalog Coral catalog providing access to table metadata
    */
   protected ToRelConverter(@Nonnull CoralCatalog coralCatalog) {
@@ -123,7 +123,7 @@ public abstract class ToRelConverter {
 
   /**
    * Constructor for local metastore (testing/development).
-   * 
+   *
    * @param localMetaStore Local metastore map
    */
   protected ToRelConverter(Map<String, Map<String, List<String>>> localMetaStore) {
@@ -205,10 +205,10 @@ public abstract class ToRelConverter {
     String stringViewExpandedText;
     org.apache.hadoop.hive.metastore.api.Table table;
 
-    if (coralTable instanceof HiveCoralTable) {
+    if (coralTable instanceof HiveTable) {
       // Hive coral table: can be TABLE or VIEW
-      HiveCoralTable hiveCoralTable = (HiveCoralTable) coralTable;
-      table = hiveCoralTable.getHiveTable();
+      HiveTable hiveTable = (HiveTable) coralTable;
+      table = hiveTable.getHiveTable();
 
       if (table.getTableType().equals("VIRTUAL_VIEW")) {
         // It's a view - use expanded view text
@@ -217,14 +217,14 @@ public abstract class ToRelConverter {
         // It's a Hive table
         stringViewExpandedText = "SELECT * FROM " + dbName + "." + tableName;
       }
-    } else if (coralTable instanceof IcebergCoralTable) {
+    } else if (coralTable instanceof IcebergTable) {
       // Iceberg coral table: always a table (Iceberg doesn't have views)
-      IcebergCoralTable icebergCoralTable = (IcebergCoralTable) coralTable;
+      IcebergTable icebergTable = (IcebergTable) coralTable;
 
       // Convert Iceberg coral table to minimal Hive Table for backward compatibility
       // This is needed because downstream code (ParseTreeBuilder, HiveFunctionResolver)
       // expects a Hive Table object for Dali UDF resolution
-      table = IcebergHiveTableConverter.toHiveTable(icebergCoralTable);
+      table = IcebergHiveTableConverter.toHiveTable(icebergTable);
       stringViewExpandedText = "SELECT * FROM " + dbName + "." + tableName;
     } else {
       throw new RuntimeException("Unsupported coral table type for: " + dbName + "." + tableName);

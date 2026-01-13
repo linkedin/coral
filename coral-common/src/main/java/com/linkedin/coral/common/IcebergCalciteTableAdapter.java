@@ -18,9 +18,8 @@ import org.apache.calcite.schema.Statistic;
 import org.apache.calcite.schema.Statistics;
 import org.apache.calcite.sql.SqlCall;
 import org.apache.calcite.sql.SqlNode;
-import org.apache.iceberg.Table;
 
-import com.linkedin.coral.common.catalog.IcebergCoralTable;
+import com.linkedin.coral.common.catalog.IcebergTable;
 import com.linkedin.coral.common.catalog.TableType;
 import com.linkedin.coral.common.types.CoralTypeToRelDataTypeConverter;
 import com.linkedin.coral.common.types.StructType;
@@ -51,19 +50,16 @@ import com.linkedin.coral.common.types.StructType;
  */
 public class IcebergCalciteTableAdapter implements ScannableTable {
 
-  private final IcebergCoralTable coralTable;
+  private final IcebergTable coralTable;
 
   /**
    * Creates IcebergCalciteTableAdapter from IcebergCoralTable.
    *
    * @param coralTable IcebergCoralTable from catalog
    */
-  public IcebergCalciteTableAdapter(IcebergCoralTable coralTable) {
+  public IcebergCalciteTableAdapter(IcebergTable coralTable) {
     Preconditions.checkNotNull(coralTable);
     this.coralTable = coralTable;
-    if (coralTable.getIcebergTable() == null) {
-      throw new IllegalArgumentException("IcebergCoralTable must have an Iceberg Table");
-    }
   }
 
   /**
@@ -77,10 +73,10 @@ public class IcebergCalciteTableAdapter implements ScannableTable {
    */
   @Override
   public RelDataType getRowType(RelDataTypeFactory typeFactory) {
-    // Stage 1: Iceberg → Coral
+    // Step 1: Iceberg → Coral
     StructType structType = (StructType) coralTable.getSchema();
 
-    // Stage 2: Coral → Calcite
+    // Step 2: Coral → Calcite
     return CoralTypeToRelDataTypeConverter.convert(structType, typeFactory);
   }
 
@@ -110,14 +106,5 @@ public class IcebergCalciteTableAdapter implements ScannableTable {
   @Override
   public Enumerable<Object[]> scan(DataContext root) {
     throw new RuntimeException("Calcite runtime execution is not supported");
-  }
-
-  /**
-   * Returns the underlying Iceberg Table for advanced operations.
-   *
-   * @return org.apache.iceberg.Table instance
-   */
-  public Table getIcebergTable() {
-    return coralTable.getIcebergTable();
   }
 }

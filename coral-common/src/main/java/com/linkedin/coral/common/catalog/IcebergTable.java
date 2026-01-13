@@ -20,10 +20,8 @@ import static com.google.common.base.Preconditions.*;
  * Implementation of {@link CoralTable} interface for Apache Iceberg tables.
  * This class wraps an Iceberg Table object and provides a unified
  * CoralTable API for accessing table metadata.
- *
- * Used by Calcite integration to dispatch to IcebergCalciteTableAdapter.
  */
-public class IcebergCoralTable implements CoralTable {
+public class IcebergTable implements CoralTable {
 
   private final Table table;
 
@@ -32,7 +30,7 @@ public class IcebergCoralTable implements CoralTable {
    *
    * @param table Iceberg Table object (must not be null)
    */
-  public IcebergCoralTable(Table table) {
+  public IcebergTable(Table table) {
     this.table = checkNotNull(table, "Iceberg table cannot be null");
   }
 
@@ -73,8 +71,9 @@ public class IcebergCoralTable implements CoralTable {
   }
 
   /**
-   * Returns the underlying Iceberg Table object.
-   * Used by Calcite integration layer (IcebergCalciteTableAdapter).
+   * INTERNAL API
+   * @deprecated This method is for internal use only and will be removed in a future release.
+   * Do not depend on this API.
    *
    * @return Iceberg Table object
    */

@@ -19,8 +19,8 @@ import org.apache.calcite.schema.*;
 
 import com.linkedin.coral.common.catalog.CoralCatalog;
 import com.linkedin.coral.common.catalog.CoralTable;
-import com.linkedin.coral.common.catalog.HiveCoralTable;
-import com.linkedin.coral.common.catalog.IcebergCoralTable;
+import com.linkedin.coral.common.catalog.HiveTable;
+import com.linkedin.coral.common.catalog.IcebergTable;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.linkedin.coral.common.catalog.TableType.VIEW;
@@ -28,27 +28,27 @@ import static com.linkedin.coral.common.catalog.TableType.VIEW;
 
 /**
  * Coral's database-level Calcite adapter for {@link CoralCatalog} integration.
- * 
+ *
  * <p>This is the modern iteration of Coral's database-level schema adapter that bridges
  * {@link CoralCatalog} to Calcite's {@link Schema} interface. It represents a specific database/namespace
  * and dispatches table lookups to the appropriate format-specific implementations.
- * 
+ *
  * <p><b>Multi-format Dispatch:</b> This class automatically dispatches to the correct table implementation
  * based on the underlying table format:
  * <ul>
- *   <li>{@link IcebergCalciteTableAdapter} for Iceberg tables ({@link IcebergCoralTable})</li>
- *   <li>{@link HiveCalciteTableAdapter} for Hive tables ({@link HiveCoralTable})</li>
- *   <li>{@link HiveCalciteViewAdapter} for Hive views ({@link HiveCoralTable} with VIEW type)</li>
+ *   <li>{@link IcebergCalciteTableAdapter} for Iceberg tables ({@link IcebergTable})</li>
+ *   <li>{@link HiveCalciteTableAdapter} for Hive tables ({@link HiveTable})</li>
+ *   <li>{@link HiveCalciteViewAdapter} for Hive views ({@link HiveTable} with VIEW type)</li>
  * </ul>
- * 
+ *
  * <p><b>Relationship to HiveDbSchema:</b>
  * <ul>
  *   <li>{@link CoralDatabaseSchema} (this class) - Modern CoralCatalog-based integration (new code)</li>
  *   <li>{@link HiveDbSchema} - Legacy dual-mode adapter supporting both CoralCatalog and HiveMetastoreClient (backward compatibility)</li>
  * </ul>
- * 
+ *
  * <p><b>Usage:</b> This class is instantiated by {@link CoralRootSchema} when a database subschema is requested.
- * 
+ *
  * @see CoralRootSchema Root-level adapter (contains databases)
  * @see HiveDbSchema Legacy adapter with HiveMetastoreClient support
  * @see CoralCatalog Unified catalog interface
@@ -76,14 +76,14 @@ public class CoralDatabaseSchema implements Schema {
 
   /**
    * Returns a Calcite Table for the specified table name.
-   * 
+   *
    * <p>This method performs format-aware dispatch:
    * <ul>
    *   <li>Iceberg tables → {@link IcebergCalciteTableAdapter}</li>
    *   <li>Hive views → {@link HiveCalciteViewAdapter}</li>
    *   <li>Hive tables → {@link HiveCalciteTableAdapter}</li>
    * </ul>
-   * 
+   *
    * @param name Table name
    * @return Calcite Table implementation, or null if table doesn't exist
    */
@@ -95,15 +95,15 @@ public class CoralDatabaseSchema implements Schema {
     }
 
     // Dispatch based on CoralTable implementation type
-    if (coralTable instanceof IcebergCoralTable) {
-      return new IcebergCalciteTableAdapter((IcebergCoralTable) coralTable);
-    } else if (coralTable instanceof HiveCoralTable) {
-      HiveCoralTable hiveCoralTable = (HiveCoralTable) coralTable;
+    if (coralTable instanceof IcebergTable) {
+      return new IcebergCalciteTableAdapter((IcebergTable) coralTable);
+    } else if (coralTable instanceof HiveTable) {
+      HiveTable hiveTable = (HiveTable) coralTable;
       // Check if it's a view
-      if (hiveCoralTable.tableType() == VIEW) {
-        return new HiveCalciteViewAdapter(hiveCoralTable, ImmutableList.of(CoralRootSchema.ROOT_SCHEMA, dbName));
+      if (hiveTable.tableType() == VIEW) {
+        return new HiveCalciteViewAdapter(hiveTable, ImmutableList.of(CoralRootSchema.ROOT_SCHEMA, dbName));
       } else {
-        return new HiveCalciteTableAdapter(hiveCoralTable);
+        return new HiveCalciteTableAdapter(hiveTable);
       }
     }
 
@@ -112,7 +112,7 @@ public class CoralDatabaseSchema implements Schema {
 
   /**
    * Returns all table names in this database.
-   * 
+   *
    * @return Set of table names
    */
   @Override
@@ -142,7 +142,7 @@ public class CoralDatabaseSchema implements Schema {
 
   /**
    * A database does not have subschemas.
-   * 
+   *
    * @param name Subschema name
    * @return null (databases don't have subschemas)
    */

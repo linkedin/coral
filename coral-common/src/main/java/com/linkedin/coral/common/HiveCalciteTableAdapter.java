@@ -40,7 +40,7 @@ import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.linkedin.coral.common.catalog.HiveCoralTable;
+import com.linkedin.coral.common.catalog.HiveTable;
 import com.linkedin.coral.common.types.CoralDataType;
 import com.linkedin.coral.common.types.CoralTypeToRelDataTypeConverter;
 import com.linkedin.coral.common.types.StructField;
@@ -117,7 +117,7 @@ public class HiveCalciteTableAdapter implements ScannableTable {
    * Constructor accepting HiveCoralTable for unified catalog integration.
    * @param coralTable HiveCoralTable from catalog
    */
-  public HiveCalciteTableAdapter(HiveCoralTable coralTable) {
+  public HiveCalciteTableAdapter(HiveTable coralTable) {
     Preconditions.checkNotNull(coralTable);
     this.hiveTable = coralTable.getHiveTable();
   }

@@ -29,10 +29,8 @@ import static com.google.common.base.Preconditions.*;
  * Implementation of {@link CoralTable} interface for Hive tables.
  * This class wraps a Hive metastore Table object and provides
  * a unified CoralTable API for accessing table metadata.
- *
- * Used by Calcite integration to dispatch to HiveCalciteTableAdapter.
  */
-public class HiveCoralTable implements CoralTable {
+public class HiveTable implements CoralTable {
 
   private final Table table;
 
@@ -41,7 +39,7 @@ public class HiveCoralTable implements CoralTable {
    *
    * @param table Hive metastore Table object (must not be null)
    */
-  public HiveCoralTable(Table table) {
+  public HiveTable(Table table) {
     this.table = checkNotNull(table, "Hive table cannot be null");
   }
 
@@ -84,8 +82,9 @@ public class HiveCoralTable implements CoralTable {
   }
 
   /**
-   * Returns the underlying Hive Table object.
-   * Used by Calcite integration layer (HiveCalciteTableAdapter).
+   * INTERNAL API
+   * @deprecated This method is for internal use only and will be removed in a future release.
+   * Do not depend on this API.
    *
    * @return Hive metastore Table object
    */
@@ -106,7 +105,6 @@ public class HiveCoralTable implements CoralTable {
     final List<StructField> fields = new ArrayList<>();
     final List<String> fieldNames = new ArrayList<>();
 
-    // Combine regular columns and partition keys (same as HiveCalciteTableAdapter.getCoralSchema)
     final Iterable<FieldSchema> allCols = Iterables.concat(cols, table.getPartitionKeys());
 
     for (FieldSchema col : allCols) {

@@ -28,29 +28,29 @@ public interface CoralCatalog {
    * This method returns a unified CoralTable abstraction that works
    * across different table formats (Hive, Iceberg, etc.).
    *
-   * @param namespaceName Namespace (database) name
+   * @param namespace Namespace (database) name
    * @param tableName Table name
    * @return CoralTable object representing the table, or null if not found
    */
-  CoralTable getTable(String namespaceName, String tableName);
+  CoralTable getTable(String namespace, String tableName);
 
   /**
    * Checks if a namespace (database) exists in the catalog.
    * This provides a lightweight way to verify namespace existence
    * without retrieving full metadata.
    *
-   * @param namespaceName Namespace (database) name
+   * @param namespace Namespace (database) name
    * @return true if the namespace exists, false otherwise
    */
-  boolean namespaceExists(String namespaceName);
+  boolean namespaceExists(String namespace);
 
   /**
    * Retrieves all table (table/view) names in a namespace.
    *
-   * @param namespaceName Namespace (database) name
+   * @param namespace Namespace (database) name
    * @return List of table names in the namespace, empty list if namespace doesn't exist
    */
-  List<String> getAllTables(String namespaceName);
+  List<String> getAllTables(String namespace);
 
   /**
    * Retrieves all namespace (database) names accessible through this catalog.

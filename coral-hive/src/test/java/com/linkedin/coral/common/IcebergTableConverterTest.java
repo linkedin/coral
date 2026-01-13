@@ -20,7 +20,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import com.linkedin.coral.common.catalog.CoralTable;
-import com.linkedin.coral.common.catalog.IcebergCoralTable;
+import com.linkedin.coral.common.catalog.IcebergTable;
 import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
 
 import static org.mockito.Mockito.*;
@@ -45,9 +45,9 @@ public class IcebergTableConverterTest {
 
     // Create mock Iceberg table with timestamp(6) column using Mockito
     org.apache.iceberg.Table mockIcebergTable = createMockIcebergTable();
-    IcebergCoralTable icebergCoralTable = new IcebergCoralTable(mockIcebergTable);
+    IcebergTable icebergTable = new IcebergTable(mockIcebergTable);
 
-    testCatalog.addTable(TEST_DB, TEST_TABLE, icebergCoralTable);
+    testCatalog.addTable(TEST_DB, TEST_TABLE, icebergTable);
 
     // Create converter with test catalog
     converter = new HiveToRelConverter(testCatalog);
@@ -126,7 +126,7 @@ public class IcebergTableConverterTest {
     CoralTable coralTable = testCatalog.getTable(TEST_DB, TEST_TABLE);
 
     assertNotNull(coralTable, "CoralTable should not be null");
-    assertTrue(coralTable instanceof IcebergCoralTable, "CoralTable should be IcebergCoralTable");
+    assertTrue(coralTable instanceof IcebergTable, "CoralTable should be IcebergCoralTable");
 
     // Verify table metadata
     assertEquals(coralTable.name(), TEST_DB + "." + TEST_TABLE);
@@ -149,8 +149,8 @@ public class IcebergTableConverterTest {
     }
 
     @Override
-    public CoralTable getTable(String namespaceName, String tableName) {
-      Map<String, CoralTable> tables = namespaces.get(namespaceName);
+    public CoralTable getTable(String namespace, String tableName) {
+      Map<String, CoralTable> tables = namespaces.get(namespace);
       return tables != null ? tables.get(tableName) : null;
     }
 
