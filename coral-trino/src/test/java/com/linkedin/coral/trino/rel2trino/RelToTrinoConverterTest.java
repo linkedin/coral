@@ -542,8 +542,8 @@ public class RelToTrinoConverterTest {
   @Test
   public void testCurrentTimestamp() {
     String sql = "SELECT current_timestamp";
-    String expected =
-        formatSql("SELECT CAST(CURRENT_TIMESTAMP AS TIMESTAMP(3))\nFROM (VALUES  (0)) AS \"t\" (\"ZERO\")");
+    String expected = formatSql(
+        "SELECT CAST(CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AS TIMESTAMP(3))\nFROM (VALUES  (0)) AS \"t\" (\"ZERO\")");
     testConversion(sql, expected);
   }
 
