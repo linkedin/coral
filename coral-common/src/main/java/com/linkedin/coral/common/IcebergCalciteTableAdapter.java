@@ -34,6 +34,20 @@ import com.linkedin.coral.common.types.StructType;
  *
  * <p>This class uses IcebergCoralTable to access Iceberg table metadata and converts
  * through the Coral type system for better abstraction and consistency with HiveCalciteTableAdapter.
+ *
+ * <p><b>Integration with ParseTreeBuilder and HiveFunctionResolver:</b> While this adapter itself
+ * doesn't provide Dali UDF methods, Iceberg tables with UDF metadata still need to work with
+ * {@code ParseTreeBuilder} and {@code HiveFunctionResolver}, which are currently tightly coupled to
+ * {@link org.apache.hadoop.hive.metastore.api.Table}. The temporary workaround is
+ * {@link com.linkedin.coral.common.catalog.IcebergHiveTableConverter}, which converts Iceberg tables
+ * to Hive Table objects for UDF resolution.
+ *
+ * <p>This coupling is being addressed in <a href="https://github.com/linkedin/coral/issues/575">issue #575</a>,
+ * which will refactor {@code ParseTreeBuilder} and {@code HiveFunctionResolver} to accept
+ * {@link com.linkedin.coral.common.catalog.CoralTable} instead, enabling direct Iceberg support without conversion.
+ *
+ * @see com.linkedin.coral.common.catalog.IcebergHiveTableConverter
+ * @see <a href="https://github.com/linkedin/coral/issues/575">Issue #575: Refactor ParseTreeBuilder to Use CoralTable</a>
  */
 public class IcebergCalciteTableAdapter implements ScannableTable {
 

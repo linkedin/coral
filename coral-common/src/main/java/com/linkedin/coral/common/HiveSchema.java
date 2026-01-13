@@ -27,8 +27,24 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * to Calcite {@link Schema}. This class represents the "root" schema
  * that holds all hive databases as subschema and no tables.
  *
- * Can use either CoralCatalog for unified access to different table formats
- * or HiveMetastoreClient for Hive-specific access.
+ * <p><b>LEGACY API:</b> This class exists for backward compatibility with existing code
+ * that uses {@link HiveMetastoreClient} directly. For new code, prefer {@link CoralRootSchema}
+ * which integrates with the unified {@link com.linkedin.coral.common.catalog.CoralCatalog} API
+ * and supports multiple table formats (Hive, Iceberg, etc.) without Hive-specific coupling.
+ *
+ * <p><b>Migration Path:</b>
+ * <ul>
+ *   <li><b>Legacy:</b> {@link HiveSchema} (this class) → {@link HiveDbSchema} → {@link HiveCalciteTableAdapter}</li>
+ *   <li><b>Modern:</b> {@link CoralRootSchema} → {@link CoralDatabaseSchema} → Format-specific adapters</li>
+ * </ul>
+ *
+ * <p><b>Future:</b> As part of <a href="https://github.com/linkedin/coral/issues/575">issue #575</a>,
+ * this class will be evaluated for deprecation/cleanup once all clients migrate to {@link CoralRootSchema}
+ * and the {@link com.linkedin.coral.common.catalog.CoralCatalog} API.
+ *
+ * @see CoralRootSchema Modern replacement with CoralCatalog integration
+ * @see HiveDbSchema Legacy database-level schema
+ * @see <a href="https://github.com/linkedin/coral/issues/575">Issue #575: Refactor ParseTreeBuilder to Use CoralTable</a>
  */
 public class HiveSchema implements Schema {
 

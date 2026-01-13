@@ -19,8 +19,9 @@ import com.linkedin.coral.common.types.*;
  * Converts Iceberg Schema and Types to Coral data types.
  * This is the first stage of the two-stage conversion: Iceberg → Coral → Calcite.
  *
- * Mirrors the structure of IcebergTypeConverter but converts to Coral types
- * instead of directly to Calcite RelDataType, enabling better type system abstraction.
+ * This converter provides a unified type system abstraction by converting Iceberg types
+ * to Coral's intermediate type representation, which can then be converted to Calcite
+ * RelDataType using {@link com.linkedin.coral.common.types.CoralTypeToRelDataTypeConverter}.
  */
 public class IcebergToCoralTypeConverter {
 
@@ -50,7 +51,6 @@ public class IcebergToCoralTypeConverter {
 
   /**
    * Main dispatcher - converts Iceberg Type to Coral CoralDataType based on type category.
-   * Similar to IcebergTypeConverter.convert(Type, RelDataTypeFactory).
    *
    * @param icebergType Iceberg type
    * @param nullable Whether this type instance is nullable

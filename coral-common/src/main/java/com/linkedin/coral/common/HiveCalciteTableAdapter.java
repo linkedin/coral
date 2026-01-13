@@ -54,8 +54,23 @@ import com.linkedin.coral.common.types.StructType;
  * into Calcite's {@link ScannableTable}, enabling Hive tables to be queried through Calcite's
  * SQL processing engine.
  *
+ * <p><b>Integration with ParseTreeBuilder and HiveFunctionResolver:</b> This class provides critical
+ * Dali UDF metadata extraction methods ({@link #getDaliFunctionParams()} and {@link #getDaliUdfDependencies()})
+ * that are tightly coupled to {@link org.apache.hadoop.hive.metastore.api.Table} and used by:
+ * <ul>
+ *   <li>{@code HiveFunctionResolver} - for resolving Dali function names to implementing classes</li>
+ *   <li>{@code ParseTreeBuilder} - for parsing view definitions with UDF metadata</li>
+ * </ul>
+ *
+ * <p>These components currently require {@link org.apache.hadoop.hive.metastore.api.Table} and cannot
+ * work directly with {@link com.linkedin.coral.common.catalog.CoralTable}. This tight coupling is being
+ * addressed in <a href="https://github.com/linkedin/coral/issues/575">issue #575</a>, which will refactor
+ * these APIs to accept {@code CoralTable} instead, enabling multi-format support (Hive, Iceberg, etc.).
+ *
  * <p>Implementing this as a ScannableTable, instead of Table, is hacky approach to make calcite
  * correctly generate relational algebra. This will have to go away gradually.
+ *
+ * @see <a href="https://github.com/linkedin/coral/issues/575">Issue #575: Refactor ParseTreeBuilder to Use CoralTable</a>
  */
 public class HiveCalciteTableAdapter implements ScannableTable {
 

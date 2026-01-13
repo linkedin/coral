@@ -26,6 +26,18 @@ import static org.apache.calcite.sql.type.SqlTypeName.*;
  *
  * <p>This adapter enables Calcite to process Hive views by implementing the TranslatableTable interface,
  * which allows the view definition to be expanded and converted into a relational algebra tree.
+ *
+ * <p><b>Integration with ParseTreeBuilder:</b> This class inherits the Dali UDF metadata extraction
+ * methods from {@link HiveCalciteTableAdapter}, which are used by {@code ParseTreeBuilder} and
+ * {@code HiveFunctionResolver} for parsing view definitions with custom functions. These components
+ * are currently tightly coupled to {@link org.apache.hadoop.hive.metastore.api.Table} and cannot
+ * work directly with {@link com.linkedin.coral.common.catalog.CoralTable}.
+ *
+ * <p>This coupling is being addressed in <a href="https://github.com/linkedin/coral/issues/575">issue #575</a>,
+ * which will refactor these APIs to accept {@code CoralTable} instead, enabling multi-format support.
+ *
+ * @see HiveCalciteTableAdapter
+ * @see <a href="https://github.com/linkedin/coral/issues/575">Issue #575: Refactor ParseTreeBuilder to Use CoralTable</a>
  */
 public class HiveCalciteViewAdapter extends HiveCalciteTableAdapter implements TranslatableTable {
   private final List<String> schemaPath;
