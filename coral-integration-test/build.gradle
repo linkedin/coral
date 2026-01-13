@@ -1,0 +1,115 @@
+// Copyright 2019-2020 LinkedIn Corporation. All rights reserved.
+// Licensed under the BSD-2 Clause license.
+// See LICENSE in the project root for license information.
+
+apply plugin: 'java'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+def jacksonVersion = '2.15.3'  // Use a consistent version
+
+dependencies {
+
+  implementation "com.fasterxml.jackson.core:jackson-core:${jacksonVersion}"
+  implementation "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
+  implementation "com.fasterxml.jackson.core:jackson-annotations:${jacksonVersion}"
+  implementation "com.fasterxml.jackson.module:jackson-module-scala_2.12:${jacksonVersion}"
+
+  // Coral dependencies
+  testCompile project(':coral-hive')
+  testCompile project(':coral-spark')
+  testCompile project(':coral-schema')
+  testCompile project(':coral-trino')
+
+  // Spark3 dependencies
+  testCompile(deps.'spark3'.'hive') {
+    exclude group: 'com.fasterxml.jackson.core', module: 'jackson-databind'
+    exclude group: 'com.fasterxml.jackson.core', module: 'jackson-core'
+    exclude group: 'com.fasterxml.jackson.core', module: 'jackson-annotations'
+  }
+
+  // Hive Metastore 2.0 dependencies
+  testCompile(deps.'hive2'.'hive-metastore') {
+    exclude group: 'org.apache.calcite', module: 'calcite-core'
+    exclude group: 'org.apache.calcite', module: 'calcite-avatica'
+    exclude group: 'org.apache.avro', module: 'avro-tools'
+    exclude group: 'com.fasterxml.jackson.core', module: 'jackson-databind'
+    exclude group: 'com.fasterxml.jackson.core', module: 'jackson-core'
+    exclude group: 'com.fasterxml.jackson.core', module: 'jackson-annotations'
+  }
+  testCompile(deps.'hive2'.'hive-exec-core') {
+    exclude group: 'org.apache.calcite', module: 'calcite-core'
+    exclude group: 'org.apache.calcite', module: 'calcite-avatica'
+    exclude group: 'org.apache.avro', module: 'avro-tools'
+    exclude group: 'com.fasterxml.jackson.core', module: 'jackson-databind'
+    exclude group: 'com.fasterxml.jackson.core', module: 'jackson-core'
+    exclude group: 'com.fasterxml.jackson.core', module: 'jackson-annotations'
+  }
+
+  // Iceberg dependencies
+  testCompile(deps.'iceberg'.'iceberg-core') {
+    exclude group: 'com.fasterxml.jackson.core', module: 'jackson-databind'
+    exclude group: 'com.fasterxml.jackson.core', module: 'jackson-core'
+    exclude group: 'com.fasterxml.jackson.core', module: 'jackson-annotations'
+  }
+  testCompile(deps.'iceberg'.'iceberg-spark') {
+    exclude group: 'com.fasterxml.jackson.core', module: 'jackson-databind'
+    exclude group: 'com.fasterxml.jackson.core', module: 'jackson-core'
+    exclude group: 'com.fasterxml.jackson.core', module: 'jackson-annotations'
+  }
+  testCompile(deps.'iceberg'.'iceberg-hive-metastore') {
+    exclude group: 'com.fasterxml.jackson.core', module: 'jackson-databind'
+    exclude group: 'com.fasterxml.jackson.core', module: 'jackson-core'
+    exclude group: 'com.fasterxml.jackson.core', module: 'jackson-annotations'
+  }
+  // Add Iceberg test utilities for TestHiveMetastore
+  testCompile(deps.'iceberg'.'iceberg-hive-metastore' + ':tests') {
+    exclude group: 'com.fasterxml.jackson.core', module: 'jackson-databind'
+    exclude group: 'com.fasterxml.jackson.core', module: 'jackson-core'
+    exclude group: 'com.fasterxml.jackson.core', module: 'jackson-annotations'
+  }
+
+  // Hadoop dependencies
+  testCompile deps.'hadoop'.'hadoop-common'
+  testCompile deps.'hadoop'.'hadoop-mapreduce-client-core'
+
+  // Additional test dependencies
+  testCompile 'org.apache.derby:derby:10.14.2.0'
+  testCompile 'org.slf4j:slf4j-api:1.7.30'
+  testCompile 'org.slf4j:slf4j-log4j12:1.7.30'
+
+  // Force consistent Jackson version (Spark 3.1.1 uses 2.10.0)
+  testCompile 'com.fasterxml.jackson.core:jackson-databind:2.10.0'
+  testCompile 'com.fasterxml.jackson.core:jackson-core:2.10.0'
+  testCompile 'com.fasterxml.jackson.core:jackson-annotations:2.10.0'
+  testCompile 'com.fasterxml.jackson.module:jackson-module-scala_2.12:2.10.0'
+  testCompile 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.10.0'
+}
+
+// Needs to enforce using compatible versions
+configurations.all {
+  resolutionStrategy {
+    force 'org.apache.avro:avro:1.10.2'
+    force 'com.google.guava:guava:27.0-jre'
+    // Force Jackson 2.10.0 - Spark 3.1.1 default version
+    force 'com.fasterxml.jackson.core:jackson-databind:2.10.0'
+    force 'com.fasterxml.jackson.core:jackson-core:2.10.0'
+    force 'com.fasterxml.jackson.core:jackson-annotations:2.10.0'
+    force 'com.fasterxml.jackson.module:jackson-module-scala_2.12:2.10.0'
+    force 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.10.0'
+  }
+}
+
+test {
+  systemProperty 'derby.stream.error.file', 'build/derby.log'
+  systemProperty 'java.io.tmpdir', 'build/tmp'
+
+  // Run tests sequentially to avoid resource contention
+  maxParallelForks = 1
+
+  testLogging {
+    events "passed", "skipped", "failed"
+    exceptionFormat "full"
+  }
+}

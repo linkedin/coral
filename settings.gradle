@@ -3,6 +3,7 @@ def modules = [
   'coral-dbt',
   'coral-hive',
   'coral-incremental',
+  'coral-integration-test',
   'coral-pig',
   'coral-spark',
   'coral-schema',
