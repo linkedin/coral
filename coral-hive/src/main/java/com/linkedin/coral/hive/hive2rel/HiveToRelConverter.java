@@ -57,8 +57,8 @@ public class HiveToRelConverter extends ToRelConverter {
 
   /**
    * Constructor accepting HiveMetastoreClient for backward compatibility.
-   *
    * @param hiveMetastoreClient Hive metastore client
+   * @deprecated Use {@link #HiveToRelConverter(CoralCatalog)} instead.
    */
   @Deprecated
   public HiveToRelConverter(HiveMetastoreClient hiveMetastoreClient) {

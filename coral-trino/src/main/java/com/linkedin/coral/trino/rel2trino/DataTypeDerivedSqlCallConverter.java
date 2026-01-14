@@ -39,18 +39,15 @@ public class DataTypeDerivedSqlCallConverter extends SqlShuttle {
   private final HiveToRelConverter toRelConverter;
 
   public DataTypeDerivedSqlCallConverter(HiveMetastoreClient mscClient, SqlNode topSqlNode) {
-    toRelConverter = new HiveToRelConverter(mscClient);
-    topSqlNode.accept(new RegisterDynamicFunctionsForTypeDerivation());
-
-    TypeDerivationUtil typeDerivationUtil = new TypeDerivationUtil(toRelConverter.getSqlValidator(), topSqlNode);
-    operatorTransformerList = SqlCallTransformers.of(new FromUtcTimestampOperatorTransformer(typeDerivationUtil),
-        new GenericProjectTransformer(typeDerivationUtil), new NamedStructToCastTransformer(typeDerivationUtil),
-        new ConcatOperatorTransformer(typeDerivationUtil), new SubstrOperatorTransformer(typeDerivationUtil),
-        new CastOperatorTransformer(typeDerivationUtil), new UnionSqlCallTransformer(typeDerivationUtil));
+    this(new HiveToRelConverter(mscClient), topSqlNode);
   }
 
   public DataTypeDerivedSqlCallConverter(CoralCatalog coralCatalog, SqlNode topSqlNode) {
-    toRelConverter = new HiveToRelConverter(coralCatalog);
+    this(new HiveToRelConverter(coralCatalog), topSqlNode);
+  }
+
+  private DataTypeDerivedSqlCallConverter(HiveToRelConverter toRelConverter, SqlNode topSqlNode) {
+    this.toRelConverter = toRelConverter;
     topSqlNode.accept(new RegisterDynamicFunctionsForTypeDerivation());
 
     TypeDerivationUtil typeDerivationUtil = new TypeDerivationUtil(toRelConverter.getSqlValidator(), topSqlNode);
