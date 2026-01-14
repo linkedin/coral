@@ -62,6 +62,13 @@ public class RelToTrinoConverter extends RelToSqlConverter {
    * Creates a RelToTrinoConverter.
    * @param mscClient client interface used to interact with the Hive Metastore service.
    */
+  /**
+   * Creates a RelToTrinoConverter.
+   * @param mscClient client interface used to interact with the Hive Metastore service.
+   *
+   * @deprecated Use {@link #RelToTrinoConverter(CoralCatalog)} instead.
+   */
+  @Deprecated
   public RelToTrinoConverter(HiveMetastoreClient mscClient) {
     super(CoralRelToSqlNodeConverter.INSTANCE);
     _hiveMetastoreClient = mscClient;
@@ -77,6 +84,8 @@ public class RelToTrinoConverter extends RelToSqlConverter {
    * Creates a RelToTrinoConverter.
    * @param mscClient client interface used to interact with the Hive Metastore service.
    * @param configs configs
+   *
+   * @deprecated Use {@link #RelToTrinoConverter(CoralCatalog)} instead.
    */
   public RelToTrinoConverter(HiveMetastoreClient mscClient, Map<String, Boolean> configs) {
     super(CoralRelToSqlNodeConverter.INSTANCE);

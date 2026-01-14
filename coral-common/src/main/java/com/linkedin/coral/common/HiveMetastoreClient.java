@@ -24,35 +24,11 @@ import org.apache.hadoop.hive.metastore.api.Table;
 @Deprecated
 public interface HiveMetastoreClient {
 
-  /**
-   * Retrieves all database names from the metastore.
-   *
-   * @return List of database names
-   */
   List<String> getAllDatabases();
 
-  /**
-   * Retrieves database metadata by name.
-   *
-   * @param dbName Database name
-   * @return Database object, or null if not found
-   */
   Database getDatabase(String dbName);
 
-  /**
-   * Retrieves all table names in a database.
-   *
-   * @param dbName Database name
-   * @return List of table names
-   */
   List<String> getAllTables(String dbName);
 
-  /**
-   * Retrieves a table by database and table name.
-   *
-   * @param dbName Database name
-   * @param tableName Table name
-   * @return Hive Table object, or null if not found
-   */
   Table getTable(String dbName, String tableName);
 }

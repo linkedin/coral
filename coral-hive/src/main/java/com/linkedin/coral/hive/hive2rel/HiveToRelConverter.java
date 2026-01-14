@@ -57,9 +57,10 @@ public class HiveToRelConverter extends ToRelConverter {
 
   /**
    * Constructor accepting HiveMetastoreClient for backward compatibility.
-   * 
+   *
    * @param hiveMetastoreClient Hive metastore client
    */
+  @Deprecated
   public HiveToRelConverter(HiveMetastoreClient hiveMetastoreClient) {
     super(hiveMetastoreClient);
     this.parseTreeBuilder = new ParseTreeBuilder(functionResolver);
@@ -68,7 +69,7 @@ public class HiveToRelConverter extends ToRelConverter {
   /**
    * Constructor accepting CoralCatalog for unified catalog access.
    * This allows using Iceberg and other catalog implementations.
-   * 
+   *
    * @param catalog Coral catalog providing unified access to tables
    */
   public HiveToRelConverter(CoralCatalog catalog) {
@@ -76,11 +77,6 @@ public class HiveToRelConverter extends ToRelConverter {
     this.parseTreeBuilder = new ParseTreeBuilder(functionResolver);
   }
 
-  /**
-   * Constructor for local metastore (testing/development).
-   * 
-   * @param localMetaStore Local metastore map
-   */
   public HiveToRelConverter(Map<String, Map<String, List<String>>> localMetaStore) {
     super(localMetaStore);
     this.parseTreeBuilder = new ParseTreeBuilder(functionResolver);

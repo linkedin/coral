@@ -77,9 +77,10 @@ public abstract class ToRelConverter {
 
   /**
    * Constructor for backward compatibility with HiveMetastoreClient.
-   *
+   * @deprecated Use {@link #ToRelConverter(CoralCatalog)} instead.
    * @param hiveMetastoreClient Hive metastore client
    */
+  @Deprecated
   protected ToRelConverter(@Nonnull HiveMetastoreClient hiveMetastoreClient) {
     checkNotNull(hiveMetastoreClient);
     this.msc = hiveMetastoreClient;
@@ -121,11 +122,6 @@ public abstract class ToRelConverter {
 
   }
 
-  /**
-   * Constructor for local metastore (testing/development).
-   *
-   * @param localMetaStore Local metastore map
-   */
   protected ToRelConverter(Map<String, Map<String, List<String>>> localMetaStore) {
     this.coralCatalog = null;
     this.msc = null;
@@ -185,7 +181,7 @@ public abstract class ToRelConverter {
   @VisibleForTesting
   public SqlNode processView(String dbName, String tableName) {
     if (coralCatalog != null) {
-      return processViewWithCatalog(dbName, tableName);
+      return processViewWithCoralCatalog(dbName, tableName);
     } else if (msc != null) {
       return processViewWithMsc(dbName, tableName);
     } else {
@@ -196,7 +192,7 @@ public abstract class ToRelConverter {
   /**
    * Processes a table/view using CoralCatalog (supports Hive and Iceberg tables).
    */
-  private SqlNode processViewWithCatalog(String dbName, String tableName) {
+  private SqlNode processViewWithCoralCatalog(String dbName, String tableName) {
     CoralTable coralTable = coralCatalog.getTable(dbName, tableName);
     if (coralTable == null) {
       throw new RuntimeException("Table/view not found: " + dbName + "." + tableName);
@@ -224,6 +220,8 @@ public abstract class ToRelConverter {
       // Convert Iceberg coral table to minimal Hive Table for backward compatibility
       // This is needed because downstream code (ParseTreeBuilder, HiveFunctionResolver)
       // expects a Hive Table object for Dali UDF resolution
+      // In the future: As part of <a href="https://github.com/linkedin/coral/issues/575">issue #575</a>,
+      // this conversion will no longer be needed and should be removed
       table = IcebergHiveTableConverter.toHiveTable(icebergTable);
       stringViewExpandedText = "SELECT * FROM " + dbName + "." + tableName;
     } else {

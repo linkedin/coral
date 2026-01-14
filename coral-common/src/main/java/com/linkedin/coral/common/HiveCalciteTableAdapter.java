@@ -211,10 +211,10 @@ public class HiveCalciteTableAdapter implements ScannableTable {
    * This is the preferred path when using CoralCatalog.
    */
   private RelDataType getRowTypeFromCoralType(RelDataTypeFactory typeFactory) {
-    // Stage 1: Hive → Coral
+    // Step 1: Hive → Coral
     StructType structType = (StructType) getCoralSchema();
 
-    // Stage 2: Coral → Calcite
+    // Step 2: Coral → Calcite
     return CoralTypeToRelDataTypeConverter.convert(structType, typeFactory);
   }
 
