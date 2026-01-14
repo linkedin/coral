@@ -1,5 +1,5 @@
 /**
- * Copyright 2018-2024 LinkedIn Corporation. All rights reserved.
+ * Copyright 2018-2026 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -30,7 +30,7 @@ import org.apache.hadoop.hive.metastore.api.Table;
 
 import com.linkedin.coral.com.google.common.base.Preconditions;
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
-import com.linkedin.coral.common.HiveTable;
+import com.linkedin.coral.common.HiveCalciteTableAdapter;
 import com.linkedin.coral.common.functions.Function;
 import com.linkedin.coral.common.functions.FunctionRegistry;
 import com.linkedin.coral.common.functions.UnknownSqlFunctionException;
@@ -179,7 +179,7 @@ public class HiveFunctionResolver {
       functionPrefix = "";
     }
     String funcBaseName = originalViewTextFunctionName.substring(functionPrefix.length());
-    HiveTable hiveTable = new HiveTable(table);
+    HiveCalciteTableAdapter hiveTable = new HiveCalciteTableAdapter(table);
     Map<String, String> functionParams = hiveTable.getDaliFunctionParams();
     String functionClassName = functionParams.get(funcBaseName);
     if (functionClassName == null) {
@@ -215,7 +215,7 @@ public class HiveFunctionResolver {
   }
 
   private @Nonnull Collection<Function> resolveDaliFunctionDynamically(String originalViewTextFunctionName,
-      String functionClassName, HiveTable hiveTable, int numOfOperands) {
+      String functionClassName, HiveCalciteTableAdapter hiveTable, int numOfOperands) {
     if (dynamicFunctionRegistry.contains(functionClassName)) {
       return ImmutableList.of(dynamicFunctionRegistry.get(originalViewTextFunctionName));
     }

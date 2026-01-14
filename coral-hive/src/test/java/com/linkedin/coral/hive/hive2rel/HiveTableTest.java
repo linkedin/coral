@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2026 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -28,9 +28,9 @@ import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import com.linkedin.coral.common.HiveCalciteTableAdapter;
 import com.linkedin.coral.common.HiveMscAdapter;
 import com.linkedin.coral.common.HiveSchema;
-import com.linkedin.coral.common.HiveTable;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -130,14 +130,14 @@ public class HiveTableTest {
   public void testGetDaliFunctionParams() throws HiveException, TException {
     {
       // empty params
-      HiveTable fooTable = getAsHiveTable("default", "foo");
+      HiveCalciteTableAdapter fooTable = getAsHiveTable("default", "foo");
       Map<String, String> params = fooTable.getDaliFunctionParams();
       assertNotNull(params);
       assertEquals(params.size(), 0);
     }
     {
       // just one entry
-      HiveTable fooViewTable = getAsHiveTable("default", "foo_view");
+      HiveCalciteTableAdapter fooViewTable = getAsHiveTable("default", "foo_view");
       Map<String, String> params = fooViewTable.getDaliFunctionParams();
       assertNotNull(params);
       assertEquals(params.size(), 1);
@@ -153,7 +153,7 @@ public class HiveTableTest {
       TestUtils.setOrUpdateDaliFunction(complexHiveTable, "functionTwo", "com.linkedin.functionTwo");
       msc.alter_table("default", "complex", complexHiveTable);
       try {
-        HiveTable complexTable = getAsHiveTable("default", "complex");
+        HiveCalciteTableAdapter complexTable = getAsHiveTable("default", "complex");
 
         Map<String, String> params = complexTable.getDaliFunctionParams();
         assertEquals(params.size(), 2);
@@ -167,10 +167,10 @@ public class HiveTableTest {
     }
   }
 
-  private HiveTable getAsHiveTable(String db, String table) {
+  private HiveCalciteTableAdapter getAsHiveTable(String db, String table) {
     Table t = getTable(db, table);
-    assertTrue(t instanceof HiveTable);
-    return ((HiveTable) t);
+    assertTrue(t instanceof HiveCalciteTableAdapter);
+    return ((HiveCalciteTableAdapter) t);
   }
 
   /**

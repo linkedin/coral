@@ -1,5 +1,5 @@
 /**
- * Copyright 2024-2025 LinkedIn Corporation. All rights reserved.
+ * Copyright 2024-2026 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -42,6 +42,15 @@ public final class CoralTypeToRelDataTypeConverter {
       } else {
         // No precision specified - matches TypeConverter behavior
         relType = factory.createSqlType(SqlTypeName.TIMESTAMP);
+      }
+    } else if (type instanceof BinaryType) {
+      BinaryType bin = (BinaryType) type;
+      // Handle fixed-length vs unbounded binary
+      if (bin.isFixedLength()) {
+        relType = factory.createSqlType(SqlTypeName.BINARY, bin.getLength());
+      } else {
+        // Unbounded/variable-length
+        relType = factory.createSqlType(SqlTypeName.BINARY);
       }
     } else if (type instanceof DecimalType) {
       DecimalType dec = (DecimalType) type;

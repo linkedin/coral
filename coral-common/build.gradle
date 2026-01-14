@@ -16,4 +16,12 @@ dependencies {
   }
 
   compile deps.'hadoop'.'hadoop-common'
+
+  // LinkedIn Iceberg dependencies
+  compile deps.'linkedin-iceberg'.'iceberg-api'
+  compile deps.'linkedin-iceberg'.'iceberg-core'
+  compile(deps.'linkedin-iceberg'.'iceberg-hive-metastore') {
+    exclude group: 'org.apache.hive', module: 'hive-metastore'
+    exclude group: 'org.apache.hadoop', module: 'hadoop-common'
+  }
 }
