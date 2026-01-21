@@ -209,14 +209,14 @@ public class HiveFunctionResolver {
   }
 
   public void addDynamicFunctionToTheRegistry(String functionClassName, Function function) {
-    if (!dynamicFunctionRegistry.contains(functionClassName)) {
+    if (!dynamicFunctionRegistry.containsKey(functionClassName)) {
       dynamicFunctionRegistry.put(functionClassName, function);
     }
   }
 
   private @Nonnull Collection<Function> resolveDaliFunctionDynamically(String originalViewTextFunctionName,
       String functionClassName, HiveTable hiveTable, int numOfOperands) {
-    if (dynamicFunctionRegistry.contains(functionClassName)) {
+    if (dynamicFunctionRegistry.containsKey(functionClassName)) {
       return ImmutableList.of(dynamicFunctionRegistry.get(originalViewTextFunctionName));
     }
     Function function = new Function(functionClassName,
