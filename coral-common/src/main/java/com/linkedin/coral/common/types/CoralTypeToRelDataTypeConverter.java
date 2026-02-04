@@ -43,6 +43,15 @@ public final class CoralTypeToRelDataTypeConverter {
         // No precision specified - matches TypeConverter behavior
         relType = factory.createSqlType(SqlTypeName.TIMESTAMP);
       }
+    } else if (type instanceof BinaryType) {
+      BinaryType bin = (BinaryType) type;
+      // Handle fixed-length vs unbounded binary
+      if (bin.isFixedLength()) {
+        relType = factory.createSqlType(SqlTypeName.BINARY, bin.getLength());
+      } else {
+        // Unbounded/variable-length
+        relType = factory.createSqlType(SqlTypeName.BINARY);
+      }
     } else if (type instanceof DecimalType) {
       DecimalType dec = (DecimalType) type;
       relType = factory.createSqlType(SqlTypeName.DECIMAL, dec.getPrecision(), dec.getScale());

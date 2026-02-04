@@ -67,7 +67,7 @@ public class HiveToCoralTypeConverterTest {
 
     // Check basic properties
     assertTrue(result instanceof PrimitiveType || result instanceof DecimalType || result instanceof VarcharType
-        || result instanceof CharType || result instanceof TimestampType);
+        || result instanceof CharType || result instanceof TimestampType || result instanceof BinaryType);
     assertEquals(result.getKind(), expectedKind);
     assertEquals(result.isNullable(), expectedNullable);
 

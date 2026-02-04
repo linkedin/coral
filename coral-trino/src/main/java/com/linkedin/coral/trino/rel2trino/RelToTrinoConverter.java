@@ -30,6 +30,7 @@ import org.apache.calcite.sql.type.SqlTypeName;
 
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import com.linkedin.coral.common.HiveMetastoreClient;
+import com.linkedin.coral.common.catalog.CoralCatalog;
 import com.linkedin.coral.common.functions.CoralSqlUnnestOperator;
 import com.linkedin.coral.common.functions.FunctionFieldReferenceOperator;
 import com.linkedin.coral.transformers.CoralRelToSqlNodeConverter;
@@ -55,20 +56,36 @@ public class RelToTrinoConverter extends RelToSqlConverter {
    */
   private Map<String, Boolean> configs = new HashMap<>();
   private HiveMetastoreClient _hiveMetastoreClient;
+  private CoralCatalog _coralCatalog;
 
   /**
    * Creates a RelToTrinoConverter.
    * @param mscClient client interface used to interact with the Hive Metastore service.
    */
+  /**
+   * Creates a RelToTrinoConverter.
+   * @param mscClient client interface used to interact with the Hive Metastore service.
+   *
+   * @deprecated Use {@link #RelToTrinoConverter(CoralCatalog)} instead.
+   */
+  @Deprecated
   public RelToTrinoConverter(HiveMetastoreClient mscClient) {
     super(CoralRelToSqlNodeConverter.INSTANCE);
     _hiveMetastoreClient = mscClient;
+  }
+
+  public RelToTrinoConverter(CoralCatalog coralCatalog) {
+    super(CoralRelToSqlNodeConverter.INSTANCE);
+    _coralCatalog = coralCatalog;
+    ;
   }
 
   /**
    * Creates a RelToTrinoConverter.
    * @param mscClient client interface used to interact with the Hive Metastore service.
    * @param configs configs
+   *
+   * @deprecated Use {@link #RelToTrinoConverter(CoralCatalog)} instead.
    */
   public RelToTrinoConverter(HiveMetastoreClient mscClient, Map<String, Boolean> configs) {
     super(CoralRelToSqlNodeConverter.INSTANCE);
@@ -84,9 +101,15 @@ public class RelToTrinoConverter extends RelToSqlConverter {
    */
   public String convert(RelNode relNode) {
     SqlNode sqlNode = convertToSqlNode(relNode);
+    SqlNode sqlNodeWithRelDataTypeDerivedConversions;
 
-    SqlNode sqlNodeWithRelDataTypeDerivedConversions =
-        sqlNode.accept(new DataTypeDerivedSqlCallConverter(_hiveMetastoreClient, sqlNode));
+    if (_coralCatalog != null) {
+      sqlNodeWithRelDataTypeDerivedConversions =
+          sqlNode.accept(new DataTypeDerivedSqlCallConverter(_coralCatalog, sqlNode));
+    } else {
+      sqlNodeWithRelDataTypeDerivedConversions =
+          sqlNode.accept(new DataTypeDerivedSqlCallConverter(_hiveMetastoreClient, sqlNode));
+    }
 
     SqlNode sqlNodeWithUDFOperatorConverted =
         sqlNodeWithRelDataTypeDerivedConversions.accept(new CoralToTrinoSqlCallConverter(configs));

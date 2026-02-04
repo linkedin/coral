@@ -20,6 +20,7 @@ import com.google.common.collect.Iterables;
 import org.apache.calcite.DataContext;
 import org.apache.calcite.config.CalciteConnectionConfig;
 import org.apache.calcite.linq4j.Enumerable;
+import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.schema.ScannableTable;
@@ -39,6 +40,7 @@ import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.linkedin.coral.common.catalog.HiveTable;
 import com.linkedin.coral.common.types.CoralDataType;
 import com.linkedin.coral.common.types.CoralTypeToRelDataTypeConverter;
 import com.linkedin.coral.common.types.StructField;
@@ -46,15 +48,33 @@ import com.linkedin.coral.common.types.StructType;
 
 
 /**
- * Adaptor class from Hive {@link org.apache.hadoop.hive.metastore.api.Table} representation to
- * Calcite {@link ScannableTable}
+ * Calcite adapter for Hive tables, bridging Hive metadata to Calcite's ScannableTable interface.
  *
- * Implementing this as a ScannableTable, instead of Table, is hacky approach to make calcite
+ * <p>This adapter converts Hive {@link org.apache.hadoop.hive.metastore.api.Table} representations
+ * into Calcite's {@link ScannableTable}, enabling Hive tables to be queried through Calcite's
+ * SQL processing engine.
+ *
+ * <p><b>Integration with ParseTreeBuilder and HiveFunctionResolver:</b> This class provides critical
+ * Dali UDF metadata extraction methods ({@link #getDaliFunctionParams()} and {@link #getDaliUdfDependencies()})
+ * that are tightly coupled to {@link org.apache.hadoop.hive.metastore.api.Table} and used by:
+ * <ul>
+ *   <li>{@code HiveFunctionResolver} - for resolving Dali function names to implementing classes</li>
+ *   <li>{@code ParseTreeBuilder} - for parsing view definitions with UDF metadata</li>
+ * </ul>
+ *
+ * <p>These components currently require {@link org.apache.hadoop.hive.metastore.api.Table} and cannot
+ * work directly with {@link com.linkedin.coral.common.catalog.CoralTable}. This tight coupling is being
+ * addressed in <a href="https://github.com/linkedin/coral/issues/575">issue #575</a>, which will refactor
+ * these APIs to accept {@code CoralTable} instead, enabling multi-format support (Hive, Iceberg, etc.).
+ *
+ * <p>Implementing this as a ScannableTable, instead of Table, is hacky approach to make calcite
  * correctly generate relational algebra. This will have to go away gradually.
+ *
+ * @see <a href="https://github.com/linkedin/coral/issues/575">Issue #575: Refactor ParseTreeBuilder to Use CoralTable</a>
  */
-public class HiveTable implements ScannableTable {
+public class HiveCalciteTableAdapter implements ScannableTable {
 
-  private static final Logger LOG = LoggerFactory.getLogger(HiveTable.class);
+  private static final Logger LOG = LoggerFactory.getLogger(HiveCalciteTableAdapter.class);
   protected final org.apache.hadoop.hive.metastore.api.Table hiveTable;
   private Deserializer deserializer;
 
@@ -88,9 +108,18 @@ public class HiveTable implements ScannableTable {
    * Constructor to create bridge from hive table to calcite table
    * @param hiveTable Hive table
    */
-  public HiveTable(org.apache.hadoop.hive.metastore.api.Table hiveTable) {
+  public HiveCalciteTableAdapter(org.apache.hadoop.hive.metastore.api.Table hiveTable) {
     Preconditions.checkNotNull(hiveTable);
     this.hiveTable = hiveTable;
+  }
+
+  /**
+   * Constructor accepting HiveCoralTable for unified catalog integration.
+   * @param coralTable HiveCoralTable from catalog
+   */
+  public HiveCalciteTableAdapter(HiveTable coralTable) {
+    Preconditions.checkNotNull(coralTable);
+    this.hiveTable = coralTable.getHiveTable();
   }
 
   /**
@@ -162,8 +191,8 @@ public class HiveTable implements ScannableTable {
     try {
       RelDataType coralType = getRowTypeFromCoralType(typeFactory);
 
-      // Compare the two type representations
-      if (!hiveType.equals(coralType)) {
+      // Compare using structural equality (not reference equality)
+      if (!RelOptUtil.areRowTypesEqual(hiveType, coralType, false)) {
         LOG.warn("Hive and Coral type conversion mismatch for table {}.{}. Hive: {}, Coral: {}", hiveTable.getDbName(),
             hiveTable.getTableName(), hiveType, coralType);
       }
@@ -182,27 +211,11 @@ public class HiveTable implements ScannableTable {
    * This is the preferred path when using CoralCatalog.
    */
   private RelDataType getRowTypeFromCoralType(RelDataTypeFactory typeFactory) {
-    // Stage 1: Hive → Coral
-    CoralDataType coralSchema = getCoralSchema();
+    // Step 1: Hive → Coral
+    StructType structType = (StructType) getCoralSchema();
 
-    // Stage 2: Coral → Calcite
-    if (!(coralSchema instanceof StructType)) {
-      throw new IllegalStateException("Expected StructType from getCoralSchema(), got: " + coralSchema.getClass());
-    }
-
-    StructType structType = (StructType) coralSchema;
-    List<StructField> fields = structType.getFields();
-
-    List<RelDataType> fieldTypes = new ArrayList<>(fields.size());
-    List<String> fieldNames = new ArrayList<>(fields.size());
-
-    for (StructField field : fields) {
-      fieldNames.add(field.getName());
-      RelDataType fieldType = CoralTypeToRelDataTypeConverter.convert(field.getType(), typeFactory);
-      fieldTypes.add(fieldType);
-    }
-
-    return typeFactory.createStructType(fieldTypes, fieldNames);
+    // Step 2: Coral → Calcite
+    return CoralTypeToRelDataTypeConverter.convert(structType, typeFactory);
   }
 
   /**
@@ -240,7 +253,7 @@ public class HiveTable implements ScannableTable {
     final List<StructField> fields = new ArrayList<>();
     final List<String> fieldNames = new ArrayList<>();
 
-    // Combine regular columns and partition keys (same as HiveTable.getRowType)
+    // Combine regular columns and partition keys (same as HiveCalciteTableAdapter.getRowType)
     final Iterable<FieldSchema> allCols = Iterables.concat(cols, hiveTable.getPartitionKeys());
 
     for (FieldSchema col : allCols) {

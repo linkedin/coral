@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2022 LinkedIn Corporation. All rights reserved.
+ * Copyright 2020-2026 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -24,7 +24,7 @@ import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
 
 
 /**
- * This class is a replacement for {@link HiveTable} to work with localMetastore in coral-spark-plan module
+ * This class is a replacement for {@link HiveCalciteTableAdapter} to work with localMetastore in coral-spark-plan module
  *
  * Adaptor class from Hive {@link org.apache.hadoop.hive.metastore.api.Table} representation to
  * Calcite {@link ScannableTable}
