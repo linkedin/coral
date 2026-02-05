@@ -1,14 +1,37 @@
-dependencies {
-  compile project(':coral-hive')
+plugins {
+  id 'java'
+}
 
-  testCompile(deps.'hive'.'hive-exec-core') {
+repositories {
+  maven { url ' https://linkedin.jfrog.io/artifactory/calcite' }
+  mavenCentral()
+}
+
+dependencies {
+  // Coral modules
+  implementation project(':coral-common')
+  implementation project(':coral-hive')
+
+  // Relocated Guava (uses shaded jar variant)
+  implementation(project(path: ':shading:guava-shaded', configuration: 'shadow'))
+
+  // Libraries used by spark-plan
+  implementation 'com.google.code.gson:gson:2.10.1'
+  implementation 'org.apache.commons:commons-lang3:3.12.0'
+
+  // Calcite (match versions used elsewhere)
+  implementation 'com.linkedin.calcite:calcite-core:1.21.0.265'
+  implementation 'org.apache.calcite:calcite-linq4j:1.21.0'
+
+  // Tests
+  testImplementation('org.apache.hive:hive-exec:1.2.2:core') {
     exclude group: 'org.apache.avro', module: 'avro-tools'
-    // These exclusions are required to prevent duplicate classes since we
-    // include shaded jar above
+    // Prevent duplicates since calcite is already on the classpath
     exclude group: 'org.apache.calcite', module: 'calcite-core'
     exclude group: 'org.apache.calcite', module: 'calcite-avatica'
   }
-
-  testCompile deps.'hadoop'.'hadoop-mapreduce-client-core'
-  testCompile deps.'kryo'
+  testImplementation 'org.apache.hadoop:hadoop-mapreduce-client-core:2.7.0'
+  testImplementation 'com.esotericsoftware.kryo:kryo:2.22'
+  testImplementation 'org.apache.hadoop:hadoop-common:2.7.0'
+  testImplementation 'com.google.code.gson:gson:2.10.1'
 }

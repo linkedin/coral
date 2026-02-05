@@ -1,18 +1,27 @@
-dependencies {
-  // NOTE: jline is needed as testCompile for PigUnit tests because it is missing from Pig runtime
-  testCompile deps.'jline'
+plugins {
+  id 'java'
+}
 
-  compile(project(path: ':coral-hive')) {
+repositories {
+  maven { url 'https://linkedin.jfrog.io/artifactory/calcite' }
+  mavenCentral()
+}
+
+dependencies {
+  // NOTE: jline is needed as testImplementation for PigUnit tests because it is missing from Pig runtime
+  testImplementation deps.'jline'
+
+  implementation(project(path: ':coral-hive')) {
     exclude group: 'jline', module: 'jline'
   }
 
-  testCompile(deps.'pig'.'pig') { transitive = false }
-  testCompile(deps.'pig'.'pigunit') { transitive = false }
+  testImplementation(deps.'pig'.'pig') { transitive = false }
+  testImplementation(deps.'pig'.'pigunit') { transitive = false }
 
   // Pull in hive-metastore transitively through hive-exec.
   // Use shaded hive-exec/hive-metastore dependencies for Coral to prevent classpath
   // conflicts with DaliStorage/PiggyBank.
-  testCompile(deps.'hive'.'hive-exec-core') {
+  testImplementation(deps.'hive'.'hive-exec-core') {
     exclude group: 'org.apache.avro', module: 'avro-tools'
     // These exclusions are required to prevent duplicate classes since we include
     // shaded coral-calcite jar above
@@ -22,6 +31,12 @@ dependencies {
     exclude group: 'org.codehaus.groovy', module: 'groovy-all'
   }
 
-  testCompile deps.'hadoop'.'hadoop-mapreduce-client-common'
-  testCompile deps.'kryo'
+  testImplementation deps.'hadoop'.'hadoop-mapreduce-client-common'
+  testImplementation deps.'kryo'
+  implementation(project(path: ':shading:guava-shaded', configuration: 'shadow'))
+
+  implementation project(path: ':coral-common')
+  implementation 'org.apache.commons:commons-lang3:3.12.0'
+  implementation 'com.linkedin.calcite:calcite-core:1.21.0.265'
+  implementation 'org.apache.calcite:calcite-linq4j:1.21.0'
 }

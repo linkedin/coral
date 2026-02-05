@@ -1,8 +1,36 @@
-dependencies {
-  compile project(path: ':coral-hive')
-  compile deps.'avroCompatHelper'
+plugins {
+  id 'java'
+}
 
-  testCompile(deps.'hive'.'hive-exec-core') {
+repositories {
+  maven { url 'https://linkedin.jfrog.io/artifactory/calcite' }
+  mavenCentral()
+}
+
+dependencies {
+  // Schema code and tests often use Coral utilities and types
+  implementation project(':coral-common')
+  // Avro core API (required; resolutionStrategy alone is not enough)
+  implementation 'org.apache.avro:avro:1.10.2'
+
+  implementation project(path: ':coral-hive')
+  implementation deps.'avroCompatHelper'
+  // Hive APIs needed by coral-schema
+  implementation('org.apache.hive:hive-metastore:2.3.9.1') {
+    // avoid classpath conflicts with your shaded Guava
+    exclude group: 'com.google.guava', module: 'guava'
+  }
+  implementation('org.apache.hive:hive-serde:1.2.2') {
+    // avoid classpath conflicts with your shaded Guava
+    exclude group: 'com.google.guava', module: 'guava'
+  }
+
+  // Codehaus Jackson (older API used by Hive 1.x and your schema code)
+  implementation 'org.codehaus.jackson:jackson-core-asl:1.9.13'
+  implementation 'org.codehaus.jackson:jackson-mapper-asl:1.9.13'
+  implementation(project(path: ':shading:guava-shaded', configuration: 'shadow'))
+
+  testImplementation(deps.'hive'.'hive-exec-core') {
     exclude group: 'org.apache.avro', module: 'avro-tools'
     // These exclusions are required to prevent duplicate classes since we include
     // shaded jar above
@@ -10,8 +38,12 @@ dependencies {
     exclude group: 'org.apache.calcite', module: 'calcite-avatica'
   }
 
-  testCompile deps.'hadoop'.'hadoop-mapreduce-client-core'
-  testCompile deps.'kryo'
+
+  testImplementation deps.'hadoop'.'hadoop-mapreduce-client-core'
+  testImplementation deps.'kryo'
+
+  implementation 'com.linkedin.calcite:calcite-core:1.21.0.265'
+  implementation 'org.apache.calcite:calcite-linq4j:1.21.0'
 }
 
 configurations.all {

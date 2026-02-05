@@ -1,5 +1,14 @@
+plugins {
+  id 'java'
+}
+
+repositories {
+  maven { url 'https://linkedin.jfrog.io/artifactory/calcite' }
+  mavenCentral()
+}
+
 dependencies {
-  compile(deps.'linkedin-calcite-core') {
+  implementation(deps.'linkedin-calcite-core') {
     artifact {
       name = 'calcite-core'
       extension = 'jar'
@@ -8,12 +17,16 @@ dependencies {
     }
   }
 
-  compile(deps.'hive'.'hive-metastore') {
+  implementation(deps.'hive'.'hive-metastore') {
     exclude group: 'com.linkedin.metastore-autometrics', module: 'autometrics-reporter'
     exclude group: 'com.linkedin.metastore-audit', module: 'metastore-audit-logging'
     // avro-tools brings in whole bunch of hadoop classes causing duplicates and conflicts
     exclude group: 'org.apache.avro', module: 'avro-tools'
   }
 
-  compile deps.'hadoop'.'hadoop-common'
+  implementation deps.'hadoop'.'hadoop-common'
+  implementation(project(path: ':shading:guava-shaded', configuration: 'shadow'))
+
+  implementation 'com.linkedin.calcite:calcite-core:1.21.0.265'
+  implementation 'org.apache.calcite:calcite-linq4j:1.21.0'
 }

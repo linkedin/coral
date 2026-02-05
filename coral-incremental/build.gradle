@@ -1,12 +1,26 @@
+plugins {
+  id 'java'
+}
+
+repositories {
+  maven { url 'https://linkedin.jfrog.io/artifactory/calcite' }
+  mavenCentral()
+}
+
 dependencies {
-  compile project(':coral-hive')
+  testImplementation project(':coral-common')
+  implementation project(':coral-hive')
+  implementation(project(path: ':shading:guava-shaded', configuration: 'shadow'))
 
-  testCompile(deps.'hive'.'hive-exec-core') {
-    // This exclusion is required to prevent duplicate classes since we include
-    // shaded 'calcite-core' transitively
+  implementation 'com.linkedin.calcite:calcite-core:1.21.0.265'
+  implementation 'org.apache.calcite:calcite-linq4j:1.21.0'
+
+  testImplementation('org.apache.hive:hive-exec:1.2.2:core') {
+    exclude group: 'org.apache.avro', module: 'avro-tools'
     exclude group: 'org.apache.calcite', module: 'calcite-core'
+    exclude group: 'org.apache.calcite', module: 'calcite-avatica'
   }
-
-  testCompile deps.'hadoop'.'hadoop-mapreduce-client-core'
-  testCompile deps.'kryo'
+  testImplementation 'org.apache.hadoop:hadoop-common:2.7.0'
+  testImplementation deps.'hadoop'.'hadoop-mapreduce-client-core'
+  testImplementation deps.'kryo'
 }

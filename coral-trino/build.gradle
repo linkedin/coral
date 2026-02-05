@@ -1,17 +1,45 @@
-dependencies {
-  compile deps.'gson'
-  compile project(path: ':coral-hive')
-  compile project(path: ':shading:coral-trino-parser', configuration: 'shadow')
+plugins {
+  id 'java'
+}
 
-  testCompile(deps.'hive'.'hive-exec-core') {
+repositories {
+  maven { url 'https://linkedin.jfrog.io/artifactory/calcite' }
+  mavenCentral()
+}
+
+dependencies {
+  // Coral modules
+  implementation project(':coral-common')
+  implementation project(':coral-hive')  // <-- needed for HiveToRelConverter, validators, function registry
+  implementation(project(path: ':shading:coral-trino-parser', configuration: 'shadow'))
+  implementation(project(path: ':shading:guava-shaded', configuration: 'shadow'))
+
+  // Calcite (keep consistent with other modules)
+  implementation 'com.linkedin.calcite:calcite-core:1.21.0.265'
+  implementation 'org.apache.calcite:calcite-linq4j:1.21.0'
+
+  // Hive APIs used in trino code (Table, TypeInfo, ObjectInspector, etc.)
+  implementation 'org.apache.hive:hive-metastore:2.3.9.1'
+  implementation 'org.apache.hive:hive-serde:1.2.2'
+
+  // Utilities
+  implementation 'com.google.code.gson:gson:2.10.1'
+  implementation 'org.apache.commons:commons-lang3:3.12.0'
+  implementation 'javax.annotation:javax.annotation-api:1.3.2'
+
+  // Tests
+  testImplementation(deps.'hive'.'hive-exec-core') {
     exclude group: 'org.apache.avro', module: 'avro-tools'
-    // These exclusions are required to prevent duplicate classes since we include
-    // shaded jar above
     exclude group: 'org.apache.calcite', module: 'calcite-core'
     exclude group: 'org.apache.calcite', module: 'calcite-avatica'
   }
-
-  testCompile deps.'hadoop'.'hadoop-mapreduce-client-common'
-  testCompile deps.'kryo'
+  testImplementation deps.'hadoop'.'hadoop-mapreduce-client-common'
+  testImplementation deps.'kryo'
   testImplementation deps.'jetbrains'
+}
+
+configurations.all {
+  resolutionStrategy {
+    force 'org.apache.avro:avro:1.10.2'
+  }
 }

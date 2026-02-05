@@ -1,19 +1,19 @@
 plugins {
-  id 'org.springframework.boot' version '2.4.0'
-  id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+  id 'org.springframework.boot' version '3.3.5'
+  id 'io.spring.dependency-management' version '1.1.4'
   id 'java'
 }
 
-// Ref: https://docs.gradle.org/current/userguide/upgrading_version_6.html?_ga=2.55190571.1487781572.1677273009-780026602.1675378719#publishing_spring_boot_applications
-configurations {
-  [apiElements, runtimeElements].each {
-    it.outgoing.artifacts.removeIf { it.buildDependencies.getDependencies(null).contains(jar) }
-    it.outgoing.artifact(bootJar)
-  }
+tasks.named('jar') {
+  enabled = false
+}
+tasks.named('bootJar') {
+  archiveClassifier = null
 }
 
 repositories {
-  maven { url "http://conjars.org/repo" }
+  mavenCentral()
+  maven { url " https://conjars.org/repo" }
 }
 
 // Exclusions required to fix issue of multiple bindings on the class path
@@ -23,6 +23,7 @@ configurations.all {
 }
 
 dependencies {
+  // Coral modules
   implementation project(':coral-common')
   implementation project(':coral-hive')
   implementation project(':coral-incremental')
@@ -30,12 +31,26 @@ dependencies {
   implementation project(':coral-spark')
   implementation project(':coral-visualization')
 
+  // Calcite APIs used directly in coral-service (RelNode, SqlNode, RelToSqlConverter)
+  implementation 'com.linkedin.calcite:calcite-core:1.21.0.265'
+  implementation 'org.apache.calcite:calcite-linq4j:1.21.0'
+  // Hive + Hadoop
   implementation('org.apache.hive:hive-exec:1.2.2:core') {
+    // prevent old calcite dragged in by hive-exec
     exclude group: 'org.apache.calcite', module: 'calcite-core'
   }
+  implementation 'org.apache.hadoop:hadoop-common:2.7.0'
   implementation 'org.apache.hadoop:hadoop-mapreduce-client-core:2.7.0'
+
+  // Spring Boot
   implementation 'org.springframework.boot:spring-boot-starter-web'
   implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
-  // Need to add this to avoid class not found issue while setting up local metastore
+
+  // Misc
   implementation 'com.esotericsoftware.kryo:kryo:2.22'
+  implementation(project(path: ':shading:guava-shaded', configuration: 'shadow'))
+  implementation 'commons-io:commons-io:2.11.0' // FileUtils (if used)
+
+  // Tests (if you run service unit tests)
+  testImplementation 'org.testng:testng:6.4'
 }

@@ -1,29 +1,98 @@
-apply plugin: 'antlr'
+plugins {
+  id 'java'
+  id 'antlr'
+}
+
+repositories {
+  mavenCentral()
+  // LinkedIn Artifactory for LinkedIn-hosted artifacts (e.g., com.linkedin.calcite)
+  // If your org uses different path, adjust the URL accordingly.
+  maven { url ' https://linkedin.jfrog.io/artifactory/calcite' }
+}
 
 dependencies {
-  antlr deps.'antlr'
-  compile project(path: ':coral-common')
-  compile deps.'ivy'
+  // Antlr v3 for .g grammars
+  antlr 'org.antlr:antlr:3.4'
+  implementation 'org.antlr:antlr-runtime:3.4'
 
-  // required for hiveSQL parser code
-  compile deps.'antlr-runtime'
+  // Coral common
+  implementation project(':coral-common')
 
-  testCompile(deps.'hive'.'hive-exec-core') {
+  // Calcite: use LinkedIn fork for core (expected by Coral), linq4j can remain Apache
+  implementation 'com.linkedin.calcite:calcite-core:1.21.0.265'
+  implementation 'org.apache.calcite:calcite-linq4j:1.21.0'
+
+  // Ivy for dynamic artifact resolution (ArtifactsResolver)
+  implementation 'org.apache.ivy:ivy:2.5.1'
+
+  // Hadoop common (ANTLR-generated parser references org.apache.hadoop.conf.Configuration)
+  implementation 'org.apache.hadoop:hadoop-common:2.7.0'
+
+  // Hive APIs used in main sources
+  implementation 'org.apache.hive:hive-metastore:2.3.9.1'
+  implementation 'org.apache.hive:hive-serde:1.2.2'
+
+  // Logging & annotations
+  implementation 'commons-logging:commons-logging:1.2'
+  implementation 'javax.annotation:javax.annotation-api:1.3.2'
+
+  // Relocated Guava (com.linkedin.coral.com.google.common.*)
+  // Uses the shaded jar variant published by the subproject
+  implementation(project(path: ':shading:guava-shaded', configuration: 'shadow'))
+
+  // Tests
+  testImplementation('org.apache.hive:hive-exec:1.2.2:core') {
     exclude group: 'org.apache.avro', module: 'avro-tools'
-    // These exclusions are required to prevent duplicate classes since we include
-    // shaded jar above
+    // Prevent duplicate Calcite classes coming from hive-exec's shaded deps
     exclude group: 'org.apache.calcite', module: 'calcite-core'
     exclude group: 'org.apache.calcite', module: 'calcite-avatica'
   }
-
-  testCompile deps.'hadoop'.'hadoop-mapreduce-client-core'
-  testCompile deps.'kryo'
+  testImplementation 'org.apache.hadoop:hadoop-mapreduce-client-core:2.7.0'
+  testImplementation 'com.esotericsoftware.kryo:kryo:2.22'
 }
 
-sourceSets.main.antlr.srcDirs = ['src/main/antlr/roots']
+// Antlr v3 grammar location and imports
+sourceSets {
+  main {
+    antlr {
+      srcDirs = ['src/main/antlr/roots']
+    }
+    // Make generated sources visible to Java compilation
+    java {
+      srcDir("$buildDir/generated-src/antlr/main")
+    }
+  }
+}
 
 generateGrammarSource {
+  // Allow grammars to import shared lexer/parser fragments
   arguments += [
     '-lib',
     'src/main/antlr/imports'
-  ]}
+  ]
+}
+
+// Ensure ANTLR runs before Java compilation
+tasks.named('compileJava') {
+  dependsOn(tasks.named('generateGrammarSource'))
+}
+
+// Ensure Spotless formats after ANTLR has generated sources
+tasks.named('spotlessJava') {
+  dependsOn(tasks.named('generateGrammarSource'))
+}
+
+// Handle duplicates in sourcesJar and exclude Antlr side files
+// (sourcesJar task is added by your publishing logic; if absent, this block is harmless)
+tasks.named('sourcesJar', org.gradle.api.tasks.bundling.Jar) {
+  dependsOn(tasks.named('generateGrammarSource'))
+  duplicatesStrategy = org.gradle.api.file.DuplicatesStrategy.EXCLUDE
+  exclude('/*.tokens', '/*.interp')
+}
+
+// Skip formatting generated sources
+spotless {
+  java {
+    targetExclude 'build/generated-src/antlr/**'
+  }
+}

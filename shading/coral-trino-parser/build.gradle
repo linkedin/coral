@@ -1,24 +1,34 @@
-import com.github.jengelman.gradle.plugins.shadow.tasks.ConfigureShadowRelocation
-apply plugin: "com.github.johnrengelman.shadow"
+plugins {
+  id 'com.github.johnrengelman.shadow' version '8.1.1'
+}
+
+configurations {
+  // Create a resolvable configuration that extends compileOnly
+  compileOnlyResolved {
+    canBeResolved = true
+    canBeConsumed = false
+    extendsFrom configurations.compileOnly
+  }
+}
 
 dependencies {
   compileOnly 'io.trino:trino-parser:355'
+  implementation project(':shading:guava-shaded')
 }
 
-task relocateShadowJar(type: ConfigureShadowRelocation) {
-  target = tasks.shadowJar
-  prefix = 'coral.shading'
-}
-
-shadowJar {
+tasks.named('shadowJar').configure {
+  // Use the resolvable configuration instead of compileOnly
   configurations = [
-    project.configurations.compileOnly
+    project.configurations.compileOnlyResolved
   ]
-  dependsOn(relocateShadowJar)
+  archiveClassifier.set(null)
+  relocate('io.trino', 'coral.shading.io.trino')
 }
 
-// Rename shadow jar to original artifact name, so that 'coral-trino-parser-x.x.x.jar' itself is the shadow jar
-jar {
+tasks.named('jar').configure {
   enabled = false
-  dependsOn(shadowJar { classifier = null })
+}
+
+tasks.named('assemble').configure {
+  dependsOn tasks.named('shadowJar')
 }

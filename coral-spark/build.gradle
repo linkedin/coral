@@ -1,26 +1,44 @@
+plugins {
+  id 'java'
+}
+repositories {
+  mavenCentral()
+}
 apply from: "spark_itest.gradle"
 
 dependencies {
-  compile project(':coral-hive')
-  compile project(':coral-schema')
-
+  implementation project(':coral-common')
+  implementation project(':coral-hive')
+  implementation project(':coral-schema')
+  implementation 'com.linkedin.calcite:calcite-core:1.21.0.265'
+  implementation 'org.apache.calcite:calcite-linq4j:1.21.0'
+  implementation(project(path: ':shading:guava-shaded', configuration: 'shadow'))
+  implementation 'org.apache.hive:hive-serde:1.2.2'
 
   compileOnly deps.'spark'.'sql'
 
-  testCompile(deps.'hive'.'hive-exec-core') {
+  testImplementation(deps.'hive'.'hive-exec-core') {
     exclude group: 'org.apache.avro', module: 'avro-tools'
     // These exclusions are required to prevent duplicate classes since we include
     // shaded jar above
     exclude group: 'org.apache.calcite', module: 'calcite-core'
     exclude group: 'org.apache.calcite', module: 'calcite-avatica'
   }
-  testCompile deps.'hadoop'.'hadoop-mapreduce-client-core'
-  testCompile deps.'kryo'
+  testImplementation deps.'hadoop'.'hadoop-mapreduce-client-core'
+  testImplementation deps.'kryo'
 }
 
 // Needs to enforce using Avro 1.10 because Coral-Spark depends on Coral-Schema which uses Avro 1.10
 configurations.all {
   resolutionStrategy {
     force 'org.apache.avro:avro:1.10.2'
+    force 'com.linkedin.calcite:calcite-core:1.21.0.265'
+    // Ensure upstream calcite-core is not used
+    eachDependency { details ->
+      if (details.requested.group == 'org.apache.calcite' &&
+          details.requested.name == 'calcite-core') {
+        details.useTarget('com.linkedin.calcite:calcite-core:1.21.0.265')
+      }
+    }
   }
 }
