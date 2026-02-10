@@ -4,39 +4,93 @@ plugins {
 
 repositories {
   maven { url 'https://linkedin.jfrog.io/artifactory/calcite' }
+  maven { url 'https://repo1.maven.org/maven2' }
   mavenCentral()
 }
 
 dependencies {
-  // NOTE: jline is needed as testImplementation for PigUnit tests because it is missing from Pig runtime
-  testImplementation deps.'jline'
-
-  implementation(project(path: ':coral-hive')) {
+  // Coral modules
+  implementation project(':coral-common')
+  implementation(project(':coral-hive')) {
+    // keep classpath clean
     exclude group: 'jline', module: 'jline'
+    exclude group: 'com.google.guava', module: 'guava'
   }
 
-  testImplementation(deps.'pig'.'pig') { transitive = false }
-  testImplementation(deps.'pig'.'pigunit') { transitive = false }
+  // Shaded Guava to avoid conflicts
+  implementation(project(path: ':shading:guava-shaded', configuration: 'shadow'))
 
-  // Pull in hive-metastore transitively through hive-exec.
-  // Use shaded hive-exec/hive-metastore dependencies for Coral to prevent classpath
-  // conflicts with DaliStorage/PiggyBank.
-  testImplementation(deps.'hive'.'hive-exec-core') {
+  // Apache Commons + Calcite for code here
+  implementation 'org.apache.commons:commons-lang3:3.12.0'
+  implementation 'com.linkedin.calcite:calcite-core:1.21.0.265'
+  implementation 'org.apache.calcite:calcite-linq4j:1.21.0'
+
+  // Pig + PigUnit for tests (non-transitive to control classpath)
+  testImplementation('org.apache.pig:pig:0.16.0') { transitive = false }
+  testImplementation('org.apache.pig:pigunit:0.16.0') { transitive = false }
+
+  // jline is required by PigUnit tests (Pig runtime doesn’t include it)
+  testImplementation 'jline:jline:2.12'
+
+  // Hive runtime for tests (Java 17 friendly)
+  testImplementation('org.apache.hive:hive-exec:2.3.9') {
     exclude group: 'org.apache.avro', module: 'avro-tools'
-    // These exclusions are required to prevent duplicate classes since we include
-    // shaded coral-calcite jar above
     exclude group: 'org.apache.calcite', module: 'calcite-core'
     exclude group: 'org.apache.calcite', module: 'calcite-avatica'
     exclude group: 'jline', module: 'jline'
     exclude group: 'org.codehaus.groovy', module: 'groovy-all'
+    exclude group: 'com.google.guava', module: 'guava'
+    // avoid pentaho aggdesigner
+    exclude group: 'org.pentaho', module: 'pentaho-aggdesigner-algorithm'
   }
 
-  testImplementation deps.'hadoop'.'hadoop-mapreduce-client-common'
-  testImplementation deps.'kryo'
-  implementation(project(path: ':shading:guava-shaded', configuration: 'shadow'))
+  // Hive Metastore with its own DataNucleus/JDO dependencies
+  testImplementation('org.apache.hive:hive-metastore:2.3.9') {
+    exclude group: 'com.google.guava', module: 'guava'
+  }
 
-  implementation project(path: ':coral-common')
-  implementation 'org.apache.commons:commons-lang3:3.12.0'
-  implementation 'com.linkedin.calcite:calcite-core:1.21.0.265'
-  implementation 'org.apache.calcite:calcite-linq4j:1.21.0'
+  // Java 17-compatible Derby for embedded DB
+  testImplementation 'org.apache.derby:derby:10.14.2.0'
+
+  // Hadoop dependencies for testing
+  testImplementation 'org.apache.hadoop:hadoop-common:2.7.0'
+  testImplementation 'org.apache.hadoop:hadoop-hdfs:2.7.0'
+  testImplementation 'org.apache.hadoop:hadoop-mapreduce-client-core:2.7.0'
+  testImplementation 'com.esotericsoftware.kryo:kryo:2.22'
+  testImplementation 'org.datanucleus:javax.jdo:3.2.0-m3'
+  // Optional: add a simple SLF4J binding to silence StaticLoggerBinder warnings
+  testImplementation 'org.slf4j:slf4j-simple:1.7.36'
+}
+
+// Hive's metastore will handle its own JDO enhancement
+
+// Configure test JVM arguments
+test {
+  // Set system properties for Hive metastore
+  systemProperties = [
+    'datanucleus.autoCreateSchema': 'true',
+    'datanucleus.schema.autoCreateAll': 'true',
+    'datanucleus.autoCreateTables': 'true',
+    'datanucleus.validateTables': 'false',
+    'datanucleus.validateConstraints': 'false',
+    'hive.metastore.local': 'true',
+    'hive.metastore.warehouse.dir': 'build/hive-warehouse',
+    'hive.metastore.schema.verification': 'false',
+    'hive.metastore.schema.verification.record.version': 'false',
+    'datanucleus.schema.autoCreateAll': 'true'
+  ]
+
+  // Add JVM args for Java 17 compatibility
+  jvmArgs = [
+    '--add-opens=java.base/java.lang=ALL-UNNAMED',
+    '--add-opens=java.base/java.lang.invoke=ALL-UNNAMED',
+    '--add-opens=java.base/java.lang.reflect=ALL-UNNAMED',
+    '--add-opens=java.base/java.util=ALL-UNNAMED',
+    '--add-opens=java.base/java.io=ALL-UNNAMED',
+    '--add-opens=java.base/java.net=ALL-UNNAMED',
+    '--add-opens=java.base/java.nio=ALL-UNNAMED',
+    '--add-opens=java.base/sun.nio.ch=ALL-UNNAMED',
+    '--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED',
+    '--add-opens=java.base/sun.reflect.generics.reflectiveObjects=ALL-UNNAMED'
+  ]
 }

@@ -6,6 +6,7 @@
 package com.linkedin.coral.schema.avro;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import com.linkedin.avroutil1.compatibility.AvroCompatibilityHelper;
@@ -105,9 +106,9 @@ public class SchemaUtilitiesTests {
     Schema nestedRecord2 = SchemaBuilder.record("FooRecord").namespace("com.baz.qux").fields().name("field2").type()
         .stringType().noDefault().endRecord();
 
-    // Create nullable unions for both nested records
-    Schema nullableRecord1 = Schema.createUnion(Schema.create(Schema.Type.NULL), nestedRecord1);
-    Schema nullableRecord2 = Schema.createUnion(Schema.create(Schema.Type.NULL), nestedRecord2);
+    // Create nullable unions for both nested records using List for compatibility
+    Schema nullableRecord1 = Schema.createUnion(Arrays.asList(Schema.create(Schema.Type.NULL), nestedRecord1));
+    Schema nullableRecord2 = Schema.createUnion(Arrays.asList(Schema.create(Schema.Type.NULL), nestedRecord2));
 
     // Create parent schema with two fields containing the nested records
     Schema parentSchema = SchemaBuilder.record("ParentRecord").namespace("com.parent").fields().name("contextV1")

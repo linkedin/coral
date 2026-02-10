@@ -3,7 +3,9 @@ plugins {
 }
 
 repositories {
+  // LinkedIn Calcite fork for calcite-core and calcite-linq4j
   maven { url ' https://linkedin.jfrog.io/artifactory/calcite' }
+  // Standard artifacts
   mavenCentral()
 }
 
@@ -12,21 +14,20 @@ dependencies {
   implementation project(':coral-common')
   implementation project(':coral-hive')
 
-  // Relocated Guava (uses shaded jar variant)
+  // Shaded Guava to avoid conflicts
   implementation(project(path: ':shading:guava-shaded', configuration: 'shadow'))
 
-  // Libraries used by spark-plan
+  // Core libs used by spark-plan
   implementation 'com.google.code.gson:gson:2.10.1'
   implementation 'org.apache.commons:commons-lang3:3.12.0'
 
-  // Calcite (match versions used elsewhere)
+  // Calcite (use LinkedIn fork consistently)
   implementation 'com.linkedin.calcite:calcite-core:1.21.0.265'
-  implementation 'org.apache.calcite:calcite-linq4j:1.21.0'
+  implementation 'com.linkedin.calcite:calcite-linq4j:1.21.0.265'
 
   // Tests
   testImplementation('org.apache.hive:hive-exec:1.2.2:core') {
     exclude group: 'org.apache.avro', module: 'avro-tools'
-    // Prevent duplicates since calcite is already on the classpath
     exclude group: 'org.apache.calcite', module: 'calcite-core'
     exclude group: 'org.apache.calcite', module: 'calcite-avatica'
   }

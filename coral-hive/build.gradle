@@ -7,7 +7,7 @@ repositories {
   mavenCentral()
   // LinkedIn Artifactory for LinkedIn-hosted artifacts (e.g., com.linkedin.calcite)
   // If your org uses different path, adjust the URL accordingly.
-  maven { url ' https://linkedin.jfrog.io/artifactory/calcite' }
+  maven { url 'https://linkedin.jfrog.io/artifactory/calcite' }
 }
 
 dependencies {
@@ -29,7 +29,7 @@ dependencies {
   implementation 'org.apache.hadoop:hadoop-common:2.7.0'
 
   // Hive APIs used in main sources
-  implementation 'org.apache.hive:hive-metastore:2.3.9.1'
+  implementation 'org.apache.hive:hive-metastore:2.3.9'
   implementation 'org.apache.hive:hive-serde:1.2.2'
 
   // Logging & annotations

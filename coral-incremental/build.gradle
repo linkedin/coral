@@ -3,8 +3,13 @@ plugins {
 }
 
 repositories {
-  maven { url 'https://linkedin.jfrog.io/artifactory/calcite' }
+  // Prefer Maven Central first
   mavenCentral()
+
+  // Keep these in case other transitive bits need them
+  maven { url ' https://nexus.pentaho.org/content/groups/public/' }
+  maven { url ' https://repo.osgeo.org/repository/release/' }
+  maven { url ' https://linkedin.jfrog.io/artifactory/calcite' }
 }
 
 dependencies {
@@ -12,15 +17,51 @@ dependencies {
   implementation project(':coral-hive')
   implementation(project(path: ':shading:guava-shaded', configuration: 'shadow'))
 
+  // Calcite (LinkedIn fork) + matching linq4j
   implementation 'com.linkedin.calcite:calcite-core:1.21.0.265'
   implementation 'org.apache.calcite:calcite-linq4j:1.21.0'
 
-  testImplementation('org.apache.hive:hive-exec:1.2.2:core') {
+  // If you use hive-exec core in tests, exclude calcite to avoid conflicts
+  testImplementation(deps.'hive'.'hive-exec-core') {
     exclude group: 'org.apache.avro', module: 'avro-tools'
     exclude group: 'org.apache.calcite', module: 'calcite-core'
     exclude group: 'org.apache.calcite', module: 'calcite-avatica'
+    exclude group: 'org.pentaho', module: 'pentaho-aggdesigner-algorithm'
   }
+
+  // Hive metastore for tests; exclude old Calcite to avoid clashes
+  testImplementation('org.apache.hive:hive-metastore:2.3.9') {
+    exclude group: 'org.apache.calcite', module: 'calcite-core'
+    exclude group: 'org.apache.calcite', module: 'calcite-avatica'
+  }
+
+  // Hadoop + helpers for tests
   testImplementation 'org.apache.hadoop:hadoop-common:2.7.0'
   testImplementation deps.'hadoop'.'hadoop-mapreduce-client-core'
   testImplementation deps.'kryo'
+
+  // Runtime deps required by Hive Metastore under JDK 17
+  testRuntimeOnly 'org.datanucleus:datanucleus-api-jdo:4.2.5'
+  testRuntimeOnly 'org.datanucleus:datanucleus-core:4.1.17'
+  testRuntimeOnly 'org.datanucleus:datanucleus-rdbms:4.1.19'
+  testRuntimeOnly 'org.apache.derby:derby:10.14.2.0'
+
+  // Optional: reduce SLF4J multiple-binding noise in test runtime
+  testRuntimeOnly('org.apache.logging.log4j:log4j-slf4j-impl:2.20.0') {
+    exclude group: 'org.slf4j', module: 'slf4j-log4j12'
+  }
+}
+
+test {
+  useTestNG()
+}
+
+configurations.all {
+  resolutionStrategy {
+    // Pin the Calcite fork and matching linq4j
+    force 'com.linkedin.calcite:calcite-core:1.21.0.265'
+    force 'org.apache.calcite:calcite-linq4j:1.21.0'
+    // Ensure API-JDO uses 4.2.5 (4.2.6 is broken/not in Central)
+    force 'org.datanucleus:datanucleus-api-jdo:4.2.5'
+  }
 }

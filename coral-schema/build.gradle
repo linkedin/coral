@@ -3,51 +3,96 @@ plugins {
 }
 
 repositories {
-  maven { url 'https://linkedin.jfrog.io/artifactory/calcite' }
+  maven { url 'https://linkedin.jfrog.io/artifactory/calcite/' }
   mavenCentral()
 }
 
 dependencies {
-  // Schema code and tests often use Coral utilities and types
+  // Coral modules
   implementation project(':coral-common')
-  // Avro core API (required; resolutionStrategy alone is not enough)
+  implementation project(':coral-hive')
+
+  // Avro (explicit versions here)
   implementation 'org.apache.avro:avro:1.10.2'
-
-  implementation project(path: ':coral-hive')
+  implementation 'org.apache.avro:avro-mapred:1.10.2'
   implementation deps.'avroCompatHelper'
-  // Hive APIs needed by coral-schema
-  implementation('org.apache.hive:hive-metastore:2.3.9.1') {
-    // avoid classpath conflicts with your shaded Guava
+
+  // Hive APIs (aligned)
+  implementation('org.apache.hive:hive-metastore:2.3.9') {
     exclude group: 'com.google.guava', module: 'guava'
   }
-  implementation('org.apache.hive:hive-serde:1.2.2') {
-    // avoid classpath conflicts with your shaded Guava
+  implementation('org.apache.hive:hive-serde:2.3.9') {
     exclude group: 'com.google.guava', module: 'guava'
   }
 
-  // Codehaus Jackson (older API used by Hive 1.x and your schema code)
+  // Calcite
+  implementation 'com.linkedin.calcite:calcite-core:1.21.0.265'
+  implementation 'org.apache.calcite:calcite-linq4j:1.21.0'
+
+  // Legacy Jackson
   implementation 'org.codehaus.jackson:jackson-core-asl:1.9.13'
   implementation 'org.codehaus.jackson:jackson-mapper-asl:1.9.13'
+
+  // RESTORE shaded Guava (provides com.linkedin.coral.com.google.common.*)
   implementation(project(path: ':shading:guava-shaded', configuration: 'shadow'))
 
+  // Test deps (with conflicts excluded)
   testImplementation(deps.'hive'.'hive-exec-core') {
     exclude group: 'org.apache.avro', module: 'avro-tools'
-    // These exclusions are required to prevent duplicate classes since we include
-    // shaded jar above
     exclude group: 'org.apache.calcite', module: 'calcite-core'
     exclude group: 'org.apache.calcite', module: 'calcite-avatica'
+    exclude group: 'org.slf4j', module: 'slf4j-log4j12'
   }
-
+  testImplementation('org.apache.hadoop:hadoop-common:2.7.0') {
+    exclude group: 'org.slf4j', module: 'slf4j-log4j12'
+  }
+  testImplementation('org.apache.hadoop:hadoop-hdfs:2.7.0') {
+    exclude group: 'org.slf4j', module: 'slf4j-log4j12'
+  }
+  testImplementation('org.apache.hive:hive-exec:2.3.9') {
+    exclude group: 'org.slf4j', module: 'slf4j-log4j12'
+  }
 
   testImplementation deps.'hadoop'.'hadoop-mapreduce-client-core'
   testImplementation deps.'kryo'
 
-  implementation 'com.linkedin.calcite:calcite-core:1.21.0.265'
-  implementation 'org.apache.calcite:calcite-linq4j:1.21.0'
+  // DataNucleus + JDO/JTA + Derby for embedded HMS in tests
+  testImplementation 'org.datanucleus:datanucleus-core:3.2.10'
+  testImplementation 'org.datanucleus:datanucleus-api-jdo:3.2.6'
+  testImplementation 'org.datanucleus:datanucleus-rdbms:3.2.9'
+  testImplementation 'javax.jdo:jdo-api:3.0.1'
+  testImplementation 'javax.transaction:jta:1.1'
+  testImplementation 'org.apache.derby:derby:10.14.2.0'
+
+  // Optional: single SLF4J binding to quiet warnings
+  testRuntimeOnly 'org.slf4j:slf4j-simple:1.7.36'
 }
 
-configurations.all {
-  resolutionStrategy {
-    force 'org.apache.avro:avro:1.10.2'
+test {
+  useTestNG()
+
+  // Embedded metastore config (Derby-backed)
+  systemProperty "javax.jdo.option.ConnectionURL", "jdbc:derby:;databaseName=memory:metastore_db;create=true"
+  systemProperty "javax.jdo.option.ConnectionDriverName", "org.apache.derby.jdbc.EmbeddedDriver"
+  systemProperty "hive.metastore.warehouse.dir", "${buildDir}/hive/warehouse"
+
+  // DN/HMS schema bootstrap
+  systemProperty "hive.metastore.schema.verification", "false"
+  systemProperty "datanucleus.autoCreateSchema", "true"
+  systemProperty "datanucleus.schema.autoCreateAll", "true"
+  systemProperty "datanucleus.fixedDatastore", "false"
+  systemProperty "javax.jdo.option.Mapping", "derby"
+
+  // Ensure test resources (hive.xml) are loaded
+  testClassesDirs = sourceSets.test.output.classesDirs
+  classpath += files("${projectDir}/src/test/resources")
+
+  testLogging {
+    showStandardStreams = true
+    exceptionFormat = 'full'
+  }
+
+  doFirst {
+    file("${buildDir}/hive/warehouse").mkdirs()
   }
 }

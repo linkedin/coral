@@ -19,7 +19,7 @@ dependencies {
   implementation 'org.apache.calcite:calcite-linq4j:1.21.0'
 
   // Hive APIs used in trino code (Table, TypeInfo, ObjectInspector, etc.)
-  implementation 'org.apache.hive:hive-metastore:2.3.9.1'
+  implementation 'org.apache.hive:hive-metastore:2.3.9'
   implementation 'org.apache.hive:hive-serde:1.2.2'
 
   // Utilities

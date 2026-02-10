@@ -6,6 +6,11 @@ repositories {
 }
 apply from: "spark_itest.gradle"
 
+configurations.all {
+  // Exclude the problematic avro-mapred from all configurations
+  exclude group: 'org.apache.avro', module: 'avro-mapred'
+}
+
 dependencies {
   implementation project(':coral-common')
   implementation project(':coral-hive')
@@ -13,31 +18,55 @@ dependencies {
   implementation 'com.linkedin.calcite:calcite-core:1.21.0.265'
   implementation 'org.apache.calcite:calcite-linq4j:1.21.0'
   implementation(project(path: ':shading:guava-shaded', configuration: 'shadow'))
-  implementation 'org.apache.hive:hive-serde:1.2.2'
+
+  // Explicitly declare Avro dependencies
+  implementation 'org.apache.avro:avro:1.10.2'
+
+  // Add avro-mapred with the correct classifier
+  implementation 'org.apache.avro:avro-mapred:1.10.2:hadoop2'
+
+  // Exclude avro-mapred from hive-serde to avoid conflicts
+  implementation('org.apache.hive:hive-serde:1.2.2') {
+    exclude group: 'org.apache.avro', module: 'avro-mapred'
+    exclude group: 'org.apache.avro', module: 'avro-tools'
+  }
 
   compileOnly deps.'spark'.'sql'
 
   testImplementation(deps.'hive'.'hive-exec-core') {
     exclude group: 'org.apache.avro', module: 'avro-tools'
-    // These exclusions are required to prevent duplicate classes since we include
-    // shaded jar above
+    exclude group: 'org.apache.avro', module: 'avro-mapred'
     exclude group: 'org.apache.calcite', module: 'calcite-core'
     exclude group: 'org.apache.calcite', module: 'calcite-avatica'
   }
-  testImplementation deps.'hadoop'.'hadoop-mapreduce-client-core'
-  testImplementation deps.'kryo'
+
+  testImplementation 'org.apache.avro:avro-mapred:1.10.2:hadoop2'
+  testImplementation(deps.hadoop.'hadoop-mapreduce-client-core') {
+    exclude group: 'org.apache.avro', module: 'avro'
+  }
+  testImplementation(deps.kryo) {
+    exclude group: 'org.apache.avro', module: 'avro'
+  }
 }
 
-// Needs to enforce using Avro 1.10 because Coral-Spark depends on Coral-Schema which uses Avro 1.10
+// Configure resolution strategy for consistent dependency versions
 configurations.all {
   resolutionStrategy {
+    // Force specific versions of dependencies
     force 'org.apache.avro:avro:1.10.2'
     force 'com.linkedin.calcite:calcite-core:1.21.0.265'
+
     // Ensure upstream calcite-core is not used
     eachDependency { details ->
       if (details.requested.group == 'org.apache.calcite' &&
           details.requested.name == 'calcite-core') {
         details.useTarget('com.linkedin.calcite:calcite-core:1.21.0.265')
+      }
+
+      // Ensure consistent Avro version (except for avro-mapred which we handle separately)
+      if (details.requested.group == 'org.apache.avro' &&
+          details.requested.name != 'avro-mapred') {
+        details.useVersion '1.10.2'
       }
     }
   }
