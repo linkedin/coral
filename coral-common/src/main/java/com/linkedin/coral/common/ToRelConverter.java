@@ -162,8 +162,13 @@ public abstract class ToRelConverter {
    * @return Calcite {@link RelNode} representation of hive view definition
    */
   public RelNode convertView(String hiveDbName, String hiveViewName) {
-    SqlNode sqlNode = processView(hiveDbName, hiveViewName);
-    return toRel(sqlNode);
+    ViewDependencyTracker.get().enterView(hiveDbName, hiveViewName);
+    try {
+      SqlNode sqlNode = processView(hiveDbName, hiveViewName);
+      return toRel(sqlNode);
+    } finally {
+      ViewDependencyTracker.get().exitView();
+    }
   }
 
   // TODO change back to protected once the relevant tests move to the common package

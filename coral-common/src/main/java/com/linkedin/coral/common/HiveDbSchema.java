@@ -76,6 +76,7 @@ public class HiveDbSchema implements Schema {
       case VIRTUAL_VIEW:
         return new HiveCalciteViewAdapter(table, ImmutableList.of(HiveSchema.ROOT_SCHEMA, dbName));
       default:
+        ViewDependencyTracker.get().recordBaseDependency(dbName, name);
         return new HiveCalciteTableAdapter(table);
     }
   }

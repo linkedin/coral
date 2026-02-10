@@ -26,6 +26,8 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
+import com.linkedin.coral.common.ViewDependency;
+import com.linkedin.coral.common.ViewDependencyTracker;
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 import com.linkedin.coral.spark.containers.SparkUDFInfo;
 import com.linkedin.coral.spark.exceptions.UnsupportedUDFException;
@@ -72,6 +74,60 @@ public class CoralSparkTest {
     List<String> base_tables = coralSpark.getBaseTables();
     assertTrue(base_tables.contains("default.foo"));
     assertTrue(base_tables.contains("default.bar"));
+  }
+
+  @Test
+  public void testGetViewDependenciesFromNestedView() {
+    // foo_bar_view depends on foo_view (a view) and bar (a table)
+    // foo_view depends on foo (a table)
+    // Expected chain:
+    //   foo_bar_view -> [foo_view, bar]
+    //   foo_view -> [foo]
+    ViewDependencyTracker.reset();
+    RelNode relNode = TestUtils.toRelNode("default", "foo_bar_view");
+    CoralSpark coralSpark = createCoralSpark(relNode);
+    List<ViewDependency> viewDeps = coralSpark.getViewDependencies();
+
+    assertFalse(viewDeps.isEmpty(), "Expected view dependencies for nested view");
+
+    ViewDependency fooBarViewDep =
+        viewDeps.stream().filter(vd -> vd.getViewName().equals("default.foo_bar_view")).findFirst().orElse(null);
+    assertNotNull(fooBarViewDep, "Expected dependency entry for foo_bar_view");
+    assertTrue(fooBarViewDep.getDependencies().contains("default.foo_view"), "foo_bar_view should depend on foo_view");
+    assertTrue(fooBarViewDep.getDependencies().contains("default.bar"), "foo_bar_view should depend on bar");
+
+    ViewDependency fooViewDep =
+        viewDeps.stream().filter(vd -> vd.getViewName().equals("default.foo_view")).findFirst().orElse(null);
+    assertNotNull(fooViewDep, "Expected dependency entry for foo_view");
+    assertTrue(fooViewDep.getDependencies().contains("default.foo"), "foo_view should depend on foo");
+  }
+
+  @Test
+  public void testGetViewDependenciesFromSimpleView() {
+    // foo_view depends only on foo (a base table)
+    // Expected: single entry foo_view -> [foo]
+    ViewDependencyTracker.reset();
+    RelNode relNode = TestUtils.toRelNode("default", "foo_view");
+    CoralSpark coralSpark = createCoralSpark(relNode);
+    List<ViewDependency> viewDeps = coralSpark.getViewDependencies();
+
+    assertFalse(viewDeps.isEmpty(), "Expected view dependencies for simple view");
+    assertEquals(viewDeps.size(), 1, "Expected exactly one view dependency entry");
+
+    ViewDependency dep = viewDeps.get(0);
+    assertEquals(dep.getViewName(), "default.foo_view");
+    assertTrue(dep.getDependencies().contains("default.foo"), "foo_view should depend on foo");
+  }
+
+  @Test
+  public void testGetViewDependenciesFromBaseTable() {
+    // A base table should have no view dependencies
+    ViewDependencyTracker.reset();
+    RelNode relNode = TestUtils.toRelNode("default", "foo");
+    CoralSpark coralSpark = createCoralSpark(relNode);
+    List<ViewDependency> viewDeps = coralSpark.getViewDependencies();
+
+    assertTrue(viewDeps.isEmpty(), "Expected no view dependencies for a base table");
   }
 
   @Test

@@ -20,6 +20,8 @@ import org.apache.calcite.sql.SqlSelect;
 
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
 import com.linkedin.coral.common.HiveMetastoreClient;
+import com.linkedin.coral.common.ViewDependency;
+import com.linkedin.coral.common.ViewDependencyTracker;
 import com.linkedin.coral.spark.containers.SparkRelInfo;
 import com.linkedin.coral.spark.containers.SparkUDFInfo;
 import com.linkedin.coral.spark.dialect.SparkSqlDialect;
@@ -43,14 +45,16 @@ import com.linkedin.coral.transformers.CoralRelToSqlNodeConverter;
 public class CoralSpark {
 
   private final List<String> baseTables;
+  private final List<ViewDependency> viewDependencies;
   private final List<SparkUDFInfo> sparkUDFInfoList;
   private final HiveMetastoreClient hiveMetastoreClient;
   private final SqlNode sqlNode;
   private final String sparkSql;
 
-  private CoralSpark(List<String> baseTables, List<SparkUDFInfo> sparkUDFInfoList, String sparkSql,
-      HiveMetastoreClient hmsClient, SqlNode sqlNode) {
+  private CoralSpark(List<String> baseTables, List<ViewDependency> viewDependencies,
+      List<SparkUDFInfo> sparkUDFInfoList, String sparkSql, HiveMetastoreClient hmsClient, SqlNode sqlNode) {
     this.baseTables = baseTables;
+    this.viewDependencies = viewDependencies;
     this.sparkUDFInfoList = sparkUDFInfoList;
     this.sparkSql = sparkSql;
     this.hiveMetastoreClient = hmsClient;
@@ -74,13 +78,16 @@ public class CoralSpark {
    * @return [[CoralSpark]]
    */
   public static CoralSpark create(RelNode irRelNode, HiveMetastoreClient hmsClient) {
+    // Capture view dependencies that were collected during convertView -> expandView chain
+    List<ViewDependency> viewDeps = ViewDependencyTracker.get().getViewDependencies();
+
     SparkRelInfo sparkRelInfo = IRRelToSparkRelTransformer.transform(irRelNode);
     Set<SparkUDFInfo> sparkUDFInfos = sparkRelInfo.getSparkUDFInfos();
     RelNode sparkRelNode = sparkRelInfo.getSparkRelNode();
     SqlNode sparkSqlNode = constructSparkSqlNode(sparkRelNode, sparkUDFInfos, hmsClient);
     String sparkSQL = constructSparkSQL(sparkSqlNode);
     List<String> baseTables = constructBaseTables(sparkRelNode);
-    return new CoralSpark(baseTables, ImmutableList.copyOf(sparkUDFInfos), sparkSQL, hmsClient, sparkSqlNode);
+    return new CoralSpark(baseTables, viewDeps, ImmutableList.copyOf(sparkUDFInfos), sparkSQL, hmsClient, sparkSqlNode);
   }
 
   /**
@@ -99,6 +106,9 @@ public class CoralSpark {
   }
 
   private static CoralSpark createWithAlias(RelNode irRelNode, List<String> aliases, HiveMetastoreClient hmsClient) {
+    // Capture view dependencies that were collected during convertView -> expandView chain
+    List<ViewDependency> viewDeps = ViewDependencyTracker.get().getViewDependencies();
+
     SparkRelInfo sparkRelInfo = IRRelToSparkRelTransformer.transform(irRelNode);
     Set<SparkUDFInfo> sparkUDFInfos = sparkRelInfo.getSparkUDFInfos();
     RelNode sparkRelNode = sparkRelInfo.getSparkRelNode();
@@ -111,7 +121,7 @@ public class CoralSpark {
     }
     String sparkSQL = constructSparkSQL(sparkSqlNode);
     List<String> baseTables = constructBaseTables(sparkRelNode);
-    return new CoralSpark(baseTables, ImmutableList.copyOf(sparkUDFInfos), sparkSQL, hmsClient, sparkSqlNode);
+    return new CoralSpark(baseTables, viewDeps, ImmutableList.copyOf(sparkUDFInfos), sparkSQL, hmsClient, sparkSqlNode);
   }
 
   private static SqlNode constructSparkSqlNode(RelNode sparkRelNode, Set<SparkUDFInfo> sparkUDFInfos,
@@ -163,6 +173,25 @@ public class CoralSpark {
    */
   public List<String> getBaseTables() {
     return baseTables;
+  }
+
+  /**
+   * Getter for the view dependency chain collected during view expansion.
+   * Each {@link ViewDependency} represents a view and its immediate dependencies
+   * (which can be other views or base tables) in "database_name.table_name" format.
+   *
+   * <p>For example, if view "db.v1" depends on view "db.v2" and table "db.t1",
+   * and "db.v2" depends on tables "db.t3" and "db.t4", this returns:
+   * <pre>
+   * [ViewDependency("db.v1", ["db.v2", "db.t1"]),
+   *  ViewDependency("db.v2", ["db.t3", "db.t4"])]
+   * </pre>
+   *
+   * @return List of {@link ViewDependency} representing the view dependency chain,
+   *         or an empty list if no views were involved.
+   */
+  public List<ViewDependency> getViewDependencies() {
+    return viewDependencies;
   }
 
   /**
