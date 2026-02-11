@@ -16,11 +16,17 @@ dependencies {
 
   // Calcite (keep consistent with other modules)
   implementation 'com.linkedin.calcite:calcite-core:1.21.0.265'
-  implementation 'org.apache.calcite:calcite-linq4j:1.21.0'
+  implementation 'com.linkedin.calcite:calcite-linq4j:1.21.0.265'
 
   // Hive APIs used in trino code (Table, TypeInfo, ObjectInspector, etc.)
-  implementation 'org.apache.hive:hive-metastore:2.3.9'
-  implementation 'org.apache.hive:hive-serde:1.2.2'
+  implementation('org.apache.hive:hive-metastore:2.3.9') {
+    exclude group: 'org.apache.calcite', module: 'calcite-core'
+    exclude group: 'org.apache.calcite', module: 'calcite-avatica'
+  }
+  implementation('org.apache.hive:hive-serde:2.3.9') {
+    exclude group: 'org.apache.calcite', module: 'calcite-core'
+    exclude group: 'org.apache.calcite', module: 'calcite-avatica'
+  }
 
   // Utilities
   implementation 'com.google.code.gson:gson:2.10.1'
@@ -33,9 +39,41 @@ dependencies {
     exclude group: 'org.apache.calcite', module: 'calcite-core'
     exclude group: 'org.apache.calcite', module: 'calcite-avatica'
   }
+  testImplementation('org.apache.hive:hive-metastore:2.3.9') {
+    exclude group: 'org.apache.calcite', module: 'calcite-core'
+    exclude group: 'org.apache.calcite', module: 'calcite-avatica'
+  }
   testImplementation deps.'hadoop'.'hadoop-mapreduce-client-common'
   testImplementation deps.'kryo'
   testImplementation deps.'jetbrains'
+  testImplementation 'org.apache.derby:derby:10.10.2.0'
+
+  // DataNucleus dependencies required by Hive Metastore under JDK 17
+  testRuntimeOnly 'org.datanucleus:datanucleus-api-jdo:4.2.5'
+  testRuntimeOnly 'org.datanucleus:datanucleus-core:4.1.17'
+  testRuntimeOnly 'org.datanucleus:datanucleus-rdbms:4.1.19'
+}
+
+test {
+  // Add JVM args for Java 17 compatibility
+  jvmArgs = [
+    '--add-opens=java.base/java.lang=ALL-UNNAMED',
+    '--add-opens=java.base/java.lang.invoke=ALL-UNNAMED',
+    '--add-opens=java.base/java.lang.reflect=ALL-UNNAMED',
+    '--add-opens=java.base/java.util=ALL-UNNAMED',
+    '--add-opens=java.base/java.io=ALL-UNNAMED',
+    '--add-opens=java.base/java.net=ALL-UNNAMED',
+    '--add-opens=java.base/java.nio=ALL-UNNAMED',
+    '--add-opens=java.base/sun.nio.ch=ALL-UNNAMED',
+    '--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED',
+    '--add-opens=java.base/sun.reflect.generics.reflectiveObjects=ALL-UNNAMED'
+  ]
+
+  // Disable Hive CBO to avoid Calcite Druid adapter issues
+  systemProperty 'hive.cbo.enable', 'false'
+  systemProperty 'hive.exec.mode.local.auto', 'false'
+  // Allow schema evolution for tests (HMS 2.3.9 is stricter)
+  systemProperty 'hive.metastore.disallow.incompatible.col.type.changes', 'false'
 }
 
 configurations.all {

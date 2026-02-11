@@ -72,10 +72,14 @@ allprojects {
       force(
           'com.linkedin.calcite:calcite-core:1.21.0.265',
           'com.linkedin.calcite:calcite-linq4j:1.21.0.265',
-          'org.apache.hive:hive-exec:1.2.2',
-          'org.apache.hive:hive-metastore:1.2.2',
+          'org.apache.hive:hive-exec:2.3.9',
+          'org.apache.hive:hive-metastore:2.3.9',
           'org.apache.hadoop:hadoop-common:2.7.0',
-          'org.apache.hadoop:hadoop-mapreduce-client-core:2.7.0'
+          'org.apache.hadoop:hadoop-mapreduce-client-core:2.7.0',
+          'org.apache.derby:derby:10.10.2.0',
+          'org.datanucleus:datanucleus-api-jdo:4.2.5',
+          'org.datanucleus:datanucleus-core:4.1.17',
+          'org.datanucleus:datanucleus-rdbms:4.1.19'
           )
 
       // Reject any dynamic versions to ensure build reproducibility

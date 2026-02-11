@@ -33,14 +33,25 @@ dependencies {
 
   // Calcite APIs used directly in coral-service (RelNode, SqlNode, RelToSqlConverter)
   implementation 'com.linkedin.calcite:calcite-core:1.21.0.265'
-  implementation 'org.apache.calcite:calcite-linq4j:1.21.0'
+  implementation 'com.linkedin.calcite:calcite-linq4j:1.21.0.265'
   // Hive + Hadoop
-  implementation('org.apache.hive:hive-exec:1.2.2:core') {
+  implementation('org.apache.hive:hive-exec:2.3.9:core') {
     // prevent old calcite dragged in by hive-exec
     exclude group: 'org.apache.calcite', module: 'calcite-core'
+    exclude group: 'org.apache.calcite', module: 'calcite-avatica'
+  }
+  implementation('org.apache.hive:hive-metastore:2.3.9') {
+    exclude group: 'org.apache.calcite', module: 'calcite-core'
+    exclude group: 'org.apache.calcite', module: 'calcite-avatica'
   }
   implementation 'org.apache.hadoop:hadoop-common:2.7.0'
   implementation 'org.apache.hadoop:hadoop-mapreduce-client-core:2.7.0'
+
+  // DataNucleus dependencies required by Hive Metastore under JDK 17
+  runtimeOnly 'org.datanucleus:datanucleus-api-jdo:4.2.5'
+  runtimeOnly 'org.datanucleus:datanucleus-core:4.1.17'
+  runtimeOnly 'org.datanucleus:datanucleus-rdbms:4.1.19'
+  runtimeOnly 'org.apache.derby:derby:10.10.2.0'
 
   // Spring Boot
   implementation 'org.springframework.boot:spring-boot-starter-web'

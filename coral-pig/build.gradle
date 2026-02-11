@@ -23,7 +23,7 @@ dependencies {
   // Apache Commons + Calcite for code here
   implementation 'org.apache.commons:commons-lang3:3.12.0'
   implementation 'com.linkedin.calcite:calcite-core:1.21.0.265'
-  implementation 'org.apache.calcite:calcite-linq4j:1.21.0'
+  implementation 'com.linkedin.calcite:calcite-linq4j:1.21.0.265'
 
   // Pig + PigUnit for tests (non-transitive to control classpath)
   testImplementation('org.apache.pig:pig:0.16.0') { transitive = false }
@@ -47,10 +47,12 @@ dependencies {
   // Hive Metastore with its own DataNucleus/JDO dependencies
   testImplementation('org.apache.hive:hive-metastore:2.3.9') {
     exclude group: 'com.google.guava', module: 'guava'
+    exclude group: 'org.apache.calcite', module: 'calcite-core'
+    exclude group: 'org.apache.calcite', module: 'calcite-avatica'
   }
 
-  // Java 17-compatible Derby for embedded DB
-  testImplementation 'org.apache.derby:derby:10.14.2.0'
+  // Java 17-compatible Derby for embedded DB (HMS 2.3.9 requires 10.10.2.0)
+  testImplementation 'org.apache.derby:derby:10.10.2.0'
 
   // Hadoop dependencies for testing
   testImplementation 'org.apache.hadoop:hadoop-common:2.7.0'
@@ -60,6 +62,11 @@ dependencies {
   testImplementation 'org.datanucleus:javax.jdo:3.2.0-m3'
   // Optional: add a simple SLF4J binding to silence StaticLoggerBinder warnings
   testImplementation 'org.slf4j:slf4j-simple:1.7.36'
+
+  // DataNucleus dependencies required by Hive Metastore under JDK 17
+  testRuntimeOnly 'org.datanucleus:datanucleus-api-jdo:4.2.5'
+  testRuntimeOnly 'org.datanucleus:datanucleus-core:4.1.17'
+  testRuntimeOnly 'org.datanucleus:datanucleus-rdbms:4.1.19'
 }
 
 // Hive's metastore will handle its own JDO enhancement
@@ -67,20 +74,14 @@ dependencies {
 // Configure test JVM arguments
 test {
   // Set system properties for Hive metastore
-  systemProperties = [
-    'datanucleus.autoCreateSchema': 'true',
-    'datanucleus.schema.autoCreateAll': 'true',
-    'datanucleus.autoCreateTables': 'true',
-    'datanucleus.validateTables': 'false',
-    'datanucleus.validateConstraints': 'false',
-    'hive.metastore.local': 'true',
-    'hive.metastore.warehouse.dir': 'build/hive-warehouse',
-    'hive.metastore.schema.verification': 'false',
-    'hive.metastore.schema.verification.record.version': 'false',
-    'datanucleus.schema.autoCreateAll': 'true'
-  ]
-
-  // Add JVM args for Java 17 compatibility
+  systemProperty 'datanucleus.schema.autoCreateAll', 'true'
+  systemProperty 'datanucleus.autoCreateTables', 'true'
+  systemProperty 'datanucleus.validateTables', 'false'
+  systemProperty 'datanucleus.validateConstraints', 'false'
+  systemProperty 'hive.metastore.local', 'true'
+  systemProperty 'hive.metastore.warehouse.dir', "file://${project.buildDir.absolutePath}/hive-warehouse"
+  systemProperty 'hive.metastore.schema.verification', 'false'
+  systemProperty 'hive.metastore.schema.verification.record.version', 'false'
   jvmArgs = [
     '--add-opens=java.base/java.lang=ALL-UNNAMED',
     '--add-opens=java.base/java.lang.invoke=ALL-UNNAMED',
@@ -93,4 +94,10 @@ test {
     '--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED',
     '--add-opens=java.base/sun.reflect.generics.reflectiveObjects=ALL-UNNAMED'
   ]
+
+  // Disable Hive CBO to avoid Calcite Druid adapter issues
+  systemProperties['hive.cbo.enable'] = 'false'
+  systemProperties['hive.exec.mode.local.auto'] = 'false'
+  // Allow schema evolution for tests (HMS 2.3.9 is stricter)
+  systemProperties['hive.metastore.disallow.incompatible.col.type.changes'] = 'false'
 }

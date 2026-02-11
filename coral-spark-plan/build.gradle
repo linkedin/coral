@@ -26,8 +26,12 @@ dependencies {
   implementation 'com.linkedin.calcite:calcite-linq4j:1.21.0.265'
 
   // Tests
-  testImplementation('org.apache.hive:hive-exec:1.2.2:core') {
+  testImplementation('org.apache.hive:hive-exec:2.3.9:core') {
     exclude group: 'org.apache.avro', module: 'avro-tools'
+    exclude group: 'org.apache.calcite', module: 'calcite-core'
+    exclude group: 'org.apache.calcite', module: 'calcite-avatica'
+  }
+  testImplementation('org.apache.hive:hive-metastore:2.3.9') {
     exclude group: 'org.apache.calcite', module: 'calcite-core'
     exclude group: 'org.apache.calcite', module: 'calcite-avatica'
   }
@@ -35,4 +39,10 @@ dependencies {
   testImplementation 'com.esotericsoftware.kryo:kryo:2.22'
   testImplementation 'org.apache.hadoop:hadoop-common:2.7.0'
   testImplementation 'com.google.code.gson:gson:2.10.1'
+  testImplementation 'org.apache.derby:derby:10.10.2.0'
+
+  // DataNucleus dependencies required by Hive Metastore under JDK 17
+  testRuntimeOnly 'org.datanucleus:datanucleus-api-jdo:4.2.5'
+  testRuntimeOnly 'org.datanucleus:datanucleus-core:4.1.17'
+  testRuntimeOnly 'org.datanucleus:datanucleus-rdbms:4.1.19'
 }

@@ -20,7 +20,7 @@ dependencies {
 
   // Calcite: use LinkedIn fork for core (expected by Coral), linq4j can remain Apache
   implementation 'com.linkedin.calcite:calcite-core:1.21.0.265'
-  implementation 'org.apache.calcite:calcite-linq4j:1.21.0'
+  implementation 'com.linkedin.calcite:calcite-linq4j:1.21.0.265'
 
   // Ivy for dynamic artifact resolution (ArtifactsResolver)
   implementation 'org.apache.ivy:ivy:2.5.1'
@@ -29,8 +29,14 @@ dependencies {
   implementation 'org.apache.hadoop:hadoop-common:2.7.0'
 
   // Hive APIs used in main sources
-  implementation 'org.apache.hive:hive-metastore:2.3.9'
-  implementation 'org.apache.hive:hive-serde:1.2.2'
+  implementation('org.apache.hive:hive-metastore:2.3.9') {
+    exclude group: 'org.apache.calcite', module: 'calcite-core'
+    exclude group: 'org.apache.calcite', module: 'calcite-avatica'
+  }
+  implementation('org.apache.hive:hive-serde:2.3.9') {
+    exclude group: 'org.apache.calcite', module: 'calcite-core'
+    exclude group: 'org.apache.calcite', module: 'calcite-avatica'
+  }
 
   // Logging & annotations
   implementation 'commons-logging:commons-logging:1.2'
@@ -41,7 +47,7 @@ dependencies {
   implementation(project(path: ':shading:guava-shaded', configuration: 'shadow'))
 
   // Tests
-  testImplementation('org.apache.hive:hive-exec:1.2.2:core') {
+  testImplementation('org.apache.hive:hive-exec:2.3.9:core') {
     exclude group: 'org.apache.avro', module: 'avro-tools'
     // Prevent duplicate Calcite classes coming from hive-exec's shaded deps
     exclude group: 'org.apache.calcite', module: 'calcite-core'
@@ -49,6 +55,12 @@ dependencies {
   }
   testImplementation 'org.apache.hadoop:hadoop-mapreduce-client-core:2.7.0'
   testImplementation 'com.esotericsoftware.kryo:kryo:2.22'
+  testImplementation 'org.apache.derby:derby:10.10.2.0'
+
+  // DataNucleus dependencies required by Hive Metastore under JDK 17
+  testRuntimeOnly 'org.datanucleus:datanucleus-api-jdo:4.2.5'
+  testRuntimeOnly 'org.datanucleus:datanucleus-core:4.1.17'
+  testRuntimeOnly 'org.datanucleus:datanucleus-rdbms:4.1.19'
 }
 
 // Antlr v3 grammar location and imports
@@ -95,4 +107,26 @@ spotless {
   java {
     targetExclude 'build/generated-src/antlr/**'
   }
+}
+
+// Add Java 17 JVM args for tests
+test {
+  jvmArgs = [
+    '--add-opens=java.base/java.lang=ALL-UNNAMED',
+    '--add-opens=java.base/java.lang.invoke=ALL-UNNAMED',
+    '--add-opens=java.base/java.lang.reflect=ALL-UNNAMED',
+    '--add-opens=java.base/java.util=ALL-UNNAMED',
+    '--add-opens=java.base/java.io=ALL-UNNAMED',
+    '--add-opens=java.base/java.net=ALL-UNNAMED',
+    '--add-opens=java.base/java.nio=ALL-UNNAMED',
+    '--add-opens=java.base/sun.nio.ch=ALL-UNNAMED',
+    '--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED',
+    '--add-opens=java.base/sun.reflect.generics.reflectiveObjects=ALL-UNNAMED'
+  ]
+
+  // Disable Hive CBO to avoid Calcite Druid adapter issues
+  systemProperty 'hive.cbo.enable', 'false'
+  systemProperty 'hive.exec.mode.local.auto', 'false'
+  // Allow schema evolution for tests (HMS 2.3.9 is stricter)
+  systemProperty 'hive.metastore.disallow.incompatible.col.type.changes', 'false'
 }

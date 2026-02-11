@@ -20,14 +20,21 @@ dependencies {
   // Hive APIs (aligned)
   implementation('org.apache.hive:hive-metastore:2.3.9') {
     exclude group: 'com.google.guava', module: 'guava'
+    exclude group: 'org.apache.calcite', module: 'calcite-core'
+    exclude group: 'org.apache.calcite', module: 'calcite-avatica'
   }
   implementation('org.apache.hive:hive-serde:2.3.9') {
     exclude group: 'com.google.guava', module: 'guava'
+    exclude group: 'org.apache.calcite', module: 'calcite-core'
+    exclude group: 'org.apache.calcite', module: 'calcite-avatica'
   }
 
   // Calcite
   implementation 'com.linkedin.calcite:calcite-core:1.21.0.265'
-  implementation 'org.apache.calcite:calcite-linq4j:1.21.0'
+  implementation 'com.linkedin.calcite:calcite-linq4j:1.21.0.265'
+
+  // Force newer Guava to override old version from Calcite
+  implementation 'com.google.guava:guava:31.1-jre'
 
   // Legacy Jackson
   implementation 'org.codehaus.jackson:jackson-core-asl:1.9.13'
@@ -42,27 +49,39 @@ dependencies {
     exclude group: 'org.apache.calcite', module: 'calcite-core'
     exclude group: 'org.apache.calcite', module: 'calcite-avatica'
     exclude group: 'org.slf4j', module: 'slf4j-log4j12'
+    exclude group: 'com.google.guava', module: 'guava'
   }
   testImplementation('org.apache.hadoop:hadoop-common:2.7.0') {
     exclude group: 'org.slf4j', module: 'slf4j-log4j12'
+    exclude group: 'com.google.guava', module: 'guava'
   }
   testImplementation('org.apache.hadoop:hadoop-hdfs:2.7.0') {
     exclude group: 'org.slf4j', module: 'slf4j-log4j12'
+    exclude group: 'com.google.guava', module: 'guava'
   }
   testImplementation('org.apache.hive:hive-exec:2.3.9') {
     exclude group: 'org.slf4j', module: 'slf4j-log4j12'
+    exclude group: 'org.apache.calcite', module: 'calcite-core'
+    exclude group: 'org.apache.calcite', module: 'calcite-avatica'
+    exclude group: 'com.google.guava', module: 'guava'
   }
 
-  testImplementation deps.'hadoop'.'hadoop-mapreduce-client-core'
-  testImplementation deps.'kryo'
+  testImplementation(deps.'hadoop'.'hadoop-mapreduce-client-core') {
+    exclude group: 'com.google.guava', module: 'guava'
+  }
+  testImplementation(deps.'kryo') {
+    exclude group: 'com.google.guava', module: 'guava'
+  }
 
-  // DataNucleus + JDO/JTA + Derby for embedded HMS in tests
-  testImplementation 'org.datanucleus:datanucleus-core:3.2.10'
-  testImplementation 'org.datanucleus:datanucleus-api-jdo:3.2.6'
-  testImplementation 'org.datanucleus:datanucleus-rdbms:3.2.9'
+  // DataNucleus + JDO/JTA + Derby for embedded HMS in tests (HMS 2.3.9 compatible versions)
   testImplementation 'javax.jdo:jdo-api:3.0.1'
   testImplementation 'javax.transaction:jta:1.1'
-  testImplementation 'org.apache.derby:derby:10.14.2.0'
+  testImplementation 'org.apache.derby:derby:10.10.2.0'
+
+  // DataNucleus dependencies required by Hive Metastore under JDK 17
+  testRuntimeOnly 'org.datanucleus:datanucleus-api-jdo:4.2.5'
+  testRuntimeOnly 'org.datanucleus:datanucleus-core:4.1.17'
+  testRuntimeOnly 'org.datanucleus:datanucleus-rdbms:4.1.19'
 
   // Optional: single SLF4J binding to quiet warnings
   testRuntimeOnly 'org.slf4j:slf4j-simple:1.7.36'
@@ -83,6 +102,26 @@ test {
   systemProperty "datanucleus.fixedDatastore", "false"
   systemProperty "javax.jdo.option.Mapping", "derby"
 
+  // Add JVM args for Java 17 compatibility
+  jvmArgs = [
+    '--add-opens=java.base/java.lang=ALL-UNNAMED',
+    '--add-opens=java.base/java.lang.invoke=ALL-UNNAMED',
+    '--add-opens=java.base/java.lang.reflect=ALL-UNNAMED',
+    '--add-opens=java.base/java.util=ALL-UNNAMED',
+    '--add-opens=java.base/java.io=ALL-UNNAMED',
+    '--add-opens=java.base/java.net=ALL-UNNAMED',
+    '--add-opens=java.base/java.nio=ALL-UNNAMED',
+    '--add-opens=java.base/sun.nio.ch=ALL-UNNAMED',
+    '--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED',
+    '--add-opens=java.base/sun.reflect.generics.reflectiveObjects=ALL-UNNAMED'
+  ]
+
+  // Disable Hive CBO to avoid Calcite Druid adapter issues
+  systemProperty 'hive.cbo.enable', 'false'
+  systemProperty 'hive.exec.mode.local.auto', 'false'
+  // Allow schema evolution for tests (HMS 2.3.9 is stricter)
+  systemProperty 'hive.metastore.disallow.incompatible.col.type.changes', 'false'
+
   // Ensure test resources (hive.xml) are loaded
   testClassesDirs = sourceSets.test.output.classesDirs
   classpath += files("${projectDir}/src/test/resources")
@@ -94,5 +133,12 @@ test {
 
   doFirst {
     file("${buildDir}/hive/warehouse").mkdirs()
+  }
+}
+
+// Force Guava version to resolve conflicts
+configurations.all {
+  resolutionStrategy {
+    force 'com.google.guava:guava:31.1-jre'
   }
 }

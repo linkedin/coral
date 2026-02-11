@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2024 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2026 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -77,7 +77,7 @@ public abstract class ToRelConverter {
     new Driver();
     config = Frameworks.newConfigBuilder().convertletTable(convertletTable).defaultSchema(schemaPlus)
         .typeSystem(new HiveTypeSystem()).traitDefs((List<RelTraitDef>) null).operatorTable(getOperatorTable())
-        .programs(Programs.ofRules(Programs.RULE_SET)).build();
+        .programs(Programs.standard()).build();
 
   }
 
@@ -92,7 +92,7 @@ public abstract class ToRelConverter {
     new Driver();
     config = Frameworks.newConfigBuilder().convertletTable(convertletTable).defaultSchema(schemaPlus)
         .typeSystem(new HiveTypeSystem()).traitDefs((List<RelTraitDef>) null).operatorTable(getOperatorTable())
-        .programs(Programs.ofRules(Programs.RULE_SET)).build();
+        .programs(Programs.standard()).build();
 
   }
 
