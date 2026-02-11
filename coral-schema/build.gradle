@@ -8,6 +8,8 @@ repositories {
 }
 
 dependencies {
+  implementation(project(path: ':shading:guava-shaded', configuration: 'shadow'))
+
   // Coral modules
   implementation project(':coral-common')
   implementation project(':coral-hive')
@@ -23,12 +25,6 @@ dependencies {
     exclude group: 'org.apache.calcite', module: 'calcite-core'
     exclude group: 'org.apache.calcite', module: 'calcite-avatica'
   }
-  implementation('org.apache.hive:hive-serde:2.3.9') {
-    exclude group: 'com.google.guava', module: 'guava'
-    exclude group: 'org.apache.calcite', module: 'calcite-core'
-    exclude group: 'org.apache.calcite', module: 'calcite-avatica'
-  }
-
   // Calcite
   implementation 'com.linkedin.calcite:calcite-core:1.21.0.265'
   implementation 'com.linkedin.calcite:calcite-linq4j:1.21.0.265'
@@ -40,15 +36,11 @@ dependencies {
   implementation 'org.codehaus.jackson:jackson-core-asl:1.9.13'
   implementation 'org.codehaus.jackson:jackson-mapper-asl:1.9.13'
 
-  // RESTORE shaded Guava (provides com.linkedin.coral.com.google.common.*)
-  implementation(project(path: ':shading:guava-shaded', configuration: 'shadow'))
-
   // Test deps (with conflicts excluded)
   testImplementation(deps.'hive'.'hive-exec-core') {
     exclude group: 'org.apache.avro', module: 'avro-tools'
     exclude group: 'org.apache.calcite', module: 'calcite-core'
     exclude group: 'org.apache.calcite', module: 'calcite-avatica'
-    exclude group: 'org.slf4j', module: 'slf4j-log4j12'
     exclude group: 'com.google.guava', module: 'guava'
   }
   testImplementation('org.apache.hadoop:hadoop-common:2.7.0') {

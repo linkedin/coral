@@ -25,12 +25,16 @@ dependencies {
   implementation 'com.linkedin.calcite:calcite-core:1.21.0.265'
   implementation 'com.linkedin.calcite:calcite-linq4j:1.21.0.265'
 
-  // Pig + PigUnit for tests (non-transitive to control classpath)
-  testImplementation('org.apache.pig:pig:0.16.0') { transitive = false }
-  testImplementation('org.apache.pig:pigunit:0.16.0') { transitive = false }
+  // Pig + PigUnit for tests
+  testImplementation('org.apache.pig:pig:0.16.0') {
+    exclude group: 'com.google.guava', module: 'guava'
+  }
+  testImplementation('org.apache.pig:pigunit:0.16.0') {
+    exclude group: 'com.google.guava', module: 'guava'
+  }
 
   // jline is required by PigUnit tests (Pig runtime doesn’t include it)
-  testImplementation 'jline:jline:2.12'
+  testImplementation 'jline:jline:0.9.94'
 
   // Hive runtime for tests (Java 17 friendly)
   testImplementation('org.apache.hive:hive-exec:2.3.9') {
@@ -58,6 +62,8 @@ dependencies {
   testImplementation 'org.apache.hadoop:hadoop-common:2.7.0'
   testImplementation 'org.apache.hadoop:hadoop-hdfs:2.7.0'
   testImplementation 'org.apache.hadoop:hadoop-mapreduce-client-core:2.7.0'
+  testImplementation 'org.apache.hadoop:hadoop-mapreduce-client-common:2.7.0'
+  testImplementation 'org.apache.hadoop:hadoop-mapreduce-client-jobclient:2.7.0'
   testImplementation 'com.esotericsoftware.kryo:kryo:2.22'
   testImplementation 'org.datanucleus:javax.jdo:3.2.0-m3'
   // Optional: add a simple SLF4J binding to silence StaticLoggerBinder warnings
@@ -100,4 +106,11 @@ test {
   systemProperties['hive.exec.mode.local.auto'] = 'false'
   // Allow schema evolution for tests (HMS 2.3.9 is stricter)
   systemProperties['hive.metastore.disallow.incompatible.col.type.changes'] = 'false'
+}
+
+// Force jline version to fix Pig compatibility
+configurations.all {
+  resolutionStrategy {
+    force 'jline:jline:0.9.94'
+  }
 }

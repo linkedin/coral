@@ -12,12 +12,13 @@ configurations.all {
 }
 
 dependencies {
+  implementation(project(path: ':shading:guava-shaded', configuration: 'shadow'))
+
   implementation project(':coral-common')
   implementation project(':coral-hive')
   implementation project(':coral-schema')
   implementation 'com.linkedin.calcite:calcite-core:1.21.0.265'
   implementation 'com.linkedin.calcite:calcite-linq4j:1.21.0.265'
-  implementation(project(path: ':shading:guava-shaded', configuration: 'shadow'))
 
   // Explicitly declare Avro dependencies
   implementation 'org.apache.avro:avro:1.10.2'
