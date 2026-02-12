@@ -49,7 +49,7 @@ public class ViewDependencyTracker {
   /**
    * Called when a base table (non-view) is encountered during view expansion.
    */
-  public void recordBaseDependency(String dbName, String tableName) {
+  public void recordBaseTableDependency(String dbName, String tableName) {
     String qualifiedName = dbName + "." + tableName;
     if (!expansionStack.isEmpty()) {
       String parent = expansionStack.peek();
@@ -60,10 +60,11 @@ public class ViewDependencyTracker {
   /**
    * Called at the END of expanding a view.
    */
-  public void exitView() {
+  public String exitView() {
     if (!expansionStack.isEmpty()) {
-      expansionStack.pop();
+      return expansionStack.pop();
     }
+    return null;
   }
 
   /**

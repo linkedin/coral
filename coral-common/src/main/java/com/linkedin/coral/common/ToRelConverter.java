@@ -11,6 +11,7 @@ import java.util.Properties;
 
 import javax.annotation.Nonnull;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import org.apache.calcite.config.CalciteConnectionConfig;
@@ -167,7 +168,10 @@ public abstract class ToRelConverter {
       SqlNode sqlNode = processView(hiveDbName, hiveViewName);
       return toRel(sqlNode);
     } finally {
-      ViewDependencyTracker.get().exitView();
+      String exitedView = ViewDependencyTracker.get().exitView();
+      String expectedView = hiveDbName + "." + hiveViewName;
+      Preconditions.checkState(expectedView.equals(exitedView),
+              "View mismatch: expected %s but exited with %s", expectedView, exitedView);
     }
   }
 

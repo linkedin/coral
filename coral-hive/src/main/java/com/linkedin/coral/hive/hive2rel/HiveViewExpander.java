@@ -51,7 +51,10 @@ public class HiveViewExpander implements RelOptTable.ViewExpander {
           .accept(new FuzzyUnionSqlRewriter(tableName, hiveToRelConverter));
       return hiveToRelConverter.getSqlToRelConverter().convertQuery(sqlNode, true, true);
     } finally {
-      ViewDependencyTracker.get().exitView();
+      String exitedView = ViewDependencyTracker.get().exitView();
+      String expectedView = dbName + "." + tableName;
+      Preconditions.checkState(expectedView.equals(exitedView),
+              "View mismatch: expected %s but exited with %s", expectedView, exitedView);
     }
   }
 }
