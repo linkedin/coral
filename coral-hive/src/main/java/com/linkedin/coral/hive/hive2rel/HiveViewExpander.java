@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2022 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2026 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -18,6 +18,7 @@ import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.util.Util;
 
 import com.linkedin.coral.common.FuzzyUnionSqlRewriter;
+import com.linkedin.coral.common.ViewDependencyTracker;
 
 
 /**
@@ -44,8 +45,10 @@ public class HiveViewExpander implements RelOptTable.ViewExpander {
     String dbName = Util.last(schemaPath);
     String tableName = viewPath.get(0);
 
-    SqlNode sqlNode = hiveToRelConverter.processView(dbName, tableName)
-        .accept(new FuzzyUnionSqlRewriter(tableName, hiveToRelConverter));
-    return hiveToRelConverter.getSqlToRelConverter().convertQuery(sqlNode, true, true);
+    return ViewDependencyTracker.get().withViewExpansion(ViewDependencyTracker.HIVE_CATALOG, dbName, tableName, () -> {
+      SqlNode sqlNode = hiveToRelConverter.processView(dbName, tableName)
+          .accept(new FuzzyUnionSqlRewriter(tableName, hiveToRelConverter));
+      return hiveToRelConverter.getSqlToRelConverter().convertQuery(sqlNode, true, true);
+    });
   }
 }
