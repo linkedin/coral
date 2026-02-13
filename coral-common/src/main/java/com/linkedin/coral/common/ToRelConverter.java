@@ -11,7 +11,6 @@ import java.util.Properties;
 
 import javax.annotation.Nonnull;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import org.apache.calcite.config.CalciteConnectionConfig;
@@ -163,16 +162,10 @@ public abstract class ToRelConverter {
    * @return Calcite {@link RelNode} representation of hive view definition
    */
   public RelNode convertView(String hiveDbName, String hiveViewName) {
-    ViewDependencyTracker.get().enterView(hiveDbName, hiveViewName);
-    try {
+    return ViewDependencyTracker.get().withViewExpansion(hiveDbName, hiveViewName, () -> {
       SqlNode sqlNode = processView(hiveDbName, hiveViewName);
       return toRel(sqlNode);
-    } finally {
-      String exitedView = ViewDependencyTracker.get().exitView();
-      String expectedView = hiveDbName + "." + hiveViewName;
-      Preconditions.checkState(expectedView.equals(exitedView),
-              "View mismatch: expected %s but exited with %s", expectedView, exitedView);
-    }
+    });
   }
 
   // TODO change back to protected once the relevant tests move to the common package

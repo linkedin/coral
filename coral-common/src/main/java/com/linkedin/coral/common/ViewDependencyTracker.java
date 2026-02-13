@@ -11,6 +11,7 @@ import java.util.Deque;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 
 /**
@@ -34,37 +35,37 @@ public class ViewDependencyTracker {
   }
 
   /**
-   * Called at the START of expanding a view.
+   * Tracks a view expansion, recording the view as a dependency of any parent view
+   * currently being expanded, then executing the supplied work within the scope of
+   * this view. The expansion stack is managed automatically.
    */
-  public void enterView(String dbName, String tableName) {
+  public <T> T withViewExpansion(String dbName, String tableName, Supplier<T> work) {
     String qualifiedName = dbName + "." + tableName;
-    // Record this view as a dependency of the current parent
     if (!expansionStack.isEmpty()) {
       String parent = expansionStack.peek();
       viewDeps.computeIfAbsent(parent, k -> new ArrayList<>()).add(qualifiedName);
     }
     expansionStack.push(qualifiedName);
+    try {
+      return work.get();
+    } finally {
+      expansionStack.pop();
+    }
   }
 
   /**
-   * Called when a base table (non-view) is encountered during view expansion.
+   * Records a base table (non-view) as a dependency of the view currently being expanded.
    */
   public void recordBaseTableDependency(String dbName, String tableName) {
     String qualifiedName = dbName + "." + tableName;
     if (!expansionStack.isEmpty()) {
       String parent = expansionStack.peek();
-      viewDeps.computeIfAbsent(parent, k -> new ArrayList<>()).add(qualifiedName);
+      // Skip self-dependency: this occurs when convertView is called on a base table,
+      // which pushes the table name onto the stack and then resolves itself.
+      if (!qualifiedName.equals(parent)) {
+        viewDeps.computeIfAbsent(parent, k -> new ArrayList<>()).add(qualifiedName);
+      }
     }
-  }
-
-  /**
-   * Called at the END of expanding a view.
-   */
-  public String exitView() {
-    if (!expansionStack.isEmpty()) {
-      return expansionStack.pop();
-    }
-    return null;
   }
 
   /**
@@ -74,7 +75,9 @@ public class ViewDependencyTracker {
   public List<ViewDependency> getViewDependencies() {
     List<ViewDependency> result = new ArrayList<>();
     for (Map.Entry<String, List<String>> entry : viewDeps.entrySet()) {
-      result.add(new ViewDependency(entry.getKey(), entry.getValue()));
+      if (!entry.getValue().isEmpty()) {
+        result.add(new ViewDependency(entry.getKey(), entry.getValue()));
+      }
     }
     return result;
   }
