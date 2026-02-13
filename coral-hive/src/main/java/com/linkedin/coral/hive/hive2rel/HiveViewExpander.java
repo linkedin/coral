@@ -45,7 +45,7 @@ public class HiveViewExpander implements RelOptTable.ViewExpander {
     String dbName = Util.last(schemaPath);
     String tableName = viewPath.get(0);
 
-    return ViewDependencyTracker.get().withViewExpansion(dbName, tableName, () -> {
+    return ViewDependencyTracker.get().withViewExpansion(ViewDependencyTracker.HIVE_CATALOG, dbName, tableName, () -> {
       SqlNode sqlNode = hiveToRelConverter.processView(dbName, tableName)
           .accept(new FuzzyUnionSqlRewriter(tableName, hiveToRelConverter));
       return hiveToRelConverter.getSqlToRelConverter().convertQuery(sqlNode, true, true);

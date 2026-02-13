@@ -96,7 +96,7 @@ public class CoralDatabaseSchema implements Schema {
 
     // Dispatch based on CoralTable implementation type
     if (coralTable instanceof IcebergTable) {
-      ViewDependencyTracker.get().recordBaseTableDependency(dbName, name);
+      ViewDependencyTracker.get().recordBaseTableDependency(ViewDependencyTracker.OPENHOUSE_CATALOG, dbName, name);
       return new IcebergCalciteTableAdapter((IcebergTable) coralTable);
     } else if (coralTable instanceof HiveTable) {
       HiveTable hiveTable = (HiveTable) coralTable;
@@ -104,7 +104,7 @@ public class CoralDatabaseSchema implements Schema {
       if (hiveTable.tableType() == VIEW) {
         return new HiveCalciteViewAdapter(hiveTable, ImmutableList.of(CoralRootSchema.ROOT_SCHEMA, dbName));
       } else {
-        ViewDependencyTracker.get().recordBaseTableDependency(dbName, name);
+        ViewDependencyTracker.get().recordBaseTableDependency(ViewDependencyTracker.HIVE_CATALOG, dbName, name);
         return new HiveCalciteTableAdapter(hiveTable);
       }
     }

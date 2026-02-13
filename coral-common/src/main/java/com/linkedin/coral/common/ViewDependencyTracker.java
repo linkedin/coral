@@ -19,6 +19,9 @@ import java.util.function.Supplier;
  * during Calcite view expansion.
  */
 public class ViewDependencyTracker {
+  public static final String HIVE_CATALOG = "hive";
+  public static final String OPENHOUSE_CATALOG = "openhouse";
+
   private static final ThreadLocal<ViewDependencyTracker> INSTANCE =
       ThreadLocal.withInitial(ViewDependencyTracker::new);
 
@@ -39,8 +42,8 @@ public class ViewDependencyTracker {
    * currently being expanded, then executing the supplied work within the scope of
    * this view. The expansion stack is managed automatically.
    */
-  public <T> T withViewExpansion(String dbName, String tableName, Supplier<T> work) {
-    String qualifiedName = dbName + "." + tableName;
+  public <T> T withViewExpansion(String catalog, String dbName, String tableName, Supplier<T> work) {
+    String qualifiedName = catalog + "." + dbName + "." + tableName;
     if (!expansionStack.isEmpty()) {
       String parent = expansionStack.peek();
       viewDeps.computeIfAbsent(parent, k -> new ArrayList<>()).add(qualifiedName);
@@ -56,8 +59,8 @@ public class ViewDependencyTracker {
   /**
    * Records a base table (non-view) as a dependency of the view currently being expanded.
    */
-  public void recordBaseTableDependency(String dbName, String tableName) {
-    String qualifiedName = dbName + "." + tableName;
+  public void recordBaseTableDependency(String catalog, String dbName, String tableName) {
+    String qualifiedName = catalog + "." + dbName + "." + tableName;
     if (!expansionStack.isEmpty()) {
       String parent = expansionStack.peek();
       // Skip self-dependency: this occurs when convertView is called on a base table,

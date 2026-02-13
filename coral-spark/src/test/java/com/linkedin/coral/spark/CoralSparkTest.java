@@ -81,8 +81,8 @@ public class CoralSparkTest {
     // foo_bar_view depends on foo_view (a view) and bar (a table)
     // foo_view depends on foo (a table)
     // Expected chain:
-    //   foo_bar_view -> [foo_view, bar]
-    //   foo_view -> [foo]
+    //   hive.default.foo_bar_view -> [hive.default.foo_view, hive.default.bar]
+    //   hive.default.foo_view -> [hive.default.foo]
     ViewDependencyTracker.reset();
     RelNode relNode = TestUtils.toRelNode("default", "foo_bar_view");
     CoralSpark coralSpark = createCoralSpark(relNode);
@@ -91,21 +91,21 @@ public class CoralSparkTest {
     assertFalse(viewDeps.isEmpty(), "Expected view dependencies for nested view");
 
     ViewDependency fooBarViewDep =
-        viewDeps.stream().filter(vd -> vd.getViewName().equals("default.foo_bar_view")).findFirst().orElse(null);
+        viewDeps.stream().filter(vd -> vd.getViewName().equals("hive.default.foo_bar_view")).findFirst().orElse(null);
     assertNotNull(fooBarViewDep, "Expected dependency entry for foo_bar_view");
-    assertTrue(fooBarViewDep.getDependencies().contains("default.foo_view"), "foo_bar_view should depend on foo_view");
-    assertTrue(fooBarViewDep.getDependencies().contains("default.bar"), "foo_bar_view should depend on bar");
+    assertTrue(fooBarViewDep.getDependencies().contains("hive.default.foo_view"), "foo_bar_view should depend on foo_view");
+    assertTrue(fooBarViewDep.getDependencies().contains("hive.default.bar"), "foo_bar_view should depend on bar");
 
     ViewDependency fooViewDep =
-        viewDeps.stream().filter(vd -> vd.getViewName().equals("default.foo_view")).findFirst().orElse(null);
+        viewDeps.stream().filter(vd -> vd.getViewName().equals("hive.default.foo_view")).findFirst().orElse(null);
     assertNotNull(fooViewDep, "Expected dependency entry for foo_view");
-    assertTrue(fooViewDep.getDependencies().contains("default.foo"), "foo_view should depend on foo");
+    assertTrue(fooViewDep.getDependencies().contains("hive.default.foo"), "foo_view should depend on foo");
   }
 
   @Test
   public void testGetViewDependenciesFromSimpleView() {
     // foo_view depends only on foo (a base table)
-    // Expected: single entry foo_view -> [foo]
+    // Expected: single entry hive.default.foo_view -> [hive.default.foo]
     ViewDependencyTracker.reset();
     RelNode relNode = TestUtils.toRelNode("default", "foo_view");
     CoralSpark coralSpark = createCoralSpark(relNode);
@@ -115,8 +115,8 @@ public class CoralSparkTest {
     assertEquals(viewDeps.size(), 1, "Expected exactly one view dependency entry");
 
     ViewDependency dep = viewDeps.get(0);
-    assertEquals(dep.getViewName(), "default.foo_view");
-    assertTrue(dep.getDependencies().contains("default.foo"), "foo_view should depend on foo");
+    assertEquals(dep.getViewName(), "hive.default.foo_view");
+    assertTrue(dep.getDependencies().contains("hive.default.foo"), "foo_view should depend on foo");
   }
 
   @Test

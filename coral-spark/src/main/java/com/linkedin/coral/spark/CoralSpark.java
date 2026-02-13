@@ -178,13 +178,14 @@ public class CoralSpark {
   /**
    * Getter for the view dependency chain collected during view expansion.
    * Each {@link ViewDependency} represents a view and its immediate dependencies
-   * (which can be other views or base tables) in "database_name.table_name" format.
+   * (which can be other views or base tables) in "catalog.database_name.table_name" format
+   * (e.g. "hive.db.v1", "openhouse.db.t1").
    *
-   * <p>For example, if view "db.v1" depends on view "db.v2" and table "db.t1",
-   * and "db.v2" depends on tables "db.t3" and "db.t4", this returns:
+   * <p>For example, if view "hive.db.v1" depends on view "hive.db.v2" and table "openhouse.db.t1",
+   * and "hive.db.v2" depends on tables "hive.db.t3" and "openhouse.db.t4", this returns:
    * <pre>
-   * [ViewDependency("db.v1", ["db.v2", "db.t1"]),
-   *  ViewDependency("db.v2", ["db.t3", "db.t4"])]
+   * [ViewDependency("hive.db.v1", ["hive.db.v2", "openhouse.db.t1"]),
+   *  ViewDependency("hive.db.v2", ["hive.db.t3", "openhouse.db.t4"])]
    * </pre>
    *
    * @return List of {@link ViewDependency} representing the view dependency chain,

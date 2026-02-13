@@ -11,8 +11,9 @@ import java.util.Objects;
 
 /**
  * Represents a single node in the view dependency chain.
- * For a view "db.v1" that depends on "db.v2" and "db.t1",
- * this would be: ViewDependency("db.v1", ["db.v2", "db.t1"])
+ * Names are in "catalog.db.table" format (e.g. "hive.db.v1", "openhouse.db.t1").
+ * For a view "hive.db.v1" that depends on "hive.db.v2" and "openhouse.db.t1",
+ * this would be: ViewDependency("hive.db.v1", ["hive.db.v2", "openhouse.db.t1"])
  */
 public class ViewDependency {
   private final String viewName;

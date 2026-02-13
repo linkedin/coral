@@ -162,7 +162,7 @@ public abstract class ToRelConverter {
    * @return Calcite {@link RelNode} representation of hive view definition
    */
   public RelNode convertView(String hiveDbName, String hiveViewName) {
-    return ViewDependencyTracker.get().withViewExpansion(hiveDbName, hiveViewName, () -> {
+    return ViewDependencyTracker.get().withViewExpansion(ViewDependencyTracker.HIVE_CATALOG, hiveDbName, hiveViewName, () -> {
       SqlNode sqlNode = processView(hiveDbName, hiveViewName);
       return toRel(sqlNode);
     });
