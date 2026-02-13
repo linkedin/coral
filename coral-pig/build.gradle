@@ -25,11 +25,11 @@ dependencies {
   implementation 'com.linkedin.calcite:calcite-core:1.21.0.265'
   implementation 'com.linkedin.calcite:calcite-linq4j:1.21.0.265'
 
-  // Pig + PigUnit for tests
-  testImplementation('org.apache.pig:pig:0.16.0') {
+  // Pig + PigUnit for tests (0.18.0 for Java 17 compatibility)
+  testImplementation('org.apache.pig:pig:0.18.0') {
     exclude group: 'com.google.guava', module: 'guava'
   }
-  testImplementation('org.apache.pig:pigunit:0.16.0') {
+  testImplementation('org.apache.pig:pigunit:0.18.0') {
     exclude group: 'com.google.guava', module: 'guava'
   }
 
