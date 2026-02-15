@@ -51,12 +51,6 @@ dependencies {
     exclude group: 'org.slf4j', module: 'slf4j-log4j12'
     exclude group: 'com.google.guava', module: 'guava'
   }
-  testImplementation('org.apache.hive:hive-exec:2.3.9') {
-    exclude group: 'org.slf4j', module: 'slf4j-log4j12'
-    exclude group: 'org.apache.calcite', module: 'calcite-core'
-    exclude group: 'org.apache.calcite', module: 'calcite-avatica'
-    exclude group: 'com.google.guava', module: 'guava'
-  }
 
   testImplementation(deps.'hadoop'.'hadoop-mapreduce-client-core') {
     exclude group: 'com.google.guava', module: 'guava'
