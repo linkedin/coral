@@ -3,13 +3,6 @@ plugins {
   id 'antlr'
 }
 
-repositories {
-  mavenCentral()
-  // LinkedIn Artifactory for LinkedIn-hosted artifacts (e.g., com.linkedin.calcite)
-  // If your org uses different path, adjust the URL accordingly.
-  maven { url 'https://linkedin.jfrog.io/artifactory/calcite' }
-}
-
 dependencies {
   // Antlr v3 for .g grammars
   antlr 'org.antlr:antlr:3.4'

@@ -2,12 +2,6 @@ plugins {
   id 'java'
 }
 
-repositories {
-  // LinkedIn Calcite fork for calcite-core and calcite-linq4j
-  maven { url ' https://linkedin.jfrog.io/artifactory/calcite' }
-  // Standard artifacts
-  mavenCentral()
-}
 
 dependencies {
   // Coral modules

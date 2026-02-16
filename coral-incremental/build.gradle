@@ -2,15 +2,6 @@ plugins {
   id 'java'
 }
 
-repositories {
-  // Prefer Maven Central first
-  mavenCentral()
-
-  // Keep these in case other transitive bits need them
-  maven { url ' https://nexus.pentaho.org/content/groups/public/' }
-  maven { url ' https://repo.osgeo.org/repository/release/' }
-  maven { url ' https://linkedin.jfrog.io/artifactory/calcite' }
-}
 
 dependencies {
   testImplementation project(':coral-common')

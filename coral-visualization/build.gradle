@@ -2,10 +2,6 @@ plugins {
   id 'java'
 }
 
-repositories {
-  maven { url 'https://linkedin.jfrog.io/artifactory/calcite' }
-  mavenCentral()
-}
 
 dependencies {
   implementation project(path: ':coral-common')
