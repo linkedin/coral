@@ -3,18 +3,14 @@ plugins {
 }
 
 dependencies {
-  // Coral modules
   implementation project(':coral-common')
   implementation(project(':coral-hive')) {
-    // keep classpath clean
     exclude group: 'jline', module: 'jline'
     exclude group: 'com.google.guava', module: 'guava'
   }
-
-  // Shaded Guava to avoid conflicts
   implementation(project(path: ':shading:guava-shaded', configuration: 'shadow'))
 
-  // Apache Commons + Calcite for code here
+  // Apache Commons for utilities
   implementation 'org.apache.commons:commons-lang3:3.12.0'
   implementation deps.'linkedin-calcite-core'
   implementation deps.'linkedin-calcite-linq4j'

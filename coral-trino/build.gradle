@@ -3,17 +3,15 @@ plugins {
 }
 
 dependencies {
-  // Coral modules
   implementation project(':coral-common')
-  implementation project(':coral-hive')  // <-- needed for HiveToRelConverter, validators, function registry
+  implementation project(':coral-hive')
   implementation(project(path: ':shading:coral-trino-parser', configuration: 'shadow'))
   implementation(project(path: ':shading:guava-shaded', configuration: 'shadow'))
 
-  // Calcite (keep consistent with other modules)
+  // Calcite (LinkedIn fork)
   implementation deps.'linkedin-calcite-core'
   implementation deps.'linkedin-calcite-linq4j'
 
-  // Hive APIs used in trino code (Table, TypeInfo, ObjectInspector, etc.)
   implementation(deps.'hive'.'hive-metastore') {
     exclude group: 'org.apache.calcite', module: 'calcite-core'
     exclude group: 'org.apache.calcite', module: 'calcite-avatica'

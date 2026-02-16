@@ -23,7 +23,6 @@ configurations.all {
 }
 
 dependencies {
-  // Coral modules
   implementation project(':coral-common')
   implementation project(':coral-hive')
   implementation project(':coral-incremental')
@@ -31,10 +30,8 @@ dependencies {
   implementation project(':coral-spark')
   implementation project(':coral-visualization')
 
-  // Calcite APIs used directly in coral-service (RelNode, SqlNode, RelToSqlConverter)
   implementation deps.'linkedin-calcite-core'
   implementation deps.'linkedin-calcite-linq4j'
-  // Hive + Hadoop
   implementation(deps.'hive'.'hive-exec-core') {
     // prevent old calcite dragged in by hive-exec
     exclude group: 'org.apache.calcite', module: 'calcite-core'

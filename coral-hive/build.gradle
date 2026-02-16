@@ -8,10 +8,9 @@ dependencies {
   antlr deps.'antlr'
   implementation deps.'antlr-runtime'
 
-  // Coral common
   implementation project(':coral-common')
 
-  // Calcite: use LinkedIn fork for core (expected by Coral)
+  // Calcite: use LinkedIn fork
   implementation deps.'linkedin-calcite-core'
   implementation deps.'linkedin-calcite-linq4j'
 
@@ -31,7 +30,6 @@ dependencies {
     exclude group: 'org.apache.calcite', module: 'calcite-avatica'
   }
 
-  // Logging & annotations
   implementation 'commons-logging:commons-logging:1.2'
   implementation 'javax.annotation:javax.annotation-api:1.3.2'
 
@@ -39,7 +37,6 @@ dependencies {
   // Uses the shaded jar variant published by the subproject
   implementation(project(path: ':shading:guava-shaded', configuration: 'shadow'))
 
-  // Tests
   testImplementation(deps.'hive'.'hive-exec-core') {
     exclude group: 'org.apache.avro', module: 'avro-tools'
     // Prevent duplicate Calcite classes coming from hive-exec's shaded deps

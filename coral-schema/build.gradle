@@ -4,27 +4,24 @@ plugins {
 
 dependencies {
   implementation(project(path: ':shading:guava-shaded', configuration: 'shadow'))
-
-  // Coral modules
   implementation project(':coral-common')
   implementation project(':coral-hive')
 
-  // Avro (explicit versions here)
+  // Avro dependencies
   implementation 'org.apache.avro:avro:1.10.2'
   implementation 'org.apache.avro:avro-mapred:1.10.2'
   implementation deps.'avroCompatHelper'
 
-  // Hive APIs (aligned)
   implementation(deps.'hive'.'hive-metastore') {
     exclude group: 'com.google.guava', module: 'guava'
     exclude group: 'org.apache.calcite', module: 'calcite-core'
     exclude group: 'org.apache.calcite', module: 'calcite-avatica'
   }
-  // Calcite
+
   implementation deps.'linkedin-calcite-core'
   implementation deps.'linkedin-calcite-linq4j'
 
-  // Force newer Guava to override old version from Calcite
+  // Force newer Guava to avoid conflicts
   implementation 'com.google.guava:guava:31.1-jre'
 
   // Legacy Jackson
