@@ -1,5 +1,9 @@
+plugins {
+  id 'java'
+}
+
 dependencies {
-  compile(deps.'linkedin-calcite-core') {
+  implementation(deps.'linkedin-calcite-core') {
     artifact {
       name = 'calcite-core'
       extension = 'jar'
@@ -8,19 +12,23 @@ dependencies {
     }
   }
 
-  compile(deps.'hive'.'hive-metastore') {
+  implementation(deps.'hive'.'hive-metastore') {
     exclude group: 'com.linkedin.metastore-autometrics', module: 'autometrics-reporter'
     exclude group: 'com.linkedin.metastore-audit', module: 'metastore-audit-logging'
     // avro-tools brings in whole bunch of hadoop classes causing duplicates and conflicts
     exclude group: 'org.apache.avro', module: 'avro-tools'
   }
 
-  compile deps.'hadoop'.'hadoop-common'
+  implementation deps.'hadoop'.'hadoop-common'
+  implementation(project(path: ':shading:guava-shaded', configuration: 'shadow'))
+
+  implementation deps.'linkedin-calcite-core'
+  implementation deps.'linkedin-calcite-linq4j'
 
   // LinkedIn Iceberg dependencies
-  compile deps.'linkedin-iceberg'.'iceberg-api'
-  compile deps.'linkedin-iceberg'.'iceberg-core'
-  compile(deps.'linkedin-iceberg'.'iceberg-hive-metastore') {
+  implementation deps.'linkedin-iceberg'.'iceberg-api'
+  implementation deps.'linkedin-iceberg'.'iceberg-core'
+  implementation(deps.'linkedin-iceberg'.'iceberg-hive-metastore') {
     exclude group: 'org.apache.hive', module: 'hive-metastore'
     exclude group: 'org.apache.hadoop', module: 'hadoop-common'
   }

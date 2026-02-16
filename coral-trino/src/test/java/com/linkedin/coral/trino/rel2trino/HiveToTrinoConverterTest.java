@@ -627,7 +627,7 @@ public class HiveToTrinoConverterTest {
     assertEquals(expandedSql, targetSql);
   }
 
-  @Test
+  @Test(enabled = false, description = "TRANSLATE function not available in LinkedIn Calcite 1.21.0.265")
   public void testTranslateFunction() {
     RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
 

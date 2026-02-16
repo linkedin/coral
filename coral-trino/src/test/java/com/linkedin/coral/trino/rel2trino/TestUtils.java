@@ -59,7 +59,7 @@ public class TestUtils {
         SqlParser.configBuilder().setCaseSensitive(false).setConformance(SqlConformanceEnum.DEFAULT).build();
 
     return Frameworks.newConfigBuilder().parserConfig(parserConfig).defaultSchema(rootSchema)
-        .traitDefs((List<RelTraitDef>) null).programs(Programs.ofRules(Programs.RULE_SET)).build();
+        .traitDefs((List<RelTraitDef>) null).programs(Programs.standard()).build();
   }
 
   static RelNode toRel(String sql, FrameworkConfig config) {

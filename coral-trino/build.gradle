@@ -1,17 +1,52 @@
-dependencies {
-  compile deps.'gson'
-  compile project(path: ':coral-hive')
-  compile project(path: ':shading:coral-trino-parser', configuration: 'shadow')
+plugins {
+  id 'java'
+}
 
-  testCompile(deps.'hive'.'hive-exec-core') {
-    exclude group: 'org.apache.avro', module: 'avro-tools'
-    // These exclusions are required to prevent duplicate classes since we include
-    // shaded jar above
+dependencies {
+  implementation project(':coral-common')
+  implementation project(':coral-hive')
+  implementation(project(path: ':shading:coral-trino-parser', configuration: 'shadow'))
+  implementation(project(path: ':shading:guava-shaded', configuration: 'shadow'))
+
+  // Calcite (LinkedIn fork)
+  implementation deps.'linkedin-calcite-core'
+  implementation deps.'linkedin-calcite-linq4j'
+
+  implementation(deps.'hive'.'hive-metastore') {
+    exclude group: 'org.apache.calcite', module: 'calcite-core'
+    exclude group: 'org.apache.calcite', module: 'calcite-avatica'
+  }
+  implementation(deps.'hive'.'hive-serde') {
     exclude group: 'org.apache.calcite', module: 'calcite-core'
     exclude group: 'org.apache.calcite', module: 'calcite-avatica'
   }
 
-  testCompile deps.'hadoop'.'hadoop-mapreduce-client-common'
-  testCompile deps.'kryo'
+  implementation deps.'gson'
+  implementation deps.'commons-lang3'
+  implementation deps.'javax-annotation'
+
+  // Tests
+  testImplementation(deps.'hive'.'hive-exec-core') {
+    exclude group: 'org.apache.avro', module: 'avro-tools'
+    exclude group: 'org.apache.calcite', module: 'calcite-core'
+    exclude group: 'org.apache.calcite', module: 'calcite-avatica'
+  }
+  testImplementation(deps.'hive'.'hive-metastore') {
+    exclude group: 'org.apache.calcite', module: 'calcite-core'
+    exclude group: 'org.apache.calcite', module: 'calcite-avatica'
+  }
+  testImplementation deps.'hadoop'.'hadoop-mapreduce-client-common'
+  testImplementation deps.'kryo'
   testImplementation deps.'jetbrains'
+  testImplementation deps.'derby'
+
+  testRuntimeOnly deps.'datanucleus-api-jdo'
+  testRuntimeOnly deps.'datanucleus-core'
+  testRuntimeOnly deps.'datanucleus-rdbms'
+}
+
+configurations.all {
+  resolutionStrategy {
+    force 'org.apache.avro:avro:1.10.2'
+  }
 }

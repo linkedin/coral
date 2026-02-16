@@ -1,5 +1,5 @@
 /**
- * Copyright 2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2023-2026 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -122,6 +122,13 @@ public class HiveRelBuilder extends RelBuilder {
       return this;
     }
 
-    return project(fields(), newFieldNames, true);
+    // LinkedIn Calcite fork doesn't have fields() method
+    // Create RexInputRef for each field manually
+    final int fieldCount = peek().getRowType().getFieldCount();
+    final List<org.apache.calcite.rex.RexNode> fieldRefs = new ArrayList<>(fieldCount);
+    for (int i = 0; i < fieldCount; i++) {
+      fieldRefs.add(field(i));
+    }
+    return project(fieldRefs, newFieldNames, true);
   }
 }

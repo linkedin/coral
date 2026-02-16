@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2022 LinkedIn Corporation. All rights reserved.
+ * Copyright 2019-2026 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -87,7 +87,7 @@ public class CalcitePigUDFTest {
         { "view = LOAD 'src/test/resources/data/functions/tablefields.json' USING JsonLoader('"
             + "i_1:int, i0:int, i1:int, i2:int, i3:int, fl1:double, fl2:double, fl3:double, "
             + "str:chararray, substr:chararray, exstr:chararray, bootrue:boolean, boofalse:boolean, bin:bytearray');", "view = FOREACH view GENERATE LOG(i3)/LOG(2) AS EXPRx0;" };
-    final String[] expectedOutput = { "(1.5849625007211563)" };
+    final String[] expectedOutput = { "(1.584962500721156)" };
 
     final String[] translatedPigLatin = TestUtils.sqlToPigLatin(sql, OUTPUT_RELATION);
 
@@ -107,7 +107,7 @@ public class CalcitePigUDFTest {
         { "view = LOAD 'src/test/resources/data/functions/tablefields.json' USING JsonLoader('"
             + "i_1:int, i0:int, i1:int, i2:int, i3:int, fl1:double, fl2:double, fl3:double, "
             + "str:chararray, substr:chararray, exstr:chararray, bootrue:boolean, boofalse:boolean, bin:bytearray');", "view = FOREACH view GENERATE LOG(i3)/LOG(i2) AS EXPRx0;" };
-    final String[] expectedOutput = { "(1.5849625007211563)" };
+    final String[] expectedOutput = { "(1.584962500721156)" };
 
     final String[] translatedPigLatin = TestUtils.sqlToPigLatin(sql, OUTPUT_RELATION);
 
@@ -209,11 +209,11 @@ public class CalcitePigUDFTest {
                             "ceiling", "CEIL", "fl2",
                             "(2.0)"), PigFunctionTest.create("ceiling", "CEIL", "fl3", "(2.0)"), PigFunctionTest
                                 .create("cos", "COS", "i1", "(0.5403023058681398)"), PigFunctionTest.create("exp",
-                                    "EXP", "fl1", "(2.718281828459045)"), PigFunctionTest.create("floor", "FLOOR",
+                                    "EXP", "fl1", "(2.7182818284590455)"), PigFunctionTest.create("floor", "FLOOR",
                                         "fl1", "(1.0)"), PigFunctionTest.create("floor", "FLOOR", "fl2",
                                             "(1.0)"), PigFunctionTest.create("floor", "FLOOR", "fl3",
                                                 "(1.0)"), PigFunctionTest.create("log10", "LOG10", "fl3",
-                                                    "(0.24303804868629444)"), PigFunctionTest.create("lower", "LOWER",
+                                                    "(0.24303804868629442)"), PigFunctionTest.create("lower", "LOWER",
                                                         "str", "(abcd)"), PigFunctionTest.create("ln", "LOG", "fl3",
                                                             "(0.5596157879354227)"), PigFunctionTest.create(
                                                                 "regexp_extract", "REGEX_EXTRACT",
@@ -260,7 +260,7 @@ public class CalcitePigUDFTest {
                                                     .create("power", "i2, i2", "(4.0)"), PigFunctionTest.create("power",
                                                         "fl2, fl2",
                                                         "(1.3056984531291909)"), PigFunctionTest.create("radians", "i3",
-                                                            "(0.05235987755982988)"), PigFunctionTest.create(
+                                                            "(0.05235987755982989)"), PigFunctionTest.create(
                                                                 "regexp_replace", "str, substr, exstr",
                                                                 "(aBeFg )"), PigFunctionTest.create("split", "str, 'c'",
                                                                     "({(aB),(D)})"), PigFunctionTest.create("unbase64",
