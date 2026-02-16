@@ -88,24 +88,9 @@ test {
   systemProperty "datanucleus.fixedDatastore", "false"
   systemProperty "javax.jdo.option.Mapping", "derby"
 
-  // Add JVM args for Java 17 compatibility
-  jvmArgs = [
-    '--add-opens=java.base/java.lang=ALL-UNNAMED',
-    '--add-opens=java.base/java.lang.invoke=ALL-UNNAMED',
-    '--add-opens=java.base/java.lang.reflect=ALL-UNNAMED',
-    '--add-opens=java.base/java.util=ALL-UNNAMED',
-    '--add-opens=java.base/java.io=ALL-UNNAMED',
-    '--add-opens=java.base/java.net=ALL-UNNAMED',
-    '--add-opens=java.base/java.nio=ALL-UNNAMED',
-    '--add-opens=java.base/sun.nio.ch=ALL-UNNAMED',
-    '--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED',
-    '--add-opens=java.base/sun.reflect.generics.reflectiveObjects=ALL-UNNAMED'
-  ]
-
-  // Disable Hive CBO to avoid Calcite Druid adapter issues
+  // Hive-specific configuration for HMS 2.3.9
   systemProperty 'hive.cbo.enable', 'false'
   systemProperty 'hive.exec.mode.local.auto', 'false'
-  // Allow schema evolution for tests (HMS 2.3.9 is stricter)
   systemProperty 'hive.metastore.disallow.incompatible.col.type.changes', 'false'
 
   // Ensure test resources (hive.xml) are loaded
