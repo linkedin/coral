@@ -15,14 +15,14 @@ dependencies {
   implementation deps.'avroCompatHelper'
 
   // Hive APIs (aligned)
-  implementation('org.apache.hive:hive-metastore:2.3.9') {
+  implementation(deps.'hive'.'hive-metastore') {
     exclude group: 'com.google.guava', module: 'guava'
     exclude group: 'org.apache.calcite', module: 'calcite-core'
     exclude group: 'org.apache.calcite', module: 'calcite-avatica'
   }
   // Calcite
-  implementation 'com.linkedin.calcite:calcite-core:1.21.0.265'
-  implementation 'com.linkedin.calcite:calcite-linq4j:1.21.0.265'
+  implementation deps.'linkedin-calcite-core'
+  implementation deps.'linkedin-calcite-linq4j'
 
   // Force newer Guava to override old version from Calcite
   implementation 'com.google.guava:guava:31.1-jre'
@@ -38,7 +38,7 @@ dependencies {
     exclude group: 'org.apache.calcite', module: 'calcite-avatica'
     exclude group: 'com.google.guava', module: 'guava'
   }
-  testImplementation('org.apache.hadoop:hadoop-common:2.7.0') {
+  testImplementation(deps.'hadoop'.'hadoop-common') {
     exclude group: 'org.slf4j', module: 'slf4j-log4j12'
     exclude group: 'com.google.guava', module: 'guava'
   }

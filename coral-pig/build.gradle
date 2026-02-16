@@ -16,8 +16,8 @@ dependencies {
 
   // Apache Commons + Calcite for code here
   implementation 'org.apache.commons:commons-lang3:3.12.0'
-  implementation 'com.linkedin.calcite:calcite-core:1.21.0.265'
-  implementation 'com.linkedin.calcite:calcite-linq4j:1.21.0.265'
+  implementation deps.'linkedin-calcite-core'
+  implementation deps.'linkedin-calcite-linq4j'
 
   // Pig + PigUnit for tests (0.18.0 for Java 17 compatibility)
   testImplementation('org.apache.pig:pig:0.18.0') {
@@ -27,8 +27,8 @@ dependencies {
     exclude group: 'com.google.guava', module: 'guava'
   }
 
-  // jline is required by PigUnit tests (Pig runtime doesn’t include it)
-  testImplementation 'jline:jline:0.9.94'
+  // jline is required by PigUnit tests (Pig runtime doesn't include it)
+  testImplementation deps.'jline'
 
   // Hive runtime for tests (Java 17 friendly)
   testImplementation('org.apache.hive:hive-exec:2.3.9') {
@@ -43,7 +43,7 @@ dependencies {
   }
 
   // Hive Metastore with its own DataNucleus/JDO dependencies
-  testImplementation('org.apache.hive:hive-metastore:2.3.9') {
+  testImplementation(deps.'hive'.'hive-metastore') {
     exclude group: 'com.google.guava', module: 'guava'
     exclude group: 'org.apache.calcite', module: 'calcite-core'
     exclude group: 'org.apache.calcite', module: 'calcite-avatica'

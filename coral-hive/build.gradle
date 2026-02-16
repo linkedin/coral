@@ -5,28 +5,28 @@ plugins {
 
 dependencies {
   // Antlr v3 for .g grammars
-  antlr 'org.antlr:antlr:3.4'
-  implementation 'org.antlr:antlr-runtime:3.4'
+  antlr deps.'antlr'
+  implementation deps.'antlr-runtime'
 
   // Coral common
   implementation project(':coral-common')
 
-  // Calcite: use LinkedIn fork for core (expected by Coral), linq4j can remain Apache
-  implementation 'com.linkedin.calcite:calcite-core:1.21.0.265'
-  implementation 'com.linkedin.calcite:calcite-linq4j:1.21.0.265'
+  // Calcite: use LinkedIn fork for core (expected by Coral)
+  implementation deps.'linkedin-calcite-core'
+  implementation deps.'linkedin-calcite-linq4j'
 
   // Ivy for dynamic artifact resolution (ArtifactsResolver)
-  implementation 'org.apache.ivy:ivy:2.5.1'
+  implementation deps.'ivy'
 
   // Hadoop common (ANTLR-generated parser references org.apache.hadoop.conf.Configuration)
-  implementation 'org.apache.hadoop:hadoop-common:2.7.0'
+  implementation deps.'hadoop'.'hadoop-common'
 
   // Hive APIs used in main sources
-  implementation('org.apache.hive:hive-metastore:2.3.9') {
+  implementation(deps.'hive'.'hive-metastore') {
     exclude group: 'org.apache.calcite', module: 'calcite-core'
     exclude group: 'org.apache.calcite', module: 'calcite-avatica'
   }
-  implementation('org.apache.hive:hive-serde:2.3.9') {
+  implementation(deps.'hive'.'hive-serde') {
     exclude group: 'org.apache.calcite', module: 'calcite-core'
     exclude group: 'org.apache.calcite', module: 'calcite-avatica'
   }
@@ -40,14 +40,14 @@ dependencies {
   implementation(project(path: ':shading:guava-shaded', configuration: 'shadow'))
 
   // Tests
-  testImplementation('org.apache.hive:hive-exec:2.3.9:core') {
+  testImplementation(deps.'hive'.'hive-exec-core') {
     exclude group: 'org.apache.avro', module: 'avro-tools'
     // Prevent duplicate Calcite classes coming from hive-exec's shaded deps
     exclude group: 'org.apache.calcite', module: 'calcite-core'
     exclude group: 'org.apache.calcite', module: 'calcite-avatica'
   }
-  testImplementation 'org.apache.hadoop:hadoop-mapreduce-client-core:2.7.0'
-  testImplementation 'com.esotericsoftware.kryo:kryo:2.22'
+  testImplementation deps.'hadoop'.'hadoop-mapreduce-client-core'
+  testImplementation deps.'kryo'
   testImplementation 'org.apache.derby:derby:10.10.2.0'
 
   // Mockito for mocking in tests

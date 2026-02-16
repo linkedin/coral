@@ -32,20 +32,20 @@ dependencies {
   implementation project(':coral-visualization')
 
   // Calcite APIs used directly in coral-service (RelNode, SqlNode, RelToSqlConverter)
-  implementation 'com.linkedin.calcite:calcite-core:1.21.0.265'
-  implementation 'com.linkedin.calcite:calcite-linq4j:1.21.0.265'
+  implementation deps.'linkedin-calcite-core'
+  implementation deps.'linkedin-calcite-linq4j'
   // Hive + Hadoop
-  implementation('org.apache.hive:hive-exec:2.3.9:core') {
+  implementation(deps.'hive'.'hive-exec-core') {
     // prevent old calcite dragged in by hive-exec
     exclude group: 'org.apache.calcite', module: 'calcite-core'
     exclude group: 'org.apache.calcite', module: 'calcite-avatica'
   }
-  implementation('org.apache.hive:hive-metastore:2.3.9') {
+  implementation(deps.'hive'.'hive-metastore') {
     exclude group: 'org.apache.calcite', module: 'calcite-core'
     exclude group: 'org.apache.calcite', module: 'calcite-avatica'
   }
-  implementation 'org.apache.hadoop:hadoop-common:2.7.0'
-  implementation 'org.apache.hadoop:hadoop-mapreduce-client-core:2.7.0'
+  implementation deps.'hadoop'.'hadoop-common'
+  implementation deps.'hadoop'.'hadoop-mapreduce-client-core'
 
   // DataNucleus dependencies required by Hive Metastore under JDK 17
   runtimeOnly 'org.datanucleus:datanucleus-api-jdo:4.2.5'

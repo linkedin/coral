@@ -10,15 +10,15 @@ dependencies {
   implementation(project(path: ':shading:guava-shaded', configuration: 'shadow'))
 
   // Calcite (keep consistent with other modules)
-  implementation 'com.linkedin.calcite:calcite-core:1.21.0.265'
-  implementation 'com.linkedin.calcite:calcite-linq4j:1.21.0.265'
+  implementation deps.'linkedin-calcite-core'
+  implementation deps.'linkedin-calcite-linq4j'
 
   // Hive APIs used in trino code (Table, TypeInfo, ObjectInspector, etc.)
-  implementation('org.apache.hive:hive-metastore:2.3.9') {
+  implementation(deps.'hive'.'hive-metastore') {
     exclude group: 'org.apache.calcite', module: 'calcite-core'
     exclude group: 'org.apache.calcite', module: 'calcite-avatica'
   }
-  implementation('org.apache.hive:hive-serde:2.3.9') {
+  implementation(deps.'hive'.'hive-serde') {
     exclude group: 'org.apache.calcite', module: 'calcite-core'
     exclude group: 'org.apache.calcite', module: 'calcite-avatica'
   }
@@ -34,7 +34,7 @@ dependencies {
     exclude group: 'org.apache.calcite', module: 'calcite-core'
     exclude group: 'org.apache.calcite', module: 'calcite-avatica'
   }
-  testImplementation('org.apache.hive:hive-metastore:2.3.9') {
+  testImplementation(deps.'hive'.'hive-metastore') {
     exclude group: 'org.apache.calcite', module: 'calcite-core'
     exclude group: 'org.apache.calcite', module: 'calcite-avatica'
   }

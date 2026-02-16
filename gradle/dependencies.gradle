@@ -30,7 +30,8 @@ ext.deps = [
   ],
   'hive':[
     'hive-metastore': "org.apache.hive:hive-metastore:${versions['hive']}",
-    'hive-exec-core': "org.apache.hive:hive-exec:${versions['hive']}:core"
+    'hive-exec-core': "org.apache.hive:hive-exec:${versions['hive']}:core",
+    'hive-serde': "org.apache.hive:hive-serde:${versions['hive']}"
   ],
   'linkedin-iceberg': [
     'iceberg-core': "com.linkedin.iceberg:iceberg-core:${versions['linkedin-iceberg']}",
@@ -42,6 +43,7 @@ ext.deps = [
   'jline': "jline:jline:${versions['jline']}",
   'kryo': "com.esotericsoftware.kryo:kryo:${versions['kryo']}",
   'linkedin-calcite-core': "com.linkedin.calcite:calcite-core:${versions['linkedin-calcite-core']}",
+  'linkedin-calcite-linq4j': "com.linkedin.calcite:calcite-linq4j:${versions['linkedin-calcite-core']}",
   'pig': [
     'pig': "org.apache.pig:pig:${versions['pig']}:h2",
     'pigunit': "org.apache.pig:pigunit:${versions['pig']}"

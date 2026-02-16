@@ -9,8 +9,8 @@ dependencies {
   implementation(project(path: ':shading:guava-shaded', configuration: 'shadow'))
 
   // Calcite (LinkedIn fork) + matching linq4j
-  implementation 'com.linkedin.calcite:calcite-core:1.21.0.265'
-  implementation 'com.linkedin.calcite:calcite-linq4j:1.21.0.265'
+  implementation deps.'linkedin-calcite-core'
+  implementation deps.'linkedin-calcite-linq4j'
 
   // If you use hive-exec core in tests, exclude calcite to avoid conflicts
   testImplementation(deps.'hive'.'hive-exec-core') {
@@ -21,7 +21,7 @@ dependencies {
   }
 
   // Hive metastore for tests; exclude old Calcite to avoid clashes
-  testImplementation('org.apache.hive:hive-metastore:2.3.9') {
+  testImplementation(deps.'hive'.'hive-metastore') {
     exclude group: 'org.apache.calcite', module: 'calcite-core'
     exclude group: 'org.apache.calcite', module: 'calcite-avatica'
   }

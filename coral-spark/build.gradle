@@ -15,8 +15,8 @@ dependencies {
   implementation project(':coral-common')
   implementation project(':coral-hive')
   implementation project(':coral-schema')
-  implementation 'com.linkedin.calcite:calcite-core:1.21.0.265'
-  implementation 'com.linkedin.calcite:calcite-linq4j:1.21.0.265'
+  implementation deps.'linkedin-calcite-core'
+  implementation deps.'linkedin-calcite-linq4j'
 
   // Explicitly declare Avro dependencies
   implementation 'org.apache.avro:avro:1.10.2'
@@ -25,21 +25,21 @@ dependencies {
   implementation 'org.apache.avro:avro-mapred:1.10.2:hadoop2'
 
   // Exclude avro-mapred from hive-serde to avoid conflicts
-  implementation('org.apache.hive:hive-serde:2.3.9') {
+  implementation(deps.'hive'.'hive-serde') {
     exclude group: 'org.apache.avro', module: 'avro-mapred'
     exclude group: 'org.apache.avro', module: 'avro-tools'
   }
 
   compileOnly deps.'spark'.'sql'
 
-  testImplementation('org.apache.hive:hive-exec:2.3.9:core') {
+  testImplementation(deps.'hive'.'hive-exec-core') {
     exclude group: 'org.apache.avro', module: 'avro-tools'
     exclude group: 'org.apache.avro', module: 'avro-mapred'
     exclude group: 'org.apache.calcite', module: 'calcite-core'
     exclude group: 'org.apache.calcite', module: 'calcite-avatica'
   }
 
-  testImplementation('org.apache.hive:hive-metastore:2.3.9') {
+  testImplementation(deps.'hive'.'hive-metastore') {
     exclude group: 'org.apache.calcite', module: 'calcite-core'
     exclude group: 'org.apache.calcite', module: 'calcite-avatica'
     exclude group: 'org.apache.avro', module: 'avro-mapred'
