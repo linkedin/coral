@@ -29,4 +29,12 @@ dependencies {
 
   implementation 'com.linkedin.calcite:calcite-core:1.21.0.265'
   implementation 'com.linkedin.calcite:calcite-linq4j:1.21.0.265'
+
+  // LinkedIn Iceberg dependencies
+  implementation deps.'linkedin-iceberg'.'iceberg-api'
+  implementation deps.'linkedin-iceberg'.'iceberg-core'
+  implementation(deps.'linkedin-iceberg'.'iceberg-hive-metastore') {
+    exclude group: 'org.apache.hive', module: 'hive-metastore'
+    exclude group: 'org.apache.hadoop', module: 'hadoop-common'
+  }
 }

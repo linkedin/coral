@@ -57,6 +57,13 @@ dependencies {
   testImplementation 'com.esotericsoftware.kryo:kryo:2.22'
   testImplementation 'org.apache.derby:derby:10.10.2.0'
 
+  // Mockito for mocking in tests
+  testImplementation 'org.mockito:mockito-core:2.28.2'
+
+  // Iceberg dependencies for tests (needed by IcebergTableConverterTest from master)
+  testImplementation deps.'linkedin-iceberg'.'iceberg-api'
+  testImplementation deps.'linkedin-iceberg'.'iceberg-core'
+
   // DataNucleus dependencies required by Hive Metastore under JDK 17
   testRuntimeOnly 'org.datanucleus:datanucleus-api-jdo:4.2.5'
   testRuntimeOnly 'org.datanucleus:datanucleus-core:4.1.17'
