@@ -1,5 +1,5 @@
 /**
- * Copyright 2018-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2018-2026 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -19,7 +19,8 @@ public class TransportUDFTransformerTest {
       "com.linkedin.coral.hive.hive2rel.CoralTestUDF", "com.linkedin.coral.spark.CoralTestUDF",
       "ivy://com.linkedin.coral.spark.CoralTestUDF", null, new HashSet<>());
 
-  @Test(enabled = false, description = "Spark 3.1.1 has SecurityException with Java 17 - servlet JAR signature mismatch")
+  @Test(enabled = false,
+      description = "Spark 3.1.1 has SecurityException with Java 17 - servlet JAR signature mismatch")
   public void testScalaVersionWithSparkSession() {
     SparkSession ss = SparkSession.builder().appName(TransportUDFTransformerTest.class.getSimpleName())
         .master("local[1]").enableHiveSupport().getOrCreate();
