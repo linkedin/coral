@@ -31,7 +31,7 @@ dependencies {
   }
 
   implementation 'commons-logging:commons-logging:1.2'
-  implementation 'javax.annotation:javax.annotation-api:1.3.2'
+  implementation deps.'javax-annotation'
 
   // Relocated Guava (com.linkedin.coral.com.google.common.*)
   // Uses the shaded jar variant published by the subproject
@@ -45,19 +45,16 @@ dependencies {
   }
   testImplementation deps.'hadoop'.'hadoop-mapreduce-client-core'
   testImplementation deps.'kryo'
-  testImplementation 'org.apache.derby:derby:10.10.2.0'
+  testImplementation deps.'derby'
 
-  // Mockito for mocking in tests
   testImplementation 'org.mockito:mockito-core:2.28.2'
 
-  // Iceberg dependencies for tests (needed by IcebergTableConverterTest from master)
   testImplementation deps.'linkedin-iceberg'.'iceberg-api'
   testImplementation deps.'linkedin-iceberg'.'iceberg-core'
 
-  // DataNucleus dependencies required by Hive Metastore under JDK 17
-  testRuntimeOnly 'org.datanucleus:datanucleus-api-jdo:4.2.5'
-  testRuntimeOnly 'org.datanucleus:datanucleus-core:4.1.17'
-  testRuntimeOnly 'org.datanucleus:datanucleus-rdbms:4.1.19'
+  testRuntimeOnly deps.'datanucleus-api-jdo'
+  testRuntimeOnly deps.'datanucleus-core'
+  testRuntimeOnly deps.'datanucleus-rdbms'
 }
 
 // Antlr v3 grammar location and imports
@@ -104,11 +101,4 @@ spotless {
   java {
     targetExclude 'build/generated-src/antlr/**'
   }
-}
-
-// Hive-specific test configuration for HMS 2.3.9
-test {
-  systemProperty 'hive.cbo.enable', 'false'
-  systemProperty 'hive.exec.mode.local.auto', 'false'
-  systemProperty 'hive.metastore.disallow.incompatible.col.type.changes', 'false'
 }

@@ -44,21 +44,17 @@ dependencies {
   implementation deps.'hadoop'.'hadoop-common'
   implementation deps.'hadoop'.'hadoop-mapreduce-client-core'
 
-  // DataNucleus dependencies required by Hive Metastore under JDK 17
-  runtimeOnly 'org.datanucleus:datanucleus-api-jdo:4.2.5'
-  runtimeOnly 'org.datanucleus:datanucleus-core:4.1.17'
-  runtimeOnly 'org.datanucleus:datanucleus-rdbms:4.1.19'
-  runtimeOnly 'org.apache.derby:derby:10.10.2.0'
+  runtimeOnly deps.'datanucleus-api-jdo'
+  runtimeOnly deps.'datanucleus-core'
+  runtimeOnly deps.'datanucleus-rdbms'
+  runtimeOnly deps.'derby'
 
-  // Spring Boot
   implementation 'org.springframework.boot:spring-boot-starter-web'
   implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
 
-  // Misc
-  implementation 'com.esotericsoftware.kryo:kryo:2.22'
+  implementation deps.'kryo'
   implementation(project(path: ':shading:guava-shaded', configuration: 'shadow'))
-  implementation 'commons-io:commons-io:2.11.0' // FileUtils (if used)
+  implementation 'commons-io:commons-io:2.11.0'
 
-  // Tests (if you run service unit tests)
-  testImplementation 'org.testng:testng:6.4'
+  testImplementation deps.'testing'
 }

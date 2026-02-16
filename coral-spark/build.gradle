@@ -18,11 +18,8 @@ dependencies {
   implementation deps.'linkedin-calcite-core'
   implementation deps.'linkedin-calcite-linq4j'
 
-  // Explicitly declare Avro dependencies
-  implementation 'org.apache.avro:avro:1.10.2'
-
-  // Add avro-mapred with the correct classifier
-  implementation 'org.apache.avro:avro-mapred:1.10.2:hadoop2'
+  implementation deps.'avro'
+  implementation deps.'avro-mapred-hadoop2'
 
   // Exclude avro-mapred from hive-serde to avoid conflicts
   implementation(deps.'hive'.'hive-serde') {
@@ -45,7 +42,7 @@ dependencies {
     exclude group: 'org.apache.avro', module: 'avro-mapred'
   }
 
-  testImplementation 'org.apache.avro:avro-mapred:1.10.2:hadoop2'
+  testImplementation deps.'avro-mapred-hadoop2'
   testImplementation(deps.hadoop.'hadoop-mapreduce-client-core') {
     exclude group: 'org.apache.avro', module: 'avro'
   }
@@ -53,18 +50,10 @@ dependencies {
     exclude group: 'org.apache.avro', module: 'avro'
   }
 
-  // DataNucleus dependencies required by Hive Metastore under JDK 17
-  testRuntimeOnly 'org.datanucleus:datanucleus-api-jdo:4.2.5'
-  testRuntimeOnly 'org.datanucleus:datanucleus-core:4.1.17'
-  testRuntimeOnly 'org.datanucleus:datanucleus-rdbms:4.1.19'
-  testRuntimeOnly 'org.apache.derby:derby:10.10.2.0'
-}
-
-// Hive-specific test configuration for HMS 2.3.9
-test {
-  systemProperty 'hive.cbo.enable', 'false'
-  systemProperty 'hive.exec.mode.local.auto', 'false'
-  systemProperty 'hive.metastore.disallow.incompatible.col.type.changes', 'false'
+  testRuntimeOnly deps.'datanucleus-api-jdo'
+  testRuntimeOnly deps.'datanucleus-core'
+  testRuntimeOnly deps.'datanucleus-rdbms'
+  testRuntimeOnly deps.'derby'
 }
 
 // Configure resolution strategy for consistent dependency versions

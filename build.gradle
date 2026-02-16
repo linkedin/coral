@@ -127,8 +127,12 @@ allprojects {
       "--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED",
       "--add-opens=java.base/jdk.internal.reflect=ALL-UNNAMED"
     ]
-    // Keep Derby errors quiet (optional)
+    // Keep Derby errors quiet
     systemProperty "derby.stream.error.field", "java.lang.System.err"
+    // Hive Metastore test configuration for HMS 2.3.9
+    systemProperty 'hive.cbo.enable', 'false'
+    systemProperty 'hive.exec.mode.local.auto', 'false'
+    systemProperty 'hive.metastore.disallow.incompatible.col.type.changes', 'false'
   }
 
   spotless {

@@ -20,16 +20,15 @@ dependencies {
   }
   testImplementation deps.'hadoop'.'hadoop-mapreduce-client-core'
   testImplementation deps.'kryo'
-  testImplementation 'com.google.code.gson:gson:2.10.1'
+  testImplementation deps.'gson'
   testImplementation deps.'hadoop'.'hadoop-common'
+  testImplementation deps.'derby'
   implementation deps.'linkedin-calcite-core'
   implementation deps.'linkedin-calcite-linq4j'
-  testImplementation 'org.apache.derby:derby:10.10.2.0'
 
-  // DataNucleus dependencies required by Hive Metastore under JDK 17
-  testRuntimeOnly 'org.datanucleus:datanucleus-api-jdo:4.2.5'
-  testRuntimeOnly 'org.datanucleus:datanucleus-core:4.1.17'
-  testRuntimeOnly 'org.datanucleus:datanucleus-rdbms:4.1.19'
+  testRuntimeOnly deps.'datanucleus-api-jdo'
+  testRuntimeOnly deps.'datanucleus-core'
+  testRuntimeOnly deps.'datanucleus-rdbms'
 }
 
 test {

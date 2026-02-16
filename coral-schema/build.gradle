@@ -7,9 +7,8 @@ dependencies {
   implementation project(':coral-common')
   implementation project(':coral-hive')
 
-  // Avro dependencies
-  implementation 'org.apache.avro:avro:1.10.2'
-  implementation 'org.apache.avro:avro-mapred:1.10.2'
+  implementation deps.'avro'
+  implementation deps.'avro-mapred'
   implementation deps.'avroCompatHelper'
 
   implementation(deps.'hive'.'hive-metastore') {
@@ -51,15 +50,13 @@ dependencies {
     exclude group: 'com.google.guava', module: 'guava'
   }
 
-  // DataNucleus + JDO/JTA + Derby for embedded HMS in tests (HMS 2.3.9 compatible versions)
   testImplementation 'javax.jdo:jdo-api:3.0.1'
   testImplementation 'javax.transaction:jta:1.1'
-  testImplementation 'org.apache.derby:derby:10.10.2.0'
+  testImplementation deps.'derby'
 
-  // DataNucleus dependencies required by Hive Metastore under JDK 17
-  testRuntimeOnly 'org.datanucleus:datanucleus-api-jdo:4.2.5'
-  testRuntimeOnly 'org.datanucleus:datanucleus-core:4.1.17'
-  testRuntimeOnly 'org.datanucleus:datanucleus-rdbms:4.1.19'
+  testRuntimeOnly deps.'datanucleus-api-jdo'
+  testRuntimeOnly deps.'datanucleus-core'
+  testRuntimeOnly deps.'datanucleus-rdbms'
 
   // Optional: single SLF4J binding to quiet warnings
   testRuntimeOnly 'org.slf4j:slf4j-simple:1.7.36'
@@ -79,11 +76,6 @@ test {
   systemProperty "datanucleus.schema.autoCreateAll", "true"
   systemProperty "datanucleus.fixedDatastore", "false"
   systemProperty "javax.jdo.option.Mapping", "derby"
-
-  // Hive-specific configuration for HMS 2.3.9
-  systemProperty 'hive.cbo.enable', 'false'
-  systemProperty 'hive.exec.mode.local.auto', 'false'
-  systemProperty 'hive.metastore.disallow.incompatible.col.type.changes', 'false'
 
   // Ensure test resources (hive.xml) are loaded
   testClassesDirs = sourceSets.test.output.classesDirs

@@ -10,8 +10,7 @@ dependencies {
   }
   implementation(project(path: ':shading:guava-shaded', configuration: 'shadow'))
 
-  // Apache Commons for utilities
-  implementation 'org.apache.commons:commons-lang3:3.12.0'
+  implementation deps.'commons-lang3'
   implementation deps.'linkedin-calcite-core'
   implementation deps.'linkedin-calcite-linq4j'
 
@@ -48,21 +47,18 @@ dependencies {
   // Java 17-compatible Derby for embedded DB (HMS 2.3.9 requires 10.10.2.0)
   testImplementation 'org.apache.derby:derby:10.10.2.0'
 
-  // Hadoop dependencies for testing
-  testImplementation 'org.apache.hadoop:hadoop-common:2.7.0'
+  testImplementation deps.'hadoop'.'hadoop-common'
   testImplementation 'org.apache.hadoop:hadoop-hdfs:2.7.0'
-  testImplementation 'org.apache.hadoop:hadoop-mapreduce-client-core:2.7.0'
-  testImplementation 'org.apache.hadoop:hadoop-mapreduce-client-common:2.7.0'
+  testImplementation deps.'hadoop'.'hadoop-mapreduce-client-core'
+  testImplementation deps.'hadoop'.'hadoop-mapreduce-client-common'
   testImplementation 'org.apache.hadoop:hadoop-mapreduce-client-jobclient:2.7.0'
-  testImplementation 'com.esotericsoftware.kryo:kryo:2.22'
+  testImplementation deps.'kryo'
   testImplementation 'org.datanucleus:javax.jdo:3.2.0-m3'
-  // Optional: add a simple SLF4J binding to silence StaticLoggerBinder warnings
   testImplementation 'org.slf4j:slf4j-simple:1.7.36'
 
-  // DataNucleus dependencies required by Hive Metastore under JDK 17
-  testRuntimeOnly 'org.datanucleus:datanucleus-api-jdo:4.2.5'
-  testRuntimeOnly 'org.datanucleus:datanucleus-core:4.1.17'
-  testRuntimeOnly 'org.datanucleus:datanucleus-rdbms:4.1.19'
+  testRuntimeOnly deps.'datanucleus-api-jdo'
+  testRuntimeOnly deps.'datanucleus-core'
+  testRuntimeOnly deps.'datanucleus-rdbms'
 }
 
 // Hive's metastore will handle its own JDO enhancement
@@ -78,11 +74,6 @@ test {
   systemProperty 'hive.metastore.warehouse.dir', "file://${project.buildDir.absolutePath}/hive-warehouse"
   systemProperty 'hive.metastore.schema.verification', 'false'
   systemProperty 'hive.metastore.schema.verification.record.version', 'false'
-
-  // Hive-specific configuration for HMS 2.3.9
-  systemProperties['hive.cbo.enable'] = 'false'
-  systemProperties['hive.exec.mode.local.auto'] = 'false'
-  systemProperties['hive.metastore.disallow.incompatible.col.type.changes'] = 'false'
 }
 
 // Force jline version to fix Pig compatibility
