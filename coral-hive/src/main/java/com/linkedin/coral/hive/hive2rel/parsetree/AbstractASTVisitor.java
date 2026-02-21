@@ -112,6 +112,18 @@ public abstract class AbstractASTVisitor<R, C> {
       case HiveParser.TOK_ORDERBY:
         return visitOrderBy(node, ctx);
 
+      case HiveParser.TOK_GROUPING_SETS:
+        return visitGroupingSets(node,ctx);
+
+      case HiveParser.TOK_ROLLUP_GROUPBY:
+        return visitRollUpGroupBy(node,ctx);
+
+      case HiveParser.TOK_CUBE_GROUPBY:
+        return visitCubeGroupBy(node,ctx);
+
+      case HiveParser.TOK_GROUPING_SETS_EXPRESSION:
+        return visitGroupingSetsExpression(node,ctx);
+
       case HiveParser.TOK_TABSORTCOLNAMEASC:
         return visitSortColNameAsc(node, ctx);
 
@@ -434,6 +446,20 @@ public abstract class AbstractASTVisitor<R, C> {
     return visitChildren(node, ctx).get(0);
   }
 
+  protected  R visitGroupingSets(ASTNode node, C ctx){
+    return visitChildren(node, ctx).get(0);
+  }
+
+  protected R visitRollUpGroupBy(ASTNode node , C ctx){
+    return visitChildren(node, ctx).get(0);
+  }
+
+  protected  R visitCubeGroupBy(ASTNode node,C ctx){
+    return visitChildren(node, ctx).get(0);
+  }
+  protected  R visitGroupingSetsExpression(ASTNode node, C ctx){
+    return visitChildren(node, ctx).get(0);
+  }
   protected R visitGroupBy(ASTNode node, C ctx) {
     return visitChildren(node, ctx).get(0);
   }
