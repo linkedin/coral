@@ -52,13 +52,13 @@ public class JsonTransformSqlCallTransformer extends SourceOperatorMatchSqlCallT
     OP_MAP.put("%", SqlStdOperatorTable.MOD);
     OP_MAP.put("date", new SqlUserDefinedFunction(new SqlIdentifier("date", SqlParserPos.ZERO), ReturnTypes.DATE, null,
         OperandTypes.STRING, null, null));
-    OP_MAP.put("timestamp", new SqlUserDefinedFunction(new SqlIdentifier("timestamp", SqlParserPos.ZERO),
+    OP_MAP.put("trino_timestamp", new SqlUserDefinedFunction(new SqlIdentifier("trino_timestamp", SqlParserPos.ZERO),
         FunctionReturnTypes.TIMESTAMP, null, OperandTypes.STRING, null, null) {
       @Override
       public void unparse(SqlWriter writer, SqlCall call, int leftPrec, int rightPrec) {
-        // for timestamp operator, we need to construct `CAST(x AS TIMESTAMP)`
+        // for timestamp operator, we need to construct `TRY_CAST(x AS TIMESTAMP)`
         Preconditions.checkState(call.operandCount() == 1);
-        final SqlWriter.Frame frame = writer.startFunCall("CAST");
+        final SqlWriter.Frame frame = writer.startFunCall("TRY_CAST");
         call.operand(0).unparse(writer, 0, 0);
         writer.sep("AS");
         writer.literal("TIMESTAMP");
