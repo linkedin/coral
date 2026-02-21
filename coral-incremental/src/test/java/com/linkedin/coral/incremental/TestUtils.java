@@ -1,5 +1,5 @@
 /**
- * Copyright 2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2023-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -60,6 +60,11 @@ public class TestUtils {
     run(driver, "CREATE TABLE IF NOT EXISTS test.bar1(x int, y double)");
     run(driver, "CREATE TABLE IF NOT EXISTS test.bar2(x int, y double)");
     run(driver, "CREATE TABLE IF NOT EXISTS test.bar3(x int, y double)");
+
+    run(driver, "CREATE TABLE IF NOT EXISTS test.alpha(a1 int, a2 double)");
+    run(driver, "CREATE TABLE IF NOT EXISTS test.beta(b1 int, b2 double)");
+    run(driver, "CREATE TABLE IF NOT EXISTS test.gamma(g1 int, g2 double)");
+    run(driver, "CREATE TABLE IF NOT EXISTS test.epsilon(e1 int, e2 double)");
   }
 
   public static HiveConf loadResourceHiveConf() {
