@@ -1,0 +1,60 @@
+{
+  "type" : "record",
+  "name" : "testrecord",
+  "namespace" : "com.test",
+  "fields" : [ {
+    "name" : "simple_field",
+    "type" : "int",
+    "default" : 42
+  }, {
+    "name" : "struct_field",
+    "type" : {
+      "type" : "record",
+      "name" : "nestedrecord",
+      "fields" : [ {
+        "name" : "firstname",
+        "type" : "string"
+      }, {
+        "name" : "lastname",
+        "type" : "string"
+      }, {
+        "name" : "age",
+        "type" : "int"
+      } ]
+    },
+    "default" : {
+      "firstname" : "John",
+      "lastname" : "Doe",
+      "age" : 30
+    }
+  }, {
+    "name" : "map_field",
+    "type" : {
+      "type" : "map",
+      "values" : "string"
+    },
+    "default" : {
+      "key_one" : "value1",
+      "key_two" : "value2"
+    }
+  }, {
+    "name" : "array_field",
+    "type" : {
+      "type" : "array",
+      "items" : {
+        "type" : "record",
+        "name" : "arrayitem",
+        "fields" : [ {
+          "name" : "item_name",
+          "type" : "string"
+        } ]
+      }
+    },
+    "default" : [ {
+      "item_name" : "item1"
+    }, {
+      "item_name" : "item2"
+    } ]
+  } ]
+}
+
