@@ -37,4 +37,7 @@ dependencies {
     exclude group: 'org.apache.hive', module: 'hive-metastore'
     exclude group: 'org.apache.hadoop', module: 'hadoop-common'
   }
+
+  // javax.annotation removed from JDK in Java 11+
+  implementation deps.'javax-annotation'
 }

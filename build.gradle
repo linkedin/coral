@@ -17,7 +17,7 @@ buildscript {
 }
 
 plugins {
-  id "com.diffplug.spotless" version "5.9.0"
+  id "com.diffplug.spotless" version "6.25.0"
 }
 
 apply from: "gradle/shipkit.gradle"
@@ -59,6 +59,11 @@ allprojects {
 
 subprojects {
   plugins.withType(JavaPlugin) {
+    java {
+      toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+      }
+    }
     dependencies {
       testImplementation deps.'testing'
       // Hive 2.3.9 embedded metastore requires DataNucleus and Derby
@@ -79,6 +84,16 @@ subprojects {
     }
     test {
       useTestNG()
+      jvmArgs = [
+        '--add-opens=java.base/java.lang=ALL-UNNAMED',
+        '--add-opens=java.base/java.lang.invoke=ALL-UNNAMED',
+        '--add-opens=java.base/java.lang.reflect=ALL-UNNAMED',
+        '--add-opens=java.base/java.util=ALL-UNNAMED',
+        '--add-opens=java.base/java.io=ALL-UNNAMED',
+        '--add-opens=java.base/java.net=ALL-UNNAMED',
+        '--add-opens=java.base/java.nio=ALL-UNNAMED',
+        '--add-opens=java.base/sun.nio.ch=ALL-UNNAMED'
+      ]
       systemProperty 'derby.stream.error.field', 'java.lang.System.err'
       // Hive 2.3.9 CalcitePlanner is incompatible with Calcite 1.21.0.265
       systemProperty 'hive.cbo.enable', 'false'
