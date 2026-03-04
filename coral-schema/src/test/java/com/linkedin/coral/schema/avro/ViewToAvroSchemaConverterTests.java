@@ -58,6 +58,16 @@ public class ViewToAvroSchemaConverterTests {
   }
 
   @Test
+  public void testToAvroSchemaWithSql() {
+    // Verify the public SQL-based overload works end-to-end (e.g. for the DCS write-path)
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("SELECT * FROM basecomplex", false, false);
+
+    Assert.assertNotNull(actualSchema);
+    Assert.assertEquals(actualSchema.getName(), "basecomplex");
+  }
+
+  @Test
   public void testSchemaWithNullableFieldsAndDefaults() {
     String viewSql = "CREATE VIEW v AS SELECT * FROM basecomplexnullablewithdefaults";
 

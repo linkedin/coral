@@ -134,7 +134,6 @@ public class ViewToAvroSchemaConverter {
     return relToAvroSchemaConverter.convert(relNode, false, false);
   }
 
-  @VisibleForTesting
   public Schema toAvroSchema(String sql, boolean strictMode, boolean forceLowercase) {
     Preconditions.checkNotNull(sql);
 
