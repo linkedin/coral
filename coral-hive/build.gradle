@@ -1,14 +1,15 @@
 apply plugin: 'antlr'
+apply plugin: 'java-library'
 
 dependencies {
   antlr deps.'antlr'
-  compile project(path: ':coral-common')
-  compile deps.'ivy'
+  api project(path: ':coral-common')
+  implementation deps.'ivy'
 
   // required for hiveSQL parser code
-  compile deps.'antlr-runtime'
+  implementation deps.'antlr-runtime'
 
-  testCompile(deps.'hive'.'hive-exec-core') {
+  testImplementation(deps.'hive'.'hive-exec-core') {
     exclude group: 'org.apache.avro', module: 'avro-tools'
     // These exclusions are required to prevent duplicate classes since we include
     // shaded jar above
@@ -16,11 +17,11 @@ dependencies {
     exclude group: 'org.apache.calcite', module: 'calcite-avatica'
   }
 
-  testCompile deps.'hadoop'.'hadoop-mapreduce-client-core'
-  testCompile deps.'kryo'
+  testImplementation deps.'hadoop'.'hadoop-mapreduce-client-core'
+  testImplementation deps.'kryo'
 
   // Mockito for mocking in tests
-  testCompile 'org.mockito:mockito-core:2.28.2'
+  testImplementation 'org.mockito:mockito-core:2.28.2'
 }
 
 sourceSets.main.antlr.srcDirs = ['src/main/antlr/roots']
@@ -29,4 +30,8 @@ generateGrammarSource {
   arguments += [
     '-lib',
     'src/main/antlr/imports'
-  ]}
+  ]
+}
+
+// Gradle 8 strict validation: spotless must run after ANTLR generates sources
+tasks.named('spotlessJava').configure { mustRunAfter('generateGrammarSource') }

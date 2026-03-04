@@ -1,7 +1,7 @@
 dependencies {
-  compile project(':coral-hive')
+  implementation project(':coral-hive')
 
-  testCompile(deps.'hive'.'hive-exec-core') {
+  testImplementation(deps.'hive'.'hive-exec-core') {
     exclude group: 'org.apache.avro', module: 'avro-tools'
     // These exclusions are required to prevent duplicate classes since we
     // include shaded jar above
@@ -9,6 +9,6 @@ dependencies {
     exclude group: 'org.apache.calcite', module: 'calcite-avatica'
   }
 
-  testCompile deps.'hadoop'.'hadoop-mapreduce-client-core'
-  testCompile deps.'kryo'
+  testImplementation deps.'hadoop'.'hadoop-mapreduce-client-core'
+  testImplementation deps.'kryo'
 }
