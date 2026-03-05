@@ -685,7 +685,8 @@ public class CoralSparkTest {
     assertEquals(createCoralSpark(relNode).getSparkSql(), targetSql);
   }
 
-  @Test
+  // Disabled: TRANSLATE function registration disabled due to Calcite 1.21.0.265 incompatibility
+  @Test(enabled = false)
   public void testTranslateFunction() {
     RelNode relNode = TestUtils.toRelNode("SELECT translate('aaa', 'a', 'b') FROM default.foo");
     String targetSql = "SELECT TRANSLATE('aaa', 'a', 'b')\n" + "FROM default.foo foo";

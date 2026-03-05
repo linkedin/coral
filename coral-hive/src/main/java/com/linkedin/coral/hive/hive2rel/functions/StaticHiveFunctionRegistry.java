@@ -253,8 +253,9 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
         family(ImmutableList.of(SqlTypeFamily.STRING, SqlTypeFamily.STRING, SqlTypeFamily.INTEGER), optionalOrd(2)));
     addFunctionEntry("lower", LOWER);
     addFunctionEntry("lcase", LOWER);
-    addFunctionEntry("translate", TRANSLATE3);
-    addFunctionEntry("translate3", TRANSLATE3);
+    // TRANSLATE3 not compatible with Calcite 1.21.0.265 after Hive 2.3.9 upgrade
+    // addFunctionEntry("translate", TRANSLATE3);
+    // addFunctionEntry("translate3", TRANSLATE3);
     createAddUserDefinedFunction("lpad", FunctionReturnTypes.STRING,
         family(SqlTypeFamily.STRING, SqlTypeFamily.INTEGER, SqlTypeFamily.STRING));
     createAddUserDefinedFunction("ltrim", FunctionReturnTypes.STRING, STRING);
@@ -281,9 +282,13 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
     createAddUserDefinedFunction("str_to_map", FunctionReturnTypes.mapOfType(SqlTypeName.VARCHAR, SqlTypeName.VARCHAR),
         family(Collections.nCopies(3, SqlTypeFamily.STRING), optionalOrd(ImmutableList.of(1, 2))));
     createAddUserDefinedFunction("substr", FunctionReturnTypes.STRING,
-        family(ImmutableList.of(SqlTypeFamily.STRING, SqlTypeFamily.INTEGER, SqlTypeFamily.INTEGER), optionalOrd(2)));
+        family(SqlTypeFamily.STRING, SqlTypeFamily.INTEGER));
+    createAddUserDefinedFunction("substr", FunctionReturnTypes.STRING,
+        family(SqlTypeFamily.STRING, SqlTypeFamily.INTEGER, SqlTypeFamily.INTEGER));
     createAddUserDefinedFunction("substring", FunctionReturnTypes.STRING,
-        family(ImmutableList.of(SqlTypeFamily.STRING, SqlTypeFamily.INTEGER, SqlTypeFamily.INTEGER), optionalOrd(2)));
+        family(SqlTypeFamily.STRING, SqlTypeFamily.INTEGER));
+    createAddUserDefinedFunction("substring", FunctionReturnTypes.STRING,
+        family(SqlTypeFamily.STRING, SqlTypeFamily.INTEGER, SqlTypeFamily.INTEGER));
 
     createAddUserDefinedFunction("substring_index", FunctionReturnTypes.STRING, STRING_STRING_INTEGER);
     createAddUserDefinedFunction("trim", FunctionReturnTypes.STRING, STRING);

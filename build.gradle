@@ -13,12 +13,11 @@ buildscript {
     classpath "io.github.gradle-nexus:publish-plugin:1.1.0"
     classpath "org.shipkit:shipkit-auto-version:1.1.1"
     classpath "org.shipkit:shipkit-changelog:1.1.10"
-    classpath "com.github.jengelman.gradle.plugins:shadow:6.1.0"
   }
 }
 
 plugins {
-  id "com.diffplug.spotless" version "5.9.0"
+  id "com.diffplug.spotless" version "6.25.0"
 }
 
 apply from: "gradle/shipkit.gradle"
@@ -60,11 +59,46 @@ allprojects {
 
 subprojects {
   plugins.withType(JavaPlugin) {
+    java {
+      toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+      }
+    }
     dependencies {
-      testCompile deps.'testing'
+      testImplementation deps.'testing'
+      // Hive 2.3.9 embedded metastore requires DataNucleus and Derby
+      testRuntimeOnly deps.'derby'
+      testRuntimeOnly deps.'datanucleus-api-jdo'
+      testRuntimeOnly deps.'datanucleus-core'
+      testRuntimeOnly deps.'datanucleus-rdbms'
+      testImplementation deps.'javax-jdo'
+      // Hive 2.3.9 references DruidQuery from Calcite adapter at runtime
+      testRuntimeOnly('org.apache.calcite:calcite-druid:1.10.0') {
+        exclude group: 'org.apache.calcite', module: 'calcite-core'
+        exclude group: 'org.apache.calcite', module: 'calcite-avatica'
+      }
+    }
+    // Hive 2.3.9 transitively depends on pentaho-aggdesigner which is not in Maven Central
+    configurations.all {
+      exclude group: 'org.pentaho', module: 'pentaho-aggdesigner-algorithm'
     }
     test {
       useTestNG()
+      jvmArgs = [
+        '--add-opens=java.base/java.lang=ALL-UNNAMED',
+        '--add-opens=java.base/java.lang.invoke=ALL-UNNAMED',
+        '--add-opens=java.base/java.lang.reflect=ALL-UNNAMED',
+        '--add-opens=java.base/java.util=ALL-UNNAMED',
+        '--add-opens=java.base/java.io=ALL-UNNAMED',
+        '--add-opens=java.base/java.net=ALL-UNNAMED',
+        '--add-opens=java.base/java.nio=ALL-UNNAMED',
+        '--add-opens=java.base/sun.nio.ch=ALL-UNNAMED'
+      ]
+      systemProperty 'derby.stream.error.field', 'java.lang.System.err'
+      // Hive 2.3.9 CalcitePlanner is incompatible with Calcite 1.21.0.265
+      systemProperty 'hive.cbo.enable', 'false'
+      systemProperty 'hive.exec.mode.local.auto', 'false'
+      systemProperty 'hive.metastore.disallow.incompatible.col.type.changes', 'false'
     }
     spotless {
       java {

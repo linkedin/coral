@@ -1,24 +1,27 @@
-def modules = [
-  'coral-common',
-  'coral-dbt',
-  'coral-hive',
-  'coral-incremental',
-  'coral-pig',
-  'coral-spark',
-  'coral-schema',
-  'coral-spark-plan',
-  'coral-trino',
-  'coral-service',
-  'coral-visualization',
-  'shading'
-]
-
-modules.each { module ->
-  if (!file(module).directory) {
-    throw new GradleException("Module '$module' specified in the settings.gradle file must be a valid directory in the root project.")
+pluginManagement {
+  repositories {
+    mavenCentral()
+    gradlePluginPortal()
   }
+}
+
+include 'coral-common'
+include 'coral-dbt'
+include 'coral-hive'
+include 'coral-incremental'
+include 'coral-pig'
+include 'coral-spark'
+include 'coral-schema'
+include 'coral-spark-plan'
+include 'coral-trino'
+include 'coral-service'
+include 'coral-visualization'
+include 'shading'
+
+// Sub-modules: only include directories that have a build.gradle
+['shading'].each { module ->
   file(module).eachDir { submodule ->
-    if (!submodule.name.startsWith('.')) {
+    if (!submodule.name.startsWith('.') && new File(submodule, 'build.gradle').exists()) {
       include "${module}:${submodule.name}"
     }
   }

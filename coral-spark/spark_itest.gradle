@@ -11,8 +11,8 @@ for (String itest : itests) {
   }
 
   configurations {
-    getByName("${itest}testCompile").extendsFrom(testCompile)
-    getByName("${itest}testRuntime").extendsFrom(testRuntime)
+    getByName("${itest}testImplementation").extendsFrom(testImplementation)
+    getByName("${itest}testRuntimeOnly").extendsFrom(testRuntimeOnly)
   }
 
   tasks.register("${itest}Test", Test) {
@@ -23,10 +23,10 @@ for (String itest : itests) {
     useTestNG()
   }
 
-  check.dependsOn(tasks.getByName("${itest}Test"))
+  tasks.named('check').configure { dependsOn(tasks.named("${itest}Test")) }
 }
 
 dependencies {
-  sparktestCompile(deps.'spark'.'hive')
-  spark3testCompile(deps.'spark3'.'hive')
+  sparktestImplementation(deps.'spark'.'hive')
+  spark3testImplementation(deps.'spark3'.'hive')
 }

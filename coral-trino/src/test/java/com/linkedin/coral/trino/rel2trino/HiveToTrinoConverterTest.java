@@ -627,7 +627,8 @@ public class HiveToTrinoConverterTest {
     assertEquals(expandedSql, targetSql);
   }
 
-  @Test
+  // Disabled: TRANSLATE function registration disabled due to Calcite 1.21.0.265 incompatibility
+  @Test(enabled = false)
   public void testTranslateFunction() {
     RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
 

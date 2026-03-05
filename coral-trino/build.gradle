@@ -1,9 +1,9 @@
 dependencies {
-  compile deps.'gson'
-  compile project(path: ':coral-hive')
-  compile project(path: ':shading:coral-trino-parser', configuration: 'shadow')
+  implementation deps.'gson'
+  implementation project(path: ':coral-hive')
+  implementation project(path: ':shading:coral-trino-parser', configuration: 'shadow')
 
-  testCompile(deps.'hive'.'hive-exec-core') {
+  testImplementation(deps.'hive'.'hive-exec-core') {
     exclude group: 'org.apache.avro', module: 'avro-tools'
     // These exclusions are required to prevent duplicate classes since we include
     // shaded jar above
@@ -11,7 +11,7 @@ dependencies {
     exclude group: 'org.apache.calcite', module: 'calcite-avatica'
   }
 
-  testCompile deps.'hadoop'.'hadoop-mapreduce-client-common'
-  testCompile deps.'kryo'
+  testImplementation deps.'hadoop'.'hadoop-mapreduce-client-common'
+  testImplementation deps.'kryo'
   testImplementation deps.'jetbrains'
 }
