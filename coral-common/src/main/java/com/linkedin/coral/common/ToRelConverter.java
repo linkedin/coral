@@ -94,7 +94,7 @@ public abstract class ToRelConverter {
     new Driver();
     config = Frameworks.newConfigBuilder().convertletTable(convertletTable).defaultSchema(schemaPlus)
         .typeSystem(new HiveTypeSystem()).traitDefs((List<RelTraitDef>) null).operatorTable(getOperatorTable())
-        .programs(Programs.ofRules(Programs.RULE_SET)).build();
+        .programs(Programs.standard()).build();
   }
 
   /**
@@ -118,7 +118,7 @@ public abstract class ToRelConverter {
     new Driver();
     config = Frameworks.newConfigBuilder().convertletTable(convertletTable).defaultSchema(schemaPlus)
         .typeSystem(new HiveTypeSystem()).traitDefs((List<RelTraitDef>) null).operatorTable(getOperatorTable())
-        .programs(Programs.ofRules(Programs.RULE_SET)).build();
+        .programs(Programs.standard()).build();
 
   }
 
@@ -134,7 +134,7 @@ public abstract class ToRelConverter {
     new Driver();
     config = Frameworks.newConfigBuilder().convertletTable(convertletTable).defaultSchema(schemaPlus)
         .typeSystem(new HiveTypeSystem()).traitDefs((List<RelTraitDef>) null).operatorTable(getOperatorTable())
-        .programs(Programs.ofRules(Programs.RULE_SET)).build();
+        .programs(Programs.standard()).build();
 
   }
 

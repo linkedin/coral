@@ -1,32 +1,32 @@
 def itests = ['spark', 'spark3']
 
+def mainSourceSet = sourceSets.main
+
 for (String itest : itests) {
   sourceSets {
-    create("${itest}test", {
+    create("${itest}test") {
       java {
-        compileClasspath += main.output
-        runtimeClasspath += main.output
+        compileClasspath += mainSourceSet.output
+        runtimeClasspath += mainSourceSet.output
       }
-    })
+    }
   }
 
-  configurations {
-    getByName("${itest}testCompile").extendsFrom(testCompile)
-    getByName("${itest}testRuntime").extendsFrom(testRuntime)
-  }
+  configurations.getByName("${itest}testImplementation").extendsFrom(configurations.getByName("testImplementation"))
+  configurations.getByName("${itest}testRuntimeOnly").extendsFrom(configurations.getByName("testRuntimeOnly"))
 
   tasks.register("${itest}Test", Test) {
     description = "Run ${itest} integration tests"
-    testClassesDirs = project.sourceSets.getByName("${itest}test").output.classesDirs
-    classpath = project.sourceSets.getByName("${itest}test").runtimeClasspath
-    shouldRunAfter test
+    testClassesDirs = sourceSets["${itest}test"].output.classesDirs
+    classpath = sourceSets["${itest}test"].runtimeClasspath
+    shouldRunAfter(tasks.test)
     useTestNG()
   }
 
-  check.dependsOn(tasks.getByName("${itest}Test"))
+  tasks.check.configure { dependsOn(tasks.named("${itest}Test")) }
 }
 
 dependencies {
-  sparktestCompile(deps.'spark'.'hive')
-  spark3testCompile(deps.'spark3'.'hive')
+  sparktestImplementation deps['spark']['hive']
+  spark3testImplementation deps['spark3']['hive']
 }

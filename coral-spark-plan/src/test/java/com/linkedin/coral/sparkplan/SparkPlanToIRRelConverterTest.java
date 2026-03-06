@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2022 LinkedIn Corporation. All rights reserved.
+ * Copyright 2020-2026 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -29,6 +29,11 @@ public class SparkPlanToIRRelConverterTest {
 
   @BeforeClass
   public static void beforeClass() throws IOException, HiveException, MetaException {
+    try {
+      Class.forName("org.apache.derby.jdbc.EmbeddedDriver");
+    } catch (ClassNotFoundException e) {
+      throw new RuntimeException(e);
+    }
     conf = TestUtils.loadResourceHiveConf();
     TestUtils.TestHive testHive = TestUtils.setupDefaultHive(conf);
     final IMetaStoreClient msc = testHive.getMetastoreClient();

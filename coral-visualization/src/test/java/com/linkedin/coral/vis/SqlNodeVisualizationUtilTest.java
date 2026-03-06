@@ -21,14 +21,14 @@ import org.testng.annotations.Test;
 
 import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
 
+import static com.linkedin.coral.vis.TestUtils.*;
+import static org.testng.Assert.*;
+
 import guru.nidi.graphviz.engine.Format;
 import guru.nidi.graphviz.engine.Graphviz;
 import guru.nidi.graphviz.model.Factory;
 import guru.nidi.graphviz.model.Graph;
 import guru.nidi.graphviz.model.Node;
-
-import static com.linkedin.coral.vis.TestUtils.*;
-import static org.testng.Assert.*;
 
 
 public class SqlNodeVisualizationUtilTest {
@@ -38,6 +38,11 @@ public class SqlNodeVisualizationUtilTest {
 
   @BeforeClass
   public void setup() {
+    try {
+      Class.forName("org.apache.derby.jdbc.EmbeddedDriver");
+    } catch (ClassNotFoundException e) {
+      throw new RuntimeException(e);
+    }
     conf = getHiveConf();
     converter = new HiveToRelConverter(createMscAdapter(conf));
 

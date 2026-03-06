@@ -1,14 +1,36 @@
-dependencies {
-  compile project(':coral-hive')
+plugins {
+  id 'java'
+}
 
-  testCompile(deps.'hive'.'hive-exec-core') {
+
+dependencies {
+  implementation project(':coral-common')
+  implementation project(':coral-hive')
+  implementation(project(path: ':shading:guava-shaded', configuration: 'shadow'))
+
+  implementation deps.'gson'
+  implementation deps.'commons-lang3'
+
+  // Calcite (LinkedIn fork)
+  implementation deps.'linkedin-calcite-core'
+  implementation deps.'linkedin-calcite-linq4j'
+
+  testImplementation(deps.'hive'.'hive-exec-core') {
     exclude group: 'org.apache.avro', module: 'avro-tools'
-    // These exclusions are required to prevent duplicate classes since we
-    // include shaded jar above
     exclude group: 'org.apache.calcite', module: 'calcite-core'
     exclude group: 'org.apache.calcite', module: 'calcite-avatica'
   }
+  testImplementation(deps.'hive'.'hive-metastore') {
+    exclude group: 'org.apache.calcite', module: 'calcite-core'
+    exclude group: 'org.apache.calcite', module: 'calcite-avatica'
+  }
+  testImplementation deps.'hadoop'.'hadoop-mapreduce-client-core'
+  testImplementation deps.'kryo'
+  testImplementation deps.'hadoop'.'hadoop-common'
+  testImplementation deps.'gson'
+  testImplementation deps.'derby'
 
-  testCompile deps.'hadoop'.'hadoop-mapreduce-client-core'
-  testCompile deps.'kryo'
+  testRuntimeOnly deps.'datanucleus-api-jdo'
+  testRuntimeOnly deps.'datanucleus-core'
+  testRuntimeOnly deps.'datanucleus-rdbms'
 }

@@ -1,26 +1,80 @@
+plugins {
+  id 'java'
+}
+
 apply from: "spark_itest.gradle"
 
-dependencies {
-  compile project(':coral-hive')
-  compile project(':coral-schema')
+configurations.all {
+  // Exclude the problematic avro-mapred from all configurations
+  exclude group: 'org.apache.avro', module: 'avro-mapred'
+}
 
+dependencies {
+  implementation(project(path: ':shading:guava-shaded', configuration: 'shadow'))
+
+  implementation project(':coral-common')
+  implementation project(':coral-hive')
+  implementation project(':coral-schema')
+  implementation deps.'linkedin-calcite-core'
+  implementation deps.'linkedin-calcite-linq4j'
+
+  implementation deps.'avro'
+  implementation deps.'avro-mapred-hadoop2'
+
+  // Exclude avro-mapred from hive-serde to avoid conflicts
+  implementation(deps.'hive'.'hive-serde') {
+    exclude group: 'org.apache.avro', module: 'avro-mapred'
+    exclude group: 'org.apache.avro', module: 'avro-tools'
+  }
 
   compileOnly deps.'spark'.'sql'
 
-  testCompile(deps.'hive'.'hive-exec-core') {
+  testImplementation(deps.'hive'.'hive-exec-core') {
     exclude group: 'org.apache.avro', module: 'avro-tools'
-    // These exclusions are required to prevent duplicate classes since we include
-    // shaded jar above
+    exclude group: 'org.apache.avro', module: 'avro-mapred'
     exclude group: 'org.apache.calcite', module: 'calcite-core'
     exclude group: 'org.apache.calcite', module: 'calcite-avatica'
   }
-  testCompile deps.'hadoop'.'hadoop-mapreduce-client-core'
-  testCompile deps.'kryo'
+
+  testImplementation(deps.'hive'.'hive-metastore') {
+    exclude group: 'org.apache.calcite', module: 'calcite-core'
+    exclude group: 'org.apache.calcite', module: 'calcite-avatica'
+    exclude group: 'org.apache.avro', module: 'avro-mapred'
+  }
+
+  testImplementation deps.'avro-mapred-hadoop2'
+  testImplementation(deps.hadoop.'hadoop-mapreduce-client-core') {
+    exclude group: 'org.apache.avro', module: 'avro'
+  }
+  testImplementation(deps.kryo) {
+    exclude group: 'org.apache.avro', module: 'avro'
+  }
+
+  testRuntimeOnly deps.'datanucleus-api-jdo'
+  testRuntimeOnly deps.'datanucleus-core'
+  testRuntimeOnly deps.'datanucleus-rdbms'
+  testRuntimeOnly deps.'derby'
 }
 
-// Needs to enforce using Avro 1.10 because Coral-Spark depends on Coral-Schema which uses Avro 1.10
+// Configure resolution strategy for consistent dependency versions
 configurations.all {
   resolutionStrategy {
+    // Force specific versions of dependencies
     force 'org.apache.avro:avro:1.10.2'
+    force 'com.linkedin.calcite:calcite-core:1.21.0.265'
+
+    // Ensure upstream calcite-core is not used
+    eachDependency { details ->
+      if (details.requested.group == 'org.apache.calcite' &&
+          details.requested.name == 'calcite-core') {
+        details.useTarget('com.linkedin.calcite:calcite-core:1.21.0.265')
+      }
+
+      // Ensure consistent Avro version (except for avro-mapred which we handle separately)
+      if (details.requested.group == 'org.apache.avro' &&
+          details.requested.name != 'avro-mapred') {
+        details.useVersion '1.10.2'
+      }
+    }
   }
 }

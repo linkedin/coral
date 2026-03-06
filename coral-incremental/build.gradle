@@ -1,12 +1,57 @@
-dependencies {
-  compile project(':coral-hive')
+plugins {
+  id 'java'
+}
 
-  testCompile(deps.'hive'.'hive-exec-core') {
-    // This exclusion is required to prevent duplicate classes since we include
-    // shaded 'calcite-core' transitively
+
+dependencies {
+  testImplementation project(':coral-common')
+  implementation project(':coral-hive')
+  implementation(project(path: ':shading:guava-shaded', configuration: 'shadow'))
+
+  // Calcite (LinkedIn fork) + matching linq4j
+  implementation deps.'linkedin-calcite-core'
+  implementation deps.'linkedin-calcite-linq4j'
+
+  // If you use hive-exec core in tests, exclude calcite to avoid conflicts
+  testImplementation(deps.'hive'.'hive-exec-core') {
+    exclude group: 'org.apache.avro', module: 'avro-tools'
     exclude group: 'org.apache.calcite', module: 'calcite-core'
+    exclude group: 'org.apache.calcite', module: 'calcite-avatica'
+    exclude group: 'org.pentaho', module: 'pentaho-aggdesigner-algorithm'
   }
 
-  testCompile deps.'hadoop'.'hadoop-mapreduce-client-core'
-  testCompile deps.'kryo'
+  // Hive metastore for tests; exclude old Calcite to avoid clashes
+  testImplementation(deps.'hive'.'hive-metastore') {
+    exclude group: 'org.apache.calcite', module: 'calcite-core'
+    exclude group: 'org.apache.calcite', module: 'calcite-avatica'
+  }
+
+  // Hadoop + helpers for tests
+  testImplementation 'org.apache.hadoop:hadoop-common:2.10.2'
+  testImplementation deps.'hadoop'.'hadoop-mapreduce-client-core'
+  testImplementation deps.'kryo'
+
+  testRuntimeOnly deps.'datanucleus-api-jdo'
+  testRuntimeOnly deps.'datanucleus-core'
+  testRuntimeOnly deps.'datanucleus-rdbms'
+  testRuntimeOnly deps.'derby'
+
+  // Optional: reduce SLF4J multiple-binding noise in test runtime
+  testRuntimeOnly('org.apache.logging.log4j:log4j-slf4j-impl:2.20.0') {
+    exclude group: 'org.slf4j', module: 'slf4j-log4j12'
+  }
+}
+
+test {
+  useTestNG()
+}
+
+configurations.all {
+  resolutionStrategy {
+    // Pin the Calcite fork and matching linq4j
+    force 'com.linkedin.calcite:calcite-core:1.21.0.265'
+    force 'com.linkedin.calcite:calcite-linq4j:1.21.0.265'
+    // Ensure API-JDO uses 4.2.5 (4.2.6 is broken/not in Central)
+    force 'org.datanucleus:datanucleus-api-jdo:4.2.5'
+  }
 }

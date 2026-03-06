@@ -1,25 +1,54 @@
+pluginManagement {
+  repositories {
+    gradlePluginPortal()
+    mavenCentral()
+  }
+  plugins {
+    id("com.github.johnrengelman.shadow") version "8.1.1"
+    id("com.diffplug.spotless") version "6.25.0"
+  }
+}
+
+rootProject.name = "coral"
+
 def modules = [
-  'coral-common',
-  'coral-dbt',
-  'coral-hive',
-  'coral-incremental',
-  'coral-pig',
-  'coral-spark',
-  'coral-schema',
-  'coral-spark-plan',
-  'coral-trino',
-  'coral-service',
-  'coral-visualization',
-  'shading'
+  "coral-common",
+  "coral-dbt",
+  "coral-hive",
+  "coral-incremental",
+  "coral-pig",
+  "coral-spark",
+  "coral-schema",
+  "coral-spark-plan",
+  "coral-trino",
+  "coral-service",
+  "coral-visualization",
+  "shading"
 ]
 
-modules.each { module ->
-  if (!file(module).directory) {
-    throw new GradleException("Module '$module' specified in the settings.gradle file must be a valid directory in the root project.")
+// Include top-level modules and only valid subprojects with build.gradle, skipping build/src/.gradle
+for (m in modules) {
+  if (!file(m).isDirectory()) {
+    throw new GradleException("Module '${m}' must exist under the root project.")
   }
-  file(module).eachDir { submodule ->
-    if (!submodule.name.startsWith('.')) {
-      include "${module}:${submodule.name}"
+  include(m)
+
+  def moduleDir = file(m)
+  def subdirs = moduleDir.listFiles()
+  if (subdirs != null) {
+    for (dir in subdirs) {
+      if (dir.isDirectory()) {
+        def name = dir.name
+        if (!name.startsWith(".") && name != "build" && name != "src" && name != ".gradle") {
+          def buildGradleFile = file("${dir.path}/build.gradle")
+          if (buildGradleFile.exists()) {
+            include("${m}:${name}")
+          }
+        }
+      }
     }
   }
 }
+
+// NEW: include the shaded Guava submodule we will add next
+include("shading:guava-shaded")

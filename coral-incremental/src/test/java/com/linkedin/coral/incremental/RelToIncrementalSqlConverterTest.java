@@ -1,5 +1,5 @@
 /**
- * Copyright 2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2023-2026 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -31,6 +31,11 @@ public class RelToIncrementalSqlConverterTest {
 
   @BeforeClass
   public void beforeClass() throws HiveException, MetaException, IOException {
+    try {
+      Class.forName("org.apache.derby.jdbc.EmbeddedDriver");
+    } catch (ClassNotFoundException e) {
+      throw new RuntimeException(e);
+    }
     conf = TestUtils.loadResourceHiveConf();
     TestUtils.initializeViews(conf);
   }

@@ -1,21 +1,99 @@
-dependencies {
-  compile project(path: ':coral-hive')
-  compile deps.'avroCompatHelper'
+plugins {
+  id 'java'
+}
 
-  testCompile(deps.'hive'.'hive-exec-core') {
-    exclude group: 'org.apache.avro', module: 'avro-tools'
-    // These exclusions are required to prevent duplicate classes since we include
-    // shaded jar above
+dependencies {
+  implementation(project(path: ':shading:guava-shaded', configuration: 'shadow'))
+  implementation project(':coral-common')
+  implementation project(':coral-hive')
+
+  implementation deps.'avro'
+  implementation deps.'avro-mapred'
+  implementation deps.'avroCompatHelper'
+
+  implementation(deps.'hive'.'hive-metastore') {
+    exclude group: 'com.google.guava', module: 'guava'
     exclude group: 'org.apache.calcite', module: 'calcite-core'
     exclude group: 'org.apache.calcite', module: 'calcite-avatica'
   }
 
-  testCompile deps.'hadoop'.'hadoop-mapreduce-client-core'
-  testCompile deps.'kryo'
+  implementation deps.'linkedin-calcite-core'
+  implementation deps.'linkedin-calcite-linq4j'
+
+  // Force newer Guava to avoid conflicts
+  implementation 'com.google.guava:guava:31.1-jre'
+
+  // Legacy Jackson
+  implementation 'org.codehaus.jackson:jackson-core-asl:1.9.13'
+  implementation 'org.codehaus.jackson:jackson-mapper-asl:1.9.13'
+
+  // Test deps (with conflicts excluded)
+  testImplementation(deps.'hive'.'hive-exec-core') {
+    exclude group: 'org.apache.avro', module: 'avro-tools'
+    exclude group: 'org.apache.calcite', module: 'calcite-core'
+    exclude group: 'org.apache.calcite', module: 'calcite-avatica'
+    exclude group: 'com.google.guava', module: 'guava'
+  }
+  testImplementation(deps.'hadoop'.'hadoop-common') {
+    exclude group: 'org.slf4j', module: 'slf4j-log4j12'
+    exclude group: 'com.google.guava', module: 'guava'
+  }
+  testImplementation('org.apache.hadoop:hadoop-hdfs:2.7.0') {
+    exclude group: 'org.slf4j', module: 'slf4j-log4j12'
+    exclude group: 'com.google.guava', module: 'guava'
+  }
+
+  testImplementation(deps.'hadoop'.'hadoop-mapreduce-client-core') {
+    exclude group: 'com.google.guava', module: 'guava'
+  }
+  testImplementation(deps.'kryo') {
+    exclude group: 'com.google.guava', module: 'guava'
+  }
+
+  testImplementation 'javax.jdo:jdo-api:3.0.1'
+  testImplementation 'javax.transaction:jta:1.1'
+  testImplementation deps.'derby'
+
+  testRuntimeOnly deps.'datanucleus-api-jdo'
+  testRuntimeOnly deps.'datanucleus-core'
+  testRuntimeOnly deps.'datanucleus-rdbms'
+
+  // Optional: single SLF4J binding to quiet warnings
+  testRuntimeOnly 'org.slf4j:slf4j-simple:1.7.36'
 }
 
+test {
+  useTestNG()
+
+  // Embedded metastore config (Derby-backed)
+  systemProperty "javax.jdo.option.ConnectionURL", "jdbc:derby:;databaseName=memory:metastore_db;create=true"
+  systemProperty "javax.jdo.option.ConnectionDriverName", "org.apache.derby.jdbc.EmbeddedDriver"
+  systemProperty "hive.metastore.warehouse.dir", "${buildDir}/hive/warehouse"
+
+  // DN/HMS schema bootstrap
+  systemProperty "hive.metastore.schema.verification", "false"
+  systemProperty "datanucleus.autoCreateSchema", "true"
+  systemProperty "datanucleus.schema.autoCreateAll", "true"
+  systemProperty "datanucleus.fixedDatastore", "false"
+  systemProperty "javax.jdo.option.Mapping", "derby"
+
+  // Ensure test resources (hive.xml) are loaded
+  testClassesDirs = sourceSets.test.output.classesDirs
+  classpath += files("${projectDir}/src/test/resources")
+
+  testLogging {
+    showStandardStreams = true
+    exceptionFormat = 'full'
+  }
+
+  doFirst {
+    file("${buildDir}/hive/warehouse").mkdirs()
+  }
+}
+
+// Force Guava version to resolve conflicts
 configurations.all {
   resolutionStrategy {
-    force 'org.apache.avro:avro:1.10.2'
+    force 'com.google.guava:guava:31.1-jre'
   }
 }

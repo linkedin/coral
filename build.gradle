@@ -1,10 +1,6 @@
-// Copyright 2019-2020 LinkedIn Corporation. All rights reserved.
-// Licensed under the BSD-2 Clause license.
-// See LICENSE in the project root for license information.
-
 buildscript {
   repositories {
-    jcenter()
+    mavenCentral()
     maven {
       url "https://plugins.gradle.org/m2/"
     }
@@ -13,32 +9,130 @@ buildscript {
     classpath "io.github.gradle-nexus:publish-plugin:1.1.0"
     classpath "org.shipkit:shipkit-auto-version:1.1.1"
     classpath "org.shipkit:shipkit-changelog:1.1.10"
-    classpath "com.github.jengelman.gradle.plugins:shadow:6.1.0"
   }
 }
 
 plugins {
-  id "com.diffplug.spotless" version "5.9.0"
+  id "com.diffplug.spotless" version "6.25.0"
 }
+
 
 apply from: "gradle/shipkit.gradle"
-
-configurations {
-  provided
-}
 
 allprojects {
   group = "com.linkedin.coral"
   apply plugin: "com.diffplug.spotless"
 
+  // Set Java 17 toolchain for all projects
+  plugins.withType(JavaPlugin) {
+    java {
+      toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+      }
+    }
+  }
+
+  // Repositories: prefer Maven Central; scope Artifactory to only required LinkedIn groups
   repositories {
     mavenCentral()
+
+    // LinkedIn Calcite fork (only this group)
     maven {
-      url 'https://linkedin.jfrog.io/artifactory/avro-util/'
+      url "https://linkedin.jfrog.io/artifactory/calcite"
+      content { includeGroup "com.linkedin.calcite" }
+      metadataSources { mavenPom(); artifact() }
     }
+
+    // LinkedIn AvroUtil (only this group)
     maven {
-      url 'https://linkedin.bintray.com/maven/'
+      url "https://linkedin.jfrog.io/artifactory/avro-util"
+      content { includeGroup "com.linkedin.avroutil1" }
+      metadataSources { mavenPom(); artifact() }
     }
+    // LinkedIn general Maven (scope to LinkedIn groups only)
+    maven {
+      url "https://linkedin.jfrog.io/artifactory/maven"
+      content { includeGroupByRegex "com.linkedin..*" }
+      metadataSources { mavenPom(); artifact() }
+    }
+  }
+
+  // Global dependency management and version constraints
+  configurations.all {
+    // Exclude problematic dependencies
+    exclude group: "org.pentaho", module: "pentaho-aggdesigner-algorithm"
+
+    // Resolve version conflicts
+    resolutionStrategy {
+      // Fail on version conflict and prefer project modules
+      failOnVersionConflict()
+      preferProjectModules()
+
+      // Force specific versions of critical dependencies
+      force(
+          'com.linkedin.calcite:calcite-core:1.21.0.265',
+          'com.linkedin.calcite:calcite-linq4j:1.21.0.265',
+          'org.apache.hive:hive-exec:2.3.9',
+          'org.apache.hive:hive-metastore:2.3.9',
+          'org.apache.hadoop:hadoop-common:2.7.0',
+          'org.apache.hadoop:hadoop-mapreduce-client-core:2.7.0',
+          'org.apache.derby:derby:10.10.2.0',
+          'org.datanucleus:datanucleus-api-jdo:4.2.5',
+          'org.datanucleus:datanucleus-core:4.1.17',
+          'org.datanucleus:datanucleus-rdbms:4.1.19'
+          )
+
+      // Reject any dynamic versions to ensure build reproducibility
+      eachDependency { details ->
+        if (details.requested.version == null || details.requested.version.endsWith('+')) {
+          throw new GradleException("Dynamic versions are not allowed: ${details.requested}")
+        }
+      }
+
+      // Dependency substitution for Hive's Calcite dependencies
+      dependencySubstitution {
+        // Redirect any Calcite dependencies to use LinkedIn's version
+        substitute(module('org.apache.calcite:calcite-core'))
+            .using(module('com.linkedin.calcite:calcite-core:1.21.0.265'))
+            .because('Use LinkedIn Calcite fork consistently')
+
+        substitute(module('org.apache.calcite:calcite-linq4j'))
+            .using(module('com.linkedin.calcite:calcite-linq4j:1.21.0.265'))
+            .because('Use LinkedIn Calcite fork consistently')
+
+        // Ensure we use the same version for all Calcite modules
+        substitute(module('org.apache.calcite:calcite-avatica'))
+            .using(module('com.linkedin.calcite:calcite-avatica:1.21.0.265'))
+            .because('Use LinkedIn Calcite fork consistently')
+      }
+    }
+
+    // Exclude all Calcite from Hive dependencies
+    exclude group: 'org.apache.calcite', module: '*'
+  }
+
+  // Global test JVM args for Java 17 to allow reflective access used by Hive/Spark/Derby
+  tasks.withType(Test).configureEach {
+    jvmArgs += [
+      "--add-opens=java.base/java.lang=ALL-UNNAMED",
+      "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED",
+      "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED",
+      "--add-opens=java.base/java.util=ALL-UNNAMED",
+      "--add-opens=java.base/java.io=ALL-UNNAMED",
+      "--add-opens=java.base/java.net=ALL-UNNAMED",
+      "--add-opens=java.base/java.nio=ALL-UNNAMED",
+      "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED",
+      "--add-opens=java.prefs/java.util.prefs=ALL-UNNAMED",
+      // Sometimes needed by Spark under JDK17
+      "--add-opens=java.base/jdk.internal.misc=ALL-UNNAMED",
+      "--add-opens=java.base/jdk.internal.reflect=ALL-UNNAMED"
+    ]
+    // Keep Derby errors quiet
+    systemProperty "derby.stream.error.field", "java.lang.System.err"
+    // Hive Metastore test configuration for HMS 2.3.9
+    systemProperty 'hive.cbo.enable', 'false'
+    systemProperty 'hive.exec.mode.local.auto', 'false'
+    systemProperty 'hive.metastore.disallow.incompatible.col.type.changes', 'false'
   }
 
   spotless {
@@ -61,7 +155,27 @@ allprojects {
 subprojects {
   plugins.withType(JavaPlugin) {
     dependencies {
-      testCompile deps.'testing'
+      // Common dependency constraints
+      constraints {
+        // Avro
+        implementation 'org.apache.avro:avro:1.10.2'
+        implementation 'org.apache.avro:avro-mapred:1.10.2'
+
+        // SLF4J
+        implementation 'org.slf4j:slf4j-api:1.7.30'
+        implementation 'org.slf4j:slf4j-log4j12:1.7.30'
+
+        // Jackson
+        implementation 'com.fasterxml.jackson.core:jackson-core:2.14.1'
+        implementation 'com.fasterxml.jackson.core:jackson-annotations:2.14.1'
+        implementation 'com.fasterxml.jackson.core:jackson-databind:2.14.1'
+
+        // Commons
+        implementation 'commons-codec:commons-codec:1.15'
+        implementation 'commons-lang:commons-lang:2.6'
+      }
+
+      testImplementation deps.'testing'
     }
     test {
       useTestNG()

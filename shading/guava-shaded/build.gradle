@@ -1,0 +1,18 @@
+plugins {
+  id 'java'
+  id 'com.github.johnrengelman.shadow' // version from settings.gradle
+}
+
+repositories { mavenCentral() }
+
+dependencies {
+  implementation 'com.google.guava:guava:31.1-jre'
+}
+
+shadowJar {
+  relocate 'com.google.common', 'com.linkedin.coral.com.google.common'
+  archiveClassifier.set('')
+}
+
+tasks.named('jar') { enabled = false }
+tasks.named('assemble') { dependsOn(tasks.named('shadowJar')) }

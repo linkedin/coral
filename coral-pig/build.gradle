@@ -1,27 +1,84 @@
-dependencies {
-  // NOTE: jline is needed as testCompile for PigUnit tests because it is missing from Pig runtime
-  testCompile deps.'jline'
+plugins {
+  id 'java'
+}
 
-  compile(project(path: ':coral-hive')) {
+dependencies {
+  implementation project(':coral-common')
+  implementation(project(':coral-hive')) {
     exclude group: 'jline', module: 'jline'
+    exclude group: 'com.google.guava', module: 'guava'
+  }
+  implementation(project(path: ':shading:guava-shaded', configuration: 'shadow'))
+
+  implementation deps.'commons-lang3'
+  implementation deps.'linkedin-calcite-core'
+  implementation deps.'linkedin-calcite-linq4j'
+
+  // Pig + PigUnit for tests (0.18.0 for Java 17 compatibility)
+  testImplementation('org.apache.pig:pig:0.18.0') {
+    exclude group: 'com.google.guava', module: 'guava'
+  }
+  testImplementation('org.apache.pig:pigunit:0.18.0') {
+    exclude group: 'com.google.guava', module: 'guava'
   }
 
-  testCompile(deps.'pig'.'pig') { transitive = false }
-  testCompile(deps.'pig'.'pigunit') { transitive = false }
+  // jline is required by PigUnit tests (Pig runtime doesn't include it)
+  testImplementation deps.'jline'
 
-  // Pull in hive-metastore transitively through hive-exec.
-  // Use shaded hive-exec/hive-metastore dependencies for Coral to prevent classpath
-  // conflicts with DaliStorage/PiggyBank.
-  testCompile(deps.'hive'.'hive-exec-core') {
+  // Hive runtime for tests (Java 17 friendly)
+  testImplementation('org.apache.hive:hive-exec:2.3.9') {
     exclude group: 'org.apache.avro', module: 'avro-tools'
-    // These exclusions are required to prevent duplicate classes since we include
-    // shaded coral-calcite jar above
     exclude group: 'org.apache.calcite', module: 'calcite-core'
     exclude group: 'org.apache.calcite', module: 'calcite-avatica'
     exclude group: 'jline', module: 'jline'
     exclude group: 'org.codehaus.groovy', module: 'groovy-all'
+    exclude group: 'com.google.guava', module: 'guava'
+    // avoid pentaho aggdesigner
+    exclude group: 'org.pentaho', module: 'pentaho-aggdesigner-algorithm'
   }
 
-  testCompile deps.'hadoop'.'hadoop-mapreduce-client-common'
-  testCompile deps.'kryo'
+  // Hive Metastore with its own DataNucleus/JDO dependencies
+  testImplementation(deps.'hive'.'hive-metastore') {
+    exclude group: 'com.google.guava', module: 'guava'
+    exclude group: 'org.apache.calcite', module: 'calcite-core'
+    exclude group: 'org.apache.calcite', module: 'calcite-avatica'
+  }
+
+  // Java 17-compatible Derby for embedded DB (HMS 2.3.9 requires 10.10.2.0)
+  testImplementation 'org.apache.derby:derby:10.10.2.0'
+
+  testImplementation deps.'hadoop'.'hadoop-common'
+  testImplementation 'org.apache.hadoop:hadoop-hdfs:2.7.0'
+  testImplementation deps.'hadoop'.'hadoop-mapreduce-client-core'
+  testImplementation deps.'hadoop'.'hadoop-mapreduce-client-common'
+  testImplementation 'org.apache.hadoop:hadoop-mapreduce-client-jobclient:2.7.0'
+  testImplementation deps.'kryo'
+  testImplementation 'org.datanucleus:javax.jdo:3.2.0-m3'
+  testImplementation 'org.slf4j:slf4j-simple:1.7.36'
+
+  testRuntimeOnly deps.'datanucleus-api-jdo'
+  testRuntimeOnly deps.'datanucleus-core'
+  testRuntimeOnly deps.'datanucleus-rdbms'
+}
+
+// Hive's metastore will handle its own JDO enhancement
+
+// Configure test JVM arguments
+test {
+  // Set system properties for Hive metastore
+  systemProperty 'datanucleus.schema.autoCreateAll', 'true'
+  systemProperty 'datanucleus.autoCreateTables', 'true'
+  systemProperty 'datanucleus.validateTables', 'false'
+  systemProperty 'datanucleus.validateConstraints', 'false'
+  systemProperty 'hive.metastore.local', 'true'
+  systemProperty 'hive.metastore.warehouse.dir', "file://${project.buildDir.absolutePath}/hive-warehouse"
+  systemProperty 'hive.metastore.schema.verification', 'false'
+  systemProperty 'hive.metastore.schema.verification.record.version', 'false'
+}
+
+// Force jline version to fix Pig compatibility
+configurations.all {
+  resolutionStrategy {
+    force 'jline:jline:0.9.94'
+  }
 }
