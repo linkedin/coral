@@ -967,6 +967,21 @@ public class HiveToTrinoConverterTest {
   }
 
   @Test
+  public void testRlikeBackslashEscaping() {
+    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
+
+    // In Hive SQL, '\\d' means the string \d (backslash is escape char).
+    // In Trino SQL, '\d' means the string \d (no backslash escaping).
+    // So Hive's '\\d{4}' should become Trino's '\d{4}'.
+    RelNode relNode =
+        TestUtils.getHiveToRelConverter().convertSql("SELECT '2022-01-01' RLIKE '^\\\\d{4}-\\\\d{2}-\\\\d{2}$'");
+    String targetSql =
+        "SELECT \"REGEXP_LIKE\"('2022-01-01', '^\\d{4}-\\d{2}-\\d{2}$')\n" + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
+    String expandedSql = relToTrinoConverter.convert(relNode);
+    assertEquals(expandedSql, targetSql);
+  }
+
+  @Test
   public void testSqlSelectAliasAppenderTransformer() {
     // test.tableA(a int, b struct<b1:string>
     RelNode relNode = TestUtils.getHiveToRelConverter().convertSql("SELECT tableA.b.b1 FROM test.tableA where a > 5");
