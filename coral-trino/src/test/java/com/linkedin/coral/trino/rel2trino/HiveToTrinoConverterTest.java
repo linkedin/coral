@@ -27,6 +27,8 @@ import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 import static com.linkedin.coral.trino.rel2trino.CoralTrinoConfigKeys.*;
 import static org.apache.calcite.sql.type.OperandTypes.*;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
 
 
 public class HiveToTrinoConverterTest {
@@ -979,6 +981,40 @@ public class HiveToTrinoConverterTest {
         "SELECT \"REGEXP_LIKE\"('2022-01-01', '^\\d{4}-\\d{2}-\\d{2}$')\n" + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
     String expandedSql = relToTrinoConverter.convert(relNode);
     assertEquals(expandedSql, targetSql);
+  }
+
+  @Test
+  public void testRlikeBackslashEscapingWithColumn() {
+    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
+
+    // Test backslash escaping with a column reference instead of literal
+    RelNode relNode =
+        TestUtils.getHiveToRelConverter().convertSql("SELECT * FROM test.tableA WHERE a RLIKE '^\\\\d+$'");
+    String expandedSql = relToTrinoConverter.convert(relNode);
+    assertTrue(expandedSql.contains("\"REGEXP_LIKE\""));
+    assertTrue(expandedSql.contains("'^\\d+$'"));
+    assertFalse(expandedSql.contains("'^\\\\d+$'"));
+  }
+
+  @Test
+  public void testRegexpBackslashEscaping() {
+    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
+
+    // Test that REGEXP (synonym for RLIKE) also handles backslash escaping
+    RelNode relNode = TestUtils.getHiveToRelConverter().convertSql("SELECT 'hello' REGEXP '^\\\\w+$'");
+    String targetSql = "SELECT \"REGEXP_LIKE\"('hello', '^\\w+$')\n" + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
+    String expandedSql = relToTrinoConverter.convert(relNode);
+    assertEquals(expandedSql, targetSql);
+  }
+
+  @Test
+  public void testStringLiteralWithEscapedBackslash() {
+    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
+
+    // Test that a literal backslash (\\\\  in Hive = \\ in string = one backslash in Trino)
+    RelNode relNode = TestUtils.getHiveToRelConverter().convertSql("SELECT 'path\\\\to\\\\file'");
+    String expandedSql = relToTrinoConverter.convert(relNode);
+    assertTrue(expandedSql.contains("'path\\to\\file'"));
   }
 
   @Test
