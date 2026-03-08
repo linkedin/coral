@@ -1251,7 +1251,7 @@ public class ParseTreeBuilder extends AstVisitor<SqlNode, ParserVisitorContext> 
     switch (node.getName().getValue().toUpperCase()) {
       case "DECIMAL":
         int precision = getNumberFromNumericParameter(node.getArguments().get(0));
-        int scale = node.getArguments().size() > 1 ? getNumberFromNumericParameter(node.getArguments().get(0)) : 0;
+        int scale = node.getArguments().size() > 1 ? getNumberFromNumericParameter(node.getArguments().get(1)) : 0;
         return SqlTypeUtil.convertTypeToSpec(sqlTypeFactory.createSqlType(SqlTypeName.DECIMAL, precision, scale));
       case "CHAR":
       case "VARCHAR":

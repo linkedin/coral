@@ -170,6 +170,14 @@ public class TrinoToRelConverterTest {
         .add(new TrinoToRelTestDataProvider("select cast('123' as bigint)",
             "LogicalProject(EXPR$0=[CAST('123'):BIGINT])\n" + "  LogicalValues(tuples=[[{ 0 }]])\n",
             "SELECT CAST('123' AS BIGINT)\n" + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")"))
+        .add(new TrinoToRelTestDataProvider("select cast(a as decimal(38, 4)) from foo",
+            "LogicalProject(EXPR$0=[CAST($1):DECIMAL(38, 4)])\n"
+                + "  LogicalTableScan(table=[[hive, default, foo]])\n",
+            "SELECT CAST(\"foo\".\"a\" AS DECIMAL(38, 4))\n" + "FROM \"default\".\"foo\" AS \"foo\""))
+        .add(new TrinoToRelTestDataProvider("select cast(a as decimal(10)) from foo",
+            "LogicalProject(EXPR$0=[CAST($1):DECIMAL(10, 0)])\n"
+                + "  LogicalTableScan(table=[[hive, default, foo]])\n",
+            "SELECT CAST(\"foo\".\"a\" AS DECIMAL(10, 0))\n" + "FROM \"default\".\"foo\" AS \"foo\""))
         .add(new TrinoToRelTestDataProvider("select a \"my price\" from \"foo\" \"ORDERS\"",
             "LogicalProject(MY PRICE=[$1])\n" + "  LogicalTableScan(table=[[hive, default, foo]])\n",
             "SELECT \"foo\".\"a\" AS \"MY PRICE\"\n" + "FROM \"default\".\"foo\" AS \"foo\""))
