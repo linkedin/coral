@@ -1,5 +1,6 @@
 def modules = [
   'coral-common',
+  'coral-data-generation',
   'coral-dbt',
   'coral-hive',
   'coral-incremental',
