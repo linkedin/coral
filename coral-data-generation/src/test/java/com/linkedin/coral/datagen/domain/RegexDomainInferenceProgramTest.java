@@ -1,5 +1,5 @@
 /**
- * Copyright 2025 LinkedIn Corporation. All rights reserved.
+ * Copyright 2025-2026 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -146,67 +146,46 @@ public class RegexDomainInferenceProgramTest {
    * Extracts the predicate, derives the input domain, and runs optional assertions.
    */
   private void testDomainInference(String testName, String sql, DomainAssertion assertion) {
-    System.out.println("\n=== " + testName + " ===");
-    System.out.println("SQL: " + sql);
-
     RelNode normalized = convertAndNormalizeQuery(sql);
     DnfRewriter.Output dnfOut = extractPredicatesAsDnf(normalized);
-    System.out.println("DNF disjuncts count: " + dnfOut.disjuncts.size());
+    assertFalse(dnfOut.disjuncts.isEmpty(), testName + ": should have at least one disjunct");
 
     RexNode disjunct = dnfOut.disjuncts.get(0);
-    System.out.println("Disjunct: " + disjunct);
 
-    try {
-      if (disjunct instanceof org.apache.calcite.rex.RexCall) {
-        org.apache.calcite.rex.RexCall call = (org.apache.calcite.rex.RexCall) disjunct;
-        if (call.getOperator() == org.apache.calcite.sql.fun.SqlStdOperatorTable.EQUALS) {
-          RexNode lhs = call.getOperands().get(0);
-          RexNode rhs = call.getOperands().get(1);
+    assertTrue(disjunct instanceof org.apache.calcite.rex.RexCall, testName + ": disjunct should be a RexCall");
+    org.apache.calcite.rex.RexCall call = (org.apache.calcite.rex.RexCall) disjunct;
+    assertEquals(call.getOperator(), org.apache.calcite.sql.fun.SqlStdOperatorTable.EQUALS,
+        testName + ": operator should be EQUALS");
 
-          System.out.println("LHS: " + lhs);
-          System.out.println("RHS: " + rhs);
+    RexNode lhs = call.getOperands().get(0);
+    RexNode rhs = call.getOperands().get(1);
 
-          org.apache.calcite.rex.RexLiteral literal = (org.apache.calcite.rex.RexLiteral) rhs;
-          String rhsValue = literal.getValue2().toString();
-          System.out.println("RHS value: " + rhsValue);
-          System.out.println("RHS type: " + literal.getType().getSqlTypeName());
+    assertTrue(rhs instanceof org.apache.calcite.rex.RexLiteral, testName + ": RHS should be a literal");
+    org.apache.calcite.rex.RexLiteral literal = (org.apache.calcite.rex.RexLiteral) rhs;
+    String rhsValue = literal.getValue2().toString();
 
-          // Create appropriate domain based on RHS literal type
-          Domain<?, ?> outputDomain;
-          if (isNumericType(literal.getType().getSqlTypeName())) {
-            long numericValue = Long.parseLong(rhsValue);
-            outputDomain = IntegerDomain.of(numericValue);
-          } else {
-            outputDomain = RegexDomain.literal(rhsValue);
-          }
-          System.out.println("Output domain: " + outputDomain);
-
-          // Derive input domain constraint
-          Domain<?, ?> inputDomain = program.deriveInputDomain(lhs, outputDomain);
-
-          System.out.println("Derived input domain: " + inputDomain);
-          System.out.println("Is empty: " + inputDomain.isEmpty());
-
-          // Run custom assertions if provided
-          if (assertion != null) {
-            assertion.accept(inputDomain);
-          }
-
-          // Generate examples
-          System.out.println("Generated examples:");
-          List<?> examples = inputDomain.sample(5);
-          System.out.println("  Examples: " + examples);
-        }
-      }
-    } catch (Exception e) {
-      System.out.println("Error: " + e.getMessage());
-      e.printStackTrace();
-      if (assertion != null) {
-        fail("Test failed with exception: " + e.getMessage());
-      }
+    // Create appropriate domain based on RHS literal type
+    Domain<?, ?> outputDomain;
+    if (isNumericType(literal.getType().getSqlTypeName())) {
+      long numericValue = Long.parseLong(rhsValue);
+      outputDomain = IntegerDomain.of(numericValue);
+    } else {
+      outputDomain = RegexDomain.literal(rhsValue);
     }
 
-    System.out.println("=== Test completed ===\n");
+    // Derive input domain constraint
+    Domain<?, ?> inputDomain = program.deriveInputDomain(lhs, outputDomain);
+
+    assertFalse(inputDomain.isEmpty(), testName + ": derived input domain should not be empty");
+
+    // Run custom assertions if provided
+    if (assertion != null) {
+      assertion.accept(inputDomain);
+    }
+
+    // Verify that samples can be generated
+    List<?> examples = inputDomain.sample(5);
+    assertFalse(examples.isEmpty(), testName + ": should generate at least one sample");
   }
 
   @Test
@@ -306,19 +285,11 @@ public class RegexDomainInferenceProgramTest {
     // This test demonstrates cross-domain inference: String → Integer → through arithmetic
     testDomainInference("CAST with Arithmetic Test", "SELECT * FROM test.T WHERE CAST(age * 2 AS STRING) = '50'",
         inputDomain -> {
-          // The result should be IntegerDomain since age is an integer
-          System.out.println("Domain type: " + inputDomain.getClass().getSimpleName());
-          if (inputDomain instanceof IntegerDomain) {
-            IntegerDomain intDomain = (IntegerDomain) inputDomain;
-            System.out.println("Contains 25: " + intDomain.contains(25)); // Should be true (25 * 2 = 50)
-            System.out.println("Contains 30: " + intDomain.contains(30)); // Should be false
-
-            // Verify the constraint is correct
-            assertTrue(intDomain.contains(25), "Domain should contain 25 (since 25 * 2 = 50)");
-            assertFalse(intDomain.contains(30), "Domain should not contain 30");
-          } else {
-            fail("Expected IntegerDomain but got " + inputDomain.getClass().getSimpleName());
-          }
+          assertTrue(inputDomain instanceof IntegerDomain,
+              "Expected IntegerDomain but got " + inputDomain.getClass().getSimpleName());
+          IntegerDomain intDomain = (IntegerDomain) inputDomain;
+          assertTrue(intDomain.contains(25), "Domain should contain 25 (since 25 * 2 = 50)");
+          assertFalse(intDomain.contains(30), "Domain should not contain 30");
         });
   }
 
