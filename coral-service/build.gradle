@@ -1,6 +1,6 @@
 plugins {
-  id 'org.springframework.boot' version '2.4.0'
-  id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+  id 'org.springframework.boot' version '2.7.18'
+  id 'io.spring.dependency-management' version '1.1.4'
   id 'java'
 }
 
@@ -13,7 +13,7 @@ configurations {
 }
 
 repositories {
-  maven { url "http://conjars.org/repo" }
+  maven { url "https://conjars.org/repo" }
 }
 
 // Exclusions required to fix issue of multiple bindings on the class path

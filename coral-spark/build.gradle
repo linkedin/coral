@@ -1,21 +1,21 @@
 apply from: "spark_itest.gradle"
 
 dependencies {
-  compile project(':coral-hive')
-  compile project(':coral-schema')
+  implementation project(':coral-hive')
+  implementation project(':coral-schema')
 
 
   compileOnly deps.'spark'.'sql'
 
-  testCompile(deps.'hive'.'hive-exec-core') {
+  testImplementation(deps.'hive'.'hive-exec-core') {
     exclude group: 'org.apache.avro', module: 'avro-tools'
     // These exclusions are required to prevent duplicate classes since we include
     // shaded jar above
     exclude group: 'org.apache.calcite', module: 'calcite-core'
     exclude group: 'org.apache.calcite', module: 'calcite-avatica'
   }
-  testCompile deps.'hadoop'.'hadoop-mapreduce-client-core'
-  testCompile deps.'kryo'
+  testImplementation deps.'hadoop'.'hadoop-mapreduce-client-core'
+  testImplementation deps.'kryo'
 }
 
 // Needs to enforce using Avro 1.10 because Coral-Spark depends on Coral-Schema which uses Avro 1.10
