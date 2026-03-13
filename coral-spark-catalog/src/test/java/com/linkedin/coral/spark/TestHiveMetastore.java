@@ -7,15 +7,9 @@ package com.linkedin.coral.spark;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.concurrent.ExecutorService;
@@ -58,7 +52,6 @@ public enum TestHiveMetastore {
       hiveLocalDir = createTempDirectory("hive", asFileAttribute(fromString("rwxrwxrwx"))).toFile();
       File derbyLogFile = new File(hiveLocalDir, "derby.log");
       System.setProperty("derby.stream.error.file", derbyLogFile.getAbsolutePath());
-      setupMetastoreDB("jdbc:derby:" + getDerbyPath() + ";create=true");
 
       TServerSocket socket = new TServerSocket(0);
       int port = socket.getServerSocket().getLocalPort();
@@ -107,6 +100,9 @@ public enum TestHiveMetastore {
   private TServer newThriftServer(TServerSocket socket, HiveConf conf) throws Exception {
     HiveConf serverConf = new HiveConf(conf);
     serverConf.set(HiveConf.ConfVars.METASTORECONNECTURLKEY.varname, "jdbc:derby:" + getDerbyPath() + ";create=true");
+    serverConf.setBoolean("hive.metastore.schema.verification", false);
+    serverConf.setBoolean("datanucleus.schema.autoCreateAll", true);
+    serverConf.setBoolean("datanucleus.schema.autoCreateTables", true);
     HiveMetaStore.HMSHandler baseHandler = new HiveMetaStore.HMSHandler("new db based metaserver", serverConf);
     IHMSHandler handler = RetryingHMSHandler.getProxy(serverConf, baseHandler, false);
 
@@ -122,17 +118,6 @@ public enum TestHiveMetastore {
     newHiveConf.set(HiveConf.ConfVars.METASTOREURIS.varname, "thrift://localhost:" + port);
     newHiveConf.set(HiveConf.ConfVars.METASTOREWAREHOUSE.varname, "file:" + hiveLocalDir.getAbsolutePath());
     return newHiveConf;
-  }
-
-  private void setupMetastoreDB(String dbURL) throws SQLException, IOException {
-    Connection connection = DriverManager.getConnection(dbURL);
-    ScriptRunner scriptRunner = new ScriptRunner(connection, true, true);
-
-    ClassLoader classLoader = ClassLoader.getSystemClassLoader();
-    InputStream inputStream = classLoader.getResourceAsStream("hive-schema.derby.sql");
-    try (Reader reader = new InputStreamReader(inputStream)) {
-      scriptRunner.runScript(reader);
-    }
   }
 
   private String getDerbyPath() {
