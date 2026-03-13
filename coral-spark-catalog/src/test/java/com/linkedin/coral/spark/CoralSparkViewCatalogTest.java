@@ -5,6 +5,8 @@
  */
 package com.linkedin.coral.spark;
 
+import com.linked.coral.spark.CoralSparkViewCatalog;
+
 import org.apache.calcite.sql.type.ReturnTypes;
 import org.apache.calcite.sql.type.SqlTypeFamily;
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -35,7 +37,7 @@ public class CoralSparkViewCatalogTest {
     spark = SparkSession.builder().master("local[2]").config(SQLConf.PARTITION_OVERWRITE_MODE().key(), "dynamic")
         .config("spark.hadoop." + METASTOREURIS.varname, hiveConf.get(METASTOREURIS.varname)).enableHiveSupport()
         .getOrCreate();
-    spark.conf().set("spark.sql.catalog.spark_catalog", TestCoralSparkViewCatalog.class.getName());
+    spark.conf().set("spark.sql.catalog.spark_catalog", CoralSparkViewCatalog.class.getName());
     spark.sql("CREATE NAMESPACE IF NOT EXISTS default");
     spark.sql(
         "CREATE FUNCTION IF NOT EXISTS default_foo_dali_udf_LessThanHundred AS 'com.linkedin.coral.spark.CoralTestUDF'");

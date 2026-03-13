@@ -77,7 +77,7 @@ import com.linkedin.coral.spark.CoralSpark;
 import com.linkedin.coral.spark.containers.SparkUDFInfo;
 
 
-public abstract class CoralSparkViewCatalog<T extends TableCatalog & SupportsNamespaces>
+public class CoralSparkViewCatalog<T extends TableCatalog & SupportsNamespaces>
     implements ViewCatalog, CatalogExtension {
   private static final Logger LOG = LoggerFactory.getLogger(CoralSparkViewCatalog.class);
   private String catalogName;
