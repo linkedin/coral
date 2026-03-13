@@ -49,8 +49,9 @@ ext.deps = [
     'hive': "org.apache.spark:spark-hive_2.12:${versions['spark3']}"
   ],
   'spark3.5': [
-      'avro': "org.apache.spark:spark-avro_2.12:${versions['spark3.5']}",
-      'sql': "org.apache.spark:spark-sql_2.12:${versions['spark3.5']}"
+    'avro': "org.apache.spark:spark-avro_2.12:${versions['spark3.5']}",
+    'hive': "org.apache.spark:spark-hive_2.12:${versions['spark3.5']}",
+    'sql': "org.apache.spark:spark-sql_2.12:${versions['spark3.5']}"
   ],
   'testing': "org.testng:testng:${versions['testing']}"
 ]
