@@ -3,7 +3,7 @@
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
-package com.linked.coral.spark;
+package com.linkedin.coral.spark;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -14,7 +14,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -77,6 +76,12 @@ import com.linkedin.coral.spark.CoralSpark;
 import com.linkedin.coral.spark.containers.SparkUDFInfo;
 
 
+/**
+ * A Spark 3.5 {@link CatalogExtension} that intercepts view resolution to translate
+ * Hive view definitions into Spark SQL via Coral's translation pipeline
+ * (Hive view &rarr; Calcite RelNode &rarr; Spark SQL). Table, namespace, and function
+ * operations are delegated to the underlying session catalog.
+ */
 public class CoralSparkViewCatalog<T extends TableCatalog & SupportsNamespaces>
     implements ViewCatalog, CatalogExtension {
   private static final Logger LOG = LoggerFactory.getLogger(CoralSparkViewCatalog.class);
@@ -124,7 +129,7 @@ public class CoralSparkViewCatalog<T extends TableCatalog & SupportsNamespaces>
     viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(adapter);
     final Table table = adapter.getTable(db, tbl);
     if (table == null || !table.getTableType().equalsIgnoreCase(TableType.VIRTUAL_VIEW.name())) {
-      throw new NoSuchElementException(String.format("View doesn't exist %s", tbl));
+      throw new NoSuchElementException(String.format("View %s doesn't exist.", tbl));
     }
 
     final Schema avroSchema = viewToAvroSchemaConverter.toAvroSchema(db, tbl, false, false);
@@ -145,7 +150,7 @@ public class CoralSparkViewCatalog<T extends TableCatalog & SupportsNamespaces>
       throw new RuntimeException("Failed to parse Spark SQL: " + sparkSQL, e);
     }
     registerUDFs(coralSpark.getSparkUDFInfoList(), db + "." + tbl);
-    LOG.warn(String.format("Loaded view %s via CoralSparkViewCatalog successfully.", tableName));
+    LOG.info(String.format("Loaded view %s via CoralSparkViewCatalog successfully.", tableName));
     String resultTbl = tbl;
     String resultDb = db;
     return new View() {
@@ -197,9 +202,6 @@ public class CoralSparkViewCatalog<T extends TableCatalog & SupportsNamespaces>
     };
   }
 
-  /*
-   * Detect if loadView is called in the write path, and if so, skip ViewShift resolution.
-   */
   private static String jsonArrayString(List<String> list) {
     return list.stream().map(s -> "\"" + s + "\"").collect(Collectors.joining(", ", "[", "]"));
   }
@@ -218,7 +220,7 @@ public class CoralSparkViewCatalog<T extends TableCatalog & SupportsNamespaces>
         mavenDependencies.stream().map(f -> new FunctionResource(FunctionResourceType.fromString("jar"), f.toString()))
             .collect(Collectors.toList());
     SessionCatalog sessionCatalog = sparkSession.sessionState().catalog();
-    // Calling SessionCatalog apis such as loadFunctionResources must be thread-safe - APA-118895
+    // Calling SessionCatalog apis such as loadFunctionResources must be thread-safe
     synchronized (sessionCatalog) {
       sessionCatalog.loadFunctionResources(JavaConverters.asScalaBuffer(resolvedFunctionResources));
 
@@ -292,17 +294,6 @@ public class CoralSparkViewCatalog<T extends TableCatalog & SupportsNamespaces>
       return false;
     }
     return false;
-  }
-
-  private boolean safeGetBooleanSparkConf(final String config, final boolean defaultValue) {
-    String value;
-    try {
-      value = SparkSession.active().conf().get(config);
-    } catch (NoSuchElementException e) {
-      value = null;
-    }
-
-    return Optional.ofNullable(value).map(Boolean::parseBoolean).orElse(defaultValue);
   }
 
   // --- ViewCatalog delegation (read-only; write operations are unsupported) ---

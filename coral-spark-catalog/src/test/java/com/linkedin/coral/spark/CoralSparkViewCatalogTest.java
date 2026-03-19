@@ -5,7 +5,7 @@
  */
 package com.linkedin.coral.spark;
 
-import com.linked.coral.spark.CoralSparkViewCatalog;
+import com.linkedin.coral.spark.CoralSparkViewCatalog;
 
 import org.apache.calcite.sql.type.ReturnTypes;
 import org.apache.calcite.sql.type.SqlTypeFamily;
