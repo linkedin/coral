@@ -78,9 +78,8 @@ import com.linkedin.coral.spark.containers.SparkUDFInfo;
 
 /**
  * A Spark 3.5 {@link CatalogExtension} that intercepts view resolution to translate
- * Hive view definitions into Spark SQL via Coral's translation pipeline
- * (Hive view &rarr; Calcite RelNode &rarr; Spark SQL). Table, namespace, and function
- * operations are delegated to the underlying session catalog.
+ * view definitions into Spark SQL via Coral's translation pipeline. Table, namespace,
+ * and function operations are delegated to the underlying session catalog.
  */
 public class CoralSparkViewCatalog<T extends TableCatalog & SupportsNamespaces>
     implements ViewCatalog, CatalogExtension {
