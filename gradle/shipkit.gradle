@@ -7,7 +7,17 @@ tasks.named("generateChangelog") {
   githubToken = System.getenv("GITHUB_TOKEN")
   repository = "linkedin/coral"
   // Gradle 8 requires explicit dependency declaration when tasks share the project root directory
-  mustRunAfter(subprojects.collect { it.tasks.matching { t -> t.name in ['compileJava', 'jar', 'processResources', 'classes', 'generateMetadataFileForJavaLibraryPublication'] } })
+  mustRunAfter(subprojects.collect {
+    it.tasks.matching { t ->
+      t.name in [
+        'compileJava',
+        'jar',
+        'processResources',
+        'classes',
+        'generateMetadataFileForJavaLibraryPublication'
+      ]
+    }
+  })
 }
 
 apply plugin: "org.shipkit.shipkit-github-release" //https://github.com/shipkit/shipkit-changelog
