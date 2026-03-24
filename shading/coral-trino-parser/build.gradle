@@ -1,24 +1,45 @@
-import com.github.jengelman.gradle.plugins.shadow.tasks.ConfigureShadowRelocation
-apply plugin: "com.github.johnrengelman.shadow"
+plugins {
+  id 'com.gradleup.shadow' version '8.3.5'
+}
+
+// In Gradle 8, compileOnly is no longer resolvable. Create a resolvable copy for Shadow.
+configurations {
+  shadowDeps {
+    canBeResolved = true
+    canBeConsumed = false
+  }
+}
 
 dependencies {
   compileOnly 'io.trino:trino-parser:355'
-}
-
-task relocateShadowJar(type: ConfigureShadowRelocation) {
-  target = tasks.shadowJar
-  prefix = 'coral.shading'
+  shadowDeps 'io.trino:trino-parser:355'
 }
 
 shadowJar {
+  archiveClassifier = ''
   configurations = [
-    project.configurations.compileOnly
+    project.configurations.shadowDeps
   ]
-  dependsOn(relocateShadowJar)
+  // Relocate all packages to coral.shading.* (matches old ConfigureShadowRelocation behavior)
+  relocate 'io.trino', 'coral.shading.io.trino'
+  relocate 'io.airlift', 'coral.shading.io.airlift'
+  relocate 'org.antlr.v4', 'coral.shading.org.antlr.v4'
+  relocate 'com.google', 'coral.shading.com.google'
+  relocate 'javax.annotation', 'coral.shading.javax.annotation'
+  relocate 'org.checkerframework', 'coral.shading.org.checkerframework'
+  relocate 'org.openjdk', 'coral.shading.org.openjdk'
 }
 
 // Rename shadow jar to original artifact name, so that 'coral-trino-parser-x.x.x.jar' itself is the shadow jar
-jar {
-  enabled = false
-  dependsOn(shadowJar { classifier = null })
+jar.enabled = false
+jar.dependsOn shadowJar
+
+// Override publication to use shadow jar instead of the disabled standard jar
+afterEvaluate {
+  publishing.publications.javaLibrary(MavenPublication) {
+    artifacts.clear()
+    artifact(shadowJar)
+    artifact(sourcesJar)
+    artifact(javadocJar)
+  }
 }

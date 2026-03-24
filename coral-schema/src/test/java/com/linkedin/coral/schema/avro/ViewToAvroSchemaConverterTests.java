@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2025 LinkedIn Corporation. All rights reserved.
+ * Copyright 2019-2026 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -55,6 +55,16 @@ public class ViewToAvroSchemaConverterTests {
     Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v");
 
     Assert.assertEquals(actualSchema.toString(true), TestUtils.loadSchema("testSelectStar-expected.avsc"));
+  }
+
+  @Test
+  public void testToAvroSchemaWithSql() {
+    // Verify the public SQL-based overload works end-to-end (e.g. for the DCS write-path)
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("SELECT * FROM basecomplex", false, false);
+
+    Assert.assertNotNull(actualSchema);
+    Assert.assertEquals(actualSchema.getName(), "basecomplex");
   }
 
   @Test

@@ -1,5 +1,5 @@
 /**
- * Copyright 2017-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2017-2026 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -20,6 +20,7 @@ import com.google.common.collect.Iterables;
 import org.apache.calcite.DataContext;
 import org.apache.calcite.config.CalciteConnectionConfig;
 import org.apache.calcite.linq4j.Enumerable;
+import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.schema.ScannableTable;
@@ -39,17 +40,41 @@ import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.linkedin.coral.common.catalog.HiveTable;
+import com.linkedin.coral.common.types.CoralDataType;
+import com.linkedin.coral.common.types.CoralTypeToRelDataTypeConverter;
+import com.linkedin.coral.common.types.StructField;
+import com.linkedin.coral.common.types.StructType;
+
 
 /**
- * Adaptor class from Hive {@link org.apache.hadoop.hive.metastore.api.Table} representation to
- * Calcite {@link ScannableTable}
+ * Calcite adapter for Hive tables, bridging Hive metadata to Calcite's ScannableTable interface.
  *
- * Implementing this as a ScannableTable, instead of Table, is hacky approach to make calcite
+ * <p>This adapter converts Hive {@link org.apache.hadoop.hive.metastore.api.Table} representations
+ * into Calcite's {@link ScannableTable}, enabling Hive tables to be queried through Calcite's
+ * SQL processing engine.
+ *
+ * <p><b>Integration with ParseTreeBuilder and HiveFunctionResolver:</b> This class provides critical
+ * Dali UDF metadata extraction methods ({@link #getDaliFunctionParams()} and {@link #getDaliUdfDependencies()})
+ * that are tightly coupled to {@link org.apache.hadoop.hive.metastore.api.Table} and used by:
+ * <ul>
+ *   <li>{@code HiveFunctionResolver} - for resolving Dali function names to implementing classes</li>
+ *   <li>{@code ParseTreeBuilder} - for parsing view definitions with UDF metadata</li>
+ * </ul>
+ *
+ * <p>These components currently require {@link org.apache.hadoop.hive.metastore.api.Table} and cannot
+ * work directly with {@link com.linkedin.coral.common.catalog.CoralTable}. This tight coupling is being
+ * addressed in <a href="https://github.com/linkedin/coral/issues/575">issue #575</a>, which will refactor
+ * these APIs to accept {@code CoralTable} instead, enabling multi-format support (Hive, Iceberg, etc.).
+ *
+ * <p>Implementing this as a ScannableTable, instead of Table, is hacky approach to make calcite
  * correctly generate relational algebra. This will have to go away gradually.
+ *
+ * @see <a href="https://github.com/linkedin/coral/issues/575">Issue #575: Refactor ParseTreeBuilder to Use CoralTable</a>
  */
-public class HiveTable implements ScannableTable {
+public class HiveCalciteTableAdapter implements ScannableTable {
 
-  private static final Logger LOG = LoggerFactory.getLogger(HiveTable.class);
+  private static final Logger LOG = LoggerFactory.getLogger(HiveCalciteTableAdapter.class);
   protected final org.apache.hadoop.hive.metastore.api.Table hiveTable;
   private Deserializer deserializer;
 
@@ -83,9 +108,18 @@ public class HiveTable implements ScannableTable {
    * Constructor to create bridge from hive table to calcite table
    * @param hiveTable Hive table
    */
-  public HiveTable(org.apache.hadoop.hive.metastore.api.Table hiveTable) {
+  public HiveCalciteTableAdapter(org.apache.hadoop.hive.metastore.api.Table hiveTable) {
     Preconditions.checkNotNull(hiveTable);
     this.hiveTable = hiveTable;
+  }
+
+  /**
+   * Constructor accepting HiveCoralTable for unified catalog integration.
+   * @param coralTable HiveCoralTable from catalog
+   */
+  public HiveCalciteTableAdapter(HiveTable coralTable) {
+    Preconditions.checkNotNull(coralTable);
+    this.hiveTable = coralTable.getHiveTable();
   }
 
   /**
@@ -134,12 +168,66 @@ public class HiveTable implements ScannableTable {
     // Preconditions.checkState(isDaliTable());
   }
 
+  /**
+   * Returns the row type (schema) for this table.
+   *
+   * Current behavior (validation/shadow mode):
+   * - Always returns the legacy Hive → Calcite direct conversion
+   * - Validates against the new Hive → Coral → Calcite two-stage conversion
+   * - Logs warnings if conversions don't match or if validation fails
+   *
+   * This allows safe validation of the new conversion path in production
+   * before switching to use it as the primary path.
+   *
+   * @param typeFactory Calcite type factory
+   * @return RelDataType representing the table schema
+   */
   @Override
   public RelDataType getRowType(RelDataTypeFactory typeFactory) {
+    // Always compute and return the legacy Hive direct conversion (production path)
+    RelDataType hiveType = getRowTypeFromHiveType(typeFactory);
+
+    // Validate against new two-stage Coral conversion (shadow/validation mode)
+    try {
+      RelDataType coralType = getRowTypeFromCoralType(typeFactory);
+
+      // Compare using structural equality (not reference equality)
+      if (!RelOptUtil.areRowTypesEqual(hiveType, coralType, false)) {
+        LOG.warn("Hive and Coral type conversion mismatch for table {}.{}. Hive: {}, Coral: {}", hiveTable.getDbName(),
+            hiveTable.getTableName(), hiveType, coralType);
+      }
+    } catch (Exception e) {
+      // Log validation failure but continue with Hive type (zero production impact)
+      LOG.warn("Coral type validation failed for table {}.{}. Proceeding with Hive type. Error: {}",
+          hiveTable.getDbName(), hiveTable.getTableName(), e.getMessage(), e);
+    }
+
+    // Always return the battle-tested Hive conversion result
+    return hiveType;
+  }
+
+  /**
+   * Two-stage conversion: Hive → Coral → Calcite.
+   * This is the preferred path when using CoralCatalog.
+   */
+  private RelDataType getRowTypeFromCoralType(RelDataTypeFactory typeFactory) {
+    // Step 1: Hive → Coral
+    StructType structType = (StructType) getCoralSchema();
+
+    // Step 2: Coral → Calcite
+    return CoralTypeToRelDataTypeConverter.convert(structType, typeFactory);
+  }
+
+  /**
+   * Direct conversion: Hive → Calcite.
+   * This is the legacy path for backward compatibility.
+   */
+  private RelDataType getRowTypeFromHiveType(RelDataTypeFactory typeFactory) {
     final List<FieldSchema> cols = getColumns();
     final List<RelDataType> fieldTypes = new ArrayList<>(cols.size());
     final List<String> fieldNames = new ArrayList<>(cols.size());
     final Iterable<FieldSchema> allCols = Iterables.concat(cols, hiveTable.getPartitionKeys());
+
     allCols.forEach(col -> {
       final TypeInfo typeInfo = TypeInfoUtils.getTypeInfoFromTypeString(col.getType());
       final RelDataType relType = TypeConverter.convert(typeInfo, typeFactory);
@@ -151,6 +239,40 @@ public class HiveTable implements ScannableTable {
     });
 
     return typeFactory.createStructType(fieldTypes, fieldNames);
+  }
+
+  /**
+   * Returns the table schema in Coral type system.
+   * This includes both regular columns (from StorageDescriptor) and partition columns.
+   * Converts Hive TypeInfo to Coral types using HiveToCoralTypeConverter.
+   *
+   * @return StructType representing the full table schema (columns + partitions)
+   */
+  public CoralDataType getCoralSchema() {
+    final List<FieldSchema> cols = getColumns();
+    final List<StructField> fields = new ArrayList<>();
+    final List<String> fieldNames = new ArrayList<>();
+
+    // Combine regular columns and partition keys (same as HiveCalciteTableAdapter.getRowType)
+    final Iterable<FieldSchema> allCols = Iterables.concat(cols, hiveTable.getPartitionKeys());
+
+    for (FieldSchema col : allCols) {
+      final String colName = col.getName();
+
+      // Skip duplicate columns (partition keys might overlap with regular columns)
+      if (!fieldNames.contains(colName)) {
+        // Convert Hive type string to TypeInfo, then to CoralDataType
+        final TypeInfo typeInfo = TypeInfoUtils.getTypeInfoFromTypeString(col.getType());
+        final CoralDataType coralType = HiveToCoralTypeConverter.convert(typeInfo);
+
+        fields.add(StructField.of(colName, coralType));
+        fieldNames.add(colName);
+      }
+    }
+
+    // Return struct type representing the table schema
+    // Table-level struct is nullable (Hive convention)
+    return StructType.of(fields, true);
   }
 
   private List<FieldSchema> getColumns() {

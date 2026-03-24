@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2024 LinkedIn Corporation. All rights reserved.
+ * Copyright 2019-2026 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -395,6 +395,11 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
     createAddUserDefinedFunction("com.linkedin.dali.udf.isguestmemberid.hive.IsGuestMemberId", ReturnTypes.BOOLEAN,
         NUMERIC);
     createAddUserDefinedFunction("com.linkedin.dali.udf.watbotcrawlerlookup.hive.WATBotCrawlerLookup",
+        FunctionReturnTypes.rowOf(ImmutableList.of("iscrawler", "crawlerid"),
+            ImmutableList.of(SqlTypeName.BOOLEAN, SqlTypeName.VARCHAR)),
+        family(ImmutableList.of(SqlTypeFamily.STRING, SqlTypeFamily.STRING, SqlTypeFamily.STRING, SqlTypeFamily.STRING),
+            optionalOrd(ImmutableList.of(2, 3))));
+    createAddUserDefinedFunction("com.linkedin.stdudfs.daliudfs.hive.WatBotCrawlerLookup",
         FunctionReturnTypes.rowOf(ImmutableList.of("iscrawler", "crawlerid"),
             ImmutableList.of(SqlTypeName.BOOLEAN, SqlTypeName.VARCHAR)),
         family(ImmutableList.of(SqlTypeFamily.STRING, SqlTypeFamily.STRING, SqlTypeFamily.STRING, SqlTypeFamily.STRING),

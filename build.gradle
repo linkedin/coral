@@ -13,7 +13,6 @@ buildscript {
     classpath "io.github.gradle-nexus:publish-plugin:1.1.0"
     classpath "org.shipkit:shipkit-auto-version:1.1.1"
     classpath "org.shipkit:shipkit-changelog:1.1.10"
-    classpath "com.github.jengelman.gradle.plugins:shadow:6.1.0"
   }
 }
 
@@ -58,7 +57,7 @@ allprojects {
 subprojects {
   plugins.withType(JavaPlugin) {
     dependencies {
-      testCompile deps.'testing'
+      testImplementation deps.'testing'
     }
     test {
       useTestNG()
