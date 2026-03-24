@@ -35,9 +35,6 @@ allprojects {
     maven {
       url 'https://linkedin.jfrog.io/artifactory/avro-util/'
     }
-    maven {
-      url 'https://linkedin.bintray.com/maven/'
-    }
   }
 
   spotless {
