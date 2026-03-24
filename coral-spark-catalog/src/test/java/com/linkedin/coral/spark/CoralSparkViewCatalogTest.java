@@ -5,8 +5,6 @@
  */
 package com.linkedin.coral.spark;
 
-import com.linkedin.coral.spark.CoralSparkViewCatalog;
-
 import org.apache.calcite.sql.type.ReturnTypes;
 import org.apache.calcite.sql.type.SqlTypeFamily;
 import org.apache.hadoop.hive.conf.HiveConf;

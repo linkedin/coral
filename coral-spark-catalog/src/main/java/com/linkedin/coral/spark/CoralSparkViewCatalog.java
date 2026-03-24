@@ -72,7 +72,6 @@ import com.linkedin.coral.common.HiveMetastoreClient;
 import com.linkedin.coral.common.HiveMscAdapter;
 import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
 import com.linkedin.coral.schema.avro.ViewToAvroSchemaConverter;
-import com.linkedin.coral.spark.CoralSpark;
 import com.linkedin.coral.spark.containers.SparkUDFInfo;
 
 
