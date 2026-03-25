@@ -448,7 +448,12 @@ class SchemaUtilities {
         convertFieldSchemaToAvroSchema("partitionCols", "partitionCols", true, tableOrView.getPartitionKeys());
 
     List<Schema.Field> fieldsWithPartitionColumns = cloneFieldList(schema.getFields());
-    fieldsWithPartitionColumns.addAll(cloneFieldList(partitionColumnsSchema.getFields(), true));
+    Set<String> existingFieldNames = schema.getFields().stream().map(Schema.Field::name).collect(Collectors.toSet());
+    for (Schema.Field partitionField : cloneFieldList(partitionColumnsSchema.getFields(), true)) {
+      if (!existingFieldNames.contains(partitionField.name())) {
+        fieldsWithPartitionColumns.add(partitionField);
+      }
+    }
 
     Schema schemaWithPartitionColumns =
         Schema.createRecord(schema.getName(), schema.getDoc(), schema.getNamespace(), schema.isError());
