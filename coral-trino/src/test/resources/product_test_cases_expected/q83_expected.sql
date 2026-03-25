@@ -19,7 +19,7 @@ from `date_dim`
 where `d_week_seq` in (select `d_week_seq`
 from `date_dim`
 where `d_date` in (cast('2000-06-30' as date), cast('2000-09-27' as date), cast('2000-11-17' as date)))) and `wr_returned_date_sk` = `d_date_sk`
-group by `i_item_id`) (select `sr_items`.`item_id`, `sr_item_qty`, cast(`sr_item_qty` / (cast(`sr_item_qty` as decimal(9, 9)) + `cr_item_qty` + `wr_item_qty`) / 3.0 * 100 as decimal(7, 7)) as `sr_dev`, `cr_item_qty`, cast(`cr_item_qty` / (cast(`sr_item_qty` as decimal(9, 9)) + `cr_item_qty` + `wr_item_qty`) / 3.0 * 100 as decimal(7, 7)) as `cr_dev`, `wr_item_qty`, cast(`wr_item_qty` / (cast(`sr_item_qty` as decimal(9, 9)) + `cr_item_qty` + `wr_item_qty`) / 3.0 * 100 as decimal(7, 7)) as `wr_dev`, (`sr_item_qty` + `cr_item_qty` + `wr_item_qty`) / 3.00 as `average`
+group by `i_item_id`) (select `sr_items`.`item_id`, `sr_item_qty`, cast(`sr_item_qty` / (cast(`sr_item_qty` as decimal(9, 4)) + `cr_item_qty` + `wr_item_qty`) / 3.0 * 100 as decimal(7, 2)) as `sr_dev`, `cr_item_qty`, cast(`cr_item_qty` / (cast(`sr_item_qty` as decimal(9, 4)) + `cr_item_qty` + `wr_item_qty`) / 3.0 * 100 as decimal(7, 2)) as `cr_dev`, `wr_item_qty`, cast(`wr_item_qty` / (cast(`sr_item_qty` as decimal(9, 4)) + `cr_item_qty` + `wr_item_qty`) / 3.0 * 100 as decimal(7, 2)) as `wr_dev`, (`sr_item_qty` + `cr_item_qty` + `wr_item_qty`) / 3.00 as `average`
 from `sr_items`
 where `sr_items`.`item_id` = `cr_items`.`item_id` and `sr_items`.`item_id` = `wr_items`.`item_id`
 order by `sr_items`.`item_id`, `sr_item_qty`
