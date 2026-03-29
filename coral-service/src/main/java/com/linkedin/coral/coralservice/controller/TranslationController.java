@@ -1,5 +1,5 @@
 /**
- * Copyright 2022-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2022-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -25,6 +25,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.linkedin.coral.coralservice.entity.IncrementalRequestBody;
 import com.linkedin.coral.coralservice.entity.IncrementalResponseBody;
+import com.linkedin.coral.coralservice.entity.PIIPropagationRequestBody;
+import com.linkedin.coral.coralservice.entity.PIIPropagationResponseBody;
 import com.linkedin.coral.coralservice.entity.TranslateRequestBody;
 import com.linkedin.coral.coralservice.utils.RewriteType;
 
@@ -56,6 +58,37 @@ public class TranslationController implements ApplicationListener<ContextRefresh
     } catch (Exception e) {
       e.printStackTrace();
     }
+  }
+
+  @PostMapping("/api/pii/lineage")
+  public ResponseEntity propagatePII(@RequestBody PIIPropagationRequestBody piiPropagationRequestBody)
+      throws JSONException {
+    final String query = piiPropagationRequestBody.getQuery();
+    final List<String> piiInputFields = piiPropagationRequestBody.getInputPIIFields();
+    final String language = piiPropagationRequestBody.getLanguage();
+    if (query.isEmpty()) {
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Please provide a query.\n");
+    }
+    if (!isValidSourceLanguage(language)) {
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+          .body("Currently, only Hive, Trino and Spark are supported as source languages.\n");
+    }
+    if (piiInputFields.isEmpty()) {
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Please provide at least one PII field.\n");
+    }
+    PIIPropagationResponseBody piiPropagationResponseBody = new PIIPropagationResponseBody();
+    piiPropagationResponseBody.setInputPIIFields(piiInputFields);
+    try {
+      List<String> outputPIIFields = getOutputPIIFields(query, language, piiInputFields);
+      piiPropagationResponseBody.setOutputPIIFields(outputPIIFields);
+    } catch (Throwable t) {
+      t.printStackTrace();
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(t.getMessage());
+    }
+    JSONObject response = new JSONObject();
+    response.put("input_pii_fields", piiPropagationResponseBody.getInputPIIFields());
+    response.put("output_pii_fields", piiPropagationResponseBody.getOutputPIIFields());
+    return ResponseEntity.status(HttpStatus.OK).body(response.toString());
   }
 
   @PostMapping("/api/translations/translate")
@@ -138,7 +171,9 @@ public class TranslationController implements ApplicationListener<ContextRefresh
           incrementalResponseBody.addIncrementalTableName(incrementalTableName);
 
           // Replace the table names in the incremental query with temp view compatible names
+          System.out.println("Replacing " + tableName + " with " + underscoreDelimitedName);
           incrementalQuery = incrementalQuery.replaceAll(tableName, underscoreDelimitedName);
+          System.out.println("Incremental query: " + incrementalQuery);
         }
         // Replace newlines with spaces for compatibility with code generation
         incrementalQuery = incrementalQuery.replace('\n', ' ');
