@@ -1,0 +1,20 @@
+apply plugin: 'java-library'
+
+dependencies {
+  api project(':coral-catalog-spi')
+
+  api deps.'linkedin-iceberg'.'iceberg-api'
+  api deps.'linkedin-iceberg'.'iceberg-core'
+
+  // Temporary: needed for IcebergHiveTableConverter bridge code (issue #575)
+  implementation(deps.'linkedin-iceberg'.'iceberg-hive-metastore') {
+    exclude group: 'org.apache.hive', module: 'hive-metastore'
+    exclude group: 'org.apache.hadoop', module: 'hadoop-common'
+  }
+  implementation(deps.'hive'.'hive-metastore') {
+    exclude group: 'com.linkedin.metastore-autometrics', module: 'autometrics-reporter'
+    exclude group: 'com.linkedin.metastore-audit', module: 'metastore-audit-logging'
+    exclude group: 'org.apache.avro', module: 'avro-tools'
+  }
+  implementation deps.'hadoop'.'hadoop-common'
+}

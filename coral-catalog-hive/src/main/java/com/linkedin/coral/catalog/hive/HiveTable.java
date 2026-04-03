@@ -1,0 +1,99 @@
+/**
+ * Copyright 2017-2026 LinkedIn Corporation. All rights reserved.
+ * Licensed under the BSD-2 Clause license.
+ * See LICENSE in the project root for license information.
+ */
+package com.linkedin.coral.catalog.hive;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
+import com.google.common.collect.Iterables;
+
+import org.apache.hadoop.hive.metastore.api.FieldSchema;
+import org.apache.hadoop.hive.metastore.api.Table;
+import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
+import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
+
+import com.linkedin.coral.common.catalog.CoralTable;
+import com.linkedin.coral.common.catalog.TableType;
+import com.linkedin.coral.common.types.CoralDataType;
+import com.linkedin.coral.common.types.StructField;
+import com.linkedin.coral.common.types.StructType;
+
+import static com.google.common.base.Preconditions.*;
+
+
+/**
+ * Implementation of {@link CoralTable} interface for Hive tables.
+ * This class wraps a Hive metastore Table object and provides
+ * a unified CoralTable API for accessing table metadata.
+ */
+public class HiveTable implements CoralTable {
+
+  private final Table table;
+
+  /**
+   * Creates a new HiveTable wrapping the given Hive table.
+   *
+   * @param table Hive metastore Table object (must not be null)
+   */
+  public HiveTable(Table table) {
+    this.table = checkNotNull(table, "Hive table cannot be null");
+  }
+
+  @Override
+  public String name() {
+    return table.getDbName() + "." + table.getTableName();
+  }
+
+  @Override
+  public Map<String, String> properties() {
+    return table.getParameters() != null ? table.getParameters() : Collections.emptyMap();
+  }
+
+  @Override
+  public TableType tableType() {
+    String hiveTableType = table.getTableType();
+    if (hiveTableType != null && hiveTableType.toUpperCase().contains("VIEW")) {
+      return TableType.VIEW;
+    }
+    return TableType.TABLE;
+  }
+
+  /**
+   * INTERNAL API
+   * @deprecated This method is for internal use only and will be removed in a future release.
+   * Do not depend on this API.
+   *
+   * @return Hive metastore Table object
+   */
+  public org.apache.hadoop.hive.metastore.api.Table getHiveTable() {
+    return table;
+  }
+
+  @Override
+  public CoralDataType getSchema() {
+    final List<FieldSchema> cols = table.getSd() != null ? table.getSd().getCols() : Collections.emptyList();
+    final List<StructField> fields = new ArrayList<>();
+    final List<String> fieldNames = new ArrayList<>();
+
+    final Iterable<FieldSchema> allCols = Iterables.concat(cols, table.getPartitionKeys());
+
+    for (FieldSchema col : allCols) {
+      final String colName = col.getName();
+
+      if (!fieldNames.contains(colName)) {
+        final TypeInfo typeInfo = TypeInfoUtils.getTypeInfoFromTypeString(col.getType());
+        final CoralDataType coralType = HiveToCoralTypeConverter.convert(typeInfo);
+
+        fields.add(StructField.of(colName, coralType));
+        fieldNames.add(colName);
+      }
+    }
+
+    return StructType.of(fields, true);
+  }
+}
