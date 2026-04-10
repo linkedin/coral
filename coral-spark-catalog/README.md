@@ -1,6 +1,6 @@
 # Coral Spark Catalog
 
-A Spark 3.5 [CatalogExtension](https://spark.apache.org/docs/3.5.0/api/java/org/apache/spark/sql/connector/catalog/CatalogExtension.html) that intercepts view resolution to translate view definitions into Spark SQL via Coral's translation pipeline. Views can be defined in any SQL dialect supported by Coral (e.g., HiveQL, Trino SQL, Spark SQL). This enables Spark to transparently query Hive Metastore views without manual SQL rewriting. Table, namespace, and function operations are delegated to the underlying session catalog.
+A Spark 3.5 [CatalogExtension](https://spark.apache.org/docs/3.5.6/api/java/org/apache/spark/sql/connector/catalog/ViewCatalog.html) that intercepts view resolution to translate view definitions into Spark SQL via Coral's translation pipeline. Views can be defined in any SQL dialect supported by Coral (e.g., HiveQL, Trino SQL, Spark SQL). This enables Spark to transparently query Hive Metastore views without manual SQL rewriting. Table, namespace, and function operations are delegated to the underlying session catalog.
 
 ## How It Works
 
