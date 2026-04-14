@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.linkedin.avroutil1.compatibility.AvroCompatibilityHelper;
-import com.linkedin.avroutil1.compatibility.Jackson1Utils;
 
 import org.apache.avro.Schema;
 import org.apache.commons.collections.map.HashedMap;
@@ -18,7 +17,6 @@ import org.apache.hadoop.hive.serde2.avro.AvroSerDe;
 import org.apache.hadoop.hive.serde2.typeinfo.StructTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
-import org.codehaus.jackson.node.IntNode;
 import org.testng.annotations.Test;
 
 import com.linkedin.coral.com.google.common.base.Preconditions;
@@ -215,14 +213,34 @@ public class MergeHiveSchemaWithAvroTests {
     Schema decimalSchema = Schema.create(Schema.Type.BYTES);
     decimalSchema.addProp(AvroSerDe.AVRO_PROP_LOGICAL_TYPE, AvroSerDe.DECIMAL_TYPE_NAME);
     AvroCompatibilityHelper.setSchemaPropFromJsonString(decimalSchema, AvroSerDe.AVRO_PROP_PRECISION,
-        Jackson1Utils.toJsonString(new IntNode(4)), false);
+        String.valueOf(4), false);
     AvroCompatibilityHelper.setSchemaPropFromJsonString(decimalSchema, AvroSerDe.AVRO_PROP_SCALE,
-        Jackson1Utils.toJsonString(new IntNode(2)), false);
+        String.valueOf(2), false);
 
     Schema expected =
         struct("r1", optional("fa", dateSchema), optional("fb", timestampSchema), optional("fc", decimalSchema));
 
     assertSchema(expected, merged);
+  }
+
+  @Test
+  public void shouldRecoverLogicalTypeDecimalZeroScale() {
+    String hive = "struct<fa:decimal(10,0)>";
+    Schema avro = struct("r1", optional("fa", Schema.Type.BYTES));
+    // Assert precision/scale are JSON integers, not quoted strings.
+    // "precision" : 10 matches what Jackson IntNode serialization produces; "precision" : "10" would not.
+    String json = merge(hive, avro).toString(true);
+    assertTrue(json.contains("\"precision\" : 10"), json);
+    assertTrue(json.contains("\"scale\" : 0"), json);
+  }
+
+  @Test
+  public void shouldRecoverLogicalTypeDecimalMaxHivePrecision() {
+    String hive = "struct<fa:decimal(38,10)>";
+    Schema avro = struct("r1", optional("fa", Schema.Type.BYTES));
+    String json = merge(hive, avro).toString(true);
+    assertTrue(json.contains("\"precision\" : 38"), json);
+    assertTrue(json.contains("\"scale\" : 10"), json);
   }
 
   @Test

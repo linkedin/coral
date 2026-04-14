@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.linkedin.avroutil1.compatibility.AvroCompatibilityHelper;
-import com.linkedin.avroutil1.compatibility.Jackson1Utils;
 
 import org.apache.avro.Schema;
 import org.apache.hadoop.hive.serde2.avro.AvroSerDe;
@@ -21,8 +20,6 @@ import org.apache.hadoop.hive.serde2.typeinfo.PrimitiveTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.StructTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.UnionTypeInfo;
-import org.codehaus.jackson.node.JsonNodeFactory;
-
 import com.linkedin.coral.com.google.common.base.Preconditions;
 
 import static com.linkedin.coral.schema.avro.AvroSerdeUtils.*;
@@ -257,13 +254,12 @@ class MergeHiveSchemaWithAvro extends HiveSchemaWithPartnerVisitor<Schema, Schem
 
       case DECIMAL:
         DecimalTypeInfo dti = (DecimalTypeInfo) primitive;
-        JsonNodeFactory factory = JsonNodeFactory.instance;
         Schema decimalSchema = Schema.create(Schema.Type.BYTES);
         decimalSchema.addProp(AvroSerDe.AVRO_PROP_LOGICAL_TYPE, AvroSerDe.DECIMAL_TYPE_NAME);
         AvroCompatibilityHelper.setSchemaPropFromJsonString(decimalSchema, AvroSerDe.AVRO_PROP_PRECISION,
-            Jackson1Utils.toJsonString(factory.numberNode(dti.getPrecision())), false);
+            String.valueOf(dti.getPrecision()), false);
         AvroCompatibilityHelper.setSchemaPropFromJsonString(decimalSchema, AvroSerDe.AVRO_PROP_SCALE,
-            Jackson1Utils.toJsonString(factory.numberNode(dti.getScale())), false);
+            String.valueOf(dti.getScale()), false);
 
         return decimalSchema;
 

@@ -12,7 +12,6 @@ import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 
 import com.linkedin.avroutil1.compatibility.AvroCompatibilityHelper;
-import com.linkedin.avroutil1.compatibility.Jackson1Utils;
 
 import org.apache.avro.Schema;
 import org.apache.calcite.rel.type.DynamicRecordType;
@@ -25,8 +24,6 @@ import org.apache.calcite.sql.type.MapSqlType;
 import org.apache.calcite.sql.type.MultisetSqlType;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.hadoop.hive.serde2.avro.AvroSerDe;
-import org.codehaus.jackson.node.JsonNodeFactory;
-
 import com.linkedin.coral.com.google.common.base.Preconditions;
 
 
@@ -120,13 +117,12 @@ class RelDataTypeToAvroType {
         schema.addProp("logicalType", "date");
         return schema;
       case DECIMAL:
-        JsonNodeFactory factory = JsonNodeFactory.instance;
         Schema decimalSchema = Schema.create(Schema.Type.BYTES);
         decimalSchema.addProp(AvroSerDe.AVRO_PROP_LOGICAL_TYPE, AvroSerDe.DECIMAL_TYPE_NAME);
         AvroCompatibilityHelper.setSchemaPropFromJsonString(decimalSchema, AvroSerDe.AVRO_PROP_PRECISION,
-            Jackson1Utils.toJsonString(factory.numberNode(relDataType.getPrecision())), false);
+            String.valueOf(relDataType.getPrecision()), false);
         AvroCompatibilityHelper.setSchemaPropFromJsonString(decimalSchema, AvroSerDe.AVRO_PROP_SCALE,
-            Jackson1Utils.toJsonString(factory.numberNode(relDataType.getScale())), false);
+            String.valueOf(relDataType.getScale()), false);
         return decimalSchema;
       default:
         throw new UnsupportedOperationException(relDataType.getSqlTypeName() + " is not supported.");

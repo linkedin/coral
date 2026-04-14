@@ -91,4 +91,17 @@ public class RelDataTypeToAvroTypeTests {
     Assert.assertEquals(actualAvroType.toString(true),
         TestUtils.loadSchema("rel2avro-testDateTypeField-expected.avsc"));
   }
+
+  @Test
+  public void testDecimalTypeField() {
+    String viewSql = "CREATE VIEW v AS SELECT * FROM basedecimal";
+
+    TestUtils.executeCreateViewQuery("default", "v", viewSql);
+    RelNode relNode = hiveToRelConverter.convertView("default", "v");
+    Schema actualAvroType =
+        RelDataTypeToAvroType.relDataTypeToAvroTypeNonNullable(relNode.getRowType(), "decimalTypeField");
+
+    Assert.assertEquals(actualAvroType.toString(true),
+        TestUtils.loadSchema("rel2avro-testDecimalTypeField-expected.avsc"));
+  }
 }
