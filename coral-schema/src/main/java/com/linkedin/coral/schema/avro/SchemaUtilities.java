@@ -154,9 +154,8 @@ class SchemaUtilities {
   static Schema getCasePreservedSchemaFromTblProperties(@Nonnull final Table table) {
     Preconditions.checkNotNull(table);
 
-    Map<String, String> serdeProperties =
-        table.getSd() != null && table.getSd().getSerdeInfo() != null ? table.getSd().getSerdeInfo().getParameters()
-            : null;
+    Map<String, String> serdeProperties = table.getSd() != null && table.getSd().getSerdeInfo() != null
+        ? table.getSd().getSerdeInfo().getParameters() : null;
 
     return getCasePreservedSchemaFromPropertyMaps(table.getParameters(), serdeProperties, getCompleteName(table));
   }

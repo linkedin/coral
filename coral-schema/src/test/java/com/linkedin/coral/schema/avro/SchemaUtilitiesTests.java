@@ -42,7 +42,8 @@ public class SchemaUtilitiesTests {
     Map<String, String> serdeProperties = new HashMap<>();
     serdeProperties.put("avro.schema.literal", SIMPLE_AVRO_SCHEMA);
 
-    Schema result = SchemaUtilities.getCasePreservedSchemaFromPropertyMaps(tableProperties, serdeProperties, "test@table");
+    Schema result =
+        SchemaUtilities.getCasePreservedSchemaFromPropertyMaps(tableProperties, serdeProperties, "test@table");
 
     Assert.assertNotNull(result);
     Assert.assertEquals(result.getName(), "TestRecord");
@@ -60,7 +61,8 @@ public class SchemaUtilitiesTests {
     Map<String, String> serdeProperties = new HashMap<>();
     serdeProperties.put("avro.schema.literal", serdeSchema);
 
-    Schema result = SchemaUtilities.getCasePreservedSchemaFromPropertyMaps(tableProperties, serdeProperties, "test@table");
+    Schema result =
+        SchemaUtilities.getCasePreservedSchemaFromPropertyMaps(tableProperties, serdeProperties, "test@table");
 
     Assert.assertNotNull(result);
     Assert.assertEquals(result.getName(), "FromTable");
@@ -89,6 +91,7 @@ public class SchemaUtilitiesTests {
 
     Assert.assertNull(result);
   }
+
   @Test
   public void testCloneFieldList() {
     Schema dummySchema = SchemaBuilder.record("test").fields().name("a").type().intType().noDefault().endRecord();
