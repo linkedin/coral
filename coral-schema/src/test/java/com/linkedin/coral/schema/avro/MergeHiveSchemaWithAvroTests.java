@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2020-2026 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -206,21 +206,22 @@ public class MergeHiveSchemaWithAvroTests {
 
     Schema dateSchema = Schema.create(Schema.Type.INT);
     dateSchema.addProp(AvroSerDe.AVRO_PROP_LOGICAL_TYPE, AvroSerDe.DATE_TYPE_NAME);
-
     Schema timestampSchema = Schema.create(Schema.Type.LONG);
     timestampSchema.addProp(AvroSerDe.AVRO_PROP_LOGICAL_TYPE, AvroSerDe.TIMESTAMP_TYPE_NAME);
-
     Schema decimalSchema = Schema.create(Schema.Type.BYTES);
     decimalSchema.addProp(AvroSerDe.AVRO_PROP_LOGICAL_TYPE, AvroSerDe.DECIMAL_TYPE_NAME);
     AvroCompatibilityHelper.setSchemaPropFromJsonString(decimalSchema, AvroSerDe.AVRO_PROP_PRECISION,
         String.valueOf(4), false);
     AvroCompatibilityHelper.setSchemaPropFromJsonString(decimalSchema, AvroSerDe.AVRO_PROP_SCALE,
         String.valueOf(2), false);
+    assertSchema(struct("r1", optional("fa", dateSchema), optional("fb", timestampSchema), optional("fc", decimalSchema)),
+        merged);
 
-    Schema expected =
-        struct("r1", optional("fa", dateSchema), optional("fb", timestampSchema), optional("fc", decimalSchema));
-
-    assertSchema(expected, merged);
+    // Additionally assert precision/scale are JSON integers, not quoted strings.
+    // "precision" : 4  is what Jackson IntNode serialization produces; "precision" : "4" (quoted) would not match.
+    String json = merged.toString(true);
+    assertTrue(json.contains("\"precision\" : 4"), json);
+    assertTrue(json.contains("\"scale\" : 2"), json);
   }
 
   @Test

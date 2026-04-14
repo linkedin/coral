@@ -1,5 +1,5 @@
 /**
- * Copyright 2024 LinkedIn Corporation. All rights reserved.
+ * Copyright 2024-2026 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -19,8 +19,7 @@ public class TypeInfoToAvroSchemaConverterTests {
   // and Avro's toString(true) renders integer props as  "key" : N  (no quotes around N).
   private static void assertDecimalProps(Schema schema, int expectedPrecision, int expectedScale) {
     String json = schema.toString(true);
-    Assert.assertTrue(json.contains("\"logicalType\" : \"decimal\""),
-        "Expected logicalType decimal in: " + json);
+    Assert.assertTrue(json.contains("\"logicalType\" : \"decimal\""), "Expected logicalType decimal in: " + json);
     Assert.assertTrue(json.contains("\"precision\" : " + expectedPrecision),
         "Expected integer precision " + expectedPrecision + " in: " + json);
     Assert.assertTrue(json.contains("\"scale\" : " + expectedScale),
@@ -30,8 +29,7 @@ public class TypeInfoToAvroSchemaConverterTests {
   @Test
   public void shouldConvertDecimalWithTypicalValues() {
     TypeInfoToAvroSchemaConverter converter = new TypeInfoToAvroSchemaConverter("ns", false);
-    Schema actual = converter.convertTypeInfoToAvroSchema(
-        TypeInfoFactory.getDecimalTypeInfo(10, 5), "ns", "Test");
+    Schema actual = converter.convertTypeInfoToAvroSchema(TypeInfoFactory.getDecimalTypeInfo(10, 5), "ns", "Test");
     Assert.assertEquals(actual.getType(), Schema.Type.BYTES);
     assertDecimalProps(actual, 10, 5);
   }
@@ -39,8 +37,7 @@ public class TypeInfoToAvroSchemaConverterTests {
   @Test
   public void shouldConvertDecimalWithZeroScale() {
     TypeInfoToAvroSchemaConverter converter = new TypeInfoToAvroSchemaConverter("ns", false);
-    Schema actual = converter.convertTypeInfoToAvroSchema(
-        TypeInfoFactory.getDecimalTypeInfo(10, 0), "ns", "Test");
+    Schema actual = converter.convertTypeInfoToAvroSchema(TypeInfoFactory.getDecimalTypeInfo(10, 0), "ns", "Test");
     Assert.assertEquals(actual.getType(), Schema.Type.BYTES);
     assertDecimalProps(actual, 10, 0);
   }
@@ -48,8 +45,7 @@ public class TypeInfoToAvroSchemaConverterTests {
   @Test
   public void shouldConvertDecimalWithMaxHivePrecision() {
     TypeInfoToAvroSchemaConverter converter = new TypeInfoToAvroSchemaConverter("ns", false);
-    Schema actual = converter.convertTypeInfoToAvroSchema(
-        TypeInfoFactory.getDecimalTypeInfo(38, 10), "ns", "Test");
+    Schema actual = converter.convertTypeInfoToAvroSchema(TypeInfoFactory.getDecimalTypeInfo(38, 10), "ns", "Test");
     Assert.assertEquals(actual.getType(), Schema.Type.BYTES);
     assertDecimalProps(actual, 38, 10);
   }
