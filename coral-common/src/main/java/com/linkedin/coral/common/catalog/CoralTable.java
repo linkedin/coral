@@ -48,4 +48,15 @@ public interface CoralTable {
    * @return CoralDataType representing the table schema (typically a StructType)
    */
   CoralDataType getSchema();
+
+  /**
+   * Returns whether this table is backed by Iceberg.
+   * Used by schema converters to choose the Iceberg-aware merge path
+   * instead of the Hive merge path.
+   *
+   * @return true if the table is Iceberg-backed, false otherwise
+   */
+  default boolean isIcebergBacked() {
+    return false;
+  }
 }

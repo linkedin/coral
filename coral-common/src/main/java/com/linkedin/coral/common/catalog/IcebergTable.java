@@ -81,6 +81,11 @@ public class IcebergTable implements CoralTable {
     return table;
   }
 
+  @Override
+  public boolean isIcebergBacked() {
+    return true;
+  }
+
   /**
    * Returns the table schema in Coral type system.
    * Converts Iceberg schema to Coral types using IcebergToCoralTypeConverter.
