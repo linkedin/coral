@@ -228,9 +228,19 @@ public class MergeHiveSchemaWithAvroTests {
   public void shouldRecoverLogicalTypeDecimalZeroScale() {
     String hive = "struct<fa:decimal(10,0)>";
     Schema avro = struct("r1", optional("fa", Schema.Type.BYTES));
-    // Assert precision/scale are JSON integers, not quoted strings.
-    // "precision" : 10 matches what Jackson IntNode serialization produces; "precision" : "10" would not.
-    String json = merge(hive, avro).toString(true);
+    Schema merged = merge(hive, avro);
+
+    Schema decimalSchema = Schema.create(Schema.Type.BYTES);
+    decimalSchema.addProp(AvroSerDe.AVRO_PROP_LOGICAL_TYPE, AvroSerDe.DECIMAL_TYPE_NAME);
+    AvroCompatibilityHelper.setSchemaPropFromJsonString(decimalSchema, AvroSerDe.AVRO_PROP_PRECISION,
+        String.valueOf(10), false);
+    AvroCompatibilityHelper.setSchemaPropFromJsonString(decimalSchema, AvroSerDe.AVRO_PROP_SCALE,
+        String.valueOf(0), false);
+    assertSchema(struct("r1", optional("fa", decimalSchema)), merged);
+
+    // Additionally verify precision/scale are JSON integers, not quoted strings.
+    // "precision" : 10  is what Jackson IntNode serialization produces; "precision" : "10" would not match.
+    String json = merged.toString(true);
     assertTrue(json.contains("\"precision\" : 10"), json);
     assertTrue(json.contains("\"scale\" : 0"), json);
   }
@@ -239,7 +249,17 @@ public class MergeHiveSchemaWithAvroTests {
   public void shouldRecoverLogicalTypeDecimalMaxHivePrecision() {
     String hive = "struct<fa:decimal(38,10)>";
     Schema avro = struct("r1", optional("fa", Schema.Type.BYTES));
-    String json = merge(hive, avro).toString(true);
+    Schema merged = merge(hive, avro);
+
+    Schema decimalSchema = Schema.create(Schema.Type.BYTES);
+    decimalSchema.addProp(AvroSerDe.AVRO_PROP_LOGICAL_TYPE, AvroSerDe.DECIMAL_TYPE_NAME);
+    AvroCompatibilityHelper.setSchemaPropFromJsonString(decimalSchema, AvroSerDe.AVRO_PROP_PRECISION,
+        String.valueOf(38), false);
+    AvroCompatibilityHelper.setSchemaPropFromJsonString(decimalSchema, AvroSerDe.AVRO_PROP_SCALE,
+        String.valueOf(10), false);
+    assertSchema(struct("r1", optional("fa", decimalSchema)), merged);
+
+    String json = merged.toString(true);
     assertTrue(json.contains("\"precision\" : 38"), json);
     assertTrue(json.contains("\"scale\" : 10"), json);
   }
