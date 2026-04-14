@@ -238,11 +238,11 @@ public class MergeHiveSchemaWithAvroTests {
         String.valueOf(0), false);
     assertSchema(struct("r1", optional("fa", decimalSchema)), merged);
 
-    // Additionally verify precision/scale are JSON integers, not quoted strings.
-    // "precision" : 10  is what Jackson IntNode serialization produces; "precision" : "10" would not match.
-    String json = merged.toString(true);
-    assertTrue(json.contains("\"precision\" : 10"), json);
-    assertTrue(json.contains("\"scale\" : 0"), json);
+    // Verify precision/scale are JSON integers, not quoted strings, by comparing against a hard-coded expected.
+    // "precision" : 10  is what Jackson IntNode serialization produces; "precision" : "10" (quoted) would not match.
+    String expected = "{\n  \"type\" : \"bytes\",\n  \"logicalType\" : \"decimal\",\n"
+        + "  \"precision\" : 10,\n  \"scale\" : 0\n}";
+    assertEquals(merged.getField("fa").schema().getTypes().get(1).toString(true), expected);
   }
 
   @Test
@@ -259,9 +259,9 @@ public class MergeHiveSchemaWithAvroTests {
         String.valueOf(10), false);
     assertSchema(struct("r1", optional("fa", decimalSchema)), merged);
 
-    String json = merged.toString(true);
-    assertTrue(json.contains("\"precision\" : 38"), json);
-    assertTrue(json.contains("\"scale\" : 10"), json);
+    String expected = "{\n  \"type\" : \"bytes\",\n  \"logicalType\" : \"decimal\",\n"
+        + "  \"precision\" : 38,\n  \"scale\" : 10\n}";
+    assertEquals(merged.getField("fa").schema().getTypes().get(1).toString(true), expected);
   }
 
   @Test
