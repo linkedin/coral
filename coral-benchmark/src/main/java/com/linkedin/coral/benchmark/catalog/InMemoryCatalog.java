@@ -7,7 +7,6 @@ package com.linkedin.coral.benchmark.catalog;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,7 +14,6 @@ import java.util.Objects;
 
 import com.linkedin.coral.common.catalog.CoralCatalog;
 import com.linkedin.coral.common.catalog.CoralTable;
-import com.linkedin.coral.common.types.CoralDataType;
 import com.linkedin.coral.common.types.StructType;
 
 
@@ -65,9 +63,7 @@ public final class InMemoryCatalog implements CoralCatalog {
   @Override
   public List<String> getAllTables(String namespace) {
     Map<String, CoralTable> tables = namespaces.get(namespace);
-    return tables != null
-        ? Collections.unmodifiableList(new ArrayList<>(tables.keySet()))
-        : Collections.emptyList();
+    return tables != null ? Collections.unmodifiableList(new ArrayList<>(tables.keySet())) : Collections.emptyList();
   }
 
   @Override
@@ -145,8 +141,8 @@ public final class InMemoryCatalog implements CoralCatalog {
 
       Map<String, CoralTable> tables = namespaces.get(namespace);
       if (tables == null) {
-        throw new IllegalArgumentException("Namespace does not exist: " + namespace
-            + ". Call createNamespace() first.");
+        throw new IllegalArgumentException(
+            "Namespace does not exist: " + namespace + ". Call createNamespace() first.");
       }
       if (tables.containsKey(tableName)) {
         throw new IllegalArgumentException("Table already exists: " + namespace + "." + tableName);

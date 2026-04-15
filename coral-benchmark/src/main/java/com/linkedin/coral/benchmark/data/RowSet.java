@@ -6,13 +6,10 @@
 package com.linkedin.coral.benchmark.data;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-import com.linkedin.coral.common.types.CoralDataType;
-import com.linkedin.coral.common.types.CoralTypeKind;
 import com.linkedin.coral.common.types.StructType;
 
 
@@ -120,8 +117,7 @@ public final class RowSet {
      */
     public Builder addRow(Object... values) {
       if (values.length != columnCount) {
-        throw new IllegalArgumentException(
-            "Expected " + columnCount + " values, got " + values.length);
+        throw new IllegalArgumentException("Expected " + columnCount + " values, got " + values.length);
       }
       rows.add(Arrays.copyOf(values, values.length));
       return this;

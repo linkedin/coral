@@ -92,9 +92,7 @@ public final class TestReport {
 
   /** Returns only the results that failed. */
   public List<QueryTestResult> getFailures() {
-    return queryResults.stream()
-        .filter(r -> r.getStatus() == QueryTestResult.Status.FAIL)
-        .collect(Collectors.toList());
+    return queryResults.stream().filter(r -> r.getStatus() == QueryTestResult.Status.FAIL).collect(Collectors.toList());
   }
 
   /**
@@ -110,8 +108,7 @@ public final class TestReport {
       counts.put(category, 0);
     }
     for (QueryTestResult result : queryResults) {
-      result.getFailureCategory().ifPresent(
-          category -> counts.merge(category, 1, Integer::sum));
+      result.getFailureCategory().ifPresent(category -> counts.merge(category, 1, Integer::sum));
     }
     return Collections.unmodifiableMap(counts);
   }
@@ -124,8 +121,7 @@ public final class TestReport {
    */
   public List<QueryTestResult> getFailuresByCategory(QueryTestResult.FailureCategory category) {
     Objects.requireNonNull(category);
-    return queryResults.stream()
-        .filter(r -> r.getFailureCategory().orElse(null) == category)
+    return queryResults.stream().filter(r -> r.getFailureCategory().orElse(null) == category)
         .collect(Collectors.toList());
   }
 
