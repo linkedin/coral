@@ -20,21 +20,21 @@ import com.linkedin.coral.common.types.StructType;
  * <p>A RowSet is bound to a schema (a {@link StructType}) and contains zero or more rows.
  * Each row is an array of Java objects whose types correspond to the Coral type mapping:
  * <ul>
- *   <li>BOOLEAN -> {@link Boolean}</li>
- *   <li>TINYINT -> {@link Byte}</li>
- *   <li>SMALLINT -> {@link Short}</li>
- *   <li>INT -> {@link Integer}</li>
- *   <li>BIGINT -> {@link Long}</li>
- *   <li>FLOAT -> {@link Float}</li>
- *   <li>DOUBLE -> {@link Double}</li>
- *   <li>DECIMAL -> {@link java.math.BigDecimal}</li>
- *   <li>STRING/VARCHAR/CHAR -> {@link String}</li>
- *   <li>DATE -> {@link java.sql.Date}</li>
- *   <li>TIMESTAMP -> {@link java.sql.Timestamp}</li>
- *   <li>BINARY -> {@code byte[]}</li>
- *   <li>ARRAY -> {@link List}</li>
- *   <li>MAP -> {@link java.util.Map}</li>
- *   <li>STRUCT -> {@code Object[]}</li>
+ *   <li>BOOLEAN: {@link Boolean}</li>
+ *   <li>TINYINT: {@link Byte}</li>
+ *   <li>SMALLINT: {@link Short}</li>
+ *   <li>INT: {@link Integer}</li>
+ *   <li>BIGINT: {@link Long}</li>
+ *   <li>FLOAT: {@link Float}</li>
+ *   <li>DOUBLE: {@link Double}</li>
+ *   <li>DECIMAL: {@link java.math.BigDecimal}</li>
+ *   <li>STRING/VARCHAR/CHAR: {@link String}</li>
+ *   <li>DATE: {@link java.sql.Date}</li>
+ *   <li>TIMESTAMP: {@link java.sql.Timestamp}</li>
+ *   <li>BINARY: {@code byte[]}</li>
+ *   <li>ARRAY: {@link List}</li>
+ *   <li>MAP: {@link java.util.Map}</li>
+ *   <li>STRUCT: {@code Object[]}</li>
  * </ul>
  *
  * <p>Null values are represented by Java {@code null} and are only permitted for nullable columns.
