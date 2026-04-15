@@ -210,11 +210,12 @@ public class MergeHiveSchemaWithAvroTests {
     timestampSchema.addProp(AvroSerDe.AVRO_PROP_LOGICAL_TYPE, AvroSerDe.TIMESTAMP_TYPE_NAME);
     Schema decimalSchema = Schema.create(Schema.Type.BYTES);
     decimalSchema.addProp(AvroSerDe.AVRO_PROP_LOGICAL_TYPE, AvroSerDe.DECIMAL_TYPE_NAME);
-    AvroCompatibilityHelper.setSchemaPropFromJsonString(decimalSchema, AvroSerDe.AVRO_PROP_PRECISION,
-        String.valueOf(4), false);
-    AvroCompatibilityHelper.setSchemaPropFromJsonString(decimalSchema, AvroSerDe.AVRO_PROP_SCALE,
-        String.valueOf(2), false);
-    assertSchema(struct("r1", optional("fa", dateSchema), optional("fb", timestampSchema), optional("fc", decimalSchema)),
+    AvroCompatibilityHelper.setSchemaPropFromJsonString(decimalSchema, AvroSerDe.AVRO_PROP_PRECISION, String.valueOf(4),
+        false);
+    AvroCompatibilityHelper.setSchemaPropFromJsonString(decimalSchema, AvroSerDe.AVRO_PROP_SCALE, String.valueOf(2),
+        false);
+    assertSchema(
+        struct("r1", optional("fa", dateSchema), optional("fb", timestampSchema), optional("fc", decimalSchema)),
         merged);
 
     // Additionally assert precision/scale are JSON integers, not quoted strings.
@@ -234,8 +235,8 @@ public class MergeHiveSchemaWithAvroTests {
     decimalSchema.addProp(AvroSerDe.AVRO_PROP_LOGICAL_TYPE, AvroSerDe.DECIMAL_TYPE_NAME);
     AvroCompatibilityHelper.setSchemaPropFromJsonString(decimalSchema, AvroSerDe.AVRO_PROP_PRECISION,
         String.valueOf(10), false);
-    AvroCompatibilityHelper.setSchemaPropFromJsonString(decimalSchema, AvroSerDe.AVRO_PROP_SCALE,
-        String.valueOf(0), false);
+    AvroCompatibilityHelper.setSchemaPropFromJsonString(decimalSchema, AvroSerDe.AVRO_PROP_SCALE, String.valueOf(0),
+        false);
     Schema expected = struct("r1", optional("fa", decimalSchema));
     assertSchema(expected, merged);
   }
@@ -250,8 +251,8 @@ public class MergeHiveSchemaWithAvroTests {
     decimalSchema.addProp(AvroSerDe.AVRO_PROP_LOGICAL_TYPE, AvroSerDe.DECIMAL_TYPE_NAME);
     AvroCompatibilityHelper.setSchemaPropFromJsonString(decimalSchema, AvroSerDe.AVRO_PROP_PRECISION,
         String.valueOf(38), false);
-    AvroCompatibilityHelper.setSchemaPropFromJsonString(decimalSchema, AvroSerDe.AVRO_PROP_SCALE,
-        String.valueOf(10), false);
+    AvroCompatibilityHelper.setSchemaPropFromJsonString(decimalSchema, AvroSerDe.AVRO_PROP_SCALE, String.valueOf(10),
+        false);
     Schema expected = struct("r1", optional("fa", decimalSchema));
     assertSchema(expected, merged);
   }

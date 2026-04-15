@@ -20,8 +20,8 @@ public class TypeInfoToAvroSchemaConverterTests {
     // Hard-coded expected matches what Jackson IntNode serialization produces:
     // Jackson1Utils.toJsonString(factory.numberNode(N)) == String.valueOf(N),
     // and Avro's toString(true) renders integer props as  "key" : N  (no quotes around N).
-    String expected = "{\n  \"type\" : \"bytes\",\n  \"logicalType\" : \"decimal\",\n"
-        + "  \"precision\" : 10,\n  \"scale\" : 5\n}";
+    String expected =
+        "{\n  \"type\" : \"bytes\",\n  \"logicalType\" : \"decimal\",\n" + "  \"precision\" : 10,\n  \"scale\" : 5\n}";
     Assert.assertEquals(actual.toString(true), expected);
   }
 
@@ -29,8 +29,8 @@ public class TypeInfoToAvroSchemaConverterTests {
   public void shouldConvertDecimalWithZeroScale() {
     TypeInfoToAvroSchemaConverter converter = new TypeInfoToAvroSchemaConverter("ns", false);
     Schema actual = converter.convertTypeInfoToAvroSchema(TypeInfoFactory.getDecimalTypeInfo(10, 0), "ns", "Test");
-    String expected = "{\n  \"type\" : \"bytes\",\n  \"logicalType\" : \"decimal\",\n"
-        + "  \"precision\" : 10,\n  \"scale\" : 0\n}";
+    String expected =
+        "{\n  \"type\" : \"bytes\",\n  \"logicalType\" : \"decimal\",\n" + "  \"precision\" : 10,\n  \"scale\" : 0\n}";
     Assert.assertEquals(actual.toString(true), expected);
   }
 
@@ -38,8 +38,8 @@ public class TypeInfoToAvroSchemaConverterTests {
   public void shouldConvertDecimalWithMaxHivePrecision() {
     TypeInfoToAvroSchemaConverter converter = new TypeInfoToAvroSchemaConverter("ns", false);
     Schema actual = converter.convertTypeInfoToAvroSchema(TypeInfoFactory.getDecimalTypeInfo(38, 10), "ns", "Test");
-    String expected = "{\n  \"type\" : \"bytes\",\n  \"logicalType\" : \"decimal\",\n"
-        + "  \"precision\" : 38,\n  \"scale\" : 10\n}";
+    String expected =
+        "{\n  \"type\" : \"bytes\",\n  \"logicalType\" : \"decimal\",\n" + "  \"precision\" : 38,\n  \"scale\" : 10\n}";
     Assert.assertEquals(actual.toString(true), expected);
   }
 }
