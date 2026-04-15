@@ -6,7 +6,9 @@
 package com.linkedin.coral.schema.avro;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.linkedin.avroutil1.compatibility.AvroCompatibilityHelper;
 
@@ -17,6 +19,79 @@ import org.testng.annotations.Test;
 
 
 public class SchemaUtilitiesTests {
+
+  private static final String SIMPLE_AVRO_SCHEMA =
+      "{\"type\":\"record\",\"name\":\"TestRecord\",\"namespace\":\"com.test\","
+          + "\"fields\":[{\"name\":\"id\",\"type\":\"int\"},{\"name\":\"name\",\"type\":\"string\"}]}";
+
+  @Test
+  public void testGetCasePreservedSchemaFromPropertyMapsWithSchemaLiteral() {
+    Map<String, String> tableProperties = new HashMap<>();
+    tableProperties.put("avro.schema.literal", SIMPLE_AVRO_SCHEMA);
+
+    Schema result = SchemaUtilities.getCasePreservedSchemaFromPropertyMaps(tableProperties, null, "test@table");
+
+    Assert.assertNotNull(result);
+    Assert.assertEquals(result.getName(), "TestRecord");
+    Assert.assertEquals(result.getFields().size(), 2);
+  }
+
+  @Test
+  public void testGetCasePreservedSchemaFromPropertyMapsWithSerdeProperties() {
+    Map<String, String> tableProperties = new HashMap<>();
+    Map<String, String> serdeProperties = new HashMap<>();
+    serdeProperties.put("avro.schema.literal", SIMPLE_AVRO_SCHEMA);
+
+    Schema result =
+        SchemaUtilities.getCasePreservedSchemaFromPropertyMaps(tableProperties, serdeProperties, "test@table");
+
+    Assert.assertNotNull(result);
+    Assert.assertEquals(result.getName(), "TestRecord");
+  }
+
+  @Test
+  public void testGetCasePreservedSchemaFromPropertyMapsTablePropsTakePrecedence() {
+    String tableSchema = "{\"type\":\"record\",\"name\":\"FromTable\",\"namespace\":\"com.test\","
+        + "\"fields\":[{\"name\":\"id\",\"type\":\"int\"}]}";
+    String serdeSchema = "{\"type\":\"record\",\"name\":\"FromSerde\",\"namespace\":\"com.test\","
+        + "\"fields\":[{\"name\":\"id\",\"type\":\"int\"}]}";
+
+    Map<String, String> tableProperties = new HashMap<>();
+    tableProperties.put("avro.schema.literal", tableSchema);
+    Map<String, String> serdeProperties = new HashMap<>();
+    serdeProperties.put("avro.schema.literal", serdeSchema);
+
+    Schema result =
+        SchemaUtilities.getCasePreservedSchemaFromPropertyMaps(tableProperties, serdeProperties, "test@table");
+
+    Assert.assertNotNull(result);
+    Assert.assertEquals(result.getName(), "FromTable");
+  }
+
+  @Test
+  public void testGetCasePreservedSchemaFromPropertyMapsWithDaliRowSchema() {
+    Map<String, String> tableProperties = new HashMap<>();
+    tableProperties.put("dali.row.schema", SIMPLE_AVRO_SCHEMA);
+
+    Schema result = SchemaUtilities.getCasePreservedSchemaFromPropertyMaps(tableProperties, null, "test@table");
+
+    Assert.assertNotNull(result);
+    Assert.assertEquals(result.getName(), "TestRecord");
+    // dali.row.schema results are converted to nullable
+    for (Schema.Field field : result.getFields()) {
+      Assert.assertEquals(field.schema().getType(), Schema.Type.UNION);
+    }
+  }
+
+  @Test
+  public void testGetCasePreservedSchemaFromPropertyMapsReturnsNullWhenEmpty() {
+    Map<String, String> tableProperties = new HashMap<>();
+
+    Schema result = SchemaUtilities.getCasePreservedSchemaFromPropertyMaps(tableProperties, null, "test@table");
+
+    Assert.assertNull(result);
+  }
+
   @Test
   public void testCloneFieldList() {
     Schema dummySchema = SchemaBuilder.record("test").fields().name("a").type().intType().noDefault().endRecord();
