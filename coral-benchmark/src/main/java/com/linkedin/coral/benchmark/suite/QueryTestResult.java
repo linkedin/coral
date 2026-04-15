@@ -28,17 +28,14 @@ public final class QueryTestResult {
   public enum Status {
     /** All requested verification levels passed. */
     PASS,
-    /** A verification level failed. */
-    FAIL,
-    /** The query was skipped (e.g., known unsupported construct). */
-    SKIP,
-    /** An unexpected error occurred during testing. */
-    ERROR
+    /** A verification level failed (translation error, explain failure, result mismatch,
+     *  or unexpected exception). */
+    FAIL
   }
 
   /**
    * Category of failure, indicating which stage of the pipeline failed.
-   * Only meaningful when {@link #getStatus()} is {@link Status#FAIL} or {@link Status#ERROR}.
+   * Only meaningful when {@link #getStatus()} is {@link Status#FAIL}.
    */
   public enum FailureCategory {
     /** The translation from source dialect through IR to target dialect failed. */
@@ -108,12 +105,12 @@ public final class QueryTestResult {
     return Optional.ofNullable(comparisonResult);
   }
 
-  /** Returns the failure category, if the test failed or errored. */
+  /** Returns the failure category, if the test failed. */
   public Optional<FailureCategory> getFailureCategory() {
     return Optional.ofNullable(failureCategory);
   }
 
-  /** Returns the error message, if the test failed or errored. */
+  /** Returns the error message, if the test failed. */
   public Optional<String> getErrorMessage() {
     return Optional.ofNullable(errorMessage);
   }

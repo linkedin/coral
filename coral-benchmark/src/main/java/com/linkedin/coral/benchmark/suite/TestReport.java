@@ -81,25 +81,13 @@ public final class TestReport {
     return countByStatus(QueryTestResult.Status.FAIL);
   }
 
-  /** Returns the number of queries that were skipped. */
-  public int skipCount() {
-    return countByStatus(QueryTestResult.Status.SKIP);
-  }
-
-  /** Returns the number of queries that errored. */
-  public int errorCount() {
-    return countByStatus(QueryTestResult.Status.ERROR);
-  }
-
   /**
    * Returns the pass rate as a value between 0.0 and 1.0.
-   * Skipped queries are excluded from the denominator.
    *
-   * @return the pass rate, or 0.0 if no queries were executed
+   * @return the pass rate, or 0.0 if no queries were tested
    */
   public double passRate() {
-    int executed = totalCount() - skipCount();
-    return executed > 0 ? (double) passCount() / executed : 0.0;
+    return totalCount() > 0 ? (double) passCount() / totalCount() : 0.0;
   }
 
   /** Returns only the results that failed. */
@@ -109,16 +97,9 @@ public final class TestReport {
         .collect(Collectors.toList());
   }
 
-  /** Returns only the results that errored. */
-  public List<QueryTestResult> getErrors() {
-    return queryResults.stream()
-        .filter(r -> r.getStatus() == QueryTestResult.Status.ERROR)
-        .collect(Collectors.toList());
-  }
-
   /**
    * Returns failure counts broken down by category: translation error, explain failure,
-   * and result mismatch. Only includes results with status FAIL or ERROR that have a
+   * and result mismatch. Only includes results with status FAIL that have a
    * failure category set.
    *
    * @return a map from failure category to the count of queries in that category
