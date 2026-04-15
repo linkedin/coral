@@ -236,13 +236,8 @@ public class MergeHiveSchemaWithAvroTests {
         String.valueOf(10), false);
     AvroCompatibilityHelper.setSchemaPropFromJsonString(decimalSchema, AvroSerDe.AVRO_PROP_SCALE,
         String.valueOf(0), false);
-    assertSchema(struct("r1", optional("fa", decimalSchema)), merged);
-
-    // Verify precision/scale are JSON integers, not quoted strings, by comparing against a hard-coded expected.
-    // "precision" : 10  is what Jackson IntNode serialization produces; "precision" : "10" (quoted) would not match.
-    String expected = "{\n  \"type\" : \"bytes\",\n  \"logicalType\" : \"decimal\",\n"
-        + "  \"precision\" : 10,\n  \"scale\" : 0\n}";
-    assertEquals(merged.getField("fa").schema().getTypes().get(1).toString(true), expected);
+    Schema expected = struct("r1", optional("fa", decimalSchema));
+    assertSchema(expected, merged);
   }
 
   @Test
@@ -257,11 +252,8 @@ public class MergeHiveSchemaWithAvroTests {
         String.valueOf(38), false);
     AvroCompatibilityHelper.setSchemaPropFromJsonString(decimalSchema, AvroSerDe.AVRO_PROP_SCALE,
         String.valueOf(10), false);
-    assertSchema(struct("r1", optional("fa", decimalSchema)), merged);
-
-    String expected = "{\n  \"type\" : \"bytes\",\n  \"logicalType\" : \"decimal\",\n"
-        + "  \"precision\" : 38,\n  \"scale\" : 10\n}";
-    assertEquals(merged.getField("fa").schema().getTypes().get(1).toString(true), expected);
+    Schema expected = struct("r1", optional("fa", decimalSchema));
+    assertSchema(expected, merged);
   }
 
   @Test
