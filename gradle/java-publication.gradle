@@ -80,7 +80,11 @@ publishing {
   }
 
   //useful for testing - running "publish" will create artifacts/pom in a local dir
-  repositories { maven { url = "$rootProject.buildDir/repo" } }
+  repositories {
+    maven {
+      url = "$rootProject.buildDir/repo"
+    }
+  }
 }
 
 //fleshes out problems with Maven pom generation when building
