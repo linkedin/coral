@@ -320,18 +320,15 @@ public final class TranslationTestSuite {
       Objects.requireNonNull(verificationLevel, "Verification level is required");
 
       if (verificationLevel.ordinal() >= VerificationLevel.EXPLAIN.ordinal() && targetEngine == null) {
-        throw new IllegalStateException(
-            "Target engine is required for verification level " + verificationLevel);
+        throw new IllegalStateException("Target engine is required for verification level " + verificationLevel);
       }
 
       if (verificationLevel == VerificationLevel.RESULT_SET) {
         if (sourceEngine == null) {
-          throw new IllegalStateException(
-              "Source engine is required for RESULT_SET verification");
+          throw new IllegalStateException("Source engine is required for RESULT_SET verification");
         }
         if (testData.isEmpty()) {
-          throw new IllegalStateException(
-              "Test data is required for RESULT_SET verification");
+          throw new IllegalStateException("Test data is required for RESULT_SET verification");
         }
       }
 
