@@ -3,13 +3,21 @@
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
-package com.linkedin.coral.datagen.domain;
+package com.linkedin.coral.datagen.domain.transformer;
+
+import java.util.Arrays;
 
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.SqlKind;
+
+import com.linkedin.coral.datagen.domain.Domain;
+import com.linkedin.coral.datagen.domain.DomainTransformer;
+import com.linkedin.coral.datagen.domain.RegexDomain;
+
+import dk.brics.automaton.Automaton;
 
 
 /**
@@ -83,49 +91,21 @@ public class SubstringRegexTransformer implements DomainTransformer {
       return RegexDomain.empty();
     }
 
-    // Get the output pattern
-    String outputPattern = outputRegex.getRegex();
+    Automaton outputAutomaton = outputRegex.getAutomaton();
 
-    // Strip anchors from output pattern since we'll add our own
-    String patternWithoutAnchors = outputPattern;
-    if (patternWithoutAnchors.startsWith("^")) {
-      patternWithoutAnchors = patternWithoutAnchors.substring(1);
-    }
-    if (patternWithoutAnchors.endsWith("$")) {
-      patternWithoutAnchors = patternWithoutAnchors.substring(0, patternWithoutAnchors.length() - 1);
+    // Constrain output to strings of exactly the required length
+    Automaton exactLength = Automaton.makeAnyChar().repeat(length, length);
+    Automaton constrainedOutput = outputAutomaton.intersection(exactLength);
+
+    if (constrainedOutput.isEmpty()) {
+      return RegexDomain.empty();
     }
 
-    // If output is a literal, we can compute expected length
-    if (outputRegex.isLiteral()) {
-      // The output must have exactly 'length' characters
-      // Unescape the literal to get actual length
-      String literalValue = unescapeLiteral(outputPattern);
-      if (literalValue.length() != length) {
-        // Contradiction: output length doesn't match substring length
-        return RegexDomain.empty();
-      }
-    }
+    // Create positional constraint: .{startIdx}(output).*
+    Automaton prefix = Automaton.makeAnyChar().repeat(startIdx, startIdx);
+    Automaton suffix = Automaton.makeAnyString();
+    Automaton inputAutomaton = Automaton.concatenate(Arrays.asList(prefix, constrainedOutput, suffix));
 
-    // Create positional constraint: ^.{startIdx}(outputPattern).*$
-    String inputRegex = String.format("^.{%d}(%s).*$", startIdx, patternWithoutAnchors);
-
-    return new RegexDomain(inputRegex);
-  }
-
-  /**
-   * Unescapes a regex literal to get the actual string value.
-   * Handles anchored patterns like "^50$".
-   */
-  private String unescapeLiteral(String escaped) {
-    String result = escaped;
-    // Remove anchors if present
-    if (result.startsWith("^")) {
-      result = result.substring(1);
-    }
-    if (result.endsWith("$")) {
-      result = result.substring(0, result.length() - 1);
-    }
-    // Remove escape sequences
-    return result.replaceAll("\\\\(.)", "$1");
+    return new RegexDomain(inputAutomaton);
   }
 }

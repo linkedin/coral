@@ -18,6 +18,8 @@ import static org.testng.Assert.*;
  */
 public class IntegerTransformerTest {
 
+  // ==================== Plus Transformer ====================
+
   @Test
   public void testPlusTransformerSingleValue() {
     // Test: x + 5 = 25 => x = 20
@@ -28,7 +30,7 @@ public class IntegerTransformerTest {
     assertTrue(input.contains(20));
     assertTrue(input.isSingleton());
 
-    List<Long> samples = input.sampleValues(5);
+    List<Long> samples = input.sample(5);
     assertFalse(samples.isEmpty());
     for (long v : samples) {
       assertEquals(v, 20);
@@ -46,12 +48,14 @@ public class IntegerTransformerTest {
     assertFalse(input.contains(14));
     assertFalse(input.contains(26));
 
-    List<Long> samples = input.sampleValues(10);
+    List<Long> samples = input.sample(10);
     assertEquals(samples.size(), 10);
     for (long v : samples) {
       assertTrue(input.contains(v));
     }
   }
+
+  // ==================== Times Transformer ====================
 
   @Test
   public void testTimesTransformerSingleValue() {
@@ -90,6 +94,8 @@ public class IntegerTransformerTest {
     assertFalse(verified.contains(41));
   }
 
+  // ==================== Complex Scenarios ====================
+
   @Test
   public void testComplexArithmetic() {
     // Solve: 2*x + 5 = 25
@@ -121,7 +127,7 @@ public class IntegerTransformerTest {
     assertFalse(output.contains(19));
     assertFalse(output.contains(26));
 
-    List<Long> samples = output.sampleValues(10);
+    List<Long> samples = output.sample(10);
     for (long v : samples) {
       assertTrue(output.contains(v));
     }
@@ -139,7 +145,7 @@ public class IntegerTransformerTest {
     assertTrue(intersection.isSingleton());
     assertTrue(intersection.contains(15));
 
-    List<Long> samples = intersection.sampleValues(5);
+    List<Long> samples = intersection.sample(5);
     assertFalse(samples.isEmpty());
     for (long v : samples) {
       assertEquals(v, 15);

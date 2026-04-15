@@ -27,11 +27,11 @@ public class RegexToIntegerDomainConverterTest {
   private RegexToIntegerDomainConverter converter;
 
   @BeforeMethod
-  public void setUp() {
+  public void setup() {
     converter = new RegexToIntegerDomainConverter();
   }
 
-  // ========== Basic Literal Tests ==========
+  // ==================== Basic Literal Tests ====================
 
   @Test
   public void testLiteralSingleDigit() {
@@ -78,7 +78,7 @@ public class RegexToIntegerDomainConverterTest {
     assertFalse(result.contains(10));
   }
 
-  // ========== Character Class Tests ==========
+  // ==================== Character Class Tests ====================
 
   @Test
   public void testCharClassSingleDigit() {
@@ -116,7 +116,7 @@ public class RegexToIntegerDomainConverterTest {
     assertFalse(result.contains(1000));
   }
 
-  // ========== Bounded Repetition Tests ==========
+  // ==================== Bounded Repetition Tests ====================
 
   @Test
   public void testExactRepetition() {
@@ -158,7 +158,7 @@ public class RegexToIntegerDomainConverterTest {
     assertFalse(result.contains(556));
   }
 
-  // ========== Mixed Pattern Tests ==========
+  // ==================== Mixed Pattern Tests ====================
 
   @Test
   public void testPrefixPattern() {
@@ -202,7 +202,7 @@ public class RegexToIntegerDomainConverterTest {
     assertFalse(result.contains(2930));
   }
 
-  // ========== Alternation Tests ==========
+  // ==================== Alternation Tests ====================
 
   @Test
   public void testSimpleAlternation() {
@@ -262,7 +262,7 @@ public class RegexToIntegerDomainConverterTest {
     assertFalse(result.contains(25));
   }
 
-  // ========== Invalid Pattern Tests ==========
+  // ==================== Invalid Pattern Tests ====================
 
   @Test(expectedExceptions = NonConvertibleDomainException.class)
   public void testUnboundedStar() {
@@ -276,10 +276,15 @@ public class RegexToIntegerDomainConverterTest {
     converter.convert(regex);
   }
 
-  @Test(expectedExceptions = NonConvertibleDomainException.class)
-  public void testUnboundedQuestion() {
+  @Test
+  public void testOptionalDigit() {
+    // [0-9]? accepts "" and "0"-"9". The automaton is finite and digit-only,
+    // so it is convertible. Empty string maps to nothing; digits 0-9 convert normally.
     RegexDomain regex = new RegexDomain("^[0-9]?$");
-    converter.convert(regex);
+    assertTrue(converter.isConvertible(regex));
+    IntegerDomain result = converter.convert(regex);
+    assertTrue(result.contains(0));
+    assertTrue(result.contains(9));
   }
 
   @Test(expectedExceptions = NonConvertibleDomainException.class)
@@ -318,22 +323,24 @@ public class RegexToIntegerDomainConverterTest {
     converter.convert(regex);
   }
 
-  @Test(expectedExceptions = NonConvertibleDomainException.class)
+  @Test
   public void testMissingStartAnchor() {
+    // Anchors are stripped by RegexDomain; brics matches whole string implicitly.
+    // So [0-9]{3}$ is equivalent to [0-9]{3} which is convertible.
     RegexDomain regex = new RegexDomain("[0-9]{3}$");
-    converter.convert(regex);
+    assertTrue(converter.isConvertible(regex));
   }
 
-  @Test(expectedExceptions = NonConvertibleDomainException.class)
+  @Test
   public void testMissingEndAnchor() {
     RegexDomain regex = new RegexDomain("^[0-9]{3}");
-    converter.convert(regex);
+    assertTrue(converter.isConvertible(regex));
   }
 
-  @Test(expectedExceptions = NonConvertibleDomainException.class)
+  @Test
   public void testNoAnchors() {
     RegexDomain regex = new RegexDomain("[0-9]{3}");
-    converter.convert(regex);
+    assertTrue(converter.isConvertible(regex));
   }
 
   @Test(expectedExceptions = NonConvertibleDomainException.class)
@@ -364,10 +371,14 @@ public class RegexToIntegerDomainConverterTest {
     }
   }
 
-  @Test(expectedExceptions = NonConvertibleDomainException.class)
+  @Test
   public void testShorthandDigitClass() {
+    // \d is now translated to [0-9] by RegexDomain.parseRegex, so this is convertible.
     RegexDomain regex = new RegexDomain("^\\d{3}$");
-    converter.convert(regex);
+    assertTrue(converter.isConvertible(regex));
+    IntegerDomain result = converter.convert(regex);
+    assertTrue(result.contains(0));
+    assertTrue(result.contains(999));
   }
 
   @Test(expectedExceptions = NonConvertibleDomainException.class)
@@ -390,19 +401,23 @@ public class RegexToIntegerDomainConverterTest {
     converter.convert(regex);
   }
 
-  @Test(expectedExceptions = NonConvertibleDomainException.class)
+  @Test
   public void testEmptyPattern() {
+    // Empty regex accepts only the empty string "".
+    // The converter treats it as convertible (finite, digit-only vacuously)
+    // but produces an empty IntegerDomain since "" is not a valid integer.
     RegexDomain regex = new RegexDomain("");
-    converter.convert(regex);
+    IntegerDomain result = converter.convert(regex);
+    assertTrue(result.isEmpty());
   }
 
   @Test(expectedExceptions = { NonConvertibleDomainException.class, NullPointerException.class })
   public void testNullPattern() {
-    RegexDomain regex = new RegexDomain(null);
+    RegexDomain regex = new RegexDomain((String) null);
     converter.convert(regex);
   }
 
-  // ========== Edge Case Tests ==========
+  // ==================== Edge Case Tests ====================
 
   @Test
   public void testSingleZero() {
@@ -501,7 +516,7 @@ public class RegexToIntegerDomainConverterTest {
     assertFalse(result.contains(555));
   }
 
-  // ========== Complex Pattern Tests ==========
+  // ==================== Complex Pattern Tests ====================
 
   @Test
   public void testComplexYearRange() {
@@ -543,10 +558,10 @@ public class RegexToIntegerDomainConverterTest {
     assertTrue(result.contains(999));
   }
 
-  // ========== isConvertible Tests ==========
+  // ==================== isConvertible Tests ====================
 
   @Test
-  public void testIsConvertible_ValidPatterns() {
+  public void testIsConvertibleValidPatterns() {
     assertTrue(converter.isConvertible(new RegexDomain("^123$")));
     assertTrue(converter.isConvertible(new RegexDomain("^[0-9]$")));
     assertTrue(converter.isConvertible(new RegexDomain("^[0-9]{3}$")));
@@ -555,16 +570,14 @@ public class RegexToIntegerDomainConverterTest {
   }
 
   @Test
-  public void testIsConvertible_InvalidPatterns() {
-    assertFalse(converter.isConvertible(new RegexDomain("^[0-9]+$")));
-    assertFalse(converter.isConvertible(new RegexDomain("^[0-9]*$")));
-    assertFalse(converter.isConvertible(new RegexDomain("^abc$")));
-    assertFalse(converter.isConvertible(new RegexDomain("^[0-9]{3,}$")));
-    assertFalse(converter.isConvertible(new RegexDomain("[0-9]{3}")));
-    assertFalse(converter.isConvertible(new RegexDomain("^\\d{3}$")));
+  public void testIsConvertibleInvalidPatterns() {
+    assertFalse(converter.isConvertible(new RegexDomain("^[0-9]+$"))); // infinite
+    assertFalse(converter.isConvertible(new RegexDomain("^[0-9]*$"))); // infinite
+    assertFalse(converter.isConvertible(new RegexDomain("^abc$"))); // non-digit
+    assertFalse(converter.isConvertible(new RegexDomain("^[0-9]{3,}$"))); // infinite
   }
 
-  // ========== Integration Tests ==========
+  // ==================== Integration Tests ====================
 
   @Test
   public void testRoundTrip_SmallDomain() {

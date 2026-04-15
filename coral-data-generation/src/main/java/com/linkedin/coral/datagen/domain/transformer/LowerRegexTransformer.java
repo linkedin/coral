@@ -3,20 +3,29 @@
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
-package com.linkedin.coral.datagen.domain;
+package com.linkedin.coral.datagen.domain.transformer;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 
+import com.linkedin.coral.datagen.domain.Domain;
+import com.linkedin.coral.datagen.domain.DomainTransformer;
+import com.linkedin.coral.datagen.domain.RegexDomain;
+
+import dk.brics.automaton.Automaton;
+
 
 /**
  * Regex-based transformer for LOWER operations.
- * 
+ *
  * Inverts LOWER(input) = output_pattern
  * to produce a case-insensitive regex constraint on the input.
- * 
+ *
  * Example:
  * LOWER(input) = "abc"
  * produces input constraint: [aA][bB][cC]
@@ -49,55 +58,26 @@ public class LowerRegexTransformer implements DomainTransformer {
     }
 
     RegexDomain outputRegex = (RegexDomain) outputDomain;
-    String outputPattern = outputRegex.getRegex();
 
     // If output is a literal lowercase string, make it case-insensitive
     if (outputRegex.isLiteral()) {
-      String literalValue = unescapeLiteral(outputPattern);
-      StringBuilder caseInsensitive = new StringBuilder("^");
+      String literalValue = outputRegex.getLiteralValue();
+      List<Automaton> parts = new ArrayList<>();
 
       for (char c : literalValue.toCharArray()) {
         if (Character.isLetter(c)) {
           char lower = Character.toLowerCase(c);
           char upper = Character.toUpperCase(c);
-          caseInsensitive.append('[').append(lower).append(upper).append(']');
+          parts.add(Automaton.makeChar(lower).union(Automaton.makeChar(upper)));
         } else {
-          // Non-letter characters remain as-is (escaped if needed)
-          caseInsensitive.append(escapeRegexChar(c));
+          parts.add(Automaton.makeChar(c));
         }
       }
-      caseInsensitive.append('$');
 
-      return new RegexDomain(caseInsensitive.toString());
+      return new RegexDomain(Automaton.concatenate(parts));
     }
 
-    // For complex patterns, wrap with case-insensitive flag
-    // Note: Java regex doesn't have inline (?i) in automaton library,
-    // so we return the pattern as-is and rely on character-level matching
+    // For complex patterns, return as-is
     return outputRegex;
-  }
-
-  /**
-   * Unescapes a regex literal to get the actual string value.
-   * Handles anchored patterns like "^ABC$".
-   */
-  private String unescapeLiteral(String escaped) {
-    String result = escaped;
-    // Remove anchors if present
-    if (result.startsWith("^")) {
-      result = result.substring(1);
-    }
-    if (result.endsWith("$")) {
-      result = result.substring(0, result.length() - 1);
-    }
-    // Remove escape sequences
-    return result.replaceAll("\\\\(.)", "$1");
-  }
-
-  private String escapeRegexChar(char c) {
-    if (".+*?^$()[]{}|\\".indexOf(c) >= 0) {
-      return "\\" + c;
-    }
-    return String.valueOf(c);
   }
 }

@@ -18,6 +18,8 @@ import static org.testng.Assert.*;
  */
 public class IntegerDomainTest {
 
+  // ==================== Basic Operations ====================
+
   @Test
   public void testSingleValue() {
     IntegerDomain domain = IntegerDomain.of(42);
@@ -26,7 +28,7 @@ public class IntegerDomainTest {
     assertFalse(domain.contains(43));
     assertTrue(domain.isSingleton());
 
-    List<Long> samples = domain.sampleValues(5);
+    List<Long> samples = domain.sample(5);
     assertFalse(samples.isEmpty());
     for (long v : samples) {
       assertTrue(domain.contains(v));
@@ -43,7 +45,7 @@ public class IntegerDomainTest {
     assertFalse(domain.contains(21));
     assertFalse(domain.isSingleton());
 
-    List<Long> samples = domain.sampleValues(5);
+    List<Long> samples = domain.sample(5);
     assertEquals(samples.size(), 5);
     for (long v : samples) {
       assertTrue(domain.contains(v));
@@ -61,12 +63,14 @@ public class IntegerDomainTest {
     assertTrue(domain.contains(25));
     assertFalse(domain.contains(16));
 
-    List<Long> samples = domain.sampleValues(10);
+    List<Long> samples = domain.sample(10);
     assertFalse(samples.isEmpty());
     for (long v : samples) {
       assertTrue(domain.contains(v));
     }
   }
+
+  // ==================== Set Operations ====================
 
   @Test
   public void testIntersection() {
@@ -80,7 +84,7 @@ public class IntegerDomainTest {
     assertFalse(intersection.contains(9));
     assertFalse(intersection.contains(21));
 
-    List<Long> samples = intersection.sampleValues(5);
+    List<Long> samples = intersection.sample(5);
     for (long v : samples) {
       assertTrue(domain1.contains(v));
       assertTrue(domain2.contains(v));
@@ -98,11 +102,13 @@ public class IntegerDomainTest {
     assertTrue(union.contains(25));
     assertFalse(union.contains(15));
 
-    List<Long> samples = union.sampleValues(10);
+    List<Long> samples = union.sample(10);
     for (long v : samples) {
       assertTrue(union.contains(v));
     }
   }
+
+  // ==================== Arithmetic ====================
 
   @Test
   public void testAddConstant() {
@@ -114,7 +120,7 @@ public class IntegerDomainTest {
     assertFalse(shifted.contains(14));
     assertFalse(shifted.contains(26));
 
-    List<Long> samples = shifted.sampleValues(5);
+    List<Long> samples = shifted.sample(5);
     for (long v : samples) {
       assertTrue(shifted.contains(v));
     }
@@ -130,7 +136,7 @@ public class IntegerDomainTest {
     assertFalse(scaled.contains(19));
     assertFalse(scaled.contains(41));
 
-    List<Long> samples = scaled.sampleValues(5);
+    List<Long> samples = scaled.sample(5);
     for (long v : samples) {
       assertTrue(scaled.contains(v));
     }
@@ -148,6 +154,8 @@ public class IntegerDomainTest {
     assertFalse(scaled.contains(-21));
     assertFalse(scaled.contains(10));
   }
+
+  // ==================== Interval Merging ====================
 
   @Test
   public void testOverlappingIntervalsMerge() {
@@ -181,11 +189,13 @@ public class IntegerDomainTest {
     assertFalse(domain.contains(25));
   }
 
+  // ==================== Edge Cases ====================
+
   @Test
   public void testEmptyDomain() {
     IntegerDomain empty = IntegerDomain.empty();
     assertTrue(empty.isEmpty());
-    assertTrue(empty.sampleValues(5).isEmpty());
+    assertTrue(empty.sample(5).isEmpty());
   }
 
   @Test
@@ -194,8 +204,10 @@ public class IntegerDomainTest {
     IntegerDomain domain2 = IntegerDomain.of(20, 30);
     IntegerDomain intersection = domain1.intersect(domain2);
     assertTrue(intersection.isEmpty());
-    assertTrue(intersection.sampleValues(5).isEmpty());
+    assertTrue(intersection.sample(5).isEmpty());
   }
+
+  // ==================== Complex Scenarios ====================
 
   @Test
   public void testComplexArithmetic() {
@@ -209,7 +221,7 @@ public class IntegerDomainTest {
     assertFalse(solution.isEmpty());
     assertTrue(solution.contains(20));
 
-    long x = solution.sampleValues(1).get(0);
+    long x = solution.sample(1).get(0);
     assertEquals(x, 20);
   }
 

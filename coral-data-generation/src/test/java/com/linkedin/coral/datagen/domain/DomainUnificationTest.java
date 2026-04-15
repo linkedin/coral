@@ -17,6 +17,8 @@ import static org.testng.Assert.*;
  */
 public class DomainUnificationTest {
 
+  // ==================== Per-Domain API ====================
+
   @Test
   public void testIntegerDomainUnifiedApi() {
     IntegerDomain domain1 = IntegerDomain.of(1, 10);
@@ -76,6 +78,8 @@ public class DomainUnificationTest {
     assertFalse(domain1.isSingleton());
   }
 
+  // ==================== Empty and Contradiction ====================
+
   @Test
   public void testEmptyDomains() {
     // Integer empty domain
@@ -103,6 +107,8 @@ public class DomainUnificationTest {
     RegexDomain regexIntersection = regex1.intersect(regex2);
     assertTrue(regexIntersection.isEmpty());
   }
+
+  // ==================== Polymorphic and Chained Usage ====================
 
   @Test
   public void testPolymorphicUsage() {

@@ -449,7 +449,7 @@ IntegerDomain input = output.add(-5);  // [20]
 
 // Solving: x * 2 ∈ [40, 60]
 IntegerDomain output = IntegerDomain.of(40, 60);
-// (Requires division, handled by TimesRegexTransformer)
+// (Requires division, handled by TimesIntegerTransformer)
 ```
 
 **Key Features**:
@@ -463,7 +463,7 @@ IntegerDomain output = IntegerDomain.of(40, 60);
 // Representing: age * 2 + 5 = 25
 IntegerDomain output = IntegerDomain.of(25);
 IntegerDomain afterPlus = output.add(-5);   // [20]
-// TimesRegexTransformer handles division to get [10]
+// TimesIntegerTransformer handles division to get [10]
 ```
 
 ---
@@ -603,7 +603,7 @@ for (char c : literalValue.toCharArray()) {
 
 ---
 
-#### 4. PlusRegexTransformer (Arithmetic)
+#### 4. PlusIntegerTransformer (Arithmetic)
 
 **Inverts**: `x + c = value` where `c` is a constant
 
@@ -627,7 +627,7 @@ for (char c : literalValue.toCharArray()) {
 
 ---
 
-#### 5. TimesRegexTransformer (Arithmetic)
+#### 5. TimesIntegerTransformer (Arithmetic)
 
 **Inverts**: `x * c = value` where `c` is a non-zero constant
 
@@ -1192,8 +1192,8 @@ WHERE LOWER(u.name) = 'alice' AND o.amount > 100
 - `SubstringRegexTransformer`: Inverts `SUBSTRING(x, start, len)`
 - `LowerRegexTransformer`: Inverts `LOWER(x)`
 - `CastRegexTransformer`: Inverts `CAST(x AS type)` with cross-domain support
-- `PlusRegexTransformer`: Inverts `x + constant`
-- `TimesRegexTransformer`: Inverts `x * constant`
+- `PlusIntegerTransformer`: Inverts `x + constant`
+- `TimesIntegerTransformer`: Inverts `x * constant`
 
 ---
 
@@ -1235,8 +1235,8 @@ DomainInferenceProgram program = new DomainInferenceProgram(
         new LowerRegexTransformer(),
         new SubstringRegexTransformer(),
         new CastRegexTransformer(),
-        new PlusRegexTransformer(),
-        new TimesRegexTransformer()
+        new PlusIntegerTransformer(),
+        new TimesIntegerTransformer()
     )
 );
 

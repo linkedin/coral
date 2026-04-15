@@ -143,13 +143,11 @@ public final class ProjectPullUpRewriter {
     }
 
     List<RelNode> newInputs = new ArrayList<>();
-    boolean anyChanged = false;
 
     for (RelNode input : oldInputs) {
       RewriteResult inputResult = findAndPullUp(input);
       newInputs.add(inputResult.node);
       if (inputResult.changed) {
-        anyChanged = true;
         // Found and pulled up - stop here and return
         // Fill rest with original inputs
         for (int i = newInputs.size(); i < oldInputs.size(); i++) {
@@ -199,15 +197,18 @@ public final class ProjectPullUpRewriter {
     RelNode newRight = join.getRight();
     RexNode newCondition = join.getCondition();
 
+    // Capture left field count before reassigning newLeft (item #5 fix)
+    int leftFieldCount =
+        (leftProj != null) ? leftProj.getRowType().getFieldCount() : newLeft.getRowType().getFieldCount();
+
     // Inline left Project if present
     if (leftProj != null) {
-      newCondition = inlineLeftSide(newCondition, leftProj.getProjects(), leftProj.getRowType().getFieldCount());
+      newCondition = inlineLeftSide(newCondition, leftProj.getProjects(), leftFieldCount);
       newLeft = leftProj.getInput();
     }
 
     // Inline right Project if present
     if (rightProj != null) {
-      int leftFieldCount = newLeft.getRowType().getFieldCount();
       newCondition = inlineRightSide(newCondition, rightProj.getProjects(), leftFieldCount);
       newRight = rightProj.getInput();
     }
@@ -236,27 +237,28 @@ public final class ProjectPullUpRewriter {
       List<RexNode> exprs = new ArrayList<>();
       exprs.addAll(leftProj.getProjects());
 
-      // Add pass-through for right side
-      int leftCount = leftProj.getRowType().getFieldCount();
-      int rightCount = join.getRowType().getFieldCount() - leftCount;
+      // Use the new left side's field count for pass-through offsets (item #6 fix)
+      int newLeftCount = newLeft.getRowType().getFieldCount();
+      int rightCount = newJoin.getRowType().getFieldCount() - newLeftCount;
       for (int i = 0; i < rightCount; i++) {
-        exprs.add(new RexInputRef(leftCount + i, join.getRowType().getFieldList().get(leftCount + i).getType()));
+        exprs.add(
+            new RexInputRef(newLeftCount + i, newJoin.getRowType().getFieldList().get(newLeftCount + i).getType()));
       }
 
       return leftProj.copy(leftProj.getTraitSet(), newJoin, exprs, join.getRowType());
     } else {
       // Only right had Project
       List<RexNode> exprs = new ArrayList<>();
-      int leftCount = newLeft.getRowType().getFieldCount();
+      int newLeftCount = newLeft.getRowType().getFieldCount();
 
       // Add pass-through for left side
-      for (int i = 0; i < leftCount; i++) {
-        exprs.add(new RexInputRef(i, join.getRowType().getFieldList().get(i).getType()));
+      for (int i = 0; i < newLeftCount; i++) {
+        exprs.add(new RexInputRef(i, newJoin.getRowType().getFieldList().get(i).getType()));
       }
 
       // Add right side expressions (with offset adjusted)
       for (RexNode expr : rightProj.getProjects()) {
-        exprs.add(adjustOffsets(expr, leftCount));
+        exprs.add(adjustOffsets(expr, newLeftCount));
       }
 
       return rightProj.copy(rightProj.getTraitSet(), newJoin, exprs, join.getRowType());

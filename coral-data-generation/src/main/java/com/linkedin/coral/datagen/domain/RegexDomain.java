@@ -30,30 +30,29 @@ public class RegexDomain extends Domain<String, RegexDomain> {
       { '[', '`' }, // [ to backtick
       { '{', '~' } // { to tilde
   };
-  private final String regex;
   private final Automaton automaton;
 
   /**
-   * Creates a RegexDomain from a regex pattern.
+   * Creates a RegexDomain from a regex pattern string.
+   * The pattern uses dk.brics.automaton syntax (no ^ or $ anchors needed;
+   * matching is always against the full string).
    */
   public RegexDomain(String regex) {
-    this.regex = regex;
-    this.automaton = new RegExp(regex).toAutomaton();
+    this.automaton = parseRegex(regex);
   }
 
   /**
    * Creates a RegexDomain from an existing automaton.
    */
-  private RegexDomain(Automaton automaton) {
-    this.regex = automaton.toString();
+  public RegexDomain(Automaton automaton) {
     this.automaton = automaton;
   }
 
   /**
-   * Returns the regex pattern.
+   * Returns the underlying automaton.
    */
-  public String getRegex() {
-    return regex;
+  public Automaton getAutomaton() {
+    return automaton;
   }
 
   /**
@@ -65,20 +64,23 @@ public class RegexDomain extends Domain<String, RegexDomain> {
   }
 
   /**
-   * Checks if this regex represents a literal string (no regex operators except anchors).
-   * Anchored literals like "^50$" are still considered literals.
+   * Checks if this domain accepts exactly one string.
    */
   public boolean isLiteral() {
-    // Remove anchors first, then check for special regex characters
-    String withoutAnchors = regex;
-    if (withoutAnchors.startsWith("^")) {
-      withoutAnchors = withoutAnchors.substring(1);
+    Set<String> s = automaton.getFiniteStrings(2);
+    return s != null && s.size() == 1;
+  }
+
+  /**
+   * Returns the single string accepted by this domain.
+   * @throws IllegalStateException if the domain is not a literal
+   */
+  public String getLiteralValue() {
+    Set<String> s = automaton.getFiniteStrings(1);
+    if (s == null || s.size() != 1) {
+      throw new IllegalStateException("Not a literal domain");
     }
-    if (withoutAnchors.endsWith("$")) {
-      withoutAnchors = withoutAnchors.substring(0, withoutAnchors.length() - 1);
-    }
-    // Check if remaining pattern contains special regex characters
-    return !withoutAnchors.matches(".*[.*+?{}\\[\\]()^$|\\\\].*");
+    return s.iterator().next();
   }
 
   /**
@@ -113,9 +115,16 @@ public class RegexDomain extends Domain<String, RegexDomain> {
    * @param limit the maximum number of samples to generate
    * @return a list of sample strings (up to 100 characters each)
    */
+  private static final int DEFAULT_MAX_SAMPLE_LENGTH = 100;
+
   @Override
   public List<String> sample(int limit) {
-    return sampleStrings(limit, 100);
+    List<String> samples = sampleStrings(limit, DEFAULT_MAX_SAMPLE_LENGTH);
+    if (samples.isEmpty() && !automaton.isEmpty()) {
+      throw new IllegalStateException("Non-empty domain yielded zero samples (all valid strings may exceed max length "
+          + DEFAULT_MAX_SAMPLE_LENGTH + ")");
+    }
+    return samples;
   }
 
   /**
@@ -123,7 +132,7 @@ public class RegexDomain extends Domain<String, RegexDomain> {
    */
   @Override
   public boolean isSingleton() {
-    return automaton.getSingleton() != null;
+    return isLiteral();
   }
 
   /**
@@ -203,15 +212,6 @@ public class RegexDomain extends Domain<String, RegexDomain> {
     }
   }
 
-  private static class Node {
-    State state;
-    String value;
-    Node(State state, String value) {
-      this.state = state;
-      this.value = value;
-    }
-  }
-
   /**
    * Creates a domain that accepts no strings (empty/contradiction).
    */
@@ -221,18 +221,17 @@ public class RegexDomain extends Domain<String, RegexDomain> {
 
   /**
    * Creates a domain from a literal string.
-   * The pattern is fully anchored to match the exact string.
    */
   public static RegexDomain literal(String value) {
-    // Escape regex special characters
-    String escaped = value.replaceAll("([.+*?^$()\\[\\]{}|\\\\])", "\\\\$1");
-    // Add anchors to match exact string
-    return new RegexDomain("^" + escaped + "$");
+    return new RegexDomain(Automaton.makeString(value));
   }
 
   @Override
   public String toString() {
-    return "RegexDomain{" + regex + "}";
+    if (isLiteral()) {
+      return "RegexDomain{\"" + getLiteralValue() + "\"}";
+    }
+    return "RegexDomain{automaton}";
   }
 
   @Override
@@ -242,11 +241,30 @@ public class RegexDomain extends Domain<String, RegexDomain> {
     if (o == null || getClass() != o.getClass())
       return false;
     RegexDomain that = (RegexDomain) o;
-    return regex.equals(that.regex);
+    return this.automaton.equals(that.automaton);
   }
 
   @Override
   public int hashCode() {
-    return regex.hashCode();
+    return automaton.hashCode();
+  }
+
+  /**
+   * Parses a regex string into an automaton.
+   * Strips ^ and $ anchors (brics matches whole string implicitly)
+   * and translates common Java regex shorthands.
+   */
+  private static Automaton parseRegex(String regex) {
+    String bricsRegex = regex;
+    if (bricsRegex.startsWith("^")) {
+      bricsRegex = bricsRegex.substring(1);
+    }
+    if (bricsRegex.endsWith("$")) {
+      bricsRegex = bricsRegex.substring(0, bricsRegex.length() - 1);
+    }
+    bricsRegex = bricsRegex.replace("\\d", "[0-9]");
+    bricsRegex = bricsRegex.replace("\\w", "[a-zA-Z0-9_]");
+    bricsRegex = bricsRegex.replace("\\s", "[ \\t\\n\\r]");
+    return new RegExp(bricsRegex).toAutomaton();
   }
 }

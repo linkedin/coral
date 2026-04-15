@@ -3,7 +3,7 @@
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
-package com.linkedin.coral.datagen.domain;
+package com.linkedin.coral.datagen.domain.transformer;
 
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexInputRef;
@@ -11,13 +11,17 @@ import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 
+import com.linkedin.coral.datagen.domain.Domain;
+import com.linkedin.coral.datagen.domain.DomainTransformer;
+import com.linkedin.coral.datagen.domain.IntegerDomain;
+
 
 /**
  * Integer domain transformer for PLUS (addition) operations.
- * 
+ *
  * Inverts x + literal = output_value
  * to produce input constraint x = output_value - literal
- * 
+ *
  * Example:
  * x + 5 = 25
  * produces input constraint: x = 20
@@ -27,7 +31,7 @@ import org.apache.calcite.sql.fun.SqlStdOperatorTable;
  * x + 5 in [20, 30]
  * produces: x in [15, 25]
  */
-public class PlusRegexTransformer implements DomainTransformer {
+public class PlusIntegerTransformer implements DomainTransformer {
 
   @Override
   public boolean canHandle(RexNode expr) {
@@ -62,7 +66,7 @@ public class PlusRegexTransformer implements DomainTransformer {
   public Domain<?, ?> refineInputDomain(RexNode expr, Domain<?, ?> outputDomain) {
     if (!(outputDomain instanceof IntegerDomain)) {
       throw new IllegalArgumentException(
-          "PlusRegexTransformer expects IntegerDomain but got " + outputDomain.getClass().getSimpleName());
+          "PlusIntegerTransformer expects IntegerDomain but got " + outputDomain.getClass().getSimpleName());
     }
 
     IntegerDomain intDomain = (IntegerDomain) outputDomain;
