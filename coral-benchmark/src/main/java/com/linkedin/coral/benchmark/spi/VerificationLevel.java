@@ -10,8 +10,8 @@ package com.linkedin.coral.benchmark.spi;
  * Each level subsumes the ones before it.
  *
  * <ul>
- *   <li>{@link #TRANSLATION} — Verifies that the translation pipeline (source SQL -> IR -> target SQL)
- *       completes without error and produces non-empty output.</li>
+ *   <li>{@link #TRANSLATION} — Verifies that the translation pipeline
+ *       (source SQL to IR to target SQL) completes without error and produces non-empty output.</li>
  *   <li>{@link #EXPLAIN} — Additionally runs the translated SQL through the target engine's EXPLAIN
  *       to validate syntax and query planning against the declared schema.</li>
  *   <li>{@link #RESULT_SET} — Additionally loads test data into both engines, executes the queries,

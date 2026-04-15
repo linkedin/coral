@@ -108,7 +108,7 @@ public final class TranslationTestSuite {
    *
    * <p>For each query file, the pipeline is:
    * <ol>
-   *   <li><b>TRANSLATION:</b> sourcePlugin.toRelNode(sql) -> targetPlugin.toDialectSql(relNode)</li>
+   *   <li><b>TRANSLATION:</b> sourcePlugin.toRelNode(sql) then targetPlugin.toDialectSql(relNode)</li>
    *   <li><b>EXPLAIN:</b> (1) + targetEngine.explain(translatedSql)</li>
    *   <li><b>RESULT_SET:</b> (1) + (2) + sourceEngine.execute(sourceSql) vs
    *       targetEngine.execute(translatedSql), compared via ResultSetComparator</li>
