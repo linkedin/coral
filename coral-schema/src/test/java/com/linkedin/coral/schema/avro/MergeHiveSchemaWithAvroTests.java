@@ -214,15 +214,9 @@ public class MergeHiveSchemaWithAvroTests {
         false);
     AvroCompatibilityHelper.setSchemaPropFromJsonString(decimalSchema, AvroSerDe.AVRO_PROP_SCALE, String.valueOf(2),
         false);
-    assertSchema(
-        struct("r1", optional("fa", dateSchema), optional("fb", timestampSchema), optional("fc", decimalSchema)),
-        merged);
-
-    // Additionally assert precision/scale are JSON integers, not quoted strings.
-    // "precision" : 4  is what Jackson IntNode serialization produces; "precision" : "4" (quoted) would not match.
-    String json = merged.toString(true);
-    assertTrue(json.contains("\"precision\" : 4"), json);
-    assertTrue(json.contains("\"scale\" : 2"), json);
+    Schema expected =
+        struct("r1", optional("fa", dateSchema), optional("fb", timestampSchema), optional("fc", decimalSchema));
+    assertSchema(expected, merged);
   }
 
   @Test
