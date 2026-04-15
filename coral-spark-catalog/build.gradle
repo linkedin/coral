@@ -13,19 +13,36 @@ dependencies {
     exclude group: 'org.apache.hive'
     exclude group: 'org.datanucleus'
   }
-  testImplementation deps.'hive'.'hive-metastore'
+  testImplementation(deps.'hive'.'hive-metastore') {
+    // Hive 2.3.9 Jackson conflicts with Spark 3.5's Jackson 2.15
+    exclude group: 'com.fasterxml.jackson.core'
+    exclude group: 'com.fasterxml.jackson.module'
+  }
+  testImplementation deps.'hive'.'hive-serde'
   testImplementation(deps.'hive'.'hive-exec-core') {
     exclude group: 'org.apache.calcite', module: 'calcite-core'
     exclude group: 'org.apache.calcite', module: 'calcite-avatica'
+    // Hive 2.3.9 Jackson conflicts with Spark 3.5's Jackson 2.15
+    exclude group: 'com.fasterxml.jackson.core'
+    exclude group: 'com.fasterxml.jackson.module'
   }
   testImplementation deps.'hadoop'.'hadoop-mapreduce-client-core'
   testImplementation deps.'kryo'
+  // Hive 2.3.9 embedded metastore requires DataNucleus + Derby
+  testImplementation deps.'derby'
+  testImplementation deps.'datanucleus-api-jdo'
+  testImplementation deps.'datanucleus-core'
+  testImplementation deps.'datanucleus-rdbms'
+  testImplementation deps.'javax-jdo'
 }
 
 configurations.testImplementation {
   exclude group: 'org.pentaho', module: 'pentaho-aggdesigner-algorithm'
   // Exclude old SLF4J 1.x log4j bridge to avoid conflict with Spark 3.5's SLF4J 2.x
   exclude group: 'org.apache.logging.log4j', module: 'log4j-slf4j-impl'
+  // avatica 1.8.0 (via calcite-druid) bundles jackson-databind 2.6.3 un-relocated,
+  // which shadows Spark 3.5's jackson-databind 2.15.2 and causes NoSuchMethodError
+  exclude group: 'org.apache.calcite.avatica', module: 'avatica'
 }
 
 // Force Spark's janino version to take precedence
@@ -40,4 +57,17 @@ configurations.all {
 // hive-exec-core (shaded, signed janino) and Spark's janino
 test {
   jvmArgs '-noverify'
+  // Hive 2.3.9 CalcitePlanner is incompatible with Calcite 1.21.0.265
+  systemProperty 'hive.cbo.enable', 'false'
+  // Java 17+ requires --add-opens for Spark 3.5 internal access to JDK modules
+  if (JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_17)) {
+    jvmArgs '--add-opens=java.base/sun.nio.ch=ALL-UNNAMED',
+        '--add-opens=java.base/java.lang=ALL-UNNAMED',
+        '--add-opens=java.base/java.lang.reflect=ALL-UNNAMED',
+        '--add-opens=java.base/java.io=ALL-UNNAMED',
+        '--add-opens=java.base/java.util=ALL-UNNAMED',
+        '--add-opens=java.base/java.util.concurrent=ALL-UNNAMED',
+        '--add-opens=java.base/java.net=ALL-UNNAMED',
+        '--add-opens=java.base/sun.security.action=ALL-UNNAMED'
+  }
 }
