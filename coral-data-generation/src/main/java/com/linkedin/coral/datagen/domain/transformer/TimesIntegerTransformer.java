@@ -3,7 +3,7 @@
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
-package com.linkedin.coral.datagen.domain;
+package com.linkedin.coral.datagen.domain.transformer;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,13 +14,17 @@ import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.fun.SqlStdOperatorTable;
 
+import com.linkedin.coral.datagen.domain.Domain;
+import com.linkedin.coral.datagen.domain.DomainTransformer;
+import com.linkedin.coral.datagen.domain.IntegerDomain;
+
 
 /**
  * Integer domain transformer for TIMES (multiplication) operations.
- * 
+ *
  * Inverts x * literal = output_value
  * to produce input constraint x = output_value / literal
- * 
+ *
  * Example:
  * x * 2 = 50
  * produces input constraint: x = 25
@@ -32,7 +36,7 @@ import org.apache.calcite.sql.fun.SqlStdOperatorTable;
  *
  * Handles cases where division is not exact by filtering valid values.
  */
-public class TimesRegexTransformer implements DomainTransformer {
+public class TimesIntegerTransformer implements DomainTransformer {
 
   @Override
   public boolean canHandle(RexNode expr) {
@@ -67,7 +71,7 @@ public class TimesRegexTransformer implements DomainTransformer {
   public Domain<?, ?> refineInputDomain(RexNode expr, Domain<?, ?> outputDomain) {
     if (!(outputDomain instanceof IntegerDomain)) {
       throw new IllegalArgumentException(
-          "TimesRegexTransformer expects IntegerDomain but got " + outputDomain.getClass().getSimpleName());
+          "TimesIntegerTransformer expects IntegerDomain but got " + outputDomain.getClass().getSimpleName());
     }
 
     IntegerDomain intDomain = (IntegerDomain) outputDomain;

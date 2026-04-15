@@ -3,7 +3,10 @@
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
-package com.linkedin.coral.datagen.domain;
+package com.linkedin.coral.datagen.domain.transformer;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexCall;
@@ -11,6 +14,16 @@ import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.type.SqlTypeName;
+
+import com.linkedin.coral.datagen.domain.Domain;
+import com.linkedin.coral.datagen.domain.DomainTransformer;
+import com.linkedin.coral.datagen.domain.IntegerDomain;
+import com.linkedin.coral.datagen.domain.IntegerRangeAutomaton;
+import com.linkedin.coral.datagen.domain.NonConvertibleDomainException;
+import com.linkedin.coral.datagen.domain.RegexDomain;
+import com.linkedin.coral.datagen.domain.RegexToIntegerDomainConverter;
+
+import dk.brics.automaton.Automaton;
 
 
 /**
@@ -135,7 +148,7 @@ public class CastRegexTransformer implements DomainTransformer {
       if (isStringType(targetTypeName) && !isStringType(sourceTypeName)) {
         if (isDateType(sourceTypeName)) {
           // Date to String
-          String dateFormatRegex = "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|30)$";
+          String dateFormatRegex = "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$";
           RegexDomain dateFormatDomain = new RegexDomain(dateFormatRegex);
           return outputRegex.intersect(dateFormatDomain);
         } else {
@@ -179,48 +192,28 @@ public class CastRegexTransformer implements DomainTransformer {
 
   /**
    * Converts IntegerDomain to RegexDomain.
-   * Creates a regex pattern that matches the integer values in the domain.
+   * Creates an automaton that accepts exactly the string representations of the integer values.
+   * Uses digit-by-digit automaton construction for precise range matching.
    */
   private RegexDomain convertIntegerDomainToRegex(IntegerDomain intDomain) {
     if (intDomain.isEmpty()) {
       return RegexDomain.empty();
     }
 
-    // For simplicity, create alternation of all intervals
-    // This is a basic implementation - could be optimized for large ranges
-    StringBuilder pattern = new StringBuilder("^(");
-    boolean first = true;
+    List<Automaton> parts = new ArrayList<>();
 
     for (IntegerDomain.Interval interval : intDomain.getIntervals()) {
-      if (!first) {
-        pattern.append("|");
-      }
-      first = false;
-
       long min = interval.getMin();
       long max = interval.getMax();
 
       if (min == max) {
-        // Single value
-        pattern.append(min);
-      } else if (max - min < 100) {
-        // Small range: enumerate values
-        for (long i = min; i <= max; i++) {
-          if (i > min) {
-            pattern.append("|");
-          }
-          pattern.append(i);
-        }
+        parts.add(Automaton.makeString(String.valueOf(min)));
       } else {
-        // Large range: use character class pattern
-        // This is a simplified approach - just match numeric pattern
-        pattern.append("-?[0-9]+");
-        break; // For now, just use general numeric pattern
+        parts.add(IntegerRangeAutomaton.build(min, max));
       }
     }
 
-    pattern.append(")$");
-    return new RegexDomain(pattern.toString());
+    return new RegexDomain(Automaton.union(parts));
   }
 
   private boolean isStringType(SqlTypeName type) {
@@ -246,20 +239,4 @@ public class CastRegexTransformer implements DomainTransformer {
         || type == SqlTypeName.TIMESTAMP_WITH_LOCAL_TIME_ZONE;
   }
 
-  /**
-   * Unescapes a regex literal to get the actual string value.
-   * Handles anchored patterns like "^50$".
-   */
-  private String unescapeLiteral(String escaped) {
-    String result = escaped;
-    // Remove anchors if present
-    if (result.startsWith("^")) {
-      result = result.substring(1);
-    }
-    if (result.endsWith("$")) {
-      result = result.substring(0, result.length() - 1);
-    }
-    // Remove escape sequences
-    return result.replaceAll("\\\\(.)", "$1");
-  }
 }

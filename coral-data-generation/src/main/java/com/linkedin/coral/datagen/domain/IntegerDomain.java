@@ -53,10 +53,11 @@ public class IntegerDomain extends Domain<Long, IntegerDomain> {
     }
 
     public long size() {
-      if (max == Long.MAX_VALUE || min == Long.MIN_VALUE) {
-        return Long.MAX_VALUE; // Unbounded
+      try {
+        return Math.addExact(Math.subtractExact(max, min), 1);
+      } catch (ArithmeticException e) {
+        return Long.MAX_VALUE;
       }
-      return max - min + 1;
     }
 
     public boolean overlaps(Interval other) {
@@ -64,7 +65,8 @@ public class IntegerDomain extends Domain<Long, IntegerDomain> {
     }
 
     public boolean isAdjacent(Interval other) {
-      return this.max + 1 == other.min || other.max + 1 == this.min;
+      return this.max != Long.MAX_VALUE && this.max + 1 == other.min
+          || other.max != Long.MAX_VALUE && other.max + 1 == this.min;
     }
 
     public Interval merge(Interval other) {
@@ -354,15 +356,6 @@ public class IntegerDomain extends Domain<Long, IntegerDomain> {
   }
 
   /**
-   * Generates sample values from this domain (alias for compatibility).
-   * @deprecated Use {@link #sample(int)} instead
-   */
-  @Deprecated
-  public List<Long> sampleValues(int limit) {
-    return sample(limit);
-  }
-
-  /**
    * Checks if this domain represents exactly one value.
    */
   @Override
@@ -379,7 +372,13 @@ public class IntegerDomain extends Domain<Long, IntegerDomain> {
       return interval.min;
     }
 
-    long range = interval.max - interval.min;
+    long range;
+    try {
+      range = Math.subtractExact(interval.max, interval.min);
+    } catch (ArithmeticException e) {
+      // Overflow: range exceeds Long.MAX_VALUE, use random double sampling
+      return interval.min + (long) (RANDOM.nextDouble() * (double) (interval.max - interval.min));
+    }
     if (range < Integer.MAX_VALUE) {
       return interval.min + RANDOM.nextInt((int) range + 1);
     } else {

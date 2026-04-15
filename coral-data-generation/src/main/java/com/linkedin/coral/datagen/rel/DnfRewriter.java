@@ -25,7 +25,7 @@ import org.apache.calcite.rex.RexUtil;
  * <p>Usage pattern:</p>
  * <pre>
  *   CanonicalPredicateExtractor.Output extracted = CanonicalPredicateExtractor.extract(rel);
- *   CanonicalPredicateDnf.Output dnf = CanonicalPredicateDnf.convert(extracted, rexBuilder);
+ *   DnfRewriter.Output dnf = DnfRewriter.convert(extracted, rexBuilder);
  * </pre>
  **/
 public final class DnfRewriter {

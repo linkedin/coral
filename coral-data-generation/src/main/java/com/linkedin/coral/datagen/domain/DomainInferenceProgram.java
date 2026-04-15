@@ -5,10 +5,17 @@
  */
 package com.linkedin.coral.datagen.domain;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexNode;
+
+import com.linkedin.coral.datagen.domain.transformer.CastRegexTransformer;
+import com.linkedin.coral.datagen.domain.transformer.LowerRegexTransformer;
+import com.linkedin.coral.datagen.domain.transformer.PlusIntegerTransformer;
+import com.linkedin.coral.datagen.domain.transformer.SubstringRegexTransformer;
+import com.linkedin.coral.datagen.domain.transformer.TimesIntegerTransformer;
 
 
 /**
@@ -40,6 +47,15 @@ public class DomainInferenceProgram {
 
   public DomainInferenceProgram(List<DomainTransformer> transformers) {
     this.transformers = transformers;
+  }
+
+  /**
+   * Creates a DomainInferenceProgram with all built-in transformers.
+   * This is the recommended way to create an instance for production use.
+   */
+  public static DomainInferenceProgram withDefaultTransformers() {
+    return new DomainInferenceProgram(Arrays.asList(new LowerRegexTransformer(), new SubstringRegexTransformer(),
+        new PlusIntegerTransformer(), new TimesIntegerTransformer(), new CastRegexTransformer()));
   }
 
   /**
@@ -75,36 +91,6 @@ public class DomainInferenceProgram {
 
     // No applicable transformer found
     throw new IllegalStateException("No applicable transformer for expression: " + expr);
-  }
-
-  /**
-   * Convenience method for deriving RegexDomain constraints.
-   * Throws if the result is not a RegexDomain.
-   */
-  public RegexDomain deriveInputRegex(RexNode expr, RegexDomain outputRegex) {
-    Domain<?, ?> result = deriveInputDomain(expr, outputRegex);
-
-    if (!(result instanceof RegexDomain)) {
-      throw new IllegalStateException(
-          "Expected RegexDomain but got " + result.getClass().getSimpleName() + " for expression: " + expr);
-    }
-
-    return (RegexDomain) result;
-  }
-
-  /**
-   * Convenience method for deriving IntegerDomain constraints.
-   * Throws if the result is not an IntegerDomain.
-   */
-  public IntegerDomain deriveInputInteger(RexNode expr, IntegerDomain outputInteger) {
-    Domain<?, ?> result = deriveInputDomain(expr, outputInteger);
-
-    if (!(result instanceof IntegerDomain)) {
-      throw new IllegalStateException(
-          "Expected IntegerDomain but got " + result.getClass().getSimpleName() + " for expression: " + expr);
-    }
-
-    return (IntegerDomain) result;
   }
 
   /**

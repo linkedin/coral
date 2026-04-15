@@ -38,8 +38,7 @@ public final class CanonicalPredicateExtractor {
   }
 
   public static Output extract(RelNode root) {
-    // Reset state for this extraction
-    predicateOriginMap.clear();
+    Map<RexNode, RelNode> predicateOriginMap = new IdentityHashMap<>();
 
     List<RelNode> scans = new ArrayList<>();
     collectSequentialScans(root, scans);
@@ -60,11 +59,11 @@ public final class CanonicalPredicateExtractor {
     computeStartScan(root, scanIndex, nodeStartScanIndex);
 
     List<RexNode> preds = new ArrayList<>();
-    collectPredicates(root, preds);
+    collectPredicates(root, preds, predicateOriginMap);
 
     List<RexNode> remapped = new ArrayList<>();
     for (RexNode p : preds) {
-      RelNode origin = predicateOriginMap.get(p); // origin stored during collection
+      RelNode origin = predicateOriginMap.get(p);
       int startScan = nodeStartScanIndex.get(origin);
       int base = scanFieldOffsets[startScan];
       remapped.add(remap(p, base));
@@ -73,23 +72,21 @@ public final class CanonicalPredicateExtractor {
     return new Output(scans, remapped);
   }
 
-  private static final Map<RexNode, RelNode> predicateOriginMap = new IdentityHashMap<>();
-
-  private static void collectPredicates(RelNode node, List<RexNode> out) {
+  private static void collectPredicates(RelNode node, List<RexNode> out, Map<RexNode, RelNode> predicateOriginMap) {
     if (node instanceof Filter) {
       Filter f = (Filter) node;
       predicateOriginMap.put(f.getCondition(), f);
       out.add(f.getCondition());
-      collectPredicates(f.getInput(), out);
+      collectPredicates(f.getInput(), out, predicateOriginMap);
     } else if (node instanceof Join) {
       Join j = (Join) node;
       predicateOriginMap.put(j.getCondition(), j);
       out.add(j.getCondition());
-      collectPredicates(j.getLeft(), out);
-      collectPredicates(j.getRight(), out);
+      collectPredicates(j.getLeft(), out, predicateOriginMap);
+      collectPredicates(j.getRight(), out, predicateOriginMap);
     } else if (node instanceof Project) {
       Project p = (Project) node;
-      collectPredicates(p.getInput(), out);
+      collectPredicates(p.getInput(), out, predicateOriginMap);
     }
   }
 

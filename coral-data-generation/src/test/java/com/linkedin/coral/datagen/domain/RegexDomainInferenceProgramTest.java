@@ -8,7 +8,6 @@ package com.linkedin.coral.datagen.domain;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -72,8 +71,7 @@ public class RegexDomainInferenceProgramTest {
     converter = new HiveToRelConverter(createMscAdapter(conf));
 
     // Initialize generic domain inference program with all transformers
-    program = new DomainInferenceProgram(Arrays.asList(new LowerRegexTransformer(), new SubstringRegexTransformer(),
-        new PlusRegexTransformer(), new TimesRegexTransformer(), new CastRegexTransformer()));
+    program = DomainInferenceProgram.withDefaultTransformers();
   }
 
   @AfterClass
@@ -188,6 +186,8 @@ public class RegexDomainInferenceProgramTest {
     assertFalse(examples.isEmpty(), testName + ": should generate at least one sample");
   }
 
+  // ==================== Simple Expression Tests ====================
+
   @Test
   public void testSimpleSubstring() {
     testDomainInference("Simple SUBSTRING Test", "SELECT * FROM test.T WHERE SUBSTRING(name, 1, 4) = '2000'",
@@ -209,7 +209,7 @@ public class RegexDomainInferenceProgramTest {
     testDomainInference("Simple LOWER Test", "SELECT * FROM test.T WHERE LOWER(name) = 'abc'", inputDomain -> {
       assertTrue(inputDomain instanceof RegexDomain, "Should be RegexDomain");
       List<?> examples = inputDomain.sample(5);
-      assertEquals(5, examples.size(), "Should generate 5 examples");
+      assertEquals(examples.size(), 5, "Should generate 5 examples");
       for (Object ex : examples) {
         String s = ex.toString().replaceAll("^\\^", "").replaceAll("\\$$", "");
         assertEquals("abc", s.toLowerCase(), "Should be case-insensitive 'abc': " + s);
@@ -227,6 +227,8 @@ public class RegexDomainInferenceProgramTest {
           assertTrue(intDomain.isSingleton(), "Should be singleton");
         });
   }
+
+  // ==================== Nested Expression Tests ====================
 
   @Test
   public void testNestedLowerSubstring() {
@@ -270,6 +272,8 @@ public class RegexDomainInferenceProgramTest {
         });
   }
 
+  // ==================== Arithmetic and Cross-Domain Tests ====================
+
   @Test
   public void testArithmeticExpression() {
     testDomainInference("Arithmetic Expression Test", "SELECT * FROM test.T WHERE age * 2 + 5 = 25", inputDomain -> {
@@ -301,7 +305,7 @@ public class RegexDomainInferenceProgramTest {
           RegexDomain regex = (RegexDomain) inputDomain;
           assertTrue(regex.isLiteral(), "Should be literal");
           List<?> examples = inputDomain.sample(1);
-          assertEquals(1, examples.size(), "Should have exactly 1 example");
+          assertEquals(examples.size(), 1, "Should have exactly 1 example");
         });
   }
 
