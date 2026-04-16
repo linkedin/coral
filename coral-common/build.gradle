@@ -15,6 +15,17 @@ dependencies {
     exclude group: 'com.linkedin.metastore-audit', module: 'metastore-audit-logging'
     // avro-tools brings in whole bunch of hadoop classes causing duplicates and conflicts
     exclude group: 'org.apache.avro', module: 'avro-tools'
+    // Exclude problematic Hive 2.3.9 transitives that cause conflicts in downstream consumers (e.g., Trino)
+    exclude group: 'org.apache.logging.log4j', module: 'log4j-core'
+    exclude group: 'org.eclipse.jetty.orbit', module: 'javax.servlet'
+    exclude group: 'org.slf4j', module: 'slf4j-log4j12'
+  }
+
+  // hive-serde is separate in Hive 2.3.9 (was bundled in hive-metastore in 1.2.2)
+  api(deps.'hive'.'hive-serde') {
+    exclude group: 'org.apache.logging.log4j', module: 'log4j-core'
+    exclude group: 'org.eclipse.jetty.orbit', module: 'javax.servlet'
+    exclude group: 'org.slf4j', module: 'slf4j-log4j12'
   }
 
   api deps.'hadoop'.'hadoop-common'
@@ -26,4 +37,7 @@ dependencies {
     exclude group: 'org.apache.hive', module: 'hive-metastore'
     exclude group: 'org.apache.hadoop', module: 'hadoop-common'
   }
+
+  // javax.annotation removed from JDK in Java 11+
+  implementation deps.'javax-annotation'
 }

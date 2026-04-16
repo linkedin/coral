@@ -1,5 +1,5 @@
 plugins {
-  id 'org.springframework.boot' version '2.7.18'
+  id 'org.springframework.boot' version '3.3.5'
   id 'io.spring.dependency-management' version '1.1.4'
   id 'java'
 }
@@ -30,10 +30,10 @@ dependencies {
   implementation project(':coral-spark')
   implementation project(':coral-visualization')
 
-  implementation('org.apache.hive:hive-exec:1.2.2:core') {
+  implementation(deps.'hive'.'hive-exec-core') {
     exclude group: 'org.apache.calcite', module: 'calcite-core'
   }
-  implementation 'org.apache.hadoop:hadoop-mapreduce-client-core:2.7.0'
+  implementation deps.'hadoop'.'hadoop-mapreduce-client-core'
   implementation 'org.springframework.boot:spring-boot-starter-web'
   implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
   // Need to add this to avoid class not found issue while setting up local metastore
