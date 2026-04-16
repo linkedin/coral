@@ -58,9 +58,29 @@ subprojects {
   plugins.withType(JavaPlugin) {
     dependencies {
       testImplementation deps.'testing'
+      // Hive 2.3.9 embedded metastore requires DataNucleus and Derby
+      testRuntimeOnly deps.'derby'
+      testRuntimeOnly deps.'datanucleus-api-jdo'
+      testRuntimeOnly deps.'datanucleus-core'
+      testRuntimeOnly deps.'datanucleus-rdbms'
+      testImplementation deps.'javax-jdo'
+      // Hive 2.3.9 references DruidQuery from Calcite adapter at runtime
+      testRuntimeOnly('org.apache.calcite:calcite-druid:1.10.0') {
+        exclude group: 'org.apache.calcite', module: 'calcite-core'
+        exclude group: 'org.apache.calcite', module: 'calcite-avatica'
+      }
+    }
+    // Hive 2.3.9 transitively depends on pentaho-aggdesigner which is not in Maven Central
+    configurations.all {
+      exclude group: 'org.pentaho', module: 'pentaho-aggdesigner-algorithm'
     }
     test {
       useTestNG()
+      systemProperty 'derby.stream.error.field', 'java.lang.System.err'
+      // Hive 2.3.9 CalcitePlanner is incompatible with Calcite 1.21.0.265
+      systemProperty 'hive.cbo.enable', 'false'
+      systemProperty 'hive.exec.mode.local.auto', 'false'
+      systemProperty 'hive.metastore.disallow.incompatible.col.type.changes', 'false'
     }
     spotless {
       java {
