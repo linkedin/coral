@@ -89,6 +89,10 @@ public class SparkSqlRewriter extends SqlShuttle {
           final SqlBasicTypeNameSpec stringTypeName = new SqlBasicTypeNameSpec("STRING", SqlTypeName.VARCHAR, -1,
               basicTypeNameSpec.getScale(), basicTypeNameSpec.getCharSetName(), parserPos);
           return new SqlDataTypeSpec(stringTypeName, type.getTimeZone(), parserPos);
+        case "VARBINARY":
+          final SqlBasicTypeNameSpec binaryTypeName =
+              new SqlBasicTypeNameSpec(SqlTypeName.BINARY, -1, -1, basicTypeNameSpec.getCharSetName(), parserPos);
+          return new SqlDataTypeSpec(binaryTypeName, type.getTimeZone(), parserPos);
         default:
           return type;
       }
