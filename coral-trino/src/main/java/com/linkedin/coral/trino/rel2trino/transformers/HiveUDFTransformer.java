@@ -5,35 +5,10 @@
  */
 package com.linkedin.coral.trino.rel2trino.transformers;
 
-import org.apache.calcite.sql.SqlCall;
-import org.apache.calcite.sql.SqlNodeList;
-import org.apache.calcite.sql.SqlOperator;
-import org.apache.calcite.sql.parser.SqlParserPos;
-
-import com.linkedin.coral.common.transformers.SqlCallTransformer;
-import com.linkedin.coral.hive.hive2rel.functions.VersionedSqlUserDefinedFunction;
-
 
 /**
- * This transformer converts the Hive UDF SqlCall name from the UDF class name to the
- * corresponding Trino function name.
- * i.e. from `com.linkedin.stdudfs.parsing.hive.Ip2Str` to `ip2str`.
+ * @deprecated Use {@link CoralUDFTransformer} instead. This class will be removed in a future release.
  */
-public class HiveUDFTransformer extends SqlCallTransformer {
-
-  @Override
-  protected boolean condition(SqlCall sqlCall) {
-    final SqlOperator operator = sqlCall.getOperator();
-    final String operatorName = operator.getName();
-    return operator instanceof VersionedSqlUserDefinedFunction && operatorName.contains(".")
-        && !operatorName.equals(".");
-  }
-
-  @Override
-  protected SqlCall transform(SqlCall sqlCall) {
-    final SqlOperator operator = sqlCall.getOperator();
-    final String trinoFunctionName = ((VersionedSqlUserDefinedFunction) operator).getShortFunctionName();
-    return createSqlOperator(trinoFunctionName, operator.getReturnTypeInference())
-        .createCall(new SqlNodeList(sqlCall.getOperandList(), SqlParserPos.ZERO));
-  }
+@Deprecated
+public class HiveUDFTransformer extends CoralUDFTransformer {
 }
