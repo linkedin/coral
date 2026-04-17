@@ -6,6 +6,7 @@
 package com.linkedin.coral.schema.avro;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,6 +15,9 @@ import com.linkedin.avroutil1.compatibility.AvroCompatibilityHelper;
 
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
+import org.apache.hadoop.hive.metastore.api.FieldSchema;
+import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
+import org.apache.hadoop.hive.metastore.api.Table;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -345,5 +349,59 @@ public class SchemaUtilitiesTests {
             + metadataNamespace);
     Assert.assertTrue(metadataNamespace.contains("IntermediateRecord"),
         "Metadata namespace should follow hierarchical naming. Got: " + metadataNamespace);
+  }
+
+  /**
+   * Test that convertHiveSchemaToAvro does not duplicate a partition column when it already appears
+   * in the table's regular column list. This can happen when a partition column is materialized in
+   * the underlying data and also declared as a Hive partition key.
+   */
+  @Test
+  public void testConvertHiveSchemaToAvroSkipsDuplicatePartitionCol() {
+    List<FieldSchema> regularCols = new ArrayList<>();
+    regularCols.add(new FieldSchema("id", "int", null));
+    regularCols.add(new FieldSchema("datepartition", "string", null));
+
+    StorageDescriptor sd = new StorageDescriptor();
+    sd.setCols(regularCols);
+
+    Table table = new Table();
+    table.setDbName("default");
+    table.setTableName("test_table");
+    table.setSd(sd);
+    table.setPartitionKeys(Collections.singletonList(new FieldSchema("datepartition", "string", null)));
+
+    Schema result = SchemaUtilities.convertHiveSchemaToAvro(table);
+
+    Assert.assertEquals(result.getFields().size(), 2,
+        "Should have 2 fields: id and datepartition (partition col not duplicated)");
+    Assert.assertNotNull(result.getField("id"));
+    Assert.assertNotNull(result.getField("datepartition"));
+  }
+
+  /**
+   * Test that convertHiveSchemaToAvro still appends the partition column when it's not already present.
+   */
+  @Test
+  public void testConvertHiveSchemaToAvroAppendsPartitionCol() {
+    List<FieldSchema> regularCols = new ArrayList<>();
+    regularCols.add(new FieldSchema("id", "int", null));
+    regularCols.add(new FieldSchema("value", "string", null));
+
+    StorageDescriptor sd = new StorageDescriptor();
+    sd.setCols(regularCols);
+
+    Table table = new Table();
+    table.setDbName("default");
+    table.setTableName("test_table");
+    table.setSd(sd);
+    table.setPartitionKeys(Collections.singletonList(new FieldSchema("datepartition", "string", null)));
+
+    Schema result = SchemaUtilities.convertHiveSchemaToAvro(table);
+
+    Assert.assertEquals(result.getFields().size(), 3, "Should have 3 fields: id, value, datepartition");
+    Assert.assertNotNull(result.getField("id"));
+    Assert.assertNotNull(result.getField("value"));
+    Assert.assertNotNull(result.getField("datepartition"));
   }
 }
