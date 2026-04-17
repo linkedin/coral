@@ -6,6 +6,7 @@
 package com.linkedin.coral.schema.avro;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,6 +15,9 @@ import com.linkedin.avroutil1.compatibility.AvroCompatibilityHelper;
 
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
+import org.apache.hadoop.hive.metastore.api.FieldSchema;
+import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
+import org.apache.hadoop.hive.metastore.api.Table;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -345,5 +349,51 @@ public class SchemaUtilitiesTests {
             + metadataNamespace);
     Assert.assertTrue(metadataNamespace.contains("IntermediateRecord"),
         "Metadata namespace should follow hierarchical naming. Got: " + metadataNamespace);
+  }
+
+  /**
+   * Test that addPartitionColsToSchema does not add a duplicate field when the schema
+   * already contains a field with the same name as a partition column.
+   * This can happen when a Hive view projects a partition column as a regular column.
+   */
+  @Test
+  public void testAddPartitionColsToSchemaSkipsDuplicates() {
+    Schema schemaWithPartCol = SchemaBuilder.record("testRecord").namespace("com.test").fields().name("id").type()
+        .nullable().intType().noDefault().name("date_col").type().nullable().stringType().noDefault().endRecord();
+
+    Table table = new Table();
+    table.setDbName("default");
+    table.setTableName("test_table");
+    table.setPartitionKeys(Collections.singletonList(new FieldSchema("date_col", "string", null)));
+    table.setSd(new StorageDescriptor());
+
+    // Before the fix, this would throw: "Duplicate field date_col in record testRecord"
+    Schema result = SchemaUtilities.addPartitionColsToSchema(schemaWithPartCol, table);
+
+    Assert.assertEquals(result.getFields().size(), 2, "Should have 2 fields: id and date_col (no duplicate)");
+    Assert.assertNotNull(result.getField("id"));
+    Assert.assertNotNull(result.getField("date_col"));
+  }
+
+  /**
+   * Test that addPartitionColsToSchema still adds partition columns when they don't already exist.
+   */
+  @Test
+  public void testAddPartitionColsToSchemaAddsNewPartitionCol() {
+    Schema schemaWithoutPartCol = SchemaBuilder.record("testRecord").namespace("com.test").fields().name("id").type()
+        .nullable().intType().noDefault().name("value").type().nullable().stringType().noDefault().endRecord();
+
+    Table table = new Table();
+    table.setDbName("default");
+    table.setTableName("test_table");
+    table.setPartitionKeys(Collections.singletonList(new FieldSchema("date_col", "string", null)));
+    table.setSd(new StorageDescriptor());
+
+    Schema result = SchemaUtilities.addPartitionColsToSchema(schemaWithoutPartCol, table);
+
+    Assert.assertEquals(result.getFields().size(), 3, "Should have 3 fields: id, value, and date_col");
+    Assert.assertNotNull(result.getField("id"));
+    Assert.assertNotNull(result.getField("value"));
+    Assert.assertNotNull(result.getField("date_col"));
   }
 }
