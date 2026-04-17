@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2019-2026 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -10,7 +10,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import com.linkedin.avroutil1.compatibility.AvroCompatibilityHelper;
-import com.linkedin.avroutil1.compatibility.Jackson1Utils;
 
 import org.apache.avro.Schema;
 import org.apache.commons.lang3.StringUtils;
@@ -24,7 +23,6 @@ import org.apache.hadoop.hive.serde2.typeinfo.PrimitiveTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.StructTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.UnionTypeInfo;
-import org.codehaus.jackson.node.JsonNodeFactory;
 
 import com.linkedin.coral.com.google.common.collect.Lists;
 
@@ -198,13 +196,12 @@ public class TypeInfoToAvroSchemaConverter {
 
       case DECIMAL:
         DecimalTypeInfo dti = (DecimalTypeInfo) primitiveTypeInfo;
-        JsonNodeFactory factory = JsonNodeFactory.instance;
         schema = Schema.create(Schema.Type.BYTES);
         schema.addProp(AvroSerDe.AVRO_PROP_LOGICAL_TYPE, AvroSerDe.DECIMAL_TYPE_NAME);
         AvroCompatibilityHelper.setSchemaPropFromJsonString(schema, AvroSerDe.AVRO_PROP_PRECISION,
-            Jackson1Utils.toJsonString(factory.numberNode(dti.getPrecision())), false);
+            String.valueOf(dti.getPrecision()), false);
         AvroCompatibilityHelper.setSchemaPropFromJsonString(schema, AvroSerDe.AVRO_PROP_SCALE,
-            Jackson1Utils.toJsonString(factory.numberNode(dti.getScale())), false);
+            String.valueOf(dti.getScale()), false);
         break;
 
       case FLOAT:

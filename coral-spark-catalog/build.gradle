@@ -1,0 +1,43 @@
+dependencies {
+  implementation project(':coral-hive')
+  implementation project(':coral-spark')
+  implementation project(':coral-schema')
+  testImplementation project(':coral-trino')
+
+
+  compileOnly deps.'spark3.5'.'avro'
+  compileOnly deps.'spark3.5'.'sql'
+
+  testImplementation deps.'spark3.5'.'sql'
+  testImplementation(deps.'spark3.5'.'hive') {
+    exclude group: 'org.apache.hive'
+    exclude group: 'org.datanucleus'
+  }
+  testImplementation deps.'hive'.'hive-metastore'
+  testImplementation(deps.'hive'.'hive-exec-core') {
+    exclude group: 'org.apache.calcite', module: 'calcite-core'
+    exclude group: 'org.apache.calcite', module: 'calcite-avatica'
+  }
+  testImplementation deps.'hadoop'.'hadoop-mapreduce-client-core'
+  testImplementation deps.'kryo'
+}
+
+configurations.testImplementation {
+  exclude group: 'org.pentaho', module: 'pentaho-aggdesigner-algorithm'
+  // Exclude old SLF4J 1.x log4j bridge to avoid conflict with Spark 3.5's SLF4J 2.x
+  exclude group: 'org.apache.logging.log4j', module: 'log4j-slf4j-impl'
+}
+
+// Force Spark's janino version to take precedence
+configurations.all {
+  resolutionStrategy {
+    force 'org.codehaus.janino:janino:3.1.9'
+    force 'org.codehaus.janino:commons-compiler:3.1.9'
+  }
+}
+
+// Disable jar signature verification to avoid signer conflict between
+// hive-exec-core (shaded, signed janino) and Spark's janino
+test {
+  jvmArgs '-noverify'
+}

@@ -154,13 +154,44 @@ class SchemaUtilities {
   static Schema getCasePreservedSchemaFromTblProperties(@Nonnull final Table table) {
     Preconditions.checkNotNull(table);
 
-    // First try avro.schema.literal
-    String schemaStr = readSchemaFromSchemaLiteral(table);
+    Map<String, String> serdeProperties = table.getSd() != null && table.getSd().getSerdeInfo() != null
+        ? table.getSd().getSerdeInfo().getParameters() : null;
+
+    return getCasePreservedSchemaFromPropertyMaps(table.getParameters(), serdeProperties, getCompleteName(table));
+  }
+
+  /**
+   * Returns case sensitive schema from property maps or null if not present.
+   * This is the shared implementation used by both the Hive Table path and the CoralTable path.
+   *
+   * @param tableProperties table-level properties (e.g. from Table.getParameters() or CoralTable.properties())
+   * @param serdeProperties serde-level properties, or null if not available (CoralTable path)
+   * @param tableName human-readable table name for logging
+   * @return Avro schema stored under 'avro.schema.literal', under 'dali.row.schema',
+   * or null if none of the above are present
+   */
+  static Schema getCasePreservedSchemaFromPropertyMaps(@Nonnull Map<String, String> tableProperties,
+      @Nullable Map<String, String> serdeProperties, String tableName) {
+    Preconditions.checkNotNull(tableProperties);
+
+    // First try avro.schema.literal from table properties
+    String schemaStr = tableProperties.get(AvroSerdeUtils.AVRO_SCHEMA_LITERAL);
+
+    // Then try avro.schema.literal from serde properties
+    if (Strings.isNullOrEmpty(schemaStr) && serdeProperties != null) {
+      schemaStr = serdeProperties.get(AvroSerdeUtils.AVRO_SCHEMA_LITERAL);
+    }
+
+    if (Strings.isNullOrEmpty(schemaStr)) {
+      LOG.debug("No avro schema defined under table or serde property {} for table {}",
+          AvroSerdeUtils.AVRO_SCHEMA_LITERAL, tableName);
+    }
+
     Schema schema = null;
 
     // Then, try dali.row.schema
     if (Strings.isNullOrEmpty(schemaStr)) {
-      schemaStr = table.getParameters().get(DALI_ROW_SCHEMA);
+      schemaStr = tableProperties.get(DALI_ROW_SCHEMA);
       if (!Strings.isNullOrEmpty(schemaStr)) {
         schemaStr = schemaStr.replaceAll("\n", "\\\\n");
         // Given schemas stored in `dali.row.schema` are all non-nullable, we need to convert them to be nullable to be compatible with Spark
@@ -171,11 +202,11 @@ class SchemaUtilities {
     }
 
     if (schema != null) {
-      LOG.info("Schema found for table {}", getCompleteName(table));
+      LOG.info("Schema found for table {}", tableName);
       LOG.debug("Schema is {}", schema.toString(true));
       return schema;
     } else {
-      LOG.warn("Cannot determine avro schema for table {}", getCompleteName(table));
+      LOG.warn("Cannot determine avro schema for table {}", tableName);
       return null;
     }
   }
@@ -997,28 +1028,6 @@ class SchemaUtilities {
     }
 
     return partKeys;
-  }
-
-  /**
-   * Note: This method is modified based on SchemaUtilities in Dali codebase
-   *
-   * @param table
-   * @return
-   */
-  private static String readSchemaFromSchemaLiteral(@Nonnull Table table) {
-    Preconditions.checkNotNull(table);
-
-    String schemaStr = table.getParameters().get(AvroSerdeUtils.AVRO_SCHEMA_LITERAL);
-    if (Strings.isNullOrEmpty(schemaStr)) {
-      schemaStr = table.getSd().getSerdeInfo().getParameters().get(AvroSerdeUtils.AVRO_SCHEMA_LITERAL);
-    }
-
-    if (Strings.isNullOrEmpty(schemaStr)) {
-      LOG.debug("No avro schema defined under table or serde property {} for table {}",
-          AvroSerdeUtils.AVRO_SCHEMA_LITERAL, getCompleteName(table));
-    }
-
-    return schemaStr;
   }
 
   private static String getCompleteName(@Nonnull Table table) {
