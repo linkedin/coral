@@ -38,11 +38,11 @@ import org.apache.calcite.tools.RelBuilder;
 import org.apache.calcite.util.Util;
 
 import com.linkedin.coral.com.google.common.annotations.VisibleForTesting;
+import com.linkedin.coral.catalog.hive.HiveTable;
+import com.linkedin.coral.catalog.iceberg.IcebergHiveTableConverter;
+import com.linkedin.coral.catalog.iceberg.IcebergTable;
 import com.linkedin.coral.common.catalog.CoralCatalog;
 import com.linkedin.coral.common.catalog.CoralTable;
-import com.linkedin.coral.common.catalog.HiveTable;
-import com.linkedin.coral.common.catalog.IcebergHiveTableConverter;
-import com.linkedin.coral.common.catalog.IcebergTable;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
