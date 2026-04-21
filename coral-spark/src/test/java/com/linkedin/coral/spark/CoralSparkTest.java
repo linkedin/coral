@@ -1037,6 +1037,14 @@ public class CoralSparkTest {
     return coralSpark.getSparkSql();
   }
 
+  @Test
+  public void testReservedKeywordAsTableAlias() {
+    RelNode relNode = TestUtils.toRelNode("default", "view_reserved_keyword_alias");
+    CoralSpark coralSpark = createCoralSpark(relNode);
+    String sparkSql = coralSpark.getSparkSql();
+    assertEquals(sparkSql, "SELECT *\nFROM default.collection collection\nWHERE collection.a > 0");
+  }
+
   private CoralSpark createCoralSpark(RelNode relNode) {
     return CoralSpark.create(relNode, getHiveMetastoreClient());
   }
