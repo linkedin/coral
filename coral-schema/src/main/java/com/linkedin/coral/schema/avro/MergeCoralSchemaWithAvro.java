@@ -33,12 +33,20 @@ import static com.linkedin.coral.schema.avro.AvroSerdeUtils.*;
  *
  * <ul>
  *   <li>Coral/Iceberg is the source of truth for field existence, name, nullability, and type</li>
- *   <li>Partner Avro provides metadata: defaults, docs, field props, aliases, enum/fixed/uuid materialization</li>
- *   <li>If partner Avro says a field is a union, the union envelope shape and null placement are preserved from Avro</li>
- *   <li>Fields only in Coral are included as optional; fields only in Avro are dropped</li>
+ *   <li>Partner Avro always contributes (when the attribute exists in the source): field name casing,
+ *       default values, and field docs. The view schema spec is limited to {name, type, default, doc},
+ *       so when the partner is derived from a view schema, only these attributes survive.</li>
+ *   <li>When the partner is a full Avro table schema, it additionally contributes: field props, aliases,
+ *       union envelope shape and null placement, and enum/fixed/uuid materialization. When the partner
+ *       is derived from a view schema, these attributes are not present in the source and are dropped.</li>
+ *   <li>Fields only in the CoralDataType schema are included as optional; fields only in the partner
+ *       Avro schema are dropped. Count mismatches do not fail, matching the behavior of
+ *       {@link MergeHiveSchemaWithAvro}.</li>
  * </ul>
  *
- * Field matching: exact case-sensitive match first, then unique case-insensitive match.
+ * Field matching: case-insensitive by field name. Output field names use the CoralDataType casing
+ * (Iceberg-first). Iceberg's schema spec disallows sibling fields that differ only in case, so
+ * case-insensitive matching against Iceberg-sourced schemas is unambiguous.
  */
 class MergeCoralSchemaWithAvro {
 
@@ -262,6 +270,9 @@ class MergeCoralSchemaWithAvro {
       return AvroCompatibilityHelper.createSchemaField(SchemaUtilities.makeCompatibleName(coralFieldName), fieldSchema,
           null, null);
     }
+    // Avro requires the default value to match the first type in the option, reorder option if required.
+    // e.g. fieldSchema is [null, int] and the partner's default value is 1 → reorder to [int, null] so
+    // the default is compatible with the first branch.
     Schema reordered = SchemaUtilities.reorderOptionIfRequired(fieldSchema, SchemaUtilities.defaultValue(partner));
     return SchemaUtilities.copyField(partner, reordered);
   }
@@ -294,34 +305,20 @@ class MergeCoralSchemaWithAvro {
   }
 
   /**
-   * Find a partner field using the matching rules from the design doc:
-   * 1. Exact case-sensitive match first
-   * 2. If not found, unique case-insensitive match
-   * 3. If case-insensitive match is ambiguous, treat as no match
+   * Find a partner field by case-insensitive name match, returning the first match. Matches the
+   * behavior of {@link MergeHiveSchemaWithAvro}'s partner accessor. Iceberg's schema spec disallows
+   * sibling fields that differ only in case, so this is unambiguous for Iceberg-sourced Coral schemas.
    */
   @Nullable
   private Schema.Field findPartnerField(@Nullable Schema partnerRecord, String coralFieldName) {
     if (partnerRecord == null) {
       return null;
     }
-
-    // 1. Exact case-sensitive match
-    Schema.Field exact = partnerRecord.getField(coralFieldName);
-    if (exact != null) {
-      return exact;
-    }
-
-    // 2. Unique case-insensitive match
-    Schema.Field caseInsensitiveMatch = null;
-    int matchCount = 0;
     for (Schema.Field field : partnerRecord.getFields()) {
       if (field.name().equalsIgnoreCase(coralFieldName)) {
-        caseInsensitiveMatch = field;
-        matchCount++;
+        return field;
       }
     }
-
-    // 3. Ambiguous → no match
-    return matchCount == 1 ? caseInsensitiveMatch : null;
+    return null;
   }
 }
