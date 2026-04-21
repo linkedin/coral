@@ -32,21 +32,18 @@ import static com.linkedin.coral.schema.avro.AvroSerdeUtils.*;
  * Merges a Coral schema (from Iceberg) with a partner Avro schema, using Iceberg-first semantics:
  *
  * <ul>
- *   <li>Coral/Iceberg is the source of truth for field existence, name, nullability, and type</li>
- *   <li>Partner Avro always contributes (when the attribute exists in the source): field name casing,
- *       default values, and field docs. The view schema spec is limited to {name, type, default, doc},
- *       so when the partner is derived from a view schema, only these attributes survive.</li>
- *   <li>When the partner is a full Avro table schema, it additionally contributes: field props, aliases,
- *       union envelope shape and null placement, and enum/fixed/uuid materialization. When the partner
- *       is derived from a view schema, these attributes are not present in the source and are dropped.</li>
+ *   <li>CoralDataType is the source of truth for field existence, name, nullability, and type.</li>
+ *   <li>Partner Avro contributes whatever metadata it carries for a matched field — defaults, docs,
+ *       field props, aliases, union envelope shape and null placement, enum/fixed/uuid materialization.
+ *       Nothing is fabricated: attributes the partner does not carry are absent from the output. When
+ *       the partner is derived from a view schema spec ({name, type, default, doc}), only those four
+ *       survive; when the partner is a full Avro table schema, the complete set is preserved.</li>
  *   <li>Fields only in the CoralDataType schema are included as optional; fields only in the partner
- *       Avro schema are dropped. Count mismatches do not fail, matching the behavior of
- *       {@link MergeHiveSchemaWithAvro}.</li>
+ *       are dropped. Count mismatches do not fail, matching {@link MergeHiveSchemaWithAvro}.</li>
  * </ul>
  *
- * Field matching: case-insensitive by field name. Output field names use the CoralDataType casing
- * (Iceberg-first). Iceberg's schema spec disallows sibling fields that differ only in case, so
- * case-insensitive matching against Iceberg-sourced schemas is unambiguous.
+ * Field matching is case-insensitive. Output field names use the CoralDataType casing. Iceberg's
+ * schema spec disallows sibling fields that differ only in case, so this is unambiguous.
  */
 class MergeCoralSchemaWithAvro {
 
