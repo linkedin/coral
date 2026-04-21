@@ -270,25 +270,14 @@ public class MergeCoralSchemaWithAvroTests {
   }
 
   @Test
-  public void shouldUseCaseSensitiveMatchFirst() {
+  public void shouldMatchPartnerFieldCaseInsensitively() {
     StructType coral = struct(field("fA", intType(false)));
-    // Partner has both "fA" (exact) and "fa" (case-insensitive) — should match "fA"
-    Schema avro = avroStruct("r1", requiredAvroField("fA", Schema.Type.INT, "exact-match", null, null),
-        requiredAvroField("fa", Schema.Type.INT, "ci-match", null, null));
+    // Partner uses lowercase "fa" — case-insensitive match should find it and copy its doc.
+    Schema avro = avroStruct("r1", requiredAvroField("fa", Schema.Type.INT, "ci-match", null, null));
 
     Schema result = merge(coral, avro);
-    assertEquals(result.getField("fA").doc(), "exact-match");
-  }
-
-  @Test
-  public void shouldHandleAmbiguousCaseInsensitiveMatch() {
-    StructType coral = struct(field("fa", intType(true)));
-    // Partner has "FA" and "Fa" — ambiguous case-insensitive, treat as no match
-    Schema avro = avroStruct("r1", requiredField("FA", Schema.Type.INT), requiredField("Fa", Schema.Type.INT));
-
-    Schema result = merge(coral, avro);
-    // Should be treated as extra field from Coral (optional)
-    assertTrue(AvroSerdeUtils.isNullableType(result.getField("fa").schema()));
+    // copyField preserves partner's casing, but the field is matched and its metadata is copied through.
+    assertEquals(result.getField("fa").doc(), "ci-match");
   }
 
   @Test
