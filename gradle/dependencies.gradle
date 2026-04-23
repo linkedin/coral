@@ -4,7 +4,7 @@ def versions = [
   'graph-vis': '0.18.1',
   'gson': '2.9.0',
   'hadoop': '2.7.0',
-  'hive': '1.2.2',
+  'hive': '2.3.9',
   'linkedin-iceberg': '1.2.0.10',
   'ivy': '2.5.1',
   'jetbrains': '16.0.2',
@@ -31,7 +31,8 @@ ext.deps = [
   ],
   'hive':[
     'hive-metastore': "org.apache.hive:hive-metastore:${versions['hive']}",
-    'hive-exec-core': "org.apache.hive:hive-exec:${versions['hive']}:core"
+    'hive-exec-core': "org.apache.hive:hive-exec:${versions['hive']}:core",
+    'hive-serde': "org.apache.hive:hive-serde:${versions['hive']}"
   ],
   'linkedin-iceberg': [
     'iceberg-core': "com.linkedin.iceberg:iceberg-core:${versions['linkedin-iceberg']}",
@@ -59,5 +60,11 @@ ext.deps = [
     'hive': "org.apache.spark:spark-hive_2.12:${versions['spark3.5']}",
     'sql': "org.apache.spark:spark-sql_2.12:${versions['spark3.5']}"
   ],
-  'testing': "org.testng:testng:${versions['testing']}"
+  'testing': "org.testng:testng:${versions['testing']}",
+  // Hive 2.3.9 embedded metastore dependencies
+  'derby': 'org.apache.derby:derby:10.10.2.0',
+  'datanucleus-api-jdo': 'org.datanucleus:datanucleus-api-jdo:4.2.5',
+  'datanucleus-core': 'org.datanucleus:datanucleus-core:4.1.17',
+  'datanucleus-rdbms': 'org.datanucleus:datanucleus-rdbms:4.1.19',
+  'javax-jdo': 'org.datanucleus:javax.jdo:3.2.0-m3'
 ]
