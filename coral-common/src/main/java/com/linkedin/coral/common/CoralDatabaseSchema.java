@@ -17,13 +17,11 @@ import org.apache.calcite.linq4j.tree.Expression;
 import org.apache.calcite.rel.type.RelProtoDataType;
 import org.apache.calcite.schema.*;
 
+import com.linkedin.coral.common.catalog.CoralCalciteTableAdapterRegistry;
 import com.linkedin.coral.common.catalog.CoralCatalog;
 import com.linkedin.coral.common.catalog.CoralTable;
-import com.linkedin.coral.common.catalog.HiveTable;
-import com.linkedin.coral.common.catalog.IcebergTable;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.linkedin.coral.common.catalog.TableType.VIEW;
 
 
 /**
@@ -33,13 +31,9 @@ import static com.linkedin.coral.common.catalog.TableType.VIEW;
  * {@link CoralCatalog} to Calcite's {@link Schema} interface. It represents a specific database/namespace
  * and dispatches table lookups to the appropriate format-specific implementations.
  *
- * <p><b>Multi-format Dispatch:</b> This class automatically dispatches to the correct table implementation
- * based on the underlying table format:
- * <ul>
- *   <li>{@link IcebergCalciteTableAdapter} for Iceberg tables ({@link IcebergTable})</li>
- *   <li>{@link HiveCalciteTableAdapter} for Hive tables ({@link HiveTable})</li>
- *   <li>{@link HiveCalciteViewAdapter} for Hive views ({@link HiveTable} with VIEW type)</li>
- * </ul>
+ * <p><b>Multi-format Dispatch:</b> This class uses the SPI-based
+ * {@link CoralCalciteTableAdapterRegistry} to dispatch table lookups to the appropriate
+ * format-specific adapter factories discovered at runtime via {@link java.util.ServiceLoader}.
  *
  * <p><b>Relationship to HiveDbSchema:</b>
  * <ul>
@@ -77,12 +71,8 @@ public class CoralDatabaseSchema implements Schema {
   /**
    * Returns a Calcite Table for the specified table name.
    *
-   * <p>This method performs format-aware dispatch:
-   * <ul>
-   *   <li>Iceberg tables → {@link IcebergCalciteTableAdapter}</li>
-   *   <li>Hive views → {@link HiveCalciteViewAdapter}</li>
-   *   <li>Hive tables → {@link HiveCalciteTableAdapter}</li>
-   * </ul>
+   * <p>This method uses the SPI-based {@link CoralCalciteTableAdapterRegistry} to dispatch
+   * to the appropriate format-specific adapter factory.
    *
    * @param name Table name
    * @return Calcite Table implementation, or null if table doesn't exist
@@ -94,20 +84,8 @@ public class CoralDatabaseSchema implements Schema {
       return null;
     }
 
-    // Dispatch based on CoralTable implementation type
-    if (coralTable instanceof IcebergTable) {
-      return new IcebergCalciteTableAdapter((IcebergTable) coralTable);
-    } else if (coralTable instanceof HiveTable) {
-      HiveTable hiveTable = (HiveTable) coralTable;
-      // Check if it's a view
-      if (hiveTable.tableType() == VIEW) {
-        return new HiveCalciteViewAdapter(hiveTable, ImmutableList.of(CoralRootSchema.ROOT_SCHEMA, dbName));
-      } else {
-        return new HiveCalciteTableAdapter(hiveTable);
-      }
-    }
-
-    return null;
+    return CoralCalciteTableAdapterRegistry.createAdapter(coralTable,
+        ImmutableList.of(CoralRootSchema.ROOT_SCHEMA, dbName));
   }
 
   /**
