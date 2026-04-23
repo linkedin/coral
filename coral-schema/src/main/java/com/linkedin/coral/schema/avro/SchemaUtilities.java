@@ -116,10 +116,7 @@ class SchemaUtilities {
         resultTableSchema = originalTableSchema;
       } else {
         final List<FieldSchema> cols = new ArrayList<>(table.getSd().getCols());
-        // Add partition columns if table partitioned
-        if (isPartitioned(table)) {
-          cols.addAll(getPartitionCols(table));
-        }
+        appendMissingPartitionCols(cols, table);
 
         resultTableSchema = MergeHiveSchemaWithAvro.visit(structTypeInfoFromCols(cols), originalTableSchema);
       }
@@ -135,9 +132,7 @@ class SchemaUtilities {
     String recordNamespace = table.getDbName() + "." + recordName;
 
     final List<FieldSchema> cols = new ArrayList<>(table.getSd().getCols());
-    if (isPartitioned(table)) {
-      cols.addAll(getPartitionCols(table));
-    }
+    appendMissingPartitionCols(cols, table);
 
     return convertFieldSchemaToAvroSchema(recordName, recordNamespace, true, cols);
   }
@@ -1023,6 +1018,23 @@ class SchemaUtilities {
     }
 
     return partKeys;
+  }
+
+  /**
+   * Appends the table's partition columns to {@code cols}, skipping any whose name is already present.
+   * A partition column may coexist as a regular column in the table's schema; re-adding it would
+   * produce a duplicate field when the combined list is converted to Avro.
+   */
+  private static void appendMissingPartitionCols(@Nonnull List<FieldSchema> cols, @Nonnull Table tableOrView) {
+    if (!isPartitioned(tableOrView)) {
+      return;
+    }
+    Set<String> existingNames = cols.stream().map(FieldSchema::getName).collect(Collectors.toSet());
+    for (FieldSchema partCol : getPartitionCols(tableOrView)) {
+      if (!existingNames.contains(partCol.getName())) {
+        cols.add(partCol);
+      }
+    }
   }
 
   private static String getCompleteName(@Nonnull Table table) {
