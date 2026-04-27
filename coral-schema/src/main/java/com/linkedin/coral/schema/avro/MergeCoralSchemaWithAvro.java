@@ -13,8 +13,9 @@ import javax.annotation.Nullable;
 
 import com.linkedin.avroutil1.compatibility.AvroCompatibilityHelper;
 
+import org.apache.avro.LogicalType;
+import org.apache.avro.LogicalTypes;
 import org.apache.avro.Schema;
-import org.apache.hadoop.hive.serde2.avro.AvroSerDe;
 
 import com.linkedin.coral.common.types.ArrayType;
 import com.linkedin.coral.common.types.BinaryType;
@@ -58,7 +59,7 @@ class MergeCoralSchemaWithAvro {
    * @param recordNamespace Avro record namespace for the top-level record
    * @return merged Avro schema
    */
-  static Schema visit(StructType structType, @Nullable Schema partner, String recordName, String recordNamespace) {
+  static Schema merge(StructType structType, @Nullable Schema partner, String recordName, String recordNamespace) {
     return new MergeCoralSchemaWithAvro().mergeTopLevelStruct(structType, partner, recordName, recordNamespace);
   }
 
@@ -80,7 +81,6 @@ class MergeCoralSchemaWithAvro {
       result = Schema.createRecord(recordName, null, recordNamespace, false);
       result.setFields(fields);
     }
-
     // Top-level record is never wrapped in a nullable union — callers expect a record schema
     return result;
   }
@@ -116,7 +116,6 @@ class MergeCoralSchemaWithAvro {
       result = Schema.createRecord("record" + recordNum, null, "namespace" + recordNum, false);
       result.setFields(fields);
     }
-
     return applyCoralNullability(result, structType.isNullable(), partner);
   }
 
@@ -180,17 +179,10 @@ class MergeCoralSchemaWithAvro {
         return binaryToAvro((BinaryType) coralType);
       case NULL:
         return Schema.create(Schema.Type.NULL);
-      case DATE: {
-        Schema dateSchema = Schema.create(Schema.Type.INT);
-        dateSchema.addProp(AvroSerDe.AVRO_PROP_LOGICAL_TYPE, AvroSerDe.DATE_TYPE_NAME);
-        return dateSchema;
-      }
-      case TIME: {
-        // time-micros: long with logicalType
-        Schema timeSchema = Schema.create(Schema.Type.LONG);
-        timeSchema.addProp(AvroSerDe.AVRO_PROP_LOGICAL_TYPE, "time-micros");
-        return timeSchema;
-      }
+      case DATE:
+        return LogicalTypes.date().addToSchema(Schema.create(Schema.Type.INT));
+      case TIME:
+        return LogicalTypes.timeMicros().addToSchema(Schema.create(Schema.Type.LONG));
       case TIMESTAMP:
         return timestampToAvro((TimestampType) coralType);
       case DECIMAL:
@@ -210,22 +202,15 @@ class MergeCoralSchemaWithAvro {
   private Schema timestampToAvro(TimestampType timestampType) {
     Schema schema = Schema.create(Schema.Type.LONG);
     if (timestampType.hasPrecision() && timestampType.getPrecision() <= 3) {
-      schema.addProp(AvroSerDe.AVRO_PROP_LOGICAL_TYPE, "timestamp-millis");
-    } else {
-      // Default to micros for precision 6, 9, or unspecified
-      schema.addProp(AvroSerDe.AVRO_PROP_LOGICAL_TYPE, "timestamp-micros");
+      return LogicalTypes.timestampMillis().addToSchema(schema);
     }
-    return schema;
+    // Default to micros for precision 6, 9, or unspecified
+    return LogicalTypes.timestampMicros().addToSchema(schema);
   }
 
   private Schema decimalToAvro(DecimalType decimalType) {
-    Schema schema = Schema.create(Schema.Type.BYTES);
-    schema.addProp(AvroSerDe.AVRO_PROP_LOGICAL_TYPE, AvroSerDe.DECIMAL_TYPE_NAME);
-    AvroCompatibilityHelper.setSchemaPropFromJsonString(schema, AvroSerDe.AVRO_PROP_PRECISION,
-        String.valueOf(decimalType.getPrecision()), false);
-    AvroCompatibilityHelper.setSchemaPropFromJsonString(schema, AvroSerDe.AVRO_PROP_SCALE,
-        String.valueOf(decimalType.getScale()), false);
-    return schema;
+    return LogicalTypes.decimal(decimalType.getPrecision(), decimalType.getScale())
+        .addToSchema(Schema.create(Schema.Type.BYTES));
   }
 
   /**
@@ -249,7 +234,7 @@ class MergeCoralSchemaWithAvro {
         }
         // Preserve UUID logical type from partner
         if (extractedPartner.getType() == Schema.Type.STRING
-            && "uuid".equals(extractedPartner.getProp(AvroSerDe.AVRO_PROP_LOGICAL_TYPE))) {
+            && "uuid".equals(extractedPartner.getProp(LogicalType.LOGICAL_TYPE_PROP))) {
           return extractedPartner;
         }
         return coralSchema;
@@ -259,19 +244,25 @@ class MergeCoralSchemaWithAvro {
   }
 
   /**
-   * Merge a single field: use Coral field name, apply partner metadata (docs, defaults, props).
+   * Merge a single field: canonical field name is the CoralDataType name; partner contributes
+   * doc, default, ordering, and field props. The output field carries only {name, schema, doc,
+   * default} plus any field-level props the partner already had — no aliases are introduced.
+   * Case-insensitive resolution is the consumer's responsibility.
    */
   private Schema.Field mergeField(String coralFieldName, CoralDataType coralFieldType, @Nullable Schema.Field partner,
       Schema fieldSchema) {
+    String safeCoralName = SchemaUtilities.makeCompatibleName(coralFieldName);
     if (partner == null) {
-      return AvroCompatibilityHelper.createSchemaField(SchemaUtilities.makeCompatibleName(coralFieldName), fieldSchema,
-          null, null);
+      return AvroCompatibilityHelper.createSchemaField(safeCoralName, fieldSchema, null, null);
     }
     // Avro requires the default value to match the first type in the option, reorder option if required.
     // e.g. fieldSchema is [null, int] and the partner's default value is 1 → reorder to [int, null] so
     // the default is compatible with the first branch.
     Schema reordered = SchemaUtilities.reorderOptionIfRequired(fieldSchema, SchemaUtilities.defaultValue(partner));
-    return SchemaUtilities.copyField(partner, reordered);
+    Schema.Field merged = AvroCompatibilityHelper.createSchemaField(safeCoralName, reordered, partner.doc(),
+        SchemaUtilities.defaultValue(partner), partner.order());
+    SchemaUtilities.replicateFieldProps(partner, merged);
+    return merged;
   }
 
   /**

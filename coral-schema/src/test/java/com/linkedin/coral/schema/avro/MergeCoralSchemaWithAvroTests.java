@@ -36,10 +36,16 @@ public class MergeCoralSchemaWithAvroTests {
         optionalField("fb", avroStruct("r2", optionalField("ga", Schema.Type.INT))));
 
     Schema result = merge(coral, avro);
-    // Coral field names are used (via partner copyField which preserves partner names,
-    // but matching is case-insensitive so partner field "fa" matches Coral "fA")
-    assertNotNull(result.getField("fa")); // partner name preserved via copyField
-    assertNotNull(result.getField("fb"));
+    // Iceberg-first: only the Coral casing appears in the output; the partner casing is dropped.
+    // Case-insensitive resolution is the consumer's responsibility.
+    assertNotNull(result.getField("fA"));
+    assertNull(result.getField("fa"));
+    assertNotNull(result.getField("fB"));
+    assertNull(result.getField("fb"));
+    // Same rule applies to nested fields.
+    Schema fbRecord = SchemaUtilities.extractIfOption(result.getField("fB").schema());
+    assertNotNull(fbRecord.getField("gA"));
+    assertNull(fbRecord.getField("ga"));
   }
 
   @Test
@@ -276,8 +282,10 @@ public class MergeCoralSchemaWithAvroTests {
     Schema avro = avroStruct("r1", requiredAvroField("fa", Schema.Type.INT, "ci-match", null, null));
 
     Schema result = merge(coral, avro);
-    // copyField preserves partner's casing, but the field is matched and its metadata is copied through.
-    assertEquals(result.getField("fa").doc(), "ci-match");
+    // Output uses Coral casing; the partner casing does not appear. Doc is copied through.
+    assertNotNull(result.getField("fA"));
+    assertEquals(result.getField("fA").doc(), "ci-match");
+    assertNull(result.getField("fa"));
   }
 
   @Test
@@ -322,7 +330,7 @@ public class MergeCoralSchemaWithAvroTests {
   /** Test Helpers */
 
   private Schema merge(StructType coral, Schema avro) {
-    return MergeCoralSchemaWithAvro.visit(coral, avro, "TestRecord", "com.test");
+    return MergeCoralSchemaWithAvro.merge(coral, avro, "TestRecord", "com.test");
   }
 
   private PrimitiveType intType(boolean nullable) {
