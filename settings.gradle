@@ -5,6 +5,9 @@ pluginManagement {
   }
 }
 
+include 'coral-catalog-spi'
+include 'coral-catalog-hive'
+include 'coral-catalog-iceberg'
 include 'coral-common'
 include 'coral-dbt'
 include 'coral-hive'
