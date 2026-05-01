@@ -6,6 +6,7 @@
 package com.linkedin.coral.schema.avro;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,6 +17,15 @@ import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+
+import com.linkedin.coral.common.catalog.CoralTable;
+import com.linkedin.coral.common.catalog.TableType;
+import com.linkedin.coral.common.types.CoralDataType;
+import com.linkedin.coral.common.types.CoralTypeKind;
+import com.linkedin.coral.common.types.PrimitiveType;
+import com.linkedin.coral.common.types.StructField;
+import com.linkedin.coral.common.types.StructType;
+import com.linkedin.coral.schema.avro.exceptions.SchemaNotFoundException;
 
 
 public class SchemaUtilitiesTests {
@@ -90,6 +100,130 @@ public class SchemaUtilitiesTests {
     Schema result = SchemaUtilities.getCasePreservedSchemaFromPropertyMaps(tableProperties, null, "test@table");
 
     Assert.assertNull(result);
+  }
+
+  @Test
+  public void testGetAvroSchemaForCoralTableIcebergWithPartner() {
+    StructType coralSchema = struct(field("id", intType(false)), field("name", stringType(true)));
+    Map<String, String> properties = new HashMap<>();
+    properties.put("avro.schema.literal", SIMPLE_AVRO_SCHEMA);
+
+    CoralTable coralTable = new TestCoralTable("db.tbl", coralSchema, properties);
+    Schema result = SchemaUtilities.getAvroSchemaForTable(coralTable, false);
+
+    // Partner-provided record name preserved; merge engine populated both fields.
+    Assert.assertNotNull(result);
+    Assert.assertEquals(result.getName(), "TestRecord");
+    Assert.assertNotNull(result.getField("id"));
+    Assert.assertNotNull(result.getField("name"));
+  }
+
+  @Test
+  public void testGetAvroSchemaForCoralTableIcebergCoralNullabilityWins() {
+    // Coral declares id as non-nullable; partner Avro declares id as nullable ([null,int]).
+    // Iceberg-first semantics require the Coral nullability to win, which proves the merge
+    // engine ran rather than the partner schema being passed through unchanged.
+    StructType coralSchema = struct(field("id", intType(false)));
+    String nullablePartner = "{\"type\":\"record\",\"name\":\"R\",\"namespace\":\"x\","
+        + "\"fields\":[{\"name\":\"id\",\"type\":[\"null\",\"int\"],\"default\":null}]}";
+    Map<String, String> properties = new HashMap<>();
+    properties.put("avro.schema.literal", nullablePartner);
+
+    CoralTable coralTable = new TestCoralTable("db.tbl", coralSchema, properties);
+    Schema result = SchemaUtilities.getAvroSchemaForTable(coralTable, false);
+
+    Assert.assertNotNull(result.getField("id"));
+    Assert.assertFalse(AvroSerdeUtils.isNullableType(result.getField("id").schema()),
+        "Coral nullability (non-nullable) must win over partner Avro nullability");
+  }
+
+  @Test
+  public void testGetAvroSchemaForCoralTableIcebergNoPartnerNonStrict() {
+    StructType coralSchema = struct(field("id", intType(false)), field("name", stringType(true)));
+
+    CoralTable coralTable = new TestCoralTable("db.tbl", coralSchema, new HashMap<>());
+    Schema result = SchemaUtilities.getAvroSchemaForTable(coralTable, false);
+
+    // Pure Coral-derived schema: record name/namespace come from the CoralTable name.
+    Assert.assertNotNull(result);
+    Assert.assertEquals(result.getName(), "tbl");
+    Assert.assertEquals(result.getNamespace(), "db");
+    Assert.assertNotNull(result.getField("id"));
+    Assert.assertNotNull(result.getField("name"));
+  }
+
+  @Test(expectedExceptions = SchemaNotFoundException.class)
+  public void testGetAvroSchemaForCoralTableIcebergNoPartnerStrictThrows() {
+    StructType coralSchema = struct(field("id", intType(false)));
+    CoralTable coralTable = new TestCoralTable("db.tbl", coralSchema, new HashMap<>());
+
+    SchemaUtilities.getAvroSchemaForTable(coralTable, true);
+  }
+
+  @Test
+  public void testGetAvroSchemaForCoralTableUnqualifiedNameYieldsEmptyNamespace() {
+    StructType coralSchema = struct(field("id", intType(false)));
+    CoralTable coralTable = new TestCoralTable("flat", coralSchema, new HashMap<>());
+
+    Schema result = SchemaUtilities.getAvroSchemaForTable(coralTable, false);
+
+    Assert.assertNotNull(result);
+    Assert.assertEquals(result.getName(), "flat");
+    Assert.assertTrue(result.getNamespace() == null || result.getNamespace().isEmpty());
+  }
+
+  /**
+   * Minimal {@link CoralTable} test fixture. Used to exercise the non-Hive path of
+   * {@link SchemaUtilities#getAvroSchemaForTable(CoralTable, boolean)} without requiring a real
+   * Iceberg or Hive metastore. The Hive-delegation branch is covered by integration tests via
+   * the existing {@code getAvroSchemaForTable(Table, boolean)} surface.
+   */
+  private static class TestCoralTable implements CoralTable {
+    private final String name;
+    private final StructType schema;
+    private final Map<String, String> properties;
+
+    TestCoralTable(String name, StructType schema, Map<String, String> properties) {
+      this.name = name;
+      this.schema = schema;
+      this.properties = properties;
+    }
+
+    @Override
+    public String name() {
+      return name;
+    }
+
+    @Override
+    public Map<String, String> properties() {
+      return properties;
+    }
+
+    @Override
+    public TableType tableType() {
+      return TableType.TABLE;
+    }
+
+    @Override
+    public CoralDataType getSchema() {
+      return schema;
+    }
+  }
+
+  private static StructField field(String name, CoralDataType type) {
+    return StructField.of(name, type);
+  }
+
+  private static StructType struct(StructField... fields) {
+    return StructType.of(Arrays.asList(fields), true);
+  }
+
+  private static PrimitiveType intType(boolean nullable) {
+    return PrimitiveType.of(CoralTypeKind.INT, nullable);
+  }
+
+  private static PrimitiveType stringType(boolean nullable) {
+    return PrimitiveType.of(CoralTypeKind.STRING, nullable);
   }
 
   @Test

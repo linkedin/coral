@@ -33,5 +33,9 @@ generateGrammarSource {
   ]
 }
 
-// Gradle 8 strict validation: spotless must run after ANTLR generates sources
-tasks.named('spotlessJava').configure { mustRunAfter('generateGrammarSource') }
+// Gradle 8 strict validation: spotless must run after ANTLR generates both main and test sources.
+// Without the test grammar dependency, CI fails on `:coral-hive:spotlessJava` reading from
+// `:coral-hive:generateTestGrammarSource` output without a declared dependency.
+tasks.named('spotlessJava').configure {
+  mustRunAfter('generateGrammarSource', 'generateTestGrammarSource')
+}
