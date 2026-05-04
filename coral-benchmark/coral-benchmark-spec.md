@@ -13,6 +13,36 @@ A new module (`coral-benchmark`) that tests Coral translations end-to-end: from 
 
 ## 3. Core Concepts
 
+The framework is organized around a single orchestrator (`TranslationTestSuite`) that
+drives a corpus of SQL queries through pluggable translation and execution stages,
+comparing results via a configurable comparator. The major components and their
+relationships:
+
+```
+                       +-----------------------------+
+                       |   TranslationTestSuite      |
+                       |       (orchestrator)        |
+                       +--+--------+--------+--------+
+                          |        |        |
+                    uses  |        |        |  uses
+                          v        v        v
+                +-----------+ +-------+ +---------------------+
+                |  Catalog  | |  SPI  | | ResultSetComparator |
+                | (schemas) | | impls | |   (Level 3 only)    |
+                +-----------+ +---+---+ +---------------------+
+                                  |
+                          +-------+--------+
+                          v                v
+                  +---------------+ +--------------+
+                  | DialectPlugin | | EnginePlugin |
+                  |  (translate)  | |  (execute)   |
+                  +---------------+ +--------------+
+```
+
+The orchestrator iterates over `.sql` files from the configured query directory,
+runs each through the appropriate plugins for the requested verification level, and
+emits a `QueryTestResult` per query plus an aggregate `TestReport`.
+
 ### 3.1 Catalog Setup
 
 Tests declare their table schemas using the Coral type system and register them in an in-memory catalog.
@@ -63,28 +93,45 @@ Each file contains a single SELECT statement written in the source dialect's syn
 
 ### 3.3 Dialect SPI
 
-Each dialect plugs into the framework by implementing a single interface:
+Each dialect plugs into the framework via a *provider/plugin* pair. The provider is the
+ServiceLoader-discoverable entry point (no-arg constructor); the plugin is the
+fully-constructed translator bound to a catalog. This split keeps the plugin immutable
+(catalog as a `final` field, no two-phase `init`) while still supporting standard SPI
+discovery.
 
 ```java
+public interface DialectPluginProvider {
+
+    /** Identifier for the dialect this provider produces plugins for. */
+    Dialect dialect();
+
+    /** Construct a plugin bound to the given catalog. */
+    DialectPlugin create(CoralCatalog catalog);
+}
+
 public interface DialectPlugin {
 
     /** Identifier for this dialect (e.g., HIVE, SPARK, TRINO). */
     Dialect dialect();
 
     /** Parse a SQL string in this dialect and produce a Coral IR RelNode. */
-    RelNode toRelNode(String sql, CoralCatalog catalog);
+    RelNode toRelNode(String sql);
 
     /** Convert a Coral IR RelNode to a SQL string in this dialect. */
-    String toDialectSql(RelNode relNode, CoralCatalog catalog);
+    String toDialectSql(RelNode relNode);
 }
 ```
 
-Implementations wrap the existing converters:
+Provider implementations are typically three lines, e.g.
+`new HiveDialectPlugin(catalog)`. Plugins themselves wrap the existing converters:
 - **Hive**: `HiveToRelConverter` / `CoralRelToSqlNodeConverter` (Hive dialect)
 - **Trino**: `TrinoToRelConverter` / `RelToTrinoConverter`
 - **Spark**: `HiveToRelConverter` (Spark SQL parses as Hive) / `CoralSpark`
 
-Plugins are discovered by `ServiceLoader` or registered explicitly at suite construction time.
+Providers are discovered by `ServiceLoader` (via
+`META-INF/services/com.linkedin.coral.benchmark.spi.DialectPluginProvider`) or registered
+explicitly on the suite builder. The framework calls `provider.create(catalog)` once per
+suite to materialize the plugin.
 
 ### 3.4 Engine SPI (for execution-level verification)
 
@@ -138,7 +185,36 @@ Values are Java objects matching the Coral type mapping (INT -> Integer, STRING 
 
 ## 4. Verification Levels
 
-The framework supports three escalating levels of verification. Each level subsumes the ones before it.
+The framework supports three escalating levels of verification. Each level subsumes the
+ones before it: passing Level 3 implies Level 2 also passed, which implies Level 1.
+
+```
+  Level 1 (TRANSLATION):
+
+      Source SQL --[toRelNode]--> IR --[toDialectSql]--> Target SQL
+
+
+  Level 2 (EXPLAIN):  Level 1, plus:
+
+      Target SQL --[targetEngine.explain]--> ExplainResult
+
+
+  Level 3 (RESULT_SET):  Level 2, plus:
+
+      sourceEngine.execute(Source SQL) ---> ResultSet A
+                                                         \
+                                                          ResultSetComparator
+                                                         /
+      targetEngine.execute(Target SQL) ---> ResultSet B
+```
+
+Each step up the ladder requires more setup:
+
+| Level       | Engines required | Test data required |
+| ----------- | ---------------- | ------------------ |
+| TRANSLATION | none             | no                 |
+| EXPLAIN     | target only      | no                 |
+| RESULT_SET  | source + target  | yes                |
 
 ### Level 1: Translation (IR round-trip)
 
@@ -227,6 +303,11 @@ Result-set comparison must handle real-world engine differences:
 
 ## 8. Module Structure
 
+This section describes only the framework code that ships in this module. Concrete
+`DialectPlugin` and `EnginePlugin` implementations are deferred to follow-up changes;
+their hosting module is intentionally left undecided here so it can be chosen against
+real implementations rather than against speculation.
+
 ```
 coral-benchmark/
   src/main/java/com/linkedin/coral/benchmark/
@@ -235,7 +316,8 @@ coral-benchmark/
       InMemoryTable.java            # CoralTable impl for tests
     spi/
       Dialect.java                  # Enum: HIVE, SPARK, TRINO, ...
-      DialectPlugin.java            # Translation SPI
+      DialectPluginProvider.java    # Translation SPI - ServiceLoader entry point
+      DialectPlugin.java            # Translation SPI - catalog-bound plugin
       EnginePlugin.java             # Execution SPI
       VerificationLevel.java        # Enum: TRANSLATION, EXPLAIN, RESULT_SET
     data/
@@ -250,13 +332,6 @@ coral-benchmark/
       QueryTestResult.java          # Per-query test outcome
       TestReport.java               # Aggregate results
       TranslationTestSuite.java     # Main orchestrator
-    plugins/
-      HiveDialectPlugin.java
-      TrinoDialectPlugin.java
-      SparkDialectPlugin.java
-  src/main/java/com/linkedin/coral/benchmark/engines/
-      SparkEnginePlugin.java
-      TrinoEnginePlugin.java
   src/test/resources/
     queries/
       hive/
@@ -267,11 +342,6 @@ coral-benchmark/
 ## 9. Dependencies
 
 - `coral-common` (CoralCatalog, CoralTable, CoralDataType, type hierarchy)
-- `coral-hive` (HiveToRelConverter, HiveDialectPlugin)
-- `coral-trino` (TrinoToRelConverter, RelToTrinoConverter)
-- `coral-spark` (CoralSpark)
-- Embedded Spark (test scope, for SparkEnginePlugin)
-- Trino test framework (test scope, for TrinoEnginePlugin)
 
 ## 10. Non-Goals (for initial version)
 

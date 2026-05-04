@@ -47,6 +47,7 @@ Coral can be used as a library in other projects, or as a service. See instructi
 - **Coral-Spark-Plan** [WIP]: Converts Spark plan strings into an equivalent logical plan.
 - **Coral-Visualization**: Renders Coral SqlNode and RelNode trees to an image.
 - **Coral-Service**: Exposes Coral via REST APIs (see [Coral-as-a-Service](#Coral-as-a-Service) for more details).
+- **Coral-Benchmark** [WIP]: Cross-dialect translation correctness framework. Verifies translations via IR round-trip, target-engine EXPLAIN, and result-set comparison against real engines.
 
 ## Version Upgrades
 

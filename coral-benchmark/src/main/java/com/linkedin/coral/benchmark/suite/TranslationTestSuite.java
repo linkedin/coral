@@ -9,11 +9,13 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.ServiceLoader;
 
 import com.linkedin.coral.benchmark.comparison.ComparisonConfig;
 import com.linkedin.coral.benchmark.data.RowSet;
 import com.linkedin.coral.benchmark.spi.Dialect;
 import com.linkedin.coral.benchmark.spi.DialectPlugin;
+import com.linkedin.coral.benchmark.spi.DialectPluginProvider;
 import com.linkedin.coral.benchmark.spi.EnginePlugin;
 import com.linkedin.coral.benchmark.spi.VerificationLevel;
 import com.linkedin.coral.common.catalog.CoralCatalog;
@@ -88,14 +90,14 @@ public final class TranslationTestSuite {
   private final Map<String, RowSet> testData;
   private final ComparisonConfig comparisonConfig;
 
-  private TranslationTestSuite(Builder builder) {
+  private TranslationTestSuite(Builder builder, DialectPlugin sourcePlugin, DialectPlugin targetPlugin) {
     this.source = builder.source;
     this.target = builder.target;
     this.catalog = builder.catalog;
     this.queryDir = builder.queryDir;
     this.verificationLevel = builder.verificationLevel;
-    this.sourcePlugin = builder.sourcePlugin;
-    this.targetPlugin = builder.targetPlugin;
+    this.sourcePlugin = sourcePlugin;
+    this.targetPlugin = targetPlugin;
     this.sourceEngine = builder.sourceEngine;
     this.targetEngine = builder.targetEngine;
     this.testData = Collections.unmodifiableMap(new HashMap<>(builder.testData));
@@ -108,10 +110,12 @@ public final class TranslationTestSuite {
    *
    * <p>For each query file, the pipeline is:
    * <ol>
-   *   <li><b>TRANSLATION:</b> sourcePlugin.toRelNode(sql) then targetPlugin.toDialectSql(relNode)</li>
-   *   <li><b>EXPLAIN:</b> (1) + targetEngine.explain(translatedSql)</li>
-   *   <li><b>RESULT_SET:</b> (1) + (2) + sourceEngine.execute(sourceSql) vs
-   *       targetEngine.execute(translatedSql), compared via ResultSetComparator</li>
+   *   <li><b>TRANSLATION:</b> {@code sourcePlugin.toRelNode(sql)} then
+   *       {@code targetPlugin.toDialectSql(relNode)}</li>
+   *   <li><b>EXPLAIN:</b> (1) + {@code targetEngine.explain(translatedSql)}</li>
+   *   <li><b>RESULT_SET:</b> (1) + (2) + {@code sourceEngine.execute(sourceSql)} vs
+   *       {@code targetEngine.execute(translatedSql)}, compared via
+   *       {@code ResultSetComparator}</li>
    * </ol>
    *
    * <p>Engine lifecycle is managed automatically: start() is called before the first query,
@@ -143,8 +147,15 @@ public final class TranslationTestSuite {
    * Builder for {@link TranslationTestSuite}.
    *
    * <p>Required for all levels: source, target, catalog, queryDir, verificationLevel.
-   * <p>Required for EXPLAIN: targetEngine (or both sourcePlugin and targetPlugin if not using ServiceLoader).
+   * <p>Required for EXPLAIN: targetEngine.
    * <p>Required for RESULT_SET: sourceEngine, targetEngine, testData.
+   *
+   * <p>Dialect plugins are resolved by matching {@link DialectPluginProvider#dialect()}
+   * against the configured source and target dialects, using
+   * {@link java.util.ServiceLoader} discovery by default. Callers may override either
+   * provider explicitly via {@link #sourcePluginProvider} or {@link #targetPluginProvider}
+   * (e.g. for tests, or to inject a non-discovered implementation). The framework calls
+   * {@code provider.create(catalog)} during {@link #build()} to materialize the plugin.
    */
   public static final class Builder {
     private Dialect source;
@@ -152,8 +163,8 @@ public final class TranslationTestSuite {
     private CoralCatalog catalog;
     private String queryDir;
     private VerificationLevel verificationLevel;
-    private DialectPlugin sourcePlugin;
-    private DialectPlugin targetPlugin;
+    private DialectPluginProvider sourcePluginProvider;
+    private DialectPluginProvider targetPluginProvider;
     private EnginePlugin sourceEngine;
     private EnginePlugin targetEngine;
     private final Map<String, RowSet> testData = new HashMap<>();
@@ -219,26 +230,28 @@ public final class TranslationTestSuite {
     }
 
     /**
-     * Explicitly sets the source dialect plugin. If not set, the plugin is resolved
-     * via {@link java.util.ServiceLoader} based on the source dialect.
+     * Explicitly sets the provider used to construct the source dialect plugin. If not
+     * set, the provider is resolved via {@link java.util.ServiceLoader} based on the
+     * source dialect.
      *
-     * @param plugin the source dialect plugin
+     * @param provider the source dialect plugin provider
      * @return this builder
      */
-    public Builder sourcePlugin(DialectPlugin plugin) {
-      this.sourcePlugin = Objects.requireNonNull(plugin);
+    public Builder sourcePluginProvider(DialectPluginProvider provider) {
+      this.sourcePluginProvider = Objects.requireNonNull(provider);
       return this;
     }
 
     /**
-     * Explicitly sets the target dialect plugin. If not set, the plugin is resolved
-     * via {@link java.util.ServiceLoader} based on the target dialect.
+     * Explicitly sets the provider used to construct the target dialect plugin. If not
+     * set, the provider is resolved via {@link java.util.ServiceLoader} based on the
+     * target dialect.
      *
-     * @param plugin the target dialect plugin
+     * @param provider the target dialect plugin provider
      * @return this builder
      */
-    public Builder targetPlugin(DialectPlugin plugin) {
-      this.targetPlugin = Objects.requireNonNull(plugin);
+    public Builder targetPluginProvider(DialectPluginProvider provider) {
+      this.targetPluginProvider = Objects.requireNonNull(provider);
       return this;
     }
 
@@ -332,7 +345,26 @@ public final class TranslationTestSuite {
         }
       }
 
-      return new TranslationTestSuite(this);
+      DialectPluginProvider resolvedSourceProvider =
+          sourcePluginProvider != null ? sourcePluginProvider : resolveProvider(source);
+      DialectPluginProvider resolvedTargetProvider =
+          targetPluginProvider != null ? targetPluginProvider : resolveProvider(target);
+
+      DialectPlugin sourcePlugin = resolvedSourceProvider.create(catalog);
+      DialectPlugin targetPlugin = resolvedTargetProvider.create(catalog);
+
+      return new TranslationTestSuite(this, sourcePlugin, targetPlugin);
+    }
+
+    private static DialectPluginProvider resolveProvider(Dialect dialect) {
+      for (DialectPluginProvider provider : ServiceLoader.load(DialectPluginProvider.class)) {
+        if (provider.dialect() == dialect) {
+          return provider;
+        }
+      }
+      throw new IllegalStateException("No DialectPluginProvider registered for dialect " + dialect
+          + ". Set one explicitly via sourcePluginProvider/targetPluginProvider, or add a " + "META-INF/services/"
+          + DialectPluginProvider.class.getName() + " entry.");
     }
   }
 }
