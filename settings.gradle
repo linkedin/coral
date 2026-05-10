@@ -5,6 +5,7 @@ pluginManagement {
   }
 }
 
+include 'coral-benchmark'
 include 'coral-common'
 include 'coral-dbt'
 include 'coral-hive'
