@@ -7,6 +7,7 @@ pluginManagement {
 
 include 'coral-benchmark'
 include 'coral-common'
+include 'coral-data-generation'
 include 'coral-dbt'
 include 'coral-hive'
 include 'coral-incremental'
