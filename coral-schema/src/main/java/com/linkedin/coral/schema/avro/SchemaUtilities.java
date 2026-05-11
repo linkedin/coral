@@ -42,6 +42,9 @@ import org.slf4j.LoggerFactory;
 
 import com.linkedin.coral.com.google.common.base.Preconditions;
 import com.linkedin.coral.com.google.common.base.Strings;
+import com.linkedin.coral.common.catalog.CoralTable;
+import com.linkedin.coral.common.catalog.HiveTable;
+import com.linkedin.coral.common.types.StructType;
 import com.linkedin.coral.schema.avro.exceptions.SchemaNotFoundException;
 
 import static com.linkedin.coral.schema.avro.AvroSerdeUtils.*;
@@ -126,6 +129,51 @@ class SchemaUtilities {
     }
 
     return resultTableSchema;
+  }
+
+  /**
+   * Returns the Avro schema for a {@link CoralTable}.
+   *
+   * For Hive-backed tables, delegates to {@link #getAvroSchemaForTable(Table, boolean)} to preserve
+   * existing behavior unchanged. For other CoralTables (e.g. Iceberg-backed), reads partner Avro
+   * from {@link CoralTable#properties()} and merges it with the Coral schema using Iceberg-first
+   * semantics via {@link MergeCoralSchemaWithAvro#merge}. When partner Avro is missing, a pure
+   * Coral-derived schema is generated; in strict mode this case throws {@link SchemaNotFoundException}.
+   *
+   * @param coralTable the table to resolve, must not be null
+   * @param strictMode if true, throw when no partner Avro schema is available
+   * @return the resolved Avro schema
+   */
+  static Schema getAvroSchemaForTable(@Nonnull final CoralTable coralTable, boolean strictMode) {
+    Preconditions.checkNotNull(coralTable);
+
+    // Hive-backed CoralTable: delegate to the existing Hive-table API to preserve current behavior.
+    if (coralTable instanceof HiveTable) {
+      // TODO(linkedin/coral#606): migrate off HiveTable.getHiveTable() (deprecated INTERNAL API).
+      return getAvroSchemaForTable(((HiveTable) coralTable).getHiveTable(), strictMode);
+    }
+
+    // Non-Hive (e.g. Iceberg) path: parse partner Avro from properties and merge with the Coral schema.
+    Schema partnerAvro = getCasePreservedSchemaFromPropertyMaps(coralTable.properties(), null, coralTable.name());
+    if (partnerAvro == null && strictMode) {
+      throw new SchemaNotFoundException("strictMode is set to True and fallback is disabled. "
+          + "Cannot determine Avro schema for table " + coralTable.name() + ".");
+    }
+
+    Preconditions.checkState(coralTable.getSchema() instanceof StructType,
+        "CoralTable schema must be a StructType but was " + coralTable.getSchema().getClass().getSimpleName());
+    StructType coralSchema = (StructType) coralTable.getSchema();
+
+    // Match the legacy {@link #convertHiveSchemaToAvro} behavior for the no-partner fallback:
+    // recordName is the bare table name and recordNamespace is the fully qualified name.
+    // When partnerAvro is non-null, MergeCoralSchemaWithAvro takes name/namespace from the
+    // partner record (via copyRecord in mergeTopLevelStruct), so these args only apply here.
+    String fullName = coralTable.name();
+    int lastDot = fullName.lastIndexOf('.');
+    String recordName = lastDot >= 0 ? fullName.substring(lastDot + 1) : fullName;
+    String recordNamespace = fullName;
+
+    return MergeCoralSchemaWithAvro.merge(coralSchema, partnerAvro, recordName, recordNamespace);
   }
 
   static Schema convertHiveSchemaToAvro(@Nonnull final Table table) {
