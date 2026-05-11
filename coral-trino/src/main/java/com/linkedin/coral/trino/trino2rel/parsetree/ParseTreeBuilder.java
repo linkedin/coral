@@ -1,5 +1,5 @@
 /**
- * Copyright 2021-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2021-2026 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -1251,7 +1251,7 @@ public class ParseTreeBuilder extends AstVisitor<SqlNode, ParserVisitorContext> 
     switch (node.getName().getValue().toUpperCase()) {
       case "DECIMAL":
         int precision = getNumberFromNumericParameter(node.getArguments().get(0));
-        int scale = node.getArguments().size() > 1 ? getNumberFromNumericParameter(node.getArguments().get(0)) : 0;
+        int scale = node.getArguments().size() > 1 ? getNumberFromNumericParameter(node.getArguments().get(1)) : 0;
         return SqlTypeUtil.convertTypeToSpec(sqlTypeFactory.createSqlType(SqlTypeName.DECIMAL, precision, scale));
       case "CHAR":
       case "VARCHAR":
