@@ -1024,8 +1024,15 @@ public class ViewToAvroSchemaConverterTests {
     Assert.assertEquals(actualSchema.toString(true), TestUtils.loadSchema("testEnumUnionEnum-expected.avsc"));
   }
 
-  // Disabled: Hive 2.3.9 SemanticAnalyzer throws AssertionError in UnparseTranslator.addTranslation
-  // during CREATE VIEW with UNION ALL between Avro enum and string columns (HIVE-specific bug)
+  // Disabled: upstream Hive 2.3.9 parser bug. SemanticAnalyzer throws AssertionError
+  // in UnparseTranslator.addTranslation during CREATE VIEW parse when a UNION ALL
+  // mixes an Avro enum column with a string column. Coral's mergeUnionSchema (added
+  // in #282) is unaffected — it still produces a correct STRING-typed schema for
+  // already-created views at translation time.
+  //
+  // The bug fires at CREATE VIEW parse time on Hive 2.3.9. The case stays unsupported
+  // in Coral CI/i-tests (which embed Hive 2.3.9). Re-enable once the upstream Hive
+  // parser issue is resolved.
   @Test(enabled = false)
   public void testEnumUnionString() {
     String viewSql = "CREATE VIEW v AS SELECT b1.Enum_Top_Col AS c1 FROM baseenum b1"
