@@ -85,6 +85,10 @@ public class TestUtils {
       driver.run(
           "CREATE TABLE IF NOT EXISTS test.tableInt(tinyint_col tinyint, smallint_col smallint, int_col int, bigint_col bigint)");
 
+      // Fixture for HiveViewExpander.expandView() row-type alignment regression test.
+      driver.run("CREATE TABLE IF NOT EXISTS test.realign_base(col_a int, col_b string)");
+      driver.run("CREATE VIEW IF NOT EXISTS test.realign_view AS SELECT * FROM test.realign_base");
+
       driver.run("CREATE DATABASE IF NOT EXISTS fuzzy_union");
 
       driver.run("CREATE TABLE IF NOT EXISTS fuzzy_union.tableA(a int, b struct<b1:string>)");

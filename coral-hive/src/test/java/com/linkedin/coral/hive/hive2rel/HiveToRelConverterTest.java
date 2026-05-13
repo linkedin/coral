@@ -13,8 +13,13 @@ import java.util.Map;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
+import org.apache.calcite.jdbc.JavaTypeFactoryImpl;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.RelRoot;
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeFactory;
+import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.type.ReturnTypes;
 import org.apache.calcite.sql.type.SqlTypeFamily;
@@ -666,6 +671,40 @@ public class HiveToRelConverterTest {
         + "  LogicalTableScan(table=[[hive, test, tableint]])\n";
 
     assertEquals(relToString(sql), expected);
+  }
+
+  /**
+   * Regression test for the {@link org.apache.calcite.plan.RelOptTable.ViewExpander} contract:
+   * the {@link org.apache.calcite.rel.RelRoot} returned from {@link HiveViewExpander#expandView}
+   * must have a row type that matches the caller-provided {@code rowType}, even when the
+   * re-parsed view body would naturally produce its columns in a different order. Without the
+   * alignment, downstream consumers that rely on positional access (e.g. {@code SELECT *} over
+   * a view-on-view) would index into the wrong RelNode output column.
+   */
+  @Test
+  public void testExpandViewAlignsToCallerRowType() {
+    // Build a caller-provided rowType whose order is the reverse of the view body's
+    // natural order. The view body produces [col_a INT, col_b STRING]; we ask for
+    // [col_b STRING, col_a INT].
+    RelDataTypeFactory typeFactory = new JavaTypeFactoryImpl();
+    RelDataType reversedRowType = typeFactory.builder().add("col_b", typeFactory.createSqlType(SqlTypeName.VARCHAR))
+        .add("col_a", typeFactory.createSqlType(SqlTypeName.INTEGER)).build();
+
+    HiveViewExpander expander = new HiveViewExpander(converter);
+    RelRoot result = expander.expandView(reversedRowType, "ignored", ImmutableList.of("hive", "test"),
+        ImmutableList.of("realign_view"));
+
+    List<String> actualNames = result.rel.getRowType().getFieldNames();
+    assertEquals(actualNames.size(), 2, "Expected 2 output columns");
+    assertEquals(actualNames.get(0).toLowerCase(), "col_b",
+        "Position 0 must be col_b (matches caller-provided rowType), got: " + actualNames);
+    assertEquals(actualNames.get(1).toLowerCase(), "col_a",
+        "Position 1 must be col_a (matches caller-provided rowType), got: " + actualNames);
+
+    // The types must also line up with the caller-provided rowType, not the body's natural order.
+    List<RelDataTypeField> fields = result.rel.getRowType().getFieldList();
+    assertEquals(fields.get(0).getType().getSqlTypeName(), SqlTypeName.VARCHAR);
+    assertEquals(fields.get(1).getType().getSqlTypeName(), SqlTypeName.INTEGER);
   }
 
   private String relToString(String sql) {
