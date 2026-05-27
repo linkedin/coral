@@ -64,15 +64,15 @@ import org.apache.spark.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import scala.Option;
-import scala.collection.JavaConverters;
-import scala.collection.Seq;
-
 import com.linkedin.coral.common.HiveMetastoreClient;
 import com.linkedin.coral.common.HiveMscAdapter;
 import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
 import com.linkedin.coral.schema.avro.ViewToAvroSchemaConverter;
 import com.linkedin.coral.spark.containers.SparkUDFInfo;
+
+import scala.Option;
+import scala.collection.JavaConverters;
+import scala.collection.Seq;
 
 
 /**
