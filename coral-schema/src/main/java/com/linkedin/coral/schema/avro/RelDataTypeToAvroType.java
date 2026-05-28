@@ -105,12 +105,27 @@ class RelDataTypeToAvroType {
       case CHAR:
         return Schema.create(Schema.Type.STRING);
       case BINARY:
+        // Fixed-length BINARY(n) (e.g. an Iceberg FixedType) carries an explicit precision and maps
+        // to an Avro fixed; unbounded BINARY (precision unspecified, as for Hive binary) stays bytes.
+        if (relDataType.getPrecision() != RelDataType.PRECISION_NOT_SPECIFIED && relDataType.getPrecision() > 0) {
+          return Schema.createFixed("fixed" + relDataType.getPrecision(), null, null, relDataType.getPrecision());
+        }
         return Schema.create(Schema.Type.BYTES);
       case NULL:
         return Schema.create(Schema.Type.NULL);
       case TIMESTAMP:
+        // Precision > 3 (e.g. Iceberg's TIMESTAMP(6)) is microsecond-resolution and maps to
+        // timestamp-micros. Unspecified precision (Hive timestamps) and precision <= 3 stay
+        // timestamp-millis, preserving the existing Hive-path behavior.
         schema = Schema.create(Schema.Type.LONG);
-        schema.addProp("logicalType", "timestamp-millis");
+        schema.addProp("logicalType",
+            relDataType.getPrecision() != RelDataType.PRECISION_NOT_SPECIFIED && relDataType.getPrecision() > 3
+                ? "timestamp-micros" : "timestamp-millis");
+        return schema;
+      case TIME:
+        // Iceberg TIME is microsecond-resolution; Avro represents it as a long with time-micros.
+        schema = Schema.create(Schema.Type.LONG);
+        schema.addProp("logicalType", "time-micros");
         return schema;
       case DATE:
         // In Avro, "date" type is represented as {"type": "int", "logicalType": "date"}.
