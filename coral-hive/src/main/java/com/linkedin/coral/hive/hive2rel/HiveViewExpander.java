@@ -87,9 +87,35 @@ public class HiveViewExpander implements RelOptTable.ViewExpander {
     final List<RelDataTypeField> af = a.getFieldList();
     final List<RelDataTypeField> bf = b.getFieldList();
     for (int i = 0; i < af.size(); i++) {
-      if (!af.get(i).getName().equalsIgnoreCase(bf.get(i).getName())) {
+      final RelDataTypeField afi = af.get(i);
+      final RelDataTypeField bfi = bf.get(i);
+      if (!afi.getName().equalsIgnoreCase(bfi.getName())) {
         return false;
       }
+      // Recurse into nested row-shaped types so reordered struct fields
+      // (including arrays/multisets of structs) are flagged too. Same
+      // class of silent positional-swap bug, one level deeper.
+      if (!nestedRowTypesAlignedByOrder(afi.getType(), bfi.getType())) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  private static boolean nestedRowTypesAlignedByOrder(RelDataType a, RelDataType b) {
+    if (a.isStruct() != b.isStruct()) {
+      return false;
+    }
+    if (a.isStruct()) {
+      return fieldNamesAlignedByOrder(a, b);
+    }
+    final RelDataType ac = a.getComponentType();
+    final RelDataType bc = b.getComponentType();
+    if ((ac == null) != (bc == null)) {
+      return false;
+    }
+    if (ac != null) {
+      return nestedRowTypesAlignedByOrder(ac, bc);
     }
     return true;
   }
