@@ -93,7 +93,7 @@ public abstract class ToRelConverter {
     // if the service uses its own service loader (see Trino)
     new Driver();
     config = Frameworks.newConfigBuilder().convertletTable(convertletTable).defaultSchema(schemaPlus)
-        .typeSystem(new HiveTypeSystem()).traitDefs((List<RelTraitDef>) null).operatorTable(getOperatorTable())
+        .typeSystem(new CoralTypeSystem()).traitDefs((List<RelTraitDef>) null).operatorTable(getOperatorTable())
         .programs(Programs.ofRules(Programs.RULE_SET)).build();
   }
 
@@ -117,7 +117,7 @@ public abstract class ToRelConverter {
     // if the service uses its own service loader (see Trino)
     new Driver();
     config = Frameworks.newConfigBuilder().convertletTable(convertletTable).defaultSchema(schemaPlus)
-        .typeSystem(new HiveTypeSystem()).traitDefs((List<RelTraitDef>) null).operatorTable(getOperatorTable())
+        .typeSystem(new CoralTypeSystem()).traitDefs((List<RelTraitDef>) null).operatorTable(getOperatorTable())
         .programs(Programs.ofRules(Programs.RULE_SET)).build();
 
   }
@@ -133,7 +133,7 @@ public abstract class ToRelConverter {
     // if the service uses its own service loader (see Trino)
     new Driver();
     config = Frameworks.newConfigBuilder().convertletTable(convertletTable).defaultSchema(schemaPlus)
-        .typeSystem(new HiveTypeSystem()).traitDefs((List<RelTraitDef>) null).operatorTable(getOperatorTable())
+        .typeSystem(new CoralTypeSystem()).traitDefs((List<RelTraitDef>) null).operatorTable(getOperatorTable())
         .programs(Programs.ofRules(Programs.RULE_SET)).build();
 
   }
@@ -272,7 +272,7 @@ public abstract class ToRelConverter {
     // 2. Converted expression is harder to validate for correctness(because it appears different from input)
     if (relBuilder == null) {
       Hook.REL_BUILDER_SIMPLIFY.add(Hook.propertyJ(false));
-      relBuilder = HiveRelBuilder.create(config);
+      relBuilder = CoralRelBuilder.create(config);
     }
     return relBuilder;
   }
