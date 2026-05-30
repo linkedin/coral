@@ -172,6 +172,9 @@ public class HiveToTrinoConverterTest {
         { "test", "date_calculation_view", "SELECT \"date\"(CAST(\"substr\"('2021-08-20', 1, 10) AS TIMESTAMP)), \"date\"(CAST('2021-08-20' AS TIMESTAMP)), \"date\"(CAST('2021-08-20 00:00:00' AS TIMESTAMP)), \"date_add\"('day', 1, \"date\"(CAST('2021-08-20' AS TIMESTAMP))), \"date_add\"('day', 1, \"date\"(CAST('2021-08-20 00:00:00' AS TIMESTAMP))), \"date_add\"('day', 1 * -1, \"date\"(CAST('2021-08-20' AS TIMESTAMP))), \"date_add\"('day', 1 * -1, \"date\"(CAST('2021-08-20 00:00:00' AS TIMESTAMP))), CAST(\"date_diff\"('day', \"date\"(CAST('2021-08-21' AS TIMESTAMP)), \"date\"(CAST('2021-08-20' AS TIMESTAMP))) AS INTEGER), CAST(\"date_diff\"('day', \"date\"(CAST('2021-08-19' AS TIMESTAMP)), \"date\"(CAST('2021-08-20' AS TIMESTAMP))) AS INTEGER), CAST(\"date_diff\"('day', \"date\"(CAST('2021-08-19 23:59:59' AS TIMESTAMP)), \"date\"(CAST('2021-08-20 00:00:00' AS TIMESTAMP))) AS INTEGER)\n"
             + "FROM \"test\".\"tablea\" AS \"tablea\"" },
 
+        { "test", "unix_timestamp_view", "SELECT TO_UNIXTIME(CAST(CURRENT_TIMESTAMP AS TIMESTAMP(0))), TO_UNIXTIME(CAST(DATE_PARSE('2023-06-14 00:00:00', '%Y-%m-%d %H:%i:%s') AS TIMESTAMP(0))), TO_UNIXTIME(CAST(DATE_PARSE('20230614', '%Y%m%d') AS TIMESTAMP(0)))\n"
+            + "FROM \"test\".\"tablea\" AS \"tablea\"" },
+
         { "test", "pmod_view", "SELECT MOD(MOD(- 9, 4) + 4, 4)\n" + "FROM \"test\".\"tablea\" AS \"tablea\"" },
 
         { "test", "nullscollationd_view", "SELECT *\n" + "FROM \"test\".\"tabler\" AS \"tabler\"\n"
