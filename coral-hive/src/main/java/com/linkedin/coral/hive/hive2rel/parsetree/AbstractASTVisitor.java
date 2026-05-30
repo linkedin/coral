@@ -180,7 +180,6 @@ public abstract class AbstractASTVisitor<R, C> {
       case HiveParser.TOK_ISNOTNULL:
       case HiveParser.TOK_ISNULL:
       case HiveParser.KW_CASE:
-      case HiveParser.KW_CAST:
       case HiveParser.KW_WHEN:
       case HiveParser.KW_IN:
       case HiveParser.KW_EXISTS:
