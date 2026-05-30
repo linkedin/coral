@@ -13,10 +13,10 @@ from `store_sales`
 left join `store_returns` on `sr_ticket_number` = `ss_ticket_number` and `ss_item_sk` = `sr_item_sk`
 inner join `date_dim` on `ss_sold_date_sk` = `d_date_sk`
 where `sr_ticket_number` is null
-group by `d_year`, `ss_item_sk`, `ss_customer_sk`) (select `ss_sold_year`, `ss_item_sk`, `ss_customer_sk`, round(cast(`ss_qty` as decimal(10, 10)) / coalesce(`ws_qty` + `cs_qty`, 1), 2) as `ratio`, `ss_qty` as `store_qty`, `ss_wc` as `store_wholesale_cost`, `ss_sp` as `store_sales_price`, coalesce(`ws_qty`, 0) + coalesce(`cs_qty`, 0) as `other_chan_qty`, coalesce(`ws_wc`, 0) + coalesce(`cs_wc`, 0) as `other_chan_wholesale_cost`, coalesce(`ws_sp`, 0) + coalesce(`cs_sp`, 0) as `other_chan_sales_price`
+group by `d_year`, `ss_item_sk`, `ss_customer_sk`) (select `ss_sold_year`, `ss_item_sk`, `ss_customer_sk`, round(cast(`ss_qty` as decimal(10, 2)) / coalesce(`ws_qty` + `cs_qty`, 1), 2) as `ratio`, `ss_qty` as `store_qty`, `ss_wc` as `store_wholesale_cost`, `ss_sp` as `store_sales_price`, coalesce(`ws_qty`, 0) + coalesce(`cs_qty`, 0) as `other_chan_qty`, coalesce(`ws_wc`, 0) + coalesce(`cs_wc`, 0) as `other_chan_wholesale_cost`, coalesce(`ws_sp`, 0) + coalesce(`cs_sp`, 0) as `other_chan_sales_price`
 from `ss`
 left join `ws` on `ws_sold_year` = `ss_sold_year` and `ws_item_sk` = `ss_item_sk` and `ws_customer_sk` = `ss_customer_sk`
 left join `cs` on `cs_sold_year` = `ss_sold_year` and `cs_item_sk` = `cs_item_sk` and `cs_customer_sk` = `ss_customer_sk`
 where coalesce(`ws_qty`, 0) > 0 and coalesce(`cs_qty`, 0) > 0 and `ss_sold_year` = 2000
-order by `ss_sold_year`, `ss_item_sk`, `ss_customer_sk`, `ss_qty` desc, `ss_wc` desc, `ss_sp` desc, `other_chan_qty`, `other_chan_wholesale_cost`, `other_chan_sales_price`, round(cast(`ss_qty` as decimal(10, 10)) / coalesce(`ws_qty` + `cs_qty`, 1), 2)
+order by `ss_sold_year`, `ss_item_sk`, `ss_customer_sk`, `ss_qty` desc, `ss_wc` desc, `ss_sp` desc, `other_chan_qty`, `other_chan_wholesale_cost`, `other_chan_sales_price`, round(cast(`ss_qty` as decimal(10, 2)) / coalesce(`ws_qty` + `cs_qty`, 1), 2)
 fetch next 100 rows only)
