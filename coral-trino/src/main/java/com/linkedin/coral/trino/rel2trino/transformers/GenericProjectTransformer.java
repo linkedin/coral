@@ -1,5 +1,5 @@
 /**
- * Copyright 2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2023-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -303,7 +303,7 @@ public class GenericProjectTransformer extends SqlCallTransformer {
    */
   private String structDataTypeString(RelRecordType fromDataType, RelRecordType toDataType, String fieldNameReference) {
     String structDataTypeArgumentString = structDataTypeArgumentString(fromDataType, toDataType, fieldNameReference);
-    return (String.format("cast(%s)", structDataTypeArgumentString));
+    return (String.format("TRY_CAST(%s)", structDataTypeArgumentString));
   }
 
   /**
