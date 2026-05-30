@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
+import com.linkedin.coral.common.calcite.CalciteUtil;
 import org.apache.calcite.avatica.util.TimeUnit;
 import org.apache.calcite.sql.JoinConditionType;
 import org.apache.calcite.sql.JoinType;
@@ -62,6 +63,7 @@ import com.linkedin.coral.hive.hive2rel.parsetree.parser.ParseException;
 
 import static com.google.common.base.Preconditions.checkState;
 import static java.lang.String.format;
+import static org.apache.calcite.sql.fun.SqlStdOperatorTable.*;
 import static org.apache.calcite.sql.parser.SqlParserPos.ZERO;
 
 
@@ -472,6 +474,84 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     List<SqlNode> grpCols = visitChildren(node, ctx);
     ctx.grpBy = new SqlNodeList(grpCols, ZERO);
     return ctx.grpBy;
+  }
+
+
+
+  @Override
+  protected  SqlNode visitGroupingSets(ASTNode node,  ParseContext ctx){
+    // When Hive recognizes a grouping set, it omits the group by node in the constructed AST.
+    // However, Calcite requires the grouping set to be within a group by node when building SqlNode.
+    // Therefore, we need to add a group by node.
+    if(ctx.grpBy == null){
+      ctx.grpBy = new SqlNodeList(new ArrayList<SqlNode>(), ZERO);
+    }
+
+    List<SqlNode> groupingSets = visitChildren(node, ctx);
+    List<SqlNode> operands = new ArrayList<>();
+    if (groupingSets.isEmpty()) {
+      operands.add(CalciteUtil.createSqlNodeList(Collections.emptyList()));
+    } else  {
+      // In Hive, fields used in GROUPING SETS must be declared after the GROUP BY clause.
+      // However, when constructing Calcite SqlNode, the SqlIdentifier after GROUP BY isn't required;
+      // only the child nodes of TOK_GROUPING_SETS are needed, so they are filtered out.
+      List<SqlNode> operand = groupingSets.stream()
+              .filter(f -> !(f instanceof SqlIdentifier))
+              .collect(Collectors.toList());
+      operands.add(new SqlNodeList(operand, ZERO));
+    }
+    SqlNode groupingSetsNode = GROUPING_SETS.createCall(ZERO, operands);
+    ctx.grpBy.add(groupingSetsNode);
+
+    return groupingSetsNode;
+  }
+
+  @Override
+  protected  SqlNode visitGroupingSetsExpression(ASTNode node, ParseContext ctx){
+    List<SqlNode> identifiers = visitChildren(node, ctx);
+    if (identifiers == null || identifiers.isEmpty()){
+      return  CalciteUtil.createSqlNodeList(Collections.emptyList());
+    }else{
+      return ROW.createCall(ZERO, new SqlNodeList(identifiers, ZERO));
+    }
+  }
+
+  @Override
+  protected  SqlNode visitCubeGroupBy(ASTNode node, ParseContext ctx){
+    if(ctx.grpBy == null){
+      ctx.grpBy = new SqlNodeList(new ArrayList<SqlNode>(), ZERO);
+    }
+
+    List<SqlNode> cubeGroupby = visitChildren(node, ctx);
+    List<SqlNode> operands = new ArrayList<>();
+    if (cubeGroupby.isEmpty()) {
+      operands.add(CalciteUtil.createSqlNodeList(Collections.emptyList()));
+    } else  {
+      operands.add(new SqlNodeList(cubeGroupby, ZERO));
+    }
+    SqlNode cubeCall = CUBE.createCall(ZERO, operands);
+    ctx.grpBy.add(cubeCall);
+
+    return cubeCall;
+  }
+
+  @Override
+  protected  SqlNode visitRollUpGroupBy(ASTNode node, ParseContext ctx){
+    if(ctx.grpBy == null){
+      ctx.grpBy = new SqlNodeList(new ArrayList<SqlNode>(), ZERO);
+    }
+
+    List<SqlNode> rollupGroupby = visitChildren(node, ctx);
+    List<SqlNode> operands = new ArrayList<>();
+    if (rollupGroupby.isEmpty()) {
+      operands.add(CalciteUtil.createSqlNodeList(Collections.emptyList()));
+    } else  {
+      operands.add(new SqlNodeList(rollupGroupby, ZERO));
+    }
+    SqlNode rollupCall = ROLLUP.createCall(ZERO, operands);
+    ctx.grpBy.add(rollupCall);
+
+    return rollupCall;
   }
 
   @Override
