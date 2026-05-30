@@ -5,7 +5,6 @@
  */
 package com.linkedin.coral.common.catalog;
 
-
 /**
  * @deprecated Use {@link com.linkedin.coral.catalog.iceberg.IcebergHiveTableConverter} instead.
  * This class is retained for backward compatibility and will be removed in a future release.
