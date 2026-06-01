@@ -248,4 +248,61 @@ public class ParseTreeBuilderTest {
     // Validate if the translation is successful
     assertEquals(sqlNode.toString().replaceAll("\\r?\\n", " "), table.getViewExpandedText());
   }
+
+  /**
+   * Validates that non-reserved keywords (e.g., collection, comment, role — listed under the
+   * {@code nonReserved} rule in the Hive grammar) can be used as unquoted table aliases in FROM
+   * clauses. This is needed because Hive's CBO automatically adds the table name as an unquoted
+   * alias when persisting view definitions.
+   * See BDP-70589.
+   */
+  @DataProvider(name = "nonReservedKeywordImplicitAlias")
+  public Object[][] getNonReservedKeywordImplicitAliasSql() {
+    return new Object[][] { { "SELECT collection.a FROM test.tableOne collection WHERE collection.a > 0", "SELECT `collection`.`a`\nFROM `test`.`tableOne` AS `collection`\nWHERE `collection`.`a` > 0" }, { "SELECT comment.a FROM test.tableOne comment WHERE comment.a > 0", "SELECT `comment`.`a`\nFROM `test`.`tableOne` AS `comment`\nWHERE `comment`.`a` > 0" }, { "SELECT role.a FROM test.tableOne role WHERE role.a > 0", "SELECT `role`.`a`\nFROM `test`.`tableOne` AS `role`\nWHERE `role`.`a` > 0" }, { "SELECT data.a FROM test.tableOne data WHERE data.a > 0", "SELECT `data`.`a`\nFROM `test`.`tableOne` AS `data`\nWHERE `data`.`a` > 0" }, { "SELECT schema.a FROM test.tableOne schema WHERE schema.a > 0", "SELECT `schema`.`a`\nFROM `test`.`tableOne` AS `schema`\nWHERE `schema`.`a` > 0" }, { "SELECT view.a FROM test.tableOne view WHERE view.a > 0", "SELECT `view`.`a`\nFROM `test`.`tableOne` AS `view`\nWHERE `view`.`a` > 0" }, { "SELECT index.a FROM test.tableOne index WHERE index.a > 0", "SELECT `index`.`a`\nFROM `test`.`tableOne` AS `index`\nWHERE `index`.`a` > 0" }, { "SELECT enable.a FROM test.tableOne enable WHERE enable.a > 0", "SELECT `enable`.`a`\nFROM `test`.`tableOne` AS `enable`\nWHERE `enable`.`a` > 0" }, };
+  }
+
+  @Test(dataProvider = "nonReservedKeywordImplicitAlias")
+  public void testNonReservedKeywordAsImplicitAlias(String input, String expected) {
+    SqlNode sqlNode = convert(input);
+    assertNotNull(sqlNode, "Failed to parse SQL with nonReserved keyword as implicit alias: " + input);
+    assertEquals(sqlNode.toString(), expected);
+  }
+
+  @DataProvider(name = "nonReservedKeywordExplicitAlias")
+  public Object[][] getNonReservedKeywordExplicitAliasSql() {
+    return new Object[][] { { "SELECT collection.a FROM test.tableOne AS collection WHERE collection.a > 0", "SELECT `collection`.`a`\nFROM `test`.`tableOne` AS `collection`\nWHERE `collection`.`a` > 0" }, { "SELECT role.a FROM test.tableOne AS role WHERE role.a > 0", "SELECT `role`.`a`\nFROM `test`.`tableOne` AS `role`\nWHERE `role`.`a` > 0" }, };
+  }
+
+  @Test(dataProvider = "nonReservedKeywordExplicitAlias")
+  public void testNonReservedKeywordAsExplicitAlias(String input, String expected) {
+    SqlNode sqlNode = convert(input);
+    assertNotNull(sqlNode, "Failed to parse SQL with nonReserved keyword as explicit AS alias: " + input);
+    assertEquals(sqlNode.toString(), expected);
+  }
+
+  @DataProvider(name = "sql11KeywordExplicitAlias")
+  public Object[][] getSql11KeywordExplicitAliasSql() {
+    return new Object[][] { { "SELECT a FROM test.tableOne AS group WHERE a > 0", "SELECT `a`\nFROM `test`.`tableOne` AS `group`\nWHERE `a` > 0" }, { "SELECT a FROM test.tableOne AS union WHERE a > 0", "SELECT `a`\nFROM `test`.`tableOne` AS `union`\nWHERE `a` > 0" }, { "SELECT a FROM test.tableOne AS inner WHERE a > 0", "SELECT `a`\nFROM `test`.`tableOne` AS `inner`\nWHERE `a` > 0" }, { "SELECT a FROM test.tableOne AS left WHERE a > 0", "SELECT `a`\nFROM `test`.`tableOne` AS `left`\nWHERE `a` > 0" }, { "SELECT a FROM test.tableOne AS order WHERE a > 0", "SELECT `a`\nFROM `test`.`tableOne` AS `order`\nWHERE `a` > 0" }, { "SELECT a FROM test.tableOne AS table WHERE a > 0", "SELECT `a`\nFROM `test`.`tableOne` AS `table`\nWHERE `a` > 0" }, };
+  }
+
+  @Test(dataProvider = "sql11KeywordExplicitAlias")
+  public void testSql11KeywordAsExplicitAlias(String input, String expected) {
+    SqlNode sqlNode = convert(input);
+    assertNotNull(sqlNode, "Failed to parse SQL with sql11 keyword as explicit AS alias: " + input);
+    assertEquals(sqlNode.toString(), expected);
+  }
+
+  @DataProvider(name = "sql11KeywordNotConsumedAsAlias")
+  public Object[][] getSql11KeywordNotConsumedAsAliasSql() {
+    return new Object[][] { { "SELECT a FROM test.tableOne group BY a", "GROUP BY" }, { "SELECT a FROM test.tableOne order BY a", "ORDER BY" }, { "SELECT test.tableOne.a FROM test.tableOne inner JOIN test.tableTwo ON test.tableOne.a = test.tableTwo.x", "INNER JOIN" }, { "SELECT test.tableOne.a FROM test.tableOne left JOIN test.tableTwo ON test.tableOne.a = test.tableTwo.x", "LEFT JOIN" }, { "SELECT test.tableOne.a FROM test.tableOne full OUTER JOIN test.tableTwo ON test.tableOne.a = test.tableTwo.x", "FULL" }, { "SELECT a FROM test.tableOne union SELECT x FROM test.tableTwo", "UNION" }, };
+  }
+
+  @Test(dataProvider = "sql11KeywordNotConsumedAsAlias")
+  public void testSql11KeywordNotConsumedAsAlias(String input, String expectedClause) {
+    SqlNode sqlNode = convert(input);
+    assertNotNull(sqlNode, "Failed to parse SQL where sql11 keyword should not be alias: " + input);
+    String result = sqlNode.toString();
+    assertTrue(result.contains(expectedClause),
+        expectedClause + " should be parsed as SQL clause, not alias: " + result);
+  }
 }

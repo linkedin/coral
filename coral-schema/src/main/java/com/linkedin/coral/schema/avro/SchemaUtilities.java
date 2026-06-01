@@ -42,6 +42,9 @@ import org.slf4j.LoggerFactory;
 
 import com.linkedin.coral.com.google.common.base.Preconditions;
 import com.linkedin.coral.com.google.common.base.Strings;
+import com.linkedin.coral.common.catalog.CoralTable;
+import com.linkedin.coral.common.catalog.HiveTable;
+import com.linkedin.coral.common.types.StructType;
 import com.linkedin.coral.schema.avro.exceptions.SchemaNotFoundException;
 
 import static com.linkedin.coral.schema.avro.AvroSerdeUtils.*;
@@ -128,6 +131,51 @@ class SchemaUtilities {
     return resultTableSchema;
   }
 
+  /**
+   * Returns the Avro schema for a {@link CoralTable}.
+   *
+   * For Hive-backed tables, delegates to {@link #getAvroSchemaForTable(Table, boolean)} to preserve
+   * existing behavior unchanged. For other CoralTables (e.g. Iceberg-backed), reads partner Avro
+   * from {@link CoralTable#properties()} and merges it with the Coral schema using Iceberg-first
+   * semantics via {@link MergeCoralSchemaWithAvro#merge}. When partner Avro is missing, a pure
+   * Coral-derived schema is generated; in strict mode this case throws {@link SchemaNotFoundException}.
+   *
+   * @param coralTable the table to resolve, must not be null
+   * @param strictMode if true, throw when no partner Avro schema is available
+   * @return the resolved Avro schema
+   */
+  static Schema getAvroSchemaForTable(@Nonnull final CoralTable coralTable, boolean strictMode) {
+    Preconditions.checkNotNull(coralTable);
+
+    // Hive-backed CoralTable: delegate to the existing Hive-table API to preserve current behavior.
+    if (coralTable instanceof HiveTable) {
+      // TODO(linkedin/coral#606): migrate off HiveTable.getHiveTable() (deprecated INTERNAL API).
+      return getAvroSchemaForTable(((HiveTable) coralTable).getHiveTable(), strictMode);
+    }
+
+    // Non-Hive (e.g. Iceberg) path: parse partner Avro from properties and merge with the Coral schema.
+    Schema partnerAvro = getCasePreservedSchemaFromPropertyMaps(coralTable.properties(), null, coralTable.name());
+    if (partnerAvro == null && strictMode) {
+      throw new SchemaNotFoundException("strictMode is set to True and fallback is disabled. "
+          + "Cannot determine Avro schema for table " + coralTable.name() + ".");
+    }
+
+    Preconditions.checkState(coralTable.getSchema() instanceof StructType,
+        "CoralTable schema must be a StructType but was " + coralTable.getSchema().getClass().getSimpleName());
+    StructType coralSchema = (StructType) coralTable.getSchema();
+
+    // Match the legacy {@link #convertHiveSchemaToAvro} behavior for the no-partner fallback:
+    // recordName is the bare table name and recordNamespace is the fully qualified name.
+    // When partnerAvro is non-null, MergeCoralSchemaWithAvro takes name/namespace from the
+    // partner record (via copyRecord in mergeTopLevelStruct), so these args only apply here.
+    String fullName = coralTable.name();
+    int lastDot = fullName.lastIndexOf('.');
+    String recordName = lastDot >= 0 ? fullName.substring(lastDot + 1) : fullName;
+    String recordNamespace = fullName;
+
+    return MergeCoralSchemaWithAvro.merge(coralSchema, partnerAvro, recordName, recordNamespace);
+  }
+
   static Schema convertHiveSchemaToAvro(@Nonnull final Table table) {
     Preconditions.checkNotNull(table);
 
@@ -154,13 +202,44 @@ class SchemaUtilities {
   static Schema getCasePreservedSchemaFromTblProperties(@Nonnull final Table table) {
     Preconditions.checkNotNull(table);
 
-    // First try avro.schema.literal
-    String schemaStr = readSchemaFromSchemaLiteral(table);
+    Map<String, String> serdeProperties = table.getSd() != null && table.getSd().getSerdeInfo() != null
+        ? table.getSd().getSerdeInfo().getParameters() : null;
+
+    return getCasePreservedSchemaFromPropertyMaps(table.getParameters(), serdeProperties, getCompleteName(table));
+  }
+
+  /**
+   * Returns case sensitive schema from property maps or null if not present.
+   * This is the shared implementation used by both the Hive Table path and the CoralTable path.
+   *
+   * @param tableProperties table-level properties (e.g. from Table.getParameters() or CoralTable.properties())
+   * @param serdeProperties serde-level properties, or null if not available (CoralTable path)
+   * @param tableName human-readable table name for logging
+   * @return Avro schema stored under 'avro.schema.literal', under 'dali.row.schema',
+   * or null if none of the above are present
+   */
+  static Schema getCasePreservedSchemaFromPropertyMaps(@Nonnull Map<String, String> tableProperties,
+      @Nullable Map<String, String> serdeProperties, String tableName) {
+    Preconditions.checkNotNull(tableProperties);
+
+    // First try avro.schema.literal from table properties
+    String schemaStr = tableProperties.get(AvroSerdeUtils.AVRO_SCHEMA_LITERAL);
+
+    // Then try avro.schema.literal from serde properties
+    if (Strings.isNullOrEmpty(schemaStr) && serdeProperties != null) {
+      schemaStr = serdeProperties.get(AvroSerdeUtils.AVRO_SCHEMA_LITERAL);
+    }
+
+    if (Strings.isNullOrEmpty(schemaStr)) {
+      LOG.debug("No avro schema defined under table or serde property {} for table {}",
+          AvroSerdeUtils.AVRO_SCHEMA_LITERAL, tableName);
+    }
+
     Schema schema = null;
 
     // Then, try dali.row.schema
     if (Strings.isNullOrEmpty(schemaStr)) {
-      schemaStr = table.getParameters().get(DALI_ROW_SCHEMA);
+      schemaStr = tableProperties.get(DALI_ROW_SCHEMA);
       if (!Strings.isNullOrEmpty(schemaStr)) {
         schemaStr = schemaStr.replaceAll("\n", "\\\\n");
         // Given schemas stored in `dali.row.schema` are all non-nullable, we need to convert them to be nullable to be compatible with Spark
@@ -171,11 +250,11 @@ class SchemaUtilities {
     }
 
     if (schema != null) {
-      LOG.info("Schema found for table {}", getCompleteName(table));
+      LOG.info("Schema found for table {}", tableName);
       LOG.debug("Schema is {}", schema.toString(true));
       return schema;
     } else {
-      LOG.warn("Cannot determine avro schema for table {}", getCompleteName(table));
+      LOG.warn("Cannot determine avro schema for table {}", tableName);
       return null;
     }
   }
@@ -992,28 +1071,6 @@ class SchemaUtilities {
     }
 
     return partKeys;
-  }
-
-  /**
-   * Note: This method is modified based on SchemaUtilities in Dali codebase
-   *
-   * @param table
-   * @return
-   */
-  private static String readSchemaFromSchemaLiteral(@Nonnull Table table) {
-    Preconditions.checkNotNull(table);
-
-    String schemaStr = table.getParameters().get(AvroSerdeUtils.AVRO_SCHEMA_LITERAL);
-    if (Strings.isNullOrEmpty(schemaStr)) {
-      schemaStr = table.getSd().getSerdeInfo().getParameters().get(AvroSerdeUtils.AVRO_SCHEMA_LITERAL);
-    }
-
-    if (Strings.isNullOrEmpty(schemaStr)) {
-      LOG.debug("No avro schema defined under table or serde property {} for table {}",
-          AvroSerdeUtils.AVRO_SCHEMA_LITERAL, getCompleteName(table));
-    }
-
-    return schemaStr;
   }
 
   private static String getCompleteName(@Nonnull Table table) {

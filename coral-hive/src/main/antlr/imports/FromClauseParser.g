@@ -186,10 +186,16 @@ tableSource
     : tabname=tableName
     ((tableProperties) => props=tableProperties)?
     ((tableSample) => ts=tableSample)?
-    ((KW_AS) => (KW_AS alias=Identifier)
+    ((KW_AS) => (KW_AS asAlias=identifier)
     |
-    (Identifier) => (alias=Identifier))?
-    -> ^(TOK_TABREF $tabname $props? $ts? $alias?)
+    (tableAliasCandidate) => (implicitAlias=tableAliasCandidate))?
+    -> ^(TOK_TABREF $tabname $props? $ts? $asAlias? $implicitAlias?)
+    ;
+
+tableAliasCandidate
+    :
+    Identifier
+    | nonReserved -> Identifier[$nonReserved.text]
     ;
 
 tableName

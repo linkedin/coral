@@ -1,5 +1,5 @@
 /**
- * Copyright 2018-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2018-2026 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -89,6 +89,10 @@ public class SparkSqlRewriter extends SqlShuttle {
           final SqlBasicTypeNameSpec stringTypeName = new SqlBasicTypeNameSpec("STRING", SqlTypeName.VARCHAR, -1,
               basicTypeNameSpec.getScale(), basicTypeNameSpec.getCharSetName(), parserPos);
           return new SqlDataTypeSpec(stringTypeName, type.getTimeZone(), parserPos);
+        case "VARBINARY":
+          final SqlBasicTypeNameSpec binaryTypeName =
+              new SqlBasicTypeNameSpec(SqlTypeName.BINARY, -1, -1, basicTypeNameSpec.getCharSetName(), parserPos);
+          return new SqlDataTypeSpec(binaryTypeName, type.getTimeZone(), parserPos);
         default:
           return type;
       }

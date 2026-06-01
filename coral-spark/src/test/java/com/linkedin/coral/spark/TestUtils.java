@@ -243,6 +243,10 @@ public class TestUtils {
         "tblproperties('functions' = 'LessThanHundred_versioning_prefix_0_1_x:coral_udf_version_0_1_x.com.linkedin.coral.hive.hive2rel.CoralTestVersionedUDF',",
         "              'dependencies' = 'ivy://com.linkedin:udf-shaded:1.0')", "AS",
         "SELECT LessThanHundred_versioning_prefix_0_1_x(a)", "FROM foo"));
+
+    run(driver, "CREATE TABLE IF NOT EXISTS `collection`(a int, b string)");
+    run(driver,
+        "CREATE VIEW IF NOT EXISTS view_reserved_keyword_alias AS SELECT `collection`.a, `collection`.b FROM default.`collection` `collection` WHERE `collection`.a > 0");
   }
 
   private static void executeCreateTableQuery(Driver driver, String dbName, String tableName, String schema) {

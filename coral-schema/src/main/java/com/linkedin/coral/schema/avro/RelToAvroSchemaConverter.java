@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Queue;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
@@ -59,6 +60,8 @@ import org.slf4j.LoggerFactory;
 import com.linkedin.coral.com.google.common.base.Preconditions;
 import com.linkedin.coral.common.HiveMetastoreClient;
 import com.linkedin.coral.common.HiveUncollect;
+import com.linkedin.coral.common.catalog.CoralCatalog;
+import com.linkedin.coral.common.catalog.CoralTable;
 import com.linkedin.coral.hive.hive2rel.functions.OrdinalReturnTypeInferenceV2;
 
 
@@ -104,11 +107,35 @@ import com.linkedin.coral.hive.hive2rel.functions.OrdinalReturnTypeInferenceV2;
  *
  */
 public class RelToAvroSchemaConverter {
+  @Nullable
   private final HiveMetastoreClient hiveMetastoreClient;
+  @Nullable
+  private final CoralCatalog coralCatalog;
   private static final Logger LOG = LoggerFactory.getLogger(RelToAvroSchemaConverter.class);
 
+  /**
+   * Legacy constructor wired against {@link HiveMetastoreClient}. Prefer
+   * {@link #RelToAvroSchemaConverter(CoralCatalog)} for new callers.
+   *
+   * @deprecated use {@link #RelToAvroSchemaConverter(CoralCatalog)} instead.
+   */
+  @Deprecated
   public RelToAvroSchemaConverter(HiveMetastoreClient hiveMetastoreClient) {
     this.hiveMetastoreClient = hiveMetastoreClient;
+    this.coralCatalog = null;
+  }
+
+  /**
+   * CoralCatalog-backed constructor. Base-table resolution inside
+   * {@link SchemaRelShuttle#getTableScanSchema} is delegated to the CoralCatalog (and
+   * {@link SchemaUtilities#getAvroSchemaForTable(CoralTable, boolean)}), so Hive- and
+   * Iceberg-backed tables share a single resolution path. This constructor and the legacy
+   * {@link #RelToAvroSchemaConverter(HiveMetastoreClient)} are mutually exclusive — pick one
+   * abstraction; instances do not mix.
+   */
+  public RelToAvroSchemaConverter(CoralCatalog coralCatalog) {
+    this.coralCatalog = coralCatalog;
+    this.hiveMetastoreClient = null;
   }
 
   /**
@@ -125,7 +152,7 @@ public class RelToAvroSchemaConverter {
     Preconditions.checkNotNull(relNode, "RelNode to convert cannot be null");
 
     Map<RelNode, Schema> schemaMap = new HashMap<>();
-    relNode.accept(new SchemaRelShuttle(hiveMetastoreClient, schemaMap, strictMode, forceLowercase));
+    relNode.accept(new SchemaRelShuttle(coralCatalog, hiveMetastoreClient, schemaMap, strictMode, forceLowercase));
     Schema viewSchema = schemaMap.get(relNode);
 
     return viewSchema;
@@ -171,10 +198,17 @@ public class RelToAvroSchemaConverter {
     private final boolean strictMode;
     private final boolean forceLowercase;
 
+    // Exactly one of these is non-null per instance, mirroring the public constructor split on
+    // RelToAvroSchemaConverter. The two paths never mix: a CoralCatalog-backed shuttle never
+    // resolves a table through HiveMetastoreClient, and vice versa.
+    @Nullable
     private final HiveMetastoreClient hiveMetastoreClient;
+    @Nullable
+    private final CoralCatalog coralCatalog;
 
-    public SchemaRelShuttle(HiveMetastoreClient hiveMetastoreClient, Map<RelNode, Schema> schemaMap, boolean strictMode,
-        boolean forceLowercase) {
+    public SchemaRelShuttle(@Nullable CoralCatalog coralCatalog, @Nullable HiveMetastoreClient hiveMetastoreClient,
+        Map<RelNode, Schema> schemaMap, boolean strictMode, boolean forceLowercase) {
+      this.coralCatalog = coralCatalog;
       this.hiveMetastoreClient = hiveMetastoreClient;
       this.schemaMap = schemaMap;
       this.strictMode = strictMode;
@@ -361,25 +395,39 @@ public class RelToAvroSchemaConverter {
     }
 
     /**
-     * This method retrieves avro schema for tableScan
+     * Retrieves the avro schema for a tableScan.
      *
-     * @param tableScan
-     * @return avro schema for tableScan. The schema includes partition columns if table is partitioned
-     * @throws RuntimeException if cannot find table in Hive metastore
-     * @throws RuntimeException if cannot determine avro schema for tableScan
+     * Resolution stays inside whichever abstraction the converter was constructed with:
+     * <ul>
+     *   <li>CoralCatalog-backed instances resolve via {@link CoralCatalog#getTable} and
+     *       {@link SchemaUtilities#getAvroSchemaForTable(CoralTable, boolean)}.</li>
+     *   <li>HiveMetastoreClient-backed instances resolve via {@link HiveMetastoreClient#getTable}
+     *       and {@link SchemaUtilities#getAvroSchemaForTable(Table, boolean)}.</li>
+     * </ul>
+     * The two paths do not fall back to each other — if the configured abstraction does not
+     * surface the table, this method throws.
+     *
+     * @return avro schema for tableScan. The schema includes partition columns if the table is partitioned.
+     * @throws RuntimeException if the configured catalog/metastore cannot find the table or produce its schema.
      */
     private Schema getTableScanSchema(TableScan tableScan) {
       List<String> qualifiedName = tableScan.getTable().getQualifiedName();
       String dbName = qualifiedName.get(1);
       String tableName = qualifiedName.get(2);
+
+      if (coralCatalog != null) {
+        CoralTable coralTable = coralCatalog.getTable(dbName, tableName);
+        if (coralTable == null) {
+          throw new RuntimeException("Cannot find table " + dbName + "." + tableName + " in CoralCatalog");
+        }
+        return SchemaUtilities.getAvroSchemaForTable(coralTable, strictMode);
+      }
+
       Table baseTable = hiveMetastoreClient.getTable(dbName, tableName);
       if (baseTable == null) {
         throw new RuntimeException("Cannot find table " + dbName + "." + tableName + " in Hive metastore");
       }
-
-      Schema tableSchema = SchemaUtilities.getAvroSchemaForTable(baseTable, strictMode);
-
-      return tableSchema;
+      return SchemaUtilities.getAvroSchemaForTable(baseTable, strictMode);
     }
   }
 

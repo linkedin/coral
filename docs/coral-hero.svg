@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 1130" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif">
+  <defs>
+    <linearGradient id="bar" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#0a66c2"/>
+      <stop offset="1" stop-color="#004182"/>
+    </linearGradient>
+    <linearGradient id="icon" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0a66c2"/>
+      <stop offset="1" stop-color="#004182"/>
+    </linearGradient>
+    <linearGradient id="diffBg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#eff6ff"/>
+      <stop offset="1" stop-color="#e0e7ff"/>
+    </linearGradient>
+    <linearGradient id="archCenter" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0a66c2"/>
+      <stop offset="1" stop-color="#004182"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1100" height="1130" fill="#ffffff"/>
+
+  <!-- Top accent -->
+  <rect width="1100" height="8" fill="url(#bar)"/>
+
+  <!-- HEADER -->
+  <rect x="88" y="30" width="60" height="60" rx="14" fill="url(#icon)"/>
+  <text x="118" y="74" font-size="36" font-weight="800" fill="#ffffff" text-anchor="middle">C</text>
+  <text x="170" y="68" font-size="48" font-weight="800" fill="#1a1a2e" letter-spacing="-1.5">Coral</text>
+  <text x="172" y="92" font-size="13" font-weight="600" fill="#0a66c2" letter-spacing="2.5">QUERY TRANSLATION &amp; REWRITE ENGINE</text>
+  <text x="1012" y="68" font-size="16" font-weight="700" fill="#0a66c2" text-anchor="end">LinkedIn</text>
+
+  <line x1="88" y1="116" x2="1012" y2="116" stroke="#e2e8f0"/>
+
+  <!-- VALUE PROP -->
+  <text x="88" y="160" font-size="22" font-weight="600" fill="#2d3748">Translate, analyze, and rewrite SQL queries across <tspan fill="#0a66c2" font-weight="700">any dialect</tspan></text>
+  <text x="88" y="192" font-size="22" font-weight="600" fill="#2d3748">through a single, <tspan fill="#0a66c2" font-weight="700">engine-independent</tspan> intermediate representation.</text>
+
+  <!-- PROBLEM -->
+  <rect x="0" y="220" width="1100" height="100" fill="#f8fafc"/>
+  <line x1="0" y1="220" x2="1100" y2="220" stroke="#e2e8f0"/>
+  <line x1="0" y1="320" x2="1100" y2="320" stroke="#e2e8f0"/>
+  <text x="88" y="248" font-size="11" font-weight="700" fill="#b91c1c" letter-spacing="2.5">THE PROBLEM</text>
+  <text x="88" y="274" font-size="14" fill="#4a5568">Modern data platforms run Hive, Spark, Trino, and more in parallel. Each engine has its own SQL dialect, function</text>
+  <text x="88" y="294" font-size="14" fill="#4a5568">signatures, and type semantics. Migrating queries, enforcing governance, and maintaining views across engines is</text>
+  <text x="88" y="314" font-size="14" fill="#4a5568">manual, error-prone, and doesn't scale.</text>
+
+  <!-- TWO-COLUMN CONTENT -->
+  <line x1="550" y1="345" x2="550" y2="755" stroke="#e2e8f0"/>
+  <line x1="0" y1="755" x2="1100" y2="755" stroke="#e2e8f0"/>
+
+  <!-- Why Coral - left column -->
+  <text x="88" y="370" font-size="18" font-weight="700" fill="#1a1a2e">Why Coral?</text>
+
+  <g transform="translate(88,395)">
+    <rect width="34" height="34" rx="8" fill="#e8f0fe"/>
+    <text x="17" y="24" font-size="18" fill="#0a66c2" text-anchor="middle">✓</text>
+    <text x="48" y="14" font-size="14" font-weight="700" fill="#1a1a2e">Battle Tested</text>
+    <text x="48" y="32" font-size="13" fill="#64748b">100,000s of transformations in production at LinkedIn daily</text>
+  </g>
+
+  <g transform="translate(88,455)">
+    <rect width="34" height="34" rx="8" fill="#dbeafe"/>
+    <text x="17" y="24" font-size="18" fill="#1d4ed8" text-anchor="middle">⚙</text>
+    <text x="48" y="14" font-size="14" font-weight="700" fill="#1a1a2e">Dual IR</text>
+    <text x="48" y="32" font-size="13" fill="#64748b">AST for translation, Logical Plan for rewrites — bijective between them</text>
+  </g>
+
+  <g transform="translate(88,515)">
+    <rect width="34" height="34" rx="8" fill="#e0e7ff"/>
+    <text x="17" y="24" font-size="18" fill="#4338ca" text-anchor="middle">⇄</text>
+    <text x="48" y="14" font-size="14" font-weight="700" fill="#1a1a2e">N-to-N Translation</text>
+    <text x="48" y="32" font-size="13" fill="#64748b">Add one adapter, connect to every existing dialect automatically</text>
+  </g>
+
+  <g transform="translate(88,575)">
+    <rect width="34" height="34" rx="8" fill="#ede9fe"/>
+    <text x="17" y="24" font-size="18" fill="#6d28d9" text-anchor="middle">✎</text>
+    <text x="48" y="14" font-size="14" font-weight="700" fill="#1a1a2e">Rewritable</text>
+    <text x="48" y="32" font-size="13" fill="#64748b">Transform queries structurally — incremental rewrites, predicate pushdown</text>
+  </g>
+
+  <g transform="translate(88,635)">
+    <rect width="34" height="34" rx="8" fill="#e0f2fe"/>
+    <text x="17" y="24" font-size="18" fill="#0369a1" text-anchor="middle">★</text>
+    <text x="48" y="14" font-size="14" font-weight="700" fill="#1a1a2e">Expressive</text>
+    <text x="48" y="32" font-size="13" fill="#64748b">Lateral views, UDTFs, window functions, CTEs, complex nested types</text>
+  </g>
+
+  <!-- Use Cases - right column -->
+  <text x="580" y="370" font-size="18" font-weight="700" fill="#1a1a2e">Use Cases</text>
+
+  <g transform="translate(580,393)">
+    <circle cx="6" cy="9" r="5" fill="#0a66c2"/>
+    <text x="20" y="14" font-size="14" font-weight="600" fill="#1a1a2e">SQL Dialect Translation</text>
+    <text x="20" y="32" font-size="13" fill="#64748b">Migrate queries between Hive, Spark, and Trino with correct function and type mapping</text>
+  </g>
+
+  <g transform="translate(580,448)">
+    <circle cx="6" cy="9" r="5" fill="#0a66c2"/>
+    <text x="20" y="14" font-size="14" font-weight="600" fill="#1a1a2e">Materialized Views</text>
+    <text x="20" y="32" font-size="13" fill="#64748b">Replace recurring batch workloads with materialized tables to cut compute costs</text>
+  </g>
+
+  <g transform="translate(580,503)">
+    <circle cx="6" cy="9" r="5" fill="#0a66c2"/>
+    <text x="20" y="14" font-size="14" font-weight="600" fill="#1a1a2e">Incremental View Maintenance</text>
+    <text x="20" y="32" font-size="13" fill="#64748b">Auto-rewrite batch views to delta queries — process only changed data</text>
+  </g>
+
+  <g transform="translate(580,558)">
+    <circle cx="6" cy="9" r="5" fill="#0a66c2"/>
+    <text x="20" y="14" font-size="14" font-weight="600" fill="#1a1a2e">Data Governance</text>
+    <text x="20" y="32" font-size="13" fill="#64748b">Inject masking and consent-based access control into query plans transparently</text>
+  </g>
+
+  <g transform="translate(580,613)">
+    <circle cx="6" cy="9" r="5" fill="#0a66c2"/>
+    <text x="20" y="14" font-size="14" font-weight="600" fill="#1a1a2e">Query Optimization</text>
+    <text x="20" y="32" font-size="13" fill="#64748b">Rule-based optimizer for plan-level transformations and predicate pushdown</text>
+  </g>
+
+  <g transform="translate(580,668)">
+    <circle cx="6" cy="9" r="5" fill="#0a66c2"/>
+    <text x="20" y="14" font-size="14" font-weight="600" fill="#1a1a2e">Test Data Generation</text>
+    <text x="20" y="32" font-size="13" fill="#64748b">Generate representative test datasets from query structure for validation</text>
+  </g>
+
+  <!-- DIFFERENTIATOR -->
+  <g transform="translate(88,775)">
+    <rect width="924" height="80" rx="10" fill="url(#diffBg)" stroke="#bfdbfe"/>
+    <text x="24" y="34" font-size="22" fill="#0a66c2">◆</text>
+    <text x="56" y="30" font-size="15" font-weight="700" fill="#1a1a2e">What Makes Coral Different</text>
+    <text x="56" y="52" font-size="13" fill="#4a5568">Unlike point-to-point transpilers, Coral uses a universal IR so every new dialect connects to all others. Unlike</text>
+    <text x="56" y="70" font-size="13" fill="#4a5568">query optimizers, Coral preserves full query semantics across translation, rewriting, and governance in one framework.</text>
+  </g>
+
+  <line x1="0" y1="880" x2="1100" y2="880" stroke="#e2e8f0"/>
+
+  <!-- ARCHITECTURE -->
+  <g transform="translate(88,895)">
+    <rect width="924" height="135" rx="10" fill="#f8fafc" stroke="#e2e8f0"/>
+
+    <text x="100" y="22" font-size="10" font-weight="700" fill="#94a3b8" letter-spacing="1.5" text-anchor="middle">INPUT</text>
+    <g transform="translate(40,32)">
+      <rect width="120" height="22" rx="5" fill="#ffffff" stroke="#cbd5e1"/>
+      <text x="60" y="16" font-size="12" font-weight="500" fill="#475569" text-anchor="middle">Hive SQL</text>
+    </g>
+    <g transform="translate(40,58)">
+      <rect width="120" height="22" rx="5" fill="#ffffff" stroke="#cbd5e1"/>
+      <text x="60" y="16" font-size="12" font-weight="500" fill="#475569" text-anchor="middle">Spark SQL</text>
+    </g>
+    <g transform="translate(40,84)">
+      <rect width="120" height="22" rx="5" fill="#ffffff" stroke="#cbd5e1"/>
+      <text x="60" y="16" font-size="12" font-weight="500" fill="#475569" text-anchor="middle">Trino SQL</text>
+    </g>
+    <g transform="translate(40,110)">
+      <rect width="120" height="22" rx="5" fill="#ffffff" stroke="#cbd5e1" stroke-dasharray="4,3"/>
+      <text x="60" y="16" font-size="12" font-weight="500" fill="#94a3b8" text-anchor="middle">Other Dialect</text>
+    </g>
+
+    <text x="220" y="78" font-size="32" fill="#94a3b8">→</text>
+
+    <g transform="translate(360,38)">
+      <rect width="200" height="60" rx="12" fill="url(#archCenter)"/>
+      <text x="100" y="34" font-size="22" font-weight="800" fill="#ffffff" text-anchor="middle">Coral</text>
+      <text x="100" y="50" font-size="11" fill="#cbd5e1" text-anchor="middle">AST &amp; Logical Plan IR</text>
+    </g>
+
+    <text x="600" y="78" font-size="32" fill="#94a3b8">→</text>
+
+    <text x="824" y="22" font-size="10" font-weight="700" fill="#94a3b8" letter-spacing="1.5" text-anchor="middle">OUTPUT</text>
+    <g transform="translate(764,32)">
+      <rect width="120" height="22" rx="5" fill="#ffffff" stroke="#cbd5e1"/>
+      <text x="60" y="16" font-size="12" font-weight="500" fill="#475569" text-anchor="middle">Hive SQL</text>
+    </g>
+    <g transform="translate(764,58)">
+      <rect width="120" height="22" rx="5" fill="#ffffff" stroke="#cbd5e1"/>
+      <text x="60" y="16" font-size="12" font-weight="500" fill="#475569" text-anchor="middle">Spark SQL</text>
+    </g>
+    <g transform="translate(764,84)">
+      <rect width="120" height="22" rx="5" fill="#ffffff" stroke="#cbd5e1"/>
+      <text x="60" y="16" font-size="12" font-weight="500" fill="#475569" text-anchor="middle">Trino SQL</text>
+    </g>
+    <g transform="translate(764,110)">
+      <rect width="120" height="22" rx="5" fill="#ffffff" stroke="#cbd5e1" stroke-dasharray="4,3"/>
+      <text x="60" y="16" font-size="12" font-weight="500" fill="#94a3b8" text-anchor="middle">Other Dialect</text>
+    </g>
+  </g>
+
+  <line x1="0" y1="1050" x2="1100" y2="1050" stroke="#e2e8f0"/>
+
+  <!-- INTEGRATIONS -->
+  <g transform="translate(88,1070)">
+    <text font-size="11" font-weight="700" fill="#718096" letter-spacing="1.8">BUILT FOR YOUR STACK</text>
+    <g transform="translate(0,16)" font-size="12" font-weight="600" fill="#2d3748">
+      <g><rect width="110" height="28" rx="14" fill="#ffffff" stroke="#dde3ea"/><text x="55" y="19" text-anchor="middle">Apache Hive</text></g>
+      <g transform="translate(120,0)"><rect width="120" height="28" rx="14" fill="#ffffff" stroke="#dde3ea"/><text x="60" y="19" text-anchor="middle">Apache Spark</text></g>
+      <g transform="translate(250,0)"><rect width="70" height="28" rx="14" fill="#ffffff" stroke="#dde3ea"/><text x="35" y="19" text-anchor="middle">Trino</text></g>
+      <g transform="translate(330,0)"><rect width="125" height="28" rx="14" fill="#ffffff" stroke="#dde3ea"/><text x="62" y="19" text-anchor="middle">Apache Iceberg</text></g>
+      <g transform="translate(465,0)"><rect width="115" height="28" rx="14" fill="#ffffff" stroke="#dde3ea"/><text x="57" y="19" text-anchor="middle">Apache Avro</text></g>
+      <g transform="translate(590,0)"><rect width="90" height="28" rx="14" fill="#ffffff" stroke="#dde3ea"/><text x="45" y="19" text-anchor="middle">REST API</text></g>
+    </g>
+  </g>
+
+</svg>

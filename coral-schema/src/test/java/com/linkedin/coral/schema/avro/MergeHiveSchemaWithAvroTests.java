@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2020-2026 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.linkedin.avroutil1.compatibility.AvroCompatibilityHelper;
-import com.linkedin.avroutil1.compatibility.Jackson1Utils;
 
 import org.apache.avro.Schema;
 import org.apache.commons.collections.map.HashedMap;
@@ -18,7 +17,6 @@ import org.apache.hadoop.hive.serde2.avro.AvroSerDe;
 import org.apache.hadoop.hive.serde2.typeinfo.StructTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
-import org.codehaus.jackson.node.IntNode;
 import org.testng.annotations.Test;
 
 import com.linkedin.coral.com.google.common.base.Preconditions;
@@ -208,20 +206,42 @@ public class MergeHiveSchemaWithAvroTests {
 
     Schema dateSchema = Schema.create(Schema.Type.INT);
     dateSchema.addProp(AvroSerDe.AVRO_PROP_LOGICAL_TYPE, AvroSerDe.DATE_TYPE_NAME);
-
     Schema timestampSchema = Schema.create(Schema.Type.LONG);
     timestampSchema.addProp(AvroSerDe.AVRO_PROP_LOGICAL_TYPE, AvroSerDe.TIMESTAMP_TYPE_NAME);
+    Schema decimalSchema = Schema.create(Schema.Type.BYTES);
+    decimalSchema.addProp(AvroSerDe.AVRO_PROP_LOGICAL_TYPE, AvroSerDe.DECIMAL_TYPE_NAME);
+    AvroCompatibilityHelper.setSchemaPropFromJsonString(decimalSchema, AvroSerDe.AVRO_PROP_PRECISION, "4", false);
+    AvroCompatibilityHelper.setSchemaPropFromJsonString(decimalSchema, AvroSerDe.AVRO_PROP_SCALE, "2", false);
+    Schema expected =
+        struct("r1", optional("fa", dateSchema), optional("fb", timestampSchema), optional("fc", decimalSchema));
+    assertSchema(expected, merged);
+  }
+
+  @Test
+  public void shouldRecoverLogicalTypeDecimalZeroScale() {
+    String hive = "struct<fa:decimal(10,0)>";
+    Schema avro = struct("r1", optional("fa", Schema.Type.BYTES));
+    Schema merged = merge(hive, avro);
 
     Schema decimalSchema = Schema.create(Schema.Type.BYTES);
     decimalSchema.addProp(AvroSerDe.AVRO_PROP_LOGICAL_TYPE, AvroSerDe.DECIMAL_TYPE_NAME);
-    AvroCompatibilityHelper.setSchemaPropFromJsonString(decimalSchema, AvroSerDe.AVRO_PROP_PRECISION,
-        Jackson1Utils.toJsonString(new IntNode(4)), false);
-    AvroCompatibilityHelper.setSchemaPropFromJsonString(decimalSchema, AvroSerDe.AVRO_PROP_SCALE,
-        Jackson1Utils.toJsonString(new IntNode(2)), false);
+    AvroCompatibilityHelper.setSchemaPropFromJsonString(decimalSchema, AvroSerDe.AVRO_PROP_PRECISION, "10", false);
+    AvroCompatibilityHelper.setSchemaPropFromJsonString(decimalSchema, AvroSerDe.AVRO_PROP_SCALE, "0", false);
+    Schema expected = struct("r1", optional("fa", decimalSchema));
+    assertSchema(expected, merged);
+  }
 
-    Schema expected =
-        struct("r1", optional("fa", dateSchema), optional("fb", timestampSchema), optional("fc", decimalSchema));
+  @Test
+  public void shouldRecoverLogicalTypeDecimalMaxHivePrecision() {
+    String hive = "struct<fa:decimal(38,10)>";
+    Schema avro = struct("r1", optional("fa", Schema.Type.BYTES));
+    Schema merged = merge(hive, avro);
 
+    Schema decimalSchema = Schema.create(Schema.Type.BYTES);
+    decimalSchema.addProp(AvroSerDe.AVRO_PROP_LOGICAL_TYPE, AvroSerDe.DECIMAL_TYPE_NAME);
+    AvroCompatibilityHelper.setSchemaPropFromJsonString(decimalSchema, AvroSerDe.AVRO_PROP_PRECISION, "38", false);
+    AvroCompatibilityHelper.setSchemaPropFromJsonString(decimalSchema, AvroSerDe.AVRO_PROP_SCALE, "10", false);
+    Schema expected = struct("r1", optional("fa", decimalSchema));
     assertSchema(expected, merged);
   }
 

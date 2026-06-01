@@ -4,6 +4,10 @@
 [![release](https://img.shields.io/github/v/release/linkedin/coral?include_prereleases)](https://github.com/linkedin/coral/releases)
 
 <p align="center">
+  <img src="docs/coral-hero.svg" alt="Coral — SQL translation, analysis, and rewrite engine" width="900">
+</p>
+
+<p align="center">
  <img src="docs/coral-logo.jpg" width="400" title="Coral Logo">
 </p>
 
@@ -34,15 +38,16 @@ Coral can be used as a library in other projects, or as a service. See instructi
 
 **Coral** consists of following modules:
 
-- Coral-Hive: Converts HiveQL to Coral IR (can be typically used with Spark SQL as well).
-- Coral-Trino: Converts Coral IR to Trino SQL. Converting Trino SQL to Coral IR is WIP.
-- Coral-Spark: Converts Coral IR to Spark SQL (can be typically used with HiveQL as well).
-- Coral-Dbt: Integrates Coral with DBT. It enables applying Coral transformations on DBT models.
-- Coral-Incremental: Derives an incremental query from input SQL for incremental view maintenance.
-- Coral-Schema: Derives Avro schema of view using view logical plan and input Avro schemas of base tables.
-- Coral-Spark-Plan [WIP]: Converts Spark plan strings to equivalent logical plan.
-- Coral-Visualization: Visualizes Coral SqlNode and RelNode trees and renders them to an output file.
-- Coral-Service: Service that exposes REST APIs that allow users to interact with Coral (see [Coral-as-a-Service](#Coral-as-a-Service) for more details).
+- **Coral-Hive**: Parses HiveQL (and Spark SQL, which is largely Hive-compatible) into Coral IR.
+- **Coral-Trino**: Generates Trino SQL from Coral IR. Parsing Trino SQL into Coral IR is in progress.
+- **Coral-Spark**: Generates Spark SQL from Coral IR (typically also valid HiveQL).
+- **Coral-Dbt**: Applies Coral transformations to dbt models.
+- **Coral-Incremental**: Rewrites a query into an incremental form for view maintenance.
+- **Coral-Schema**: Derives the Avro schema of a view from its logical plan and the Avro schemas of its base tables.
+- **Coral-Spark-Plan** [WIP]: Converts Spark plan strings into an equivalent logical plan.
+- **Coral-Visualization**: Renders Coral SqlNode and RelNode trees to an image.
+- **Coral-Service**: Exposes Coral via REST APIs (see [Coral-as-a-Service](#Coral-as-a-Service) for more details).
+- **Coral-Benchmark** [WIP]: Cross-dialect translation correctness framework. Verifies translations via IR round-trip, target-engine EXPLAIN, and result-set comparison against real engines.
 
 ## Version Upgrades
 
@@ -86,11 +91,26 @@ Please see the [Contribution Agreement](CONTRIBUTING.md).
 
 ## Resources
 
-- [Coral: A SQL translation, analysis, and rewrite engine for modern data lakehouses](https://engineering.linkedin.com/blog/2020/coral), LinkedIn Engineering Blog, 12/10/2020.
-- [Incremental View Maintenance with Coral, DBT, and Iceberg](https://www.slideshare.net/walaa_eldin_moustafa/incremental-view-maintenance-with-coral-dbt-and-iceberg), Tech Talk, Iceberg Meetup, 5/11/2023.
-- [Coral & Transport UDFs: Building Blocks of a Postmodern Data Warehouse](https://www.slideshare.net/walaa_eldin_moustafa/coral-transport-udfs-building-blocks-of-a-postmodern-data-warehouse-229545076), Tech-talk, Facebook HQ, 2/28/2020.
-- [Transport: Towards Logical Independence Using Translatable Portable UDFs](https://engineering.linkedin.com/blog/2018/11/using-translatable-portable-UDFs), LinkedIn Engineering Blog, 11/14/2018.
-- [Dali Views: Functions as a Service for Big Data](https://engineering.linkedin.com/blog/2017/11/dali-views--functions-as-a-service-for-big-data), LinkedIn Engineering Blog, 11/9/2017.
+### Blog Posts
+
+- [Coral: A SQL translation, analysis, and rewrite engine for modern data lakehouses](https://engineering.linkedin.com/blog/2020/coral), LinkedIn Engineering Blog, December 10, 2020.
+- [Transport: Towards Logical Independence Using Translatable Portable UDFs](https://engineering.linkedin.com/blog/2018/11/using-translatable-portable-UDFs), LinkedIn Engineering Blog, November 14, 2018.
+- [Dali Views: Functions as a Service for Big Data](https://engineering.linkedin.com/blog/2017/11/dali-views--functions-as-a-service-for-big-data), LinkedIn Engineering Blog, November 9, 2017.
+
+### Talks
+
+- [ViewShift: Dynamic Policy Enforcement for Every Data Lake](docs/talks/coral-viewshift.pdf), Databricks Data + AI Summit, June 10, 2025.
+- [Harnessing Coral and Iceberg for Advanced Incremental View Maintenance](docs/talks/coral-incremental-view-maintenance.pdf), Iceberg Summit, May 2024.
+- [Incremental View Maintenance with Coral, DBT, and Iceberg](https://www.slideshare.net/walaa_eldin_moustafa/incremental-view-maintenance-with-coral-dbt-and-iceberg), Iceberg Meetup, May 11, 2023.
+- [Coral: A SQL translation and rewrite engine for modern data lakes](https://cdmsworkshop.github.io/2022/Proceedings/InvitedTalks/Abstract_WalaaEldinMoustafa.pdf), CDMS Workshop @ VLDB 2022, September 2022.
+- [Coral & Transport UDFs: Building Blocks of a Postmodern Data Warehouse](https://www.slideshare.net/walaa_eldin_moustafa/coral-transport-udfs-building-blocks-of-a-postmodern-data-warehouse-229545076), Facebook HQ, February 28, 2020.
+
+### Cited-by
+
+- [SQL Telemetry & Intelligence – How we built a Petabyte-scale Data Platform with Fabric](https://blog.fabric.microsoft.com/en-us/blog/sql-telemetry-intelligence-how-we-built-a-petabyte-scale-data-platform-with-fabric), Raki Rahman, Microsoft Fabric Blog, December 16, 2025.
+- [How Uber Migrated from Hive to Spark SQL for ETL Workloads](https://www.uber.com/blog/how-uber-migrated-from-hive-to-spark-sql-for-etl-workloads/), Kumudini Kakwani, Suprit Acharya, Nimesh Khandelwal, Akshayaprakash Sharma, Chintan Betrabet, and Aayush Chaturvedi, Uber Engineering Blog, June 12, 2025.
+- [Data Guard: A Fine-grained Purpose-based Access Control System for Large Data Warehouses](https://arxiv.org/abs/2502.01998), Khai Tran et al., ICDE 2026 (arXiv:2502.01998), February 4, 2025.
+- [OpenIVM: a SQL-to-SQL Compiler for Incremental Computations](https://arxiv.org/abs/2404.16486), Ilaria Battiston, Kriti Kathuria, and Peter Boncz, SIGMOD 2024 (arXiv:2404.16486), April 25, 2024.
 
 
 ## Coral-as-a-Service

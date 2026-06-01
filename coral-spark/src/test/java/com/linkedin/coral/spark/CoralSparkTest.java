@@ -412,6 +412,16 @@ public class CoralSparkTest {
   }
 
   @Test
+  public void testBase64OnStringProducesBinaryCast() {
+    // base64() expects BINARY input, so Calcite inserts an implicit CAST(... AS VARBINARY)
+    // when the argument is a STRING. The SparkSqlRewriter must rewrite VARBINARY to BINARY
+    // since Spark's parser does not recognize VARBINARY.
+    RelNode relNode = TestUtils.toRelNode(String.join("\n", "", "SELECT base64(b)", "FROM complex"));
+    String targetSql = "SELECT base64(CAST(complex.b AS BINARY))\n" + "FROM default.complex complex";
+    assertEquals(createCoralSpark(relNode).getSparkSql(), targetSql);
+  }
+
+  @Test
   public void testInterval() {
     RelNode relNode = TestUtils.toRelNode("SELECT CAST('2021-08-31' AS DATE) + INTERVAL '7' DAY FROM default.complex");
     String targetSql = "SELECT (CAST('2021-08-31' AS DATE) + INTERVAL '7' DAY)\n" + "FROM default.complex complex";
@@ -1035,6 +1045,14 @@ public class CoralSparkTest {
     Schema schema = TestUtils.getAvroSchemaForView(source, false);
     CoralSpark coralSpark = createCoralSparkWithSchema(relNode, schema);
     return coralSpark.getSparkSql();
+  }
+
+  @Test
+  public void testReservedKeywordAsTableAlias() {
+    RelNode relNode = TestUtils.toRelNode("default", "view_reserved_keyword_alias");
+    CoralSpark coralSpark = createCoralSpark(relNode);
+    String sparkSql = coralSpark.getSparkSql();
+    assertEquals(sparkSql, "SELECT *\nFROM default.collection collection\nWHERE collection.a > 0");
   }
 
   private CoralSpark createCoralSpark(RelNode relNode) {

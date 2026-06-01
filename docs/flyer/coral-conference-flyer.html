@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Coral - Conference Flyer</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  @page {
+    size: letter;
+    margin: 0;
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #ffffff;
+    color: #1a1a2e;
+    width: 8.5in;
+    height: 11in;
+    margin: 0 auto;
+    overflow: hidden;
+    position: relative;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Top accent bar */
+  .accent-bar {
+    height: 5px;
+    background: linear-gradient(90deg, #0a66c2 0%, #004182 100%);
+  }
+
+  /* Header */
+  .header {
+    padding: 22px 44px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .logo-area {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .coral-icon {
+    width: 46px;
+    height: 46px;
+    background: linear-gradient(135deg, #0a66c2, #004182);
+    border-radius: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 24px;
+    font-weight: 800;
+  }
+
+  .project-name {
+    font-size: 38px;
+    font-weight: 800;
+    letter-spacing: -1.5px;
+    color: #1a1a2e;
+  }
+
+  .tagline {
+    font-size: 11.5px;
+    font-weight: 500;
+    color: #0a66c2;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-top: -2px;
+  }
+
+  .linkedin-logo img {
+    height: 28px;
+    opacity: 0.9;
+  }
+
+  /* Value proposition */
+  .value-prop {
+    padding: 0 44px 16px;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .value-prop h2 {
+    font-size: 17.5px;
+    font-weight: 600;
+    line-height: 1.45;
+    color: #2d3748;
+  }
+
+  .value-prop h2 em {
+    font-style: normal;
+    color: #0a66c2;
+    font-weight: 700;
+  }
+
+  /* Problem section */
+  .problem {
+    padding: 14px 44px;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .problem-label {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #b91c1c;
+    margin-bottom: 4px;
+  }
+
+  .problem p {
+    font-size: 12px;
+    line-height: 1.45;
+    color: #4a5568;
+  }
+
+  /* Main content grid */
+  .content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  /* Why Coral - left column */
+  .why-coral {
+    padding: 16px 24px 14px 44px;
+    border-right: 1px solid #e2e8f0;
+  }
+
+  .section-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin-bottom: 11px;
+  }
+
+  .feature {
+    display: flex;
+    gap: 9px;
+    margin-bottom: 10px;
+    align-items: flex-start;
+  }
+
+  .feature-icon {
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .feature-icon.blue1 { background: #e8f0fe; color: #0a66c2; }
+  .feature-icon.blue2 { background: #dbeafe; color: #1d4ed8; }
+  .feature-icon.blue3 { background: #e0e7ff; color: #4338ca; }
+  .feature-icon.blue4 { background: #ede9fe; color: #6d28d9; }
+  .feature-icon.blue5 { background: #e0f2fe; color: #0369a1; }
+
+  .feature-text h4 {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin-bottom: 1px;
+  }
+
+  .feature-text p {
+    font-size: 10.5px;
+    line-height: 1.35;
+    color: #64748b;
+  }
+
+  /* Use cases - right column */
+  .use-cases {
+    padding: 16px 44px 14px 24px;
+  }
+
+  .use-case-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 7px;
+    margin-bottom: 9px;
+  }
+
+  .use-case-bullet {
+    width: 5px;
+    height: 5px;
+    background: #0a66c2;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 5px;
+  }
+
+  .use-case-item h4 {
+    font-size: 11px;
+    font-weight: 600;
+    color: #1a1a2e;
+  }
+
+  .use-case-item p {
+    font-size: 10px;
+    color: #64748b;
+    line-height: 1.35;
+  }
+
+  /* Differentiator callout */
+  .differentiator {
+    padding: 12px 44px;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .diff-box {
+    background: linear-gradient(135deg, #eff6ff, #e0e7ff);
+    border: 1px solid #bfdbfe;
+    border-radius: 8px;
+    padding: 11px 16px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .diff-icon {
+    font-size: 18px;
+    flex-shrink: 0;
+    margin-top: 1px;
+    color: #0a66c2;
+  }
+
+  .diff-text h4 {
+    font-size: 11px;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin-bottom: 2px;
+  }
+
+  .diff-text p {
+    font-size: 10.5px;
+    line-height: 1.4;
+    color: #4a5568;
+  }
+
+  /* Architecture diagram */
+  .architecture {
+    padding: 12px 44px;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .arch-diagram {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+  }
+
+  .arch-col {
+    text-align: center;
+  }
+
+  .arch-label {
+    font-size: 8px;
+    font-weight: 600;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 5px;
+  }
+
+  .arch-box {
+    background: white;
+    border: 1px solid #cbd5e1;
+    border-radius: 5px;
+    padding: 3px 12px;
+    font-size: 10px;
+    font-weight: 500;
+    color: #475569;
+    margin-bottom: 3px;
+  }
+
+  .arch-center {
+    background: linear-gradient(135deg, #0a66c2, #004182);
+    border-radius: 9px;
+    padding: 12px 24px;
+    text-align: center;
+    color: white;
+    min-width: 100px;
+  }
+
+  .arch-center .name {
+    font-size: 17px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+  }
+
+  .arch-center .sub {
+    font-size: 8px;
+    opacity: 0.85;
+    margin-top: 1px;
+  }
+
+  .arch-arrow {
+    font-size: 18px;
+    color: #94a3b8;
+    font-weight: 300;
+  }
+
+  /* Integrations bar */
+  .integrations {
+    padding: 11px 44px;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .integrations-label {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #718096;
+    margin-bottom: 8px;
+  }
+
+  .integration-pills {
+    display: flex;
+    gap: 7px;
+    flex-wrap: wrap;
+  }
+
+  .pill {
+    background: white;
+    border: 1px solid #dde3ea;
+    border-radius: 14px;
+    padding: 4px 12px;
+    font-size: 10px;
+    font-weight: 600;
+    color: #2d3748;
+  }
+
+  /* Bottom CTA */
+  .bottom {
+    padding: 14px 44px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #0f172a;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+  }
+
+  .cta-left {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+  }
+
+  .cta-text h3 {
+    font-size: 15px;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 2px;
+  }
+
+  .cta-text p {
+    font-size: 10.5px;
+    color: #94a3b8;
+  }
+
+  .cta-text a {
+    color: #60a5fa;
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  .credibility {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+  }
+
+  .cred-item {
+    text-align: center;
+  }
+
+  .cred-item .num {
+    font-size: 14px;
+    font-weight: 800;
+    color: #60a5fa;
+  }
+
+  .cred-item .label {
+    font-size: 8px;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .qr-area {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .qr-area img {
+    width: 64px;
+    height: 64px;
+    border-radius: 6px;
+  }
+
+  .qr-label {
+    font-size: 9px;
+    color: #94a3b8;
+    text-align: center;
+    line-height: 1.3;
+  }
+
+  .qr-label strong {
+    color: white;
+    font-size: 10px;
+    display: block;
+  }
+</style>
+</head>
+<body>
+
+<!-- Top accent -->
+<div class="accent-bar"></div>
+
+<!-- Header -->
+<div class="header">
+  <div class="logo-area">
+    <div class="coral-icon">C</div>
+    <div>
+      <div class="project-name">Coral</div>
+      <div class="tagline">Query Translation &amp; Rewrite Engine</div>
+    </div>
+  </div>
+  <div class="linkedin-logo">
+    <img src="LinkedIn_2021.svg.png" alt="LinkedIn">
+  </div>
+</div>
+
+<!-- Value Proposition -->
+<div class="value-prop">
+  <h2>Translate, analyze, and rewrite SQL queries across <em>any dialect</em> through a single, <em>engine-independent</em> intermediate representation.</h2>
+</div>
+
+<!-- Problem -->
+<div class="problem">
+  <div class="problem-label">The Problem</div>
+  <p>Modern data platforms run Hive, Spark, Trino, and more in parallel. Each engine has its own SQL dialect, function signatures, and type semantics. Migrating queries, enforcing governance, and maintaining views across engines is manual, error-prone, and doesn't scale.</p>
+</div>
+
+<!-- Main content -->
+<div class="content">
+  <!-- Left: Why Coral -->
+  <div class="why-coral">
+    <div class="section-title">Why Coral?</div>
+
+    <div class="feature">
+      <div class="feature-icon blue1">&#10003;</div>
+      <div class="feature-text">
+        <h4>Battle Tested</h4>
+        <p>100,000s of transformations in production at LinkedIn daily</p>
+      </div>
+    </div>
+
+    <div class="feature">
+      <div class="feature-icon blue2">&#9881;</div>
+      <div class="feature-text">
+        <h4>Dual IR</h4>
+        <p>AST for translation, Logical Plan for optimization &amp; rewrites &mdash; bijective between them</p>
+      </div>
+    </div>
+
+    <div class="feature">
+      <div class="feature-icon blue3">&#8644;</div>
+      <div class="feature-text">
+        <h4>N-to-N Translation</h4>
+        <p>Add one adapter, connect to every existing dialect automatically</p>
+      </div>
+    </div>
+
+    <div class="feature">
+      <div class="feature-icon blue4">&#9997;</div>
+      <div class="feature-text">
+        <h4>Rewritable</h4>
+        <p>Transform queries structurally &mdash; incremental rewrites, predicate pushdown, masking</p>
+      </div>
+    </div>
+
+    <div class="feature">
+      <div class="feature-icon blue5">&#9733;</div>
+      <div class="feature-text">
+        <h4>Expressive</h4>
+        <p>Lateral views, UDTFs, window functions, CTEs, complex nested types</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: Use Cases -->
+  <div class="use-cases">
+    <div class="section-title">Use Cases</div>
+
+    <div class="use-case-item">
+      <div class="use-case-bullet"></div>
+      <div>
+        <h4>SQL Dialect Translation</h4>
+        <p>Migrate queries between Hive, Spark, and Trino with correct function and type mapping</p>
+      </div>
+    </div>
+
+    <div class="use-case-item">
+      <div class="use-case-bullet"></div>
+      <div>
+        <h4>Materialized Views</h4>
+        <p>Replace recurring batch workloads with materialized tables to cut compute costs</p>
+      </div>
+    </div>
+
+    <div class="use-case-item">
+      <div class="use-case-bullet"></div>
+      <div>
+        <h4>Incremental View Maintenance</h4>
+        <p>Auto-rewrite batch views to delta queries &mdash; process only changed data instead of full recomputation</p>
+      </div>
+    </div>
+
+    <div class="use-case-item">
+      <div class="use-case-bullet"></div>
+      <div>
+        <h4>Data Governance</h4>
+        <p>Inject data masking and consent-based access control into query plans transparently</p>
+      </div>
+    </div>
+
+    <div class="use-case-item">
+      <div class="use-case-bullet"></div>
+      <div>
+        <h4>Query Optimization</h4>
+        <p>Rule-based optimizer for plan-level transformations and predicate pushdown</p>
+      </div>
+    </div>
+
+    <div class="use-case-item">
+      <div class="use-case-bullet"></div>
+      <div>
+        <h4>Test Data Generation</h4>
+        <p>Automatically generate representative test datasets from query structure for validation and development</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Differentiator -->
+<div class="differentiator">
+  <div class="diff-box">
+    <div class="diff-icon">&#9670;</div>
+    <div class="diff-text">
+      <h4>What Makes Coral Different</h4>
+      <p>Unlike point-to-point transpilers, Coral uses a <strong>universal IR</strong> so every new dialect connects to all others. Unlike query optimizers, Coral preserves full query semantics across representations &mdash; translation, rewriting, and governance in one framework.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Architecture -->
+<div class="architecture">
+  <div class="arch-diagram">
+    <div class="arch-col">
+      <div class="arch-label">Input</div>
+      <div class="arch-box">Hive SQL</div>
+      <div class="arch-box">Spark SQL</div>
+      <div class="arch-box">Trino SQL</div>
+      <div class="arch-box" style="border-style:dashed;color:#94a3b8;">Other Dialect</div>
+    </div>
+    <div class="arch-arrow">&rarr;</div>
+    <div class="arch-center">
+      <div class="name">Coral</div>
+      <div class="sub">AST &amp; Logical Plan IR</div>
+    </div>
+    <div class="arch-arrow">&rarr;</div>
+    <div class="arch-col">
+      <div class="arch-label">Output</div>
+      <div class="arch-box">Hive SQL</div>
+      <div class="arch-box">Spark SQL</div>
+      <div class="arch-box">Trino SQL</div>
+      <div class="arch-box" style="border-style:dashed;color:#94a3b8;">Other Dialect</div>
+    </div>
+  </div>
+</div>
+
+<!-- Integrations -->
+<div class="integrations">
+  <div class="integrations-label">Built for your stack</div>
+  <div class="integration-pills">
+    <div class="pill">Apache Hive</div>
+    <div class="pill">Apache Spark</div>
+    <div class="pill">Trino</div>
+    <div class="pill">Apache Iceberg</div>
+    <div class="pill">Apache Avro</div>
+    <div class="pill">REST API</div>
+  </div>
+</div>
+
+<!-- Bottom CTA -->
+<div class="bottom">
+  <div class="cta-left">
+    <div class="cta-text">
+      <h3>Get Started</h3>
+      <p><a>github.com/linkedin/coral</a>&nbsp;&nbsp;&middot;&nbsp;&nbsp;BSD-2-Clause&nbsp;&nbsp;&middot;&nbsp;&nbsp;Java</p>
+    </div>
+    <div class="credibility">
+      <div class="cred-item">
+        <div class="num">Since 2020</div>
+        <div class="label">Open Source</div>
+      </div>
+      <div class="cred-item">
+        <div class="num">100K+</div>
+        <div class="label">Daily Transforms</div>
+      </div>
+    </div>
+  </div>
+  <div class="qr-area">
+    <div>
+      <!-- Insert a fresh QR code image here before printing -->
+      <div class="qr-label"><strong>Scan to Star</strong></div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
