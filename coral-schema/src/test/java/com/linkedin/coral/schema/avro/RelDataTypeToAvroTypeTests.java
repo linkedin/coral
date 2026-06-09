@@ -10,6 +10,10 @@ import java.io.IOException;
 
 import org.apache.avro.Schema;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeFactory;
+import org.apache.calcite.sql.type.SqlTypeFactoryImpl;
+import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.MetaException;
@@ -20,6 +24,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import com.linkedin.coral.common.HiveMetastoreClient;
+import com.linkedin.coral.common.HiveTypeSystem;
 import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
 
 import static com.linkedin.coral.schema.avro.TestUtils.*;
@@ -103,5 +108,23 @@ public class RelDataTypeToAvroTypeTests {
 
     Assert.assertEquals(actualAvroType.toString(true),
         TestUtils.loadSchema("rel2avro-testDecimalTypeField-expected.avsc"));
+  }
+
+  @Test
+  public void testPrecisionSensitiveTypes() {
+    // Build a RelDataType directly so we can exercise the precision-prone leaf types the
+    // CoralCatalog/Iceberg path produces (TIMESTAMP(6), TIME, fixed BINARY) alongside the
+    // unspecified-precision forms the Hive path produces, without needing an Iceberg metastore.
+    RelDataTypeFactory typeFactory = new SqlTypeFactoryImpl(new HiveTypeSystem());
+    RelDataType recordType = typeFactory.builder().add("ts6", typeFactory.createSqlType(SqlTypeName.TIMESTAMP, 6))
+        .add("tsUnspecified", typeFactory.createSqlType(SqlTypeName.TIMESTAMP))
+        .add("timeField", typeFactory.createSqlType(SqlTypeName.TIME))
+        .add("binFixed16", typeFactory.createSqlType(SqlTypeName.BINARY, 16))
+        .add("binUnbounded", typeFactory.createSqlType(SqlTypeName.BINARY)).build();
+
+    Schema actualAvroType = RelDataTypeToAvroType.relDataTypeToAvroTypeNonNullable(recordType, "precisionTypes");
+
+    Assert.assertEquals(actualAvroType.toString(true),
+        TestUtils.loadSchema("rel2avro-testPrecisionTypes-expected.avsc"));
   }
 }

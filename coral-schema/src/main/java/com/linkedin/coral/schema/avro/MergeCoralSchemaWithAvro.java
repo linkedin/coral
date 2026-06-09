@@ -204,7 +204,9 @@ class MergeCoralSchemaWithAvro {
     if (timestampType.hasPrecision() && timestampType.getPrecision() <= 3) {
       return LogicalTypes.timestampMillis().addToSchema(schema);
     }
-    // Default to micros for precision 6, 9, or unspecified
+    // Default to micros for precision 6, 9, or unspecified.
+    // (RelDataTypeToAvroType, the derived-expression path, instead defaults unspecified precision to
+    // millis to preserve Hive-view output; reconcile deliberately if Hive ever moves onto this engine.)
     return LogicalTypes.timestampMicros().addToSchema(schema);
   }
 

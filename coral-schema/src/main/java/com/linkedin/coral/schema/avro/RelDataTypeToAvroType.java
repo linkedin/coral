@@ -105,12 +105,32 @@ class RelDataTypeToAvroType {
       case CHAR:
         return Schema.create(Schema.Type.STRING);
       case BINARY:
+        // Fixed-length BINARY(n) (e.g. an Iceberg FixedType) carries an explicit positive length and
+        // maps to an Avro fixed. Unbounded BINARY (Hive binary, Iceberg variable-length binary)
+        // reports PRECISION_NOT_SPECIFIED (-1), so the same > 0 check leaves it as bytes.
+        if (relDataType.getPrecision() > 0) {
+          return Schema.createFixed("fixed" + relDataType.getPrecision(), null, null, relDataType.getPrecision());
+        }
         return Schema.create(Schema.Type.BYTES);
       case NULL:
         return Schema.create(Schema.Type.NULL);
       case TIMESTAMP:
+        // Precision > 3 (e.g. Iceberg's TIMESTAMP(6), microsecond resolution) maps to timestamp-micros.
+        // Unspecified precision (Hive timestamps, PRECISION_NOT_SPECIFIED == -1) and precision <= 3
+        // stay timestamp-millis, preserving the existing Hive-path behavior.
+        // Note: MergeCoralSchemaWithAvro.timestampToAvro defaults unspecified precision to
+        // timestamp-micros instead. The two cannot collide today (Iceberg is always TIMESTAMP(6), and
+        // Hive tables route through MergeHiveSchemaWithAvro); a future Hive-on-Coral consolidation
+        // should reconcile these defaults deliberately.
         schema = Schema.create(Schema.Type.LONG);
-        schema.addProp("logicalType", "timestamp-millis");
+        schema.addProp("logicalType", relDataType.getPrecision() > 3 ? "timestamp-micros" : "timestamp-millis");
+        return schema;
+      case TIME:
+        // Iceberg TIME is microsecond resolution -- "time: Time of day, microsecond precision,
+        // without date, timezone" (https://iceberg.apache.org/spec/#primitive-types) -- so Avro
+        // represents it as a long with time-micros.
+        schema = Schema.create(Schema.Type.LONG);
+        schema.addProp("logicalType", "time-micros");
         return schema;
       case DATE:
         // In Avro, "date" type is represented as {"type": "int", "logicalType": "date"}.
