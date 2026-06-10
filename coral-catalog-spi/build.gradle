@@ -1,0 +1,12 @@
+apply plugin: 'java-library'
+
+dependencies {
+  api(deps.'linkedin-calcite-core') {
+    artifact {
+      name = 'calcite-core'
+      extension = 'jar'
+      type = 'jar'
+      classifier = 'shaded'
+    }
+  }
+}
