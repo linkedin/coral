@@ -20,6 +20,7 @@ import org.apache.avro.Schema;
 import com.linkedin.coral.common.types.ArrayType;
 import com.linkedin.coral.common.types.BinaryType;
 import com.linkedin.coral.common.types.CoralDataType;
+import com.linkedin.coral.common.types.CoralTypeKind;
 import com.linkedin.coral.common.types.DecimalType;
 import com.linkedin.coral.common.types.MapType;
 import com.linkedin.coral.common.types.StructField;
@@ -88,7 +89,12 @@ class MergeCoralSchemaWithAvro {
   private Schema mergeType(CoralDataType coralType, @Nullable Schema partner) {
     switch (coralType.getKind()) {
       case STRUCT:
-        return mergeStruct((StructType) coralType, partner);
+        StructType structType = (StructType) coralType;
+        Schema unionPartner = unionPartnerOrNull(structType, partner);
+        if (unionPartner != null) {
+          return mergeUnionStruct(structType, unionPartner);
+        }
+        return mergeStruct(structType, partner);
       case ARRAY:
         return mergeArray((ArrayType) coralType, partner);
       case MAP:
@@ -117,6 +123,81 @@ class MergeCoralSchemaWithAvro {
       result.setFields(fields);
     }
     return applyCoralNullability(result, structType.isNullable(), partner);
+  }
+
+  /**
+   * Decides whether {@code structType} is a Trino-style union-struct whose partner Avro is a genuine
+   * multi-branch union, and if so returns that partner union (null branch intact). Returns null to fall
+   * back to regular struct handling.
+   *
+   * <p>Iceberg's type system has no union type, so a Hive {@code uniontype<A,B,C>} that has been persisted
+   * into Iceberg surfaces as the struct {@code {tag:INT, field0:A, field1:B, field2:C}} — the same encoding
+   * {@link com.linkedin.coral.common.HiveToCoralTypeConverter#convertUnion} produces (Trino union
+   * representation, see <a href="https://github.com/trinodb/trino/pull/3483">trinodb/trino#3483</a>). To
+   * stay faithful to the legacy Hive Avro path ({@link MergeHiveSchemaWithAvro#union}), such a column must be
+   * emitted as an Avro union rather than a record.
+   *
+   * <p>The struct shape alone is ambiguous — a genuine record could be named {@code {tag, field0, ...}} — so
+   * two further conditions are required: the partner must be an Avro union, and its non-null branch count
+   * must equal the number of {@code fieldN} members. A genuine nullable struct yields {@code [null, record]}
+   * (one non-null branch), which fails the count check for any multi-branch union. The only residual
+   * ambiguity is a single-member {@code uniontype<record>}, which is vanishingly rare; it is treated as a
+   * struct (the pre-existing behavior).
+   */
+  @Nullable
+  private Schema unionPartnerOrNull(StructType structType, @Nullable Schema partner) {
+    if (partner == null || partner.getType() != Schema.Type.UNION || !isUnionStruct(structType)) {
+      return null;
+    }
+    int memberCount = structType.getFields().size() - 1; // exclude the leading "tag" field
+    int nonNullBranchCount = SchemaUtilities.discardNullFromUnionIfExist(partner).getTypes().size();
+    // Require at least two members so the count check is collision-free: a genuine nullable struct yields
+    // [null, record] (one non-null branch), which can never equal a member count of two or more. A
+    // single-member union-struct is left to the struct path (see Javadoc).
+    return memberCount >= 2 && memberCount == nonNullBranchCount ? partner : null;
+  }
+
+  /**
+   * Recognizes the union-struct shape: a leading {@code tag} field of type INT followed by
+   * {@code field0, field1, ..., fieldN-1} in order. See {@link #unionPartnerOrNull}.
+   */
+  private boolean isUnionStruct(StructType structType) {
+    List<StructField> fields = structType.getFields();
+    if (fields.size() < 2) {
+      return false;
+    }
+    StructField tag = fields.get(0);
+    if (!"tag".equals(tag.getName()) || tag.getType().getKind() != CoralTypeKind.INT) {
+      return false;
+    }
+    for (int i = 1; i < fields.size(); i++) {
+      if (!("field" + (i - 1)).equals(fields.get(i).getName())) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /**
+   * Reconstructs an Avro union from a union-struct, merging each {@code fieldN} member against the
+   * corresponding partner union branch (by ordinal). Null placement follows {@link MergeHiveSchemaWithAvro#union}:
+   * the NULL branch is emitted first when the partner union carries one. Caller ({@link #unionPartnerOrNull})
+   * guarantees the member count matches the partner's non-null branch count.
+   */
+  private Schema mergeUnionStruct(StructType unionStruct, Schema partnerUnion) {
+    List<Schema> partnerBranches = SchemaUtilities.discardNullFromUnionIfExist(partnerUnion).getTypes();
+    List<StructField> members = unionStruct.getFields(); // [tag, field0, field1, ...]
+    List<Schema> unionTypes = new ArrayList<>();
+    if (SchemaUtilities.nullExistInUnion(partnerUnion)) {
+      unionTypes.add(Schema.create(Schema.Type.NULL));
+    }
+    for (int i = 1; i < members.size(); i++) {
+      Schema branch = mergeType(members.get(i).getType(), partnerBranches.get(i - 1));
+      // A union member is never itself nullable in Avro — the union's own NULL branch carries nullability,
+      // so strip any option wrapper the recursive merge may have added around the member.
+      unionTypes.add(SchemaUtilities.extractIfOption(branch));
+    }
+    return Schema.createUnion(unionTypes);
   }
 
   private Schema mergeArray(ArrayType arrayType, @Nullable Schema partner) {
