@@ -16,6 +16,6 @@ dependencies {
 
 configurations.all {
   resolutionStrategy {
-    force 'org.apache.avro:avro:1.10.2'
+    force 'org.apache.avro:avro:1.11.4'
   }
 }

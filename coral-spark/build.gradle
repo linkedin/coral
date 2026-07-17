@@ -18,9 +18,9 @@ dependencies {
   testImplementation deps.'kryo'
 }
 
-// Needs to enforce using Avro 1.10 because Coral-Spark depends on Coral-Schema which uses Avro 1.10
+// Needs to enforce using Avro 1.11.4 because Coral-Spark depends on Coral-Schema which uses Avro 1.11.4
 configurations.all {
   resolutionStrategy {
-    force 'org.apache.avro:avro:1.10.2'
+    force 'org.apache.avro:avro:1.11.4'
   }
 }
