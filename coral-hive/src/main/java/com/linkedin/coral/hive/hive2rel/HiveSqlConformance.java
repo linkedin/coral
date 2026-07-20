@@ -6,30 +6,17 @@
 package com.linkedin.coral.hive.hive2rel;
 
 import org.apache.calcite.sql.validate.SqlConformance;
-import org.apache.calcite.sql.validate.SqlConformanceEnum;
-import org.apache.calcite.sql.validate.SqlDelegatingConformance;
 
 
-public class HiveSqlConformance extends SqlDelegatingConformance {
+/**
+ * @deprecated Use {@link CoralSqlConformance} instead.
+ */
+@Deprecated
+public class HiveSqlConformance extends CoralSqlConformance {
 
-  public static final SqlConformance HIVE_SQL = new HiveSqlConformance();
+  public static final SqlConformance HIVE_SQL = CoralSqlConformance.CORAL_SQL;
 
   private HiveSqlConformance() {
-    super(SqlConformanceEnum.PRAGMATIC_2003);
-  }
-
-  @Override
-  public boolean allowNiladicParentheses() {
-    return true;
-  }
-
-  @Override
-  public boolean isSortByAlias() {
-    return true;
-  }
-
-  @Override
-  public boolean isHavingAlias() {
-    return true;
+    super();
   }
 }
