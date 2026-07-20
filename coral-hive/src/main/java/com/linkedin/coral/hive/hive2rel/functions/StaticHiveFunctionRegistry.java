@@ -434,6 +434,14 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
     createAddUserDefinedFunction("org.apache.hadoop.hive.ql.udf.generic.GenericProject", ARG0,
         family(SqlTypeFamily.ANY, SqlTypeFamily.STRING));
     createAddUserDefinedFunction("com.linkedin.dali.view.udf.entityhandles.GetIdFromUrn", BIGINT, STRING);
+
+    // Start of member-id-utils Hive UDFs
+    createAddUserDefinedFunction("com.linkedin.memberidutils.hive.GetIdFromMemberUrnUdf", BIGINT_NULLABLE, STRING);
+    createAddUserDefinedFunction("com.linkedin.memberidutils.hive.GetSaltedIdUdf", BIGINT, NILADIC);
+    createAddUserDefinedFunction("com.linkedin.memberidutils.hive.IsMemberFromUrnUdf", ReturnTypes.BOOLEAN, STRING);
+    createAddUserDefinedFunction("com.linkedin.memberidutils.hive.IsMemberUdf", ReturnTypes.BOOLEAN, NUMERIC);
+    createAddUserDefinedFunction("com.linkedin.memberidutils.hive.IsSaltedIdUdf", ReturnTypes.BOOLEAN, NUMERIC);
+    // End of member-id-utils Hive UDFs
     createAddUserDefinedFunction("com.linkedin.dali.view.udf.entityhandles.GetPermissionsString",
         FunctionReturnTypes.STRING, family(SqlTypeFamily.ARRAY));
     createAddUserDefinedFunction("com.linkedin.dali.view.udf.entityhandles.EpochTimeInSeconds", BIGINT, STRING);
