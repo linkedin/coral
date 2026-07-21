@@ -119,12 +119,12 @@ public class RelNodeVisualizationShuttle extends RelShuttleImpl {
   }
 
   private String getLabel(RelNode target, int startIndex, boolean isCorrelateSide) {
-    String label = "";
+    StringBuilder label = new StringBuilder();
     String prefix = isCorrelateSide ? "$cor" : "$";
     for (int i = 0; i < target.getRowType().getFieldCount(); i++) {
-      label += prefix + (i + startIndex) + " = " + target.getRowType().getFieldList().get(i).getName() + "\n";
+      label.append(prefix).append(i + startIndex).append(" = ").append(target.getRowType().getFieldList().get(i).getName()).append("\n");
     }
-    return label;
+    return label.toString();
   }
 
   @Override
