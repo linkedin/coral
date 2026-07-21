@@ -18,25 +18,23 @@ import com.linkedin.coral.datagen.domain.IntegerDomain;
 
 
 /**
- * Integer domain transformer for PLUS (addition) operations.
+ * Integer domain transformer for MINUS (subtraction) operations.
  *
- * Inverts x + literal = output_value
- * to produce input constraint x = output_value - literal
+ * Inverts x - literal = output_value
+ * to produce input constraint x = output_value + literal
+ *
+ * Also handles literal - x = output_value
+ * producing input constraint x = literal - output_value
  *
  * Example:
- * x + 5 = 25
- * produces input constraint: x = 20
- * which becomes domain: {20}
- *
- * For interval constraints:
- * x + 5 in [20, 30]
- * produces: x in [15, 25]
+ * x - 3 = 7
+ * produces input constraint: x = 10
  */
-public class PlusIntegerTransformer implements DomainTransformer {
+public class MinusIntegerTransformer implements DomainTransformer {
 
   @Override
   public boolean canHandle(RexNode expr) {
-    return expr instanceof RexCall && ((RexCall) expr).getOperator() == SqlStdOperatorTable.PLUS;
+    return expr instanceof RexCall && ((RexCall) expr).getOperator() == SqlStdOperatorTable.MINUS;
   }
 
   @Override
@@ -67,7 +65,7 @@ public class PlusIntegerTransformer implements DomainTransformer {
   public Domain<?, ?> refineInputDomain(RexNode expr, Domain<?, ?> outputDomain) {
     if (!(outputDomain instanceof IntegerDomain)) {
       throw new IllegalArgumentException(
-          "PlusIntegerTransformer expects IntegerDomain but got " + outputDomain.getClass().getSimpleName());
+          getClass().getSimpleName() + " expects IntegerDomain but got " + outputDomain.getClass().getSimpleName());
     }
 
     IntegerDomain intDomain = (IntegerDomain) outputDomain;
@@ -76,11 +74,16 @@ public class PlusIntegerTransformer implements DomainTransformer {
     RexNode right = call.getOperands().get(1);
     boolean leftVar = (left instanceof RexInputRef || left instanceof RexCall || left instanceof RexFieldAccess);
 
-    // Get the literal value
     RexLiteral literalNode = (RexLiteral) (leftVar ? right : left);
     long literal = literalNode.getValueAs(Long.class);
 
-    // Invert the addition: x + literal = output => x = output - literal
-    return intDomain.add(-literal);
+    if (leftVar) {
+      // x - literal = output => x = output + literal
+      return intDomain.add(literal);
+    } else {
+      // literal - x = output => x = literal - output
+      // For each interval [a, b] in output: x in [literal - b, literal - a]
+      return intDomain.negate().add(literal);
+    }
   }
 }

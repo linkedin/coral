@@ -44,39 +44,45 @@ public class CastRegexTransformerTest {
 
   @Test
   public void testCastStringToIntegerWithIntegerDomainOutput() {
-    // CAST(x AS INTEGER) where output is IntegerDomain [100, 200]
-    // Input should be RegexDomain matching "100", "101", ..., "200"
+    // CAST(x AS INTEGER) where output is IntegerDomain [100, 200].
+    // Input regex should accept canonical strings "100".."200" and reject anything outside.
 
     RexNode inputRef = rexBuilder.makeInputRef(typeFactory.createSqlType(SqlTypeName.VARCHAR), 0);
     RexNode castExpr = rexBuilder.makeCast(typeFactory.createSqlType(SqlTypeName.INTEGER), inputRef);
 
     IntegerDomain outputDomain = IntegerDomain.of(100, 200);
-
     Domain<?, ?> inputDomain = transformer.refineInputDomain(castExpr, outputDomain);
 
-    // Input should be RegexDomain
     assertTrue(inputDomain instanceof RegexDomain);
     RegexDomain regexInput = (RegexDomain) inputDomain;
 
-    // Should match numeric values in the range
-    assertFalse(regexInput.isEmpty());
+    assertTrue(regexInput.getAutomaton().run("100"), "should accept '100'");
+    assertTrue(regexInput.getAutomaton().run("150"), "should accept '150'");
+    assertTrue(regexInput.getAutomaton().run("200"), "should accept '200'");
+    assertFalse(regexInput.getAutomaton().run("99"), "should reject '99'");
+    assertFalse(regexInput.getAutomaton().run("201"), "should reject '201'");
+    assertFalse(regexInput.getAutomaton().run("abc"), "should reject non-numeric");
   }
 
   @Test
   public void testCastStringToIntegerSmallRange() {
-    // CAST(x AS INTEGER) where output is [10, 12]
-    // Input should be RegexDomain matching "10|11|12"
+    // CAST(x AS INTEGER) where output is [10, 12]. Input regex should accept exactly {"10","11","12"}.
 
     RexNode inputRef = rexBuilder.makeInputRef(typeFactory.createSqlType(SqlTypeName.VARCHAR), 0);
     RexNode castExpr = rexBuilder.makeCast(typeFactory.createSqlType(SqlTypeName.INTEGER), inputRef);
 
     IntegerDomain outputDomain = IntegerDomain.of(10, 12);
-
     Domain<?, ?> inputDomain = transformer.refineInputDomain(castExpr, outputDomain);
 
     assertTrue(inputDomain instanceof RegexDomain);
     RegexDomain regexInput = (RegexDomain) inputDomain;
-    assertFalse(regexInput.isEmpty());
+
+    assertTrue(regexInput.getAutomaton().run("10"), "should accept '10'");
+    assertTrue(regexInput.getAutomaton().run("11"), "should accept '11'");
+    assertTrue(regexInput.getAutomaton().run("12"), "should accept '12'");
+    assertFalse(regexInput.getAutomaton().run("9"), "should reject '9'");
+    assertFalse(regexInput.getAutomaton().run("13"), "should reject '13'");
+    assertFalse(regexInput.getAutomaton().run("100"), "should reject '100'");
   }
 
   @Test
@@ -100,25 +106,41 @@ public class CastRegexTransformerTest {
   // ==================== Integer to String Conversion Tests ====================
 
   @Test
-  public void testCastIntegerToStringWithRegexDomainOutput() {
-    // CAST(x AS VARCHAR) where output is RegexDomain "^[0-9]{3}$"
-    // Input should be IntegerDomain [0, 999]
+  public void testCastIntegerToStringWithCanonicalRegexOutput() {
+    // CAST(x AS VARCHAR) where the output regex is canonical (^[1-9][0-9]{2}$ = 100..999).
+    // SQL CAST(integer AS VARCHAR) produces canonical decimal, so the inverted integer set
+    // is exactly the integers whose canonical decimal form lies in the regex.
+    RexNode inputRef = rexBuilder.makeInputRef(typeFactory.createSqlType(SqlTypeName.INTEGER), 0);
+    RexNode castExpr = rexBuilder.makeCast(typeFactory.createSqlType(SqlTypeName.VARCHAR), inputRef);
 
+    RegexDomain outputDomain = new RegexDomain("^[1-9][0-9]{2}$");
+    Domain<?, ?> inputDomain = transformer.refineInputDomain(castExpr, outputDomain);
+
+    assertTrue(inputDomain instanceof IntegerDomain);
+    IntegerDomain intInput = (IntegerDomain) inputDomain;
+
+    assertTrue(intInput.contains(100));
+    assertTrue(intInput.contains(500));
+    assertTrue(intInput.contains(999));
+    assertFalse(intInput.contains(99));
+    assertFalse(intInput.contains(1000));
+  }
+
+  @Test
+  public void testCastIntegerToStringWithNonCanonicalRegexFallsBackToRegex() {
+    // CAST(x AS VARCHAR) with a non-canonical output regex like ^[0-9]{3}$ (admits "000"):
+    // the converter contract requires canonical-only input and rejects this, so the
+    // transformer falls through to the regex-format fallback. The result is therefore a
+    // RegexDomain over integer-shaped strings, not an IntegerDomain. Real SQL inference
+    // does not produce non-canonical regexes at this branch; the test pins the fallback.
     RexNode inputRef = rexBuilder.makeInputRef(typeFactory.createSqlType(SqlTypeName.INTEGER), 0);
     RexNode castExpr = rexBuilder.makeCast(typeFactory.createSqlType(SqlTypeName.VARCHAR), inputRef);
 
     RegexDomain outputDomain = new RegexDomain("^[0-9]{3}$");
-
     Domain<?, ?> inputDomain = transformer.refineInputDomain(castExpr, outputDomain);
 
-    // Input should be IntegerDomain (converted from regex)
-    assertTrue(inputDomain instanceof IntegerDomain);
-    IntegerDomain intInput = (IntegerDomain) inputDomain;
-
-    assertTrue(intInput.contains(0));
-    assertTrue(intInput.contains(500));
-    assertTrue(intInput.contains(999));
-    assertFalse(intInput.contains(1000));
+    assertTrue(inputDomain instanceof RegexDomain, "non-canonical input falls back to regex form");
+    assertFalse(inputDomain.isEmpty());
   }
 
   @Test
@@ -222,18 +244,24 @@ public class CastRegexTransformerTest {
 
   @Test
   public void testCastStringToIntegerNonConvertibleRegex() {
-    // Output regex contains non-numeric patterns
+    // When the output regex isn't convertible to an IntegerDomain (here `.*`), the fallback
+    // intersects with the integer-shaped regex /^-?[0-9]+$/, so the result must accept
+    // integer strings and reject non-integer strings.
     RexNode inputRef = rexBuilder.makeInputRef(typeFactory.createSqlType(SqlTypeName.VARCHAR), 0);
     RexNode castExpr = rexBuilder.makeCast(typeFactory.createSqlType(SqlTypeName.INTEGER), inputRef);
 
-    // This regex has wildcards, not convertible to IntegerDomain
     RegexDomain outputDomain = new RegexDomain("^.*$");
-
     Domain<?, ?> inputDomain = transformer.refineInputDomain(castExpr, outputDomain);
 
-    // Should fall back to integer format constraint
     assertTrue(inputDomain instanceof RegexDomain);
-    assertFalse(inputDomain.isEmpty());
+    RegexDomain regexInput = (RegexDomain) inputDomain;
+
+    assertTrue(regexInput.getAutomaton().run("0"), "should accept '0'");
+    assertTrue(regexInput.getAutomaton().run("42"), "should accept '42'");
+    assertTrue(regexInput.getAutomaton().run("-7"), "should accept '-7'");
+    assertFalse(regexInput.getAutomaton().run("abc"), "should reject non-numeric 'abc'");
+    assertFalse(regexInput.getAutomaton().run("1.5"), "should reject decimal '1.5'");
+    assertFalse(regexInput.getAutomaton().run(""), "should reject empty");
   }
 
   // ==================== canHandle Tests ====================
