@@ -692,10 +692,10 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     return new SqlIdentifier(node.getText(), ZERO);
   }
 
-  /** See {@link #removeBackslashBeforeQuotes}
-   * We use removeBackslashBeforeQuotes to remove the backslash before quotes,
-   * so that we maintain patterns like {@code I'm} or {@code abc"xyz} as is in the java object in memory,
-   * the escaped literal string representation will be generated when the SqlNode is written to string
+  /** See {@link #unescapeHiveStringLiteral}
+   * We use unescapeHiveStringLiteral to interpret Hive backslash escape sequences,
+   * so that patterns like {@code \\d} are correctly stored as {@code \d} in the java object in memory.
+   * The escaped literal string representation will be generated when the SqlNode is written to string
    * by the SqlWriter, which can be controlled by the SqlDialect to decide the choice of escaping mechanism.
    * */
   @Override
@@ -703,17 +703,18 @@ public class ParseTreeBuilder extends AbstractASTVisitor<SqlNode, ParseTreeBuild
     // TODO: Add charset here. UTF-8 is not supported by calcite
     String text = node.getText();
     checkState(text.length() >= 2);
-    return SqlLiteral.createCharString(removeBackslashBeforeQuotes(text.substring(1, text.length() - 1)), ZERO);
+    return SqlLiteral.createCharString(unescapeHiveStringLiteral(text.substring(1, text.length() - 1)), ZERO);
   }
 
-  private String removeBackslashBeforeQuotes(String input) {
-    // matches a \' or \" literal pattern
-    Pattern pattern = Pattern.compile("\\\\['\"]");
+  private String unescapeHiveStringLiteral(String input) {
+    // Handle Hive backslash escape sequences: \\ -> \, \' -> ', \" -> "
+    Pattern pattern = Pattern.compile("\\\\[\\\\'\"]");
     Matcher matcher = pattern.matcher(input);
 
     StringBuffer res = new StringBuffer();
     while (matcher.find()) {
-      String replacement = matcher.group().substring(1);
+      String matched = matcher.group();
+      String replacement = Matcher.quoteReplacement(matched.substring(1));
       matcher.appendReplacement(res, replacement);
     }
     matcher.appendTail(res);
