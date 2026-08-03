@@ -46,7 +46,7 @@ public class TransportUDFTransformer extends SqlCallTransformer {
   public static final String DALI_UDFS_IVY_URL_SPARK_2_11 =
       "ivy://com.linkedin.standard-udfs-dali-udfs:standard-udfs-dali-udfs:2.0.3?classifier=spark_2.11";
   public static final String DALI_UDFS_IVY_URL_SPARK_2_12 =
-      "ivy://com.linkedin.standard-udfs-dali-udfs:standard-udfs-dali-udfs:2.0.3?classifier=spark_2.12";
+      "ivy://com.linkedin.standard-udfs-dali-udfs:standard-udfs-dali-udfs:2.0.124?classifier=spark_2.12";
 
   public enum ScalaVersion {
     SCALA_2_11,
