@@ -1,0 +1,13 @@
+apply plugin: 'java-library'
+
+dependencies {
+  api project(':coral-catalog-spi')
+
+  api(deps.'hive'.'hive-metastore') {
+    exclude group: 'com.linkedin.metastore-autometrics', module: 'autometrics-reporter'
+    exclude group: 'com.linkedin.metastore-audit', module: 'metastore-audit-logging'
+    exclude group: 'org.apache.avro', module: 'avro-tools'
+  }
+
+  api deps.'hadoop'.'hadoop-common'
+}
