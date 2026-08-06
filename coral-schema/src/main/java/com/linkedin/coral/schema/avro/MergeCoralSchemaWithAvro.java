@@ -90,9 +90,8 @@ class MergeCoralSchemaWithAvro {
     switch (coralType.getKind()) {
       case STRUCT:
         StructType structType = (StructType) coralType;
-        Schema unionPartner = unionPartnerOrNull(structType, partner);
-        if (unionPartner != null) {
-          return mergeUnionStruct(structType, unionPartner);
+        if (isMultiBranchUnionStruct(structType, partner)) {
+          return mergeUnionStruct(structType, partner);
         }
         return mergeStruct(structType, partner);
       case ARRAY:
@@ -127,8 +126,7 @@ class MergeCoralSchemaWithAvro {
 
   /**
    * Decides whether {@code structType} is a Trino-style union-struct whose partner Avro is a genuine
-   * multi-branch union, and if so returns that partner union (null branch intact). Returns null to fall
-   * back to regular struct handling.
+   * multi-branch union, and must therefore be emitted as an Avro union rather than a record.
    *
    * <p>Iceberg's type system has no union type, so a Hive {@code uniontype<A,B,C>} that has been persisted
    * into Iceberg surfaces as the struct {@code {tag:INT, field0:A, field1:B, field2:C}} — the same encoding
@@ -144,22 +142,21 @@ class MergeCoralSchemaWithAvro {
    * ambiguity is a single-member {@code uniontype<record>}, which is vanishingly rare; it is treated as a
    * struct (the pre-existing behavior).
    */
-  @Nullable
-  private Schema unionPartnerOrNull(StructType structType, @Nullable Schema partner) {
+  private boolean isMultiBranchUnionStruct(StructType structType, @Nullable Schema partner) {
     if (partner == null || partner.getType() != Schema.Type.UNION || !isUnionStruct(structType)) {
-      return null;
+      return false;
     }
     int memberCount = structType.getFields().size() - 1; // exclude the leading "tag" field
     int nonNullBranchCount = SchemaUtilities.discardNullFromUnionIfExist(partner).getTypes().size();
     // Require at least two members so the count check is collision-free: a genuine nullable struct yields
     // [null, record] (one non-null branch), which can never equal a member count of two or more. A
     // single-member union-struct is left to the struct path (see Javadoc).
-    return memberCount >= 2 && memberCount == nonNullBranchCount ? partner : null;
+    return memberCount >= 2 && memberCount == nonNullBranchCount;
   }
 
   /**
    * Recognizes the union-struct shape: a leading {@code tag} field of type INT followed by
-   * {@code field0, field1, ..., fieldN-1} in order. See {@link #unionPartnerOrNull}.
+   * {@code field0, field1, ..., fieldN-1} in order. See {@link #isMultiBranchUnionStruct}.
    */
   private boolean isUnionStruct(StructType structType) {
     List<StructField> fields = structType.getFields();
@@ -181,8 +178,9 @@ class MergeCoralSchemaWithAvro {
   /**
    * Reconstructs an Avro union from a union-struct, merging each {@code fieldN} member against the
    * corresponding partner union branch (by ordinal). Null placement follows {@link MergeHiveSchemaWithAvro#union}:
-   * the NULL branch is emitted first when the partner union carries one. Caller ({@link #unionPartnerOrNull})
-   * guarantees the member count matches the partner's non-null branch count.
+   * the NULL branch is emitted first when the partner union carries one. Caller
+   * ({@link #isMultiBranchUnionStruct}) guarantees the member count matches the partner's non-null branch
+   * count.
    */
   private Schema mergeUnionStruct(StructType unionStruct, Schema partnerUnion) {
     List<Schema> partnerBranches = SchemaUtilities.discardNullFromUnionIfExist(partnerUnion).getTypes();
