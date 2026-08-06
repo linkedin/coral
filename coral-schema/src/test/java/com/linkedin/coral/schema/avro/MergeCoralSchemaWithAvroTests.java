@@ -327,7 +327,137 @@ public class MergeCoralSchemaWithAvroTests {
     assertNotNull(outerSchema.getField("inner"));
   }
 
+  @Test
+  public void shouldReconstructMultiBranchUnionFromUnionStruct() {
+    // Hive uniontype<int,string,boolean> persisted into Iceberg is the struct {tag, field0, field1, field2}.
+    // The partner Avro keeps it as a union, so the engine must emit a union with the same branches/order.
+    StructType coral =
+        struct(field("u", unionStruct(intType(true), stringType(true), PrimitiveType.of(CoralTypeKind.BOOLEAN, true))));
+    Schema avro = avroStruct("r1", avroField("u",
+        avroUnion(Schema.Type.NULL, Schema.Type.INT, Schema.Type.STRING, Schema.Type.BOOLEAN), null, null, null));
+
+    Schema result = merge(coral, avro);
+    Schema u = result.getField("u").schema();
+    assertEquals(u.getType(), Schema.Type.UNION);
+    assertEquals(u.getTypes().get(0).getType(), Schema.Type.NULL);
+    assertEquals(u.getTypes().get(1).getType(), Schema.Type.INT);
+    assertEquals(u.getTypes().get(2).getType(), Schema.Type.STRING);
+    assertEquals(u.getTypes().get(3).getType(), Schema.Type.BOOLEAN);
+  }
+
+  @Test
+  public void shouldReconstructUnionWithoutNullBranch() {
+    // A non-nullable partner union (no null member) must not gain a null branch — null placement follows
+    // the partner, matching MergeHiveSchemaWithAvro.union.
+    StructType coral = struct(field("u", unionStruct(intType(true), stringType(true))));
+    Schema avro = avroStruct("r1", avroField("u", avroUnion(Schema.Type.INT, Schema.Type.STRING), null, null, null));
+
+    Schema result = merge(coral, avro);
+    Schema u = result.getField("u").schema();
+    assertEquals(u.getType(), Schema.Type.UNION);
+    assertEquals(u.getTypes().size(), 2);
+    assertEquals(u.getTypes().get(0).getType(), Schema.Type.INT);
+    assertEquals(u.getTypes().get(1).getType(), Schema.Type.STRING);
+  }
+
+  @Test
+  public void shouldMergeRecordMemberAgainstItsPartnerBranch() {
+    // uniontype<int, struct<x:int>>: the struct member must become a record branch whose fields are
+    // merged from the corresponding partner branch, and must NOT be double-wrapped in its own
+    // [null, record] option — the union's own NULL branch already carries nullability.
+    StructType coral = struct(field("u", unionStruct(intType(true), struct(field("x", intType(true))))));
+    Schema partnerRecordBranch = avroStruct("branchRec", optionalField("x", Schema.Type.INT));
+    Schema avro = avroStruct("r1",
+        avroField("u",
+            avroUnionOf(Schema.create(Schema.Type.NULL), Schema.create(Schema.Type.INT), partnerRecordBranch), null,
+            null, null));
+
+    Schema result = merge(coral, avro);
+    Schema u = result.getField("u").schema();
+    assertEquals(u.getType(), Schema.Type.UNION);
+    assertEquals(u.getTypes().size(), 3);
+    assertEquals(u.getTypes().get(0).getType(), Schema.Type.NULL);
+    assertEquals(u.getTypes().get(1).getType(), Schema.Type.INT);
+
+    Schema recordBranch = u.getTypes().get(2);
+    // Not wrapped in an option: the branch is the record itself, not [null, record].
+    assertEquals(recordBranch.getType(), Schema.Type.RECORD);
+    // The member's fields were merged against the partner branch rather than regenerated blindly.
+    assertEquals(recordBranch.getName(), "branchRec");
+    assertNotNull(recordBranch.getField("x"));
+  }
+
+  @Test
+  public void shouldKeepArrayMemberAsArrayBranch() {
+    // uniontype<int, array<string>>: the array member must stay an array branch rather than being
+    // collapsed or unwrapped into its element type.
+    StructType coral = struct(field("u", unionStruct(intType(true), ArrayType.of(stringType(true), true))));
+    Schema partnerArrayBranch =
+        Schema.createArray(SchemaUtilities.makeNullable(Schema.create(Schema.Type.STRING), false));
+    Schema avro = avroStruct("r1",
+        avroField("u", avroUnionOf(Schema.create(Schema.Type.NULL), Schema.create(Schema.Type.INT), partnerArrayBranch),
+            null, null, null));
+
+    Schema result = merge(coral, avro);
+    Schema u = result.getField("u").schema();
+    assertEquals(u.getType(), Schema.Type.UNION);
+    assertEquals(u.getTypes().size(), 3);
+    assertEquals(u.getTypes().get(0).getType(), Schema.Type.NULL);
+    assertEquals(u.getTypes().get(1).getType(), Schema.Type.INT);
+
+    Schema arrayBranch = u.getTypes().get(2);
+    assertEquals(arrayBranch.getType(), Schema.Type.ARRAY);
+    assertEquals(SchemaUtilities.extractIfOption(arrayBranch.getElementType()).getType(), Schema.Type.STRING);
+  }
+
+  @Test
+  public void shouldPromoteStringMemberToPartnerEnumBranch() {
+    // uniontype<string, int> whose partner branch is an enum: branches go through the normal promotion
+    // path (checkCompatibilityAndPromote), so the STRING member must surface as the partner's ENUM
+    // rather than a bare string.
+    StructType coral = struct(field("u", unionStruct(stringType(true), intType(true))));
+    Schema partnerEnumBranch = Schema.createEnum("Color", null, "com.test", Arrays.asList("RED", "GREEN"));
+    Schema avro = avroStruct("r1",
+        avroField("u", avroUnionOf(Schema.create(Schema.Type.NULL), partnerEnumBranch, Schema.create(Schema.Type.INT)),
+            null, null, null));
+
+    Schema result = merge(coral, avro);
+    Schema u = result.getField("u").schema();
+    assertEquals(u.getType(), Schema.Type.UNION);
+    assertEquals(u.getTypes().size(), 3);
+    assertEquals(u.getTypes().get(0).getType(), Schema.Type.NULL);
+
+    Schema enumBranch = u.getTypes().get(1);
+    assertEquals(enumBranch.getType(), Schema.Type.ENUM);
+    assertEquals(enumBranch.getName(), "Color");
+    assertEquals(enumBranch.getEnumSymbols(), Arrays.asList("RED", "GREEN"));
+    assertEquals(u.getTypes().get(2).getType(), Schema.Type.INT);
+  }
+
   /** Test Helpers */
+
+  /** Builds a Trino-style union-struct {tag:INT, field0, field1, ...} from the given union member types. */
+  private StructType unionStruct(com.linkedin.coral.common.types.CoralDataType... members) {
+    StructField[] fields = new StructField[members.length + 1];
+    fields[0] = field("tag", intType(true));
+    for (int i = 0; i < members.length; i++) {
+      fields[i + 1] = field("field" + i, members[i]);
+    }
+    return struct(fields);
+  }
+
+  private Schema avroUnion(Schema.Type... branchTypes) {
+    Schema[] branches = new Schema[branchTypes.length];
+    for (int i = 0; i < branchTypes.length; i++) {
+      branches[i] = Schema.create(branchTypes[i]);
+    }
+    return Schema.createUnion(Arrays.asList(branches));
+  }
+
+  /** Union builder for branches that are not plain primitives (records, arrays, enums). */
+  private Schema avroUnionOf(Schema... branches) {
+    return Schema.createUnion(Arrays.asList(branches));
+  }
 
   private Schema merge(StructType coral, Schema avro) {
     return MergeCoralSchemaWithAvro.merge(coral, avro, "TestRecord", "com.test");

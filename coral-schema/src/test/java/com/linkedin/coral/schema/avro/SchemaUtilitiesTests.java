@@ -20,6 +20,7 @@ import org.testng.annotations.Test;
 
 import com.linkedin.coral.common.catalog.CoralTable;
 import com.linkedin.coral.common.catalog.TableType;
+import com.linkedin.coral.common.types.ArrayType;
 import com.linkedin.coral.common.types.CoralDataType;
 import com.linkedin.coral.common.types.CoralTypeKind;
 import com.linkedin.coral.common.types.PrimitiveType;
@@ -175,6 +176,98 @@ public class SchemaUtilitiesTests {
     Assert.assertEquals(result.getNamespace(), "flat");
   }
 
+  @Test
+  public void testGetAvroSchemaForCoralTableMultiBranchUnion() {
+    // A Hive uniontype<int,string,boolean> persisted into Iceberg surfaces as the struct
+    // {tag, field0, field1, field2}. The partner Avro keeps it as a real union, so the merge engine must
+    // reconstruct that union (matching the legacy Hive path) rather than synthesize a record.
+    StructType unionStruct = struct(field("tag", intType(true)), field("field0", intType(true)),
+        field("field1", stringType(true)), field("field2", boolType(true)));
+    StructType coralSchema = struct(field("u", unionStruct));
+    String partner = "{\"type\":\"record\",\"name\":\"R\",\"namespace\":\"x\",\"fields\":["
+        + "{\"name\":\"u\",\"type\":[\"null\",\"int\",\"string\",\"boolean\"],\"default\":null}]}";
+    Map<String, String> properties = new HashMap<>();
+    properties.put("avro.schema.literal", partner);
+
+    Schema result = SchemaUtilities.getAvroSchemaForTable(new TestCoralTable("db.tbl", coralSchema, properties), false);
+
+    Schema u = result.getField("u").schema();
+    Assert.assertEquals(u.getType(), Schema.Type.UNION);
+    List<Schema.Type> branchTypes = new ArrayList<>();
+    for (Schema branch : u.getTypes()) {
+      branchTypes.add(branch.getType());
+    }
+    Assert.assertEquals(branchTypes,
+        Arrays.asList(Schema.Type.NULL, Schema.Type.INT, Schema.Type.STRING, Schema.Type.BOOLEAN));
+  }
+
+  @Test
+  public void testGetAvroSchemaForCoralTableUnionInArray() {
+    // facetClauses-style column: an array whose element is a union. The element union-struct must be
+    // reconstructed into an Avro union, not collapsed.
+    StructType unionStruct =
+        struct(field("tag", intType(true)), field("field0", intType(true)), field("field1", stringType(true)));
+    StructType coralSchema = struct(field("facets", ArrayType.of(unionStruct, true)));
+    String partner = "{\"type\":\"record\",\"name\":\"R\",\"namespace\":\"x\",\"fields\":["
+        + "{\"name\":\"facets\",\"type\":[\"null\",{\"type\":\"array\",\"items\":[\"null\",\"int\",\"string\"]}],"
+        + "\"default\":null}]}";
+    Map<String, String> properties = new HashMap<>();
+    properties.put("avro.schema.literal", partner);
+
+    Schema result = SchemaUtilities.getAvroSchemaForTable(new TestCoralTable("db.tbl", coralSchema, properties), false);
+
+    Schema facets = AvroSerdeUtils.isNullableType(result.getField("facets").schema())
+        ? AvroSerdeUtils.getOtherTypeFromNullableType(result.getField("facets").schema())
+        : result.getField("facets").schema();
+    Assert.assertEquals(facets.getType(), Schema.Type.ARRAY);
+    Schema element = facets.getElementType();
+    Assert.assertEquals(element.getType(), Schema.Type.UNION);
+    Assert.assertEquals(element.getTypes().get(0).getType(), Schema.Type.NULL);
+    Assert.assertEquals(element.getTypes().size(), 3); // [null, int, string]
+  }
+
+  @Test
+  public void testGetAvroSchemaForCoralTableUnionWithDefaultDoesNotThrow() {
+    // Regression for legacy tables that failed outright because a union-typed field default could not be
+    // applied to the synthesized record. With the union correctly reconstructed, the partner default holds.
+    StructType unionStruct =
+        struct(field("tag", intType(true)), field("field0", intType(true)), field("field1", stringType(true)));
+    StructType coralSchema = struct(field("u", unionStruct));
+    String partner = "{\"type\":\"record\",\"name\":\"R\",\"namespace\":\"x\",\"fields\":["
+        + "{\"name\":\"u\",\"type\":[\"null\",\"int\",\"string\"],\"default\":null}]}";
+    Map<String, String> properties = new HashMap<>();
+    properties.put("avro.schema.literal", partner);
+
+    Schema result = SchemaUtilities.getAvroSchemaForTable(new TestCoralTable("db.tbl", coralSchema, properties), false);
+
+    Assert.assertEquals(result.getField("u").schema().getType(), Schema.Type.UNION);
+    Assert.assertTrue(AvroCompatibilityHelper.fieldHasDefault(result.getField("u")));
+  }
+
+  @Test
+  public void testUnionStructShapeWithRecordPartnerStaysStruct() {
+    // A genuine nullable struct that happens to reuse the union-struct field names. Its partner is
+    // [null, record] — one non-null branch — so the member-count guard keeps it a record, not a union.
+    StructType genuineStruct =
+        struct(field("tag", intType(true)), field("field0", intType(true)), field("field1", stringType(true)));
+    StructType coralSchema = struct(field("s", genuineStruct));
+    String partner = "{\"type\":\"record\",\"name\":\"R\",\"namespace\":\"x\",\"fields\":["
+        + "{\"name\":\"s\",\"type\":[\"null\",{\"type\":\"record\",\"name\":\"S\",\"fields\":["
+        + "{\"name\":\"tag\",\"type\":[\"null\",\"int\"],\"default\":null},"
+        + "{\"name\":\"field0\",\"type\":[\"null\",\"int\"],\"default\":null},"
+        + "{\"name\":\"field1\",\"type\":[\"null\",\"string\"],\"default\":null}]}],\"default\":null}]}";
+    Map<String, String> properties = new HashMap<>();
+    properties.put("avro.schema.literal", partner);
+
+    Schema result = SchemaUtilities.getAvroSchemaForTable(new TestCoralTable("db.tbl", coralSchema, properties), false);
+
+    Schema s = AvroSerdeUtils.isNullableType(result.getField("s").schema())
+        ? AvroSerdeUtils.getOtherTypeFromNullableType(result.getField("s").schema()) : result.getField("s").schema();
+    Assert.assertEquals(s.getType(), Schema.Type.RECORD);
+    Assert.assertNotNull(s.getField("tag"));
+    Assert.assertNotNull(s.getField("field0"));
+  }
+
   /**
    * Minimal {@link CoralTable} test fixture. Used to exercise the non-Hive path of
    * {@link SchemaUtilities#getAvroSchemaForTable(CoralTable, boolean)} without requiring a real
@@ -227,6 +320,10 @@ public class SchemaUtilitiesTests {
 
   private static PrimitiveType stringType(boolean nullable) {
     return PrimitiveType.of(CoralTypeKind.STRING, nullable);
+  }
+
+  private static PrimitiveType boolType(boolean nullable) {
+    return PrimitiveType.of(CoralTypeKind.BOOLEAN, nullable);
   }
 
   @Test
