@@ -48,6 +48,11 @@ public class VersionedSqlUserDefinedFunction extends SqlUserDefinedFunction {
       .put("com.linkedin.groot.runtime.udf.spark.RedactSecondarySchemaFieldIfUDF", "redact_secondary_schema_field_if")
       .put("com.linkedin.groot.runtime.udf.spark.GetMappedValueUDF", "get_mapped_value")
       .put("com.linkedin.groot.runtime.udf.spark.ExtractCollectionUDF", "extract_collection")
+      .put("com.linkedin.memberidutils.hive.GetIdFromMemberUrnUdf", "get_id_from_member_urn")
+      .put("com.linkedin.memberidutils.hive.GetSaltedIdUdf", "get_salted_id")
+      .put("com.linkedin.memberidutils.hive.IsMemberUdf", "is_member")
+      .put("com.linkedin.memberidutils.hive.IsMemberFromUrnUdf", "is_member_from_urn")
+      .put("com.linkedin.memberidutils.hive.IsSaltedIdUdf", "is_salted_id")
       .put("com.linkedin.coral.hive.hive2rel.CoralTestUDF", "coral_test").build();
 
   // The list of dependencies specified found in the view's "dependencies" property.
