@@ -217,6 +217,14 @@ public class TestUtils {
           + "        LEFT JOIN ( SELECT trim(some_id) AS SOME_ID FROM duplicate_column_name_b) b ON a.some_id = b.some_id\n"
           + "        WHERE a.some_id != ''");
 
+      driver.run("CREATE TABLE IF NOT EXISTS test.party(party_id int, party_name string)");
+      driver.run(
+          "CREATE TABLE IF NOT EXISTS test.party_identification(party_id int, party_identification_type_code string, party_identification_number string)");
+      driver.run("CREATE VIEW IF NOT EXISTS test.view_join_with_in_condition AS "
+          + "SELECT p.party_id, p.party_name, pi.party_identification_number " + "FROM test.party p "
+          + "INNER JOIN test.party_identification pi " + "ON p.party_id = pi.party_id "
+          + "AND pi.party_identification_type_code IN ('TIN', 'GIIN')");
+
       testHive.databases = ImmutableList.of(
           new TestHive.DB("test", ImmutableList.of("tableOne", "tableTwo", "tableOneView")),
           new TestHive.DB("default",

@@ -31,6 +31,7 @@ import org.testng.annotations.Test;
 import com.linkedin.coral.common.ToRelConverterTestUtils;
 import com.linkedin.coral.common.functions.UnknownSqlFunctionException;
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
+import com.linkedin.coral.transformers.CoralRelToSqlNodeConverter;
 
 import static com.linkedin.coral.common.ToRelConverterTestUtils.*;
 import static org.apache.calcite.sql.type.OperandTypes.*;
@@ -666,6 +667,19 @@ public class HiveToRelConverterTest {
         + "  LogicalTableScan(table=[[hive, test, tableint]])\n";
 
     assertEquals(relToString(sql), expected);
+  }
+
+  @Test
+  public void testViewJoinWithInCondition() {
+    RelNode relNode = converter.convertView("test", "view_join_with_in_condition");
+    CoralRelToSqlNodeConverter coralConverter = new CoralRelToSqlNodeConverter();
+    SqlNode sqlNode = coralConverter.convert(relNode);
+    String generated = sqlNode.toSqlString(CoralRelToSqlNodeConverter.INSTANCE).getSql();
+    String expected = "SELECT party.party_id, party.party_name, party_identification.party_identification_number\n"
+        + "FROM test.party AS party\n" + "INNER JOIN test.party_identification AS party_identification"
+        + " ON party.party_id = party_identification.party_id"
+        + " AND party_identification.party_identification_type_code IN ('TIN', 'GIIN')";
+    assertEquals(generated, expected);
   }
 
   private String relToString(String sql) {

@@ -243,7 +243,11 @@ public class HiveToTrinoConverterTest {
         { "test", "view_union_no_casting", "SELECT \"table_with_mixed_columns\".\"a_tinyint\" AS \"a_tinyint\", \"table_with_mixed_columns\".\"a_smallint\" AS \"a_smallint\", \"table_with_mixed_columns\".\"a_integer\" AS \"a_integer\", \"table_with_mixed_columns\".\"a_bigint\" AS \"a_bigint\", \"table_with_mixed_columns\".\"a_float\" AS \"a_float\"\n"
             + "FROM \"test\".\"table_with_mixed_columns\" AS \"table_with_mixed_columns\"\n" + "UNION ALL\n"
             + "SELECT \"table_with_mixed_columns0\".\"a_tinyint\" AS \"a_tinyint\", \"table_with_mixed_columns0\".\"a_smallint\" AS \"a_smallint\", \"table_with_mixed_columns0\".\"a_integer\" AS \"a_integer\", \"table_with_mixed_columns0\".\"a_bigint\" AS \"a_bigint\", \"table_with_mixed_columns0\".\"a_float\" AS \"a_float\"\n"
-            + "FROM \"test\".\"table_with_mixed_columns\" AS \"table_with_mixed_columns0\"" } };
+            + "FROM \"test\".\"table_with_mixed_columns\" AS \"table_with_mixed_columns0\"" },
+
+        { "test", "view_join_with_in_condition", "SELECT \"party\".\"party_id\" AS \"party_id\", \"party\".\"party_name\" AS \"party_name\", \"party_identification\".\"party_identification_number\" AS \"party_identification_number\"\n"
+            + "FROM \"test\".\"party\" AS \"party\"\n"
+            + "INNER JOIN \"test\".\"party_identification\" AS \"party_identification\" ON \"party\".\"party_id\" = \"party_identification\".\"party_id\" AND \"party_identification\".\"party_identification_type_code\" IN ('TIN', 'GIIN')" } };
   }
 
   @Test
