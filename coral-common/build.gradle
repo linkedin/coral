@@ -10,10 +10,17 @@ dependencies {
     }
   }
 
-  api(deps.'hive'.'hive-metastore') {
+  // New catalog SPI and implementation modules
+  api project(':coral-catalog-spi')
+  api project(':coral-catalog-hive')
+  api project(':coral-catalog-iceberg')
+
+  // Hive/Hadoop/Iceberg dependencies are now transitively provided by the catalog modules.
+  // These are kept as implementation deps for the deprecated wrapper classes still in coral-common
+  // (HiveMetastoreClient, HiveMscAdapter, HiveSchema, HiveDbSchema, etc.).
+  implementation(deps.'hive'.'hive-metastore') {
     exclude group: 'com.linkedin.metastore-autometrics', module: 'autometrics-reporter'
     exclude group: 'com.linkedin.metastore-audit', module: 'metastore-audit-logging'
-    // avro-tools brings in whole bunch of hadoop classes causing duplicates and conflicts
     exclude group: 'org.apache.avro', module: 'avro-tools'
     // Exclude problematic Hive 2.3.9 transitives that cause conflicts in downstream consumers (e.g., Trino)
     exclude group: 'org.apache.logging.log4j', module: 'log4j-core'
@@ -21,12 +28,11 @@ dependencies {
     exclude group: 'org.slf4j', module: 'slf4j-log4j12'
   }
 
-  api deps.'hadoop'.'hadoop-common'
+  implementation deps.'hadoop'.'hadoop-common'
 
-  // LinkedIn Iceberg dependencies
-  api deps.'linkedin-iceberg'.'iceberg-api'
-  api deps.'linkedin-iceberg'.'iceberg-core'
-  api(deps.'linkedin-iceberg'.'iceberg-hive-metastore') {
+  implementation deps.'linkedin-iceberg'.'iceberg-api'
+  implementation deps.'linkedin-iceberg'.'iceberg-core'
+  implementation(deps.'linkedin-iceberg'.'iceberg-hive-metastore') {
     exclude group: 'org.apache.hive', module: 'hive-metastore'
     exclude group: 'org.apache.hadoop', module: 'hadoop-common'
   }

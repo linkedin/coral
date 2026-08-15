@@ -3,7 +3,7 @@
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
-package com.linkedin.coral.common;
+package com.linkedin.coral.catalog.hive;
 
 import java.util.List;
 
@@ -15,37 +15,35 @@ import org.apache.hadoop.hive.metastore.api.Table;
 
 import com.linkedin.coral.com.google.common.base.Throwables;
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
-import com.linkedin.coral.common.catalog.HiveTable;
 
 
 /**
- * @deprecated Use {@link com.linkedin.coral.catalog.hive.HiveCalciteViewAdapter} instead.
- * This class is retained for backward compatibility and will be removed in a future release.
+ * Calcite adapter for Hive views, extending HiveCalciteTableAdapter with TranslatableTable support
+ * for recursive expansion of view definitions.
  *
- * <p>This shim intentionally extends {@link HiveCalciteTableAdapter} (rather than
- * {@code com.linkedin.coral.catalog.hive.HiveCalciteViewAdapter}) so that the historical
- * {@code view instanceof com.linkedin.coral.common.HiveCalciteTableAdapter} relationship is
- * preserved for existing callers. The view-specific {@link #toRel} behavior is replicated here;
- * both this class and {@link HiveCalciteTableAdapter} are removed together at cleanup, leaving the
- * canonical {@code catalog.hive} hierarchy untouched.
+ * @see HiveCalciteTableAdapter
+ * @see <a href="https://github.com/linkedin/coral/issues/575">Issue #575: Refactor ParseTreeBuilder to Use CoralTable</a>
  */
-@Deprecated
 public class HiveCalciteViewAdapter extends HiveCalciteTableAdapter implements TranslatableTable {
   private final List<String> schemaPath;
 
   /**
-   * @deprecated Use {@link com.linkedin.coral.catalog.hive.HiveCalciteViewAdapter#HiveCalciteViewAdapter(Table, List)} instead.
+   * Constructor to create bridge from hive table to calcite table.
+   *
+   * @param hiveTable Hive table
+   * @param schemaPath Calcite schema path
    */
-  @Deprecated
   public HiveCalciteViewAdapter(Table hiveTable, List<String> schemaPath) {
     super(hiveTable);
     this.schemaPath = schemaPath;
   }
 
   /**
-   * @deprecated Use {@link com.linkedin.coral.catalog.hive.HiveCalciteViewAdapter#HiveCalciteViewAdapter(com.linkedin.coral.catalog.hive.HiveTable, List)} instead.
+   * Constructor accepting HiveTable for unified catalog integration.
+   *
+   * @param coralTable HiveTable from catalog
+   * @param schemaPath Calcite schema path
    */
-  @Deprecated
   public HiveCalciteViewAdapter(HiveTable coralTable, List<String> schemaPath) {
     super(coralTable);
     this.schemaPath = schemaPath;
