@@ -19,3 +19,4 @@ ligradle
 *.patch
 */metastore_db
 .pyc
+__pycache__/
