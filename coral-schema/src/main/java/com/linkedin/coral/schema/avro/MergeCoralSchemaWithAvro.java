@@ -90,7 +90,7 @@ class MergeCoralSchemaWithAvro {
     switch (coralType.getKind()) {
       case STRUCT:
         StructType structType = (StructType) coralType;
-        if (isMultiBranchUnionStruct(structType, partner)) {
+        if (isReconstructableUnionStruct(structType, partner)) {
           return mergeUnionStruct(structType, partner);
         }
         return mergeStruct(structType, partner);
@@ -137,26 +137,57 @@ class MergeCoralSchemaWithAvro {
    *
    * <p>The struct shape alone is ambiguous — a genuine record could be named {@code {tag, field0, ...}} — so
    * two further conditions are required: the partner must be an Avro union, and its non-null branch count
-   * must equal the number of {@code fieldN} members. A genuine nullable struct yields {@code [null, record]}
-   * (one non-null branch), which fails the count check for any multi-branch union. The only residual
-   * ambiguity is a single-member {@code uniontype<record>}, which is vanishingly rare; it is treated as a
-   * struct (the pre-existing behavior).
+   * must equal the number of {@code fieldN} members.
+   *
+   * <p>For two or more members the count check alone is conclusive, because a genuine nullable struct yields
+   * {@code [null, record]} (one non-null branch) and can never match. A <em>single</em>-member union-struct
+   * is genuinely ambiguous on counts, since both {@code uniontype<X>} and a nullable struct named
+   * {@code {tag, field0}} present one non-null branch. The partner's sole branch breaks the tie: for a
+   * genuine struct it is the record describing that struct, and so carries its own {@code tag} field, whereas
+   * for {@code uniontype<X>} it is the member type {@code X}. Single unions must be reconstructed rather than
+   * left as structs — {@link com.linkedin.coral.common.HiveToCoralTypeConverter#convertUnion} emits the
+   * {@code {tag, field0}} encoding for every arity, so treating them as structs leaks that internal encoding
+   * into the output schema.
+   *
+   * <p>The only residual ambiguity is {@code uniontype<struct<tag:...>>}, whose member is itself a struct
+   * carrying a {@code tag} field; it is treated as a struct.
    */
-  private boolean isMultiBranchUnionStruct(StructType structType, @Nullable Schema partner) {
+  private boolean isReconstructableUnionStruct(StructType structType, @Nullable Schema partner) {
     if (partner == null || partner.getType() != Schema.Type.UNION || !isUnionStruct(structType)) {
       return false;
     }
     int memberCount = structType.getFields().size() - 1; // exclude the leading "tag" field
-    int nonNullBranchCount = SchemaUtilities.discardNullFromUnionIfExist(partner).getTypes().size();
-    // Require at least two members so the count check is collision-free: a genuine nullable struct yields
-    // [null, record] (one non-null branch), which can never equal a member count of two or more. A
-    // single-member union-struct is left to the struct path (see Javadoc).
-    return memberCount >= 2 && memberCount == nonNullBranchCount;
+    List<Schema> nonNullBranches = SchemaUtilities.discardNullFromUnionIfExist(partner).getTypes();
+    if (memberCount != nonNullBranches.size()) {
+      return false;
+    }
+    if (memberCount >= 2) {
+      return true;
+    }
+    return !describesStructItself(nonNullBranches.get(0));
+  }
+
+  /**
+   * Whether a partner union branch is the record describing the union-struct itself — i.e. the partner says
+   * "this really is a struct named {tag, field0}" — rather than the member type of a single
+   * {@code uniontype<X>}. See {@link #isReconstructableUnionStruct}.
+   */
+  private boolean describesStructItself(Schema branch) {
+    Schema extracted = SchemaUtilities.extractIfOption(branch);
+    if (extracted.getType() != Schema.Type.RECORD) {
+      return false;
+    }
+    for (Schema.Field field : extracted.getFields()) {
+      if ("tag".equalsIgnoreCase(field.name())) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**
    * Recognizes the union-struct shape: a leading {@code tag} field of type INT followed by
-   * {@code field0, field1, ..., fieldN-1} in order. See {@link #isMultiBranchUnionStruct}.
+   * {@code field0, field1, ..., fieldN-1} in order. See {@link #isReconstructableUnionStruct}.
    */
   private boolean isUnionStruct(StructType structType) {
     List<StructField> fields = structType.getFields();
@@ -181,7 +212,7 @@ class MergeCoralSchemaWithAvro {
    * Reconstructs an Avro union from a union-struct, merging each {@code fieldN} member against the
    * corresponding partner union branch (by ordinal). Null placement follows {@link MergeHiveSchemaWithAvro#union}:
    * the NULL branch is emitted first when the partner union carries one. Caller
-   * ({@link #isMultiBranchUnionStruct}) guarantees the member count matches the partner's non-null branch
+   * ({@link #isReconstructableUnionStruct}) guarantees the member count matches the partner's non-null branch
    * count.
    *
    * <p><b>{@code unionStruct.isNullable()} is deliberately ignored.</b> For a union the partner Avro is the

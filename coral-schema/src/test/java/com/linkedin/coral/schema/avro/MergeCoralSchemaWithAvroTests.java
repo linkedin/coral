@@ -434,6 +434,91 @@ public class MergeCoralSchemaWithAvroTests {
     assertEquals(u.getTypes().get(2).getType(), Schema.Type.INT);
   }
 
+  @Test
+  public void shouldReconstructNullableSingleUnion() {
+    // uniontype<string> persisted into Iceberg is {tag, field0} — HiveToCoralTypeConverter.convertUnion
+    // emits the union-struct encoding for EVERY arity, not just multi-branch. A nullable single union must
+    // come back as [null, string]; leaving it on the struct path would leak {tag, field0} into the output.
+    StructType coral = struct(field("u", unionStruct(stringType(true))));
+    Schema avro = avroStruct("r1", avroField("u", avroUnion(Schema.Type.NULL, Schema.Type.STRING), null, null, null));
+
+    Schema result = merge(coral, avro);
+    Schema u = result.getField("u").schema();
+    assertEquals(u.getType(), Schema.Type.UNION);
+    assertEquals(u.getTypes().size(), 2);
+    assertEquals(u.getTypes().get(0).getType(), Schema.Type.NULL);
+    assertEquals(u.getTypes().get(1).getType(), Schema.Type.STRING);
+  }
+
+  @Test
+  public void shouldReconstructNonNullableSingleUnion() {
+    // Same as above without a null branch: the partner owns null placement, so no null may be invented.
+    StructType coral = struct(field("u", unionStruct(stringType(true))));
+    Schema avro = avroStruct("r1", avroField("u", avroUnion(Schema.Type.STRING), null, null, null));
+
+    Schema result = merge(coral, avro);
+    Schema u = result.getField("u").schema();
+    assertEquals(u.getType(), Schema.Type.UNION);
+    assertEquals(u.getTypes().size(), 1);
+    assertEquals(u.getTypes().get(0).getType(), Schema.Type.STRING);
+  }
+
+  @Test
+  public void shouldTreatGenuineNullableStructNamedLikeUnionStructAsStruct() {
+    // A real struct that happens to be named {tag, field0} is shape-indistinguishable from a single
+    // uniontype. The partner disambiguates: its sole branch is the record describing the struct, so it
+    // carries its own "tag" field. This must stay a record, not become a union.
+    StructType coral = struct(field("u", struct(field("tag", intType(true)), field("field0", stringType(true)))));
+    Schema partnerRecord =
+        avroStruct("genuineStruct", optionalField("tag", Schema.Type.INT), optionalField("field0", Schema.Type.STRING));
+    Schema avro =
+        avroStruct("r1", avroField("u", avroUnionOf(Schema.create(Schema.Type.NULL), partnerRecord), null, null, null));
+
+    Schema result = merge(coral, avro);
+    Schema u = result.getField("u").schema();
+    assertEquals(u.getType(), Schema.Type.UNION);
+    Schema inner = SchemaUtilities.extractIfOption(u);
+    assertEquals(inner.getType(), Schema.Type.RECORD);
+    assertEquals(inner.getName(), "genuineStruct");
+    assertNotNull(inner.getField("tag"));
+    assertNotNull(inner.getField("field0"));
+  }
+
+  @Test
+  public void shouldReconstructSingleUnionWhoseMemberIsARecord() {
+    // uniontype<struct<x:int>>: the partner's sole branch is a record WITHOUT a "tag" field, so it is the
+    // member type rather than a description of the union-struct — reconstruct as a union.
+    StructType coral = struct(field("u", unionStruct(struct(field("x", intType(true))))));
+    Schema memberRecord = avroStruct("memberRec", optionalField("x", Schema.Type.INT));
+    Schema avro =
+        avroStruct("r1", avroField("u", avroUnionOf(Schema.create(Schema.Type.NULL), memberRecord), null, null, null));
+
+    Schema result = merge(coral, avro);
+    Schema u = result.getField("u").schema();
+    assertEquals(u.getType(), Schema.Type.UNION);
+    assertEquals(u.getTypes().size(), 2);
+    assertEquals(u.getTypes().get(0).getType(), Schema.Type.NULL);
+    assertEquals(u.getTypes().get(1).getType(), Schema.Type.RECORD);
+    assertEquals(u.getTypes().get(1).getName(), "memberRec");
+    assertNotNull(u.getTypes().get(1).getField("x"));
+  }
+
+  @Test
+  public void shouldDetectUnionStructMarkerNamesCaseInsensitively() {
+    // A catalog that normalizes field casing must not silently downgrade a union to a record.
+    StructType coral = struct(field("u",
+        struct(field("TAG", intType(true)), field("Field0", stringType(true)), field("FIELD1", intType(true)))));
+    Schema avro = avroStruct("r1",
+        avroField("u", avroUnion(Schema.Type.NULL, Schema.Type.STRING, Schema.Type.INT), null, null, null));
+
+    Schema result = merge(coral, avro);
+    Schema u = result.getField("u").schema();
+    assertEquals(u.getType(), Schema.Type.UNION);
+    assertEquals(u.getTypes().get(0).getType(), Schema.Type.NULL);
+    assertEquals(u.getTypes().get(1).getType(), Schema.Type.STRING);
+    assertEquals(u.getTypes().get(2).getType(), Schema.Type.INT);
+  }
+
   /** Test Helpers */
 
   /** Builds a Trino-style union-struct {tag:INT, field0, field1, ...} from the given union member types. */
