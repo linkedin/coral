@@ -164,11 +164,13 @@ class MergeCoralSchemaWithAvro {
       return false;
     }
     StructField tag = fields.get(0);
-    if (!"tag".equals(tag.getName()) || tag.getType().getKind() != CoralTypeKind.INT) {
+    // Names are matched case-insensitively: the union-struct encoding may arrive through catalogs that
+    // normalize field casing, and a case-only mismatch must not silently downgrade a union to a record.
+    if (!"tag".equalsIgnoreCase(tag.getName()) || tag.getType().getKind() != CoralTypeKind.INT) {
       return false;
     }
     for (int i = 1; i < fields.size(); i++) {
-      if (!("field" + (i - 1)).equals(fields.get(i).getName())) {
+      if (!("field" + (i - 1)).equalsIgnoreCase(fields.get(i).getName())) {
         return false;
       }
     }
@@ -181,6 +183,14 @@ class MergeCoralSchemaWithAvro {
    * the NULL branch is emitted first when the partner union carries one. Caller
    * ({@link #isMultiBranchUnionStruct}) guarantees the member count matches the partner's non-null branch
    * count.
+   *
+   * <p><b>{@code unionStruct.isNullable()} is deliberately ignored.</b> For a union the partner Avro is the
+   * authority on the envelope — whether a NULL branch exists and where it sits — so nullability is taken
+   * solely from {@code partnerUnion}. This is the one place the Iceberg-first nullability rule applied by
+   * {@link #applyCoralNullability} does not hold, because Iceberg cannot express a union envelope: a nullable
+   * Hive {@code uniontype} rolls its null into the members, surfacing as {@code {tag, field0, ...}} with
+   * optional members rather than as an optional struct. Taking nullability from the struct would therefore
+   * both double-count it and lose the partner's null placement.
    */
   private Schema mergeUnionStruct(StructType unionStruct, Schema partnerUnion) {
     List<Schema> partnerBranches = SchemaUtilities.discardNullFromUnionIfExist(partnerUnion).getTypes();
