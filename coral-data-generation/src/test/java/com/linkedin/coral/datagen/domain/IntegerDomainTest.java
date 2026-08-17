@@ -31,7 +31,7 @@ public class IntegerDomainTest {
     List<Long> samples = domain.sample(5);
     assertFalse(samples.isEmpty());
     for (long v : samples) {
-      assertTrue(domain.contains(v));
+      assertEquals(v, 42L, "every sample from a singleton must be the value");
     }
   }
 
@@ -63,8 +63,9 @@ public class IntegerDomainTest {
     assertTrue(domain.contains(25));
     assertFalse(domain.contains(16));
 
+    // Domain has 5 + 6 + 11 = 22 distinct values, so sample(10) should return 10 items.
     List<Long> samples = domain.sample(10);
-    assertFalse(samples.isEmpty());
+    assertEquals(samples.size(), 10, "sample(10) should return 10 items when domain has >= 10 values");
     for (long v : samples) {
       assertTrue(domain.contains(v));
     }
@@ -128,17 +129,22 @@ public class IntegerDomainTest {
 
   @Test
   public void testMultiplyConstant() {
+    // [10, 20] * 2: the exact image is the sparse set {20, 22, …, 40}, but the domain
+    // tracks the convex hull [20, 40] as a sound over-approximation. Verify both bounds
+    // and the rejection of values outside the hull.
     IntegerDomain domain = IntegerDomain.of(10, 20);
     IntegerDomain scaled = domain.multiply(2);
 
-    assertTrue(scaled.contains(20));
-    assertTrue(scaled.contains(40));
-    assertFalse(scaled.contains(19));
-    assertFalse(scaled.contains(41));
+    assertTrue(scaled.contains(20), "lower bound 20 = 10*2");
+    assertTrue(scaled.contains(30), "midpoint must be in convex hull");
+    assertTrue(scaled.contains(40), "upper bound 40 = 20*2");
+    assertFalse(scaled.contains(19), "below lower bound");
+    assertFalse(scaled.contains(41), "above upper bound");
 
     List<Long> samples = scaled.sample(5);
     for (long v : samples) {
       assertTrue(scaled.contains(v));
+      assertTrue(v >= 20 && v <= 40, "every sample must be in [20, 40]: " + v);
     }
   }
 

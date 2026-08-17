@@ -65,8 +65,10 @@ public class IntegerDomain extends Domain<Long, IntegerDomain> {
     }
 
     public boolean isAdjacent(Interval other) {
-      return this.max != Long.MAX_VALUE && this.max + 1 == other.min
-          || other.max != Long.MAX_VALUE && other.max + 1 == this.min;
+      // Guard against overflow: MAX + 1 wraps to MIN, which would falsely match
+      boolean thisAdjacentToOther = this.max != Long.MAX_VALUE && this.max + 1 == other.min;
+      boolean otherAdjacentToThis = other.max != Long.MAX_VALUE && other.max + 1 == this.min;
+      return thisAdjacentToOther || otherAdjacentToThis;
     }
 
     public Interval merge(Interval other) {
@@ -265,6 +267,14 @@ public class IntegerDomain extends Domain<Long, IntegerDomain> {
     }
 
     return new IntegerDomain(shifted);
+  }
+
+  /**
+   * Negates all values in this domain.
+   * For each interval [a, b], produces [-b, -a].
+   */
+  public IntegerDomain negate() {
+    return multiply(-1);
   }
 
   /**
