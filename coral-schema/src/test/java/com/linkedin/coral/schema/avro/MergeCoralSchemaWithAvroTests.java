@@ -640,6 +640,78 @@ public class MergeCoralSchemaWithAvroTests {
     assertEquals(result.getField("u").schema().getType(), Schema.Type.STRING);
   }
 
+  @Test
+  public void shouldPreferAnExactCaseMatchOverAnEarlierCaseInsensitiveOne() {
+    // Avro permits fa and fA as siblings. The exact match must win even though the inexact one is
+    // declared first, otherwise the wrong field's doc/default/props get copied.
+    StructType coral = struct(field("fA", intType(true)));
+    Schema avro = avroStruct("r1",
+        avroField("fa", SchemaUtilities.makeNullable(Schema.create(Schema.Type.INT), false), "lowercase-one", null,
+            null),
+        avroField("fA", SchemaUtilities.makeNullable(Schema.create(Schema.Type.INT), false), "exact-one", null, null));
+
+    Schema result = merge(coral, avro);
+    assertNotNull(result.getField("fA"));
+    assertEquals(result.getField("fA").doc(), "exact-one");
+  }
+
+  @Test
+  public void shouldNotGuessBetweenTwoInexactCaseMatches() {
+    // Neither partner field matches exactly and both match case-insensitively: refuse to pick one
+    // arbitrarily, so no partner metadata is inherited.
+    StructType coral = struct(field("fA", intType(true)));
+    Schema avro = avroStruct("r1",
+        avroField("fa", SchemaUtilities.makeNullable(Schema.create(Schema.Type.INT), false), "first", null, null),
+        avroField("FA", SchemaUtilities.makeNullable(Schema.create(Schema.Type.INT), false), "second", null, null));
+
+    Schema result = merge(coral, avro);
+    assertNotNull(result.getField("fA"));
+    assertNull(result.getField("fA").doc());
+  }
+
+  @Test
+  public void shouldStillMatchAUniqueCaseInsensitivePartner() {
+    // Rule 2 is unchanged: a single inexact candidate still matches and still carries its metadata.
+    StructType coral = struct(field("fA", intType(true)));
+    Schema avro = avroStruct("r1",
+        avroField("fa", SchemaUtilities.makeNullable(Schema.create(Schema.Type.INT), false), "ci-match", null, null));
+
+    Schema result = merge(coral, avro);
+    assertNotNull(result.getField("fA"));
+    assertEquals(result.getField("fA").doc(), "ci-match");
+  }
+
+  @Test
+  public void shouldLowercaseAnIcebergMergedSchemaWithoutLosingStructure() {
+    // Production reads spark.sql.force.lowercase.dali.schema (default false), and the parity harness
+    // runs with forceLowercase=false, so the lowercase visitor over an Iceberg-merged schema had no
+    // coverage. Nullability, union envelopes and nested shape must all survive the rename.
+    StructType coral =
+        struct(field("fA", intType(false)), field("uU", unionStruct(false, intType(true), stringType(true))),
+            field("nEst", struct(field("iNner", intType(false)))));
+    Schema avro = avroStruct("r1", optionalField("fA", Schema.Type.INT),
+        avroField("uU", avroUnion(Schema.Type.INT, Schema.Type.STRING), null, null, null),
+        requiredField("nEst", avroStruct("r2", optionalField("iNner", Schema.Type.INT))));
+
+    Schema merged = merge(coral, avro);
+    Schema lowercased = ToLowercaseSchemaVisitor.visit(merged);
+
+    // Names are lowercased ...
+    assertNotNull(lowercased.getField("fa"));
+    assertNotNull(lowercased.getField("uu"));
+    assertNotNull(lowercased.getField("nest"));
+    // ... the relaxed nullability survives ...
+    assertTrue(AvroSerdeUtils.isNullableType(lowercased.getField("fa").schema()));
+    // ... the reconstructed union envelope survives ...
+    Schema union = lowercased.getField("uu").schema();
+    assertEquals(union.getType(), Schema.Type.UNION);
+    assertEquals(union.getTypes().size(), 2);
+    // ... and nested fields are lowercased too, keeping their relaxed nullability.
+    Schema nested = SchemaUtilities.extractIfOption(lowercased.getField("nest").schema());
+    assertNotNull(nested.getField("inner"));
+    assertTrue(AvroSerdeUtils.isNullableType(nested.getField("inner").schema()));
+  }
+
   /** Test Helpers */
 
   /** Builds a Trino-style union-struct {tag:INT, field0, field1, ...} from the given union member types. */

@@ -457,20 +457,42 @@ class MergeCoralSchemaWithAvro {
   }
 
   /**
-   * Find a partner field by case-insensitive name match, returning the first match. Matches the
-   * behavior of {@link MergeHiveSchemaWithAvro}'s partner accessor. Iceberg's schema spec disallows
-   * sibling fields that differ only in case, so this is unambiguous for Iceberg-sourced Coral schemas.
+   * Resolves the partner field for a Coral field name, following the documented matching rules:
+   *
+   * <ol>
+   *   <li>an exact, case-sensitive match wins outright;</li>
+   *   <li>otherwise a <em>unique</em> case-insensitive match;</li>
+   *   <li>otherwise no match.</li>
+   * </ol>
+   *
+   * <p>Iceberg forbids sibling fields differing only in case, so the Coral side is always unambiguous —
+   * but the <em>partner</em> is Avro, which permits both {@code fA} and {@code fa} in one record. A
+   * first-match-wins scan could therefore attach the wrong field's doc, default, props or enum/fixed
+   * promotion even when an exact match exists. Preferring the exact match removes that; refusing to
+   * guess between two inexact candidates keeps a rare, genuinely ambiguous schema from silently
+   * inheriting arbitrary metadata.
+   *
+   * <p>The output field name is unaffected — it is always the Coral name (see {@link #mergeField}). Only
+   * the source of the partner's metadata is decided here.
    */
   @Nullable
   private Schema.Field findPartnerField(@Nullable Schema partnerRecord, String coralFieldName) {
     if (partnerRecord == null) {
       return null;
     }
+    Schema.Field exactMatch = partnerRecord.getField(coralFieldName);
+    if (exactMatch != null) {
+      return exactMatch;
+    }
+    Schema.Field caseInsensitiveMatch = null;
     for (Schema.Field field : partnerRecord.getFields()) {
       if (field.name().equalsIgnoreCase(coralFieldName)) {
-        return field;
+        if (caseInsensitiveMatch != null) {
+          return null; // ambiguous: two partner fields differ only in case and neither matches exactly
+        }
+        caseInsensitiveMatch = field;
       }
     }
-    return null;
+    return caseInsensitiveMatch;
   }
 }
