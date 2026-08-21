@@ -49,15 +49,26 @@ public class MergeCoralSchemaWithAvroTests {
   }
 
   @Test
-  public void shouldUseNullabilityFromCoral() {
+  public void shouldRelaxNullabilityWhenEitherSourceSaysNullable() {
     StructType coral = struct(field("fA", intType(false)), field("fB", intType(true)));
     Schema avro = avroStruct("r1", optionalField("fA", Schema.Type.INT), requiredField("fB", Schema.Type.INT));
 
     Schema result = merge(coral, avro);
-    // Coral says fA is non-nullable
-    assertFalse(AvroSerdeUtils.isNullableType(result.getField("fA").schema()));
-    // Coral says fB is nullable
+    // Coral says fA is required but the partner declares [null,int]: nullability is always relaxed, so
+    // the partner's null branch survives rather than being dropped.
+    assertTrue(AvroSerdeUtils.isNullableType(result.getField("fA").schema()));
+    // Coral says fB is nullable while the partner says required: relaxed the other way round.
     assertTrue(AvroSerdeUtils.isNullableType(result.getField("fB").schema()));
+  }
+
+  @Test
+  public void shouldKeepFieldRequiredWhenNeitherSourceSaysNullable() {
+    StructType coral = struct(field("fA", intType(false)));
+    Schema avro = avroStruct("r1", requiredField("fA", Schema.Type.INT));
+
+    Schema result = merge(coral, avro);
+    // Relaxing never fabricates nullability: with both sources agreeing the field stays required.
+    assertFalse(AvroSerdeUtils.isNullableType(result.getField("fA").schema()));
   }
 
   @Test
@@ -327,7 +338,413 @@ public class MergeCoralSchemaWithAvroTests {
     assertNotNull(outerSchema.getField("inner"));
   }
 
+  @Test
+  public void shouldReconstructMultiBranchUnionFromUnionStruct() {
+    // Hive uniontype<int,string,boolean> persisted into Iceberg is the struct {tag, field0, field1, field2}.
+    // The partner Avro keeps it as a union, so the engine must emit a union with the same branches/order.
+    StructType coral =
+        struct(field("u", unionStruct(intType(true), stringType(true), PrimitiveType.of(CoralTypeKind.BOOLEAN, true))));
+    Schema avro = avroStruct("r1", avroField("u",
+        avroUnion(Schema.Type.NULL, Schema.Type.INT, Schema.Type.STRING, Schema.Type.BOOLEAN), null, null, null));
+
+    Schema result = merge(coral, avro);
+    Schema u = result.getField("u").schema();
+    assertEquals(u.getType(), Schema.Type.UNION);
+    assertEquals(u.getTypes().get(0).getType(), Schema.Type.NULL);
+    assertEquals(u.getTypes().get(1).getType(), Schema.Type.INT);
+    assertEquals(u.getTypes().get(2).getType(), Schema.Type.STRING);
+    assertEquals(u.getTypes().get(3).getType(), Schema.Type.BOOLEAN);
+  }
+
+  @Test
+  public void shouldReconstructUnionWithoutNullBranch() {
+    // Neither the union-struct nor the partner is nullable, so no null branch may be fabricated.
+    StructType coral = struct(field("u", unionStruct(false, intType(true), stringType(true))));
+    Schema avro = avroStruct("r1", avroField("u", avroUnion(Schema.Type.INT, Schema.Type.STRING), null, null, null));
+
+    Schema result = merge(coral, avro);
+    Schema u = result.getField("u").schema();
+    assertEquals(u.getType(), Schema.Type.UNION);
+    assertEquals(u.getTypes().size(), 2);
+    assertEquals(u.getTypes().get(0).getType(), Schema.Type.INT);
+    assertEquals(u.getTypes().get(1).getType(), Schema.Type.STRING);
+  }
+
+  @Test
+  public void shouldRelaxUnionEnvelopeWhenOnlyTheStructIsNullable() {
+    // Iceberg marks the union column optional while the partner union carries no null branch. The
+    // envelope is relaxed to nullable, matching the field-level rule.
+    StructType coral = struct(field("u", unionStruct(true, intType(true), stringType(true))));
+    Schema avro = avroStruct("r1", avroField("u", avroUnion(Schema.Type.INT, Schema.Type.STRING), null, null, null));
+
+    Schema result = merge(coral, avro);
+    Schema u = result.getField("u").schema();
+    assertEquals(u.getType(), Schema.Type.UNION);
+    assertEquals(u.getTypes().size(), 3);
+    assertEquals(u.getTypes().get(0).getType(), Schema.Type.NULL);
+    assertEquals(u.getTypes().get(1).getType(), Schema.Type.INT);
+    assertEquals(u.getTypes().get(2).getType(), Schema.Type.STRING);
+  }
+
+  @Test
+  public void shouldRelaxUnionEnvelopeWhenOnlyThePartnerIsNullable() {
+    // Mirror image: Iceberg says required, the partner declares a null branch — the null survives.
+    StructType coral = struct(field("u", unionStruct(false, intType(true), stringType(true))));
+    Schema avro = avroStruct("r1",
+        avroField("u", avroUnion(Schema.Type.NULL, Schema.Type.INT, Schema.Type.STRING), null, null, null));
+
+    Schema result = merge(coral, avro);
+    Schema u = result.getField("u").schema();
+    assertEquals(u.getType(), Schema.Type.UNION);
+    assertEquals(u.getTypes().size(), 3);
+    assertEquals(u.getTypes().get(0).getType(), Schema.Type.NULL);
+  }
+
+  @Test
+  public void shouldMergeRecordMemberAgainstItsPartnerBranch() {
+    // uniontype<int, struct<x:int>>: the struct member must become a record branch whose fields are
+    // merged from the corresponding partner branch, and must NOT be double-wrapped in its own
+    // [null, record] option — the union's own NULL branch already carries nullability.
+    StructType coral = struct(field("u", unionStruct(intType(true), struct(field("x", intType(true))))));
+    Schema partnerRecordBranch = avroStruct("branchRec", optionalField("x", Schema.Type.INT));
+    Schema avro = avroStruct("r1",
+        avroField("u",
+            avroUnionOf(Schema.create(Schema.Type.NULL), Schema.create(Schema.Type.INT), partnerRecordBranch), null,
+            null, null));
+
+    Schema result = merge(coral, avro);
+    Schema u = result.getField("u").schema();
+    assertEquals(u.getType(), Schema.Type.UNION);
+    assertEquals(u.getTypes().size(), 3);
+    assertEquals(u.getTypes().get(0).getType(), Schema.Type.NULL);
+    assertEquals(u.getTypes().get(1).getType(), Schema.Type.INT);
+
+    Schema recordBranch = u.getTypes().get(2);
+    // Not wrapped in an option: the branch is the record itself, not [null, record].
+    assertEquals(recordBranch.getType(), Schema.Type.RECORD);
+    // The member's fields were merged against the partner branch rather than regenerated blindly.
+    assertEquals(recordBranch.getName(), "branchRec");
+    assertNotNull(recordBranch.getField("x"));
+  }
+
+  @Test
+  public void shouldKeepArrayMemberAsArrayBranch() {
+    // uniontype<int, array<string>>: the array member must stay an array branch rather than being
+    // collapsed or unwrapped into its element type.
+    StructType coral = struct(field("u", unionStruct(intType(true), ArrayType.of(stringType(true), true))));
+    Schema partnerArrayBranch =
+        Schema.createArray(SchemaUtilities.makeNullable(Schema.create(Schema.Type.STRING), false));
+    Schema avro = avroStruct("r1",
+        avroField("u", avroUnionOf(Schema.create(Schema.Type.NULL), Schema.create(Schema.Type.INT), partnerArrayBranch),
+            null, null, null));
+
+    Schema result = merge(coral, avro);
+    Schema u = result.getField("u").schema();
+    assertEquals(u.getType(), Schema.Type.UNION);
+    assertEquals(u.getTypes().size(), 3);
+    assertEquals(u.getTypes().get(0).getType(), Schema.Type.NULL);
+    assertEquals(u.getTypes().get(1).getType(), Schema.Type.INT);
+
+    Schema arrayBranch = u.getTypes().get(2);
+    assertEquals(arrayBranch.getType(), Schema.Type.ARRAY);
+    assertEquals(SchemaUtilities.extractIfOption(arrayBranch.getElementType()).getType(), Schema.Type.STRING);
+  }
+
+  @Test
+  public void shouldPromoteStringMemberToPartnerEnumBranch() {
+    // uniontype<string, int> whose partner branch is an enum: branches go through the normal promotion
+    // path (checkCompatibilityAndPromote), so the STRING member must surface as the partner's ENUM
+    // rather than a bare string.
+    StructType coral = struct(field("u", unionStruct(stringType(true), intType(true))));
+    Schema partnerEnumBranch = Schema.createEnum("Color", null, "com.test", Arrays.asList("RED", "GREEN"));
+    Schema avro = avroStruct("r1",
+        avroField("u", avroUnionOf(Schema.create(Schema.Type.NULL), partnerEnumBranch, Schema.create(Schema.Type.INT)),
+            null, null, null));
+
+    Schema result = merge(coral, avro);
+    Schema u = result.getField("u").schema();
+    assertEquals(u.getType(), Schema.Type.UNION);
+    assertEquals(u.getTypes().size(), 3);
+    assertEquals(u.getTypes().get(0).getType(), Schema.Type.NULL);
+
+    Schema enumBranch = u.getTypes().get(1);
+    assertEquals(enumBranch.getType(), Schema.Type.ENUM);
+    assertEquals(enumBranch.getName(), "Color");
+    assertEquals(enumBranch.getEnumSymbols(), Arrays.asList("RED", "GREEN"));
+    assertEquals(u.getTypes().get(2).getType(), Schema.Type.INT);
+  }
+
+  @Test
+  public void shouldReconstructNullableSingleUnion() {
+    // uniontype<string> persisted into Iceberg is {tag, field0} — HiveToCoralTypeConverter.convertUnion
+    // emits the union-struct encoding for EVERY arity, not just multi-branch. A nullable single union must
+    // come back as [null, string]; leaving it on the struct path would leak {tag, field0} into the output.
+    StructType coral = struct(field("u", unionStruct(stringType(true))));
+    Schema avro = avroStruct("r1", avroField("u", avroUnion(Schema.Type.NULL, Schema.Type.STRING), null, null, null));
+
+    Schema result = merge(coral, avro);
+    Schema u = result.getField("u").schema();
+    assertEquals(u.getType(), Schema.Type.UNION);
+    assertEquals(u.getTypes().size(), 2);
+    assertEquals(u.getTypes().get(0).getType(), Schema.Type.NULL);
+    assertEquals(u.getTypes().get(1).getType(), Schema.Type.STRING);
+  }
+
+  @Test
+  public void shouldReconstructNonNullableSingleUnion() {
+    // Same as above without a null branch anywhere: nothing may fabricate one.
+    StructType coral = struct(field("u", unionStruct(false, stringType(true))));
+    Schema avro = avroStruct("r1", avroField("u", avroUnion(Schema.Type.STRING), null, null, null));
+
+    Schema result = merge(coral, avro);
+    Schema u = result.getField("u").schema();
+    assertEquals(u.getType(), Schema.Type.UNION);
+    assertEquals(u.getTypes().size(), 1);
+    assertEquals(u.getTypes().get(0).getType(), Schema.Type.STRING);
+  }
+
+  @Test
+  public void shouldTreatGenuineNullableStructNamedLikeUnionStructAsStruct() {
+    // A real struct that happens to be named {tag, field0} is shape-indistinguishable from a single
+    // uniontype. The partner disambiguates: its sole branch is the record describing the struct, so it
+    // carries its own "tag" field. This must stay a record, not become a union.
+    StructType coral = struct(field("u", struct(field("tag", intType(true)), field("field0", stringType(true)))));
+    Schema partnerRecord =
+        avroStruct("genuineStruct", optionalField("tag", Schema.Type.INT), optionalField("field0", Schema.Type.STRING));
+    Schema avro =
+        avroStruct("r1", avroField("u", avroUnionOf(Schema.create(Schema.Type.NULL), partnerRecord), null, null, null));
+
+    Schema result = merge(coral, avro);
+    Schema u = result.getField("u").schema();
+    assertEquals(u.getType(), Schema.Type.UNION);
+    Schema inner = SchemaUtilities.extractIfOption(u);
+    assertEquals(inner.getType(), Schema.Type.RECORD);
+    assertEquals(inner.getName(), "genuineStruct");
+    assertNotNull(inner.getField("tag"));
+    assertNotNull(inner.getField("field0"));
+  }
+
+  @Test
+  public void shouldReconstructSingleUnionWhoseMemberIsARecord() {
+    // uniontype<struct<x:int>>: the partner's sole branch is a record WITHOUT a "tag" field, so it is the
+    // member type rather than a description of the union-struct — reconstruct as a union.
+    StructType coral = struct(field("u", unionStruct(struct(field("x", intType(true))))));
+    Schema memberRecord = avroStruct("memberRec", optionalField("x", Schema.Type.INT));
+    Schema avro =
+        avroStruct("r1", avroField("u", avroUnionOf(Schema.create(Schema.Type.NULL), memberRecord), null, null, null));
+
+    Schema result = merge(coral, avro);
+    Schema u = result.getField("u").schema();
+    assertEquals(u.getType(), Schema.Type.UNION);
+    assertEquals(u.getTypes().size(), 2);
+    assertEquals(u.getTypes().get(0).getType(), Schema.Type.NULL);
+    assertEquals(u.getTypes().get(1).getType(), Schema.Type.RECORD);
+    assertEquals(u.getTypes().get(1).getName(), "memberRec");
+    assertNotNull(u.getTypes().get(1).getField("x"));
+  }
+
+  @Test
+  public void shouldDetectUnionStructMarkerNamesCaseInsensitively() {
+    // A catalog that normalizes field casing must not silently downgrade a union to a record.
+    StructType coral = struct(field("u",
+        struct(field("TAG", intType(true)), field("Field0", stringType(true)), field("FIELD1", intType(true)))));
+    Schema avro = avroStruct("r1",
+        avroField("u", avroUnion(Schema.Type.NULL, Schema.Type.STRING, Schema.Type.INT), null, null, null));
+
+    Schema result = merge(coral, avro);
+    Schema u = result.getField("u").schema();
+    assertEquals(u.getType(), Schema.Type.UNION);
+    assertEquals(u.getTypes().get(0).getType(), Schema.Type.NULL);
+    assertEquals(u.getTypes().get(1).getType(), Schema.Type.STRING);
+    assertEquals(u.getTypes().get(2).getType(), Schema.Type.INT);
+  }
+
+  @Test
+  public void shouldRelaxNullabilityForArrayElementAndMapValue() {
+    // The relax rule is applied at a single choke point, so nested positions inherit it. Coral marks the
+    // element and value required while the partner declares both nullable.
+    StructType coral = struct(field("arr", ArrayType.of(intType(false), false)),
+        field("m", MapType.of(stringType(false), intType(false), false)));
+    Schema nullableInt = SchemaUtilities.makeNullable(Schema.create(Schema.Type.INT), false);
+    Schema avro = avroStruct("r1", requiredField("arr", Schema.createArray(nullableInt)),
+        requiredField("m", Schema.createMap(nullableInt)));
+
+    Schema result = merge(coral, avro);
+    Schema arr = SchemaUtilities.extractIfOption(result.getField("arr").schema());
+    Schema map = SchemaUtilities.extractIfOption(result.getField("m").schema());
+    assertTrue(AvroSerdeUtils.isNullableType(arr.getElementType()));
+    assertTrue(AvroSerdeUtils.isNullableType(map.getValueType()));
+  }
+
+  @Test
+  public void shouldRelaxNullabilityForNestedStructField() {
+    StructType coral = struct(field("outer", struct(field("inner", intType(false)))));
+    Schema avro = avroStruct("r1", requiredField("outer", avroStruct("r2", optionalField("inner", Schema.Type.INT))));
+
+    Schema result = merge(coral, avro);
+    Schema outer = SchemaUtilities.extractIfOption(result.getField("outer").schema());
+    assertTrue(AvroSerdeUtils.isNullableType(outer.getField("inner").schema()));
+  }
+
+  @Test
+  public void shouldPreserveSingleElementUnionEnvelopeWhenIcebergFlattensIt() {
+    // Iceberg has no union type, so uniontype<string> may surface as a plain field while the partner
+    // still declares ["string"]. The old path reconstructs uniontype<string> from the partner via
+    // AvroAwareHiveSchemaUtil and emits ["string"], so dropping the envelope here would regress.
+    StructType coral = struct(field("u", stringType(false)));
+    Schema avro = avroStruct("r1", avroField("u", avroUnion(Schema.Type.STRING), null, null, null));
+
+    Schema result = merge(coral, avro);
+    Schema u = result.getField("u").schema();
+    assertEquals(u.getType(), Schema.Type.UNION);
+    assertEquals(u.getTypes().size(), 1);
+    assertEquals(u.getTypes().get(0).getType(), Schema.Type.STRING);
+  }
+
+  @Test
+  public void shouldSubsumeFlattenedSingleUnionEnvelopeIntoTheNullableForm() {
+    // Same input but Iceberg marks the column optional. ["null","string"] is the only Avro
+    // representation of a nullable single union, so no extra envelope is added.
+    StructType coral = struct(field("u", stringType(true)));
+    Schema avro = avroStruct("r1", avroField("u", avroUnion(Schema.Type.STRING), null, null, null));
+
+    Schema result = merge(coral, avro);
+    Schema u = result.getField("u").schema();
+    assertEquals(u.getType(), Schema.Type.UNION);
+    assertEquals(u.getTypes().size(), 2);
+    assertEquals(u.getTypes().get(0).getType(), Schema.Type.NULL);
+    assertEquals(u.getTypes().get(1).getType(), Schema.Type.STRING);
+  }
+
+  @Test
+  public void shouldPromoteThroughAFlattenedSingleUnionEnvelope() {
+    // The branch is still merged, so an enum partner branch promotes the Coral string as usual.
+    StructType coral = struct(field("u", stringType(false)));
+    Schema enumBranch = Schema.createEnum("Color", null, "com.test", Arrays.asList("RED", "GREEN"));
+    Schema avro = avroStruct("r1", avroField("u", avroUnionOf(enumBranch), null, null, null));
+
+    Schema result = merge(coral, avro);
+    Schema u = result.getField("u").schema();
+    assertEquals(u.getType(), Schema.Type.UNION);
+    assertEquals(u.getTypes().size(), 1);
+    assertEquals(u.getTypes().get(0).getType(), Schema.Type.ENUM);
+    assertEquals(u.getTypes().get(0).getName(), "Color");
+  }
+
+  @Test
+  public void shouldNotFabricateAnEnvelopeForAPlainPartner() {
+    StructType coral = struct(field("u", stringType(false)));
+    Schema avro = avroStruct("r1", requiredField("u", Schema.Type.STRING));
+
+    Schema result = merge(coral, avro);
+    assertEquals(result.getField("u").schema().getType(), Schema.Type.STRING);
+  }
+
+  @Test
+  public void shouldPreferAnExactCaseMatchOverAnEarlierCaseInsensitiveOne() {
+    // Avro permits fa and fA as siblings. The exact match must win even though the inexact one is
+    // declared first, otherwise the wrong field's doc/default/props get copied.
+    StructType coral = struct(field("fA", intType(true)));
+    Schema avro = avroStruct("r1",
+        avroField("fa", SchemaUtilities.makeNullable(Schema.create(Schema.Type.INT), false), "lowercase-one", null,
+            null),
+        avroField("fA", SchemaUtilities.makeNullable(Schema.create(Schema.Type.INT), false), "exact-one", null, null));
+
+    Schema result = merge(coral, avro);
+    assertNotNull(result.getField("fA"));
+    assertEquals(result.getField("fA").doc(), "exact-one");
+  }
+
+  @Test
+  public void shouldNotGuessBetweenTwoInexactCaseMatches() {
+    // Neither partner field matches exactly and both match case-insensitively: refuse to pick one
+    // arbitrarily, so no partner metadata is inherited.
+    StructType coral = struct(field("fA", intType(true)));
+    Schema avro = avroStruct("r1",
+        avroField("fa", SchemaUtilities.makeNullable(Schema.create(Schema.Type.INT), false), "first", null, null),
+        avroField("FA", SchemaUtilities.makeNullable(Schema.create(Schema.Type.INT), false), "second", null, null));
+
+    Schema result = merge(coral, avro);
+    assertNotNull(result.getField("fA"));
+    assertNull(result.getField("fA").doc());
+  }
+
+  @Test
+  public void shouldStillMatchAUniqueCaseInsensitivePartner() {
+    // Rule 2 is unchanged: a single inexact candidate still matches and still carries its metadata.
+    StructType coral = struct(field("fA", intType(true)));
+    Schema avro = avroStruct("r1",
+        avroField("fa", SchemaUtilities.makeNullable(Schema.create(Schema.Type.INT), false), "ci-match", null, null));
+
+    Schema result = merge(coral, avro);
+    assertNotNull(result.getField("fA"));
+    assertEquals(result.getField("fA").doc(), "ci-match");
+  }
+
+  @Test
+  public void shouldLowercaseAnIcebergMergedSchemaWithoutLosingStructure() {
+    // Production reads spark.sql.force.lowercase.dali.schema (default false), and the parity harness
+    // runs with forceLowercase=false, so the lowercase visitor over an Iceberg-merged schema had no
+    // coverage. Nullability, union envelopes and nested shape must all survive the rename.
+    StructType coral =
+        struct(field("fA", intType(false)), field("uU", unionStruct(false, intType(true), stringType(true))),
+            field("nEst", struct(field("iNner", intType(false)))));
+    Schema avro = avroStruct("r1", optionalField("fA", Schema.Type.INT),
+        avroField("uU", avroUnion(Schema.Type.INT, Schema.Type.STRING), null, null, null),
+        requiredField("nEst", avroStruct("r2", optionalField("iNner", Schema.Type.INT))));
+
+    Schema merged = merge(coral, avro);
+    Schema lowercased = ToLowercaseSchemaVisitor.visit(merged);
+
+    // Names are lowercased ...
+    assertNotNull(lowercased.getField("fa"));
+    assertNotNull(lowercased.getField("uu"));
+    assertNotNull(lowercased.getField("nest"));
+    // ... the relaxed nullability survives ...
+    assertTrue(AvroSerdeUtils.isNullableType(lowercased.getField("fa").schema()));
+    // ... the reconstructed union envelope survives ...
+    Schema union = lowercased.getField("uu").schema();
+    assertEquals(union.getType(), Schema.Type.UNION);
+    assertEquals(union.getTypes().size(), 2);
+    // ... and nested fields are lowercased too, keeping their relaxed nullability.
+    Schema nested = SchemaUtilities.extractIfOption(lowercased.getField("nest").schema());
+    assertNotNull(nested.getField("inner"));
+    assertTrue(AvroSerdeUtils.isNullableType(nested.getField("inner").schema()));
+  }
+
   /** Test Helpers */
+
+  /** Builds a Trino-style union-struct {tag:INT, field0, field1, ...} from the given union member types. */
+  private StructType unionStruct(com.linkedin.coral.common.types.CoralDataType... members) {
+    return unionStruct(true, members);
+  }
+
+  /**
+   * Union-struct with explicit nullability. Iceberg's {@code optional}/{@code required} flag on the
+   * column reaches the merge engine as this flag, and the envelope is nullable when either it or the
+   * partner says so — so tests that assert an envelope without a NULL branch must pass {@code false}.
+   */
+  private StructType unionStruct(boolean nullable, com.linkedin.coral.common.types.CoralDataType... members) {
+    StructField[] fields = new StructField[members.length + 1];
+    fields[0] = field("tag", intType(true));
+    for (int i = 0; i < members.length; i++) {
+      fields[i + 1] = field("field" + i, members[i]);
+    }
+    return StructType.of(Arrays.asList(fields), nullable);
+  }
+
+  private Schema avroUnion(Schema.Type... branchTypes) {
+    Schema[] branches = new Schema[branchTypes.length];
+    for (int i = 0; i < branchTypes.length; i++) {
+      branches[i] = Schema.create(branchTypes[i]);
+    }
+    return Schema.createUnion(Arrays.asList(branches));
+  }
+
+  /** Union builder for branches that are not plain primitives (records, arrays, enums). */
+  private Schema avroUnionOf(Schema... branches) {
+    return Schema.createUnion(Arrays.asList(branches));
+  }
 
   private Schema merge(StructType coral, Schema avro) {
     return MergeCoralSchemaWithAvro.merge(coral, avro, "TestRecord", "com.test");
