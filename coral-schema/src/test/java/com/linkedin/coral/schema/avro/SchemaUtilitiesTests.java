@@ -120,10 +120,10 @@ public class SchemaUtilitiesTests {
   }
 
   @Test
-  public void testGetAvroSchemaForCoralTableIcebergCoralNullabilityWins() {
-    // Coral declares id as non-nullable; partner Avro declares id as nullable ([null,int]).
-    // Iceberg-first semantics require the Coral nullability to win, which proves the merge
-    // engine ran rather than the partner schema being passed through unchanged.
+  public void testGetAvroSchemaForCoralTableIcebergRelaxesNullability() {
+    // Coral declares id as required; partner Avro declares id as nullable ([null,int]). Nullability is
+    // always relaxed, so the partner's null branch survives. This also proves the merge engine ran
+    // rather than the partner schema being passed through unchanged, since the record is rebuilt.
     StructType coralSchema = struct(field("id", intType(false)));
     String nullablePartner = "{\"type\":\"record\",\"name\":\"R\",\"namespace\":\"x\","
         + "\"fields\":[{\"name\":\"id\",\"type\":[\"null\",\"int\"],\"default\":null}]}";
@@ -134,8 +134,8 @@ public class SchemaUtilitiesTests {
     Schema result = SchemaUtilities.getAvroSchemaForTable(coralTable, false);
 
     Assert.assertNotNull(result.getField("id"));
-    Assert.assertFalse(AvroSerdeUtils.isNullableType(result.getField("id").schema()),
-        "Coral nullability (non-nullable) must win over partner Avro nullability");
+    Assert.assertTrue(AvroSerdeUtils.isNullableType(result.getField("id").schema()),
+        "nullability must be relaxed: the partner's null branch must not be dropped");
   }
 
   @Test

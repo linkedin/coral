@@ -34,7 +34,12 @@ import static com.linkedin.coral.schema.avro.AvroSerdeUtils.*;
  * Merges a Coral schema (from Iceberg) with a partner Avro schema, using Iceberg-first semantics:
  *
  * <ul>
- *   <li>CoralDataType is the source of truth for field existence, name, nullability, and type.</li>
+ *   <li>CoralDataType is the source of truth for field existence, name, and type.</li>
+ *   <li><b>Nullability is always relaxed:</b> where CoralDataType and the partner disagree, the output
+ *       is nullable. The merge never narrows. Iceberg's {@code required} flag is frequently inherited
+ *       from a Hive migration rather than from an enforced constraint, so treating it as authoritative
+ *       would drop a {@code null} branch the partner declared and produce a schema stricter than the
+ *       data. This supersedes the earlier Iceberg-first nullability rule.</li>
  *   <li>Partner Avro contributes whatever metadata it carries for a matched field — defaults, docs,
  *       field props, aliases, union envelope shape and null placement, enum/fixed/uuid materialization.
  *       Nothing is fabricated: attributes the partner does not carry are absent from the output. When
@@ -121,7 +126,7 @@ class MergeCoralSchemaWithAvro {
       result = Schema.createRecord("record" + recordNum, null, "namespace" + recordNum, false);
       result.setFields(fields);
     }
-    return applyCoralNullability(result, structType.isNullable(), partner);
+    return applyRelaxedNullability(result, structType.isNullable(), partner);
   }
 
   /**
@@ -210,24 +215,26 @@ class MergeCoralSchemaWithAvro {
 
   /**
    * Reconstructs an Avro union from a union-struct, merging each {@code fieldN} member against the
-   * corresponding partner union branch (by ordinal). Null placement follows {@link MergeHiveSchemaWithAvro#union}:
-   * the NULL branch is emitted first when the partner union carries one. Caller
-   * ({@link #isReconstructableUnionStruct}) guarantees the member count matches the partner's non-null branch
-   * count.
+   * corresponding partner union branch (by ordinal). Caller ({@link #isReconstructableUnionStruct})
+   * guarantees the member count matches the partner's non-null branch count.
    *
-   * <p><b>{@code unionStruct.isNullable()} is deliberately ignored.</b> For a union the partner Avro is the
-   * authority on the envelope — whether a NULL branch exists and where it sits — so nullability is taken
-   * solely from {@code partnerUnion}. This is the one place the Iceberg-first nullability rule applied by
-   * {@link #applyCoralNullability} does not hold, because Iceberg cannot express a union envelope: a nullable
-   * Hive {@code uniontype} rolls its null into the members, surfacing as {@code {tag, field0, ...}} with
-   * optional members rather than as an optional struct. Taking nullability from the struct would therefore
-   * both double-count it and lose the partner's null placement.
+   * <p>The envelope is nullable when <em>either</em> the union-struct or the partner union says so,
+   * matching the relaxed rule in {@link #applyRelaxedNullability}. {@code unionStruct.isNullable()} is
+   * real signal here: only Iceberg-backed tables reach this class ({@code SchemaUtilities} delegates a
+   * {@code HiveTable} to the Hive path), and {@code IcebergToCoralTypeConverter} passes Iceberg's
+   * {@code isOptional()} straight through, so the flag reflects the Iceberg column rather than a
+   * constant. The NULL branch is emitted first, matching {@link MergeHiveSchemaWithAvro#union}.
+   *
+   * <p>Member nullability is deliberately <em>not</em> relaxed into the envelope. Avro forbids a union
+   * directly containing a union, and in the union-struct encoding only one member is live at a time, so
+   * members are optional regardless of whether the union itself is nullable. Relaxing from them would
+   * make every union nullable; each member therefore keeps its option wrapper stripped.
    */
   private Schema mergeUnionStruct(StructType unionStruct, Schema partnerUnion) {
     List<Schema> partnerBranches = SchemaUtilities.discardNullFromUnionIfExist(partnerUnion).getTypes();
     List<StructField> members = unionStruct.getFields(); // [tag, field0, field1, ...]
     List<Schema> unionTypes = new ArrayList<>();
-    if (SchemaUtilities.nullExistInUnion(partnerUnion)) {
+    if (unionStruct.isNullable() || SchemaUtilities.nullExistInUnion(partnerUnion)) {
       unionTypes.add(Schema.create(Schema.Type.NULL));
     }
     for (int i = 1; i < members.size(); i++) {
@@ -250,7 +257,7 @@ class MergeCoralSchemaWithAvro {
 
     Schema elementSchema = mergeType(arrayType.getElementType(), partnerElement);
     Schema result = Schema.createArray(elementSchema);
-    return applyCoralNullability(result, arrayType.isNullable(), partner);
+    return applyRelaxedNullability(result, arrayType.isNullable(), partner);
   }
 
   private Schema mergeMap(MapType mapType, @Nullable Schema partner) {
@@ -264,13 +271,13 @@ class MergeCoralSchemaWithAvro {
 
     Schema valueSchema = mergeType(mapType.getValueType(), partnerValue);
     Schema result = Schema.createMap(valueSchema);
-    return applyCoralNullability(result, mapType.isNullable(), partner);
+    return applyRelaxedNullability(result, mapType.isNullable(), partner);
   }
 
   private Schema mergeLeaf(CoralDataType coralType, @Nullable Schema partner) {
     Schema coralPrimitive = coralPrimitiveToAvro(coralType);
     Schema result = partner == null ? coralPrimitive : checkCompatibilityAndPromote(coralPrimitive, partner);
-    return applyCoralNullability(result, coralType.isNullable(), partner);
+    return applyRelaxedNullability(result, coralType.isNullable(), partner);
   }
 
   /**
@@ -388,15 +395,18 @@ class MergeCoralSchemaWithAvro {
   }
 
   /**
-   * Apply Coral nullability: if the Coral type is nullable, wrap the result in a nullable union.
-   * Respects the partner's null placement order when available.
+   * Applies relaxed nullability: the result is nullable when <em>either</em> the Coral type or the
+   * partner says so, and is never narrowed. Null placement follows the partner when it has one.
+   *
+   * <p>Consulting the partner is the whole point. Iceberg's {@code required} flag is often inherited
+   * from a Hive migration rather than from an enforced constraint, so honouring it alone would drop a
+   * {@code null} branch the partner declared and publish a schema stricter than the data — breaking
+   * any consumer that has legitimate nulls.
    */
-  private Schema applyCoralNullability(Schema result, boolean coralNullable, @Nullable Schema partner) {
-    if (coralNullable && !isNullableType(result)) {
+  private Schema applyRelaxedNullability(Schema result, boolean coralNullable, @Nullable Schema partner) {
+    boolean partnerNullable = partner != null && isNullableType(partner);
+    if ((coralNullable || partnerNullable) && !isNullableType(result)) {
       return SchemaUtilities.makeNullable(result, SchemaUtilities.isNullSecond(partner));
-    }
-    if (!coralNullable && isNullableType(result)) {
-      return SchemaUtilities.extractIfOption(result);
     }
     return result;
   }
