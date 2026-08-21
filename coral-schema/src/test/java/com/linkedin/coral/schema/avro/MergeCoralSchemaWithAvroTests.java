@@ -586,6 +586,60 @@ public class MergeCoralSchemaWithAvroTests {
     assertTrue(AvroSerdeUtils.isNullableType(outer.getField("inner").schema()));
   }
 
+  @Test
+  public void shouldPreserveSingleElementUnionEnvelopeWhenIcebergFlattensIt() {
+    // Iceberg has no union type, so uniontype<string> may surface as a plain field while the partner
+    // still declares ["string"]. The old path reconstructs uniontype<string> from the partner via
+    // AvroAwareHiveSchemaUtil and emits ["string"], so dropping the envelope here would regress.
+    StructType coral = struct(field("u", stringType(false)));
+    Schema avro = avroStruct("r1", avroField("u", avroUnion(Schema.Type.STRING), null, null, null));
+
+    Schema result = merge(coral, avro);
+    Schema u = result.getField("u").schema();
+    assertEquals(u.getType(), Schema.Type.UNION);
+    assertEquals(u.getTypes().size(), 1);
+    assertEquals(u.getTypes().get(0).getType(), Schema.Type.STRING);
+  }
+
+  @Test
+  public void shouldSubsumeFlattenedSingleUnionEnvelopeIntoTheNullableForm() {
+    // Same input but Iceberg marks the column optional. ["null","string"] is the only Avro
+    // representation of a nullable single union, so no extra envelope is added.
+    StructType coral = struct(field("u", stringType(true)));
+    Schema avro = avroStruct("r1", avroField("u", avroUnion(Schema.Type.STRING), null, null, null));
+
+    Schema result = merge(coral, avro);
+    Schema u = result.getField("u").schema();
+    assertEquals(u.getType(), Schema.Type.UNION);
+    assertEquals(u.getTypes().size(), 2);
+    assertEquals(u.getTypes().get(0).getType(), Schema.Type.NULL);
+    assertEquals(u.getTypes().get(1).getType(), Schema.Type.STRING);
+  }
+
+  @Test
+  public void shouldPromoteThroughAFlattenedSingleUnionEnvelope() {
+    // The branch is still merged, so an enum partner branch promotes the Coral string as usual.
+    StructType coral = struct(field("u", stringType(false)));
+    Schema enumBranch = Schema.createEnum("Color", null, "com.test", Arrays.asList("RED", "GREEN"));
+    Schema avro = avroStruct("r1", avroField("u", avroUnionOf(enumBranch), null, null, null));
+
+    Schema result = merge(coral, avro);
+    Schema u = result.getField("u").schema();
+    assertEquals(u.getType(), Schema.Type.UNION);
+    assertEquals(u.getTypes().size(), 1);
+    assertEquals(u.getTypes().get(0).getType(), Schema.Type.ENUM);
+    assertEquals(u.getTypes().get(0).getName(), "Color");
+  }
+
+  @Test
+  public void shouldNotFabricateAnEnvelopeForAPlainPartner() {
+    StructType coral = struct(field("u", stringType(false)));
+    Schema avro = avroStruct("r1", requiredField("u", Schema.Type.STRING));
+
+    Schema result = merge(coral, avro);
+    assertEquals(result.getField("u").schema().getType(), Schema.Type.STRING);
+  }
+
   /** Test Helpers */
 
   /** Builds a Trino-style union-struct {tag:INT, field0, field1, ...} from the given union member types. */

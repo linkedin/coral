@@ -275,9 +275,41 @@ class MergeCoralSchemaWithAvro {
   }
 
   private Schema mergeLeaf(CoralDataType coralType, @Nullable Schema partner) {
+    // A Hive uniontype<X> whose Iceberg column was flattened to a plain field still arrives with a
+    // partner of ["X"]. Merge against the sole branch so promotions still apply, then restore the
+    // envelope below.
+    Schema soleBranch = nullFreeSingleBranchOrNull(partner);
+    Schema effectivePartner = soleBranch != null ? soleBranch : partner;
     Schema coralPrimitive = coralPrimitiveToAvro(coralType);
-    Schema result = partner == null ? coralPrimitive : checkCompatibilityAndPromote(coralPrimitive, partner);
-    return applyRelaxedNullability(result, coralType.isNullable(), partner);
+    Schema result =
+        effectivePartner == null ? coralPrimitive : checkCompatibilityAndPromote(coralPrimitive, effectivePartner);
+    Schema withNullability = applyRelaxedNullability(result, coralType.isNullable(), partner);
+    if (soleBranch != null && withNullability.getType() != Schema.Type.UNION) {
+      // Preserve the single-element union envelope the partner declared. Dropping it would lose the
+      // fact that the column is a uniontype, which coalesce_struct and the Hive path both rely on.
+      // When the field is nullable the envelope is already subsumed by ["null", X].
+      List<Schema> envelope = new ArrayList<>();
+      envelope.add(withNullability);
+      return Schema.createUnion(envelope);
+    }
+    return withNullability;
+  }
+
+  /**
+   * The sole branch of a partner that is a single-element union carrying no NULL ({@code ["int"]}), or
+   * null for anything else. This is the Avro shape of a Hive {@code uniontype<X>} whose Iceberg column
+   * has been flattened to a plain field, so the envelope must survive the merge.
+   *
+   * <p>{@code ["null","X"]} is deliberately excluded: it is simultaneously a plain nullable field and
+   * the only representation of a nullable single union, so it needs no special handling.
+   */
+  @Nullable
+  private Schema nullFreeSingleBranchOrNull(@Nullable Schema partner) {
+    if (partner == null || partner.getType() != Schema.Type.UNION || partner.getTypes().size() != 1) {
+      return null;
+    }
+    Schema branch = partner.getTypes().get(0);
+    return branch.getType() == Schema.Type.NULL ? null : branch;
   }
 
   /**
