@@ -193,6 +193,9 @@ class MergeCoralSchemaWithAvro {
     if (memberCount >= 2) {
       return true;
     }
+    // Only reachable at arity 1, where the count above proves nothing: both uniontype<X> and a genuine
+    // nullable struct named {tag, field0} present exactly one non-null branch. The partner's sole branch
+    // is the tie-breaker — see describesStructItself.
     return !describesStructItself(nonNullBranches.get(0));
   }
 

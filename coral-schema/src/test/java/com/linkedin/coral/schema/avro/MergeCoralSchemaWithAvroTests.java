@@ -476,9 +476,14 @@ public class MergeCoralSchemaWithAvroTests {
 
   @Test
   public void shouldReconstructNullableSingleUnion() {
-    // uniontype<string> persisted into Iceberg is {tag, field0} — HiveToCoralTypeConverter.convertUnion
-    // emits the union-struct encoding for EVERY arity, not just multi-branch. A nullable single union must
-    // come back as [null, string]; leaving it on the struct path would leak {tag, field0} into the output.
+    // Covers the case where the union-struct encoding SURVIVED into Iceberg: uniontype<string> stored as
+    // {tag, field0}. This is not an assertion that Iceberg always preserves it — a single uniontype is
+    // often flattened to a plain column instead, which is handled separately in mergeType and covered by
+    // shouldPreserveSingleElementUnionEnvelopeWhenIcebergFlattensIt. The preserved encoding is confirmed in
+    // production for multi-branch unions (the facetClauses array<union> tables); for arity 1 this test is
+    // defensive, since HiveToCoralTypeConverter.convertUnion emits {tag, field0} for EVERY arity and a
+    // writer may persist that shape. A nullable single union must come back as [null, string]; leaving it
+    // on the struct path would leak {tag, field0} into the output.
     StructType coral = struct(field("u", unionStruct(stringType(true))));
     Schema avro = avroStruct("r1", avroField("u", avroUnion(Schema.Type.NULL, Schema.Type.STRING), null, null, null));
 
