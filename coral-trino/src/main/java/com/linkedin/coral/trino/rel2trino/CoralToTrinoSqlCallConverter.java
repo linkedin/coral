@@ -94,15 +94,15 @@ public class CoralToTrinoSqlCallConverter extends SqlShuttle {
             "[{\"regex\":\"(?i)('utf-8')\", \"input\":2, \"name\":\"from_utf8\"}]", "[{\"input\":1}]", null, null),
         new JsonTransformSqlCallTransformer(hiveToCoralSqlOperator("date_add"), 2, "date_add",
             "[{\"value\": 'day'}, {\"input\": 2},  "
-                + "{\"op\": \"date\", \"operands\":[{\"op\": \"timestamp\", \"operands\":[{\"input\": 1}]}]}]",
+                + "{\"op\": \"date\", \"operands\":[{\"op\": \"trino_timestamp\", \"operands\":[{\"input\": 1}]}]}]",
             null, null),
         new JsonTransformSqlCallTransformer(hiveToCoralSqlOperator("date_sub"), 2, "date_add",
             "[{\"value\": 'day'}, " + "{\"op\": \"*\", \"operands\":[{\"input\": 2}, {\"value\": -1}]}, "
-                + "{\"op\": \"date\", \"operands\":[{\"op\": \"timestamp\", \"operands\":[{\"input\": 1}]}]}]",
+                + "{\"op\": \"date\", \"operands\":[{\"op\": \"trino_timestamp\", \"operands\":[{\"input\": 1}]}]}]",
             null, null),
         new JsonTransformSqlCallTransformer(hiveToCoralSqlOperator("datediff"), 2, "date_diff",
-            "[{\"value\": 'day'}, {\"op\": \"date\", \"operands\":[{\"op\": \"timestamp\", \"operands\":[{\"input\": 2}]}]}, "
-                + "{\"op\": \"date\", \"operands\":[{\"op\": \"timestamp\", \"operands\":[{\"input\": 1}]}]}]",
+            "[{\"value\": 'day'}, {\"op\": \"date\", \"operands\":[{\"op\": \"trino_timestamp\", \"operands\":[{\"input\": 2}]}]}, "
+                + "{\"op\": \"date\", \"operands\":[{\"op\": \"trino_timestamp\", \"operands\":[{\"input\": 1}]}]}]",
             null, null),
         new ToDateOperatorTransformer(configs.getOrDefault(AVOID_TRANSFORM_TO_DATE_UDF, false)),
         new CurrentTimestampTransformer(), new FromUnixtimeOperatorTransformer(),
