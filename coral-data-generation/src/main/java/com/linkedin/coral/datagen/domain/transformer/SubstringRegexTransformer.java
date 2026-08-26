@@ -8,6 +8,7 @@ package com.linkedin.coral.datagen.domain.transformer;
 import java.util.Arrays;
 
 import org.apache.calcite.rex.RexCall;
+import org.apache.calcite.rex.RexFieldAccess;
 import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
@@ -37,8 +38,13 @@ public class SubstringRegexTransformer implements DomainTransformer {
 
   @Override
   public boolean canHandle(RexNode expr) {
-    return expr instanceof RexCall && ((RexCall) expr).getOperator().getKind() == SqlKind.OTHER_FUNCTION
-        && ((RexCall) expr).getOperator().getName().equals("substr");
+    if (!(expr instanceof RexCall)) {
+      return false;
+    }
+    RexCall call = (RexCall) expr;
+    // SUBSTRING has 3 operands: (string, start, length)
+    return call.getOperator().getKind() == SqlKind.OTHER_FUNCTION && call.getOperator().getName().equals("substr")
+        && call.getOperands().size() == 3;
   }
 
   @Override
@@ -51,7 +57,8 @@ public class SubstringRegexTransformer implements DomainTransformer {
     RexNode lengthArg = call.getOperands().get(2);
 
     // String arg must be variable (RexInputRef) or another call (nested expression)
-    boolean stringIsVariable = (stringArg instanceof RexInputRef) || (stringArg instanceof RexCall);
+    boolean stringIsVariable =
+        (stringArg instanceof RexInputRef) || (stringArg instanceof RexCall) || (stringArg instanceof RexFieldAccess);
 
     // Start and length must be literals
     boolean startIsLiteral = startArg instanceof RexLiteral;

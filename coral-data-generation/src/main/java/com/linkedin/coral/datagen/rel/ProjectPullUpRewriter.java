@@ -193,27 +193,21 @@ public final class ProjectPullUpRewriter {
    * where cond' has Project expressions inlined.
    */
   private static RelNode pullProjectsAboveJoin(Join join, Project leftProj, Project rightProj) {
-    RelNode newLeft = join.getLeft();
-    RelNode newRight = join.getRight();
-    RexNode newCondition = join.getCondition();
+    RelNode newLeft = (leftProj != null) ? leftProj.getInput() : join.getLeft();
+    RelNode newRight = (rightProj != null) ? rightProj.getInput() : join.getRight();
 
-    // Capture left field count before reassigning newLeft (item #5 fix)
-    int leftFieldCount =
-        (leftProj != null) ? leftProj.getRowType().getFieldCount() : newLeft.getRowType().getFieldCount();
+    // The condition is currently expressed against the old frame:
+    //   [ leftProj-output (or newLeft) | rightProj-output (or newRight) ]
+    // We need to remap it to the new frame:
+    //   [ newLeft | newRight ]
+    // The left boundary moves from oldLeftCount to newLeftCount; right-side refs must shift
+    // by (newLeftCount - oldLeftCount) when no rightProj absorbs them.
+    int oldLeftCount =
+        (leftProj != null) ? leftProj.getRowType().getFieldCount() : join.getLeft().getRowType().getFieldCount();
+    int newLeftCount = newLeft.getRowType().getFieldCount();
+    RexNode newCondition = remapJoinCondition(join.getCondition(), leftProj, rightProj, oldLeftCount, newLeftCount);
 
-    // Inline left Project if present
-    if (leftProj != null) {
-      newCondition = inlineLeftSide(newCondition, leftProj.getProjects(), leftFieldCount);
-      newLeft = leftProj.getInput();
-    }
-
-    // Inline right Project if present
-    if (rightProj != null) {
-      newCondition = inlineRightSide(newCondition, rightProj.getProjects(), leftFieldCount);
-      newRight = rightProj.getInput();
-    }
-
-    // Create new Join with inlined condition
+    // Create new Join with remapped condition
     Join newJoin =
         join.copy(join.getTraitSet(), newCondition, newLeft, newRight, join.getJoinType(), join.isSemiJoinDone());
 
@@ -233,12 +227,10 @@ public final class ProjectPullUpRewriter {
 
       return leftProj.copy(leftProj.getTraitSet(), newJoin, combinedExprs, join.getRowType());
     } else if (leftProj != null) {
-      // Only left had Project
+      // Only left had Project — add pass-through for right side using newLeftCount
       List<RexNode> exprs = new ArrayList<>();
       exprs.addAll(leftProj.getProjects());
 
-      // Use the new left side's field count for pass-through offsets (item #6 fix)
-      int newLeftCount = newLeft.getRowType().getFieldCount();
       int rightCount = newJoin.getRowType().getFieldCount() - newLeftCount;
       for (int i = 0; i < rightCount; i++) {
         exprs.add(
@@ -247,11 +239,9 @@ public final class ProjectPullUpRewriter {
 
       return leftProj.copy(leftProj.getTraitSet(), newJoin, exprs, join.getRowType());
     } else {
-      // Only right had Project
+      // Only right had Project — add pass-through for left side
       List<RexNode> exprs = new ArrayList<>();
-      int newLeftCount = newLeft.getRowType().getFieldCount();
 
-      // Add pass-through for left side
       for (int i = 0; i < newLeftCount; i++) {
         exprs.add(new RexInputRef(i, newJoin.getRowType().getFieldList().get(i).getType()));
       }
@@ -288,41 +278,43 @@ public final class ProjectPullUpRewriter {
   }
 
   /**
-   * Inline expressions for left side of join condition.
-   * Only rewrites input refs < leftFieldCount.
+   * Remaps a join condition from the old frame [leftProj-output | rightProj-output] to the
+   * new frame [newLeft | newRight] in a single pass:
+   *
+   * <ul>
+   *   <li>Left-side refs ({@code idx < oldLeftCount}):
+   *       inlined to {@code leftProj.projects[idx]} if present, else passed through.</li>
+   *   <li>Right-side refs ({@code idx >= oldLeftCount}):
+   *       inlined to {@code adjustOffsets(rightProj.projects[idx - oldLeftCount], newLeftCount)}
+   *       if rightProj present; otherwise shifted to {@code newLeftCount + (idx - oldLeftCount)}.</li>
+   * </ul>
+   *
+   * The right-side shift is what previously broke when a left Project changed the field count
+   * but no right Project absorbed the right-side refs — they were left at their old offsets
+   * and pointed at the wrong column in the new frame.
    */
-  private static RexNode inlineLeftSide(RexNode condition, List<RexNode> leftProjects, int leftFieldCount) {
+  private static RexNode remapJoinCondition(RexNode condition, Project leftProj, Project rightProj, int oldLeftCount,
+      int newLeftCount) {
+    final List<RexNode> leftProjects = (leftProj != null) ? leftProj.getProjects() : null;
+    final List<RexNode> rightProjects = (rightProj != null) ? rightProj.getProjects() : null;
     return condition.accept(new RexShuttle() {
       @Override
       public RexNode visitInputRef(RexInputRef ref) {
         int idx = ref.getIndex();
-        if (idx < leftFieldCount && idx >= 0 && idx < leftProjects.size()) {
-          // Return directly - no recursive inlining
-          return leftProjects.get(idx);
-        }
-        return ref;
-      }
-    });
-  }
-
-  /**
-   * Inline expressions for right side of join condition.
-   * Only rewrites input refs >= leftFieldCount.
-   */
-  private static RexNode inlineRightSide(RexNode condition, List<RexNode> rightProjects, int leftFieldCount) {
-    return condition.accept(new RexShuttle() {
-      @Override
-      public RexNode visitInputRef(RexInputRef ref) {
-        int idx = ref.getIndex();
-        if (idx >= leftFieldCount) {
-          int rightIdx = idx - leftFieldCount;
-          if (rightIdx >= 0 && rightIdx < rightProjects.size()) {
-            RexNode replacement = rightProjects.get(rightIdx);
-            // Return directly with adjusted offsets - no recursive inlining
-            return adjustOffsets(replacement, leftFieldCount);
+        if (idx < oldLeftCount) {
+          // Left-side ref
+          if (leftProjects != null && idx >= 0 && idx < leftProjects.size()) {
+            return leftProjects.get(idx);
           }
+          return ref;
         }
-        return ref;
+        // Right-side ref
+        int rightIdx = idx - oldLeftCount;
+        if (rightProjects != null && rightIdx >= 0 && rightIdx < rightProjects.size()) {
+          return adjustOffsets(rightProjects.get(rightIdx), newLeftCount);
+        }
+        // No right Project to absorb this ref — shift to the new left/right boundary.
+        return new RexInputRef(newLeftCount + rightIdx, ref.getType());
       }
     });
   }

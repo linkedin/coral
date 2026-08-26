@@ -1,3 +1,5 @@
+apply plugin: 'java-library'
+
 dependencies {
   implementation project(path: ':coral-common')
   implementation project(path: ':coral-hive')
