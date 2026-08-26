@@ -6,6 +6,7 @@
 package com.linkedin.coral.schema.avro;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -92,13 +93,36 @@ class MergeCoralSchemaWithAvro {
   }
 
   private Schema mergeType(CoralDataType coralType, @Nullable Schema partner) {
+    // A union-struct whose partner still describes it as a union is reconstructed as a union. This
+    // takes precedence over the single-branch envelope handling below, which covers the opposite
+    // situation: Iceberg having flattened the uniontype away entirely.
+    if (coralType.getKind() == CoralTypeKind.STRUCT && isReconstructableUnionStruct((StructType) coralType, partner)) {
+      return mergeUnionStruct((StructType) coralType, partner);
+    }
+
+    Schema soleBranch = nullFreeSingleBranchOrNull(partner);
+    if (soleBranch == null) {
+      return mergeByKind(coralType, partner);
+    }
+
+    // Iceberg has no union type, so a Hive uniontype<X> may surface as a plain column of X while the
+    // partner still declares ["X"]. Merge against the sole branch so promotions and nested merging
+    // still apply, then restore the envelope. This is deliberately handled for every Coral kind, not
+    // just leaves: uniontype<array<...>>, uniontype<map<...>> and uniontype<struct<...>> flatten the
+    // same way, and dropping the envelope loses the fact that the column is a uniontype.
+    Schema merged = mergeByKind(coralType, soleBranch);
+    if (merged.getType() == Schema.Type.UNION) {
+      // Already nullable. ["null", X] is simultaneously the plain nullable form and the only Avro
+      // representation of a nullable single union, so the envelope is subsumed and nothing is added.
+      return merged;
+    }
+    return Schema.createUnion(Collections.singletonList(merged));
+  }
+
+  private Schema mergeByKind(CoralDataType coralType, @Nullable Schema partner) {
     switch (coralType.getKind()) {
       case STRUCT:
-        StructType structType = (StructType) coralType;
-        if (isReconstructableUnionStruct(structType, partner)) {
-          return mergeUnionStruct(structType, partner);
-        }
-        return mergeStruct(structType, partner);
+        return mergeStruct((StructType) coralType, partner);
       case ARRAY:
         return mergeArray((ArrayType) coralType, partner);
       case MAP:
@@ -275,24 +299,9 @@ class MergeCoralSchemaWithAvro {
   }
 
   private Schema mergeLeaf(CoralDataType coralType, @Nullable Schema partner) {
-    // A Hive uniontype<X> whose Iceberg column was flattened to a plain field still arrives with a
-    // partner of ["X"]. Merge against the sole branch so promotions still apply, then restore the
-    // envelope below.
-    Schema soleBranch = nullFreeSingleBranchOrNull(partner);
-    Schema effectivePartner = soleBranch != null ? soleBranch : partner;
     Schema coralPrimitive = coralPrimitiveToAvro(coralType);
-    Schema result =
-        effectivePartner == null ? coralPrimitive : checkCompatibilityAndPromote(coralPrimitive, effectivePartner);
-    Schema withNullability = applyRelaxedNullability(result, coralType.isNullable(), partner);
-    if (soleBranch != null && withNullability.getType() != Schema.Type.UNION) {
-      // Preserve the single-element union envelope the partner declared. Dropping it would lose the
-      // fact that the column is a uniontype, which coalesce_struct and the Hive path both rely on.
-      // When the field is nullable the envelope is already subsumed by ["null", X].
-      List<Schema> envelope = new ArrayList<>();
-      envelope.add(withNullability);
-      return Schema.createUnion(envelope);
-    }
-    return withNullability;
+    Schema result = partner == null ? coralPrimitive : checkCompatibilityAndPromote(coralPrimitive, partner);
+    return applyRelaxedNullability(result, coralType.isNullable(), partner);
   }
 
   /**

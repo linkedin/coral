@@ -641,6 +641,90 @@ public class MergeCoralSchemaWithAvroTests {
   }
 
   @Test
+  public void shouldPreserveSingleElementUnionEnvelopeAroundAnArray() {
+    // The production shape behind organization_mp.product_dbchanges_hourly $.value.productCategoryUrns:
+    // uniontype<array<string>> flattened by Iceberg to array<string> while the partner still declares
+    // [{"type":"array","items":"string"}]. Dispatch is on the Coral kind, so this reaches mergeArray
+    // rather than mergeLeaf — the envelope handling has to sit above that switch to cover it.
+    StructType coral = struct(field("u", ArrayType.of(stringType(false), false)));
+    Schema arrayBranch = Schema.createArray(Schema.create(Schema.Type.STRING));
+    Schema avro = avroStruct("r1", avroField("u", avroUnionOf(arrayBranch), null, null, null));
+
+    Schema result = merge(coral, avro);
+    Schema u = result.getField("u").schema();
+    assertEquals(u.getType(), Schema.Type.UNION);
+    assertEquals(u.getTypes().size(), 1);
+    assertEquals(u.getTypes().get(0).getType(), Schema.Type.ARRAY);
+    assertEquals(u.getTypes().get(0).getElementType().getType(), Schema.Type.STRING);
+  }
+
+  @Test
+  public void shouldPreserveSingleElementUnionEnvelopeAroundAMap() {
+    StructType coral = struct(field("u", MapType.of(stringType(false), stringType(false), false)));
+    Schema mapBranch = Schema.createMap(Schema.create(Schema.Type.STRING));
+    Schema avro = avroStruct("r1", avroField("u", avroUnionOf(mapBranch), null, null, null));
+
+    Schema result = merge(coral, avro);
+    Schema u = result.getField("u").schema();
+    assertEquals(u.getType(), Schema.Type.UNION);
+    assertEquals(u.getTypes().size(), 1);
+    assertEquals(u.getTypes().get(0).getType(), Schema.Type.MAP);
+    assertEquals(u.getTypes().get(0).getValueType().getType(), Schema.Type.STRING);
+  }
+
+  @Test
+  public void shouldPreserveSingleElementUnionEnvelopeAroundAStructAndStillMergeIt() {
+    // The partner record must still be merged through the envelope, otherwise its name, docs and
+    // props are lost exactly as they were before the envelope was recognised at all.
+    StructType coral = struct(field("u", StructType.of(Arrays.asList(field("x", intType(false))), false)));
+    Schema recordBranch = avroStruct("Inner", "inner-doc", "com.test",
+        avroField("x", SchemaUtilities.makeNullable(Schema.create(Schema.Type.INT), false), "x-doc", null, null));
+    Schema avro = avroStruct("r1", avroField("u", avroUnionOf(recordBranch), null, null, null));
+
+    Schema result = merge(coral, avro);
+    Schema u = result.getField("u").schema();
+    assertEquals(u.getType(), Schema.Type.UNION);
+    assertEquals(u.getTypes().size(), 1);
+    Schema inner = u.getTypes().get(0);
+    assertEquals(inner.getType(), Schema.Type.RECORD);
+    assertEquals(inner.getName(), "Inner");
+    assertEquals(inner.getField("x").doc(), "x-doc");
+    // Relaxed nullability still applies inside the envelope: the partner says x is nullable.
+    assertEquals(inner.getField("x").schema().getType(), Schema.Type.UNION);
+  }
+
+  @Test
+  public void shouldSubsumeAFlattenedArrayEnvelopeIntoTheNullableForm() {
+    // Same as the array case but Iceberg marks the column optional, so ["null", array] already
+    // carries the union and no extra envelope is added.
+    StructType coral = struct(field("u", ArrayType.of(stringType(true), true)));
+    Schema arrayBranch = Schema.createArray(Schema.create(Schema.Type.STRING));
+    Schema avro = avroStruct("r1", avroField("u", avroUnionOf(arrayBranch), null, null, null));
+
+    Schema result = merge(coral, avro);
+    Schema u = result.getField("u").schema();
+    assertEquals(u.getType(), Schema.Type.UNION);
+    assertEquals(u.getTypes().size(), 2);
+    assertEquals(u.getTypes().get(0).getType(), Schema.Type.NULL);
+    assertEquals(u.getTypes().get(1).getType(), Schema.Type.ARRAY);
+  }
+
+  @Test
+  public void shouldStillReconstructAMultiBranchUnionStructWhenPartnerIsAUnion() {
+    // Guard on precedence: a genuine union-struct must keep going through mergeUnionStruct and must
+    // not be diverted by the single-branch envelope path.
+    StructType coral = struct(field("u", unionStruct(false, intType(true), stringType(true))));
+    Schema avro = avroStruct("r1", avroField("u", avroUnion(Schema.Type.INT, Schema.Type.STRING), null, null, null));
+
+    Schema result = merge(coral, avro);
+    Schema u = result.getField("u").schema();
+    assertEquals(u.getType(), Schema.Type.UNION);
+    assertEquals(u.getTypes().size(), 2);
+    assertEquals(u.getTypes().get(0).getType(), Schema.Type.INT);
+    assertEquals(u.getTypes().get(1).getType(), Schema.Type.STRING);
+  }
+
+  @Test
   public void shouldPreferAnExactCaseMatchOverAnEarlierCaseInsensitiveOne() {
     // Avro permits fa and fA as siblings. The exact match must win even though the inexact one is
     // declared first, otherwise the wrong field's doc/default/props get copied.
