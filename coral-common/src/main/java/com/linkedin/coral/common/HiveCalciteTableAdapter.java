@@ -286,8 +286,10 @@ public class HiveCalciteTableAdapter implements ScannableTable {
         return MetaStoreUtils.getFieldsFromDeserializer(hiveTable.getTableName(), getDeserializer());
       } catch (Exception e) {
         // if there is an exception like failing to get the deserializer or failing to get columns using deserializer,
-        // we use sd.getCols() to avoid throwing exception
-        LOG.warn("Failed to get columns using deserializer: {}", e.getMessage());
+        // we use sd.getCols() to avoid throwing exception. These columns may be incomplete, so log the table and the
+        // full exception -- otherwise the problem resurfaces later as an opaque type derivation failure.
+        LOG.warn("Failed to get columns using deserializer for table {}.{}; falling back to storage descriptor "
+            + "columns, which may be incomplete.", hiveTable.getDbName(), hiveTable.getTableName(), e);
         return sd.getCols();
       }
     }

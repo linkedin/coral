@@ -1,5 +1,5 @@
 /**
- * Copyright 2023-2024 LinkedIn Corporation. All rights reserved.
+ * Copyright 2023-2026 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -64,6 +64,10 @@ public class TypeDerivationUtil {
       return cachedDataType;
     }
 
+    // Retained so the terminal RuntimeException can report why derivation failed. Candidate SELECTs are
+    // tried in turn and individual failures are expected, so they are not logged.
+    Throwable lastFailure = null;
+
     for (SqlSelect topSqlSelectNode : topSelectNodes) {
       final SqlSelect dummySqlSelect = new SqlSelect(topSqlSelectNode.getParserPosition(), null,
           SqlNodeList.of(sqlNode), topSqlSelectNode.getFrom(), topSqlSelectNode.getWhere(), topSqlSelectNode.getGroup(),
@@ -73,7 +77,8 @@ public class TypeDerivationUtil {
       try {
         sqlValidator.validate(dummySqlSelect);
         return sqlValidator.getValidatedNodeType(dummySqlSelect).getFieldList().get(0).getType();
-      } catch (Throwable ignored) {
+      } catch (Throwable t) {
+        lastFailure = t;
       }
     }
 
@@ -86,11 +91,14 @@ public class TypeDerivationUtil {
           SqlNodeList.of(sqlNode), topSelectNodes.get(0), null, null, null, null, null, null, null);
       sqlValidator.validate(dummySqlSelect);
       return sqlValidator.getValidatedNodeType(sqlNode);
-    } catch (Throwable ignored) {
+    } catch (Throwable t) {
+      lastFailure = t;
     }
 
+    // Chain the cause: without it this message masks the real failure (e.g. an authorization denial
+    // while loading a base table's schema).
     throw new RuntimeException(String.format("Failed to derive the RelDataType for SqlNode: %s with topSqlNode: %s",
-        sqlNode, topSelectNodes.get(0)));
+        sqlNode, topSelectNodes.get(0)), lastFailure);
   }
 
   public RelDataType leastRestrictive(List<RelDataType> types) {
