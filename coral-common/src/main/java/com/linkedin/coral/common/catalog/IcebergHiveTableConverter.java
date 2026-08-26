@@ -14,6 +14,8 @@ import org.apache.hadoop.hive.metastore.api.SerDeInfo;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
 import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.iceberg.hive.HiveSchemaUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -48,6 +50,8 @@ import org.apache.iceberg.hive.HiveSchemaUtil;
  * @see <a href="https://github.com/linkedin/coral/issues/575">Issue #575: Refactor ParseTreeBuilder to Use CoralTable</a>
  */
 public class IcebergHiveTableConverter {
+
+  private static final Logger LOG = LoggerFactory.getLogger(IcebergHiveTableConverter.class);
 
   private IcebergHiveTableConverter() {
     // Utility class - prevent instantiation
@@ -99,8 +103,11 @@ public class IcebergHiveTableConverter {
     try {
       storageDescriptor.setCols(HiveSchemaUtil.convert(icebergTable.schema()));
     } catch (Exception e) {
-      // If schema conversion fails, set empty columns list
-      // This shouldn't break function resolution as it only needs properties
+      // Empty columns keep property-only callers working but break anything needing the schema: type
+      // derivation then fails later with an error that no longer names this table. Note schema() can
+      // perform lazy I/O and authorization, so this may also catch access denials.
+      LOG.warn("Failed to convert Iceberg schema to Hive columns for table {}; falling back to an empty "
+          + "column list, which will likely break downstream type derivation.", fullName, e);
       storageDescriptor.setCols(new ArrayList<>());
     }
 
