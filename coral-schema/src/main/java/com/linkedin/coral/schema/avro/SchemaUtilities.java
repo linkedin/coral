@@ -340,13 +340,28 @@ class SchemaUtilities {
 
   static void appendField(@Nonnull String fieldName, @Nonnull Schema.Field field,
       @Nonnull SchemaBuilder.FieldAssembler<Schema> fieldAssembler) {
+    appendField(fieldName, field, field.schema(), fieldAssembler);
+  }
+
+  /**
+   * Appends {@code field} under the name {@code fieldName}, but writes {@code fieldSchema} in place of the
+   * schema the field carries.
+   *
+   * <p>This is needed when a field is lifted out of its original position and its nullability has to change
+   * as a result - for example when a nested field is projected out of a nullable ancestor, where the leaf is
+   * {@code required} within its parent record but the flattened column can still be null because the parent
+   * itself may be absent.
+   */
+  static void appendField(@Nonnull String fieldName, @Nonnull Schema.Field field, @Nonnull Schema fieldSchema,
+      @Nonnull SchemaBuilder.FieldAssembler<Schema> fieldAssembler) {
     Preconditions.checkNotNull(fieldName);
     Preconditions.checkNotNull(field);
+    Preconditions.checkNotNull(fieldSchema);
     Preconditions.checkNotNull(fieldAssembler);
 
     Object defaultValue = defaultValue(field);
 
-    SchemaBuilder.GenericDefault genericDefault = fieldAssembler.name(fieldName).doc(field.doc()).type(field.schema());
+    SchemaBuilder.GenericDefault genericDefault = fieldAssembler.name(fieldName).doc(field.doc()).type(fieldSchema);
     if (defaultValue != null) {
       genericDefault.withDefault(defaultValue);
     } else {

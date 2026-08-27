@@ -574,9 +574,19 @@ public class RelToAvroSchemaConverter {
       String newFieldName = SchemaUtilities.getFieldName(oldFieldName, suggestNewFieldName);
 
       Schema topSchema = inputSchema.getFields().get(referenceExpr.getIndex()).schema();
-      Schema.Field accessedField = getFieldFromTopSchema(topSchema, oldFieldName, innerRecordNames);
-      assert accessedField != null;
-      SchemaUtilities.appendField(newFieldName, accessedField, fieldAssembler);
+      AccessedField accessedField = getFieldFromTopSchema(topSchema, oldFieldName, innerRecordNames);
+      assert accessedField.field != null;
+
+      // Projecting a leaf out of a nullable ancestor flattens two levels of nullability into one column, so the
+      // column has to carry the union of both: it is null whenever the leaf is null OR any ancestor is absent.
+      // Without this the leaf's own `required` would be published as the column's nullability, producing a schema
+      // that the data violates for every row where an ancestor is null.
+      Schema fieldSchema = accessedField.field.schema();
+      if (accessedField.nullableAncestor) {
+        fieldSchema = SchemaUtilities.reorderOptionIfRequired(SchemaUtilities.makeNullable(fieldSchema, false),
+            SchemaUtilities.defaultValue(accessedField.field));
+      }
+      SchemaUtilities.appendField(newFieldName, accessedField.field, fieldSchema, fieldAssembler);
     }
 
     private void handleUDFFieldAccess(RexFieldAccess rexFieldAccess, RexCall referenceExpr) {
@@ -626,9 +636,13 @@ public class RelToAvroSchemaConverter {
      * Get the field named `fieldName` in the given `topSchema` which might be nested
      * @param innerRecordNames contains inner record names, if `topSchema` contains inner record, we need to retrieve the inner record which
      *                         is the ancestor of field named `fieldName`
+     * @return the resolved field together with whether any ancestor traversed on the way to it was nullable
      */
-    private Schema.Field getFieldFromTopSchema(@Nonnull Schema topSchema, @Nonnull String fieldName,
+    private AccessedField getFieldFromTopSchema(@Nonnull Schema topSchema, @Nonnull String fieldName,
         @Nonnull Deque<String> innerRecordNames) {
+      // Every `extractIfOption` below discards an ancestor's null branch. Record that it happened so the caller can
+      // put the nullability back on the flattened field; otherwise it is lost for good.
+      boolean nullableAncestor = AvroSerdeUtils.isNullableType(topSchema);
       topSchema = SchemaUtilities.extractIfOption(topSchema);
 
       while (topSchema.getType() != Schema.Type.RECORD
@@ -652,6 +666,7 @@ public class RelToAvroSchemaConverter {
           default:
             throw new IllegalArgumentException("Unsupported topSchema type: " + topSchema.getType());
         }
+        nullableAncestor = nullableAncestor || AvroSerdeUtils.isNullableType(topSchema);
         topSchema = SchemaUtilities.extractIfOption(topSchema);
       }
 
@@ -662,7 +677,22 @@ public class RelToAvroSchemaConverter {
           break;
         }
       }
-      return targetField;
+      return new AccessedField(targetField, nullableAncestor);
+    }
+  }
+
+  /**
+   * A field resolved through a (possibly nested) field access, plus whether any ancestor traversed to reach it
+   * was nullable. A leaf may be `required` inside its parent record while the flattened column that projects it
+   * is still nullable, because the parent itself may be absent.
+   */
+  private static class AccessedField {
+    private final Schema.Field field;
+    private final boolean nullableAncestor;
+
+    private AccessedField(Schema.Field field, boolean nullableAncestor) {
+      this.field = field;
+      this.nullableAncestor = nullableAncestor;
     }
   }
 }

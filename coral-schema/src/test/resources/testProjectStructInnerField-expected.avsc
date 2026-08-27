@@ -7,12 +7,12 @@
     "type" : "int"
   }, {
     "name" : "Struct_Inner_Bool_Col",
-    "type" : "boolean"
+    "type" : [ "null", "boolean" ]
   }, {
     "name" : "Struct_Inner_Int_Col",
     "type" : [ "null", "int" ]
   }, {
     "name" : "Struct_Inner_Bigint_Col",
-    "type" : "long"
+    "type" : [ "null", "long" ]
   } ]
 }
