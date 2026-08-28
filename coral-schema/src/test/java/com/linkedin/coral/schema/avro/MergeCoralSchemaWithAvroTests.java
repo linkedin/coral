@@ -647,10 +647,10 @@ public class MergeCoralSchemaWithAvroTests {
 
   @Test
   public void shouldPreserveSingleElementUnionEnvelopeAroundAnArray() {
-    // The production shape behind organization_mp.product_dbchanges_hourly $.value.productCategoryUrns:
-    // uniontype<array<string>> flattened by Iceberg to array<string> while the partner still declares
-    // [{"type":"array","items":"string"}]. Dispatch is on the Coral kind, so this reaches mergeArray
-    // rather than mergeLeaf — the envelope handling has to sit above that switch to cover it.
+    // A production shape: uniontype<array<string>> flattened by Iceberg to array<string> while the
+    // partner still declares [{"type":"array","items":"string"}]. Dispatch is on the Coral kind, so
+    // this reaches mergeArray rather than mergeLeaf — the envelope handling has to sit above that
+    // switch to cover it.
     StructType coral = struct(field("u", ArrayType.of(stringType(false), false)));
     Schema arrayBranch = Schema.createArray(Schema.create(Schema.Type.STRING));
     Schema avro = avroStruct("r1", avroField("u", avroUnionOf(arrayBranch), null, null, null));
