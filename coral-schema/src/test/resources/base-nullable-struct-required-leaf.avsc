@@ -1,0 +1,157 @@
+{
+  "type": "record",
+  "name": "BookingsRecord",
+  "fields": [
+    {
+      "name": "Job",
+      "type": [ "null", {
+        "type": "record",
+        "name": "JobRecord",
+        "fields": [
+          {
+            "name": "Region",
+            "type": "string"
+          },
+          {
+            "name": "Tier",
+            "type": "string",
+            "default": "unknown"
+          },
+          {
+            "name": "Country",
+            "type": [ "null", "string" ]
+          }
+        ]
+      } ]
+    },
+    {
+      "name": "Product",
+      "type": {
+        "type": "record",
+        "name": "ProductRecord",
+        "fields": [
+          {
+            "name": "Lob",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Wrapper",
+      "type": [ "null", {
+        "type": "record",
+        "name": "WrapperRecord",
+        "fields": [
+          {
+            "name": "Mid",
+            "type": {
+              "type": "record",
+              "name": "MidRecord",
+              "fields": [
+                {
+                  "name": "Leaf",
+                  "type": "int"
+                }
+              ]
+            }
+          }
+        ]
+      } ]
+    },
+    {
+      "name": "Deep",
+      "type": {
+        "type": "record",
+        "name": "DeepARecord",
+        "fields": [
+          {
+            "name": "Mid",
+            "type": [ "null", {
+              "type": "record",
+              "name": "DeepBRecord",
+              "fields": [
+                {
+                  "name": "Nested",
+                  "type": {
+                    "type": "record",
+                    "name": "DeepCRecord",
+                    "fields": [
+                      {
+                        "name": "Leaf",
+                        "type": "int"
+                      }
+                    ]
+                  }
+                }
+              ]
+            } ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "DeepReq",
+      "type": {
+        "type": "record",
+        "name": "DeepReqARecord",
+        "fields": [
+          {
+            "name": "Mid",
+            "type": {
+              "type": "record",
+              "name": "DeepReqBRecord",
+              "fields": [
+                {
+                  "name": "Nested",
+                  "type": {
+                    "type": "record",
+                    "name": "DeepReqCRecord",
+                    "fields": [
+                      {
+                        "name": "Leaf",
+                        "type": "int"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Arr",
+      "type": [ "null", {
+        "type": "array",
+        "items": {
+          "type": "record",
+          "name": "ArrayElement",
+          "fields": [
+            {
+              "name": "Arr_Leaf",
+              "type": "int"
+            }
+          ]
+        }
+      } ]
+    },
+    {
+      "name": "Mp",
+      "type": [ "null", {
+        "type": "map",
+        "values": {
+          "type": "record",
+          "name": "MapValue",
+          "fields": [
+            {
+              "name": "Map_Leaf",
+              "type": "int"
+            }
+          ]
+        }
+      } ]
+    }
+  ]
+}

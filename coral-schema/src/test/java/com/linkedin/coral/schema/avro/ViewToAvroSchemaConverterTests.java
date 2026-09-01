@@ -781,6 +781,112 @@ public class ViewToAvroSchemaConverterTests {
   }
 
   @Test
+  public void testFlattenedFieldFromNullableStructIsNullable() {
+    String viewSql = "CREATE VIEW v AS SELECT Job.Region job_region_col, Job.Country job_country_col, "
+        + "Product.Lob product_lob_col FROM basenullablestructrequiredleaf";
+    TestUtils.executeCreateViewQuery("default", "v", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v");
+
+    // `Region` is required inside `JobRecord`, but `Job` itself is nullable. Flattening collapses both levels into
+    // one column, so that column is null on every row where `Job` is absent and has to be declared nullable.
+    Assert.assertTrue(AvroSerdeUtils.isNullableType(actualSchema.getField("job_region_col").schema()));
+    Assert.assertTrue(AvroSerdeUtils.isNullableType(actualSchema.getField("job_country_col").schema()));
+
+    // `Product` is not nullable, so a required leaf projected out of it must stay required - the fix must not
+    // blanket-nullify every flattened field.
+    Assert.assertFalse(AvroSerdeUtils.isNullableType(actualSchema.getField("product_lob_col").schema()));
+    Assert.assertEquals(actualSchema.getField("product_lob_col").schema().getType(), Schema.Type.STRING);
+  }
+
+  @Test
+  public void testFlattenedFieldFromNullableGrandparentIsNullable() {
+    String viewSql = "CREATE VIEW v AS SELECT Wrapper.Mid.Leaf outer_mid_leaf_col FROM basenullablestructrequiredleaf";
+    TestUtils.executeCreateViewQuery("default", "v", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v");
+
+    // `Leaf` is required and its immediate parent `Mid` is not nullable, but `Wrapper` is. Nullability has to
+    // propagate from any ancestor in the chain, not just the immediate parent.
+    Assert.assertTrue(AvroSerdeUtils.isNullableType(actualSchema.getField("outer_mid_leaf_col").schema()));
+  }
+
+  @Test
+  public void testFlattenedFieldFromNullableMidAncestorIsNullable() {
+    String viewSql = "CREATE VIEW v AS SELECT Deep.Mid.Nested.Leaf deep_leaf_col, "
+        + "DeepReq.Mid.Nested.Leaf deep_req_leaf_col FROM basenullablestructrequiredleaf";
+    TestUtils.executeCreateViewQuery("default", "v", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v");
+
+    // `Deep` is required and so is every level below the nullable `Mid`, so the traversal starts with
+    // `nullableAncestor == false`, turns it true on the second hop, and then walks a third required hop before
+    // reaching the leaf. Only an accumulating OR survives that: replacing `||=` with a plain assignment leaves the
+    // final iteration's `false` in place and this assertion fails. `Wrapper.Mid.Leaf` cannot catch that, because
+    // `Wrapper` is nullable at the top and seeds the flag before the loop runs at all.
+    Assert.assertTrue(AvroSerdeUtils.isNullableType(actualSchema.getField("deep_leaf_col").schema()));
+
+    // The same depth with no nullable ancestor anywhere must stay required, so the accumulation cannot be
+    // satisfied by simply nullifying anything reached through more than one hop.
+    Assert.assertFalse(AvroSerdeUtils.isNullableType(actualSchema.getField("deep_req_leaf_col").schema()));
+    Assert.assertEquals(actualSchema.getField("deep_req_leaf_col").schema().getType(), Schema.Type.INT);
+  }
+
+  @Test
+  public void testFlattenedFieldFromNullableStructKeepsDefaultValid() {
+    String viewSql = "CREATE VIEW v AS SELECT Job.Tier job_tier_col FROM basenullablestructrequiredleaf";
+    TestUtils.executeCreateViewQuery("default", "v", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v");
+
+    // `Tier` is required and carries a default. Avro requires a field's default to match the *first* branch of its
+    // union, so naively emitting ["null", "string"] with default "unknown" would produce a schema that no longer
+    // parses. The null branch has to go second instead.
+    Schema tierSchema = actualSchema.getField("job_tier_col").schema();
+    Assert.assertTrue(AvroSerdeUtils.isNullableType(tierSchema));
+    Assert.assertEquals(tierSchema.getTypes().get(0).getType(), Schema.Type.STRING);
+    Assert.assertEquals(tierSchema.getTypes().get(1).getType(), Schema.Type.NULL);
+
+    // The emitted schema must survive a round trip through the Avro parser.
+    Assert.assertEquals(new Schema.Parser().parse(actualSchema.toString()), actualSchema);
+  }
+
+  @Test
+  public void testFlattenedFieldFromNullableArrayAndMapIsNullable() {
+    String viewSql = "CREATE VIEW v AS SELECT Arr[0].Arr_Leaf arr_leaf_col, Mp['x'].Map_Leaf map_leaf_col "
+        + "FROM basenullablestructrequiredleaf";
+    TestUtils.executeCreateViewQuery("default", "v", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v");
+
+    // The traversal walks array element and map value types the same way it walks records, so a nullable array or
+    // map anywhere in the chain has to propagate too.
+    Assert.assertTrue(AvroSerdeUtils.isNullableType(actualSchema.getField("arr_leaf_col").schema()));
+    Assert.assertTrue(AvroSerdeUtils.isNullableType(actualSchema.getField("map_leaf_col").schema()));
+  }
+
+  @Test
+  public void testSelectingNullableStructWholesaleKeepsRequiredLeaf() {
+    String viewSql = "CREATE VIEW v AS SELECT Job FROM basenullablestructrequiredleaf";
+    TestUtils.executeCreateViewQuery("default", "v", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v");
+
+    // No flattening here: the `["null", ...]` envelope still carries the "absent" case, so `Region` stays required
+    // inside the record. Only projecting a leaf out of the struct loses that envelope.
+    Schema jobSchema = actualSchema.getField("Job").schema();
+    Assert.assertTrue(AvroSerdeUtils.isNullableType(jobSchema));
+    Assert.assertFalse(
+        AvroSerdeUtils.isNullableType(SchemaUtilities.extractIfOption(jobSchema).getField("Region").schema()));
+  }
+
+  @Test
   public void testSelectDeepNestStructFieldFromDeepNestComplex() {
     String viewSql = "CREATE VIEW v AS SELECT struct_col_1.struct_col_2.struct_col_3.int_field_1 Int_Field_1, "
         + "array_col_1[0].array_col_2[0].int_field_2 Int_Field_2, map_col_1['x'].map_col_2['y'].int_field_3 Int_Field_3, "
