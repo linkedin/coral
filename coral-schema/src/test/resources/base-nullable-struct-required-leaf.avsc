@@ -60,6 +60,68 @@
       } ]
     },
     {
+      "name": "Deep",
+      "type": {
+        "type": "record",
+        "name": "DeepARecord",
+        "fields": [
+          {
+            "name": "Mid",
+            "type": [ "null", {
+              "type": "record",
+              "name": "DeepBRecord",
+              "fields": [
+                {
+                  "name": "Nested",
+                  "type": {
+                    "type": "record",
+                    "name": "DeepCRecord",
+                    "fields": [
+                      {
+                        "name": "Leaf",
+                        "type": "int"
+                      }
+                    ]
+                  }
+                }
+              ]
+            } ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "DeepReq",
+      "type": {
+        "type": "record",
+        "name": "DeepReqARecord",
+        "fields": [
+          {
+            "name": "Mid",
+            "type": {
+              "type": "record",
+              "name": "DeepReqBRecord",
+              "fields": [
+                {
+                  "name": "Nested",
+                  "type": {
+                    "type": "record",
+                    "name": "DeepReqCRecord",
+                    "fields": [
+                      {
+                        "name": "Leaf",
+                        "type": "int"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
       "name": "Arr",
       "type": [ "null", {
         "type": "array",

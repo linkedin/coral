@@ -814,6 +814,28 @@ public class ViewToAvroSchemaConverterTests {
   }
 
   @Test
+  public void testFlattenedFieldFromNullableMidAncestorIsNullable() {
+    String viewSql = "CREATE VIEW v AS SELECT Deep.Mid.Nested.Leaf deep_leaf_col, "
+        + "DeepReq.Mid.Nested.Leaf deep_req_leaf_col FROM basenullablestructrequiredleaf";
+    TestUtils.executeCreateViewQuery("default", "v", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v");
+
+    // `Deep` is required and so is every level below the nullable `Mid`, so the traversal starts with
+    // `nullableAncestor == false`, turns it true on the second hop, and then walks a third required hop before
+    // reaching the leaf. Only an accumulating OR survives that: replacing `||=` with a plain assignment leaves the
+    // final iteration's `false` in place and this assertion fails. `Wrapper.Mid.Leaf` cannot catch that, because
+    // `Wrapper` is nullable at the top and seeds the flag before the loop runs at all.
+    Assert.assertTrue(AvroSerdeUtils.isNullableType(actualSchema.getField("deep_leaf_col").schema()));
+
+    // The same depth with no nullable ancestor anywhere must stay required, so the accumulation cannot be
+    // satisfied by simply nullifying anything reached through more than one hop.
+    Assert.assertFalse(AvroSerdeUtils.isNullableType(actualSchema.getField("deep_req_leaf_col").schema()));
+    Assert.assertEquals(actualSchema.getField("deep_req_leaf_col").schema().getType(), Schema.Type.INT);
+  }
+
+  @Test
   public void testFlattenedFieldFromNullableStructKeepsDefaultValid() {
     String viewSql = "CREATE VIEW v AS SELECT Job.Tier job_tier_col FROM basenullablestructrequiredleaf";
     TestUtils.executeCreateViewQuery("default", "v", viewSql);
