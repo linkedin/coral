@@ -19,6 +19,7 @@ import org.apache.calcite.rel.logical.LogicalTableFunctionScan;
 import org.apache.calcite.rel.rel2sql.RelToSqlConverter;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
+import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexFieldAccess;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
@@ -33,6 +34,7 @@ import com.linkedin.coral.common.HiveMetastoreClient;
 import com.linkedin.coral.common.catalog.CoralCatalog;
 import com.linkedin.coral.common.functions.CoralSqlUnnestOperator;
 import com.linkedin.coral.common.functions.FunctionFieldReferenceOperator;
+import com.linkedin.coral.hive.hive2rel.functions.CoralINOperator;
 import com.linkedin.coral.transformers.CoralRelToSqlNodeConverter;
 
 import static com.google.common.base.Preconditions.*;
@@ -286,6 +288,62 @@ public class RelToTrinoConverter extends RelToSqlConverter {
       return val.getValue().equals(new BigDecimal(0));
     }
     return false;
+  }
+
+  /**
+   * Converts a join condition from a {@link RexNode} to a {@link SqlNode}.
+   *
+   * Super's implementation renders join conditions from a hardcoded switch over
+   * {@link org.apache.calcite.sql.SqlKind}, covering only AND/OR, the comparison
+   * operators, LIKE, and IS [NOT] NULL; every other kind falls through to a
+   * `default` branch that throws an AssertionError.
+   *
+   * Coral represents `IN` with {@link CoralINOperator} rather than Calcite's
+   * `SqlStdOperatorTable.IN`, so that an `IN` list is preserved as-is instead of
+   * being rewritten into OR predicates or a join on a set of values. That operator
+   * declares {@link org.apache.calcite.sql.SqlKind#OTHER}, so an `IN` predicate
+   * inside a JOIN ... ON clause reaches the `default` branch and fails to translate.
+   * For example, the view:
+   *
+   * <pre>
+   * SELECT c.customer_id, ci.identification_number
+   FROM customer c
+   * INNER JOIN customer_identification ci
+   *   ON c.customer_id = ci.customer_id
+   *  AND ci.identification_type_code IN ('TIN', 'GIIN') * </pre>
+   *
+   * fails with `java.lang.AssertionError: IN($3, 'TIN', 'GIIN')`.
+   *
+   * This overriding implementation intercepts {@link CoralINOperator} calls and
+   * converts them under a join-scoped
+   * {@link org.apache.calcite.rel.rel2sql.SqlImplementor.Context}, which resolves
+   * field references against the concatenated row type of both join inputs (left
+   * fields occupy ordinals [0, leftFieldCount), right fields the remainder) and
+   * renders the operand list via {@link CoralINOperator#unparse}. All other
+   * conditions are delegated to super. Note that super's AND/OR branch recurses
+   * through this method, so an `IN` nested under an AND is intercepted as well,
+   * while sibling comparisons retain super's handling.
+   *
+   * The join context resolves the left/right ordinal offset internally, hence
+   * {@code leftFieldCount} is unused here. This mirrors what super itself does for
+   * the conditions its fast paths do not cover; Calcite removed the switch
+   * altogether in CALCITE-4620 (1.27.0) in favor of this single delegation, so
+   * this override can be dropped once that change is available in linkedin-calcite.
+   *
+   * @param node Join condition
+   * @param leftContext Left context
+   * @param rightContext Right context
+   * @param leftFieldCount Number of fields on left result
+   * @return SqlNode that represents the condition
+   */
+  @Override
+  public SqlNode convertConditionToSqlNode(RexNode node, Context leftContext, Context rightContext,
+      int leftFieldCount) {
+    if (node instanceof RexCall && ((RexCall) node).getOperator() instanceof CoralINOperator) {
+      Context joinContext = leftContext.implementor().joinContext(leftContext, rightContext);
+      return joinContext.toSql(null, node);
+    }
+    return super.convertConditionToSqlNode(node, leftContext, rightContext, leftFieldCount);
   }
 
   /**
