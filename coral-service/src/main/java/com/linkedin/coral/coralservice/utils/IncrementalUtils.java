@@ -1,9 +1,11 @@
 /**
- * Copyright 2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2023-2025 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
 package com.linkedin.coral.coralservice.utils;
+
+import java.util.List;
 
 import org.apache.calcite.rel.RelNode;
 
@@ -29,7 +31,6 @@ public class IncrementalUtils {
         originalNode = new HiveToRelConverter(hiveMetastoreClient).convertSql(query);
         break;
     }
-
     RelNode incrementalRelNode = RelNodeIncrementalTransformer.convertRelIncremental(originalNode);
 
     switch (targetLanguage.toLowerCase()) {
@@ -40,6 +41,20 @@ public class IncrementalUtils {
         CoralSpark coralSpark = CoralSpark.create(incrementalRelNode, hiveMetastoreClient);
         return coralSpark.getSparkSql();
     }
+  }
+
+  public static List<String> getOutputPIIFields(String query, String sourceLanguage, List<String> inputPIIFields) {
+    RelNode originalNode;
+    switch (sourceLanguage.toLowerCase()) {
+      case "trino":
+        originalNode = new TrinoToRelConverter(hiveMetastoreClient).convertSql(query);
+        break;
+      case "hive":
+      default:
+        originalNode = new HiveToRelConverter(hiveMetastoreClient).convertSql(query);
+        break;
+    }
+    return RelNodeIncrementalTransformer.getOutputPIIFields(originalNode, inputPIIFields);
   }
 
 }
