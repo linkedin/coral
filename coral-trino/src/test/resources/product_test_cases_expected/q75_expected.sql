@@ -21,6 +21,6 @@ left join `web_returns` on `ws_order_number` = `wr_order_number` and `ws_item_sk
 where `i_category` = 'books') as `sales_detail`
 group by `d_year`, `i_brand_id`, `i_class_id`, `i_category_id`, `i_manufact_id`) (select `prev_yr`.`d_year` as `prev_year`, `curr_yr`.`d_year` as `year`, `curr_yr`.`i_brand_id`, `curr_yr`.`i_class_id`, `curr_yr`.`i_category_id`, `curr_yr`.`i_manufact_id`, `prev_yr`.`sales_cnt` as `prev_yr_cnt`, `curr_yr`.`sales_cnt` as `curr_yr_cnt`, `curr_yr`.`sales_cnt` - `prev_yr`.`sales_cnt` as `sales_cnt_diff`, `curr_yr`.`sales_amt` - `prev_yr`.`sales_amt` as `sales_amt_diff`
 from `all_sales` as `curr_yr`
-where `curr_yr`.`i_brand_id` = `prev_yr`.`i_brand_id` and `curr_yr`.`i_class_id` = `prev_yr`.`i_class_id` and `curr_yr`.`i_category_id` = `prev_yr`.`i_category_id` and `curr_yr`.`i_manufact_id` = `prev_yr`.`i_manufact_id` and `curr_yr`.`d_year` = 2002 and `prev_yr`.`d_year` = 2002 - 1 and cast(`curr_yr`.`sales_cnt` as decimal(17, 17)) / cast(`prev_yr`.`sales_cnt` as decimal(17, 17)) < 0.9
+where `curr_yr`.`i_brand_id` = `prev_yr`.`i_brand_id` and `curr_yr`.`i_class_id` = `prev_yr`.`i_class_id` and `curr_yr`.`i_category_id` = `prev_yr`.`i_category_id` and `curr_yr`.`i_manufact_id` = `prev_yr`.`i_manufact_id` and `curr_yr`.`d_year` = 2002 and `prev_yr`.`d_year` = 2002 - 1 and cast(`curr_yr`.`sales_cnt` as decimal(17, 2)) / cast(`prev_yr`.`sales_cnt` as decimal(17, 2)) < 0.9
 order by `sales_cnt_diff`, `sales_amt_diff`
 fetch next 100 rows only)
