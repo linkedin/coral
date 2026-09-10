@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2019-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -21,6 +21,6 @@ import org.apache.calcite.rel.type.RelDataType;
  */
 public class TrinoStructCastRowFunction extends GenericTemplateFunction {
   public TrinoStructCastRowFunction(RelDataType structDataType) {
-    super(structDataType, "cast");
+    super(structDataType, "try_cast");
   }
 }
