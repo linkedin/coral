@@ -195,7 +195,16 @@ public class ParseTreeBuilderTest {
             "SELECT CASE WHEN `a` THEN 10 WHEN `b` THEN 20 ELSE 30 END FROM `foo`"),
         ImmutableList.of("SELECT named_struct('abc', 123, 'def', 234.23) FROM foo",
             "SELECT `named_struct`('abc', 123, 'def', 234.23) FROM `foo`"),
-        ImmutableList.of("SELECT 0L FROM foo", "SELECT 0 FROM `foo`"));
+        ImmutableList.of("SELECT 0L FROM foo", "SELECT 0 FROM `foo`"),
+        //test grouping set
+        ImmutableList.of("select deptno, job, avg(sal) from emp group by deptno,job grouping sets((deptno,job), (deptno),())",
+                "SELECT `deptno`, `job`, AVG(`sal`) FROM `emp` GROUP BY GROUPING SETS(ROW(`deptno`, `job`), ROW(`deptno`), ())"),
+        ImmutableList.of("select deptno, job, avg(sal) from emp group by deptno,job with cube",
+                "SELECT `deptno`, `job`, AVG(`sal`) FROM `emp` GROUP BY CUBE(`deptno`, `job`)"),
+        ImmutableList.of("select deptno, job, avg(sal) from emp group by deptno,job with rollup",
+                "SELECT `deptno`, `job`, AVG(`sal`) FROM `emp` GROUP BY ROLLUP(`deptno`, `job`)")
+
+    );
 
     return convertAndValidateSql.stream().map(x -> new Object[] { x.get(0), x.get(1) }).iterator();
   }
