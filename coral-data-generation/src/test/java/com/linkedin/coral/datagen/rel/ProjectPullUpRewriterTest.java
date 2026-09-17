@@ -112,6 +112,7 @@ public class ProjectPullUpRewriterTest {
   @Test
   public void testProjectPreservesRowType() {
     // After pull-up, the pulled-up Project should have the same row type as the original
+    // (same field names and types, in the same order).
     RelNode tree = builder.scan("T1").project(builder.field("a"), builder.field("b"))
         .filter(builder.call(SqlStdOperatorTable.GREATER_THAN, builder.field("b"), builder.literal(5))).build();
 
@@ -120,6 +121,12 @@ public class ProjectPullUpRewriterTest {
 
     assertEquals(result.getRowType().getFieldCount(), tree.getRowType().getFieldCount(),
         "Row type field count should be preserved");
+    assertEquals(result.getRowType().getFieldNames(), tree.getRowType().getFieldNames(),
+        "Row type field names should be preserved (in order)");
+    for (int i = 0; i < result.getRowType().getFieldCount(); i++) {
+      assertEquals(result.getRowType().getFieldList().get(i).getType(),
+          tree.getRowType().getFieldList().get(i).getType(), "Field type at index " + i + " should match");
+    }
   }
 
   // ==================== Join->Project Pull-Up ====================
@@ -144,6 +151,12 @@ public class ProjectPullUpRewriterTest {
     assertTrue(joinNode instanceof Join, "Project child should be Join");
     Join newJoin = (Join) joinNode;
     assertFalse(newJoin.getLeft() instanceof Project, "Left should no longer be Project");
+
+    // The pulled-up Project must reproduce the original row type (names + types).
+    assertEquals(result.getRowType().getFieldNames(), tree.getRowType().getFieldNames(),
+        "pulled-up row type should match the original");
+    // Both join inputs are now raw scans (3-col T1 + 2-col T2 = 5 cols at join).
+    assertEquals(newJoin.getRowType().getFieldCount(), 5, "join below pulled-up Project sees raw 3+2 columns");
   }
 
   @Test
@@ -163,6 +176,12 @@ public class ProjectPullUpRewriterTest {
     assertTrue(result instanceof Project, "Root should be Project after pull-up");
     RelNode joinNode = ((Project) result).getInput();
     assertTrue(joinNode instanceof Join, "Project child should be Join");
+    Join newJoin = (Join) joinNode;
+    assertFalse(newJoin.getRight() instanceof Project, "Right should no longer be Project");
+
+    assertEquals(result.getRowType().getFieldNames(), tree.getRowType().getFieldNames(),
+        "pulled-up row type should match the original");
+    assertEquals(newJoin.getRowType().getFieldCount(), 5, "join below pulled-up Project sees raw 3+2 columns");
   }
 
   @Test
@@ -185,16 +204,20 @@ public class ProjectPullUpRewriterTest {
     Join newJoin = (Join) joinNode;
     assertFalse(newJoin.getLeft() instanceof Project, "Left should no longer be Project");
     assertFalse(newJoin.getRight() instanceof Project, "Right should no longer be Project");
+
+    assertEquals(result.getRowType().getFieldNames(), tree.getRowType().getFieldNames(),
+        "pulled-up row type should match the original");
+    assertEquals(newJoin.getRowType().getFieldCount(), 5, "join below pulled-up Project sees raw 3+2 columns");
   }
 
   // ==================== Field Count Change ====================
 
   @Test
   public void testJoinLeftProjectPullUpFieldCountChanged() {
-    // Build: Join with left = Project(a, b) -> Scan(T1: a,b,c), right = Scan(T2)
-    // Left Project reduces field count 3->2. Previously failed with type mismatch
-    // because RexInputRef offsets used the Project's output field count (2) instead
-    // of the new left side's scan field count (3). Fixed in items #5/#6.
+    // Build: Join with left = Project(a, b) -> Scan(T1: a,b,c), right = Scan(T2: x,y)
+    // Left Project reduces field count 3->2. Originally the right-side reference $2 ("x" in
+    // the projected join frame) must shift to $3 once the left expands back to 3 columns;
+    // verify the rewritten condition uses the corrected offsets ($1 for b, $3 for x).
     builder.scan("T1").project(builder.field("a"), builder.field("b"));
     builder.scan("T2");
     RelNode tree = builder.join(JoinRelType.INNER,
@@ -206,9 +229,18 @@ public class ProjectPullUpRewriterTest {
     RelNode result = ProjectPullUpRewriter.rewriteOneStep(tree);
 
     assertTrue(result instanceof Project, "Root should be Project after pull-up");
-    RelNode joinNode = ((Project) result).getInput();
-    assertTrue(joinNode instanceof Join, "Project child should be Join");
-    assertFalse(((Join) joinNode).getLeft() instanceof Project, "Left should no longer be Project");
+    Join newJoin = (Join) ((Project) result).getInput();
+    assertFalse(newJoin.getLeft() instanceof Project, "Left should no longer be Project");
+    assertEquals(newJoin.getRowType().getFieldCount(), 5, "join below pulled-up Project sees raw 3+2 columns");
+
+    // The join condition must now reference $1 (T1.b) and $3 (T2.x at offset 3 after left grew
+    // from 2 to 3 columns). If the rewriter had kept the old offset $2, that would now point
+    // at T1.c — a column type mismatch.
+    String condStr = newJoin.getCondition().toString();
+    assertTrue(condStr.contains("$1"), "condition should reference $1 (T1.b), got: " + condStr);
+    assertTrue(condStr.contains("$3"), "condition should reference $3 (T2.x at shifted offset), got: " + condStr);
+    assertFalse(condStr.contains("$2"),
+        "condition should NOT reference stale $2 (T2.x at old offset), got: " + condStr);
   }
 
   // ==================== Controller (Fixed Point) ====================
@@ -241,8 +273,8 @@ public class ProjectPullUpRewriterTest {
   public void testControllerNestedPullUp() {
     // Build a tree requiring multiple iterations:
     // Filter -> Project -> Filter -> Project -> Scan(T1)
-    // Iteration 1: pulls inner Project above inner Filter
-    // Iteration 2: inner Project merges/outer pattern matches
+    // At fixed point, all Projects should be above all Filters and the row type should
+    // still equal the original (the output row count and field types are preserved).
     RelNode tree = builder.scan("T1").project(builder.field("a"), builder.field("b"))
         .filter(builder.call(SqlStdOperatorTable.GREATER_THAN, builder.field("b"), builder.literal(5)))
         .project(builder.field("a"))
@@ -250,9 +282,11 @@ public class ProjectPullUpRewriterTest {
 
     RelNode result = ProjectPullUpController.applyUntilFixedPoint(tree, 100);
 
-    // All Projects should be above all Filters at fixed point
-    // Verify no Filter has a Project child
     assertNoFilterProjectPattern(result);
+    assertTrue(result instanceof Project, "Root should be a Project after fixed-point pull-up");
+    assertEquals(result.getRowType().getFieldNames(), tree.getRowType().getFieldNames(),
+        "Row type field names must be preserved by the pull-up");
+    assertEquals(result.getRowType().getFieldCount(), 1, "Outer Project keeps only column 'a'");
   }
 
   // ==================== Helpers ====================

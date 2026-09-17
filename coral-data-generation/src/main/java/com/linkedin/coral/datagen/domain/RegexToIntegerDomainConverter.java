@@ -13,22 +13,45 @@ import dk.brics.automaton.Transition;
 
 
 /**
- * Converts RegexDomain patterns to IntegerDomain when the regex represents
- * only bounded numeric patterns.
+ * Converts a {@link RegexDomain} of canonical-decimal integer strings into the corresponding
+ * {@link IntegerDomain}.
  *
- * Conversion is allowed only if the automaton:
- * 1. Accepts a finite language
- * 2. All transitions are over digit characters [0-9] only
+ * <p>This converter intentionally answers only one question: <i>"Given a regex whose accepted
+ * strings are all canonical decimal representations of integers, what is the integer set?"</i>.
+ * Canonical decimal means the form produced by {@code String.valueOf(int)} / SQL
+ * {@code CAST(integer AS VARCHAR)}: {@code "0"} or a non-zero leading digit followed by
+ * additional digits. Strings like {@code "000"}, {@code "01"}, {@code "-0"} are non-canonical
+ * and any regex that admits them is rejected.
  *
- * Examples:
- * - {@code /^2024$/} converts to {@code [2024, 2024]}
- * - {@code /^[0-9]{3}$/} converts to {@code [0, 999]}
- * - {@code /^19[0-9]{2}$/} converts to {@code [1900, 1999]}
- * - {@code /^(10|11|12)$/} converts to {@code [10, 10], [11, 11], [12, 12]}
+ * <p>Allowed:
+ * <ul>
+ *   <li>{@code /^2024$/} → {@code [2024, 2024]}</li>
+ *   <li>{@code /^19[0-9]{2}$/} → {@code [1900, 1999]}</li>
+ *   <li>{@code /^(10|11|12)$/} → {@code [10, 12]}</li>
+ *   <li>{@code /^[0-9]$/} → {@code [0, 9]} (every accepted string is canonical)</li>
+ * </ul>
+ *
+ * <p>Rejected (throws {@link NonConvertibleDomainException}):
+ * <ul>
+ *   <li>{@code /^[0-9]{3}$/} — admits {@code "000"}, {@code "001"}, … which are not canonical</li>
+ *   <li>{@code /^009$/} — non-canonical literal</li>
+ *   <li>{@code /^[0-9]+$/} — infinite language</li>
+ *   <li>{@code /^abc$/} — not a subset of canonical integer strings</li>
+ * </ul>
+ *
+ * <p>If a caller has a non-canonical regex but wants the canonical inverse, it must intersect
+ * with the canonical-strings regex first; the converter will then accept the result.
  */
 public class RegexToIntegerDomainConverter {
 
   private static final int MAX_ENUMERATION_SIZE = 5000;
+
+  /**
+   * Automaton accepting exactly the canonical decimal string form of every non-negative
+   * integer ({@code "0"}, {@code "1"}, {@code "2"}, …, {@code "10"}, …). This is the precondition
+   * the converter requires its inputs to satisfy.
+   */
+  private static final Automaton CANONICAL_INTEGER_STRINGS = new RegexDomain("^(0|[1-9][0-9]*)$").getAutomaton();
 
   /**
    * Checks if the given RegexDomain can be converted to IntegerDomain.
@@ -38,7 +61,7 @@ public class RegexToIntegerDomainConverter {
    */
   public boolean isConvertible(RegexDomain regexDomain) {
     Automaton a = regexDomain.getAutomaton();
-    return !a.isEmpty() && a.isFinite() && isDigitOnly(a);
+    return !a.isEmpty() && a.isFinite() && a.subsetOf(CANONICAL_INTEGER_STRINGS);
   }
 
   /**
@@ -57,8 +80,8 @@ public class RegexToIntegerDomainConverter {
     if (!a.isFinite()) {
       throw new NonConvertibleDomainException("Infinite language");
     }
-    if (!isDigitOnly(a)) {
-      throw new NonConvertibleDomainException("Non-digit characters in automaton");
+    if (!a.subsetOf(CANONICAL_INTEGER_STRINGS)) {
+      throw new NonConvertibleDomainException("Regex accepts strings outside canonical decimal form");
     }
 
     // Try enumeration first
@@ -78,20 +101,6 @@ public class RegexToIntegerDomainConverter {
       long max = computeMax(a);
       return IntegerDomain.of(Collections.singletonList(new IntegerDomain.Interval(min, max)));
     }
-  }
-
-  /**
-   * Checks that all transitions in the automaton are over digit characters only.
-   */
-  private boolean isDigitOnly(Automaton a) {
-    for (State s : a.getStates()) {
-      for (Transition t : s.getTransitions()) {
-        if (t.getMin() < '0' || t.getMax() > '9') {
-          return false;
-        }
-      }
-    }
-    return true;
   }
 
   /**

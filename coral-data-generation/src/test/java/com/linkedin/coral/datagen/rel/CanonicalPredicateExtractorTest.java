@@ -180,7 +180,8 @@ public class CanonicalPredicateExtractorTest {
 
   @Test
   public void testDnfRewriterWithExtractedPredicates() {
-    // Filter(a = 'x') -> Scan(T1)
+    // Filter(a = 'x') -> Scan(T1). DNF of a single equality is one conjunctive disjunct
+    // referencing field $0 (T1.a).
     RelNode tree = builder.scan("T1")
         .filter(builder.call(SqlStdOperatorTable.EQUALS, builder.field("a"), builder.literal("x"))).build();
 
@@ -188,7 +189,10 @@ public class CanonicalPredicateExtractorTest {
     DnfRewriter.Output dnf = DnfRewriter.convert(extracted, tree.getCluster().getRexBuilder());
 
     assertEquals(dnf.sequentialScans.size(), 1);
-    assertFalse(dnf.disjuncts.isEmpty(), "Should have at least one disjunct");
+    assertEquals(dnf.disjuncts.size(), 1, "single equality should yield exactly one DNF disjunct");
+    String disjunctStr = dnf.disjuncts.get(0).toString();
+    assertTrue(disjunctStr.contains("$0"), "disjunct should reference $0 (T1.a), got: " + disjunctStr);
+    assertTrue(disjunctStr.contains("'x'"), "disjunct should reference literal 'x', got: " + disjunctStr);
   }
 
   @Test

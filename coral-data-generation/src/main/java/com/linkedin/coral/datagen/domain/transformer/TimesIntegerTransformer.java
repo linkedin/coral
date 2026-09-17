@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.calcite.rex.RexCall;
+import org.apache.calcite.rex.RexFieldAccess;
 import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
@@ -48,8 +49,8 @@ public class TimesIntegerTransformer implements DomainTransformer {
     RexCall call = (RexCall) expr;
     RexNode left = call.getOperands().get(0);
     RexNode right = call.getOperands().get(1);
-    boolean leftVar = (left instanceof RexInputRef || left instanceof RexCall);
-    boolean rightVar = (right instanceof RexInputRef || right instanceof RexCall);
+    boolean leftVar = (left instanceof RexInputRef || left instanceof RexCall || left instanceof RexFieldAccess);
+    boolean rightVar = (right instanceof RexInputRef || right instanceof RexCall || right instanceof RexFieldAccess);
     boolean leftLit = left instanceof RexLiteral;
     boolean rightLit = right instanceof RexLiteral;
     return (leftVar && rightLit) || (rightVar && leftLit);
@@ -60,7 +61,7 @@ public class TimesIntegerTransformer implements DomainTransformer {
     RexCall call = (RexCall) expr;
     RexNode left = call.getOperands().get(0);
     RexNode right = call.getOperands().get(1);
-    if (left instanceof RexInputRef || left instanceof RexCall) {
+    if (left instanceof RexInputRef || left instanceof RexCall || left instanceof RexFieldAccess) {
       return left;
     } else {
       return right;
@@ -78,7 +79,7 @@ public class TimesIntegerTransformer implements DomainTransformer {
     RexCall call = (RexCall) expr;
     RexNode left = call.getOperands().get(0);
     RexNode right = call.getOperands().get(1);
-    boolean leftVar = (left instanceof RexInputRef || left instanceof RexCall);
+    boolean leftVar = (left instanceof RexInputRef || left instanceof RexCall || left instanceof RexFieldAccess);
 
     // Get the literal value
     RexLiteral literalNode = (RexLiteral) (leftVar ? right : left);
