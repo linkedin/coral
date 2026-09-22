@@ -436,6 +436,15 @@ public class TestUtils {
     run(driver,
         "CREATE TABLE IF NOT EXISTS test.tableInt(tinyint_col tinyint, smallint_col smallint, int_col int, bigint_col bigint)");
 
+    run(driver, "CREATE TABLE IF NOT EXISTS test.party(party_id int, party_name string)");
+    run(driver,
+        "CREATE TABLE IF NOT EXISTS test.party_identification(party_id int, party_identification_type_code string, party_identification_number string)");
+    run(driver,
+        "CREATE VIEW IF NOT EXISTS test.view_join_with_in_condition AS "
+            + "SELECT p.party_id, p.party_name, pi.party_identification_number " + "FROM test.party p "
+            + "INNER JOIN test.party_identification pi " + "ON p.party_id = pi.party_id "
+            + "AND pi.party_identification_type_code IN ('TIN', 'GIIN')");
+
   }
 
   public static HiveConf loadResourceHiveConf() {
