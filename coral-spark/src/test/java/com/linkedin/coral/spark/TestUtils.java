@@ -6,6 +6,7 @@
 package com.linkedin.coral.spark;
 
 import java.io.*;
+import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -14,6 +15,7 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.MetaException;
+import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.hadoop.hive.ql.CommandNeedRetryException;
 import org.apache.hadoop.hive.ql.Driver;
 import org.apache.hadoop.hive.ql.metadata.Hive;
@@ -22,6 +24,9 @@ import org.apache.hadoop.hive.ql.session.SessionState;
 
 import com.linkedin.coral.common.HiveMetastoreClient;
 import com.linkedin.coral.common.HiveMscAdapter;
+import com.linkedin.coral.common.catalog.CoralCatalog;
+import com.linkedin.coral.common.catalog.CoralTable;
+import com.linkedin.coral.common.catalog.HiveTable;
 import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
 import com.linkedin.coral.schema.avro.ViewToAvroSchemaConverter;
 
@@ -34,6 +39,7 @@ public class TestUtils {
   static HiveToRelConverter hiveToRelConverter;
   static ViewToAvroSchemaConverter viewToAvroSchemaConverter;
   static HiveMetastoreClient hiveMetastoreClient;
+  static CoralCatalog coralCatalog;
 
   static void run(Driver driver, String sql) {
     while (true) {
@@ -53,6 +59,7 @@ public class TestUtils {
     SessionState.start(conf);
     Driver driver = new Driver(conf);
     hiveMetastoreClient = new HiveMscAdapter(Hive.get(conf).getMSC());
+    coralCatalog = new HiveMetastoreBackedCoralCatalog(hiveMetastoreClient);
     hiveToRelConverter = new HiveToRelConverter(hiveMetastoreClient);
     viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
     run(driver, "CREATE TABLE IF NOT EXISTS foo(a int, b varchar(30), c double)");
@@ -293,5 +300,42 @@ public class TestUtils {
 
   public static HiveMetastoreClient getHiveMetastoreClient() {
     return hiveMetastoreClient;
+  }
+
+  public static CoralCatalog getCoralCatalog() {
+    return coralCatalog;
+  }
+
+  /**
+   * Test-only {@link CoralCatalog} exposing the test metastore's tables and views as {@link HiveTable}s, so the
+   * CoralCatalog-backed entry points can be checked against the {@link HiveMetastoreClient}-backed ones.
+   */
+  private static class HiveMetastoreBackedCoralCatalog implements CoralCatalog {
+    private final HiveMetastoreClient msc;
+
+    HiveMetastoreBackedCoralCatalog(HiveMetastoreClient msc) {
+      this.msc = msc;
+    }
+
+    @Override
+    public CoralTable getTable(String namespace, String tableName) {
+      Table table = msc.getTable(namespace, tableName);
+      return table != null ? new HiveTable(table) : null;
+    }
+
+    @Override
+    public boolean namespaceExists(String namespace) {
+      return msc.getDatabase(namespace) != null;
+    }
+
+    @Override
+    public List<String> getAllTables(String namespace) {
+      return msc.getAllTables(namespace);
+    }
+
+    @Override
+    public List<String> getAllNamespaces() {
+      return msc.getAllDatabases();
+    }
   }
 }
