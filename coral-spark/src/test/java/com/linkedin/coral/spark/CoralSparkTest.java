@@ -8,6 +8,7 @@ package com.linkedin.coral.spark;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -26,6 +27,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
+import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
 import com.linkedin.coral.hive.hive2rel.functions.StaticHiveFunctionRegistry;
 import com.linkedin.coral.spark.containers.SparkUDFInfo;
 import com.linkedin.coral.spark.exceptions.UnsupportedUDFException;
@@ -1053,6 +1055,47 @@ public class CoralSparkTest {
     CoralSpark coralSpark = createCoralSpark(relNode);
     String sparkSql = coralSpark.getSparkSql();
     assertEquals(sparkSql, "SELECT *\nFROM default.collection collection\nWHERE collection.a > 0");
+  }
+
+  @Test
+  public void testCoralCatalogEntryPointMatchesHiveMetastoreClientEntryPoint() {
+    HiveToRelConverter coralCatalogToRelConverter = new HiveToRelConverter(getCoralCatalog());
+
+    // Multi-table view, and a Dali UDF view that populates SparkUDFInfo
+    for (String view : ImmutableList.of("foo_bar_view", "foo_dali_udf")) {
+      assertSameTranslation(
+          CoralSpark.create(coralCatalogToRelConverter.convertView("default", view), getCoralCatalog()),
+          createCoralSpark(TestUtils.toRelNode("default", view)));
+    }
+
+    // extract_union rewrites derive operand types through the catalog-backed validator
+    for (String sql : ImmutableList.of("SELECT extract_union(foo, 2) FROM union_table",
+        "SELECT extract_union(bar) FROM union_table", "SELECT extract_union(baz).single.tag_0 FROM union_table")) {
+      assertSameTranslation(CoralSpark.create(coralCatalogToRelConverter.convertSql(sql), getCoralCatalog()),
+          createCoralSpark(TestUtils.toRelNode(sql)));
+    }
+
+    CoralSpark singleUnion = CoralSpark
+        .create(coralCatalogToRelConverter.convertSql("SELECT extract_union(bar) FROM union_table"), getCoralCatalog());
+    assertEquals(singleUnion.getSparkSql(), "SELECT coalesce_struct(union_table.bar, 'uniontype<array<string>>')\n"
+        + "FROM default.union_table union_table");
+  }
+
+  @Test
+  public void testCoralCatalogEntryPointWithSchemaMatchesHiveMetastoreClientEntryPoint() {
+    String sql = "SELECT LOWER(complex.s.name) FROM default.complex";
+    Schema schema = TestUtils.getAvroSchemaForView(sql, false);
+    CoralSpark coralSpark =
+        CoralSpark.create(new HiveToRelConverter(getCoralCatalog()).convertSql(sql), schema, getCoralCatalog());
+
+    assertSameTranslation(coralSpark, createCoralSparkWithSchema(TestUtils.toRelNode(sql), schema));
+    assertEquals(coralSpark.getSparkSql(), "SELECT LOWER(complex.s.name) EXPR_0\nFROM default.complex complex");
+  }
+
+  private static void assertSameTranslation(CoralSpark actual, CoralSpark expected) {
+    assertEquals(actual.getSparkSql(), expected.getSparkSql());
+    assertEquals(actual.getBaseTables(), expected.getBaseTables());
+    assertEquals(new HashSet<>(actual.getSparkUDFInfoList()), new HashSet<>(expected.getSparkUDFInfoList()));
   }
 
   private CoralSpark createCoralSpark(RelNode relNode) {
