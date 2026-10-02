@@ -8,15 +8,43 @@ package com.linkedin.coral.datagen.domain;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.calcite.rel.type.RelDataTypeFactory;
+import org.apache.calcite.rex.RexBuilder;
+import org.apache.calcite.rex.RexLiteral;
+import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.sql.fun.SqlStdOperatorTable;
+import org.apache.calcite.sql.type.SqlTypeName;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
+
+import com.linkedin.coral.datagen.domain.transformer.AbsIntegerTransformer;
+import com.linkedin.coral.datagen.domain.transformer.MinusIntegerTransformer;
+import com.linkedin.coral.datagen.domain.transformer.NegateIntegerTransformer;
 
 import static org.testng.Assert.*;
 
 
 /**
- * Tests for integer domain transformers (Plus and Times).
+ * Tests for integer domain transformers (Plus, Times, Minus, Negate, Abs).
  */
 public class IntegerTransformerTest {
+
+  private RexBuilder rexBuilder;
+  private RelDataTypeFactory typeFactory;
+
+  @BeforeMethod
+  public void setup() {
+    rexBuilder = TestHelper.createRexBuilder();
+    typeFactory = rexBuilder.getTypeFactory();
+  }
+
+  private RexNode intRef() {
+    return rexBuilder.makeInputRef(typeFactory.createSqlType(SqlTypeName.INTEGER), 0);
+  }
+
+  private RexLiteral intLit(long value) {
+    return (RexLiteral) rexBuilder.makeLiteral(value, typeFactory.createSqlType(SqlTypeName.BIGINT), false);
+  }
 
   // ==================== Plus Transformer ====================
 
@@ -150,5 +178,199 @@ public class IntegerTransformerTest {
     for (long v : samples) {
       assertEquals(v, 15);
     }
+  }
+
+  // ==================== Minus Transformer ====================
+
+  @Test
+  public void testMinusTransformerVariableMinusLiteral() {
+    // x - 3 = 7 => x = 10
+    MinusIntegerTransformer transformer = new MinusIntegerTransformer();
+    RexNode expr = rexBuilder.makeCall(SqlStdOperatorTable.MINUS, intRef(), intLit(3));
+
+    assertTrue(transformer.canHandle(expr));
+    assertTrue(transformer.isVariableOperandPositionValid(expr));
+
+    Domain<?, ?> result = transformer.refineInputDomain(expr, IntegerDomain.of(7));
+    assertTrue(result instanceof IntegerDomain);
+    IntegerDomain intResult = (IntegerDomain) result;
+    assertTrue(intResult.contains(10));
+    assertTrue(intResult.isSingleton());
+  }
+
+  @Test
+  public void testMinusTransformerLiteralMinusVariable() {
+    // 10 - x = 3 => x = 7
+    MinusIntegerTransformer transformer = new MinusIntegerTransformer();
+    RexNode expr = rexBuilder.makeCall(SqlStdOperatorTable.MINUS, intLit(10), intRef());
+
+    assertTrue(transformer.canHandle(expr));
+    assertTrue(transformer.isVariableOperandPositionValid(expr));
+
+    Domain<?, ?> result = transformer.refineInputDomain(expr, IntegerDomain.of(3));
+    assertTrue(result instanceof IntegerDomain);
+    IntegerDomain intResult = (IntegerDomain) result;
+    assertTrue(intResult.contains(7));
+    assertTrue(intResult.isSingleton());
+  }
+
+  @Test
+  public void testMinusTransformerInterval() {
+    // x - 5 in [20, 30] => x in [25, 35]
+    MinusIntegerTransformer transformer = new MinusIntegerTransformer();
+    RexNode expr = rexBuilder.makeCall(SqlStdOperatorTable.MINUS, intRef(), intLit(5));
+
+    Domain<?, ?> result = transformer.refineInputDomain(expr, IntegerDomain.of(20, 30));
+    assertTrue(result instanceof IntegerDomain);
+    IntegerDomain intResult = (IntegerDomain) result;
+    assertTrue(intResult.contains(25));
+    assertTrue(intResult.contains(35));
+    assertFalse(intResult.contains(24));
+    assertFalse(intResult.contains(36));
+  }
+
+  @Test
+  public void testMinusTransformerLiteralMinusVariableInterval() {
+    // 50 - x in [10, 20] => x in [30, 40]
+    MinusIntegerTransformer transformer = new MinusIntegerTransformer();
+    RexNode expr = rexBuilder.makeCall(SqlStdOperatorTable.MINUS, intLit(50), intRef());
+
+    Domain<?, ?> result = transformer.refineInputDomain(expr, IntegerDomain.of(10, 20));
+    assertTrue(result instanceof IntegerDomain);
+    IntegerDomain intResult = (IntegerDomain) result;
+    assertTrue(intResult.contains(30));
+    assertTrue(intResult.contains(40));
+    assertFalse(intResult.contains(29));
+    assertFalse(intResult.contains(41));
+  }
+
+  // ==================== Negate Transformer ====================
+
+  @Test
+  public void testNegateTransformerSingleValue() {
+    // -x = -5 => x = 5
+    NegateIntegerTransformer transformer = new NegateIntegerTransformer();
+    RexNode expr = rexBuilder.makeCall(SqlStdOperatorTable.UNARY_MINUS, intRef());
+
+    assertTrue(transformer.canHandle(expr));
+    assertTrue(transformer.isVariableOperandPositionValid(expr));
+
+    Domain<?, ?> result = transformer.refineInputDomain(expr, IntegerDomain.of(-5));
+    assertTrue(result instanceof IntegerDomain);
+    IntegerDomain intResult = (IntegerDomain) result;
+    assertTrue(intResult.contains(5));
+    assertTrue(intResult.isSingleton());
+  }
+
+  @Test
+  public void testNegateTransformerInterval() {
+    // -x in [10, 20] => x in [-20, -10]
+    NegateIntegerTransformer transformer = new NegateIntegerTransformer();
+    RexNode expr = rexBuilder.makeCall(SqlStdOperatorTable.UNARY_MINUS, intRef());
+
+    Domain<?, ?> result = transformer.refineInputDomain(expr, IntegerDomain.of(10, 20));
+    assertTrue(result instanceof IntegerDomain);
+    IntegerDomain intResult = (IntegerDomain) result;
+    assertTrue(intResult.contains(-20));
+    assertTrue(intResult.contains(-10));
+    assertFalse(intResult.contains(-21));
+    assertFalse(intResult.contains(-9));
+  }
+
+  @Test
+  public void testNegateTransformerCrossesZero() {
+    // -x in [-5, 5] => x in [-5, 5] (symmetric)
+    NegateIntegerTransformer transformer = new NegateIntegerTransformer();
+    RexNode expr = rexBuilder.makeCall(SqlStdOperatorTable.UNARY_MINUS, intRef());
+
+    Domain<?, ?> result = transformer.refineInputDomain(expr, IntegerDomain.of(-5, 5));
+    assertTrue(result instanceof IntegerDomain);
+    IntegerDomain intResult = (IntegerDomain) result;
+    assertTrue(intResult.contains(-5));
+    assertTrue(intResult.contains(0));
+    assertTrue(intResult.contains(5));
+    assertFalse(intResult.contains(-6));
+    assertFalse(intResult.contains(6));
+  }
+
+  // ==================== Abs Transformer ====================
+
+  @Test
+  public void testAbsTransformerPositiveValue() {
+    // ABS(x) = 5 => x in {-5, 5}
+    AbsIntegerTransformer transformer = new AbsIntegerTransformer();
+    RexNode expr = rexBuilder.makeCall(SqlStdOperatorTable.ABS, intRef());
+
+    assertTrue(transformer.canHandle(expr));
+    assertTrue(transformer.isVariableOperandPositionValid(expr));
+
+    Domain<?, ?> result = transformer.refineInputDomain(expr, IntegerDomain.of(5));
+    assertTrue(result instanceof IntegerDomain);
+    IntegerDomain intResult = (IntegerDomain) result;
+    assertTrue(intResult.contains(-5));
+    assertTrue(intResult.contains(5));
+    assertFalse(intResult.contains(0));
+    assertFalse(intResult.contains(4));
+    assertFalse(intResult.contains(-4));
+  }
+
+  @Test
+  public void testAbsTransformerZero() {
+    // ABS(x) = 0 => x = 0
+    AbsIntegerTransformer transformer = new AbsIntegerTransformer();
+    RexNode expr = rexBuilder.makeCall(SqlStdOperatorTable.ABS, intRef());
+
+    Domain<?, ?> result = transformer.refineInputDomain(expr, IntegerDomain.of(0));
+    assertTrue(result instanceof IntegerDomain);
+    IntegerDomain intResult = (IntegerDomain) result;
+    assertTrue(intResult.contains(0));
+    assertTrue(intResult.isSingleton());
+  }
+
+  @Test
+  public void testAbsTransformerPositiveInterval() {
+    // ABS(x) in [3, 7] => x in [-7, -3] ∪ [3, 7]
+    AbsIntegerTransformer transformer = new AbsIntegerTransformer();
+    RexNode expr = rexBuilder.makeCall(SqlStdOperatorTable.ABS, intRef());
+
+    Domain<?, ?> result = transformer.refineInputDomain(expr, IntegerDomain.of(3, 7));
+    assertTrue(result instanceof IntegerDomain);
+    IntegerDomain intResult = (IntegerDomain) result;
+    assertTrue(intResult.contains(3));
+    assertTrue(intResult.contains(7));
+    assertTrue(intResult.contains(-3));
+    assertTrue(intResult.contains(-7));
+    assertFalse(intResult.contains(0));
+    assertFalse(intResult.contains(2));
+    assertFalse(intResult.contains(-2));
+    assertFalse(intResult.contains(8));
+    assertFalse(intResult.contains(-8));
+  }
+
+  @Test
+  public void testAbsTransformerIntervalIncludingZero() {
+    // ABS(x) in [0, 5] => x in [-5, 5]
+    AbsIntegerTransformer transformer = new AbsIntegerTransformer();
+    RexNode expr = rexBuilder.makeCall(SqlStdOperatorTable.ABS, intRef());
+
+    Domain<?, ?> result = transformer.refineInputDomain(expr, IntegerDomain.of(0, 5));
+    assertTrue(result instanceof IntegerDomain);
+    IntegerDomain intResult = (IntegerDomain) result;
+    assertTrue(intResult.contains(0));
+    assertTrue(intResult.contains(-5));
+    assertTrue(intResult.contains(5));
+    assertFalse(intResult.contains(-6));
+    assertFalse(intResult.contains(6));
+  }
+
+  @Test
+  public void testAbsTransformerNegativeIntervalProducesEmpty() {
+    // ABS(x) in [-5, -1] => no valid input (ABS is always non-negative)
+    AbsIntegerTransformer transformer = new AbsIntegerTransformer();
+    RexNode expr = rexBuilder.makeCall(SqlStdOperatorTable.ABS, intRef());
+
+    Domain<?, ?> result = transformer.refineInputDomain(expr, IntegerDomain.of(-5, -1));
+    assertTrue(result instanceof IntegerDomain);
+    assertTrue(result.isEmpty());
   }
 }

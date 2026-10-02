@@ -22,20 +22,20 @@ import dk.brics.automaton.Automaton;
 
 
 /**
- * Regex-based transformer for LOWER operations.
+ * Regex-based transformer for UPPER operations.
  *
- * Inverts LOWER(input) = output_pattern
+ * Inverts UPPER(input) = output_pattern
  * to produce a case-insensitive regex constraint on the input.
  *
  * Example:
- * LOWER(input) = "abc"
+ * UPPER(input) = "ABC"
  * produces input constraint: [aA][bB][cC]
  */
-public class LowerRegexTransformer implements DomainTransformer {
+public class UpperRegexTransformer implements DomainTransformer {
 
   @Override
   public boolean canHandle(RexNode expr) {
-    return expr instanceof RexCall && ((RexCall) expr).getOperator() == SqlStdOperatorTable.LOWER;
+    return expr instanceof RexCall && ((RexCall) expr).getOperator() == SqlStdOperatorTable.UPPER;
   }
 
   @Override
@@ -55,12 +55,12 @@ public class LowerRegexTransformer implements DomainTransformer {
   public Domain<?, ?> refineInputDomain(RexNode expr, Domain<?, ?> outputDomain) {
     if (!(outputDomain instanceof RegexDomain)) {
       throw new IllegalArgumentException(
-          "LowerRegexTransformer expects RegexDomain but got " + outputDomain.getClass().getSimpleName());
+          "UpperRegexTransformer expects RegexDomain but got " + outputDomain.getClass().getSimpleName());
     }
 
     RegexDomain outputRegex = (RegexDomain) outputDomain;
 
-    // If output is a literal lowercase string, make it case-insensitive
+    // If output is a literal uppercase string, make it case-insensitive
     if (outputRegex.isLiteral()) {
       String literalValue = outputRegex.getLiteralValue();
       List<Automaton> parts = new ArrayList<>();

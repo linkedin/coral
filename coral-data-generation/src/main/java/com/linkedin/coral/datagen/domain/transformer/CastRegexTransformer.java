@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexCall;
+import org.apache.calcite.rex.RexFieldAccess;
 import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.SqlKind;
@@ -37,6 +38,9 @@ import dk.brics.automaton.Automaton;
  */
 public class CastRegexTransformer implements DomainTransformer {
 
+  /** Any integer-shaped string (canonical or with leading zeros). Used by the fallback path. */
+  private static final RegexDomain ANY_INTEGER_STRING = new RegexDomain("^-?[0-9]+$");
+
   private final RegexToIntegerDomainConverter regexToIntegerConverter;
 
   public CastRegexTransformer() {
@@ -56,7 +60,7 @@ public class CastRegexTransformer implements DomainTransformer {
   public boolean isVariableOperandPositionValid(RexNode expr) {
     RexCall call = (RexCall) expr;
     RexNode operand = call.getOperands().get(0);
-    return operand instanceof RexInputRef || operand instanceof RexCall;
+    return operand instanceof RexInputRef || operand instanceof RexCall || operand instanceof RexFieldAccess;
   }
 
   @Override
@@ -117,21 +121,21 @@ public class CastRegexTransformer implements DomainTransformer {
     if (isIntegerType(sourceTypeName) && isStringType(targetTypeName) && outputDomain instanceof RegexDomain) {
       RegexDomain outputRegex = (RegexDomain) outputDomain;
 
-      // Try to convert RegexDomain to IntegerDomain
+      // SQL CAST(integer AS VARCHAR) produces canonical decimal: no leading zeros and no "-0".
+      // RegexToIntegerDomainConverter accepts only canonical-decimal-string regexes by contract;
+      // it rejects (NonConvertibleDomainException) anything else. Real inference at this branch
+      // produces canonical outputs (literal "500", alternations like "100|999", etc.). Non-canonical
+      // shapes fall through to the regex-intersection fallback below.
       try {
         if (regexToIntegerConverter.isConvertible(outputRegex)) {
-          IntegerDomain intDomain = regexToIntegerConverter.convert(outputRegex);
-          // Return the IntegerDomain as input constraint
-          return intDomain;
+          return regexToIntegerConverter.convert(outputRegex);
         }
       } catch (NonConvertibleDomainException e) {
         // Fall through to default handling
       }
 
-      // Intersect with valid integer format
-      String integerFormatRegex = "^-?[0-9]+$";
-      RegexDomain integerFormatDomain = new RegexDomain(integerFormatRegex);
-      return outputRegex.intersect(integerFormatDomain);
+      // Fall back: intersection of the original regex with any integer-shaped string.
+      return outputRegex.intersect(ANY_INTEGER_STRING);
     }
 
     // ========== CAST(integer AS string) with IntegerDomain output ==========
