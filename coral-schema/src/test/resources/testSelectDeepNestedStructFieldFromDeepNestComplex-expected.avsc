@@ -4,18 +4,23 @@
   "namespace" : "default.v",
   "fields" : [ {
     "name" : "Int_Field_1",
-    "type" : [ "null", "int" ]
+    "type" : [ "null", "int" ],
+    "default" : null
   }, {
     "name" : "Int_Field_2",
-    "type" : [ "null", "int" ]
+    "type" : [ "null", "int" ],
+    "default" : null
   }, {
     "name" : "Int_Field_3",
-    "type" : [ "null", "int" ]
+    "type" : [ "null", "int" ],
+    "default" : null
   }, {
     "name" : "Int_Field_4",
-    "type" : [ "null", "int" ]
+    "type" : [ "null", "int" ],
+    "default" : null
   }, {
     "name" : "Int_Field_5",
-    "type" : [ "null", "int" ]
+    "type" : [ "null", "int" ],
+    "default" : null
   } ]
 }

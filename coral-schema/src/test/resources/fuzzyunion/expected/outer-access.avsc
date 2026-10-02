@@ -1,2 +1,2 @@
 {"type":"record","name":"@VIEW@","namespace":"fz.@VIEW@","fields":[
-  {"name":"pageKey","type":"string","doc":"Page key"}]}
+  {"name":"pagekey","type":"string","doc":"Page key"}]}

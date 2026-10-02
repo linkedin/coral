@@ -38,6 +38,7 @@
     "type" : [ "null", {
       "type" : "array",
       "items" : [ "null", "string" ]
-    } ]
+    } ],
+    "default" : null
   } ]
 }

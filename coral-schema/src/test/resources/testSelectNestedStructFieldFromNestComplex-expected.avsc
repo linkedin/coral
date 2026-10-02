@@ -10,6 +10,7 @@
     "type" : [ "null", "int" ]
   }, {
     "name" : "Int_Field3",
-    "type" : [ "null", "int" ]
+    "type" : [ "null", "int" ],
+    "default" : null
   } ]
 }

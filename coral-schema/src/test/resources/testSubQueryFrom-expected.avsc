@@ -10,6 +10,7 @@
     "type" : [ "null", {
       "type" : "map",
       "values" : [ "null", "string" ]
-    } ]
+    } ],
+    "default" : null
   } ]
 }

@@ -15,25 +15,29 @@
         "namespace" : "default.v.v",
         "fields" : [ {
           "name" : "Bool_Field",
-          "type" : [ "null", "boolean" ]
+          "type" : [ "null", "boolean" ],
+          "default" : null
         }, {
           "name" : "Int_Field",
           "type" : [ "null", "int" ]
         }, {
           "name" : "Bigint_Field",
-          "type" : [ "null", "long" ]
+          "type" : [ "null", "long" ],
+          "default" : null
         }, {
           "name" : "Float_Field",
           "type" : [ "null", "float" ]
         }, {
           "name" : "Double_Field",
-          "type" : [ "null", "double" ]
+          "type" : [ "null", "double" ],
+          "default" : null
         }, {
           "name" : "Date_String_Field",
           "type" : [ "null", "string" ]
         }, {
           "name" : "String_Field",
-          "type" : [ "null", "string" ]
+          "type" : [ "null", "string" ],
+          "default" : null
         }, {
           "name" : "Array_Col_1",
           "type" : [ "null", {
@@ -42,7 +46,8 @@
               "type" : "array",
               "items" : "string"
             }
-          } ]
+          } ],
+          "default" : null
         }, {
           "name" : "Array_Col_2",
           "type" : [ "null", {
@@ -51,7 +56,8 @@
               "type" : "map",
               "values" : "string"
             }
-          } ]
+          } ],
+          "default" : null
         }, {
           "name" : "Map_Col_3",
           "type" : [ "null", {
@@ -60,7 +66,8 @@
               "type" : "map",
               "values" : "string"
             }
-          } ]
+          } ],
+          "default" : null
         }, {
           "name" : "Map_Col_4",
           "type" : [ "null", {
@@ -69,10 +76,12 @@
               "type" : "array",
               "items" : "string"
             }
-          } ]
+          } ],
+          "default" : null
         } ]
       } ]
-    } ]
+    } ],
+    "default" : null
   }, {
     "name" : "map_col",
     "type" : [ "null", {
@@ -86,7 +95,8 @@
           "type" : [ "null", "int" ]
         } ]
       } ]
-    } ]
+    } ],
+    "default" : null
   }, {
     "name" : "struct_col",
     "type" : [ "null", {
@@ -95,25 +105,32 @@
       "namespace" : "default.v.v",
       "fields" : [ {
         "name" : "bool_field",
-        "type" : [ "null", "boolean" ]
+        "type" : [ "null", "boolean" ],
+        "default" : null
       }, {
         "name" : "int_field",
-        "type" : [ "null", "int" ]
+        "type" : [ "null", "int" ],
+        "default" : null
       }, {
         "name" : "bigint_field",
-        "type" : [ "null", "long" ]
+        "type" : [ "null", "long" ],
+        "default" : null
       }, {
         "name" : "float_field",
-        "type" : [ "null", "float" ]
+        "type" : [ "null", "float" ],
+        "default" : null
       }, {
         "name" : "double_field",
-        "type" : [ "null", "double" ]
+        "type" : [ "null", "double" ],
+        "default" : null
       }, {
         "name" : "date_string_field",
-        "type" : [ "null", "string" ]
+        "type" : [ "null", "string" ],
+        "default" : null
       }, {
         "name" : "string_field",
-        "type" : [ "null", "string" ]
+        "type" : [ "null", "string" ],
+        "default" : null
       }, {
         "name" : "inner_struct_col",
         "type" : {
@@ -122,14 +139,17 @@
           "namespace" : "default.v.v.Struct_col",
           "fields" : [ {
             "name" : "Int_Field3",
-            "type" : [ "null", "int" ]
+            "type" : [ "null", "int" ],
+            "default" : null
           } ]
         }
       } ]
-    } ]
+    } ],
+    "default" : null
   }, {
     "name" : "datepartition",
     "type" : [ "null", "string" ],
-    "doc" : "This is the partition column. Partition columns, if present in the schema, should also be projected in the data."
+    "doc" : "This is the partition column. Partition columns, if present in the schema, should also be projected in the data.",
+    "default" : null
   } ]
 }

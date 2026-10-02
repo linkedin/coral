@@ -267,6 +267,7 @@ final class FuzzyUnionFixtures {
     unionView(c, "v_t23r", "SELECT id, hdr AS b FROM fz.inner_rename", "SELECT id, b FROM fz.acc_direct");
     c.addView(DB, "v_t23_outer", "SELECT u.b.pagekey FROM (SELECT id, b FROM fz.acc_direct UNION ALL "
         + "SELECT id, s.child AS b FROM fz.acc_nested) u", "pagekey string");
+    c.addView(DB, "v_plain_outer", "SELECT u.b.pagekey FROM (SELECT id, b FROM fz.acc_direct) u", "pagekey string");
     unionView(c, "v_t10c", "SELECT * FROM fz.cdef_base", "SELECT * FROM fz.cdef_evolved");
     unionView(c, "v_t10cr", "SELECT * FROM fz.cdef_evolved", "SELECT * FROM fz.cdef_base");
     unionView(c, "v_item_arr", "SELECT id, b FROM fz.acc_direct", "SELECT id, arr[0].child AS b FROM fz.itm_src");

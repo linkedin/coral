@@ -9,6 +9,7 @@
       "logicalType" : "decimal",
       "precision" : 2,
       "scale" : 1
-    } ]
+    } ],
+    "default" : null
   } ]
 }

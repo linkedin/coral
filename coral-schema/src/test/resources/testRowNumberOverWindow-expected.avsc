@@ -10,13 +10,15 @@
     "type" : [ "null", {
       "type" : "array",
       "items" : [ "null", "string" ]
-    } ]
+    } ],
+    "default" : null
   }, {
     "name" : "Map_Col",
     "type" : [ "null", {
       "type" : "map",
       "values" : [ "null", "string" ]
-    } ]
+    } ],
+    "default" : null
   }, {
     "name" : "Struct_Col",
     "type" : [ "null", {
@@ -28,24 +30,29 @@
         "type" : "boolean"
       }, {
         "name" : "Int_Field",
-        "type" : [ "null", "int" ]
+        "type" : [ "null", "int" ],
+        "default" : null
       }, {
         "name" : "Bigint_Field",
         "type" : "long"
       }, {
         "name" : "Float_Field",
-        "type" : [ "null", "float" ]
+        "type" : [ "null", "float" ],
+        "default" : null
       }, {
         "name" : "Double_Field",
         "type" : "double"
       }, {
         "name" : "Date_String_Field",
-        "type" : [ "null", "string" ]
+        "type" : [ "null", "string" ],
+        "default" : null
       }, {
         "name" : "String_Field",
-        "type" : [ "null", "string" ]
+        "type" : [ "null", "string" ],
+        "default" : null
       } ]
-    } ]
+    } ],
+    "default" : null
   }, {
     "name" : "rank",
     "type" : "long",

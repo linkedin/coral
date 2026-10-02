@@ -14,6 +14,7 @@ import com.linkedin.avroutil1.compatibility.AvroCompatibilityHelper;
 
 import org.apache.avro.Schema;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.core.Union;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexFieldAccess;
 import org.apache.calcite.rex.RexInputRef;
@@ -582,7 +583,28 @@ public class FuzzyUnionAvroSchemaTests {
 
   @Test
   public void testT23FieldAccessAboveFuzzyUnion() {
+    // The outer u.b.pagekey is an ordinary field access, not a generic_project operand: its output name follows the
+    // existing getFieldName(calcite name, suggested name) policy (pagekey), while the resolved field keeps its source
+    // type, doc and default absence. Source casing is preserved only inside the generated-projection context.
+    RelNode rel = rel("v_t23_outer");
     assertView(nonStrict("v_t23_outer"), "outer-access.avsc", "v_t23_outer");
+
+    // Below the outer access, the fuzzy UNION itself still carries the canonical source spelling b.pageKey.
+    RelNode union = rel.getInput(0);
+    Assert.assertTrue(union instanceof Union, "expected the outer Project directly over the UNION");
+    Assert.assertEquals(projectionCounts(union), counts(0, 1));
+    Schema unionSchema = new RelToAvroSchemaConverter(catalog.asCoralCatalog()).convert(union, false, false);
+    Schema b = SchemaUtilities.extractIfOption(unionSchema.getField("b").schema());
+    Assert.assertNotNull(b.getField("pageKey"), "UNION output keeps b.pageKey: " + b.toString(true));
+    Assert.assertNull(b.getField("pagekey"));
+    Assert.assertEquals(b.getField("pageKey").doc(), "Page key");
+  }
+
+  @Test
+  public void testOrdinaryOuterAccessWithoutUnionControl() {
+    // Baseline: the same lowercase SQL access over a plain subquery uses the same ordinary naming policy.
+    Assert.assertTrue(allGenericProjects(rel("v_plain_outer")).isEmpty());
+    assertView(nonStrict("v_plain_outer"), "outer-access.avsc", "v_plain_outer");
   }
 
   // ---------------------------------------------------------------------------------------------------------------
