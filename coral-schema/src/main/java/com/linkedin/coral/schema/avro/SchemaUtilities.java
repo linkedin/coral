@@ -492,6 +492,11 @@ class SchemaUtilities {
     return newRecord(schema, schema.getName(), schema.getNamespace(), fieldsWithPartitionColumns);
   }
 
+  /**
+   * Assigns the view name and a namespace per nesting level (non-strict mode). Records and enums are rebuilt in their
+   * new namespace without their declared aliases, because those aliases are qualified by the namespace they were
+   * declared in, which this normalization replaces. Fixed schemas, field aliases and all other metadata are kept.
+   */
   static Schema setupNameAndNamespace(@Nonnull Schema schema, @Nonnull String schemaName,
       @Nonnull String schemaNamespace) {
     Preconditions.checkNotNull(schema);
@@ -971,7 +976,7 @@ class SchemaUtilities {
           field.doc()));
     }
 
-    return newRecord(schema, schema.getName(), recordNamespace, fields);
+    return newRecord(schema, schema.getName(), recordNamespace, fields, false);
   }
 
   private static Schema setupNestedNamespace(@Nonnull Schema schema, @Nonnull String namespace,
@@ -1001,7 +1006,7 @@ class SchemaUtilities {
         Schema elementSchemaWithNestedNamespace = setupNestedNamespace(elementSchema, namespace, collisionMap);
         return createArrayLike(schema, elementSchemaWithNestedNamespace);
       case ENUM:
-        return createEnumLike(schema, schema.getName(), namespace, schema.getEnumSymbols());
+        return createEnumLike(schema, schema.getName(), namespace, schema.getEnumSymbols(), false);
       case RECORD:
         return setupNestedNamespaceForRecord(schema, namespace, collisionMap);
       case UNION:
@@ -1022,7 +1027,7 @@ class SchemaUtilities {
 
     if (originalSchema.getNamespace() == null) {
       modifiedSchema = newRecord(originalSchema, originalSchema.getName(), originalSchema.getName(),
-          cloneFieldList(originalSchema.getFields()));
+          cloneFieldList(originalSchema.getFields()), false);
     }
 
     return SchemaUtilities.setupNameAndNamespace(modifiedSchema, modifiedSchema.getName(),
@@ -1033,7 +1038,7 @@ class SchemaUtilities {
     Preconditions.checkNotNull(schema);
     Preconditions.checkNotNull(schemaName);
 
-    return newRecord(schema, schemaName, schema.getNamespace(), cloneFieldList(schema.getFields()));
+    return newRecord(schema, schemaName, schema.getNamespace(), cloneFieldList(schema.getFields()), false);
   }
 
   private static Schema convertFieldSchemaToAvroSchema(@Nonnull final String recordName,
@@ -1148,9 +1153,19 @@ class SchemaUtilities {
    * name, namespace and the (unattached) fields are given. Callers pass fields that are not part of another record.
    */
   static Schema newRecord(Schema template, String name, String namespace, List<Schema.Field> fields) {
+    return newRecord(template, name, namespace, fields, true);
+  }
+
+  /**
+   * As {@link #newRecord(Schema, String, String, List)}; with {@code keepAliases=false} the record declares no
+   * aliases. The non-strict namespace normalization rebuilds records this way, which is how it has always behaved:
+   * aliases are qualified by the namespace they were declared in, which normalization replaces.
+   */
+  static Schema newRecord(Schema template, String name, String namespace, List<Schema.Field> fields,
+      boolean keepAliases) {
     Schema record = Schema.createRecord(name, template.getDoc(), namespace, template.isError());
     record.setFields(fields);
-    replicateNamedSchemaMetadata(template, record);
+    replicateNamedSchemaMetadata(template, record, keepAliases);
     return record;
   }
 
@@ -1177,9 +1192,15 @@ class SchemaUtilities {
 
   /** An enum that keeps doc, enum default, declared aliases and custom properties of {@code template}. */
   static Schema createEnumLike(Schema template, String name, String namespace, List<String> symbols) {
+    return createEnumLike(template, name, namespace, symbols, true);
+  }
+
+  /** As above; with {@code keepAliases=false} the enum declares no aliases (see {@code newRecord}). */
+  static Schema createEnumLike(Schema template, String name, String namespace, List<String> symbols,
+      boolean keepAliases) {
     Schema enumSchema = AvroCompatibilityHelper.newEnumSchema(name, template.getDoc(), namespace, symbols,
         enumDefault(template, symbols));
-    replicateNamedSchemaMetadata(template, enumSchema);
+    replicateNamedSchemaMetadata(template, enumSchema, keepAliases);
     return enumSchema;
   }
 
@@ -1190,8 +1211,12 @@ class SchemaUtilities {
 
   /** Copies declared aliases (as their qualified names) and custom properties of a named or container schema. */
   static void replicateNamedSchemaMetadata(Schema src, Schema target) {
+    replicateNamedSchemaMetadata(src, target, true);
+  }
+
+  private static void replicateNamedSchemaMetadata(Schema src, Schema target, boolean keepAliases) {
     replicateSchemaProps(src, target);
-    if (src.getType() == RECORD || src.getType() == ENUM || src.getType() == FIXED) {
+    if (keepAliases && (src.getType() == RECORD || src.getType() == ENUM || src.getType() == FIXED)) {
       // Aliases are qualified names; an alias without namespace must not inherit the namespace of the new schema.
       src.getAliases().forEach(alias -> target.addAlias(alias, ""));
     }
