@@ -181,11 +181,17 @@ final class AvroSchemaProjection {
     SqlTypeName sourceName = source.getSqlTypeName();
     SqlTypeName targetName = target.getSqlTypeName();
     if (sourceName == targetName) {
-      return sourceName != SqlTypeName.DECIMAL
+      return !hasRepresentationParameters(sourceName)
           || (source.getPrecision() == target.getPrecision() && source.getScale() == target.getScale());
     }
     return (SqlTypeName.CHAR_TYPES.contains(sourceName) && SqlTypeName.CHAR_TYPES.contains(targetName))
         || (SqlTypeName.BINARY_TYPES.contains(sourceName) && SqlTypeName.BINARY_TYPES.contains(targetName));
+  }
+
+  /** Types whose precision or scale changes the Avro representation (fixed size, timestamp unit, decimal). */
+  private static boolean hasRepresentationParameters(SqlTypeName typeName) {
+    return typeName == SqlTypeName.DECIMAL || typeName == SqlTypeName.BINARY || typeName == SqlTypeName.TIMESTAMP
+        || typeName == SqlTypeName.TIME;
   }
 
   private static boolean sameRepresentation(RelDataType source, RelDataType target) {
