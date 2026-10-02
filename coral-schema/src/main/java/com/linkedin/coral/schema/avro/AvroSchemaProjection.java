@@ -313,6 +313,80 @@ final class AvroSchemaProjection {
     }
   }
 
+  /**
+   * Orders the nullable options inside {@code schema}, the (merged) schema of {@code field}, so that the defaults the
+   * field retains stay valid: a default value null needs the null option first, any other value needs its type first.
+   * The default of the field and the values it supplies for nested fields, array elements and map values (and the
+   * declared defaults of those nested fields) are all constraints; they have to agree. Only the two alternatives of a
+   * nullable option are ever reordered, nothing is coerced, dropped or given a default.
+   */
+  static Schema orderOptionsForDefault(Schema schema, Schema.Field field, String path) {
+    if (!AvroCompatibilityHelper.fieldHasDefault(field)) {
+      return schema;
+    }
+    Object value = new JsonReader(AvroCompatibilityHelper.getDefaultValueAsJsonString(field)).readValue();
+    return orderOptions(schema, Collections.singletonList(value), path);
+  }
+
+  private static Schema orderOptions(Schema schema, List<Object> values, String path) {
+    if (values.isEmpty()) {
+      return schema;
+    }
+
+    if (schema.getType() == Schema.Type.UNION) {
+      if (!isNullableType(schema)) {
+        return schema;
+      }
+      Schema option = getOtherTypeFromNullableType(schema);
+      List<Object> nonNull = values.stream().filter(v -> v != JsonProperties.NULL_VALUE).collect(Collectors.toList());
+      boolean nullDefault = nonNull.size() != values.size();
+      if (nullDefault && !nonNull.isEmpty()) {
+        throw error(path, "retained defaults need the null option both first and last: " + values);
+      }
+      Schema ordered = orderOptions(option, nonNull, path);
+      boolean nullFirst = nullDefault || (nonNull.isEmpty() && !SchemaUtilities.isNullSecond(schema));
+      if (ordered == option && nullFirst == !SchemaUtilities.isNullSecond(schema)) {
+        return schema;
+      }
+      Schema nullSchema = Schema.create(Schema.Type.NULL);
+      return Schema.createUnion(nullFirst ? Arrays.asList(nullSchema, ordered) : Arrays.asList(ordered, nullSchema));
+    }
+
+    switch (schema.getType()) {
+      case RECORD:
+        boolean changed = false;
+        List<Schema.Field> fields = new ArrayList<>();
+        for (Schema.Field field : schema.getFields()) {
+          List<Object> members = new ArrayList<>();
+          for (Object value : values) {
+            if (value instanceof Map && ((Map<?, ?>) value).containsKey(field.name())) {
+              members.add(((Map<?, ?>) value).get(field.name()));
+            }
+          }
+          if (AvroCompatibilityHelper.fieldHasDefault(field)) {
+            members.add(new JsonReader(AvroCompatibilityHelper.getDefaultValueAsJsonString(field)).readValue());
+          }
+          Schema ordered = orderOptions(field.schema(), members, path + "." + field.name());
+          changed |= ordered != field.schema();
+          fields.add(ordered == field.schema() ? field
+              : SchemaUtilities.cloneField(field, field.name(), ordered, field.doc()));
+        }
+        return changed ? SchemaUtilities.newRecord(schema, schema.getName(), schema.getNamespace(), fields) : schema;
+      case ARRAY:
+        List<Object> elements = new ArrayList<>();
+        values.stream().filter(v -> v instanceof List).forEach(v -> elements.addAll((List<?>) v));
+        Schema element = orderOptions(schema.getElementType(), elements, path + ".items");
+        return element == schema.getElementType() ? schema : SchemaUtilities.createArrayLike(schema, element);
+      case MAP:
+        List<Object> entries = new ArrayList<>();
+        values.stream().filter(v -> v instanceof Map).forEach(v -> entries.addAll(((Map<?, ?>) v).values()));
+        Schema value = orderOptions(schema.getValueType(), entries, path + ".values");
+        return value == schema.getValueType() ? schema : SchemaUtilities.createMapLike(schema, value);
+      default:
+        return schema;
+    }
+  }
+
   private static RuntimeException mismatch(String path, Schema schema, RelDataType source, RelDataType target) {
     boolean leaf = schema.getType() != Schema.Type.RECORD && schema.getType() != Schema.Type.ARRAY
         && schema.getType() != Schema.Type.MAP;

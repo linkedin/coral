@@ -580,11 +580,11 @@ class SchemaUtilities {
       Schema.Field leftField = pair[0];
       Schema unionFieldSchema =
           getUnionFieldSchema(leftField.schema(), pair[1].schema(), strictMode, path + "." + leftField.name());
-      // We need to reorder the union option if necessary
-      // i.e. defaultValue = 1, unionFieldSchema = [null, int], we need to reorder `unionFieldSchema` to be [int, null]
-      // otherwise, schema validation will fail and cause exception
+      // We need to reorder the union options if necessary, here and inside the field's type: the defaults the field
+      // retains have to stay valid, i.e. defaultValue = 1, unionFieldSchema = [null, int], we need to reorder
+      // `unionFieldSchema` to be [int, null], otherwise, schema validation will fail and cause exception
       Schema reordered =
-          hasNonNullDefault(leftField) ? reorderOptionIfRequired(unionFieldSchema, Boolean.TRUE) : unionFieldSchema;
+          AvroSchemaProjection.orderOptionsForDefault(unionFieldSchema, leftField, path + "." + leftField.name());
       mergedFields.add(cloneField(leftField, leftField.name(), reordered, leftField.doc()));
     }
     return newRecord(left, left.getName(), left.getNamespace(), mergedFields);
