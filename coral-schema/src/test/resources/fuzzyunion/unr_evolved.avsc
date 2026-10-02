@@ -1,3 +1,3 @@
 {"type":"record","name":"unr","namespace":"com.linkedin.un","fields":[
   {"name":"id","type":"long"},
-  {"name":"u","type":["null","int",{"type":"record","name":"ur","fields":[{"name":"a","type":"int"},{"name":"extra","type":"int"}]}],"default":null}]}
+  {"name":"choice","type":["null","int",{"type":"record","name":"ur","fields":[{"name":"a","type":"int"},{"name":"extra","type":"int"}]}],"default":null}]}

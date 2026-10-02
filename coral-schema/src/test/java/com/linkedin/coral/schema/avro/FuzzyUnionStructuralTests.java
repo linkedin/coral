@@ -154,6 +154,62 @@ public class FuzzyUnionStructuralTests {
   }
 
   // ---------------------------------------------------------------------------------------------------------------
+  // T10 (structural, typed call): retained fields reordered by the target, inside a record and inside array elements
+  // and map values. The projected field is canonical here, so its reshaped complex defaults are observable.
+  // ---------------------------------------------------------------------------------------------------------------
+
+  @Test
+  public void testT10ReorderedProjectionReshapesNestedRecordDefaults() {
+    RelNode scan = scan("SELECT * FROM fz.cdef_evolved");
+    RelDataTypeFactory typeFactory = rexBuilder(scan).getTypeFactory();
+    RelDataType varchar = nullable(typeFactory, SqlTypeName.VARCHAR);
+    RelDataType integer = nullable(typeFactory, SqlTypeName.INTEGER);
+    RelDataType rec = nullableStruct(typeFactory, ImmutableList.of(varchar, integer), "rb", "ra");
+    RelDataType element = nullableStruct(typeFactory, ImmutableList.of(varchar, integer), "eb", "ea");
+    RelDataType value = nullableStruct(typeFactory, ImmutableList.of(varchar, integer), "vb", "va");
+    RelDataType target = nullableStruct(typeFactory,
+        ImmutableList.of(rec, typeFactory.createTypeWithNullability(typeFactory.createArrayType(element, -1), true),
+            typeFactory.createTypeWithNullability(typeFactory.createMapType(varchar, value), true)),
+        "rec", "recs", "bykey");
+    RelNode project = projectColumn(scan, 1, "c", genericProject(scan, target, inputRef(scan, 1)));
+
+    Schema.Field field = relToAvroSchemaConverter.convert(project, true, false).getField("c");
+    Assert.assertNotNull(field, "projected field keeps the source name c");
+    Assert.assertFalse(AvroCompatibilityHelper.fieldHasDefault(field));
+    Assert.assertEquals(field.schema().toString(true),
+        new Schema.Parser().parse(load("expected/cdef-reordered-c.avsc")).toString(true));
+    Assert.assertEquals(new Schema.Parser().parse(field.schema().toString()).toString(true),
+        field.schema().toString(true));
+  }
+
+  // ---------------------------------------------------------------------------------------------------------------
+  // T17 (structural, typed call): a requested reshape of a multi-member union member is rejected by the projection
+  // itself, with no surrounding UNION to fail later.
+  // ---------------------------------------------------------------------------------------------------------------
+
+  @Test
+  public void testT17ReshapingOpaqueUnionIsRejectedByProjection() {
+    // Calcite represents uniontype<int,struct<a,extra>> as struct<tag,field0,field1>; the target trims field1.
+    RelNode scan = scan("SELECT * FROM fz.unr_evolved");
+    RelDataTypeFactory typeFactory = rexBuilder(scan).getTypeFactory();
+    RelDataType integer = nullable(typeFactory, SqlTypeName.INTEGER);
+    RelDataType target = nullableStruct(typeFactory,
+        ImmutableList.of(integer, integer, nullableStruct(typeFactory, ImmutableList.of(integer), "a")), "tag",
+        "field0", "field1");
+    RelNode project = projectColumn(scan, 1, "choice", genericProject(scan, target, inputRef(scan, 1)));
+
+    try {
+      Schema result = relToAvroSchemaConverter.convert(project, true, false);
+      Assert.fail("Expected the opaque union reshape to be rejected but produced:\n" + result.toString(true));
+    } catch (IndexOutOfBoundsException | NullPointerException | ClassCastException e) {
+      Assert.fail("Reshape must be rejected explicitly, not by " + e, e);
+    } catch (RuntimeException e) {
+      Assert.assertTrue(String.valueOf(e.getMessage()).contains("choice"),
+          "Expected the rejection to name the field path but was: " + e.getMessage());
+    }
+  }
+
+  // ---------------------------------------------------------------------------------------------------------------
   // T16: truly malformed internal calls, and a different operator printed as generic_project
   // ---------------------------------------------------------------------------------------------------------------
 
@@ -258,6 +314,11 @@ public class FuzzyUnionStructuralTests {
 
   private static RelDataType nullable(RelDataTypeFactory typeFactory, SqlTypeName typeName) {
     return typeFactory.createTypeWithNullability(typeFactory.createSqlType(typeName), true);
+  }
+
+  private static RelDataType nullableStruct(RelDataTypeFactory typeFactory, List<RelDataType> types, String... names) {
+    return typeFactory.createTypeWithNullability(typeFactory.createStructType(types, ImmutableList.copyOf(names)),
+        true);
   }
 
   /** {@code struct<amount:decimal(precision,scale)>}, dropping the source's extra field. */

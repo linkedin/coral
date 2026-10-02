@@ -225,6 +225,32 @@ public class FuzzyUnionAvroSchemaTests {
   }
 
   @Test
+  public void testT10RecordDefaultsInsideArraysAndMapsAreProjected() {
+    // c.recs is array<E>, c.byKey is map<V>, c.rec is a record; each evolved element record gained an extra field that
+    // also appears in its complex default. When the projected branch is canonical (first), its defaults must be
+    // projected recursively: extras removed from every array element and map value, retained values unchanged.
+    // Strict mode: non-strict normalization of array/map-of-record defaults already fails before this change
+    // ("Unknown datum class: GenericData$Record", even without UNION) and is escalated separately.
+    assertProjections("v_t10cr", 1, 0);
+    Schema projectedFirst = converter.toAvroSchema(DB, "v_t10cr", true, false);
+    assertSchema(projectedFirst, "expected/cdef-strict-projected.avsc");
+    Schema c = projectedFirst.getField("c").schema();
+    Assert.assertEquals(AvroCompatibilityHelper.getDefaultValueAsJsonString(c.getField("recs")),
+        "[{\"ea\":1,\"eb\":\"x\"},{\"ea\":4,\"eb\":\"w\"}]");
+    Assert.assertEquals(AvroCompatibilityHelper.getDefaultValueAsJsonString(c.getField("byKey")),
+        "{\"k\":{\"va\":2,\"vb\":\"y\"},\"j\":{\"va\":5,\"vb\":\"v\"}}");
+    Assert.assertEquals(AvroCompatibilityHelper.getDefaultValueAsJsonString(c.getField("rec")),
+        "{\"ra\":6,\"rb\":\"q\"}");
+    Schema element = c.getField("recs").schema().getElementType();
+    Assert.assertFalse(AvroCompatibilityHelper.fieldHasDefault(element.getField("ea")));
+    Assert.assertNull(element.getField("eExtra"));
+
+    // The direct branch is canonical: its own defaults win; the projected branch's differing defaults do not leak.
+    assertProjections("v_t10c", 0, 1);
+    assertSchema(converter.toAvroSchema(DB, "v_t10c", true, false), "expected/cdef-strict-base.avsc");
+  }
+
+  @Test
   public void testT11RecordAndFieldMetadataNonStrict() {
     assertView(nonStrict("v_t11"), "meta.avsc", "v_t11", "@FIELD@", "info");
     assertView(nonStrict("v_t11r"), "meta.avsc", "v_t11r", "@FIELD@", "info");
@@ -249,6 +275,16 @@ public class FuzzyUnionAvroSchemaTests {
 
     assertSchema(converter.toAvroSchema(DB, "v_t12", true, false), "expected/logical-strict.avsc");
     assertSchema(converter.toAvroSchema(DB, "v_t12r", true, false), "expected/logical-strict.avsc");
+
+    // The enum's declared alias keeps its original qualified identity through non-strict namespace normalization, and
+    // its typed custom property survives the enum-specific copy paths.
+    for (String view : list("v_t12", "v_t12r")) {
+      Schema color = nonStrict(view).getField("l").schema().getField("color").schema();
+      Assert.assertEquals(color.getNamespace(), "fz." + view + "." + view + ".L", view);
+      Assert.assertEquals(new ArrayList<>(color.getAliases()), list("com.linkedin.lt.OldColor"), view);
+      Assert.assertEquals(AvroCompatibilityHelper.getSchemaPropAsJsonString(color, "x-enum-prop"), "{\"v\":1}", view);
+      Assert.assertEquals(AvroCompatibilityHelper.getEnumDefault(color), "RED", view);
+    }
   }
 
   // ---------------------------------------------------------------------------------------------------------------
@@ -305,6 +341,49 @@ public class FuzzyUnionAvroSchemaTests {
   }
 
   @Test
+  public void testT14ItemAccessOperandResolvesSourceMetadata() {
+    // arr[0].child and m['k'].child inline to generic_project(ITEM(...).child). The accessed struct keeps its source
+    // identity and the access path's existing nullability (ITEM does not add a null envelope in the existing
+    // field-access policy; see the non-helper characterization in the test contract).
+    assertOperandAccessOn("v_item_arr", "ITEM");
+    assertView(nonStrict("v_item_arr"), "access-direct-doc.avsc", "v_item_arr");
+
+    assertOperandAccessOn("v_item_arr_r", "ITEM");
+    assertView(nonStrict("v_item_arr_r"), "access-required.avsc", "v_item_arr_r", "@DOC@", "array child");
+
+    assertOperandAccessOn("v_item_map_r", "ITEM");
+    assertView(nonStrict("v_item_map_r"), "access-required.avsc", "v_item_map_r", "@DOC@", "map child");
+  }
+
+  @Test
+  public void testT14AmbiguousSegmentUnderItemFails() {
+    // Array element has both Foo and foo; arr[0].foo must not select the first case-insensitive match.
+    assertOperandAccessOn("v_item_amb", "ITEM");
+    assertFailsMentioning(() -> nonStrict("v_item_amb"), "Foo", "foo");
+  }
+
+  @Test
+  public void testT14OrdinaryAmbiguousAccessKeepsExistingPolicy() {
+    // Without a generated projection, s.foo keeps its pre-existing first-match lookup (Foo, record F1).
+    Assert.assertTrue(allGenericProjects(rel("v_amb_plain")).isEmpty());
+    assertView(nonStrict("v_amb_plain"), "ordinary-ambiguous-access.avsc", "v_amb_plain");
+  }
+
+  @Test
+  public void testT21FieldAccessOnUdfResultOperand() {
+    // MakeNested(id).child: the helper operand is a field access on a metadata-free UDF call. Only the accessed child
+    // is inferred (existing derived field-access policy: required because id is required, derived nested fields),
+    // never the whole parent struct; the evolved extra is dropped.
+    assertProjections("v_udf_access", 0, 1);
+    assertOperandAccessOn("v_udf_access", "com.linkedin.coral.schema.avro.FuzzyUnionMakeNested");
+    assertView(nonStrict("v_udf_access"), "derived-required-direct-doc.avsc", "v_udf_access");
+
+    assertProjections("v_udf_access_r", 1, 0);
+    assertOperandAccessOn("v_udf_access_r", "com.linkedin.coral.schema.avro.FuzzyUnionMakeNested");
+    assertView(nonStrict("v_udf_access_r"), "udf-access-first.avsc", "v_udf_access_r");
+  }
+
+  @Test
   public void testT15FixedSizeMismatchFailsInBothModes() {
     assertFailsMentioning(() -> nonStrict("v_fx_size"), "Md5", "16", "8");
     assertFailsMentioning(() -> converter.toAvroSchema(DB, "v_fx_size", true, false), "Md5", "16", "8");
@@ -333,8 +412,11 @@ public class FuzzyUnionAvroSchemaTests {
     assertProjections("v_addr", 0, 2);
     Schema actual = nonStrict("v_addr");
     assertView(actual, "address.avsc", "v_addr");
-    // toString prints the second Address as a reference, so also check the in-memory definition behind it.
-    Assert.assertEquals(fieldNames(actual.getField("work").schema()), list("street", "city"));
+    // toString prints the second Address as a reference to the first, and Avro record equality ignores docs and
+    // aliases. Compare each in-memory definition standalone against the complete contract.
+    String address = new Schema.Parser().parse(load("expected/address-definition.avsc")).toString(true);
+    Assert.assertEquals(SchemaUtilities.extractIfOption(actual.getField("home").schema()).toString(true), address);
+    Assert.assertEquals(SchemaUtilities.extractIfOption(actual.getField("work").schema()).toString(true), address);
   }
 
   @Test
@@ -345,9 +427,16 @@ public class FuzzyUnionAvroSchemaTests {
 
   @Test
   public void testT17ReshapingOpaqueUnionMemberFails() {
-    // Guard: requested reshape of a multi-member union member is unsupported and must not invent a schema.
+    // Requested reshape of a multi-member union member is unsupported: the projection itself must reject it with the
+    // field path, rather than a later UNION merge comparing an opaque union with an invented record.
     assertProjections("v_unr", 0, 1);
-    assertFailsMentioning(() -> nonStrict("v_unr"));
+    assertFailsMentioning(() -> nonStrict("v_unr"), "choice");
+    try {
+      nonStrict("v_unr");
+    } catch (RuntimeException e) {
+      Assert.assertFalse(String.valueOf(e.getMessage()).contains("LogicalUnion"),
+          "The reshape must be rejected by the projection, not by the later UNION merge: " + e.getMessage());
+    }
   }
 
   @Test
@@ -500,6 +589,18 @@ public class FuzzyUnionAvroSchemaTests {
     }
   }
 
+  /** The single generic_project operand must be a field access whose reference is a call to {@code operatorName}. */
+  private void assertOperandAccessOn(String view, String operatorName) {
+    List<RexCall> calls = allGenericProjects(rel(view));
+    Assert.assertEquals(calls.size(), 1, "generic_project calls in " + view);
+    RexNode operand = calls.get(0).getOperands().get(0);
+    Assert.assertTrue(operand instanceof RexFieldAccess, view + ": operand was " + operand);
+    RexNode reference = ((RexFieldAccess) operand).getReferenceExpr();
+    Assert.assertTrue(
+        reference instanceof RexCall && ((RexCall) reference).getOperator().getName().equals(operatorName),
+        view + ": expected field access on " + operatorName + " but was " + operand);
+  }
+
   private static void assertView(Schema actual, String resource, String view, String... replacements) {
     String json = load("expected/" + resource).replace("@VIEW@", view);
     for (int i = 0; i < replacements.length; i += 2) {
@@ -542,14 +643,6 @@ public class FuzzyUnionAvroSchemaTests {
     }
     Assert.fail("Expected conversion to fail but it produced:\n"
         + (result instanceof Schema ? ((Schema) result).toString(true) : result));
-  }
-
-  private static List<String> fieldNames(Schema record) {
-    List<String> names = new ArrayList<>();
-    for (Schema.Field field : SchemaUtilities.extractIfOption(record).getFields()) {
-      names.add(field.name());
-    }
-    return names;
   }
 
   private static List<String> list(String... values) {

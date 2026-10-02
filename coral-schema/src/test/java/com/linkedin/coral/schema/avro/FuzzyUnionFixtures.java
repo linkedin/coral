@@ -17,6 +17,7 @@ import org.apache.calcite.rel.core.Union;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexShuttle;
+import org.apache.calcite.sql.type.ReturnTypes;
 import org.apache.calcite.sql.type.SqlTypeFamily;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.testng.Assert;
@@ -37,6 +38,7 @@ final class FuzzyUnionFixtures {
   static final String DB = "fz";
   static final String MAKE_HEADER_UDF = "com.linkedin.coral.schema.avro.FuzzyUnionMakeHeader";
   static final String RETURN_ARG_UDF = "com.linkedin.coral.schema.avro.FuzzyUnionReturnSecondArg";
+  static final String MAKE_NESTED_UDF = "com.linkedin.coral.schema.avro.FuzzyUnionMakeNested";
   private static final String RESOURCE_DIR = "fuzzyunion/";
 
   private FuzzyUnionFixtures() {
@@ -49,6 +51,17 @@ final class FuzzyUnionFixtures {
       StaticHiveFunctionRegistry.createAddUserDefinedFunction(MAKE_HEADER_UDF,
           FunctionReturnTypes.rowOf(ImmutableList.of("pageKey", "memberId", "extra"),
               ImmutableList.of(SqlTypeName.VARCHAR, SqlTypeName.INTEGER, SqlTypeName.VARCHAR)),
+          family(SqlTypeFamily.NUMERIC));
+    }
+    if (registry.lookup(MAKE_NESTED_UDF).isEmpty()) {
+      // Returns struct<child:struct<pageKey,memberId,extra>, other:int>: a metadata-free parent struct.
+      StaticHiveFunctionRegistry.createAddUserDefinedFunction(MAKE_NESTED_UDF,
+          FunctionReturnTypes.rowOfInference(ImmutableList.of("child", "other"),
+              ImmutableList.of(opBinding -> opBinding.getTypeFactory().createStructType(
+                  ImmutableList.of(opBinding.getTypeFactory().createSqlType(SqlTypeName.VARCHAR),
+                      opBinding.getTypeFactory().createSqlType(SqlTypeName.INTEGER),
+                      opBinding.getTypeFactory().createSqlType(SqlTypeName.VARCHAR)),
+                  ImmutableList.of("pageKey", "memberId", "extra")), ReturnTypes.INTEGER)),
           family(SqlTypeFamily.NUMERIC));
     }
     if (registry.lookup(RETURN_ARG_UDF).isEmpty()) {
@@ -153,12 +166,24 @@ final class FuzzyUnionFixtures {
     c.addAvroSerdeTable(DB, "addr_base", load("addr_base.avsc"), "id bigint", "home " + addr, "work " + addr);
     c.addAvroSerdeTable(DB, "addr_evolved", load("addr_evolved.avsc"), "id bigint", "home " + addrEvolved,
         "work " + addrEvolved);
+    String cdefC = "c struct<recs:array<struct<ea:int,eb:string>>,bykey:map<string,struct<va:int,vb:string>>,"
+        + "rec:struct<ra:int,rb:string>";
+    c.addAvroSerdeTable(DB, "cdef_base", load("cdef_base.avsc"), "id bigint", cdefC + ">");
+    c.addAvroSerdeTable(DB, "cdef_evolved", load("cdef_evolved.avsc"), "id bigint",
+        "c struct<recs:array<struct<ea:int,eextra:boolean,eb:string>>,"
+            + "bykey:map<string,struct<vextra:boolean,va:int,vb:string>>,rec:struct<ra:int,rextra:boolean,rb:string>,"
+            + "cextra:string>");
+    String inner = "struct<pagekey:string,memberid:int,extra:string>";
+    c.addAvroSerdeTable(DB, "itm_src", load("itm_src.avsc"), "id bigint",
+        "arr array<struct<child:" + inner + ",other:int>>", "m map<string,struct<child:" + inner + ">>");
+    c.addHiveTableWithAvroLiteral(DB, "itm_amb", load("itm_amb.avsc"), "id bigint",
+        "arr array<struct<foo:struct<x:int,y:int>>>");
     c.addAvroSerdeTable(DB, "un_base", load("un_base.avsc"), "id bigint", "s struct<u:uniontype<int,string>,a:int>");
     c.addAvroSerdeTable(DB, "un_evolved", load("un_evolved.avsc"), "id bigint",
         "s struct<u:uniontype<int,string>,a:int,extra:int>");
-    c.addAvroSerdeTable(DB, "unr_base", load("unr_base.avsc"), "id bigint", "u uniontype<int,struct<a:int>>");
+    c.addAvroSerdeTable(DB, "unr_base", load("unr_base.avsc"), "id bigint", "choice uniontype<int,struct<a:int>>");
     c.addAvroSerdeTable(DB, "unr_evolved", load("unr_evolved.avsc"), "id bigint",
-        "u uniontype<int,struct<a:int,extra:int>>");
+        "choice uniontype<int,struct<a:int,extra:int>>");
 
     // Stored views. Each is the view text as already saved before its base tables evolved.
     unionView(c, "v_t1", "SELECT * FROM fz.pv_base", "SELECT * FROM fz.pv_evolved");
@@ -242,6 +267,24 @@ final class FuzzyUnionFixtures {
     unionView(c, "v_t23r", "SELECT id, hdr AS b FROM fz.inner_rename", "SELECT id, b FROM fz.acc_direct");
     c.addView(DB, "v_t23_outer", "SELECT u.b.pagekey FROM (SELECT id, b FROM fz.acc_direct UNION ALL "
         + "SELECT id, s.child AS b FROM fz.acc_nested) u", "pagekey string");
+    unionView(c, "v_t10c", "SELECT * FROM fz.cdef_base", "SELECT * FROM fz.cdef_evolved");
+    unionView(c, "v_t10cr", "SELECT * FROM fz.cdef_evolved", "SELECT * FROM fz.cdef_base");
+    unionView(c, "v_item_arr", "SELECT id, b FROM fz.acc_direct", "SELECT id, arr[0].child AS b FROM fz.itm_src");
+    unionView(c, "v_item_arr_r", "SELECT id, arr[0].child AS b FROM fz.itm_src", "SELECT id, b FROM fz.acc_direct");
+    unionView(c, "v_item_map_r", "SELECT id, m['k'].child AS b FROM fz.itm_src", "SELECT id, b FROM fz.acc_direct");
+    unionView(c, "v_item_amb", "SELECT id, b FROM fz.amb_b", "SELECT id, arr[0].foo AS b FROM fz.itm_amb");
+    c.addView(DB, "v_udf_access",
+        "SELECT id, b FROM fz.acc_direct UNION ALL "
+            + "SELECT id, fz_v_udf_access_MakeNested(id).child AS b FROM fz.flat_src",
+        functions("MakeNested", MAKE_NESTED_UDF), "id bigint", "b struct<pagekey:string,memberid:int>");
+    c.addView(DB, "v_udf_access_r",
+        "SELECT id, fz_v_udf_access_r_MakeNested(id).child AS b FROM fz.flat_src "
+            + "UNION ALL SELECT id, b FROM fz.acc_direct",
+        functions("MakeNested", MAKE_NESTED_UDF), "id bigint", "b struct<pagekey:string,memberid:int,extra:string>");
+    c.addView(DB, "v_udf_access_plain", "SELECT id, fz_v_udf_access_plain_MakeNested(id).child AS b FROM fz.flat_src",
+        functions("MakeNested", MAKE_NESTED_UDF), "id bigint", "b struct<pagekey:string,memberid:int,extra:string>");
+    c.addView(DB, "v_amb_plain", "SELECT id, s.foo AS b FROM fz.amb_acc", "id bigint", "b struct<x:int,y:int>");
+    c.addView(DB, "v_cdef_plain", "SELECT * FROM fz.cdef_evolved", "id bigint", "c string");
     unionView(c, "v_t24", "SELECT * FROM fz.case_camel", "SELECT * FROM fz.case_lower");
     unionView(c, "v_t24r", "SELECT * FROM fz.case_lower", "SELECT * FROM fz.case_camel");
     return c;

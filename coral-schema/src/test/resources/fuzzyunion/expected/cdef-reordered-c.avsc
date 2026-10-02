@@ -1,0 +1,10 @@
+{"type":"record","name":"C","namespace":"com.linkedin.cdef","fields":[
+  {"name":"rec","type":{"type":"record","name":"RD","fields":[
+    {"name":"rb","type":"string"},
+    {"name":"ra","type":"int"}]},"default":{"rb":"q","ra":6}},
+  {"name":"recs","type":{"type":"array","items":{"type":"record","name":"E","fields":[
+    {"name":"eb","type":"string"},
+    {"name":"ea","type":"int"}]}},"default":[{"eb":"x","ea":1},{"eb":"w","ea":4}]},
+  {"name":"byKey","type":{"type":"map","values":{"type":"record","name":"V","fields":[
+    {"name":"vb","type":"string"},
+    {"name":"va","type":"int"}]}},"default":{"k":{"vb":"y","va":2},"j":{"vb":"v","va":5}}}]}

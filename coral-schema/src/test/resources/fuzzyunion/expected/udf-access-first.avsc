@@ -1,0 +1,5 @@
+{"type":"record","name":"@VIEW@","namespace":"fz.@VIEW@","fields":[
+  {"name":"id","type":"long"},
+  {"name":"b","type":{"type":"record","name":"b","namespace":"fz.@VIEW@.@VIEW@","fields":[
+    {"name":"pageKey","type":["null","string"],"default":null},
+    {"name":"memberId","type":["null","int"],"default":null}]}}]}

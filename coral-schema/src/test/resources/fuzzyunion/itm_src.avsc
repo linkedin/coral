@@ -1,0 +1,10 @@
+{"type":"record","name":"Itm","namespace":"com.linkedin.itm","fields":[
+  {"name":"id","type":"long"},
+  {"name":"arr","type":{"type":"array","items":{"type":"record","name":"Elem","fields":[
+    {"name":"child","type":{"type":"record","name":"Inner","doc":"Inner record","fields":[
+      {"name":"pageKey","type":"string","doc":"Page key"},
+      {"name":"memberId","type":"int","doc":"Member id"},
+      {"name":"extra","type":["null","string"],"default":null}]},"doc":"array child"},
+    {"name":"other","type":"int"}]}}},
+  {"name":"m","type":{"type":"map","values":{"type":"record","name":"MElem","fields":[
+    {"name":"child","type":"Inner","doc":"map child"}]}}}]}

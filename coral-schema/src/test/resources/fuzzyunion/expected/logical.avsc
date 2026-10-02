@@ -6,4 +6,4 @@
     {"name":"createdAt","type":{"type":"long","logicalType":"timestamp-millis"}},
     {"name":"token","type":{"type":"string","logicalType":"uuid"}},
     {"name":"digest","type":{"type":"fixed","name":"Md5","namespace":"com.linkedin.fixed","size":16,"x-fixed-prop":"f"}},
-    {"name":"color","type":{"type":"enum","name":"Color","namespace":"fz.@VIEW@.@VIEW@.L","doc":"Colors","symbols":["RED","GREEN"],"default":"RED"}}]}}]}
+    {"name":"color","type":{"type":"enum","name":"Color","namespace":"fz.@VIEW@.@VIEW@.L","doc":"Colors","aliases":["com.linkedin.lt.OldColor"],"x-enum-prop":{"v":1},"symbols":["RED","GREEN"],"default":"RED"}}]}}]}
