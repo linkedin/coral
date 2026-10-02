@@ -120,7 +120,7 @@ final class AvroSchemaProjection {
       default:
         // BOOLEAN, INT, LONG, FLOAT, DOUBLE, BYTES, STRING, FIXED, ENUM and NULL are kept as they are, which is only
         // valid if the request denotes the same value representation
-        if (schema.getType() != Schema.Type.NULL && !sameLeafRepresentation(sourceType, targetType)) {
+        if (schema.getType() != Schema.Type.NULL && !sameLeafRepresentation(schema, sourceType, targetType)) {
           throw mismatch(path, schema, sourceType, targetType);
         }
         return schema;
@@ -175,6 +175,58 @@ final class AvroSchemaProjection {
 
   private static boolean isOfType(RelDataType type, SqlTypeName typeName) {
     return type.getSqlTypeName() == typeName;
+  }
+
+  /**
+   * A leaf is projected only if the request denotes the representation the Avro schema actually has. A request that
+   * spells out its precision (BINARY(8), TIMESTAMP(6), DECIMAL(10,2)) is compared with the parameters the Avro schema
+   * defines (fixed size, timestamp unit, decimal precision and scale); a request without parameters has to equal
+   * the relational type the source was converted to.
+   */
+  private static boolean sameLeafRepresentation(Schema schema, RelDataType source, RelDataType target) {
+    SqlTypeName name = target.getSqlTypeName();
+    if (source.getSqlTypeName() == name && hasRepresentationParameters(name) && hasExplicitParameters(target)) {
+      int[] expected = avroParameters(schema);
+      if (expected != null) {
+        return expected[0] == target.getPrecision()
+            && (name != SqlTypeName.DECIMAL || expected[1] == target.getScale());
+      }
+    }
+    return sameLeafRepresentation(source, target);
+  }
+
+  /** Fixed size, timestamp/time unit digits, or decimal precision and scale of the Avro schema; null if none. */
+  private static int[] avroParameters(Schema schema) {
+    if (schema.getType() == Schema.Type.FIXED
+        && AvroCompatibilityHelper.getSchemaPropAsJsonString(schema, "logicalType") == null) {
+      return new int[] { schema.getFixedSize(), 0 };
+    }
+    String logicalType = AvroCompatibilityHelper.getSchemaPropAsJsonString(schema, "logicalType");
+    if (logicalType == null) {
+      return null;
+    }
+    switch (logicalType.replace("\"", "")) {
+      case "timestamp-millis":
+      case "local-timestamp-millis":
+      case "time-millis":
+        return new int[] { 3, 0 };
+      case "timestamp-micros":
+      case "local-timestamp-micros":
+      case "time-micros":
+        return new int[] { 6, 0 };
+      case "decimal":
+        String precision = AvroCompatibilityHelper.getSchemaPropAsJsonString(schema, "precision");
+        String scale = AvroCompatibilityHelper.getSchemaPropAsJsonString(schema, "scale");
+        return precision == null ? null
+            : new int[] { Integer.parseInt(precision), scale == null ? 0 : Integer.parseInt(scale) };
+      default:
+        return null;
+    }
+  }
+
+  /** True if the type spells out its precision, as opposed to the default of its type name. */
+  private static boolean hasExplicitParameters(RelDataType type) {
+    return type.toString().indexOf('(') >= 0;
   }
 
   private static boolean sameLeafRepresentation(RelDataType source, RelDataType target) {
@@ -262,8 +314,10 @@ final class AvroSchemaProjection {
   }
 
   private static RuntimeException mismatch(String path, Schema schema, RelDataType source, RelDataType target) {
-    return error(path, "avro " + schema.getType() + " of relational type " + source.getFullTypeString()
-        + " cannot be projected as " + target.getFullTypeString());
+    boolean leaf = schema.getType() != Schema.Type.RECORD && schema.getType() != Schema.Type.ARRAY
+        && schema.getType() != Schema.Type.MAP;
+    return error(path, "avro " + (leaf ? schema.toString() : schema.getType().toString()) + " of relational type "
+        + source.getFullTypeString() + " cannot be projected as " + target.getFullTypeString());
   }
 
   private static RuntimeException error(String path, String message) {
