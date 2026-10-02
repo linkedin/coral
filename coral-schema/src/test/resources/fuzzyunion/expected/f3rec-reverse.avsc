@@ -1,0 +1,7 @@
+{"type":"record","name":"@VIEW@","namespace":"fz.@VIEW@","fields":[
+  {"name":"id","type":"long"},
+  {"name":"c","type":{"type":"record","name":"C","namespace":"fz.@VIEW@.@VIEW@","fields":[
+    {"name":"x","type":["null","int"],"default":null},
+    {"name":"inner","type":{"type":"record","name":"I","namespace":"fz.@VIEW@.@VIEW@.C","fields":[
+      {"name":"y","type":["null","int"],"default":null}]}}]},
+   "default":{"x":null,"inner":{"y":null}}}]}

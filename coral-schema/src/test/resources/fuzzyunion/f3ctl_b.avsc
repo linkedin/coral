@@ -1,0 +1,8 @@
+{"type":"record","name":"F3Ctl","namespace":"com.linkedin.f3","fields":[
+  {"name":"id","type":"long"},
+  {"name":"c","type":{"type":"record","name":"C","fields":[
+    {"name":"z","type":["null","int"],"default":null},{"name":"extra","type":["null","string"],"default":null}]},
+   "default":{"z":null,"extra":null}},
+  {"name":"d","type":{"type":"record","name":"D","fields":[
+    {"name":"x","type":["int","null"],"default":9},{"name":"extra","type":["null","string"],"default":null}]},
+   "default":{"x":9,"extra":null}}]}

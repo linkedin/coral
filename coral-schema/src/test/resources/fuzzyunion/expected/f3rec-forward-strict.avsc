@@ -1,0 +1,6 @@
+{"type":"record","name":"F3Rec","namespace":"com.linkedin.f3","fields":[
+  {"name":"id","type":"long"},
+  {"name":"c","type":{"type":"record","name":"C","fields":[
+    {"name":"x","type":["int","null"]},
+    {"name":"inner","type":{"type":"record","name":"I","fields":[{"name":"y","type":["int","null"]}]}}]},
+   "default":{"x":1,"inner":{"y":2}}}]}

@@ -1,0 +1,5 @@
+{"type":"record","name":"F3Ctl","namespace":"com.linkedin.f3","fields":[
+  {"name":"id","type":"long"},
+  {"name":"c","type":{"type":"record","name":"C","fields":[{"name":"z","type":"int","default":5}]},
+   "default":{"z":7}},
+  {"name":"d","type":{"type":"record","name":"D","fields":[{"name":"x","type":"int"}]}}]}

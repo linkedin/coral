@@ -7,6 +7,7 @@ package com.linkedin.coral.schema.avro;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import com.linkedin.avroutil1.compatibility.AvroCompatibilityHelper;
 
@@ -32,6 +33,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import com.linkedin.coral.com.google.common.collect.ImmutableList;
+import com.linkedin.coral.com.google.common.collect.ImmutableMap;
 import com.linkedin.coral.common.functions.GenericProjectFunction;
 import com.linkedin.coral.hive.hive2rel.HiveToRelConverter;
 
@@ -212,6 +214,71 @@ public class FuzzyUnionStructuralTests {
     }
   }
 
+  @Test
+  public void testT13OptionalFixedRequestedWithDifferentLengthFails() {
+    RelNode scan = scan("SELECT * FROM fz.rep_src");
+    RelNode project = projectColumn(scan, 1, "r",
+        genericProject(scan, repProjection(scan, "optf16", binary(scan, 8)), inputRef(scan, 1)));
+
+    assertParameterMismatchRejected(project, "r.optF16", "BINARY(8)");
+  }
+
+  @Test
+  public void testT13ArrayFixedElementRequestedWithDifferentLengthFails() {
+    RelNode scan = scan("SELECT * FROM fz.rep_src");
+    RelDataTypeFactory typeFactory = rexBuilder(scan).getTypeFactory();
+    RelDataType array = typeFactory.createTypeWithNullability(typeFactory.createArrayType(binary(scan, 8), -1), true);
+    RelNode project =
+        projectColumn(scan, 1, "r", genericProject(scan, repProjection(scan, "arrf16", array), inputRef(scan, 1)));
+
+    assertParameterMismatchRejected(project, "r.arrF16", "BINARY(8)");
+  }
+
+  @Test
+  public void testT13MapTimestampValueRequestedWithDifferentPrecisionFails() {
+    RelNode scan = scan("SELECT * FROM fz.rep_src");
+    RelDataTypeFactory typeFactory = rexBuilder(scan).getTypeFactory();
+    RelDataType sourceMap =
+        scan.getRowType().getField("r", false, false).getType().getField("mapmillis", false, false).getType();
+    RelDataType map = typeFactory.createTypeWithNullability(typeFactory.createMapType(sourceMap.getKeyType(),
+        typeFactory.createTypeWithNullability(typeFactory.createSqlType(SqlTypeName.TIMESTAMP, 6), true)), true);
+    RelNode project =
+        projectColumn(scan, 1, "r", genericProject(scan, repProjection(scan, "mapmillis", map), inputRef(scan, 1)));
+
+    assertParameterMismatchRejected(project, "r.mapMillis", "TIMESTAMP(6)");
+  }
+
+  @Test
+  public void testT13ShorterFixedRequestedAsLongerFails() {
+    // Opposite direction: an 8-byte fixed requested as BINARY(16).
+    RelNode scan = scan("SELECT * FROM fz.rep_src");
+    RelNode project = projectColumn(scan, 1, "r",
+        genericProject(scan, repProjection(scan, "f8", binary(scan, 16)), inputRef(scan, 1)));
+
+    assertParameterMismatchRejected(project, "r.f8", "BINARY(16)");
+  }
+
+  @Test
+  public void testT12ParameterizedRequestsMatchingAvroIdentityAreKept() {
+    // Controls: BINARY(16) is the relational form of a 16-byte fixed and TIMESTAMP(3) of timestamp-millis, so both
+    // denote the source representation even though the source relational types (from Hive) carry no parameters.
+    // Every other retained leaf, including optional/array/map ones, is requested at its own type; extra is dropped.
+    RelNode scan = scan("SELECT * FROM fz.rep_src");
+    RelDataType target = projection(scan, "r", "extra",
+        ImmutableMap.of("f16", binary(scan, 16), "millis", rexBuilder(scan).getTypeFactory().createTypeWithNullability(
+            rexBuilder(scan).getTypeFactory().createSqlType(SqlTypeName.TIMESTAMP, 3), true)));
+    RelNode project = projectColumn(scan, 1, "r", genericProject(scan, target, inputRef(scan, 1)));
+
+    Schema projected =
+        SchemaUtilities.extractIfOption(relToAvroSchemaConverter.convert(project, true, false).getField("r").schema());
+    Schema source = new Schema.Parser().parse(load("rep_src.avsc")).getField("r").schema();
+    Assert.assertNull(projected.getField("extra"));
+    for (String leaf : ImmutableList.of("millis", "f8", "f16", "optF16", "arrF16", "mapMillis")) {
+      Assert.assertEquals(projected.getField(leaf).schema().toString(true),
+          source.getField(leaf).schema().toString(true), leaf);
+    }
+  }
+
   // ---------------------------------------------------------------------------------------------------------------
   // T10 (structural, typed call): retained fields reordered by the target, inside a record and inside array elements
   // and map values. The projected field is canonical here, so its reshaped complex defaults are observable.
@@ -380,23 +447,40 @@ public class FuzzyUnionStructuralTests {
         .createTypeWithNullability(typeFactory.createStructType(types.build(), ImmutableList.copyOf(names)), true);
   }
 
-  /**
-   * The relational type of lt_evolved.l without lExtra, every field keeping exactly its source relational type except
-   * {@code replacedField} (lowercase Calcite name), which is requested as {@code replacement}.
-   */
+  /** lt_evolved.l without lExtra, every field at its source type except {@code replacedField} (lowercase name). */
   private static RelDataType ltProjection(RelNode scan, String replacedField, RelDataType replacement) {
+    return projection(scan, "l", "lextra",
+        replacedField == null ? ImmutableMap.of() : ImmutableMap.of(replacedField, replacement));
+  }
+
+  /** rep_src.r without extra, every field at its source type except {@code replacedField} (lowercase name). */
+  private static RelDataType repProjection(RelNode scan, String replacedField, RelDataType replacement) {
+    return projection(scan, "r", "extra", ImmutableMap.of(replacedField, replacement));
+  }
+
+  /**
+   * The relational type of struct column {@code column} without {@code droppedField}, every field keeping exactly its
+   * source relational type except those in {@code replacements} (keyed by lowercase Calcite name).
+   */
+  private static RelDataType projection(RelNode scan, String column, String droppedField,
+      Map<String, RelDataType> replacements) {
     RelDataTypeFactory typeFactory = rexBuilder(scan).getTypeFactory();
-    RelDataType source = scan.getRowType().getField("l", false, false).getType();
+    RelDataType source = scan.getRowType().getField(column, false, false).getType();
     ImmutableList.Builder<RelDataType> types = ImmutableList.builder();
     ImmutableList.Builder<String> names = ImmutableList.builder();
     for (RelDataTypeField field : source.getFieldList()) {
-      if (field.getName().equals("lextra")) {
+      if (field.getName().equals(droppedField)) {
         continue;
       }
       names.add(field.getName());
-      types.add(field.getName().equals(replacedField) ? replacement : field.getType());
+      types.add(replacements.getOrDefault(field.getName(), field.getType()));
     }
     return typeFactory.createTypeWithNullability(typeFactory.createStructType(types.build(), names.build()), true);
+  }
+
+  private static RelDataType binary(RelNode scan, int length) {
+    RelDataTypeFactory typeFactory = rexBuilder(scan).getTypeFactory();
+    return typeFactory.createTypeWithNullability(typeFactory.createSqlType(SqlTypeName.BINARY, length), true);
   }
 
   /** Must fail explicitly, naming the field path and the requested type; not an incidental runtime error. */

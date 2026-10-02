@@ -1,0 +1,10 @@
+{"type":"record","name":"Rep","namespace":"com.linkedin.rep","fields":[
+  {"name":"id","type":"long"},
+  {"name":"r","type":{"type":"record","name":"R","fields":[
+    {"name":"millis","type":{"type":"long","logicalType":"timestamp-millis"}},
+    {"name":"f8","type":{"type":"fixed","name":"F8","size":8}},
+    {"name":"f16","type":{"type":"fixed","name":"F16","size":16}},
+    {"name":"optF16","type":["null",{"type":"fixed","name":"OptF16","size":16}],"default":null},
+    {"name":"arrF16","type":{"type":"array","items":{"type":"fixed","name":"ArrF16","size":16}}},
+    {"name":"mapMillis","type":{"type":"map","values":{"type":"long","logicalType":"timestamp-millis"}}},
+    {"name":"extra","type":["null","string"],"default":null}]}}]}

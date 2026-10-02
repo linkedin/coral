@@ -1,0 +1,6 @@
+{"type":"record","name":"@VIEW@","namespace":"fz.@VIEW@","fields":[
+  {"name":"id","type":"long"},
+  {"name":"arr","type":{"type":"array","items":{"type":"record","name":"E","namespace":"fz.@VIEW@.@VIEW@","fields":[
+    {"name":"x","type":["int","null"]}]}},"default":[{"x":1},{"x":2}]},
+  {"name":"m","type":{"type":"map","values":{"type":"record","name":"V","namespace":"fz.@VIEW@.@VIEW@","fields":[
+    {"name":"x","type":["int","null"]}]}},"default":{"k":{"x":3},"j":{"x":4}}}]}

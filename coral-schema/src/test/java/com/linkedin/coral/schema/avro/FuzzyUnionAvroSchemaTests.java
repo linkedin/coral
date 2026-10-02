@@ -297,6 +297,66 @@ public class FuzzyUnionAvroSchemaTests {
   }
 
   @Test
+  public void testT10CanonicalRecordDefaultSurvivesWidenedNestedOptions() {
+    // Final-review F3. The canonical branch declares c's default {"x":1,"inner":{"y":2}} over required x and inner.y;
+    // the other branch makes both nullable. The widened nested options must put int first so the canonical default
+    // stays valid at every depth. The default value itself is kept, and x/y gain no field default of their own.
+    assertProjections("v_f3rec", 0, 1);
+    Schema forward = nonStrict("v_f3rec");
+    assertView(forward, "f3rec-forward.avsc", "v_f3rec");
+    Schema c = forward.getField("c").schema();
+    Assert.assertEquals(AvroCompatibilityHelper.getDefaultValueAsJsonString(forward.getField("c")),
+        "{\"x\":1,\"inner\":{\"y\":2}}");
+    Assert.assertFalse(AvroCompatibilityHelper.fieldHasDefault(c.getField("x")));
+    Assert.assertFalse(AvroCompatibilityHelper.fieldHasDefault(c.getField("inner").schema().getField("y")));
+    assertSchema(converter.toAvroSchema(DB, "v_f3rec", true, false), "expected/f3rec-forward-strict.avsc");
+
+    // Reverse: the nullable branch is canonical, so its null default and null-first options are kept.
+    assertProjections("v_f3rec_r", 1, 0);
+    assertView(nonStrict("v_f3rec_r"), "f3rec-reverse.avsc", "v_f3rec_r");
+    assertSchema(converter.toAvroSchema(DB, "v_f3rec_r", true, false), "expected/f3rec-reverse-strict.avsc");
+  }
+
+  @Test
+  public void testT10CanonicalCollectionDefaultsSurviveWidenedElementOptions() {
+    // Same as above, with the canonical default values inside array elements and map values.
+    assertProjections("v_f3col", 0, 2);
+    Schema forward = nonStrict("v_f3col");
+    assertView(forward, "f3col-forward.avsc", "v_f3col");
+    Assert.assertEquals(AvroCompatibilityHelper.getDefaultValueAsJsonString(forward.getField("arr")),
+        "[{\"x\":1},{\"x\":2}]");
+    Assert.assertEquals(AvroCompatibilityHelper.getDefaultValueAsJsonString(forward.getField("m")),
+        "{\"k\":{\"x\":3},\"j\":{\"x\":4}}");
+    Assert.assertFalse(
+        AvroCompatibilityHelper.fieldHasDefault(forward.getField("arr").schema().getElementType().getField("x")));
+    Assert.assertFalse(
+        AvroCompatibilityHelper.fieldHasDefault(forward.getField("m").schema().getValueType().getField("x")));
+
+    assertProjections("v_f3col_r", 2, 0);
+    assertView(nonStrict("v_f3col_r"), "f3col-reverse.avsc", "v_f3col_r");
+  }
+
+  @Test
+  public void testT10ContainingDefaultControls() {
+    // Controls for the containing-default rule; both convert today and must keep doing so.
+    // c: the child z declares its own default 5 while c's default supplies z=7. Both stay exactly as declared and
+    //    the widened z is int-first.
+    // d: the canonical branch declares no default for d or d.x, so the widened d.x keeps the established null-first
+    //    order without a default. The other branch's discarded d default {"x":9} (int-first) imposes nothing.
+    assertProjections("v_f3ctl", 0, 2);
+    Schema forward = nonStrict("v_f3ctl");
+    assertView(forward, "f3ctl-forward.avsc", "v_f3ctl");
+    Assert.assertEquals(
+        AvroCompatibilityHelper.getDefaultValueAsJsonString(forward.getField("c").schema().getField("z")), "5");
+    Assert.assertFalse(AvroCompatibilityHelper.fieldHasDefault(forward.getField("d")));
+    Assert.assertFalse(AvroCompatibilityHelper.fieldHasDefault(forward.getField("d").schema().getField("x")));
+
+    // Reversed, the formerly discarded branch is canonical and its own retained defaults decide the order.
+    assertProjections("v_f3ctl_r", 2, 0);
+    assertView(nonStrict("v_f3ctl_r"), "f3ctl-reverse.avsc", "v_f3ctl_r");
+  }
+
+  @Test
   public void testT11RecordAndFieldMetadataNonStrict() {
     assertView(nonStrict("v_t11"), "meta.avsc", "v_t11", "@FIELD@", "info");
     assertView(nonStrict("v_t11r"), "meta.avsc", "v_t11r", "@FIELD@", "info");

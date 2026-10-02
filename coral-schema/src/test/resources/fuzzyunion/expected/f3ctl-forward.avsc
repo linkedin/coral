@@ -1,0 +1,6 @@
+{"type":"record","name":"@VIEW@","namespace":"fz.@VIEW@","fields":[
+  {"name":"id","type":"long"},
+  {"name":"c","type":{"type":"record","name":"C","namespace":"fz.@VIEW@.@VIEW@","fields":[
+    {"name":"z","type":["int","null"],"default":5}]},"default":{"z":7}},
+  {"name":"d","type":{"type":"record","name":"D","namespace":"fz.@VIEW@.@VIEW@","fields":[
+    {"name":"x","type":["null","int"]}]}}]}

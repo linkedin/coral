@@ -178,6 +178,19 @@ final class FuzzyUnionFixtures {
         "arr array<struct<child:" + inner + ",other:int>>", "m map<string,struct<child:" + inner + ">>");
     c.addHiveTableWithAvroLiteral(DB, "itm_amb", load("itm_amb.avsc"), "id bigint",
         "arr array<struct<foo:struct<x:int,y:int>>>");
+    c.addAvroSerdeTable(DB, "f3rec_a", load("f3rec_a.avsc"), "id bigint", "c struct<x:int,inner:struct<y:int>>");
+    c.addAvroSerdeTable(DB, "f3rec_b", load("f3rec_b.avsc"), "id bigint",
+        "c struct<x:int,inner:struct<y:int>,extra:string>");
+    c.addAvroSerdeTable(DB, "f3col_a", load("f3col_a.avsc"), "id bigint", "arr array<struct<x:int>>",
+        "m map<string,struct<x:int>>");
+    c.addAvroSerdeTable(DB, "f3col_b", load("f3col_b.avsc"), "id bigint", "arr array<struct<x:int,extra:string>>",
+        "m map<string,struct<x:int,extra:string>>");
+    c.addAvroSerdeTable(DB, "f3ctl_a", load("f3ctl_a.avsc"), "id bigint", "c struct<z:int>", "d struct<x:int>");
+    c.addAvroSerdeTable(DB, "f3ctl_b", load("f3ctl_b.avsc"), "id bigint", "c struct<z:int,extra:string>",
+        "d struct<x:int,extra:string>");
+    c.addAvroSerdeTable(DB, "rep_src", load("rep_src.avsc"), "id bigint",
+        "r struct<millis:timestamp,f8:binary,f16:binary,optf16:binary,arrf16:array<binary>,"
+            + "mapmillis:map<string,timestamp>,extra:string>");
     c.addAvroSerdeTable(DB, "un_base", load("un_base.avsc"), "id bigint", "s struct<u:uniontype<int,string>,a:int>");
     c.addAvroSerdeTable(DB, "un_evolved", load("un_evolved.avsc"), "id bigint",
         "s struct<u:uniontype<int,string>,a:int,extra:int>");
@@ -287,6 +300,12 @@ final class FuzzyUnionFixtures {
     c.addView(DB, "v_amb_plain", "SELECT id, s.foo AS b FROM fz.amb_acc", "id bigint", "b struct<x:int,y:int>");
     c.addView(DB, "v_cdef_plain", "SELECT * FROM fz.cdef_evolved", "id bigint", "c string");
     c.addView(DB, "v_cdef_base_plain", "SELECT * FROM fz.cdef_base", "id bigint", "c string");
+    unionView(c, "v_f3rec", "SELECT * FROM fz.f3rec_a", "SELECT * FROM fz.f3rec_b");
+    unionView(c, "v_f3rec_r", "SELECT * FROM fz.f3rec_b", "SELECT * FROM fz.f3rec_a");
+    unionView(c, "v_f3ctl", "SELECT * FROM fz.f3ctl_a", "SELECT * FROM fz.f3ctl_b");
+    unionView(c, "v_f3ctl_r", "SELECT * FROM fz.f3ctl_b", "SELECT * FROM fz.f3ctl_a");
+    unionView(c, "v_f3col", "SELECT * FROM fz.f3col_a", "SELECT * FROM fz.f3col_b");
+    unionView(c, "v_f3col_r", "SELECT * FROM fz.f3col_b", "SELECT * FROM fz.f3col_a");
     unionView(c, "v_t24", "SELECT * FROM fz.case_camel", "SELECT * FROM fz.case_lower");
     unionView(c, "v_t24r", "SELECT * FROM fz.case_lower", "SELECT * FROM fz.case_camel");
     return c;

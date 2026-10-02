@@ -1,0 +1,8 @@
+{"type":"record","name":"F3Col","namespace":"com.linkedin.f3","fields":[
+  {"name":"id","type":"long"},
+  {"name":"arr","type":{"type":"array","items":{"type":"record","name":"E","fields":[
+    {"name":"x","type":["null","int"],"default":null},{"name":"extra","type":["null","string"],"default":null}]}},
+   "default":[{"x":null,"extra":null}]},
+  {"name":"m","type":{"type":"map","values":{"type":"record","name":"V","fields":[
+    {"name":"x","type":["null","int"],"default":null},{"name":"extra","type":["null","string"],"default":null}]}},
+   "default":{"k":{"x":null,"extra":null}}}]}
