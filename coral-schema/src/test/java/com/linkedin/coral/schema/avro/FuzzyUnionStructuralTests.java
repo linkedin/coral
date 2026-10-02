@@ -17,6 +17,7 @@ import org.apache.calcite.rel.logical.LogicalProject;
 import org.apache.calcite.rel.logical.LogicalUnion;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
+import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.SqlIdentifier;
@@ -151,6 +152,64 @@ public class FuzzyUnionStructuralTests {
     RelNode project = projectColumn(scan, 1, "p", genericProject(scan, decimalStruct(scan, 10, 3), inputRef(scan, 1)));
 
     assertFailsMentioning(() -> relToAvroSchemaConverter.convert(project, true, false), "amount");
+  }
+
+  // ---------------------------------------------------------------------------------------------------------------
+  // T12/T13 (structural, typed call): a leaf keeps its Avro schema only when the requested relational type denotes the
+  // same value representation, including type parameters. A parameterized request that differs is a cast, which
+  // generic projection does not perform: it must be rejected with the field path rather than return the source schema.
+  // ---------------------------------------------------------------------------------------------------------------
+
+  @Test
+  public void testT13TopLevelFixedRequestedWithDifferentLengthFails() {
+    // fx_a.c is Avro fixed Md5 of size 16; BINARY(8) is the relational form of an 8-byte fixed.
+    RelNode scan = scan("SELECT * FROM fz.fx_a");
+    RelDataTypeFactory typeFactory = rexBuilder(scan).getTypeFactory();
+    RelDataType binary8 = typeFactory.createTypeWithNullability(typeFactory.createSqlType(SqlTypeName.BINARY, 8), true);
+    RelNode project = projectColumn(scan, 1, "c", genericProject(scan, binary8, inputRef(scan, 1)));
+
+    assertParameterMismatchRejected(project, "c", "BINARY(8)");
+  }
+
+  @Test
+  public void testT13NestedFixedRequestedWithDifferentLengthFails() {
+    RelNode scan = scan("SELECT * FROM fz.lt_evolved");
+    RelDataTypeFactory typeFactory = rexBuilder(scan).getTypeFactory();
+    RelDataType target = ltProjection(scan, "digest",
+        typeFactory.createTypeWithNullability(typeFactory.createSqlType(SqlTypeName.BINARY, 8), true));
+    RelNode project = projectColumn(scan, 2, "l", genericProject(scan, target, inputRef(scan, 2)));
+
+    assertParameterMismatchRejected(project, "l.digest", "BINARY(8)");
+  }
+
+  @Test
+  public void testT13NestedTimestampRequestedWithDifferentPrecisionFails() {
+    // l.createdAt is Avro long/timestamp-millis; TIMESTAMP(6) is the relational form of timestamp-micros.
+    RelNode scan = scan("SELECT * FROM fz.lt_evolved");
+    RelDataTypeFactory typeFactory = rexBuilder(scan).getTypeFactory();
+    RelDataType target = ltProjection(scan, "createdat",
+        typeFactory.createTypeWithNullability(typeFactory.createSqlType(SqlTypeName.TIMESTAMP, 6), true));
+    RelNode project = projectColumn(scan, 2, "l", genericProject(scan, target, inputRef(scan, 2)));
+
+    assertParameterMismatchRejected(project, "l.createdAt", "TIMESTAMP(6)");
+  }
+
+  @Test
+  public void testT12SameRepresentationLeavesKeepLogicalAndFixedIdentity() {
+    // Control: requesting every retained leaf with exactly its own relational type is a pure projection; date,
+    // timestamp-millis, uuid, fixed (with its property) and enum keep their source schemas, and lExtra is dropped.
+    RelNode scan = scan("SELECT * FROM fz.lt_evolved");
+    RelNode project =
+        projectColumn(scan, 2, "l", genericProject(scan, ltProjection(scan, null, null), inputRef(scan, 2)));
+
+    Schema projected =
+        SchemaUtilities.extractIfOption(relToAvroSchemaConverter.convert(project, true, false).getField("l").schema());
+    Schema source = new Schema.Parser().parse(load("lt_evolved.avsc")).getField("l").schema();
+    Assert.assertNull(projected.getField("lExtra"));
+    for (String leaf : ImmutableList.of("birthDate", "createdAt", "token", "digest", "color")) {
+      Assert.assertEquals(projected.getField(leaf).schema().toString(true),
+          source.getField(leaf).schema().toString(true), leaf);
+    }
   }
 
   // ---------------------------------------------------------------------------------------------------------------
@@ -319,6 +378,40 @@ public class FuzzyUnionStructuralTests {
     }
     return typeFactory
         .createTypeWithNullability(typeFactory.createStructType(types.build(), ImmutableList.copyOf(names)), true);
+  }
+
+  /**
+   * The relational type of lt_evolved.l without lExtra, every field keeping exactly its source relational type except
+   * {@code replacedField} (lowercase Calcite name), which is requested as {@code replacement}.
+   */
+  private static RelDataType ltProjection(RelNode scan, String replacedField, RelDataType replacement) {
+    RelDataTypeFactory typeFactory = rexBuilder(scan).getTypeFactory();
+    RelDataType source = scan.getRowType().getField("l", false, false).getType();
+    ImmutableList.Builder<RelDataType> types = ImmutableList.builder();
+    ImmutableList.Builder<String> names = ImmutableList.builder();
+    for (RelDataTypeField field : source.getFieldList()) {
+      if (field.getName().equals("lextra")) {
+        continue;
+      }
+      names.add(field.getName());
+      types.add(field.getName().equals(replacedField) ? replacement : field.getType());
+    }
+    return typeFactory.createTypeWithNullability(typeFactory.createStructType(types.build(), names.build()), true);
+  }
+
+  /** Must fail explicitly, naming the field path and the requested type; not an incidental runtime error. */
+  private void assertParameterMismatchRejected(RelNode project, String path, String requestedType) {
+    try {
+      Schema result = relToAvroSchemaConverter.convert(project, true, false);
+      Assert.fail("Expected a request for " + requestedType + " at " + path + " to be rejected but produced:\n"
+          + result.toString(true));
+    } catch (IndexOutOfBoundsException | NullPointerException | ClassCastException e) {
+      Assert.fail("Mismatch must be rejected explicitly, not by " + e, e);
+    } catch (RuntimeException e) {
+      String message = String.valueOf(e.getMessage());
+      Assert.assertTrue(message.contains(path) && message.contains(requestedType),
+          "Expected the rejection to name '" + path + "' and '" + requestedType + "' but was: " + message);
+    }
   }
 
   private static RelDataType nullable(RelDataTypeFactory typeFactory, SqlTypeName typeName) {
