@@ -1,0 +1,3 @@
+{"type":"record","name":"DepthDirect","namespace":"com.linkedin.depth","fields":[
+  {"name":"id","type":"long"},
+  {"name":"b","type":{"type":"record","name":"B","fields":[{"name":"a","type":"long"}]}}]}

@@ -1,0 +1,3 @@
+{"type":"record","name":"Req","namespace":"com.linkedin.req","fields":[
+  {"name":"id","type":"long"},
+  {"name":"f","type":["null","string"],"default":null}]}

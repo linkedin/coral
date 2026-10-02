@@ -1,0 +1,5 @@
+{"type":"record","name":"@VIEW@","namespace":"fz.@VIEW@","fields":[
+  {"name":"id","type":"long"},
+  {"name":"hdr","type":{"type":"record","name":"Hdr","namespace":"fz.@VIEW@.@VIEW@","fields":[
+    {"name":"memberId","type":["null","int"]},
+    {"name":"checksum","type":{"type":"fixed","name":"Md5","namespace":"com.linkedin.ev","size":16}}]}}]}

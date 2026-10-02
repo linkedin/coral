@@ -1,0 +1,8 @@
+{"type":"record","name":"DepthSrc","namespace":"com.linkedin.depth","fields":[
+  {"name":"id","type":"long"},
+  {"name":"s","type":{"type":"record","name":"S","fields":[
+    {"name":"x","type":{"type":"record","name":"X1","fields":[{"name":"a","type":"int","doc":"outer a"}]}},
+    {"name":"child","type":{"type":"record","name":"Inner","fields":[
+      {"name":"x","type":{"type":"record","name":"X2","doc":"inner x","fields":[
+        {"name":"a","type":"long","doc":"inner a"},
+        {"name":"extra","type":["null","int"],"default":null}]},"doc":"inner x field"}]}}]}}]}

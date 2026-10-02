@@ -1,0 +1,6 @@
+{"type":"record","name":"@VIEW@","namespace":"fz.@VIEW@","doc":"A page view","fields":[
+  {"name":"eventId","type":"long","doc":"Event id"},
+  {"name":"request_header","type":{"type":"record","name":"RequestHeader","namespace":"fz.@VIEW@.@VIEW@","doc":"Request header record","fields":[
+    {"name":"pageKey","type":"string","doc":"Page key"},
+    {"name":"path","type":["null","string"],"doc":"Request path","default":null}]},"doc":"The request header"},
+  {"name":"tag_col","type":["null","string"],"default":null}]}

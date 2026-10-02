@@ -1,0 +1,4 @@
+{"type":"record","name":"@VIEW@","namespace":"fz.@VIEW@","fields":[
+  {"name":"pagekey","type":"string","doc":"lower page key"},
+  {"name":"hdr","type":{"type":"record","name":"H","namespace":"fz.@VIEW@.@VIEW@","fields":[
+    {"name":"memberid","type":"int","doc":"lower member"}]}}]}

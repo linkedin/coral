@@ -1,0 +1,3 @@
+{"type":"record","name":"AmbB","namespace":"com.linkedin.amb","fields":[
+  {"name":"id","type":"long"},
+  {"name":"b","type":{"type":"record","name":"B","fields":[{"name":"x","type":"int"}]}}]}

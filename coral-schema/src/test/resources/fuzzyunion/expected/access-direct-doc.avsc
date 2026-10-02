@@ -1,0 +1,5 @@
+{"type":"record","name":"@VIEW@","namespace":"fz.@VIEW@","fields":[
+  {"name":"id","type":"long"},
+  {"name":"b","type":{"type":"record","name":"Inner","namespace":"fz.@VIEW@.@VIEW@","doc":"Inner record","fields":[
+    {"name":"pageKey","type":"string","doc":"Page key"},
+    {"name":"memberId","type":"int","doc":"Member id"}]},"doc":"direct b"}]}

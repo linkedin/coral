@@ -1,0 +1,10 @@
+{"type":"record","name":"Nul","namespace":"com.linkedin.nul","fields":[
+  {"name":"s","type":["null",{"type":"record","name":"S","fields":[
+    {"name":"req","type":"int"},
+    {"name":"opt","type":["null","int"],"default":null},
+    {"name":"arr","type":{"type":"array","items":"int"}},
+    {"name":"arrNullElem","type":{"type":"array","items":["null","int"]}},
+    {"name":"m","type":{"type":"map","values":["null","string"]}}]}],"default":null},
+  {"name":"r","type":{"type":"record","name":"R","fields":[
+    {"name":"a","type":"int"},
+    {"name":"b","type":"int"}]}}]}

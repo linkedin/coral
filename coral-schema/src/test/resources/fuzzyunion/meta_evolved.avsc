@@ -1,0 +1,9 @@
+{"type":"record","name":"MetaEvent","namespace":"com.linkedin.meta","doc":"Meta event","aliases":["OldMetaEvent"],"x-record-prop":"top","fields":[
+  {"name":"id","type":"long"},
+  {"name":"info","type":{"type":"record","name":"Info","doc":"Info record","aliases":["LegacyInfo"],"x-info-prop":{"k":[1,2]},"fields":[
+    {"name":"firstField","type":"string","doc":"First field","aliases":["first_field"],"order":"descending","x-field-prop":{"a":1}},
+    {"name":"extraField","type":["null","string"],"default":null},
+    {"name":"errInfo","type":{"type":"error","name":"ErrInfo","fields":[
+      {"name":"code","type":"int"},
+      {"name":"msg","type":["null","string"],"default":null}]}},
+    {"name":"lastField","type":["null","long"],"default":null,"order":"ignore"}]},"doc":"Info field","aliases":["information"]}]}

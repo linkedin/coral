@@ -1,0 +1,5 @@
+{"type":"record","name":"Flat","namespace":"com.linkedin.flat","fields":[
+  {"name":"id","type":"long"},
+  {"name":"pk","type":"string"},
+  {"name":"mid","type":"int"},
+  {"name":"e","type":["null","string"],"default":null}]}

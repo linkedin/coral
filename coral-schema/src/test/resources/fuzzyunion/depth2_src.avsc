@@ -1,0 +1,7 @@
+{"type":"record","name":"Depth2Src","namespace":"com.linkedin.depth","fields":[
+  {"name":"id","type":"long"},
+  {"name":"s","type":{"type":"record","name":"S2","fields":[
+    {"name":"id","type":"int","doc":"outer id"},
+    {"name":"child","type":{"type":"record","name":"Inner2","doc":"inner record","fields":[
+      {"name":"id","type":"long","doc":"inner id"},
+      {"name":"extra","type":["null","int"],"default":null}]},"doc":"inner field"}]}}]}

@@ -1,0 +1,3 @@
+{"type":"record","name":"CaseEvent","namespace":"com.linkedin.cs","fields":[
+  {"name":"pageKey","type":"string","doc":"camel page key"},
+  {"name":"hdr","type":{"type":"record","name":"H","fields":[{"name":"memberId","type":"int","doc":"camel member"}]}}]}

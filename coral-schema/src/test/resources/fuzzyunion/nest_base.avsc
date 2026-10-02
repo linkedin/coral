@@ -1,0 +1,9 @@
+{"type":"record","name":"Nest","namespace":"com.linkedin.nest","fields":[
+  {"name":"items","type":{"type":"array","items":{"type":"record","name":"Item","doc":"An item","fields":[
+    {"name":"itemId","type":"long","doc":"Item id"},
+    {"name":"itemName","type":"string"}]},"x-array-prop":"arr"}},
+  {"name":"attrs","type":{"type":"map","values":{"type":"record","name":"Attr","fields":[
+    {"name":"attrKey","type":"string"},
+    {"name":"attrVal","type":"int"}]},"x-map-prop":"map"}},
+  {"name":"mixed","type":{"type":"map","values":{"type":"array","items":{"type":"record","name":"Leaf","fields":[
+    {"name":"leafId","type":"int"}]}}}}]}

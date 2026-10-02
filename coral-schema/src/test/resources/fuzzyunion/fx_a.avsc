@@ -1,0 +1,3 @@
+{"type":"record","name":"Fx","namespace":"com.linkedin.fx","fields":[
+  {"name":"id","type":"long"},
+  {"name":"c","type":{"type":"fixed","name":"Md5","size":16}}]}

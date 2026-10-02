@@ -1,0 +1,6 @@
+{"type":"record","name":"neg","namespace":"com.linkedin.neg","fields":[
+  {"name":"id","type":"long"},
+  {"name":"rh","type":{"type":"record","name":"rh","fields":[
+    {"name":"alpha","type":{"type":"record","name":"arec","fields":[{"name":"x","type":"int"}]}},
+    {"name":"b","type":"int"},
+    {"name":"c","type":["null","int"],"default":null}]}}]}

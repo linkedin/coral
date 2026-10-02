@@ -1,0 +1,10 @@
+{"type":"record","name":"Lt","namespace":"com.linkedin.lt","fields":[
+  {"name":"id","type":"long"},
+  {"name":"amount","type":{"type":"bytes","logicalType":"decimal","precision":10,"scale":2}},
+  {"name":"l","type":{"type":"record","name":"L","fields":[
+    {"name":"birthDate","type":{"type":"int","logicalType":"date"}},
+    {"name":"createdAt","type":{"type":"long","logicalType":"timestamp-millis"}},
+    {"name":"token","type":{"type":"string","logicalType":"uuid"}},
+    {"name":"digest","type":{"type":"fixed","name":"Md5","namespace":"com.linkedin.fixed","size":16,"x-fixed-prop":"f"}},
+    {"name":"color","type":{"type":"enum","name":"Color","doc":"Colors","symbols":["RED","GREEN"],"default":"RED"}},
+    {"name":"lExtra","type":["null","string"],"default":null}]}}]}

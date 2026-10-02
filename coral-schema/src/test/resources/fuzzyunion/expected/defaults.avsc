@@ -1,0 +1,11 @@
+{"type":"record","name":"@VIEW@","namespace":"fz.@VIEW@","fields":[
+  {"name":"d","type":{"type":"record","name":"D","namespace":"fz.@VIEW@.@VIEW@","fields":[
+    {"name":"noDef","type":["null","string"]},
+    {"name":"nullDef","type":["null","string"],"default":null},
+    {"name":"intDef","type":"int","default":7},
+    {"name":"strDef","type":["string","null"],"default":"x"},
+    {"name":"recDef","type":{"type":"record","name":"RD","namespace":"fz.@VIEW@.@VIEW@.D","fields":[
+      {"name":"x","type":"int"},
+      {"name":"y","type":"string"}]},"default":{"x":1,"y":"a"}},
+    {"name":"arrDef","type":{"type":"array","items":"int"},"default":[1,2]},
+    {"name":"mapDef","type":{"type":"map","values":"int"},"default":{"k":1}}]}}]}

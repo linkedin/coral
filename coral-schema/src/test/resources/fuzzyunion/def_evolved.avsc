@@ -1,0 +1,13 @@
+{"type":"record","name":"Def","namespace":"com.linkedin.def","fields":[
+  {"name":"d","type":{"type":"record","name":"D","fields":[
+    {"name":"noDef","type":["null","string"]},
+    {"name":"nullDef","type":["null","string"],"default":null},
+    {"name":"intDef","type":"int","default":7},
+    {"name":"strDef","type":["string","null"],"default":"x"},
+    {"name":"recDef","type":{"type":"record","name":"RD","fields":[
+      {"name":"x","type":"int"},
+      {"name":"z","type":"boolean","default":false},
+      {"name":"y","type":"string"}]},"default":{"x":1,"z":true,"y":"a"}},
+    {"name":"arrDef","type":{"type":"array","items":"int"},"default":[1,2]},
+    {"name":"mapDef","type":{"type":"map","values":"int"},"default":{"k":1}},
+    {"name":"dExtra","type":["null","string"],"default":null}]}}]}

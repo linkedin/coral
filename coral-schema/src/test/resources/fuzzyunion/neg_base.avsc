@@ -1,0 +1,5 @@
+{"type":"record","name":"neg","namespace":"com.linkedin.neg","fields":[
+  {"name":"id","type":"long"},
+  {"name":"rh","type":{"type":"record","name":"rh","fields":[
+    {"name":"alpha","type":"string"},
+    {"name":"b","type":"int"}]}}]}

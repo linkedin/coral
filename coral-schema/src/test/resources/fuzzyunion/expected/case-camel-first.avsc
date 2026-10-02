@@ -1,0 +1,4 @@
+{"type":"record","name":"@VIEW@","namespace":"fz.@VIEW@","fields":[
+  {"name":"pageKey","type":"string","doc":"camel page key"},
+  {"name":"hdr","type":{"type":"record","name":"H","namespace":"fz.@VIEW@.@VIEW@","fields":[
+    {"name":"memberId","type":"int","doc":"camel member"}]}}]}

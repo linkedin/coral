@@ -1,0 +1,9 @@
+{"type":"record","name":"@VIEW@","namespace":"fz.@VIEW@","fields":[
+  {"name":"items","type":{"type":"array","items":{"type":"record","name":"Item","namespace":"fz.@VIEW@.@VIEW@","doc":"An item","fields":[
+    {"name":"itemId","type":"long","doc":"Item id"},
+    {"name":"itemName","type":"string"}]},"x-array-prop":"arr"}},
+  {"name":"attrs","type":{"type":"map","values":{"type":"record","name":"Attr","namespace":"fz.@VIEW@.@VIEW@","fields":[
+    {"name":"attrKey","type":"string"},
+    {"name":"attrVal","type":"int"}]},"x-map-prop":"map"}},
+  {"name":"mixed","type":{"type":"map","values":{"type":"array","items":{"type":"record","name":"Leaf","namespace":"fz.@VIEW@.@VIEW@","fields":[
+    {"name":"leafId","type":"int"}]}}}}]}

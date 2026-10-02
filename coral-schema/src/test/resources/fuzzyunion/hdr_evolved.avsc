@@ -1,0 +1,6 @@
+{"type":"record","name":"ProfileViewEvent","namespace":"com.linkedin.events","fields":[
+  {"name":"header","type":{"type":"record","name":"EventHeader","fields":[
+    {"name":"memberId","type":"int","doc":"Member id"},
+    {"name":"eventTime","type":"long"},
+    {"name":"device","type":["null","string"],"default":null}]}},
+  {"name":"viewerId","type":"long"}]}

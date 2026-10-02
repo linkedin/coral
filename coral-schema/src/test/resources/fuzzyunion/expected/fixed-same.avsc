@@ -1,0 +1,3 @@
+{"type":"record","name":"@VIEW@","namespace":"fz.@VIEW@","fields":[
+  {"name":"id","type":"long"},
+  {"name":"c","type":{"type":"fixed","name":"Md5","namespace":"com.linkedin.fx","size":16}}]}

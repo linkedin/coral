@@ -1,0 +1,9 @@
+{"type":"record","name":"@VIEW@","namespace":"fz.@VIEW@","fields":[
+  {"name":"id","type":"long"},
+  {"name":"amount","type":{"type":"bytes","logicalType":"decimal","precision":10,"scale":2}},
+  {"name":"l","type":{"type":"record","name":"L","namespace":"fz.@VIEW@.@VIEW@","fields":[
+    {"name":"birthDate","type":{"type":"int","logicalType":"date"}},
+    {"name":"createdAt","type":{"type":"long","logicalType":"timestamp-millis"}},
+    {"name":"token","type":{"type":"string","logicalType":"uuid"}},
+    {"name":"digest","type":{"type":"fixed","name":"Md5","namespace":"com.linkedin.fixed","size":16,"x-fixed-prop":"f"}},
+    {"name":"color","type":{"type":"enum","name":"Color","namespace":"fz.@VIEW@.@VIEW@.L","doc":"Colors","symbols":["RED","GREEN"],"default":"RED"}}]}}]}

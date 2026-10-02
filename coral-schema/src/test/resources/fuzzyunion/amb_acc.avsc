@@ -1,0 +1,5 @@
+{"type":"record","name":"AmbAcc","namespace":"com.linkedin.amb","fields":[
+  {"name":"id","type":"long"},
+  {"name":"s","type":{"type":"record","name":"S","fields":[
+    {"name":"Foo","type":{"type":"record","name":"F1","fields":[{"name":"x","type":"int"}]}},
+    {"name":"foo","type":{"type":"record","name":"F2","fields":[{"name":"x","type":"int"},{"name":"y","type":"int"}]}}]}}]}

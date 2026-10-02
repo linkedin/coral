@@ -1,0 +1,5 @@
+{"type":"record","name":"LcEvent","namespace":"com.linkedin.lc","fields":[
+  {"name":"id","type":["null","long"]},
+  {"name":"hdr","type":["null",{"type":"record","name":"Hdr","fields":[
+    {"name":"a","type":["null","string"]},
+    {"name":"b","type":["null","int"]}]}]}]}

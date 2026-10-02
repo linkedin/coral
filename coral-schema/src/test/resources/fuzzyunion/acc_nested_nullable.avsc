@@ -1,0 +1,8 @@
+{"type":"record","name":"AccNested","namespace":"com.linkedin.acc","fields":[
+  {"name":"id","type":"long"},
+  {"name":"s","type":["null",{"type":"record","name":"Outer","fields":[
+    {"name":"child","type":{"type":"record","name":"Inner","doc":"Inner record","fields":[
+      {"name":"pageKey","type":"string","doc":"Page key"},
+      {"name":"memberId","type":"int","doc":"Member id"},
+      {"name":"extra","type":["null","string"],"default":null}]},"doc":"nested inner"},
+    {"name":"other","type":"int"}]}],"default":null}]}

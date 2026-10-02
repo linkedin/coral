@@ -1,0 +1,10 @@
+{"type":"record","name":"@VIEW@","namespace":"fz.@VIEW@","fields":[
+  {"name":"s","type":["null",{"type":"record","name":"S","namespace":"fz.@VIEW@.@VIEW@","fields":[
+    {"name":"req","type":["null","int"],"default":null},
+    {"name":"opt","type":["null","int"],"default":null},
+    {"name":"arr","type":{"type":"array","items":"int"}},
+    {"name":"arrNullElem","type":{"type":"array","items":["null","int"]}},
+    {"name":"m","type":{"type":"map","values":["null","string"]}}]}],"default":null},
+  {"name":"r","type":{"type":"record","name":"R","namespace":"fz.@VIEW@.@VIEW@","fields":[
+    {"name":"a","type":["null","int"],"default":null},
+    {"name":"b","type":"int"}]}}]}

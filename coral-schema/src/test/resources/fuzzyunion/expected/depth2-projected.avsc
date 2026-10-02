@@ -1,0 +1,4 @@
+{"type":"record","name":"@VIEW@","namespace":"fz.@VIEW@","fields":[
+  {"name":"id","type":"long"},
+  {"name":"b","type":{"type":"record","name":"Inner2","namespace":"fz.@VIEW@.@VIEW@","doc":"inner record","fields":[
+    {"name":"id","type":"long","doc":"inner id"}]},"doc":"inner field"}]}

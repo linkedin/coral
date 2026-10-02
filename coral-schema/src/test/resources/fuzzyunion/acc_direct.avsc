@@ -1,0 +1,5 @@
+{"type":"record","name":"AccDirect","namespace":"com.linkedin.acc","fields":[
+  {"name":"id","type":"long"},
+  {"name":"b","type":{"type":"record","name":"Inner","doc":"Inner record","fields":[
+    {"name":"pageKey","type":"string","doc":"Page key"},
+    {"name":"memberId","type":"int","doc":"Member id"}]},"doc":"direct b"}]}

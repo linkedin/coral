@@ -1,0 +1,7 @@
+{"type":"record","name":"Person","namespace":"com.linkedin.addr","fields":[
+  {"name":"id","type":"long"},
+  {"name":"home","type":{"type":"record","name":"Address","doc":"An address","fields":[
+    {"name":"street","type":"string"},
+    {"name":"zip","type":["null","string"],"default":null},
+    {"name":"city","type":"string"}]}},
+  {"name":"work","type":"Address"}]}

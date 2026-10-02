@@ -1,0 +1,5 @@
+{"type":"record","name":"Ev","namespace":"com.linkedin.ev","fields":[
+  {"name":"id","type":"long"},
+  {"name":"hdr","type":{"type":"record","name":"Hdr","fields":[
+    {"name":"memberId","type":"int"},
+    {"name":"checksum","type":{"type":"fixed","name":"Md5","size":16}}]}}]}

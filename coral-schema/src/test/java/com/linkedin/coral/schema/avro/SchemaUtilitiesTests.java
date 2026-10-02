@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import com.linkedin.avroutil1.compatibility.AvroCompatibilityHelper;
@@ -579,5 +580,277 @@ public class SchemaUtilitiesTests {
             + metadataNamespace);
     Assert.assertTrue(metadataNamespace.contains("IntermediateRecord"),
         "Metadata namespace should follow hierarchical naming. Got: " + metadataNamespace);
+  }
+
+  // ---------------------------------------------------------------------------------------------------------------
+  // UNION field alignment (ACTIONITEM-25474, user-approved D1): exact-name bijections stay valid; otherwise a
+  // case-insensitive group must be a singleton on both sides. Output keeps the first branch's spelling.
+  // ---------------------------------------------------------------------------------------------------------------
+
+  @Test
+  public void testMergeUnionAlignsUniqueCaseOnlyDifferenceToLeftSpelling() {
+    Schema camel = record("{'type':'record','name':'T','namespace':'n','fields':[{'name':'requestHeader','type':"
+        + "{'type':'record','name':'R','fields':[{'name':'pageKey','type':'string','doc':'camel'}]}}]}");
+    Schema lower = record("{'type':'record','name':'T','namespace':'n','fields':[{'name':'requestheader','type':"
+        + "{'type':'record','name':'R','fields':[{'name':'pagekey','type':'string','doc':'lower'}]}}]}");
+
+    assertMerged(SchemaUtilities.mergeUnionRecordSchema(camel, lower, true, false), camel);
+    assertMerged(SchemaUtilities.mergeUnionRecordSchema(lower, camel, true, false), lower);
+  }
+
+  @Test
+  public void testMergeUnionAlignsCaseOnlyDifferenceInsideArrayAndMap() {
+    Schema camel = record("{'type':'record','name':'T','namespace':'n','fields':["
+        + "{'name':'items','type':{'type':'array','items':{'type':'record','name':'I','fields':["
+        + "{'name':'itemId','type':'long'}]}}},"
+        + "{'name':'attrs','type':{'type':'map','values':{'type':'record','name':'A','fields':["
+        + "{'name':'attrKey','type':'string'}]}}}]}");
+    Schema lower = record("{'type':'record','name':'T','namespace':'n','fields':["
+        + "{'name':'items','type':{'type':'array','items':{'type':'record','name':'I','fields':["
+        + "{'name':'itemid','type':'long'}]}}},"
+        + "{'name':'attrs','type':{'type':'map','values':{'type':'record','name':'A','fields':["
+        + "{'name':'attrkey','type':'string'}]}}}]}");
+
+    assertMerged(SchemaUtilities.mergeUnionRecordSchema(camel, lower, true, false), camel);
+  }
+
+  @Test
+  public void testMergeUnionCaseAlignmentIsLocaleIndependent() {
+    Locale original = Locale.getDefault();
+    try {
+      Locale.setDefault(new Locale("tr", "TR"));
+      Schema upper =
+          record("{'type':'record','name':'T','namespace':'n','fields':[{'name':'TITLE','type':'int','doc':'u'}]}");
+      Schema lower =
+          record("{'type':'record','name':'T','namespace':'n','fields':[{'name':'title','type':'int','doc':'l'}]}");
+      assertMerged(SchemaUtilities.mergeUnionRecordSchema(upper, lower, true, false), upper);
+    } finally {
+      Locale.setDefault(original);
+    }
+  }
+
+  @Test
+  public void testMergeUnionKeepsExactBijectionAndAlignsUniqueSibling() {
+    // Foo/foo pair exactly on both sides; bar/BAR is a separate singleton group.
+    Schema left = record("{'type':'record','name':'T','namespace':'n','fields':[{'name':'Foo','type':'int'},"
+        + "{'name':'foo','type':'int'},{'name':'bar','type':'int'}]}");
+    Schema right = record("{'type':'record','name':'T','namespace':'n','fields':[{'name':'Foo','type':'long'},"
+        + "{'name':'foo','type':'int'},{'name':'BAR','type':'int'}]}");
+    Schema expected = record("{'type':'record','name':'T','namespace':'n','fields':[{'name':'Foo','type':'long'},"
+        + "{'name':'foo','type':'int'},{'name':'bar','type':'int'}]}");
+
+    assertMerged(SchemaUtilities.mergeUnionRecordSchema(left, right, true, false), expected);
+  }
+
+  @Test
+  public void testMergeUnionExactCaseDistinctBijectionControl() {
+    Schema left = record("{'type':'record','name':'T','namespace':'n','fields':[{'name':'id','type':'int'},"
+        + "{'name':'ID','type':'int'}]}");
+    Schema right = record("{'type':'record','name':'T','namespace':'n','fields':[{'name':'id','type':'long'},"
+        + "{'name':'ID','type':'int'}]}");
+    Schema expected = record("{'type':'record','name':'T','namespace':'n','fields':[{'name':'id','type':'long'},"
+        + "{'name':'ID','type':'int'}]}");
+
+    assertMerged(SchemaUtilities.mergeUnionRecordSchema(left, right, true, false), expected);
+  }
+
+  @Test
+  public void testMergeUnionRejectsAmbiguousCaseGroups() {
+    Schema fooFoo = record("{'type':'record','name':'T','namespace':'n','fields':[{'name':'Foo','type':'int'},"
+        + "{'name':'foo','type':'int'}]}");
+    Schema fooFOO = record("{'type':'record','name':'T','namespace':'n','fields':[{'name':'Foo','type':'int'},"
+        + "{'name':'FOO','type':'int'}]}");
+    // An exact foo/foo match must not leave Foo/FOO to be paired as a "unique" remainder.
+    Schema fooFOOOnly = record("{'type':'record','name':'T','namespace':'n','fields':[{'name':'foo','type':'int'},"
+        + "{'name':'FOO','type':'int'}]}");
+
+    assertMergeFails(fooFoo, fooFOO, "foo");
+    assertMergeFails(fooFoo, fooFOOOnly, "foo");
+  }
+
+  @Test
+  public void testMergeUnionRejectsAmbiguousCaseGroupInsideArray() {
+    Schema left = record("{'type':'record','name':'T','namespace':'n','fields':[{'name':'items','type':"
+        + "{'type':'array','items':{'type':'record','name':'I','fields':[{'name':'Foo','type':'int'},"
+        + "{'name':'foo','type':'int'}]}}}]}");
+    Schema right = record("{'type':'record','name':'T','namespace':'n','fields':[{'name':'items','type':"
+        + "{'type':'array','items':{'type':'record','name':'I','fields':[{'name':'foo','type':'int'},"
+        + "{'name':'FOO','type':'int'}]}}}]}");
+
+    assertMergeFails(left, right, "foo");
+  }
+
+  @Test
+  public void testMergeUnionRejectsMissingFieldAndDoesNotUseAliases() {
+    Schema left = record("{'type':'record','name':'T','namespace':'n','fields':[{'name':'pageKey','type':'string'},"
+        + "{'name':'other','type':'int'}]}");
+    Schema missing =
+        record("{'type':'record','name':'T','namespace':'n','fields':[{'name':'pageKey','type':'string'}]}");
+    Schema aliased = record("{'type':'record','name':'T','namespace':'n','fields':[{'name':'page_key','type':'string',"
+        + "'aliases':['pageKey']},{'name':'other','type':'int'}]}");
+
+    assertMergeFails(left, missing, "other");
+    assertMergeFails(left, aliased, "pageKey");
+  }
+
+  // ---------------------------------------------------------------------------------------------------------------
+  // UNION merge keeps canonical (first-branch) metadata and default presence
+  // ---------------------------------------------------------------------------------------------------------------
+
+  @Test
+  public void testMergeUnionReordersOptionForCanonicalDefaultControl() {
+    Schema left =
+        record("{'type':'record','name':'T','namespace':'n','fields':[{'name':'x','type':'int','default':5}]}");
+    Schema right = record("{'type':'record','name':'T','namespace':'n','fields':[{'name':'x','type':['null','int']}]}");
+    Schema expected = record(
+        "{'type':'record','name':'T','namespace':'n','fields':[{'name':'x','type':['int','null'],'default':5}]}");
+
+    assertMerged(SchemaUtilities.mergeUnionRecordSchema(left, right, true, false), expected);
+  }
+
+  @Test
+  public void testMergeUnionDoesNotFabricateNullDefault() {
+    Schema left = record("{'type':'record','name':'T','namespace':'n','fields':[{'name':'x','type':'int'}]}");
+    Schema right = record("{'type':'record','name':'T','namespace':'n','fields':[{'name':'x','type':['null','int'],"
+        + "'default':null}]}");
+    Schema expected =
+        record("{'type':'record','name':'T','namespace':'n','fields':[{'name':'x','type':['null','int']}]}");
+
+    Schema merged = SchemaUtilities.mergeUnionRecordSchema(left, right, true, false);
+    assertMerged(merged, expected);
+    Assert.assertFalse(AvroCompatibilityHelper.fieldHasDefault(merged.getField("x")));
+  }
+
+  @Test
+  public void testMergeUnionPreservesRecordAndContainerMetadata() {
+    String common = "'doc':'top','aliases':['OldT'],'x-record':'r','fields':["
+        + "{'name':'err','type':{'type':'error','name':'E','doc':'err doc','aliases':['OldE'],'x-e':1,'fields':["
+        + "{'name':'code','type':'int'}]},'doc':'err field','aliases':['error'],'order':'descending','x-f':{'k':'v'}},"
+        + "{'name':'arr','type':{'type':'array','items':'int','x-a':'arr'}},"
+        + "{'name':'m','type':{'type':'map','values':'int','x-m':'map'}},";
+    Schema left = record("{'type':'record','name':'T','namespace':'n'," + common + "{'name':'f','type':'int'}]}");
+    // A nullability difference keeps the inputs from being textually identical.
+    Schema right =
+        record("{'type':'record','name':'T','namespace':'n'," + common + "{'name':'f','type':['null','int']}]}");
+    Schema expected =
+        record("{'type':'record','name':'T','namespace':'n'," + common + "{'name':'f','type':['null','int']}]}");
+
+    Schema merged = SchemaUtilities.mergeUnionRecordSchema(left, right, true, false);
+    assertMerged(merged, expected);
+    Assert.assertTrue(merged.getField("err").schema().isError());
+  }
+
+  @Test
+  public void testMergeUnionEnumSymbolUnionKeepsCanonicalEnumMetadata() {
+    Schema left = record("{'type':'record','name':'T','namespace':'n','fields':[{'name':'c','type':{'type':'enum',"
+        + "'name':'Color','doc':'colors','aliases':['OldColor'],'x-enum':'e','symbols':['RED','GREEN'],"
+        + "'default':'RED'}}]}");
+    Schema right = record("{'type':'record','name':'T','namespace':'n','fields':[{'name':'c','type':{'type':'enum',"
+        + "'name':'Color','symbols':['RED','BLUE']}}]}");
+    Schema expected = record("{'type':'record','name':'T','namespace':'n','fields':[{'name':'c','type':{'type':'enum',"
+        + "'name':'Color','doc':'colors','aliases':['OldColor'],'x-enum':'e','symbols':['RED','GREEN','BLUE'],"
+        + "'default':'RED'}}]}");
+
+    assertMerged(SchemaUtilities.mergeUnionRecordSchema(left, right, true, false), expected);
+  }
+
+  // ---------------------------------------------------------------------------------------------------------------
+  // Incompatible named/logical/union types fail; existing promotions remain
+  // ---------------------------------------------------------------------------------------------------------------
+
+  @Test
+  public void testMergeUnionFixedSizeMismatchFailsInBothModes() {
+    Schema md5Of16 = fieldRecord("checksumField", "{'type':'fixed','name':'Md5','size':16}");
+    Schema md5Of8 = fieldRecord("checksumField", "{'type':'fixed','name':'Md5','size':8}");
+    Schema shaOf8 = fieldRecord("checksumField", "{'type':'fixed','name':'Sha','size':8}");
+
+    assertMergeFails(md5Of16, md5Of8, true, "checksumField", "Md5", "16", "8");
+    assertMergeFails(md5Of16, md5Of8, false, "checksumField", "Md5", "16", "8");
+    assertMergeFails(md5Of16, shaOf8, false, "checksumField", "Md5", "Sha", "16", "8");
+  }
+
+  @Test
+  public void testMergeUnionSameSizeFixedKeepsExistingNameBehavior() {
+    Schema md5 = fieldRecord("checksumField", "{'type':'fixed','name':'Md5','size':16}");
+    Schema sha = fieldRecord("checksumField", "{'type':'fixed','name':'Sha','size':16}");
+
+    // Non-strict merges ignore a name-only difference and keep the left fixed.
+    Schema merged = SchemaUtilities.mergeUnionRecordSchema(md5, sha, false, false);
+    Assert.assertEquals(merged.getField("checksumField").schema().getName(), "Md5");
+    Assert.assertEquals(merged.getField("checksumField").schema().getFixedSize(), 16);
+  }
+
+  @Test
+  public void testMergeUnionConflictingLogicalTypesFail() {
+    Schema scale2 = fieldRecord("amountField", "{'type':'bytes','logicalType':'decimal','precision':10,'scale':2}");
+    Schema scale3 = fieldRecord("amountField", "{'type':'bytes','logicalType':'decimal','precision':10,'scale':3}");
+    Schema millis = fieldRecord("createdField", "{'type':'long','logicalType':'timestamp-millis'}");
+    Schema micros = fieldRecord("createdField", "{'type':'long','logicalType':'timestamp-micros'}");
+
+    assertMergeFails(scale2, scale3, true, "amountField");
+    assertMergeFails(scale2, scale3, false, "amountField");
+    assertMergeFails(millis, micros, true, "createdField");
+  }
+
+  @Test
+  public void testMergeUnionDifferentOpaqueUnionsFail() {
+    Schema intOrString = fieldRecord("choiceField", "['int','string']");
+    Schema intOrBoolean = fieldRecord("choiceField", "['int','boolean']");
+    Schema intOrStringOptional = fieldRecord("choiceField", "['null','int','string']");
+
+    assertMergeFails(intOrString, intOrBoolean, true, "choiceField");
+    // Identical opaque unions inside otherwise different records still merge unchanged.
+    Schema left = record("{'type':'record','name':'T','namespace':'n','fields':[{'name':'choiceField','type':"
+        + "['null','int','string']},{'name':'other','type':'int'}]}");
+    Schema right = record("{'type':'record','name':'T','namespace':'n','fields':[{'name':'choiceField','type':"
+        + "['null','int','string']},{'name':'other','type':'long'}]}");
+    Schema merged = SchemaUtilities.mergeUnionRecordSchema(left, right, true, false);
+    Assert.assertEquals(merged.getField("choiceField").schema(), intOrStringOptional.getField("choiceField").schema());
+  }
+
+  @Test
+  public void testMergeUnionExistingPromotionsControl() {
+    assertPromotes("'int'", "'long'", "\"long\"");
+    assertPromotes("{'type':'enum','name':'E','symbols':['A']}", "'string'", "\"string\"");
+    assertPromotes("{'type':'fixed','name':'F','size':4}", "'bytes'", "\"bytes\"");
+  }
+
+  private static void assertPromotes(String leftType, String rightType, String expectedJson) {
+    Schema merged =
+        SchemaUtilities.mergeUnionRecordSchema(fieldRecord("v", leftType), fieldRecord("v", rightType), true, false);
+    Assert.assertEquals(merged.getField("v").schema().toString(), expectedJson);
+  }
+
+  private static Schema record(String singleQuotedJson) {
+    return new Schema.Parser().parse(singleQuotedJson.replace('\'', '"'));
+  }
+
+  private static Schema fieldRecord(String fieldName, String singleQuotedType) {
+    return record("{'type':'record','name':'T','namespace':'n','fields':[{'name':'" + fieldName + "','type':"
+        + singleQuotedType + "}]}");
+  }
+
+  /** Exact comparison including docs, aliases, props, defaults and order, plus a validating reparse. */
+  private static void assertMerged(Schema actual, Schema expected) {
+    Assert.assertEquals(new Schema.Parser().parse(actual.toString()).toString(true), actual.toString(true));
+    Assert.assertEquals(actual.toString(true), expected.toString(true));
+  }
+
+  private static void assertMergeFails(Schema left, Schema right, String... fragments) {
+    assertMergeFails(left, right, true, fragments);
+  }
+
+  private static void assertMergeFails(Schema left, Schema right, boolean strictMode, String... fragments) {
+    Schema merged;
+    try {
+      merged = SchemaUtilities.mergeUnionRecordSchema(left, right, strictMode, false);
+    } catch (RuntimeException e) {
+      for (String fragment : fragments) {
+        Assert.assertTrue(String.valueOf(e.getMessage()).contains(fragment),
+            "Expected failure to mention '" + fragment + "' but was: " + e.getMessage());
+      }
+      return;
+    }
+    Assert.fail("Expected merge to fail but produced: " + merged.toString(true));
   }
 }

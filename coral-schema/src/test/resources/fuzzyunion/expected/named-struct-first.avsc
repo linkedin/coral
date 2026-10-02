@@ -1,0 +1,5 @@
+{"type":"record","name":"@VIEW@","namespace":"fz.@VIEW@","fields":[
+  {"name":"id","type":"long"},
+  {"name":"b","type":["null",{"type":"record","name":"b","namespace":"fz.@VIEW@.@VIEW@","fields":[
+    {"name":"pageKey","type":["null","string"],"default":null},
+    {"name":"memberId","type":["null","int"],"default":null}]}],"doc":"Field created in view by applying UDF 'named_struct' with argument(s): \"pageKey\", com.linkedin.flat.Flat.pk, \"memberId\", com.linkedin.flat.Flat.mid, \"extra\", com.linkedin.flat.Flat.e"}]}

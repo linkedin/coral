@@ -1,0 +1,6 @@
+{"type":"record","name":"Un","namespace":"com.linkedin.un","fields":[
+  {"name":"id","type":"long"},
+  {"name":"s","type":{"type":"record","name":"S","fields":[
+    {"name":"u","type":["null","int","string"],"default":null},
+    {"name":"a","type":"int"},
+    {"name":"extra","type":["null","int"],"default":null}]}}]}
