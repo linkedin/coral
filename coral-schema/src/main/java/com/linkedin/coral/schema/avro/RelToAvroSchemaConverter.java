@@ -5,6 +5,7 @@
  */
 package com.linkedin.coral.schema.avro;
 
+import java.util.ArrayList;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -16,7 +17,6 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import org.apache.avro.Schema;
-import org.apache.avro.SchemaBuilder;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelShuttleImpl;
 import org.apache.calcite.rel.core.AggregateCall;
@@ -62,6 +62,7 @@ import com.linkedin.coral.common.HiveMetastoreClient;
 import com.linkedin.coral.common.HiveUncollect;
 import com.linkedin.coral.common.catalog.CoralCatalog;
 import com.linkedin.coral.common.catalog.CoralTable;
+import com.linkedin.coral.common.functions.GenericProjectFunction;
 import com.linkedin.coral.hive.hive2rel.functions.OrdinalReturnTypeInferenceV2;
 
 
@@ -75,6 +76,13 @@ import com.linkedin.coral.hive.hive2rel.functions.OrdinalReturnTypeInferenceV2;
  * Case Sensitivity is addressed by extracting field name directly from base table avro schema based on index mapping
  * and pass it through AST tree in a bottom-up manner if there is no renaming. If there is renaming, then
  * the user-specified new name is used instead
+ *
+ * Generic projection:
+ * A fuzzy UNION branch whose evolved struct has more fields than the other branches is wrapped into an internally
+ * typed {@link GenericProjectFunction}. Its operand (a column, a field access, or an expression the optimizer
+ * inlined into the call) is inferred like any other projected expression, and then projected onto the common
+ * structure of the call's type by {@link AvroSchemaProjection}. The result keeps the spelling, doc, aliases,
+ * properties, nullability and defaults of the source schema, instead of being derived from the lower-cased type.
  *
  * Nullability:
  * 1. If a column is unmodified by Rel operator, it retains nullability property
@@ -255,12 +263,13 @@ public class RelToAvroSchemaConverter {
         suggestedFieldNames.offer(field.getName());
       }
 
-      SchemaBuilder.FieldAssembler<Schema> logicalProjectFieldAssembler =
-          SchemaBuilder.record(inputSchema.getName()).namespace(inputSchema.getNamespace()).fields();
-      logicalProject.accept(new SchemaRexShuttle(inputSchema, logicalProject.getInput(), suggestedFieldNames,
-          logicalProjectFieldAssembler));
+      List<Schema.Field> logicalProjectFields = new ArrayList<>();
+      logicalProject.accept(
+          new SchemaRexShuttle(inputSchema, logicalProject.getInput(), suggestedFieldNames, logicalProjectFields));
 
-      schemaMap.put(logicalProject, logicalProjectFieldAssembler.endRecord());
+      // The projection replaces the fields only; doc, aliases and properties of the input record stay
+      schemaMap.put(logicalProject, SchemaUtilities.newRecord(inputSchema, inputSchema.getName(),
+          inputSchema.getNamespace(), logicalProjectFields));
 
       return relNode;
     }
@@ -276,17 +285,17 @@ public class RelToAvroSchemaConverter {
       List<Schema.Field> leftInputSchemaFields = leftInputSchema.getFields();
       List<Schema.Field> rightInputSchemaFields = rightInputSchema.getFields();
 
-      SchemaBuilder.FieldAssembler<Schema> logicalJoinFieldAssembler =
-          SchemaBuilder.record(leftInputSchema.getName()).namespace(leftInputSchema.getNamespace()).fields();
+      List<Schema.Field> logicalJoinFields = new ArrayList<>();
 
       for (Schema.Field leftInputSchemaField : leftInputSchemaFields) {
-        SchemaUtilities.appendField(leftInputSchemaField, logicalJoinFieldAssembler);
+        SchemaUtilities.appendField(leftInputSchemaField, logicalJoinFields);
       }
       for (Schema.Field rightInputSchemaField : rightInputSchemaFields) {
-        SchemaUtilities.appendField(rightInputSchemaField, logicalJoinFieldAssembler);
+        SchemaUtilities.appendField(rightInputSchemaField, logicalJoinFields);
       }
 
-      schemaMap.put(logicalJoin, logicalJoinFieldAssembler.endRecord());
+      schemaMap.put(logicalJoin,
+          SchemaUtilities.createRecord(leftInputSchema.getName(), leftInputSchema.getNamespace(), logicalJoinFields));
 
       return relNode;
     }
@@ -306,11 +315,12 @@ public class RelToAvroSchemaConverter {
     @Override
     public RelNode visit(LogicalUnion logicalUnion) {
       RelNode relNode = super.visit(logicalUnion);
-      Schema inputSchema1 = schemaMap.get(logicalUnion.getInput(0));
-      Schema inputSchema2 = schemaMap.get(logicalUnion.getInput(1));
-
-      Schema mergedSchema =
-          SchemaUtilities.mergeUnionRecordSchema(inputSchema1, inputSchema2, strictMode, forceLowercase);
+      // Fold every input in SQL order: the first input stays canonical, and each later input has to be compatible
+      Schema mergedSchema = schemaMap.get(logicalUnion.getInput(0));
+      for (int i = 1; i < logicalUnion.getInputs().size(); i++) {
+        mergedSchema = SchemaUtilities.mergeUnionRecordSchema(mergedSchema, schemaMap.get(logicalUnion.getInput(i)),
+            strictMode, forceLowercase);
+      }
 
       schemaMap.put(logicalUnion, mergedSchema);
 
@@ -334,13 +344,12 @@ public class RelToAvroSchemaConverter {
       // TODO: Potential need RexShuttle
       RelNode relNode = super.visit(logicalAggregate);
       Schema inputSchema = schemaMap.get(logicalAggregate.getInput());
-      SchemaBuilder.FieldAssembler<Schema> logicalAggregateFieldAssembler =
-          SchemaBuilder.record(inputSchema.getName()).namespace(inputSchema.getNamespace()).fields();
+      List<Schema.Field> logicalAggregateFields = new ArrayList<>();
 
       List<Schema.Field> inputSchemaFields = inputSchema.getFields();
       for (int i = 0; i < inputSchemaFields.size(); i++) {
         if (logicalAggregate.getGroupSet().get(i)) {
-          SchemaUtilities.appendField(inputSchemaFields.get(i), logicalAggregateFieldAssembler);
+          SchemaUtilities.appendField(inputSchemaFields.get(i), logicalAggregateFields);
         }
       }
 
@@ -349,10 +358,11 @@ public class RelToAvroSchemaConverter {
         String fieldName = SchemaUtilities.toAvroQualifiedName(aggCall.right);
         RelDataType fieldType = aggCall.left.getType();
         SchemaUtilities.appendField(fieldName, fieldType,
-            SchemaUtilities.generateDocumentationForAggregate(aggCall.left), logicalAggregateFieldAssembler, true);
+            SchemaUtilities.generateDocumentationForAggregate(aggCall.left), logicalAggregateFields, true);
       }
 
-      schemaMap.put(logicalAggregate, logicalAggregateFieldAssembler.endRecord());
+      schemaMap.put(logicalAggregate,
+          SchemaUtilities.createRecord(inputSchema.getName(), inputSchema.getNamespace(), logicalAggregateFields));
 
       return relNode;
     }
@@ -379,14 +389,13 @@ public class RelToAvroSchemaConverter {
     public RelNode visit(RelNode relNode) {
       // Handles lateral views here
       if (relNode instanceof HiveUncollect || relNode instanceof LogicalTableFunctionScan) {
-        SchemaBuilder.FieldAssembler<Schema> hiveUncollectFieldAssembler =
-            SchemaBuilder.record("LateralViews").namespace("LateralViews").fields();
+        List<Schema.Field> hiveUncollectFields = new ArrayList<>();
 
         for (RelDataTypeField field : relNode.getRowType().getFieldList()) {
-          SchemaUtilities.appendField(field.getName(), field.getType(), null, hiveUncollectFieldAssembler, true);
+          SchemaUtilities.appendField(field.getName(), field.getType(), null, hiveUncollectFields, true);
         }
 
-        schemaMap.put(relNode, hiveUncollectFieldAssembler.endRecord());
+        schemaMap.put(relNode, SchemaUtilities.createRecord("LateralViews", "LateralViews", hiveUncollectFields));
 
         return relNode;
       } else {
@@ -437,19 +446,21 @@ public class RelToAvroSchemaConverter {
   private static class SchemaRexShuttle extends RexShuttle {
     private final Schema inputSchema;
     private final Queue<String> suggestedFieldNames;
-    private final SchemaBuilder.FieldAssembler<Schema> fieldAssembler;
+    private final List<Schema.Field> fields;
     private RelNode inputNode;
+    // True while inferring the operand of a generic projection. Field names that feed a projection are resolved
+    // against the source schema without guessing between names that only differ in casing.
+    private boolean projectionSource;
 
-    public SchemaRexShuttle(Schema inputSchema, Queue<String> suggestedFieldNames,
-        SchemaBuilder.FieldAssembler<Schema> fieldAssembler) {
+    public SchemaRexShuttle(Schema inputSchema, Queue<String> suggestedFieldNames, List<Schema.Field> fields) {
       this.inputSchema = inputSchema;
       this.suggestedFieldNames = suggestedFieldNames;
-      this.fieldAssembler = fieldAssembler;
+      this.fields = fields;
     }
 
     public SchemaRexShuttle(Schema inputSchema, RelNode inputNode, Queue<String> suggestedFieldNames,
-        SchemaBuilder.FieldAssembler<Schema> fieldAssembler) {
-      this(inputSchema, suggestedFieldNames, fieldAssembler);
+        List<Schema.Field> fields) {
+      this(inputSchema, suggestedFieldNames, fields);
       this.inputNode = inputNode;
     }
 
@@ -480,6 +491,11 @@ public class RelToAvroSchemaConverter {
 
     @Override
     public RexNode visitCall(RexCall rexCall) {
+      if (rexCall.getOperator() instanceof GenericProjectFunction) {
+        appendGenericProjection(rexCall);
+        return rexCall;
+      }
+
       /**
        * If the return type of RexCall is based on an ordinal of its input arguments, then leverage SchemaRexShuttle
        * to visit the input argument and use the argument's schema as is to infer the return type of the call
@@ -558,6 +574,10 @@ public class RelToAvroSchemaConverter {
           // Besides, we need to store the field name (`inner_struct_col`) in `fieldNames` so that we can retrieve the correct inner struct from `topSchema` afterwards
           innerRecordNames.push(((RexFieldAccess) referenceExpr).getField().getName());
           referenceExpr = ((RexFieldAccess) referenceExpr).getReferenceExpr();
+        } else if (projectionSource && referenceExpr instanceof RexCall) {
+          // Only the accessed field is part of the projection operand, not the whole expression it is accessed on
+          handleUDFFieldAccess(rexFieldAccess, (RexCall) referenceExpr);
+          return rexFieldAccess;
         } else {
           return super.visitFieldAccess(rexFieldAccess);
         }
@@ -571,10 +591,18 @@ public class RelToAvroSchemaConverter {
         Deque<String> innerRecordNames) {
       String oldFieldName = rexFieldAccess.getField().getName();
       String suggestNewFieldName = suggestedFieldNames.poll();
-      String newFieldName = SchemaUtilities.getFieldName(oldFieldName, suggestNewFieldName);
 
-      Schema topSchema = inputSchema.getFields().get(referenceExpr.getIndex()).schema();
-      AccessedField accessedField = getFieldFromTopSchema(topSchema, oldFieldName, innerRecordNames);
+      Schema.Field topField = inputSchema.getFields().get(referenceExpr.getIndex());
+      AccessedField accessedField;
+      String newFieldName;
+      if (projectionSource) {
+        accessedField = resolveAccessedField(topField, innerRecordNames, oldFieldName);
+        // The source spelling, not the case-folded name of the relational type, is what the result keeps
+        newFieldName = SchemaUtilities.getFieldName(accessedField.field.name(), suggestNewFieldName);
+      } else {
+        accessedField = getFieldFromTopSchema(topField.schema(), oldFieldName, innerRecordNames);
+        newFieldName = SchemaUtilities.getFieldName(oldFieldName, suggestNewFieldName);
+      }
       assert accessedField.field != null;
 
       // Projecting a leaf out of a nullable ancestor flattens two levels of nullability into one column, so the
@@ -583,10 +611,41 @@ public class RelToAvroSchemaConverter {
       // that the data violates for every row where an ancestor is null.
       Schema fieldSchema = accessedField.field.schema();
       if (accessedField.nullableAncestor) {
-        fieldSchema = SchemaUtilities.reorderOptionIfRequired(SchemaUtilities.makeNullable(fieldSchema, false),
-            SchemaUtilities.defaultValue(accessedField.field));
+        fieldSchema = SchemaUtilities.makeNullable(fieldSchema, false);
+        if (SchemaUtilities.hasNonNullDefault(accessedField.field)) {
+          fieldSchema = SchemaUtilities.reorderOptionIfRequired(fieldSchema, Boolean.TRUE);
+        }
       }
-      SchemaUtilities.appendField(newFieldName, accessedField.field, fieldSchema, fieldAssembler);
+      SchemaUtilities.appendField(newFieldName, accessedField.field, fieldSchema, fields);
+    }
+
+    /**
+     * Infers the single field that a generic projection projects: the operand is resolved with a private shuttle,
+     * so that nothing is appended to this projection's fields and no suggested name is consumed, then the field
+     * is projected onto the typed return of the call and takes the next suggested name.
+     */
+    private void appendGenericProjection(RexCall rexCall) {
+      if (rexCall.getOperands().isEmpty() || rexCall.getType() == null) {
+        throw new IllegalArgumentException(
+            "Malformed generic_project call, it needs an operand to project and a typed return: " + rexCall);
+      }
+      Preconditions.checkState(!suggestedFieldNames.isEmpty(), "No field name for generic_project call %s", rexCall);
+
+      RexNode operand = rexCall.getOperands().get(0);
+      List<Schema.Field> operandFields = new ArrayList<>();
+      Queue<String> operandNames = new LinkedList<>();
+      operandNames.offer(suggestedFieldNames.peek());
+      SchemaRexShuttle operandShuttle = new SchemaRexShuttle(inputSchema, inputNode, operandNames, operandFields);
+      operandShuttle.projectionSource = true;
+      operand.accept(operandShuttle);
+      Preconditions.checkState(operandFields.size() == 1,
+          "The operand of generic_project call %s must infer exactly one field but inferred %s", rexCall,
+          operandFields.size());
+
+      Schema.Field inferred = operandFields.get(0);
+      Schema.Field projected = AvroSchemaProjection.project(inferred, operand.getType(), rexCall.getType());
+      String fieldName = SchemaUtilities.getFieldName(inferred.name(), suggestedFieldNames.poll());
+      fields.add(SchemaUtilities.cloneField(projected, fieldName, projected.schema(), projected.doc()));
     }
 
     private void handleUDFFieldAccess(RexFieldAccess rexFieldAccess, RexCall referenceExpr) {
@@ -597,7 +656,7 @@ public class RelToAvroSchemaConverter {
       RelDataType fieldType = rexFieldAccess.getType();
       boolean isNullable = SchemaUtilities.isFieldNullable(referenceExpr, inputSchema);
       // TODO: add field documentation
-      SchemaUtilities.appendField(newFieldName, fieldType, null, fieldAssembler, isNullable);
+      SchemaUtilities.appendField(newFieldName, fieldType, null, fields, isNullable);
     }
 
     @Override
@@ -624,12 +683,63 @@ public class RelToAvroSchemaConverter {
       String suggestNewFieldName = suggestedFieldNames.poll();
       String newFieldName = SchemaUtilities.getFieldName(oldFieldName, suggestNewFieldName);
 
-      SchemaUtilities.appendField(newFieldName, field, fieldAssembler);
+      SchemaUtilities.appendField(newFieldName, field, fields);
     }
 
     private void appendField(RelDataType fieldType, boolean isNullable, String doc) {
       String fieldName = SchemaUtilities.getFieldName("", suggestedFieldNames.poll());
-      SchemaUtilities.appendField(fieldName, fieldType, doc, fieldAssembler, isNullable);
+      SchemaUtilities.appendField(fieldName, fieldType, doc, fields, isNullable);
+    }
+
+    /**
+     * Resolves {@code topField.innerRecordNames....fieldName} against the source schema, following the access path
+     * segment by segment. Arrays and maps on the way are entered, as for ITEM accesses. Every record segment must
+     * match exactly one field ignoring case: a segment that matches several fields is ambiguous.
+     */
+    private AccessedField resolveAccessedField(Schema.Field topField, Deque<String> innerRecordNames,
+        String fieldName) {
+      List<String> segments = new ArrayList<>(innerRecordNames);
+      segments.add(fieldName);
+
+      boolean nullableAncestor = AvroSerdeUtils.isNullableType(topField.schema());
+      Schema current = SchemaUtilities.extractIfOption(topField.schema());
+      StringBuilder path = new StringBuilder(topField.name());
+      Schema.Field resolved = null;
+      for (int i = 0; i < segments.size(); i++) {
+        while (current.getType() == Schema.Type.ARRAY || current.getType() == Schema.Type.MAP) {
+          current = current.getType() == Schema.Type.ARRAY ? current.getElementType() : current.getValueType();
+          nullableAncestor = nullableAncestor || AvroSerdeUtils.isNullableType(current);
+          current = SchemaUtilities.extractIfOption(current);
+        }
+        if (current.getType() != Schema.Type.RECORD) {
+          throw new IllegalArgumentException("Cannot access field '" + segments.get(i) + "' of " + path
+              + " which is not a record but " + current.getType());
+        }
+
+        resolved = findUniqueField(current, segments.get(i), path.toString());
+        path.append('.').append(resolved.name());
+        if (i < segments.size() - 1) {
+          nullableAncestor = nullableAncestor || AvroSerdeUtils.isNullableType(resolved.schema());
+          current = SchemaUtilities.extractIfOption(resolved.schema());
+        }
+      }
+      return new AccessedField(resolved, nullableAncestor);
+    }
+
+    private Schema.Field findUniqueField(Schema record, String name, String path) {
+      List<Schema.Field> matches = new ArrayList<>();
+      for (Schema.Field field : record.getFields()) {
+        if (field.name().equalsIgnoreCase(name)) {
+          matches.add(field);
+        }
+      }
+      if (matches.size() != 1) {
+        List<String> candidates = new ArrayList<>();
+        matches.forEach(field -> candidates.add(field.name()));
+        throw new IllegalArgumentException("Cannot resolve field '" + name + "' of " + path + " in record "
+            + record.getFullName() + (matches.isEmpty() ? ": no such field" : ": ambiguous, candidates " + candidates));
+      }
+      return matches.get(0);
     }
 
     /**
