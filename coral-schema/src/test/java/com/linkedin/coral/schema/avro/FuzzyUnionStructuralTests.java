@@ -110,6 +110,49 @@ public class FuzzyUnionStructuralTests {
     assertFailsMentioning(() -> relToAvroSchemaConverter.convert(project, false, false), "first_field");
   }
 
+  @Test
+  public void testT13NonStringTargetMapKeyFails() {
+    // Source attrs is a valid Avro map (string keys); the typed target asks for MAP<INTEGER, struct>.
+    RelNode scan = scan("SELECT * FROM fz.nest_evolved");
+    RelDataTypeFactory typeFactory = rexBuilder(scan).getTypeFactory();
+    RelDataType value = typeFactory.createTypeWithNullability(typeFactory.createStructType(
+        ImmutableList.of(nullable(typeFactory, SqlTypeName.VARCHAR), nullable(typeFactory, SqlTypeName.INTEGER)),
+        ImmutableList.of("attrkey", "attrval")), true);
+    RelDataType target = typeFactory
+        .createTypeWithNullability(typeFactory.createMapType(nullable(typeFactory, SqlTypeName.INTEGER), value), true);
+    RelNode project = projectColumn(scan, 1, "attrs", genericProject(scan, target, inputRef(scan, 1)));
+
+    assertFailsMentioningIgnoringCase(() -> relToAvroSchemaConverter.convert(project, false, false), "attrs", "key");
+  }
+
+  // ---------------------------------------------------------------------------------------------------------------
+  // T12/T13 (structural, typed call): DECIMAL inside a projected record. Natural fuzzy SQL cannot reach this because
+  // the existing rewriter cannot express DECIMAL in its Hive target-type string; inference reads the typed return.
+  // ---------------------------------------------------------------------------------------------------------------
+
+  @Test
+  public void testT12ProjectedRecordKeepsDecimalIdentity() {
+    RelNode scan = scan("SELECT * FROM fz.dec_src");
+    RelNode project = projectColumn(scan, 1, "p", genericProject(scan, decimalStruct(scan, 10, 2), inputRef(scan, 1)));
+
+    Schema.Field field = relToAvroSchemaConverter.convert(project, true, false).getField("p");
+    Assert.assertNotNull(field, "projected field keeps the source name p");
+    Assert.assertEquals(field.doc(), "Price field");
+    Assert.assertFalse(AvroCompatibilityHelper.fieldHasDefault(field));
+    Assert.assertEquals(field.schema().toString(true),
+        new Schema.Parser().parse(("{'type':'record','name':'P','namespace':'com.linkedin.dec','doc':'Priced record',"
+            + "'fields':[{'name':'amount','type':{'type':'bytes','logicalType':'decimal','precision':10,'scale':2,"
+            + "'x-dec-prop':'d'},'doc':'Amount'}]}").replace('\'', '"')).toString(true));
+  }
+
+  @Test
+  public void testT13ProjectedDecimalWithDifferentScaleFails() {
+    RelNode scan = scan("SELECT * FROM fz.dec_src");
+    RelNode project = projectColumn(scan, 1, "p", genericProject(scan, decimalStruct(scan, 10, 3), inputRef(scan, 1)));
+
+    assertFailsMentioning(() -> relToAvroSchemaConverter.convert(project, true, false), "amount");
+  }
+
   // ---------------------------------------------------------------------------------------------------------------
   // T16: truly malformed internal calls, and a different operator printed as generic_project
   // ---------------------------------------------------------------------------------------------------------------
@@ -211,6 +254,19 @@ public class FuzzyUnionStructuralTests {
     }
     return typeFactory
         .createTypeWithNullability(typeFactory.createStructType(types.build(), ImmutableList.copyOf(names)), true);
+  }
+
+  private static RelDataType nullable(RelDataTypeFactory typeFactory, SqlTypeName typeName) {
+    return typeFactory.createTypeWithNullability(typeFactory.createSqlType(typeName), true);
+  }
+
+  /** {@code struct<amount:decimal(precision,scale)>}, dropping the source's extra field. */
+  private static RelDataType decimalStruct(RelNode node, int precision, int scale) {
+    RelDataTypeFactory typeFactory = rexBuilder(node).getTypeFactory();
+    RelDataType decimal =
+        typeFactory.createTypeWithNullability(typeFactory.createSqlType(SqlTypeName.DECIMAL, precision, scale), true);
+    return typeFactory.createTypeWithNullability(
+        typeFactory.createStructType(ImmutableList.of(decimal), ImmutableList.of("amount")), true);
   }
 
   /** An internally typed call shaped like the rewriter's: operand, column-name literal, Hive type string. */

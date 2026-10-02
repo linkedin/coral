@@ -1,0 +1,5 @@
+{"type":"record","name":"Dec","namespace":"com.linkedin.dec","fields":[
+  {"name":"id","type":"long"},
+  {"name":"p","type":{"type":"record","name":"P","doc":"Priced record","fields":[
+    {"name":"amount","type":{"type":"bytes","logicalType":"decimal","precision":10,"scale":2,"x-dec-prop":"d"},"doc":"Amount"},
+    {"name":"extra","type":["null","string"],"default":null}]},"doc":"Price field"}]}

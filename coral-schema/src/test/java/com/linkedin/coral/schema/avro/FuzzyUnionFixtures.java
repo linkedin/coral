@@ -139,6 +139,8 @@ final class FuzzyUnionFixtures {
     c.addAvroSerdeTable(DB, "flat_src", load("flat_src.avsc"), "id bigint", "pk string", "mid int", "e string");
     c.addAvroSerdeTable(DB, "case_camel", load("case_camel.avsc"), "pagekey string", "hdr struct<memberid:int>");
     c.addAvroSerdeTable(DB, "case_lower", load("case_lower.avsc"), "pagekey string", "hdr struct<memberid:int>");
+    c.addAvroSerdeTable(DB, "dec_src", load("dec_src.avsc"), "id bigint",
+        "p struct<amount:decimal(10,2),extra:string>");
     c.addAvroSerdeTable(DB, "fx_a", load("fx_a.avsc"), "id bigint", "c binary");
     c.addAvroSerdeTable(DB, "fx_a2", load("fx_a2.avsc"), "id bigint", "c binary");
     c.addAvroSerdeTable(DB, "fx_b", load("fx_b.avsc"), "id bigint", "c binary");
