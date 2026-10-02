@@ -285,6 +285,7 @@ final class FuzzyUnionFixtures {
         functions("MakeNested", MAKE_NESTED_UDF), "id bigint", "b struct<pagekey:string,memberid:int,extra:string>");
     c.addView(DB, "v_amb_plain", "SELECT id, s.foo AS b FROM fz.amb_acc", "id bigint", "b struct<x:int,y:int>");
     c.addView(DB, "v_cdef_plain", "SELECT * FROM fz.cdef_evolved", "id bigint", "c string");
+    c.addView(DB, "v_cdef_base_plain", "SELECT * FROM fz.cdef_base", "id bigint", "c string");
     unionView(c, "v_t24", "SELECT * FROM fz.case_camel", "SELECT * FROM fz.case_lower");
     unionView(c, "v_t24r", "SELECT * FROM fz.case_lower", "SELECT * FROM fz.case_camel");
     return c;

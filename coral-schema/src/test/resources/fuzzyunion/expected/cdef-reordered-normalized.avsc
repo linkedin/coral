@@ -1,0 +1,6 @@
+{"type":"record","name":"v","namespace":"fz.v","fields":[
+  {"name":"id","type":"long"},
+  {"name":"c","type":{"type":"record","name":"C","namespace":"fz.v.v","fields":[
+    {"name":"rec","type":{"type":"record","name":"RD","namespace":"fz.v.v.C","fields":[{"name":"rb","type":"string"},{"name":"ra","type":"int"}]},"default":{"rb":"q","ra":6}},
+    {"name":"recs","type":{"type":"array","items":{"type":"record","name":"E","namespace":"fz.v.v.C","fields":[{"name":"eb","type":"string"},{"name":"ea","type":"int"}]}},"default":[{"eb":"x","ea":1},{"eb":"w","ea":4}]},
+    {"name":"byKey","type":{"type":"map","values":{"type":"record","name":"V","namespace":"fz.v.v.C","fields":[{"name":"vb","type":"string"},{"name":"va","type":"int"}]}},"default":{"k":{"vb":"y","va":2},"j":{"vb":"v","va":5}}}]}}]}

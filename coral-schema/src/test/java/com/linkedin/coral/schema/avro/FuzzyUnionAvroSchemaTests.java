@@ -251,6 +251,51 @@ public class FuzzyUnionAvroSchemaTests {
   }
 
   @Test
+  public void testT10NonStrictPlainViewsKeepCollectionDefaults() {
+    // Pre-existing shared default-copy failure (approved D3 coverage, not a casing reproduction): non-strict namespace
+    // normalization must keep array-of-record and map-of-record defaults unchanged. No projection is involved; the
+    // evolved control keeps every extra field and its declared default.
+    Assert.assertTrue(allGenericProjects(rel("v_cdef_base_plain")).isEmpty());
+    Assert.assertTrue(allGenericProjects(rel("v_cdef_plain")).isEmpty());
+    assertView(nonStrict("v_cdef_base_plain"), "cdef-nonstrict-base.avsc", "v_cdef_base_plain");
+    Schema evolved = nonStrict("v_cdef_plain");
+    assertView(evolved, "cdef-nonstrict-evolved-plain.avsc", "v_cdef_plain");
+    assertCollectionDefaults(evolved,
+        "[{\"ea\":1,\"eExtra\":true,\"eb\":\"x\"},{\"ea\":4,\"eExtra\":false,\"eb\":\"w\"}]",
+        "{\"k\":{\"vExtra\":true,\"va\":2,\"vb\":\"y\"},\"j\":{\"vExtra\":false,\"va\":5,\"vb\":\"v\"}}",
+        "{\"ra\":6,\"rExtra\":true,\"rb\":\"q\"}");
+  }
+
+  @Test
+  public void testT10NonStrictUnionKeepsCanonicalCollectionDefaults() {
+    // Same defaults through non-strict pre-merge and final view normalization, in both canonical orders.
+    assertProjections("v_t10c", 0, 1);
+    Schema baseFirst = nonStrict("v_t10c");
+    assertView(baseFirst, "cdef-nonstrict-base.avsc", "v_t10c");
+    assertCollectionDefaults(baseFirst, "[{\"ea\":1,\"eb\":\"x\"}]", "{\"k\":{\"va\":2,\"vb\":\"y\"}}",
+        "{\"ra\":3,\"rb\":\"z\"}");
+
+    assertProjections("v_t10cr", 1, 0);
+    Schema projectedFirst = nonStrict("v_t10cr");
+    assertView(projectedFirst, "cdef-nonstrict-projected.avsc", "v_t10cr");
+    assertCollectionDefaults(projectedFirst, "[{\"ea\":1,\"eb\":\"x\"},{\"ea\":4,\"eb\":\"w\"}]",
+        "{\"k\":{\"va\":2,\"vb\":\"y\"},\"j\":{\"va\":5,\"vb\":\"v\"}}", "{\"ra\":6,\"rb\":\"q\"}");
+  }
+
+  /** Field defaults of c.recs/c.byKey/c.rec are present with exactly these values; id, c and leaves have none. */
+  static void assertCollectionDefaults(Schema view, String recs, String byKey, String rec) {
+    Assert.assertFalse(AvroCompatibilityHelper.fieldHasDefault(view.getField("id")));
+    Assert.assertFalse(AvroCompatibilityHelper.fieldHasDefault(view.getField("c")));
+    Schema c = view.getField("c").schema();
+    Assert.assertEquals(AvroCompatibilityHelper.getDefaultValueAsJsonString(c.getField("recs")), recs);
+    Assert.assertEquals(AvroCompatibilityHelper.getDefaultValueAsJsonString(c.getField("byKey")), byKey);
+    Assert.assertEquals(AvroCompatibilityHelper.getDefaultValueAsJsonString(c.getField("rec")), rec);
+    Schema element = c.getField("recs").schema().getElementType();
+    Assert.assertFalse(AvroCompatibilityHelper.fieldHasDefault(element.getField("ea")));
+    Assert.assertFalse(AvroCompatibilityHelper.fieldHasDefault(c.getField("rec").schema().getField("ra")));
+  }
+
+  @Test
   public void testT11RecordAndFieldMetadataNonStrict() {
     assertView(nonStrict("v_t11"), "meta.avsc", "v_t11", "@FIELD@", "info");
     assertView(nonStrict("v_t11r"), "meta.avsc", "v_t11r", "@FIELD@", "info");

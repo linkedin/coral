@@ -160,18 +160,7 @@ public class FuzzyUnionStructuralTests {
 
   @Test
   public void testT10ReorderedProjectionReshapesNestedRecordDefaults() {
-    RelNode scan = scan("SELECT * FROM fz.cdef_evolved");
-    RelDataTypeFactory typeFactory = rexBuilder(scan).getTypeFactory();
-    RelDataType varchar = nullable(typeFactory, SqlTypeName.VARCHAR);
-    RelDataType integer = nullable(typeFactory, SqlTypeName.INTEGER);
-    RelDataType rec = nullableStruct(typeFactory, ImmutableList.of(varchar, integer), "rb", "ra");
-    RelDataType element = nullableStruct(typeFactory, ImmutableList.of(varchar, integer), "eb", "ea");
-    RelDataType value = nullableStruct(typeFactory, ImmutableList.of(varchar, integer), "vb", "va");
-    RelDataType target = nullableStruct(typeFactory,
-        ImmutableList.of(rec, typeFactory.createTypeWithNullability(typeFactory.createArrayType(element, -1), true),
-            typeFactory.createTypeWithNullability(typeFactory.createMapType(varchar, value), true)),
-        "rec", "recs", "bykey");
-    RelNode project = projectColumn(scan, 1, "c", genericProject(scan, target, inputRef(scan, 1)));
+    RelNode project = reorderedCdefProjection();
 
     Schema.Field field = relToAvroSchemaConverter.convert(project, true, false).getField("c");
     Assert.assertNotNull(field, "projected field keeps the source name c");
@@ -180,6 +169,26 @@ public class FuzzyUnionStructuralTests {
         new Schema.Parser().parse(load("expected/cdef-reordered-c.avsc")).toString(true));
     Assert.assertEquals(new Schema.Parser().parse(field.schema().toString()).toString(true),
         field.schema().toString(true));
+  }
+
+  @Test
+  public void testT10ReorderedDefaultsSurviveNamespaceNormalization() {
+    // The reordered projection followed by the existing stored-view namespace normalization (the operation under
+    // test), compared with an independently written normalized contract. Pre-existing shared default-copy coverage.
+    Schema projected = relToAvroSchemaConverter.convert(reorderedCdefProjection(), true, false);
+    Schema normalized = SchemaUtilities.setupNameAndNamespace(projected, "v", "fz.v");
+
+    Assert.assertEquals(new Schema.Parser().parse(normalized.toString()).toString(true), normalized.toString(true));
+    Assert.assertEquals(normalized.toString(true),
+        new Schema.Parser().parse(load("expected/cdef-reordered-normalized.avsc")).toString(true));
+    Schema c = normalized.getField("c").schema();
+    Assert.assertEquals(AvroCompatibilityHelper.getDefaultValueAsJsonString(c.getField("recs")),
+        "[{\"eb\":\"x\",\"ea\":1},{\"eb\":\"w\",\"ea\":4}]");
+    Assert.assertEquals(AvroCompatibilityHelper.getDefaultValueAsJsonString(c.getField("byKey")),
+        "{\"k\":{\"vb\":\"y\",\"va\":2},\"j\":{\"vb\":\"v\",\"va\":5}}");
+    Assert.assertEquals(AvroCompatibilityHelper.getDefaultValueAsJsonString(c.getField("rec")),
+        "{\"rb\":\"q\",\"ra\":6}");
+    Assert.assertFalse(AvroCompatibilityHelper.fieldHasDefault(normalized.getField("c")));
   }
 
   // ---------------------------------------------------------------------------------------------------------------
@@ -314,6 +323,23 @@ public class FuzzyUnionStructuralTests {
 
   private static RelDataType nullable(RelDataTypeFactory typeFactory, SqlTypeName typeName) {
     return typeFactory.createTypeWithNullability(typeFactory.createSqlType(typeName), true);
+  }
+
+  /** cdef_evolved with c projected to {@code struct<rec:struct<rb,ra>, recs:array<struct<eb,ea>>, bykey:map<struct<vb,va>>>}. */
+  private RelNode reorderedCdefProjection() {
+    RelNode scan = scan("SELECT * FROM fz.cdef_evolved");
+    RelDataTypeFactory typeFactory = rexBuilder(scan).getTypeFactory();
+    RelDataType varchar = nullable(typeFactory, SqlTypeName.VARCHAR);
+    RelDataType integer = nullable(typeFactory, SqlTypeName.INTEGER);
+    RelDataType rec = nullableStruct(typeFactory, ImmutableList.of(varchar, integer), "rb", "ra");
+    RelDataType element = nullableStruct(typeFactory, ImmutableList.of(varchar, integer), "eb", "ea");
+    RelDataType value = nullableStruct(typeFactory, ImmutableList.of(varchar, integer), "vb", "va");
+    RelDataType target = nullableStruct(typeFactory,
+        ImmutableList.of(rec, typeFactory.createTypeWithNullability(typeFactory.createArrayType(element, -1), true),
+            typeFactory.createTypeWithNullability(typeFactory.createMapType(varchar, value), true)),
+        "rec", "recs", "bykey");
+    RelNode project = projectColumn(scan, 1, "c", genericProject(scan, target, inputRef(scan, 1)));
+    return project;
   }
 
   private static RelDataType nullableStruct(RelDataTypeFactory typeFactory, List<RelDataType> types, String... names) {
