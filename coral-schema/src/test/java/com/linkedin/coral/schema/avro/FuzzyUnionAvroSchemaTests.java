@@ -97,7 +97,8 @@ public class FuzzyUnionAvroSchemaTests {
 
   @Test
   public void testT4RenamedProjectionKeepsOnlyDeclaredAvroAliases() {
-    // info AS details: the renamed field keeps its declared alias "information" and gains no alias for "info".
+    // info AS details: the renamed field keeps its declared field alias "information" and gains no alias for "info".
+    // Field aliases are kept; the record aliases of Info are omitted by non-strict reconstruction (D6).
     assertProjections("v_t4_meta", 1, 0);
     Schema actual = nonStrict("v_t4_meta");
     assertView(actual, "meta.avsc", "v_t4_meta", "@FIELD@", "details");
@@ -361,8 +362,20 @@ public class FuzzyUnionAvroSchemaTests {
     assertView(nonStrict("v_t11"), "meta.avsc", "v_t11", "@FIELD@", "info");
     assertView(nonStrict("v_t11r"), "meta.avsc", "v_t11r", "@FIELD@", "info");
 
-    Schema info = nonStrict("v_t11r").getField("info").schema();
-    Assert.assertTrue(info.getField("errInfo").schema().isError(), "error record flag must survive");
+    // D6 (user-directed legacy behavior): non-strict reconstruction omits RECORD aliases (OldMetaEvent, LegacyInfo),
+    // in memory and after reparse, while field aliases, docs, properties and the error flag survive.
+    for (String view : list("v_t11", "v_t11r")) {
+      Schema actual = nonStrict(view);
+      for (Schema schema : new Schema[] { actual, new Schema.Parser().parse(actual.toString()) }) {
+        Schema info = schema.getField("info").schema();
+        Assert.assertTrue(schema.getAliases().isEmpty(), view);
+        Assert.assertTrue(info.getAliases().isEmpty(), view);
+        Assert.assertTrue(info.getField("errInfo").schema().getAliases().isEmpty(), view);
+        Assert.assertTrue(info.getField("errInfo").schema().isError(), "error record flag must survive");
+        Assert.assertEquals(new ArrayList<>(schema.getField("info").aliases()), list("information"), view);
+        Assert.assertEquals(new ArrayList<>(info.getField("firstField").aliases()), list("first_field"), view);
+      }
+    }
   }
 
   @Test
@@ -382,14 +395,18 @@ public class FuzzyUnionAvroSchemaTests {
     assertSchema(converter.toAvroSchema(DB, "v_t12", true, false), "expected/logical-strict.avsc");
     assertSchema(converter.toAvroSchema(DB, "v_t12r", true, false), "expected/logical-strict.avsc");
 
-    // The enum's declared alias keeps its original qualified identity through non-strict namespace normalization, and
-    // its typed custom property survives the enum-specific copy paths.
+    // D6 (user-directed legacy behavior): non-strict namespace reconstruction omits the enum's declared alias, in
+    // memory and after reparse; its typed custom property and default survive the enum-specific copy paths. The strict
+    // contract above keeps the alias OldColor.
     for (String view : list("v_t12", "v_t12r")) {
-      Schema color = nonStrict(view).getField("l").schema().getField("color").schema();
-      Assert.assertEquals(color.getNamespace(), "fz." + view + "." + view + ".L", view);
-      Assert.assertEquals(new ArrayList<>(color.getAliases()), list("com.linkedin.lt.OldColor"), view);
-      Assert.assertEquals(AvroCompatibilityHelper.getSchemaPropAsJsonString(color, "x-enum-prop"), "{\"v\":1}", view);
-      Assert.assertEquals(AvroCompatibilityHelper.getEnumDefault(color), "RED", view);
+      Schema actual = nonStrict(view);
+      for (Schema schema : new Schema[] { actual, new Schema.Parser().parse(actual.toString()) }) {
+        Schema color = schema.getField("l").schema().getField("color").schema();
+        Assert.assertEquals(color.getNamespace(), "fz." + view + "." + view + ".L", view);
+        Assert.assertTrue(color.getAliases().isEmpty(), view + ": " + color.getAliases());
+        Assert.assertEquals(AvroCompatibilityHelper.getSchemaPropAsJsonString(color, "x-enum-prop"), "{\"v\":1}", view);
+        Assert.assertEquals(AvroCompatibilityHelper.getEnumDefault(color), "RED", view);
+      }
     }
   }
 

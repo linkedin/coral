@@ -1,6 +1,6 @@
-{"type":"record","name":"@VIEW@","namespace":"fz.@VIEW@","doc":"Meta event","aliases":["com.linkedin.meta.OldMetaEvent"],"x-record-prop":"top","fields":[
+{"type":"record","name":"@VIEW@","namespace":"fz.@VIEW@","doc":"Meta event","x-record-prop":"top","fields":[
   {"name":"id","type":"long"},
-  {"name":"@FIELD@","type":{"type":"record","name":"Info","namespace":"fz.@VIEW@.@VIEW@","doc":"Info record","aliases":["com.linkedin.meta.LegacyInfo"],"x-info-prop":{"k":[1,2]},"fields":[
+  {"name":"@FIELD@","type":{"type":"record","name":"Info","namespace":"fz.@VIEW@.@VIEW@","doc":"Info record","x-info-prop":{"k":[1,2]},"fields":[
     {"name":"firstField","type":"string","doc":"First field","aliases":["first_field"],"order":"descending","x-field-prop":{"a":1}},
     {"name":"errInfo","type":{"type":"error","name":"ErrInfo","namespace":"fz.@VIEW@.@VIEW@.Info","fields":[
       {"name":"code","type":"int"}]}},

@@ -188,6 +188,19 @@ final class FuzzyUnionFixtures {
     c.addAvroSerdeTable(DB, "f3ctl_a", load("f3ctl_a.avsc"), "id bigint", "c struct<z:int>", "d struct<x:int>");
     c.addAvroSerdeTable(DB, "f3ctl_b", load("f3ctl_b.avsc"), "id bigint", "c struct<z:int,extra:string>",
         "d struct<x:int,extra:string>");
+    // D6: named types with namespace-free (alias_src) and qualified (alias_qsrc) declared aliases.
+    c.addAvroSerdeTable(DB, "alias_src", load("alias_src.avsc"), "id bigint", "fielda string", "hash binary",
+        "kind string", "nested struct<n:int>", "items array<struct<i:int>>", "levels map<string,string>",
+        "hashes array<binary>", "err struct<code:int>");
+    c.addAvroSerdeTable(DB, "alias_src_evolved", load("alias_src_evolved.avsc"), "id bigint", "fielda string",
+        "hash binary", "kind string", "nested struct<n:int,extra:string>", "items array<struct<i:int>>",
+        "levels map<string,string>", "hashes array<binary>", "err struct<code:int>");
+    c.addAvroSerdeTable(DB, "alias_qsrc", load("alias_qsrc.avsc"), "id bigint", "fielda string", "hash binary",
+        "kind string", "nested struct<n:int>", "items array<struct<i:int>>", "levels map<string,string>",
+        "hashes array<binary>", "err struct<code:int>");
+    c.addAvroSerdeTable(DB, "alias_qsrc_evolved", load("alias_qsrc_evolved.avsc"), "id bigint", "fielda string",
+        "hash binary", "kind string", "nested struct<n:int,extra:string>", "items array<struct<i:int>>",
+        "levels map<string,string>", "hashes array<binary>", "err struct<code:int>");
     c.addAvroSerdeTable(DB, "rep_src", load("rep_src.avsc"), "id bigint",
         "r struct<millis:timestamp,f8:binary,f16:binary,optf16:binary,arrf16:array<binary>,"
             + "mapmillis:map<string,timestamp>,extra:string>");
@@ -306,6 +319,12 @@ final class FuzzyUnionFixtures {
     unionView(c, "v_f3ctl_r", "SELECT * FROM fz.f3ctl_b", "SELECT * FROM fz.f3ctl_a");
     unionView(c, "v_f3col", "SELECT * FROM fz.f3col_a", "SELECT * FROM fz.f3col_b");
     unionView(c, "v_f3col_r", "SELECT * FROM fz.f3col_b", "SELECT * FROM fz.f3col_a");
+    c.addView(DB, "alias_view", "SELECT * FROM fz.alias_src", "id bigint");
+    c.addView(DB, "alias_qview", "SELECT * FROM fz.alias_qsrc", "id bigint");
+    unionView(c, "v_alias_fz", "SELECT * FROM fz.alias_src", "SELECT * FROM fz.alias_src_evolved");
+    unionView(c, "v_alias_fz_r", "SELECT * FROM fz.alias_src_evolved", "SELECT * FROM fz.alias_src");
+    unionView(c, "v_alias_qfz", "SELECT * FROM fz.alias_qsrc", "SELECT * FROM fz.alias_qsrc_evolved");
+    unionView(c, "v_alias_qfz_r", "SELECT * FROM fz.alias_qsrc_evolved", "SELECT * FROM fz.alias_qsrc");
     unionView(c, "v_t24", "SELECT * FROM fz.case_camel", "SELECT * FROM fz.case_lower");
     unionView(c, "v_t24r", "SELECT * FROM fz.case_lower", "SELECT * FROM fz.case_camel");
     return c;
