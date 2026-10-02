@@ -29,8 +29,12 @@ import static org.apache.avro.SchemaCompatibility.SchemaCompatibilityType.INCOMP
 /**
  * T25 (D6, user-directed): non-strict stored-view namespace reconstruction keeps the legacy omission of RECORD and ENUM
  * aliases, for namespace-free and qualified aliases alike, at the top level and inside records, arrays, maps and
- * unions. FIXED aliases and field aliases are not rebuilt and stay intact. Strict conversion and inference without the
- * stored-view normalization keep every declared alias.
+ * unions. FIXED aliases and field aliases are not rebuilt and stay intact. Strict conversion keeps every declared alias.
+ *
+ * <p>Non-strict omission happens at both existing reconstruction boundaries: the pre-merge normalization of each UNION
+ * input, and the final stored-view normalization. Converting a RelNode directly skips only the latter: a plain
+ * (no-UNION) conversion keeps every alias, while a non-strict UNION still omits RECORD/ENUM aliases at its pre-merge
+ * reconstruction.
  *
  * <p>Alias oracles use resolved {@code getAliases()} full names before and after a fresh-parser reparse, because a
  * namespace-free alias can serialize to identical JSON yet resolve to a different full name. Reader/writer
@@ -137,9 +141,39 @@ public class FuzzyUnionAliasTests {
   }
 
   @Test
+  public void testT25RawNonStrictUnionOmitsAliasesAtPreMergeReconstruction() {
+    // Before any stored-view normalization: the non-strict UNION rebuilds each input with the existing pre-merge
+    // identity policy (a namespace-free top record gets its own name as namespace; nested types go under
+    // namespace.name) and omits RECORD/ENUM aliases there. A final-view-only omission would leave them here.
+    RelToAvroSchemaConverter raw = new RelToAvroSchemaConverter(catalog);
+    for (String view : new String[] { "v_alias_fz", "v_alias_fz_r" }) {
+      Schema actual = raw.convert(rel(view), false, false);
+      FuzzyUnionFixtures.assertSchema(actual, "expected/alias-raw-union-nonstrict.avsc");
+      Assert.assertEquals(actual.getFullName(), "Source.Source", view);
+      assertAliasesBeforeAndAfterReparse(actual, nonStrictNamedAliases("OldHash", "OldAHash"), FIELD_ALIASES);
+      assertCompatibilityBeforeAndAfterReparse(actual, "OldSource", INCOMPATIBLE);
+      assertCompatibilityBeforeAndAfterReparse(actual.getField("kind").schema(), "OldKind", INCOMPATIBLE);
+    }
+    for (String view : new String[] { "v_alias_qfz", "v_alias_qfz_r" }) {
+      Schema actual = raw.convert(rel(view), false, false);
+      FuzzyUnionFixtures.assertSchema(actual, "expected/alias-q-raw-union-nonstrict.avsc");
+      Assert.assertEquals(actual.getFullName(), "com.linkedin.alias.Source", view);
+      assertAliasesBeforeAndAfterReparse(actual,
+          nonStrictNamedAliases("com.linkedin.legacy.OldQHash", "com.linkedin.alias.OldQAHash"), FIELD_ALIASES);
+      assertCompatibilityBeforeAndAfterReparse(actual, "com.linkedin.legacy.OldQSource", INCOMPATIBLE);
+      assertCompatibilityBeforeAndAfterReparse(actual.getField("kind").schema(), "com.linkedin.legacy.OldQKind",
+          INCOMPATIBLE);
+    }
+    Assert.assertEquals(projectionCounts(rel("v_alias_fz")), counts(0, 1));
+    Assert.assertEquals(projectionCounts(rel("v_alias_fz_r")), counts(1, 0));
+    Assert.assertEquals(projectionCounts(rel("v_alias_qfz")), counts(0, 1));
+    Assert.assertEquals(projectionCounts(rel("v_alias_qfz_r")), counts(1, 0));
+  }
+
+  @Test
   public void testT25InferenceWithoutViewNormalizationKeepsAllAliases() {
-    // Converting the RelNode directly performs no stored-view namespace reconstruction, so a false strictMode alone
-    // must not strip aliases.
+    // A plain (no-UNION) RelNode converted directly performs neither reconstruction, so a false strictMode alone must
+    // not strip aliases.
     Schema actual = new RelToAvroSchemaConverter(catalog)
         .convert(new HiveToRelConverter(catalog).convertView(DB, "alias_view"), false, false);
     FuzzyUnionFixtures.assertSchema(actual, "alias_src.avsc");
