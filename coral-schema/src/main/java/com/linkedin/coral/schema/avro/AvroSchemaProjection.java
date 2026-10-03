@@ -185,6 +185,16 @@ final class AvroSchemaProjection {
    */
   private static boolean sameLeafRepresentation(Schema schema, RelDataType source, RelDataType target) {
     SqlTypeName name = target.getSqlTypeName();
+    if (hasFiniteVarbinaryBound(target) && SqlTypeName.BINARY_TYPES.contains(source.getSqlTypeName())
+        && AvroCompatibilityHelper.getSchemaPropAsJsonString(schema, "logicalType") == null) {
+      // VARBINARY(n) is a maximum length. Only an Avro fixed schema proves that every value fits; bytes has no bound
+      if (schema.getType() == Schema.Type.FIXED) {
+        return schema.getFixedSize() <= target.getPrecision();
+      }
+      if (schema.getType() == Schema.Type.BYTES) {
+        return false;
+      }
+    }
     if (source.getSqlTypeName() == name && hasRepresentationParameters(name) && hasExplicitParameters(target)) {
       int[] expected = avroParameters(schema);
       if (expected != null) {
@@ -224,6 +234,10 @@ final class AvroSchemaProjection {
     }
   }
 
+  private static boolean hasFiniteVarbinaryBound(RelDataType type) {
+    return type.getSqlTypeName() == SqlTypeName.VARBINARY && type.getPrecision() != RelDataType.PRECISION_NOT_SPECIFIED;
+  }
+
   /** True if the type spells out its precision, as opposed to the default of its type name. */
   private static boolean hasExplicitParameters(RelDataType type) {
     return type.toString().indexOf('(') >= 0;
@@ -232,6 +246,11 @@ final class AvroSchemaProjection {
   private static boolean sameLeafRepresentation(RelDataType source, RelDataType target) {
     SqlTypeName sourceName = source.getSqlTypeName();
     SqlTypeName targetName = target.getSqlTypeName();
+    if (hasFiniteVarbinaryBound(target)
+        && !(sourceName == targetName && source.getPrecision() == target.getPrecision())) {
+      // Without the Avro schema a finite maximum is not proven by the type family
+      return false;
+    }
     if (sourceName == targetName) {
       return !hasRepresentationParameters(sourceName)
           || (source.getPrecision() == target.getPrecision() && source.getScale() == target.getScale());
@@ -368,8 +387,8 @@ final class AvroSchemaProjection {
           }
           Schema ordered = orderOptions(field.schema(), members, path + "." + field.name());
           changed |= ordered != field.schema();
-          fields.add(ordered == field.schema() ? field
-              : SchemaUtilities.cloneField(field, field.name(), ordered, field.doc()));
+          // A field belongs to one record only, so every field of a rebuilt record is a copy, changed or not
+          fields.add(SchemaUtilities.cloneField(field, field.name(), ordered, field.doc()));
         }
         return changed ? SchemaUtilities.newRecord(schema, schema.getName(), schema.getNamespace(), fields) : schema;
       case ARRAY:

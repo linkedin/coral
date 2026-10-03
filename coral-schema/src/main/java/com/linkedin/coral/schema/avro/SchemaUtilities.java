@@ -777,13 +777,23 @@ class SchemaUtilities {
     if (leftLogicalType == null || rightLogicalType == null) {
       return true;
     }
-    for (String prop : Arrays.asList("logicalType", "precision", "scale")) {
+    for (String prop : Arrays.asList("logicalType", "precision")) {
       if (!Objects.equals(AvroCompatibilityHelper.getSchemaPropAsJsonString(left, prop),
           AvroCompatibilityHelper.getSchemaPropAsJsonString(right, prop))) {
         return false;
       }
     }
-    return true;
+    return effectiveDecimalScale(left).equals(effectiveDecimalScale(right));
+  }
+
+  /** The scale of a decimal, which Avro defaults to 0 when it is not declared; other logical types have none. */
+  private static String effectiveDecimalScale(Schema schema) {
+    String scale = AvroCompatibilityHelper.getSchemaPropAsJsonString(schema, "scale");
+    if (scale == null
+        && "\"decimal\"".equals(AvroCompatibilityHelper.getSchemaPropAsJsonString(schema, "logicalType"))) {
+      return "0";
+    }
+    return String.valueOf(scale);
   }
 
   /** True if the field declares a default other than null, which forces the matching union option to come first. */
