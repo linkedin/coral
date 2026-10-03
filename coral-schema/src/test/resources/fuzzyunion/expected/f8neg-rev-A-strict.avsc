@@ -1,0 +1,1 @@
+{"type": "record", "name": "A", "namespace": "com.linkedin.f8", "fields": [{"name": "x", "type": "int"}]}

@@ -1,0 +1,1 @@
+{"type": "record", "name": "v_f8neg_r", "namespace": "fz.v_f8neg_r", "fields": [{"name": "leftUse", "type": {"type": "record", "name": "A", "namespace": "fz.v_f8neg_r.v_f8neg_r", "fields": [{"name": "x", "type": "int"}]}}, {"name": "rightUse", "type": {"type": "record", "name": "B", "namespace": "fz.v_f8neg_r.v_f8neg_r", "fields": [{"name": "y", "type": "int"}]}}]}

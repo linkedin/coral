@@ -6,6 +6,7 @@
 package com.linkedin.coral.schema.avro;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import com.linkedin.avroutil1.compatibility.AvroCompatibilityHelper;
@@ -167,15 +168,66 @@ public class FuzzyUnionSharedDefinitionTests {
       } catch (RuntimeException e) {
         String message = String.valueOf(e.getMessage());
         Assert.assertFalse(message.contains("Can't redefine"), message);
-        for (String fragment : new String[] { strict ? SHARED : "Shared", "leftUse", "rightUse" }) {
+        for (String fragment : new String[] { "leftUse", "rightUse" }) {
           Assert.assertTrue(message.contains(fragment),
               "strict=" + strict + ": expected the rejection to mention '" + fragment + "' but was: " + message);
         }
+        // The qualified output identity at the rejection boundary, under the existing mapping: the source name (at
+        // projection), or in non-strict mode the pre-merge (F8Neg-nested) or final view name. A bare "Shared" is not
+        // enough, since namespace-separated Shared definitions are distinct types.
+        String[] qualified = strict ? new String[] { SHARED }
+            : new String[] { SHARED, "com.linkedin.f8.F8Neg.Shared", "fz.v_f8neg.v_f8neg.Shared" };
+        Assert.assertTrue(Arrays.stream(qualified).anyMatch(message::contains), "strict=" + strict
+            + ": expected a qualified Shared name " + Arrays.toString(qualified) + " but was: " + message);
         continue;
       }
       Assert.fail("strict=" + strict + ": expected a rejection but produced " + result);
     }
     Assert.assertEquals(catalog.avroLiteral(DB, "f8neg_l"), literal, "source metadata must not be mutated");
+  }
+
+  @Test
+  public void testF8ReverseIncompatibleSourceBodiesTakeCanonicalNames() {
+    // Section 12a: with f8neg_r canonical, the output types are its A{x} and B{y}. The other branch's two differently
+    // projected Shared occurrences are not a retained output identity, so the view succeeds in both modes, with no
+    // Shared definition or reference left and nothing fabricated.
+    Assert.assertEquals(placement("v_f8neg_r"), counts(0, 2));
+    String left = catalog.avroLiteral(DB, "f8neg_l");
+    String right = catalog.avroLiteral(DB, "f8neg_r");
+    for (boolean strict : new boolean[] { true, false }) {
+      String suffix = strict ? "-strict" : "";
+      String ns = strict ? "com.linkedin.f8" : "fz.v_f8neg_r.v_f8neg_r";
+      Schema actual = convert("v_f8neg_r", strict);
+
+      // In memory, before anything is serialized: A and B as specified, no Shared anywhere, no defaults.
+      Schema a = actual.getField("leftUse").schema();
+      Schema b = actual.getField("rightUse").schema();
+      Assert.assertEquals(a.getFullName(), ns + ".A");
+      Assert.assertEquals(b.getFullName(), ns + ".B");
+      Assert.assertEquals(a.toString(true),
+          new Schema.Parser().parse(load("expected/f8neg-rev-A" + suffix + ".avsc")).toString(true));
+      Assert.assertEquals(b.toString(true),
+          new Schema.Parser().parse(load("expected/f8neg-rev-B" + suffix + ".avsc")).toString(true));
+      for (String name : new String[] { SHARED, "com.linkedin.f8.F8Neg.Shared", ns + ".Shared" }) {
+        List<Schema> shared = new ArrayList<>();
+        collectRecords(actual, name, shared);
+        Assert.assertTrue(shared.isEmpty(), "strict=" + strict + ": no " + name + " may survive");
+      }
+      for (Schema.Field field : actual.getFields()) {
+        Assert.assertFalse(AvroCompatibilityHelper.fieldHasDefault(field), field.name());
+        for (Schema.Field member : field.schema().getFields()) {
+          Assert.assertFalse(AvroCompatibilityHelper.fieldHasDefault(member), field.name() + "." + member.name());
+        }
+      }
+
+      assertReparses(actual);
+      Assert.assertFalse(actual.toString().contains("Shared"), actual.toString());
+      Assert.assertEquals(actual.toString(true),
+          new Schema.Parser().parse(load("expected/f8neg-rev" + suffix + ".avsc")).toString(true));
+      Assert.assertEquals(convert("v_f8neg_r", strict).toString(true), actual.toString(true), "repeat conversion");
+    }
+    Assert.assertEquals(catalog.avroLiteral(DB, "f8neg_l"), left, "source metadata must not be mutated");
+    Assert.assertEquals(catalog.avroLiteral(DB, "f8neg_r"), right, "source metadata must not be mutated");
   }
 
   // ---------------------------------------------------------------------------------------------------------------
