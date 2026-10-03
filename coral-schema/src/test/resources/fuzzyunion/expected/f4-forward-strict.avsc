@@ -1,0 +1,9 @@
+{"type":"record","name":"F4","namespace":"com.linkedin.f4","fields":[
+  {"name":"c","type":{"type":"record","name":"C","fields":[
+    {"name":"x","type":["int","null"]},
+    {"name":"label","type":"string","doc":"Label","aliases":["oldLabel"],"x-label":{"k":1}}]},
+   "default":{"x":1,"label":"kept"}},
+  {"name":"arr","type":{"type":"array","items":{"type":"record","name":"E","fields":[
+    {"name":"x","type":["int","null"]},
+    {"name":"tag","type":"string","doc":"Tag"}]}},
+   "default":[{"x":1,"tag":"t"},{"x":2,"tag":"u"}]}]}

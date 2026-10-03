@@ -1,0 +1,11 @@
+{"type":"record","name":"F4","namespace":"com.linkedin.f4","fields":[
+  {"name":"c","type":{"type":"record","name":"C","fields":[
+    {"name":"x","type":["null","int"]},
+    {"name":"label","type":"string","doc":"Label","aliases":["oldLabel"],"x-label":{"k":1}},
+    {"name":"extra","type":"int"}]},
+   "default":{"x":null,"label":"other","extra":2}},
+  {"name":"arr","type":{"type":"array","items":{"type":"record","name":"E","fields":[
+    {"name":"x","type":["null","int"]},
+    {"name":"tag","type":"string","doc":"Tag"},
+    {"name":"extra","type":"int"}]}},
+   "default":[{"x":null,"tag":"v","extra":3}]}]}

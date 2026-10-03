@@ -338,6 +338,34 @@ public class FuzzyUnionAvroSchemaTests {
   }
 
   @Test
+  public void testT10ContainingDefaultReorderKeepsUnchangedSiblings() {
+    // Final-review F4: c's default {"x":1,"label":"kept"} forces the widened x to be int-first while the retained
+    // sibling label is unchanged; the same inside array element records (x reordered, tag unchanged). Rebuilding the
+    // records must keep each unchanged sibling exactly (doc, field alias, typed property, no default) and keep the
+    // containing defaults, in both strict modes.
+    assertProjections("v_f4", 0, 2);
+    Schema forward = nonStrict("v_f4");
+    assertView(forward, "f4-forward.avsc", "v_f4");
+    Schema strict = converter.toAvroSchema(DB, "v_f4", true, false);
+    assertSchema(strict, "expected/f4-forward-strict.avsc");
+    for (Schema schema : new Schema[] { forward, strict }) {
+      Assert.assertEquals(AvroCompatibilityHelper.getDefaultValueAsJsonString(schema.getField("c")),
+          "{\"x\":1,\"label\":\"kept\"}");
+      Assert.assertEquals(AvroCompatibilityHelper.getDefaultValueAsJsonString(schema.getField("arr")),
+          "[{\"x\":1,\"tag\":\"t\"},{\"x\":2,\"tag\":\"u\"}]");
+      Schema.Field label = schema.getField("c").schema().getField("label");
+      Assert.assertEquals(label.schema().toString(), "\"string\"");
+      Assert.assertEquals(new ArrayList<>(label.aliases()), list("oldLabel"));
+      Assert.assertFalse(AvroCompatibilityHelper.fieldHasDefault(label));
+      Assert.assertFalse(AvroCompatibilityHelper.fieldHasDefault(schema.getField("c").schema().getField("x")));
+    }
+
+    // Reverse: the null-first canonical branch needs no reordering; its retained defaults are projected as before.
+    assertProjections("v_f4_r", 2, 0);
+    assertView(nonStrict("v_f4_r"), "f4-reverse.avsc", "v_f4_r");
+  }
+
+  @Test
   public void testT10ContainingDefaultControls() {
     // Controls for the containing-default rule; both convert today and must keep doing so.
     // c: the child z declares its own default 5 while c's default supplies z=7. Both stay exactly as declared and

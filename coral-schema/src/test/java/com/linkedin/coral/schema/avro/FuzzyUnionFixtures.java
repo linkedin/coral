@@ -201,6 +201,10 @@ final class FuzzyUnionFixtures {
     c.addAvroSerdeTable(DB, "alias_qsrc_evolved", load("alias_qsrc_evolved.avsc"), "id bigint", "fielda string",
         "hash binary", "kind string", "nested struct<n:int,extra:string>", "items array<struct<i:int>>",
         "levels map<string,string>", "hashes array<binary>", "err struct<code:int>");
+    c.addAvroSerdeTable(DB, "f4_a", load("f4_a.avsc"), "c struct<x:int,label:string>",
+        "arr array<struct<x:int,tag:string>>");
+    c.addAvroSerdeTable(DB, "f4_b", load("f4_b.avsc"), "c struct<x:int,label:string,extra:int>",
+        "arr array<struct<x:int,tag:string,extra:int>>");
     c.addAvroSerdeTable(DB, "rep_src", load("rep_src.avsc"), "id bigint",
         "r struct<millis:timestamp,f8:binary,f16:binary,optf16:binary,arrf16:array<binary>,"
             + "mapmillis:map<string,timestamp>,extra:string>");
@@ -325,6 +329,8 @@ final class FuzzyUnionFixtures {
     unionView(c, "v_alias_fz_r", "SELECT * FROM fz.alias_src_evolved", "SELECT * FROM fz.alias_src");
     unionView(c, "v_alias_qfz", "SELECT * FROM fz.alias_qsrc", "SELECT * FROM fz.alias_qsrc_evolved");
     unionView(c, "v_alias_qfz_r", "SELECT * FROM fz.alias_qsrc_evolved", "SELECT * FROM fz.alias_qsrc");
+    unionView(c, "v_f4", "SELECT * FROM fz.f4_a", "SELECT * FROM fz.f4_b");
+    unionView(c, "v_f4_r", "SELECT * FROM fz.f4_b", "SELECT * FROM fz.f4_a");
     unionView(c, "v_t24", "SELECT * FROM fz.case_camel", "SELECT * FROM fz.case_lower");
     unionView(c, "v_t24r", "SELECT * FROM fz.case_lower", "SELECT * FROM fz.case_camel");
     return c;
