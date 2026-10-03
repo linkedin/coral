@@ -56,9 +56,20 @@ final class SharedNamedDefinitions {
       return root;
     }
     SharedNamedDefinitions unifier = new SharedNamedDefinitions();
-    unifier.collect(root, root.getName(), Collections.newSetFromMap(new IdentityHashMap<>()));
+    try {
+      unifier.collect(root, root.getName(), Collections.newSetFromMap(new IdentityHashMap<>()));
+    } catch (RecursiveSchemaException e) {
+      // Recursive schemas are not newly supported here; a recursive input keeps passing through unchanged
+      return root;
+    }
     unifier.checkBodies();
     return unifier.rebuild(root.getFullName());
+  }
+
+  private static final class RecursiveSchemaException extends RuntimeException {
+    private RecursiveSchemaException() {
+      super("recursive schemas are not supported", null, false, false);
+    }
   }
 
   private static final class Use {

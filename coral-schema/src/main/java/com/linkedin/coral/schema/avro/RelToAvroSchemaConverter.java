@@ -163,7 +163,9 @@ public class RelToAvroSchemaConverter {
     relNode.accept(new SchemaRelShuttle(coralCatalog, hiveMetastoreClient, schemaMap, strictMode, forceLowercase));
     Schema viewSchema = schemaMap.get(relNode);
 
-    return viewSchema;
+    // Intermediate results may hold occurrence-local shapes of a named record until a UNION picks the canonical
+    // names, so shared definitions are only settled on the result that is returned to the caller.
+    return SharedNamedDefinitions.unify(viewSchema);
   }
 
   /**
