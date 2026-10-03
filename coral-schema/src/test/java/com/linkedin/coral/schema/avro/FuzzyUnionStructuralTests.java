@@ -12,6 +12,7 @@ import java.util.Map;
 import com.linkedin.avroutil1.compatibility.AvroCompatibilityHelper;
 
 import org.apache.avro.Schema;
+import org.apache.avro.SchemaParseException;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rel.logical.LogicalProject;
@@ -574,6 +575,77 @@ public class FuzzyUnionStructuralTests {
   }
 
   // ---------------------------------------------------------------------------------------------------------------
+  // F9 (tester-clarifications section 12a): a standalone root Project is itself the public result, so it must be one
+  // complete serializable schema. A non-canonical UNION input stays unresolved until canonical merging.
+  // ---------------------------------------------------------------------------------------------------------------
+
+  @Test
+  public void testF9StandaloneProjectRetainingIncompatibleSharedBodiesRejects() {
+    // f8neg_l uses Shared{x,y} for leftUse and rightUse; projecting {x} and {y} retains both bodies under Shared.
+    RelNode scan = scan("SELECT * FROM fz.f8neg_l");
+    String literal = catalog.avroLiteral(DB, "f8neg_l");
+    assertSharedBodiesRejected(f8negProjection(scan, sharedProjection(scan, 1, "y")));
+    Assert.assertEquals(catalog.avroLiteral(DB, "f8neg_l"), literal, "source metadata must not be mutated");
+  }
+
+  @Test
+  public void testF9StandaloneProjectWithPassThroughSharedUseRejects() {
+    // A raw pass-through use keeps the whole source body {x,y}, which differs from the projected {x}.
+    RelNode scan = scan("SELECT * FROM fz.f8neg_l");
+    assertSharedBodiesRejected(f8negProjection(scan, inputRef(scan, 1)));
+  }
+
+  @Test
+  public void testF9StandaloneProjectRetainingOneSharedBodySucceeds() {
+    // Both uses projected to {x}: one Shared definition, which every use denotes, serialized once and referenced.
+    RelNode scan = scan("SELECT * FROM fz.f8neg_l");
+    RelNode project = f8negProjection(scan, sharedProjection(scan, 1, "x"));
+    String shared =
+        "{'type':'record','name':'Shared','namespace':'com.linkedin.f8','fields':[{'name':'x','type':'int'}]}"
+            .replace('\'', '"');
+    String whole = ("{'type':'record','name':'F8Neg','namespace':'com.linkedin.f8','fields':[{'name':'leftUse','type':"
+        + "{'type':'record','name':'Shared','fields':[{'name':'x','type':'int'}]}},{'name':'rightUse','type':'Shared'}]}")
+        .replace('\'', '"');
+    for (boolean strict : new boolean[] { true, false }) {
+      Schema actual = relToAvroSchemaConverter.convert(project, strict, false);
+      for (String use : new String[] { "leftUse", "rightUse" }) {
+        Schema.Field field = actual.getField(use);
+        Assert.assertNotNull(field, "strict=" + strict + ": " + use);
+        Assert.assertEquals(field.schema().toString(true), new Schema.Parser().parse(shared).toString(true),
+            "strict=" + strict + ": " + use + " in memory");
+        Assert.assertFalse(AvroCompatibilityHelper.fieldHasDefault(field), use);
+      }
+      assertReparses(actual);
+      Assert.assertEquals(actual.toString(true), new Schema.Parser().parse(whole).toString(true), "strict=" + strict);
+    }
+  }
+
+  @Test
+  public void testF9SameProjectAsNonCanonicalUnionInputIsNotRejectedEagerly() {
+    // The rejected standalone Project, as the second UNION input under canonical f8neg_r: the output types are the
+    // canonical A{x} and B{y}, so its two differently projected Shared uses never become a retained output identity.
+    RelNode scan = scan("SELECT * FROM fz.f8neg_l");
+    RelNode project = f8negProjection(scan, sharedProjection(scan, 1, "y"));
+    LogicalUnion union =
+        LogicalUnion.create(ImmutableList.of(hiveToRelConverter.convertSql("SELECT * FROM fz.f8neg_r"), project), true);
+    for (boolean strict : new boolean[] { true, false }) {
+      // Raw RelNode conversion: non-strict keeps the existing pre-merge mapping under the F8Neg record.
+      String ns = strict ? "com.linkedin.f8" : "com.linkedin.f8.F8Neg";
+      String whole =
+          ("{'type':'record','name':'F8Neg','namespace':'com.linkedin.f8','fields':[{'name':'leftUse','type':"
+              + "{'type':'record','name':'A','namespace':'" + ns + "','fields':[{'name':'x','type':'int'}]}},"
+              + "{'name':'rightUse','type':{'type':'record','name':'B','namespace':'" + ns + "','fields':"
+              + "[{'name':'y','type':'int'}]}}]}").replace('\'', '"');
+      Schema actual = relToAvroSchemaConverter.convert(union, strict, false);
+      Assert.assertEquals(actual.getField("leftUse").schema().getFullName(), ns + ".A", "strict=" + strict);
+      Assert.assertEquals(actual.getField("rightUse").schema().getFullName(), ns + ".B", "strict=" + strict);
+      assertReparses(actual);
+      Assert.assertFalse(actual.toString().contains("Shared"), actual.toString());
+      Assert.assertEquals(actual.toString(true), new Schema.Parser().parse(whole).toString(true), "strict=" + strict);
+    }
+  }
+
+  // ---------------------------------------------------------------------------------------------------------------
   // helpers
   // ---------------------------------------------------------------------------------------------------------------
 
@@ -744,6 +816,47 @@ public class FuzzyUnionStructuralTests {
       names.add(i == index ? name : inputNames.get(i));
     }
     return LogicalProject.create(input, exprs.build(), names.build());
+  }
+
+  /** Must fail at conversion, naming the qualified Shared and both uses; not Avro's later redefinition error. */
+  private void assertSharedBodiesRejected(RelNode project) {
+    for (boolean strict : new boolean[] { true, false }) {
+      Schema result;
+      try {
+        result = relToAvroSchemaConverter.convert(project, strict, false);
+      } catch (SchemaParseException e) {
+        throw new AssertionError("Expected an explicit converter rejection, not Avro's redefinition error", e);
+      } catch (RuntimeException e) {
+        String message = String.valueOf(e.getMessage());
+        Assert.assertFalse(message.contains("Can't redefine"), message);
+        for (String fragment : new String[] { "com.linkedin.f8.Shared", "leftUse", "rightUse" }) {
+          Assert.assertTrue(message.contains(fragment),
+              "strict=" + strict + ": expected the rejection to mention '" + fragment + "' but was: " + message);
+        }
+        continue;
+      }
+      Assert.fail("strict=" + strict + ": expected the conversion itself to reject, but it returned a schema whose "
+          + "Shared uses are " + result.getField("leftUse").schema().getFields() + " and "
+          + result.getField("rightUse").schema().getFields());
+    }
+  }
+
+  /** f8neg_l projected as {@code leftuse: generic_project(leftuse, struct<x>)} and {@code rightuse: right}. */
+  private static RelNode f8negProjection(RelNode scan, RexNode right) {
+    return LogicalProject.create(scan, ImmutableList.of(sharedProjection(scan, 0, "x"), right),
+        ImmutableList.of("leftuse", "rightuse"));
+  }
+
+  /** {@code generic_project(column, struct<member>)}, keeping the member's exact source relational type. */
+  private static RexNode sharedProjection(RelNode scan, int column, String member) {
+    RelDataTypeFactory typeFactory = rexBuilder(scan).getTypeFactory();
+    RelDataType source = scan.getRowType().getFieldList().get(column).getType();
+    RelDataType target = typeFactory.createStructType(ImmutableList.of(source.getField(member, false, false).getType()),
+        ImmutableList.of(member));
+    RexBuilder rexBuilder = rexBuilder(scan);
+    return rexBuilder.makeCall(target, new GenericProjectFunction(target),
+        ImmutableList.of(inputRef(scan, column), rexBuilder.makeLiteral(scan.getRowType().getFieldNames().get(column)),
+            rexBuilder.makeLiteral("struct<" + member + ":int>")));
   }
 
   /** Must fail with an exception that names the generic projection, not an incidental index/null error. */
