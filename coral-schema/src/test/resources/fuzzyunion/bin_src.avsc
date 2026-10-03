@@ -1,0 +1,8 @@
+{"type":"record","name":"Bin","namespace":"com.linkedin.bin","fields":[
+  {"name":"id","type":"long"},
+  {"name":"b","type":{"type":"record","name":"B","fields":[
+    {"name":"raw","type":"bytes","doc":"Raw bytes","x-raw":"r"},
+    {"name":"optRaw","type":["null","bytes"],"default":null},
+    {"name":"arrRaw","type":{"type":"array","items":"bytes"}},
+    {"name":"text","type":"string"},
+    {"name":"extra","type":["null","string"],"default":null}]}}]}

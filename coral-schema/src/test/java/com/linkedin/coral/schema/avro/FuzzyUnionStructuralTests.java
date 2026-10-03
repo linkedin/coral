@@ -280,6 +280,131 @@ public class FuzzyUnionStructuralTests {
   }
 
   // ---------------------------------------------------------------------------------------------------------------
+  // F5 (structural, typed call; tester-clarifications section 11): VARBINARY(n) is a maximum length. Over Avro
+  // fixed(N) it is satisfied unchanged iff n >= N; over Avro bytes no source bound is proven, so an explicit finite
+  // VARBINARY(n) is an unproven narrowing. Unbounded VARBINARY and unparameterized BINARY keep the existing coarse
+  // behavior. These are typed inference-boundary checks, not support for a natural Hive VARBINARY flow.
+  // ---------------------------------------------------------------------------------------------------------------
+
+  @Test
+  public void testF5VarbinaryShorterThanFixedFails() {
+    RelNode scan = scan("SELECT * FROM fz.lt_evolved");
+    RelNode project = projectColumn(scan, 2, "l",
+        genericProject(scan, ltProjection(scan, "digest", varbinary(scan, 8)), inputRef(scan, 2)));
+
+    assertParameterMismatchRejected(project, "l.digest", "VARBINARY(8)", "16");
+  }
+
+  @Test
+  public void testF5VarbinaryAtLeastFixedSizeKeepsFixedUnchanged() {
+    // n == N, n > N and unbounded: the 16-byte fixed fits, so it is kept exactly (name, namespace, size, property),
+    // never widened to the requested maximum or turned into bytes.
+    String literal = catalog.avroLiteral(DB, "lt_evolved");
+    Schema sourceDigest =
+        new Schema.Parser().parse(load("lt_evolved.avsc")).getField("l").schema().getField("digest").schema();
+    RelNode scan = scan("SELECT * FROM fz.lt_evolved");
+    for (RelDataType requested : ImmutableList.of(varbinary(scan, 16), varbinary(scan, 32), varbinary(scan))) {
+      RelNode project =
+          projectColumn(scan, 2, "l", genericProject(scan, ltProjection(scan, "digest", requested), inputRef(scan, 2)));
+      Schema l = SchemaUtilities
+          .extractIfOption(relToAvroSchemaConverter.convert(project, true, false).getField("l").schema());
+      Assert.assertEquals(l.getField("digest").schema().toString(true), sourceDigest.toString(true),
+          requested.getFullTypeString());
+      Assert.assertNull(l.getField("lExtra"));
+    }
+    Assert.assertEquals(catalog.avroLiteral(DB, "lt_evolved"), literal, "source metadata must not be mutated");
+  }
+
+  @Test
+  public void testF5ShorterVarbinaryOverOptionalAndArrayFixedFails() {
+    RelNode scan = scan("SELECT * FROM fz.rep_src");
+    RelDataTypeFactory typeFactory = rexBuilder(scan).getTypeFactory();
+    RelNode optional = projectColumn(scan, 1, "r",
+        genericProject(scan, repProjection(scan, "optf16", varbinary(scan, 8)), inputRef(scan, 1)));
+    assertParameterMismatchRejected(optional, "r.optF16", "VARBINARY(8)", "16");
+
+    RelDataType shortArray =
+        typeFactory.createTypeWithNullability(typeFactory.createArrayType(varbinary(scan, 8), -1), true);
+    RelNode array =
+        projectColumn(scan, 1, "r", genericProject(scan, repProjection(scan, "arrf16", shortArray), inputRef(scan, 1)));
+    assertParameterMismatchRejected(array, "r.arrF16", "VARBINARY(8)", "16");
+  }
+
+  @Test
+  public void testF5LooserVarbinaryOverOptionalAndArrayFixedKeepsThem() {
+    // Controls for the test above: looser bounds over the same optional and array fixed leaves keep them exactly.
+    RelNode scan = scan("SELECT * FROM fz.rep_src");
+    RelDataTypeFactory typeFactory = rexBuilder(scan).getTypeFactory();
+    RelDataType wideArray =
+        typeFactory.createTypeWithNullability(typeFactory.createArrayType(varbinary(scan, 16), -1), true);
+    RelDataType target =
+        projection(scan, "r", "extra", ImmutableMap.of("optf16", varbinary(scan, 32), "arrf16", wideArray));
+    Schema r = SchemaUtilities.extractIfOption(relToAvroSchemaConverter
+        .convert(projectColumn(scan, 1, "r", genericProject(scan, target, inputRef(scan, 1))), true, false)
+        .getField("r").schema());
+    Schema source = new Schema.Parser().parse(load("rep_src.avsc")).getField("r").schema();
+    for (String leaf : ImmutableList.of("optF16", "arrF16")) {
+      Assert.assertEquals(r.getField(leaf).schema().toString(true), source.getField(leaf).schema().toString(true),
+          leaf);
+    }
+  }
+
+  @Test
+  public void testF5FiniteVarbinaryOverBytesFails() {
+    // Avro bytes declares no maximum and the coarse Hive operand (BINARY) proves none.
+    RelNode scan = scan("SELECT * FROM fz.bin_src");
+    RelDataTypeFactory typeFactory = rexBuilder(scan).getTypeFactory();
+    assertParameterMismatchRejected(
+        projectColumn(scan, 1, "b",
+            genericProject(scan, binProjection(scan, "raw", varbinary(scan, 8)), inputRef(scan, 1))),
+        "b.raw", "VARBINARY(8)");
+    assertParameterMismatchRejected(
+        projectColumn(scan, 1, "b",
+            genericProject(scan, binProjection(scan, "optraw", varbinary(scan, 64)), inputRef(scan, 1))),
+        "b.optRaw", "VARBINARY(64)");
+    RelDataType array =
+        typeFactory.createTypeWithNullability(typeFactory.createArrayType(varbinary(scan, 8), -1), true);
+    assertParameterMismatchRejected(
+        projectColumn(scan, 1, "b", genericProject(scan, binProjection(scan, "arrraw", array), inputRef(scan, 1))),
+        "b.arrRaw", "VARBINARY(8)");
+  }
+
+  @Test
+  public void testF5CoarseBinaryFamilyControlsOverBytes() {
+    // Unchanged from the reviewed implementation: unbounded VARBINARY and unparameterized BINARY keep bytes exactly
+    // (doc and property included); BINARY(8) over bytes stays rejected; a VARCHAR request over a string keeps the
+    // existing character-family behavior.
+    RelNode scan = scan("SELECT * FROM fz.bin_src");
+    RelDataTypeFactory typeFactory = rexBuilder(scan).getTypeFactory();
+    Schema source = new Schema.Parser().parse(load("bin_src.avsc")).getField("b").schema();
+    RelDataType unboundedArray =
+        typeFactory.createTypeWithNullability(typeFactory.createArrayType(varbinary(scan), -1), true);
+    RelDataType target = projection(scan, "b", "extra",
+        ImmutableMap.of("raw", varbinary(scan), "optraw", varbinary(scan), "arrraw", unboundedArray, "text",
+            typeFactory.createTypeWithNullability(typeFactory.createSqlType(SqlTypeName.VARCHAR, 8), true)));
+    Schema b = SchemaUtilities.extractIfOption(relToAvroSchemaConverter
+        .convert(projectColumn(scan, 1, "b", genericProject(scan, target, inputRef(scan, 1))), true, false)
+        .getField("b").schema());
+    for (String leaf : ImmutableList.of("raw", "optRaw", "arrRaw", "text")) {
+      Assert.assertEquals(b.getField(leaf).schema().toString(true), source.getField(leaf).schema().toString(true),
+          leaf);
+    }
+    Assert.assertEquals(b.getField("raw").doc(), "Raw bytes");
+    Assert.assertEquals(b.getField("raw").getObjectProp("x-raw"), "r");
+
+    Schema coarse = SchemaUtilities.extractIfOption(relToAvroSchemaConverter
+        .convert(projectColumn(scan, 1, "b",
+            genericProject(scan, binProjection(scan, "raw", binary(scan)), inputRef(scan, 1))), true, false)
+        .getField("b").schema());
+    Assert.assertEquals(coarse.getField("raw").schema().toString(), "\"bytes\"");
+
+    assertParameterMismatchRejected(
+        projectColumn(scan, 1, "b",
+            genericProject(scan, binProjection(scan, "raw", binary(scan, 8)), inputRef(scan, 1))),
+        "b.raw", "BINARY(8)");
+  }
+
+  // ---------------------------------------------------------------------------------------------------------------
   // T10 (structural, typed call): retained fields reordered by the target, inside a record and inside array elements
   // and map values. The projected field is canonical here, so its reshaped complex defaults are observable.
   // ---------------------------------------------------------------------------------------------------------------
@@ -478,13 +603,39 @@ public class FuzzyUnionStructuralTests {
     return typeFactory.createTypeWithNullability(typeFactory.createStructType(types.build(), names.build()), true);
   }
 
+  /** bin_src.b without extra, every field at its source type except {@code replacedField} (lowercase name). */
+  private static RelDataType binProjection(RelNode scan, String replacedField, RelDataType replacement) {
+    return projection(scan, "b", "extra", ImmutableMap.of(replacedField, replacement));
+  }
+
+  /** Unbounded VARBINARY: the Hive type system leaves the binary-family precision unspecified. */
+  private static RelDataType varbinary(RelNode scan) {
+    RelDataTypeFactory typeFactory = rexBuilder(scan).getTypeFactory();
+    RelDataType type = typeFactory.createTypeWithNullability(typeFactory.createSqlType(SqlTypeName.VARBINARY), true);
+    Assert.assertEquals(type.getPrecision(), RelDataType.PRECISION_NOT_SPECIFIED, type.getFullTypeString());
+    return type;
+  }
+
+  private static RelDataType varbinary(RelNode scan, int length) {
+    RelDataTypeFactory typeFactory = rexBuilder(scan).getTypeFactory();
+    return typeFactory.createTypeWithNullability(typeFactory.createSqlType(SqlTypeName.VARBINARY, length), true);
+  }
+
+  /** Unparameterized BINARY, as the coarse Hive type converter produces. */
+  private static RelDataType binary(RelNode scan) {
+    RelDataTypeFactory typeFactory = rexBuilder(scan).getTypeFactory();
+    RelDataType type = typeFactory.createTypeWithNullability(typeFactory.createSqlType(SqlTypeName.BINARY), true);
+    Assert.assertEquals(type.getPrecision(), RelDataType.PRECISION_NOT_SPECIFIED, type.getFullTypeString());
+    return type;
+  }
+
   private static RelDataType binary(RelNode scan, int length) {
     RelDataTypeFactory typeFactory = rexBuilder(scan).getTypeFactory();
     return typeFactory.createTypeWithNullability(typeFactory.createSqlType(SqlTypeName.BINARY, length), true);
   }
 
   /** Must fail explicitly, naming the field path and the requested type; not an incidental runtime error. */
-  private void assertParameterMismatchRejected(RelNode project, String path, String requestedType) {
+  private void assertParameterMismatchRejected(RelNode project, String path, String requestedType, String... context) {
     try {
       Schema result = relToAvroSchemaConverter.convert(project, true, false);
       Assert.fail("Expected a request for " + requestedType + " at " + path + " to be rejected but produced:\n"
@@ -495,6 +646,10 @@ public class FuzzyUnionStructuralTests {
       String message = String.valueOf(e.getMessage());
       Assert.assertTrue(message.contains(path) && message.contains(requestedType),
           "Expected the rejection to name '" + path + "' and '" + requestedType + "' but was: " + message);
+      for (String fragment : context) {
+        Assert.assertTrue(message.contains(fragment),
+            "Expected the rejection to mention '" + fragment + "' but was: " + message);
+      }
     }
   }
 
