@@ -334,6 +334,11 @@ final class AvroSchemaProjection {
     }
   }
 
+  /** The default of a field, parsed from its JSON form; only for a field that declares one. */
+  static Object defaultValue(Schema.Field field) {
+    return new JsonReader(AvroCompatibilityHelper.getDefaultValueAsJsonString(field)).readValue();
+  }
+
   /**
    * Orders the nullable options inside {@code schema}, the (merged) schema of {@code field}, so that the defaults the
    * field retains stay valid: a default value null needs the null option first, any other value needs its type first.

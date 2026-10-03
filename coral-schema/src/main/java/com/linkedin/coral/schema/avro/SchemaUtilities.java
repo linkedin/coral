@@ -558,7 +558,7 @@ class SchemaUtilities {
       rightSchema = ToLowercaseSchemaVisitor.visit(rightSchema);
     }
 
-    return mergeRecords(leftSchema, rightSchema, strictMode, leftSchema.getName());
+    return SharedNamedDefinitions.unify(mergeRecords(leftSchema, rightSchema, strictMode, leftSchema.getName()));
   }
 
   /**
@@ -567,10 +567,6 @@ class SchemaUtilities {
    * differ in casing are aligned when each side has exactly one candidate (see {@link #alignFields}).
    */
   private static Schema mergeRecords(Schema left, Schema right, boolean strictMode, String path) {
-    if (left.toString(true).equals(right.toString(true))) {
-      return left;
-    }
-
     if (strictMode) {
       // We require namespace to match in strictMode
       if (!Objects.equals(left.getNamespace(), right.getNamespace())) {
