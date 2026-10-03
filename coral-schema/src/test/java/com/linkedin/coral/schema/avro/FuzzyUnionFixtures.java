@@ -218,6 +218,22 @@ final class FuzzyUnionFixtures {
             + "mapmillis:map<string,timestamp>,extra:string>");
     c.addAvroSerdeTable(DB, "dur_src", load("dur_src.avsc"), "id bigint",
         "r struct<duration:binary,optduration:binary,extra:int>");
+    // F8: one named record (com.linkedin.f8.Shared) used by several fields; _r evolves it (x nullable, extra).
+    String sh = "struct<x:int>";
+    String shE = "struct<x:int,extra:int>";
+    for (String name : new String[] { "f8", "f8m", "f8n", "f8env", "f8ns" }) {
+      c.addAvroSerdeTable(DB, name + "_l", load(name + "_l.avsc"), "a " + sh, "b " + sh);
+      c.addAvroSerdeTable(DB, name + "_r", load(name + "_r.avsc"), "a " + shE, "b " + shE);
+    }
+    c.addAvroSerdeTable(DB, "f8e_l", load("f8e_l.avsc"), "b " + sh, "a " + sh);
+    c.addAvroSerdeTable(DB, "f8e_r", load("f8e_r.avsc"), "b " + shE, "a " + shE);
+    c.addAvroSerdeTable(DB, "f8c_l", load("f8c_l.avsc"), "d " + sh, "arr array<" + sh + ">", "m map<string," + sh + ">",
+        "h struct<s:" + sh + ">");
+    c.addAvroSerdeTable(DB, "f8c_r", load("f8c_r.avsc"), "d " + shE, "arr array<" + shE + ">",
+        "m map<string," + shE + ">", "h struct<s:" + shE + ">");
+    c.addAvroSerdeTable(DB, "f8neg_l", load("f8neg_l.avsc"), "leftuse struct<x:int,y:int>",
+        "rightuse struct<x:int,y:int>");
+    c.addAvroSerdeTable(DB, "f8neg_r", load("f8neg_r.avsc"), "leftuse struct<x:int>", "rightuse struct<y:int>");
     c.addAvroSerdeTable(DB, "bin_src", load("bin_src.avsc"), "id bigint",
         "b struct<raw:binary,optraw:binary,arrraw:array<binary>,text:string,extra:string>");
     c.addAvroSerdeTable(DB, "un_base", load("un_base.avsc"), "id bigint", "s struct<u:uniontype<int,string>,a:int>");
@@ -347,6 +363,10 @@ final class FuzzyUnionFixtures {
     unionView(c, "v_alias_qfz_r", "SELECT * FROM fz.alias_qsrc_evolved", "SELECT * FROM fz.alias_qsrc");
     unionView(c, "v_f4", "SELECT * FROM fz.f4_a", "SELECT * FROM fz.f4_b");
     unionView(c, "v_f4_r", "SELECT * FROM fz.f4_b", "SELECT * FROM fz.f4_a");
+    for (String name : new String[] { "f8", "f8e", "f8m", "f8n", "f8c", "f8env", "f8ns", "f8neg" }) {
+      unionView(c, "v_" + name, "SELECT * FROM fz." + name + "_l", "SELECT * FROM fz." + name + "_r");
+      unionView(c, "v_" + name + "_r", "SELECT * FROM fz." + name + "_r", "SELECT * FROM fz." + name + "_l");
+    }
     unionView(c, "v_t24", "SELECT * FROM fz.case_camel", "SELECT * FROM fz.case_lower");
     unionView(c, "v_t24r", "SELECT * FROM fz.case_lower", "SELECT * FROM fz.case_camel");
     return c;

@@ -1,0 +1,1 @@
+{"type": "record", "name": "F8Env", "namespace": "com.linkedin.f8", "fields": [{"name": "a", "type": ["null", {"type": "record", "name": "Shared", "doc": "Shared record", "aliases": ["OldShared"], "x-shared": 1, "fields": [{"name": "x", "type": "int", "doc": "X value"}]}], "default": null}, {"name": "b", "type": "Shared", "default": {"x": 1}}]}

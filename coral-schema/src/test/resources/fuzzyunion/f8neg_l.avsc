@@ -1,0 +1,1 @@
+{"type": "record", "name": "F8Neg", "namespace": "com.linkedin.f8", "fields": [{"name": "leftUse", "type": {"type": "record", "name": "Shared", "fields": [{"name": "x", "type": "int"}, {"name": "y", "type": "int"}]}}, {"name": "rightUse", "type": "Shared"}]}
