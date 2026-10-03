@@ -185,13 +185,15 @@ final class AvroSchemaProjection {
    */
   private static boolean sameLeafRepresentation(Schema schema, RelDataType source, RelDataType target) {
     SqlTypeName name = target.getSqlTypeName();
-    if (hasFiniteVarbinaryBound(target) && SqlTypeName.BINARY_TYPES.contains(source.getSqlTypeName())
-        && AvroCompatibilityHelper.getSchemaPropAsJsonString(schema, "logicalType") == null) {
-      // VARBINARY(n) is a maximum length. Only an Avro fixed schema proves that every value fits; bytes has no bound
-      if (schema.getType() == Schema.Type.FIXED) {
+    if (hasFiniteVarbinaryBound(target) && SqlTypeName.BINARY_TYPES.contains(source.getSqlTypeName())) {
+      // VARBINARY(n) is a maximum length. Only an Avro fixed schema proves that every value fits; bytes has no bound.
+      // A fixed keeps its identity and annotations (for example duration), a decimal is not a binary operand.
+      String logicalType = AvroCompatibilityHelper.getSchemaPropAsJsonString(schema, "logicalType");
+      boolean decimal = "\"decimal\"".equals(logicalType);
+      if (schema.getType() == Schema.Type.FIXED && !decimal) {
         return schema.getFixedSize() <= target.getPrecision();
       }
-      if (schema.getType() == Schema.Type.BYTES) {
+      if (schema.getType() == Schema.Type.BYTES && logicalType == null) {
         return false;
       }
     }
