@@ -1,0 +1,6 @@
+{"type":"record","name":"Dur","namespace":"com.linkedin.dur","fields":[
+  {"name":"id","type":"long"},
+  {"name":"r","type":{"type":"record","name":"R","fields":[
+    {"name":"duration","type":{"type":"fixed","name":"Duration","size":12,"logicalType":"duration","x-duration":"keep"},"doc":"Elapsed"},
+    {"name":"optDuration","type":["null",{"type":"fixed","name":"OptDuration","size":12,"logicalType":"duration"}],"default":null},
+    {"name":"extra","type":"int"}]}}]}

@@ -216,6 +216,8 @@ final class FuzzyUnionFixtures {
     c.addAvroSerdeTable(DB, "rep_src", load("rep_src.avsc"), "id bigint",
         "r struct<millis:timestamp,f8:binary,f16:binary,optf16:binary,arrf16:array<binary>,"
             + "mapmillis:map<string,timestamp>,extra:string>");
+    c.addAvroSerdeTable(DB, "dur_src", load("dur_src.avsc"), "id bigint",
+        "r struct<duration:binary,optduration:binary,extra:int>");
     c.addAvroSerdeTable(DB, "bin_src", load("bin_src.avsc"), "id bigint",
         "b struct<raw:binary,optraw:binary,arrraw:array<binary>,text:string,extra:string>");
     c.addAvroSerdeTable(DB, "un_base", load("un_base.avsc"), "id bigint", "s struct<u:uniontype<int,string>,a:int>");

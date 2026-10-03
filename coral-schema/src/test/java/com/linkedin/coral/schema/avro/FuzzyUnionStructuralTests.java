@@ -350,6 +350,45 @@ public class FuzzyUnionStructuralTests {
   }
 
   @Test
+  public void testF7AnnotatedFixedWithinBoundIsKept() {
+    // Final-review F7: a fixed12 carrying logicalType duration is coherently inferred as BINARY; its fixed size proves
+    // the bound regardless of the annotation. VARBINARY(12) and VARBINARY(16) keep it exactly, annotation, property and
+    // field doc included, at the top level and inside an option.
+    RelNode scan = scan("SELECT * FROM fz.dur_src");
+    Assert.assertEquals(scan.getRowType().getField("r", false, false).getType().getField("duration", false, false)
+        .getType().getSqlTypeName(), SqlTypeName.BINARY);
+    String literal = catalog.avroLiteral(DB, "dur_src");
+    Schema source = new Schema.Parser().parse(load("dur_src.avsc")).getField("r").schema();
+    for (int maximum : new int[] { 12, 16 }) {
+      RelDataType target = projection(scan, "r", "extra",
+          ImmutableMap.of("duration", varbinary(scan, maximum), "optduration", varbinary(scan, maximum)));
+      Schema r = SchemaUtilities.extractIfOption(relToAvroSchemaConverter
+          .convert(projectColumn(scan, 1, "r", genericProject(scan, target, inputRef(scan, 1))), true, false)
+          .getField("r").schema());
+      for (String leaf : ImmutableList.of("duration", "optDuration")) {
+        Assert.assertEquals(r.getField(leaf).schema().toString(true), source.getField(leaf).schema().toString(true),
+            leaf + " as VARBINARY(" + maximum + ")");
+      }
+      Assert.assertEquals(r.getField("duration").doc(), "Elapsed");
+      Assert.assertNull(r.getField("extra"));
+    }
+    Assert.assertEquals(catalog.avroLiteral(DB, "dur_src"), literal, "source metadata must not be mutated");
+  }
+
+  @Test
+  public void testF7AnnotatedFixedNarrowerBoundFails() {
+    // Guard for the test above: a maximum below the annotated fixed's 12 bytes stays rejected, top-level and optional.
+    RelNode scan = scan("SELECT * FROM fz.dur_src");
+    RelDataType narrow = projection(scan, "r", "extra", ImmutableMap.of("duration", varbinary(scan, 8)));
+    assertParameterMismatchRejected(projectColumn(scan, 1, "r", genericProject(scan, narrow, inputRef(scan, 1))),
+        "r.duration", "VARBINARY(8)", "12");
+    RelDataType narrowOptional = projection(scan, "r", "extra", ImmutableMap.of("optduration", varbinary(scan, 8)));
+    assertParameterMismatchRejected(
+        projectColumn(scan, 1, "r", genericProject(scan, narrowOptional, inputRef(scan, 1))), "r.optDuration",
+        "VARBINARY(8)", "12");
+  }
+
+  @Test
   public void testF5FiniteVarbinaryOverBytesFails() {
     // Avro bytes declares no maximum and the coarse Hive operand (BINARY) proves none.
     RelNode scan = scan("SELECT * FROM fz.bin_src");
