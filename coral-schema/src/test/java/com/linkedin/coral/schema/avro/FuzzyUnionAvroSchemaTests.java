@@ -535,6 +535,29 @@ public class FuzzyUnionAvroSchemaTests {
   }
 
   @Test
+  public void testDecimalOmittedScaleEqualsExplicitZeroScaleInUnion() {
+    // Final-review F6: Avro defaults an omitted decimal scale to 0, so decimal(10) and decimal(10,0) are the same
+    // logical type (both relational DECIMAL(10, 0)). An ordinary direct/direct UNION accepts them in both strict modes
+    // and keeps the canonical (left) branch's own declaration: no "scale" added when it was omitted, kept when explicit.
+    assertProjections("v_d6", 0, 0);
+    assertView(nonStrict("v_d6"), "d6-noscale.avsc", "v_d6");
+    assertSchema(converter.toAvroSchema(DB, "v_d6", true, false), "d6_noscale.avsc");
+
+    assertProjections("v_d6_r", 0, 0);
+    assertView(nonStrict("v_d6_r"), "d6-zero.avsc", "v_d6_r");
+    assertSchema(converter.toAvroSchema(DB, "v_d6_r", true, false), "d6_zero.avsc");
+  }
+
+  @Test
+  public void testDecimalDifferentEffectiveScaleOrPrecisionStillFailsInUnion() {
+    // Controls: an omitted scale (0) against scale 2, or precision 10 against 12, are different decimals.
+    for (boolean strict : new boolean[] { false, true }) {
+      assertFailsMentioning(() -> converter.toAvroSchema(DB, "v_d6_scale", strict, false), "amount");
+      assertFailsMentioning(() -> converter.toAvroSchema(DB, "v_d6_prec", strict, false), "amount");
+    }
+  }
+
+  @Test
   public void testT15FixedSizeMismatchFailsInBothModes() {
     assertFailsMentioning(() -> nonStrict("v_fx_size"), "Md5", "16", "8");
     assertFailsMentioning(() -> converter.toAvroSchema(DB, "v_fx_size", true, false), "Md5", "16", "8");

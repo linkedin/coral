@@ -158,6 +158,14 @@ final class FuzzyUnionFixtures {
     c.addAvroSerdeTable(DB, "fx_a2", load("fx_a2.avsc"), "id bigint", "c binary");
     c.addAvroSerdeTable(DB, "fx_b", load("fx_b.avsc"), "id bigint", "c binary");
     c.addAvroSerdeTable(DB, "fx_c", load("fx_c.avsc"), "id bigint", "c binary");
+    c.addAvroSerdeTable(DB, "d6_noscale", load("d6_noscale.avsc"), "id bigint", "amount decimal(10,0)",
+        "r struct<amt:decimal(10,0)>");
+    c.addAvroSerdeTable(DB, "d6_zero", load("d6_zero.avsc"), "id bigint", "amount decimal(10,0)",
+        "r struct<amt:decimal(10,0)>");
+    c.addAvroSerdeTable(DB, "d6_scale2", load("d6_scale2.avsc"), "id bigint", "amount decimal(10,2)",
+        "r struct<amt:decimal(10,2)>");
+    c.addAvroSerdeTable(DB, "d6_prec12", load("d6_prec12.avsc"), "id bigint", "amount decimal(12,0)",
+        "r struct<amt:decimal(12,0)>");
     c.addAvroSerdeTable(DB, "req_a", load("req_a.avsc"), "id bigint", "f string");
     c.addAvroSerdeTable(DB, "req_b", load("req_a.avsc"), "id bigint", "f string");
     c.addAvroSerdeTable(DB, "req_c", load("req_c.avsc"), "id bigint", "f string");
@@ -261,6 +269,10 @@ final class FuzzyUnionFixtures {
     unionView(c, "v_depth_r", "SELECT id, s.child.x AS b FROM fz.depth_src", "SELECT id, b FROM fz.depth_direct");
     unionView(c, "v_depth2", "SELECT id, b FROM fz.depth2_direct", "SELECT id, s.child AS b FROM fz.depth2_src");
     unionView(c, "v_depth2_r", "SELECT id, s.child AS b FROM fz.depth2_src", "SELECT id, b FROM fz.depth2_direct");
+    unionView(c, "v_d6", "SELECT * FROM fz.d6_noscale", "SELECT * FROM fz.d6_zero");
+    unionView(c, "v_d6_r", "SELECT * FROM fz.d6_zero", "SELECT * FROM fz.d6_noscale");
+    unionView(c, "v_d6_scale", "SELECT * FROM fz.d6_noscale", "SELECT * FROM fz.d6_scale2");
+    unionView(c, "v_d6_prec", "SELECT * FROM fz.d6_noscale", "SELECT * FROM fz.d6_prec12");
     unionView(c, "v_fx_size", "SELECT * FROM fz.fx_a", "SELECT * FROM fz.fx_b");
     unionView(c, "v_fx_name", "SELECT * FROM fz.fx_a", "SELECT * FROM fz.fx_c");
     unionView(c, "v_fx_same", "SELECT * FROM fz.fx_a", "SELECT * FROM fz.fx_a");

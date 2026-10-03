@@ -1,0 +1,1 @@
+{"type": "record", "name": "D6", "namespace": "com.linkedin.d6", "fields": [{"name": "id", "type": "long"}, {"name": "amount", "type": {"type": "bytes", "logicalType": "decimal", "precision": 10, "scale": 0}}, {"name": "r", "type": {"type": "record", "name": "R", "fields": [{"name": "amt", "type": {"type": "bytes", "logicalType": "decimal", "precision": 10, "scale": 0}}]}}]}
