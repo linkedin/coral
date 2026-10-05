@@ -1,0 +1,4775 @@
+=== v_n1 strict=false lower=true
+{
+  "type" : "record",
+  "name" : "v_n1",
+  "namespace" : "fz.v_n1",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "fz.v_n1.v_n1",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "default" : null
+  } ]
+}
+=== v_n1 strict=true lower=false
+!java.lang.RuntimeException
+requestHeader is in schema PageViewEvent: {
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestHeader",
+    "type" : {
+      "type" : "record",
+      "name" : "RequestHeader",
+      "fields" : [ {
+        "name" : "pageKey",
+        "type" : "string"
+      }, {
+        "name" : "memberId",
+        "type" : "long"
+      } ]
+    }
+  } ]
+}, but not in schema PageViewEvent: {
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "rel_avro",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"requestheader\", \"struct<pagekey:string,memberid:bigint>\""
+  } ]
+}
+=== v_n1 strict=true lower=true
+!java.lang.RuntimeException
+Found namespace mismatch while configured with strict mode. Namespace for requestheader is: com.linkedin.events. Namespace for requestheader is: rel_avro
+=== v_n1_r strict=false lower=true
+{
+  "type" : "record",
+  "name" : "v_n1_r",
+  "namespace" : "fz.v_n1_r",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "fz.v_n1_r.v_n1_r",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"requestheader\", \"struct<pagekey:string,memberid:bigint>\"",
+    "default" : null
+  } ]
+}
+=== v_n1_r strict=true lower=false
+!java.lang.RuntimeException
+requestheader is in schema PageViewEvent: {
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "rel_avro",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"requestheader\", \"struct<pagekey:string,memberid:bigint>\""
+  } ]
+}, but not in schema PageViewEvent: {
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestHeader",
+    "type" : {
+      "type" : "record",
+      "name" : "RequestHeader",
+      "fields" : [ {
+        "name" : "pageKey",
+        "type" : "string"
+      }, {
+        "name" : "memberId",
+        "type" : "long"
+      } ]
+    }
+  } ]
+}
+=== v_n1_r strict=true lower=true
+!java.lang.RuntimeException
+Found namespace mismatch while configured with strict mode. Namespace for requestheader is: rel_avro. Namespace for requestheader is: com.linkedin.events
+=== v_n2_3 strict=false lower=true
+{
+  "type" : "record",
+  "name" : "v_n2_3",
+  "namespace" : "fz.v_n2_3",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "fz.v_n2_3.v_n2_3",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"requestheader\", \"struct<pagekey:string,memberid:bigint>\"",
+    "default" : null
+  } ]
+}
+=== v_n2_3 strict=true lower=false
+!java.lang.RuntimeException
+requestheader is in schema PageViewEvent: {
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "rel_avro",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"requestheader\", \"struct<pagekey:string,memberid:bigint>\""
+  } ]
+}, but not in schema PageViewEvent: {
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestHeader",
+    "type" : {
+      "type" : "record",
+      "name" : "RequestHeader",
+      "fields" : [ {
+        "name" : "pageKey",
+        "type" : "string"
+      }, {
+        "name" : "memberId",
+        "type" : "long"
+      } ]
+    }
+  } ]
+}
+=== v_n2_3 strict=true lower=true
+!java.lang.RuntimeException
+Found namespace mismatch while configured with strict mode. Namespace for requestheader is: rel_avro. Namespace for requestheader is: com.linkedin.events
+=== v_n3_header strict=false lower=true
+{
+  "type" : "record",
+  "name" : "v_n3_header",
+  "namespace" : "fz.v_n3_header",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "header",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "fz.v_n3_header.v_n3_header",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "default" : null
+  } ]
+}
+=== v_n3_header strict=true lower=false
+!java.lang.RuntimeException
+Found namespace mismatch while configured with strict mode. Namespace for RequestHeader is: com.linkedin.events. Namespace for header is: rel_avro
+=== v_n3_header strict=true lower=true
+!java.lang.RuntimeException
+Found namespace mismatch while configured with strict mode. Namespace for requestheader is: com.linkedin.events. Namespace for header is: rel_avro
+=== v_n3_rh strict=false lower=true
+{
+  "type" : "record",
+  "name" : "v_n3_rh",
+  "namespace" : "fz.v_n3_rh",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "request_header",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "fz.v_n3_rh.v_n3_rh",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "default" : null
+  } ]
+}
+=== v_n3_rh strict=true lower=false
+!java.lang.RuntimeException
+Found namespace mismatch while configured with strict mode. Namespace for RequestHeader is: com.linkedin.events. Namespace for request_header is: rel_avro
+=== v_n3_rh strict=true lower=true
+!java.lang.RuntimeException
+Found namespace mismatch while configured with strict mode. Namespace for requestheader is: com.linkedin.events. Namespace for request_header is: rel_avro
+=== v_n4 strict=false lower=true
+{
+  "type" : "record",
+  "name" : "v_n4",
+  "namespace" : "fz.v_n4",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "fz.v_n4.v_n4",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "device",
+        "type" : [ "null", {
+          "type" : "record",
+          "name" : "device",
+          "namespace" : "fz.v_n4.v_n4.requestheader",
+          "fields" : [ {
+            "name" : "osname",
+            "type" : [ "null", "string" ],
+            "default" : null
+          }, {
+            "name" : "osversion",
+            "type" : [ "null", "string" ],
+            "default" : null
+          } ]
+        } ],
+        "default" : null
+      } ]
+    } ],
+    "default" : null
+  } ]
+}
+=== v_n4 strict=true lower=false
+!java.lang.RuntimeException
+requestHeader is in schema PageViewEvent: {
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestHeader",
+    "type" : {
+      "type" : "record",
+      "name" : "RequestHeader",
+      "fields" : [ {
+        "name" : "pageKey",
+        "type" : "string"
+      }, {
+        "name" : "device",
+        "type" : {
+          "type" : "record",
+          "name" : "Device",
+          "fields" : [ {
+            "name" : "osName",
+            "type" : "string"
+          }, {
+            "name" : "osVersion",
+            "type" : "string"
+          } ]
+        }
+      } ]
+    }
+  } ]
+}, but not in schema PageViewEvent: {
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "rel_avro",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "device",
+        "type" : [ "null", {
+          "type" : "record",
+          "name" : "device",
+          "fields" : [ {
+            "name" : "osname",
+            "type" : [ "null", "string" ],
+            "default" : null
+          }, {
+            "name" : "osversion",
+            "type" : [ "null", "string" ],
+            "default" : null
+          } ]
+        } ],
+        "default" : null
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"requestheader\", \"struct<pagekey:string,device:struct<osname:string,osversion:string>>\""
+  } ]
+}
+=== v_n4 strict=true lower=true
+!java.lang.RuntimeException
+Found namespace mismatch while configured with strict mode. Namespace for requestheader is: com.linkedin.events. Namespace for requestheader is: rel_avro
+=== v_n4_access strict=false lower=true
+{
+  "type" : "record",
+  "name" : "v_n4_access",
+  "namespace" : "fz.v_n4_access",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "device",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "device",
+      "namespace" : "fz.v_n4_access.v_n4_access",
+      "fields" : [ {
+        "name" : "osname",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "osversion",
+        "type" : [ "null", "string" ],
+        "default" : null
+      } ]
+    } ],
+    "default" : null
+  } ]
+}
+=== v_n4_access strict=true lower=false
+!java.lang.RuntimeException
+Found namespace mismatch while configured with strict mode. Namespace for Device is: com.linkedin.events. Namespace for device is: rel_avro
+=== v_n4_access strict=true lower=true
+!java.lang.RuntimeException
+Found namespace mismatch while configured with strict mode. Namespace for device is: com.linkedin.events. Namespace for device is: rel_avro
+=== v_n5 strict=false lower=true
+{
+  "type" : "record",
+  "name" : "v_n5",
+  "namespace" : "fz.v_n5",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "headers",
+    "type" : [ "null", {
+      "type" : "array",
+      "items" : [ "null", {
+        "type" : "record",
+        "name" : "arrheader",
+        "namespace" : "fz.v_n5.v_n5",
+        "fields" : [ {
+          "name" : "pagekey",
+          "type" : [ "null", "string" ],
+          "default" : null
+        }, {
+          "name" : "memberid",
+          "type" : [ "null", "long" ],
+          "default" : null
+        } ]
+      } ]
+    } ],
+    "default" : null
+  }, {
+    "name" : "optheaders",
+    "type" : [ "null", {
+      "type" : "array",
+      "items" : [ "null", {
+        "type" : "record",
+        "name" : "optarrheader",
+        "namespace" : "fz.v_n5.v_n5",
+        "fields" : [ {
+          "name" : "pagekey",
+          "type" : [ "null", "string" ],
+          "default" : null
+        }, {
+          "name" : "memberid",
+          "type" : [ "null", "long" ],
+          "default" : null
+        } ]
+      } ]
+    } ],
+    "default" : null
+  }, {
+    "name" : "bykey",
+    "type" : [ "null", {
+      "type" : "map",
+      "values" : [ "null", {
+        "type" : "record",
+        "name" : "mapheader",
+        "namespace" : "fz.v_n5.v_n5",
+        "fields" : [ {
+          "name" : "pagekey",
+          "type" : [ "null", "string" ],
+          "default" : null
+        }, {
+          "name" : "memberid",
+          "type" : [ "null", "long" ],
+          "default" : null
+        } ]
+      } ]
+    } ],
+    "default" : null
+  }, {
+    "name" : "optbykey",
+    "type" : [ "null", {
+      "type" : "map",
+      "values" : [ "null", {
+        "type" : "record",
+        "name" : "optmapheader",
+        "namespace" : "fz.v_n5.v_n5",
+        "fields" : [ {
+          "name" : "pagekey",
+          "type" : [ "null", "string" ],
+          "default" : null
+        }, {
+          "name" : "memberid",
+          "type" : [ "null", "long" ],
+          "default" : null
+        } ]
+      } ]
+    } ],
+    "default" : null
+  } ]
+}
+=== v_n5 strict=true lower=false
+!java.lang.RuntimeException
+optHeaders is in schema CollEvent: {
+  "type" : "record",
+  "name" : "CollEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "headers",
+    "type" : {
+      "type" : "array",
+      "items" : {
+        "type" : "record",
+        "name" : "ArrHeader",
+        "fields" : [ {
+          "name" : "pageKey",
+          "type" : "string"
+        }, {
+          "name" : "memberId",
+          "type" : "long"
+        } ]
+      }
+    }
+  }, {
+    "name" : "optHeaders",
+    "type" : [ "null", {
+      "type" : "array",
+      "items" : [ "null", {
+        "type" : "record",
+        "name" : "OptArrHeader",
+        "fields" : [ {
+          "name" : "pageKey",
+          "type" : "string"
+        }, {
+          "name" : "memberId",
+          "type" : "long"
+        } ]
+      } ]
+    } ]
+  }, {
+    "name" : "byKey",
+    "type" : {
+      "type" : "map",
+      "values" : {
+        "type" : "record",
+        "name" : "MapHeader",
+        "fields" : [ {
+          "name" : "pageKey",
+          "type" : "string"
+        }, {
+          "name" : "memberId",
+          "type" : "long"
+        } ]
+      }
+    }
+  }, {
+    "name" : "optByKey",
+    "type" : [ "null", {
+      "type" : "map",
+      "values" : [ "null", {
+        "type" : "record",
+        "name" : "OptMapHeader",
+        "fields" : [ {
+          "name" : "pageKey",
+          "type" : "string"
+        }, {
+          "name" : "memberId",
+          "type" : "long"
+        } ]
+      } ]
+    } ]
+  } ]
+}, but not in schema CollEvent: {
+  "type" : "record",
+  "name" : "CollEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "headers",
+    "type" : [ "null", {
+      "type" : "array",
+      "items" : [ "null", {
+        "type" : "record",
+        "name" : "headers",
+        "namespace" : "rel_avro",
+        "fields" : [ {
+          "name" : "pagekey",
+          "type" : [ "null", "string" ],
+          "default" : null
+        }, {
+          "name" : "memberid",
+          "type" : [ "null", "long" ],
+          "default" : null
+        } ]
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.CollEvent.headers, \"headers\", \"array<struct<pagekey:string,memberid:bigint>>\""
+  }, {
+    "name" : "optheaders",
+    "type" : [ "null", {
+      "type" : "array",
+      "items" : [ "null", {
+        "type" : "record",
+        "name" : "optheaders",
+        "namespace" : "rel_avro",
+        "fields" : [ {
+          "name" : "pagekey",
+          "type" : [ "null", "string" ],
+          "default" : null
+        }, {
+          "name" : "memberid",
+          "type" : [ "null", "long" ],
+          "default" : null
+        } ]
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.CollEvent.optHeaders, \"optheaders\", \"array<struct<pagekey:string,memberid:bigint>>\""
+  }, {
+    "name" : "bykey",
+    "type" : [ "null", {
+      "type" : "map",
+      "values" : [ "null", {
+        "type" : "record",
+        "name" : "bykey",
+        "namespace" : "rel_avro",
+        "fields" : [ {
+          "name" : "pagekey",
+          "type" : [ "null", "string" ],
+          "default" : null
+        }, {
+          "name" : "memberid",
+          "type" : [ "null", "long" ],
+          "default" : null
+        } ]
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.CollEvent.byKey, \"bykey\", \"map<string,struct<pagekey:string,memberid:bigint>>\""
+  }, {
+    "name" : "optbykey",
+    "type" : [ "null", {
+      "type" : "map",
+      "values" : [ "null", {
+        "type" : "record",
+        "name" : "optbykey",
+        "namespace" : "rel_avro",
+        "fields" : [ {
+          "name" : "pagekey",
+          "type" : [ "null", "string" ],
+          "default" : null
+        }, {
+          "name" : "memberid",
+          "type" : [ "null", "long" ],
+          "default" : null
+        } ]
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.CollEvent.optByKey, \"optbykey\", \"map<string,struct<pagekey:string,memberid:bigint>>\""
+  } ]
+}
+=== v_n5 strict=true lower=true
+!java.lang.RuntimeException
+Found namespace mismatch while configured with strict mode. Namespace for arrheader is: com.linkedin.events. Namespace for headers is: rel_avro
+=== v_n7 strict=false lower=true
+{
+  "type" : "record",
+  "name" : "v_n7",
+  "namespace" : "fz.v_n7",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long",
+    "doc" : "Event id"
+  }, {
+    "name" : "eventcount",
+    "type" : "int",
+    "doc" : "How many",
+    "default" : 0
+  }, {
+    "name" : "note",
+    "type" : [ "null", "string" ],
+    "default" : null
+  }, {
+    "name" : "label",
+    "type" : [ "string", "null" ],
+    "default" : "none"
+  }, {
+    "name" : "status",
+    "type" : {
+      "type" : "enum",
+      "name" : "Status",
+      "namespace" : "fz.v_n7.v_n7",
+      "symbols" : [ "ON", "OFF" ]
+    },
+    "default" : "ON"
+  }, {
+    "name" : "eventtime",
+    "type" : {
+      "type" : "long",
+      "logicalType" : "timestamp-millis"
+    }
+  }, {
+    "name" : "header",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "header",
+      "namespace" : "fz.v_n7.v_n7",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "doc" : "Page key",
+        "default" : null
+      }, {
+        "name" : "kind",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "md5",
+        "type" : [ "null", "bytes" ],
+        "default" : null
+      }, {
+        "name" : "createdat",
+        "type" : [ "null", {
+          "type" : "long",
+          "logicalType" : "timestamp-millis"
+        } ],
+        "default" : null
+      }, {
+        "name" : "optionalnote",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "retrycount",
+        "type" : [ "int", "null" ],
+        "default" : 1
+      }, {
+        "name" : "tags",
+        "type" : [ "null", {
+          "type" : "array",
+          "items" : [ "null", "string" ]
+        } ],
+        "default" : null
+      }, {
+        "name" : "attrs",
+        "type" : [ "null", {
+          "type" : "map",
+          "values" : [ "null", "long" ]
+        } ],
+        "default" : null
+      } ]
+    } ],
+    "default" : null
+  } ]
+}
+=== v_n7 strict=true lower=false
+!java.lang.RuntimeException
+Found namespace mismatch while configured with strict mode. Namespace for Header is: com.linkedin.events. Namespace for header is: rel_avro
+=== v_n7 strict=true lower=true
+!java.lang.RuntimeException
+Found namespace mismatch while configured with strict mode. Namespace for header is: com.linkedin.events. Namespace for header is: rel_avro
+=== v_n8_ordinal strict=false lower=true
+{
+  "type" : "record",
+  "name" : "v_n8_ordinal",
+  "namespace" : "fz.v_n8_ordinal",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "fz.v_n8_ordinal.v_n8_ordinal",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "default" : null
+  } ]
+}
+=== v_n8_ordinal strict=true lower=false
+!java.lang.RuntimeException
+requestHeader is in schema PageViewEvent: {
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestHeader",
+    "type" : {
+      "type" : "record",
+      "name" : "RequestHeader",
+      "fields" : [ {
+        "name" : "pageKey",
+        "type" : "string"
+      }, {
+        "name" : "memberId",
+        "type" : "long"
+      } ]
+    }
+  } ]
+}, but not in schema PageViewEvent: {
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "rel_avro",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): value with type RecordType:peek_no_expand(VARCHAR(2147483647) pagekey, BIGINT memberid, VARCHAR(2147483647) trackingid), \"requestheader\", \"struct<pagekey:string,memberid:bigint>\""
+  } ]
+}
+=== v_n8_ordinal strict=true lower=true
+!java.lang.RuntimeException
+Found namespace mismatch while configured with strict mode. Namespace for requestheader is: com.linkedin.events. Namespace for requestheader is: rel_avro
+=== v_n8_outer strict=false lower=true
+{
+  "type" : "record",
+  "name" : "v_n8_outer",
+  "namespace" : "fz.v_n8_outer",
+  "fields" : [ {
+    "name" : "pk",
+    "type" : [ "null", "string" ],
+    "default" : null
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "fz.v_n8_outer.v_n8_outer",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "default" : null
+  } ]
+}
+=== v_n8_outer strict=true lower=false
+!java.lang.RuntimeException
+requestHeader is in schema PageViewEvent: {
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestHeader",
+    "type" : {
+      "type" : "record",
+      "name" : "RequestHeader",
+      "fields" : [ {
+        "name" : "pageKey",
+        "type" : "string"
+      }, {
+        "name" : "memberId",
+        "type" : "long"
+      } ]
+    }
+  } ]
+}, but not in schema PageViewEvent: {
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "rel_avro",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"requestheader\", \"struct<pagekey:string,memberid:bigint>\""
+  } ]
+}
+=== v_n8_outer strict=true lower=true
+!java.lang.RuntimeException
+Found namespace mismatch while configured with strict mode. Namespace for requestheader is: com.linkedin.events. Namespace for requestheader is: rel_avro
+=== v_n12 strict=false lower=true
+{
+  "type" : "record",
+  "name" : "v_n12",
+  "namespace" : "fz.v_n12",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "fz.v_n12.v_n12",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"requestheader\", \"struct<pagekey:string,memberid:bigint>\"",
+    "default" : null
+  } ]
+}
+=== v_n12 strict=true lower=false
+!java.lang.RuntimeException
+requestheader is in schema PageViewEvent: {
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "rel_avro",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"requestheader\", \"struct<pagekey:string,memberid:bigint>\""
+  } ]
+}, but not in schema PageViewEvent: {
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestHeader",
+    "type" : {
+      "type" : "record",
+      "name" : "RequestHeader",
+      "fields" : [ {
+        "name" : "pageKey",
+        "type" : "string"
+      }, {
+        "name" : "memberId",
+        "type" : "long"
+      } ]
+    }
+  } ]
+}
+=== v_n12 strict=true lower=true
+!java.lang.RuntimeException
+Found namespace mismatch while configured with strict mode. Namespace for requestheader is: rel_avro. Namespace for requestheader is: com.linkedin.events
+=== v_n12_r strict=false lower=true
+{
+  "type" : "record",
+  "name" : "v_n12_r",
+  "namespace" : "fz.v_n12_r",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "fz.v_n12_r.v_n12_r",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "default" : null
+  } ]
+}
+=== v_n12_r strict=true lower=false
+!java.lang.RuntimeException
+requestHeader is in schema PageViewEvent: {
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestHeader",
+    "type" : {
+      "type" : "record",
+      "name" : "RequestHeader",
+      "fields" : [ {
+        "name" : "pageKey",
+        "type" : "string"
+      }, {
+        "name" : "memberId",
+        "type" : "long"
+      } ]
+    }
+  } ]
+}, but not in schema PageViewEvent: {
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "rel_avro",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"requestheader\", \"struct<pagekey:string,memberid:bigint>\""
+  } ]
+}
+=== v_n12_r strict=true lower=true
+!java.lang.RuntimeException
+Found namespace mismatch while configured with strict mode. Namespace for requestheader is: com.linkedin.events. Namespace for requestheader is: rel_avro
+=== v_n9_amb strict=false lower=false
+!java.lang.RuntimeException
+requestHeader is in schema PageViewEvent: {
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestHeader",
+    "type" : {
+      "type" : "record",
+      "name" : "RequestHeader",
+      "namespace" : "com.linkedin.events.PageViewEvent",
+      "fields" : [ {
+        "name" : "pageKey",
+        "type" : "string"
+      }, {
+        "name" : "memberId",
+        "type" : "long"
+      } ]
+    }
+  } ]
+}, but not in schema PageViewEvent: {
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "com.linkedin.events.PageViewEvent",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ]
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ]
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"requestheader\", \"struct<pagekey:string,memberid:bigint>\""
+  } ]
+}
+=== v_n9_amb strict=false lower=true
+{
+  "type" : "record",
+  "name" : "v_n9_amb",
+  "namespace" : "fz.v_n9_amb",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "fz.v_n9_amb.v_n9_amb",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "default" : null
+  } ]
+}
+=== v_n9_amb strict=true lower=false
+!java.lang.RuntimeException
+requestHeader is in schema PageViewEvent: {
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestHeader",
+    "type" : {
+      "type" : "record",
+      "name" : "RequestHeader",
+      "fields" : [ {
+        "name" : "pageKey",
+        "type" : "string"
+      }, {
+        "name" : "memberId",
+        "type" : "long"
+      } ]
+    }
+  } ]
+}, but not in schema PageViewEvent: {
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "rel_avro",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"requestheader\", \"struct<pagekey:string,memberid:bigint>\""
+  } ]
+}
+=== v_n9_amb strict=true lower=true
+!java.lang.RuntimeException
+Found namespace mismatch while configured with strict mode. Namespace for requestheader is: com.linkedin.events. Namespace for requestheader is: rel_avro
+=== v_n9_missing strict=false lower=false
+!java.lang.RuntimeException
+requestHeader is in schema PageViewEvent: {
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestHeader",
+    "type" : {
+      "type" : "record",
+      "name" : "RequestHeader",
+      "namespace" : "com.linkedin.events.PageViewEvent",
+      "fields" : [ {
+        "name" : "pageKey",
+        "type" : "string"
+      }, {
+        "name" : "memberId",
+        "type" : "long"
+      } ]
+    }
+  } ]
+}, but not in schema PageViewEvent: {
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "com.linkedin.events.PageViewEvent",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ]
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ]
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"requestheader\", \"struct<pagekey:string,memberid:bigint>\""
+  } ]
+}
+=== v_n9_missing strict=false lower=true
+{
+  "type" : "record",
+  "name" : "v_n9_missing",
+  "namespace" : "fz.v_n9_missing",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "fz.v_n9_missing.v_n9_missing",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "default" : null
+  } ]
+}
+=== v_n9_missing strict=true lower=false
+!java.lang.RuntimeException
+requestHeader is in schema PageViewEvent: {
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestHeader",
+    "type" : {
+      "type" : "record",
+      "name" : "RequestHeader",
+      "fields" : [ {
+        "name" : "pageKey",
+        "type" : "string"
+      }, {
+        "name" : "memberId",
+        "type" : "long"
+      } ]
+    }
+  } ]
+}, but not in schema PageViewEvent: {
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "rel_avro",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"requestheader\", \"struct<pagekey:string,memberid:bigint>\""
+  } ]
+}
+=== v_n9_missing strict=true lower=true
+!java.lang.RuntimeException
+Found namespace mismatch while configured with strict mode. Namespace for requestheader is: com.linkedin.events. Namespace for requestheader is: rel_avro
+=== v_n9_container strict=false lower=false
+!java.lang.RuntimeException
+requestHeader is in schema PageViewEvent: {
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestHeader",
+    "type" : {
+      "type" : "record",
+      "name" : "RequestHeader",
+      "namespace" : "com.linkedin.events.PageViewEvent",
+      "fields" : [ {
+        "name" : "pageKey",
+        "type" : "string"
+      }, {
+        "name" : "memberId",
+        "type" : "long"
+      } ]
+    }
+  } ]
+}, but not in schema PageViewEvent: {
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "com.linkedin.events.PageViewEvent",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ]
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ]
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"requestheader\", \"struct<pagekey:string,memberid:bigint>\""
+  } ]
+}
+=== v_n9_container strict=false lower=true
+{
+  "type" : "record",
+  "name" : "v_n9_container",
+  "namespace" : "fz.v_n9_container",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "fz.v_n9_container.v_n9_container",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "default" : null
+  } ]
+}
+=== v_n9_container strict=true lower=false
+!java.lang.RuntimeException
+requestHeader is in schema PageViewEvent: {
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestHeader",
+    "type" : {
+      "type" : "record",
+      "name" : "RequestHeader",
+      "fields" : [ {
+        "name" : "pageKey",
+        "type" : "string"
+      }, {
+        "name" : "memberId",
+        "type" : "long"
+      } ]
+    }
+  } ]
+}, but not in schema PageViewEvent: {
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "rel_avro",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"requestheader\", \"struct<pagekey:string,memberid:bigint>\""
+  } ]
+}
+=== v_n9_container strict=true lower=true
+!java.lang.RuntimeException
+Found namespace mismatch while configured with strict mode. Namespace for requestheader is: com.linkedin.events. Namespace for requestheader is: rel_avro
+=== v_n10_pascal strict=false lower=false
+!java.lang.RuntimeException
+pageKey is in schema RequestHeader: {
+  "type" : "record",
+  "name" : "RequestHeader",
+  "namespace" : "com.linkedin.events.PageViewEvent",
+  "fields" : [ {
+    "name" : "pageKey",
+    "type" : "string"
+  }, {
+    "name" : "memberId",
+    "type" : "long"
+  } ]
+}, but not in schema RequestHeader: {
+  "type" : "record",
+  "name" : "RequestHeader",
+  "namespace" : "com.linkedin.events.PageViewEvent",
+  "fields" : [ {
+    "name" : "PageKey",
+    "type" : "string"
+  }, {
+    "name" : "memberId",
+    "type" : "long"
+  } ]
+}
+=== v_n10_pascal strict=false lower=true
+{
+  "type" : "record",
+  "name" : "v_n10_pascal",
+  "namespace" : "fz.v_n10_pascal",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "fz.v_n10_pascal.v_n10_pascal",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : "string"
+      }, {
+        "name" : "memberid",
+        "type" : "long"
+      } ]
+    }
+  } ]
+}
+=== v_n10_pascal strict=true lower=false
+!java.lang.RuntimeException
+pageKey is in schema RequestHeader: {
+  "type" : "record",
+  "name" : "RequestHeader",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "pageKey",
+    "type" : "string"
+  }, {
+    "name" : "memberId",
+    "type" : "long"
+  } ]
+}, but not in schema RequestHeader: {
+  "type" : "record",
+  "name" : "RequestHeader",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "PageKey",
+    "type" : "string"
+  }, {
+    "name" : "memberId",
+    "type" : "long"
+  } ]
+}
+=== v_n10_pascal strict=true lower=true
+{
+  "type" : "record",
+  "name" : "pageviewevent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : {
+      "type" : "record",
+      "name" : "requestheader",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : "string"
+      }, {
+        "name" : "memberid",
+        "type" : "long"
+      } ]
+    }
+  } ]
+}
+=== v_n12_paren strict=false lower=false
+!java.lang.RuntimeException
+requestHeader is in schema PageViewEvent: {
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestHeader",
+    "type" : {
+      "type" : "record",
+      "name" : "RequestHeader",
+      "namespace" : "com.linkedin.events.PageViewEvent",
+      "fields" : [ {
+        "name" : "pageKey",
+        "type" : "string"
+      }, {
+        "name" : "memberId",
+        "type" : "long"
+      } ]
+    }
+  } ]
+}, but not in schema PageViewEvent: {
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "com.linkedin.events.PageViewEvent",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ]
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ]
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"requestheader\", \"struct<pagekey:string,memberid:bigint>\""
+  } ]
+}
+=== v_n12_paren strict=false lower=true
+{
+  "type" : "record",
+  "name" : "v_n12_paren",
+  "namespace" : "fz.v_n12_paren",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "fz.v_n12_paren.v_n12_paren",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "default" : null
+  } ]
+}
+=== v_n12_paren strict=true lower=false
+!java.lang.RuntimeException
+requestHeader is in schema PageViewEvent: {
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestHeader",
+    "type" : {
+      "type" : "record",
+      "name" : "RequestHeader",
+      "fields" : [ {
+        "name" : "pageKey",
+        "type" : "string"
+      }, {
+        "name" : "memberId",
+        "type" : "long"
+      } ]
+    }
+  } ]
+}, but not in schema PageViewEvent: {
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "rel_avro",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"requestheader\", \"struct<pagekey:string,memberid:bigint>\""
+  } ]
+}
+=== v_n12_paren strict=true lower=true
+!java.lang.RuntimeException
+Found namespace mismatch while configured with strict mode. Namespace for requestheader is: com.linkedin.events. Namespace for requestheader is: rel_avro
+=== v_n12_latent strict=false lower=false
+!java.lang.RuntimeException
+requestheader is in schema PageViewEvent: {
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "com.linkedin.events.PageViewEvent",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ]
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ]
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"requestheader\", \"struct<pagekey:string,memberid:bigint>\""
+  } ]
+}, but not in schema PageViewEvent: {
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestHeader",
+    "type" : {
+      "type" : "record",
+      "name" : "RequestHeader",
+      "namespace" : "com.linkedin.events.PageViewEvent",
+      "fields" : [ {
+        "name" : "pageKey",
+        "type" : "string"
+      }, {
+        "name" : "memberId",
+        "type" : "long"
+      } ]
+    }
+  } ]
+}
+=== v_n12_latent strict=false lower=true
+{
+  "type" : "record",
+  "name" : "v_n12_latent",
+  "namespace" : "fz.v_n12_latent",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "fz.v_n12_latent.v_n12_latent",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"requestheader\", \"struct<pagekey:string,memberid:bigint>\"",
+    "default" : null
+  } ]
+}
+=== v_n12_latent strict=true lower=false
+!java.lang.RuntimeException
+requestheader is in schema PageViewEvent: {
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "rel_avro",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"requestheader\", \"struct<pagekey:string,memberid:bigint>\""
+  } ]
+}, but not in schema PageViewEvent: {
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestHeader",
+    "type" : {
+      "type" : "record",
+      "name" : "RequestHeader",
+      "fields" : [ {
+        "name" : "pageKey",
+        "type" : "string"
+      }, {
+        "name" : "memberId",
+        "type" : "long"
+      } ]
+    }
+  } ]
+}
+=== v_n12_latent strict=true lower=true
+!java.lang.RuntimeException
+Found namespace mismatch while configured with strict mode. Namespace for requestheader is: rel_avro. Namespace for requestheader is: com.linkedin.events
+=== v_n13_pascal strict=false lower=false
+!java.lang.RuntimeException
+requestHeader is in schema PageViewEvent: {
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestHeader",
+    "type" : {
+      "type" : "record",
+      "name" : "RequestHeader",
+      "namespace" : "com.linkedin.events.PageViewEvent",
+      "fields" : [ {
+        "name" : "pageKey",
+        "type" : "string"
+      }, {
+        "name" : "memberId",
+        "type" : "long"
+      } ]
+    }
+  } ]
+}, but not in schema PageViewEvent: {
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "com.linkedin.events.PageViewEvent",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ]
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ]
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"requestheader\", \"struct<pagekey:string,memberid:bigint>\""
+  } ]
+}
+=== v_n13_pascal strict=false lower=true
+{
+  "type" : "record",
+  "name" : "v_n13_pascal",
+  "namespace" : "fz.v_n13_pascal",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "fz.v_n13_pascal.v_n13_pascal",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "default" : null
+  } ]
+}
+=== v_n13_pascal strict=true lower=false
+!java.lang.RuntimeException
+requestHeader is in schema PageViewEvent: {
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestHeader",
+    "type" : {
+      "type" : "record",
+      "name" : "RequestHeader",
+      "fields" : [ {
+        "name" : "pageKey",
+        "type" : "string"
+      }, {
+        "name" : "memberId",
+        "type" : "long"
+      } ]
+    }
+  } ]
+}, but not in schema PageViewEvent: {
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "rel_avro",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"requestheader\", \"struct<pagekey:string,memberid:bigint>\""
+  } ]
+}
+=== v_n13_pascal strict=true lower=true
+!java.lang.RuntimeException
+Found namespace mismatch while configured with strict mode. Namespace for requestheader is: com.linkedin.events. Namespace for requestheader is: rel_avro
+=== v_n13_union strict=false lower=false
+!java.lang.RuntimeException
+requestHeader is in schema PageViewEvent: {
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestHeader",
+    "type" : {
+      "type" : "record",
+      "name" : "RequestHeader",
+      "namespace" : "com.linkedin.events.PageViewEvent",
+      "fields" : [ {
+        "name" : "pageKey",
+        "type" : "string"
+      }, {
+        "name" : "memberId",
+        "type" : "long"
+      }, {
+        "name" : "payload",
+        "type" : [ "null", "int", "string" ]
+      } ]
+    }
+  } ]
+}, but not in schema PageViewEvent: {
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "com.linkedin.events.PageViewEvent",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ]
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ]
+      }, {
+        "name" : "payload",
+        "type" : [ "null", {
+          "type" : "record",
+          "name" : "payload",
+          "namespace" : "com.linkedin.events.PageViewEvent.requestheader",
+          "fields" : [ {
+            "name" : "tag",
+            "type" : [ "null", "int" ]
+          }, {
+            "name" : "field0",
+            "type" : [ "null", "int" ]
+          }, {
+            "name" : "field1",
+            "type" : [ "null", "string" ]
+          } ]
+        } ]
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"requestheader\", \"struct<pagekey:string,memberid:bigint,payload:struct<tag:int,field0:int,field1:string>>\""
+  } ]
+}
+=== v_n13_union strict=false lower=true
+!java.lang.RuntimeException
+Found two incompatible schemas for LogicalUnion operator. Left schema is: [ "null", "int", "string" ]. Right schema is: {
+  "type" : "record",
+  "name" : "payload",
+  "namespace" : "com.linkedin.events.PageViewEvent.requestheader",
+  "fields" : [ {
+    "name" : "tag",
+    "type" : [ "null", "int" ]
+  }, {
+    "name" : "field0",
+    "type" : [ "null", "int" ]
+  }, {
+    "name" : "field1",
+    "type" : [ "null", "string" ]
+  } ]
+}
+=== v_n13_union strict=true lower=false
+!java.lang.RuntimeException
+requestHeader is in schema PageViewEvent: {
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestHeader",
+    "type" : {
+      "type" : "record",
+      "name" : "RequestHeader",
+      "fields" : [ {
+        "name" : "pageKey",
+        "type" : "string"
+      }, {
+        "name" : "memberId",
+        "type" : "long"
+      }, {
+        "name" : "payload",
+        "type" : [ "null", "int", "string" ],
+        "default" : null
+      } ]
+    }
+  } ]
+}, but not in schema PageViewEvent: {
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "rel_avro",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      }, {
+        "name" : "payload",
+        "type" : [ "null", {
+          "type" : "record",
+          "name" : "payload",
+          "fields" : [ {
+            "name" : "tag",
+            "type" : [ "null", "int" ],
+            "default" : null
+          }, {
+            "name" : "field0",
+            "type" : [ "null", "int" ],
+            "default" : null
+          }, {
+            "name" : "field1",
+            "type" : [ "null", "string" ],
+            "default" : null
+          } ]
+        } ],
+        "default" : null
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"requestheader\", \"struct<pagekey:string,memberid:bigint,payload:struct<tag:int,field0:int,field1:string>>\""
+  } ]
+}
+=== v_n13_union strict=true lower=true
+!java.lang.RuntimeException
+Found namespace mismatch while configured with strict mode. Namespace for requestheader is: com.linkedin.events. Namespace for requestheader is: rel_avro
+=== v_n4_access_r strict=false lower=false
+{
+  "type" : "record",
+  "name" : "v_n4_access_r",
+  "namespace" : "fz.v_n4_access_r",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "device",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "device",
+      "namespace" : "fz.v_n4_access_r.v_n4_access_r",
+      "fields" : [ {
+        "name" : "osversion",
+        "type" : [ "null", "string" ]
+      }, {
+        "name" : "osname",
+        "type" : [ "null", "string" ]
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): value with type RecordType:peek_no_expand(VARCHAR(2147483647) osversion, INTEGER screenwidth, VARCHAR(2147483647) osname), \"device\", \"struct<osversion:string,osname:string>\""
+  } ]
+}
+=== v_n4_access_r strict=false lower=true
+{
+  "type" : "record",
+  "name" : "v_n4_access_r",
+  "namespace" : "fz.v_n4_access_r",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "device",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "device",
+      "namespace" : "fz.v_n4_access_r.v_n4_access_r",
+      "fields" : [ {
+        "name" : "osversion",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "osname",
+        "type" : [ "null", "string" ],
+        "default" : null
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): value with type RecordType:peek_no_expand(VARCHAR(2147483647) osversion, INTEGER screenwidth, VARCHAR(2147483647) osname), \"device\", \"struct<osversion:string,osname:string>\"",
+    "default" : null
+  } ]
+}
+=== v_n4_access_r strict=true lower=false
+{
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "device",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "device",
+      "namespace" : "rel_avro",
+      "fields" : [ {
+        "name" : "osversion",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "osname",
+        "type" : [ "null", "string" ],
+        "default" : null
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): value with type RecordType:peek_no_expand(VARCHAR(2147483647) osversion, INTEGER screenwidth, VARCHAR(2147483647) osname), \"device\", \"struct<osversion:string,osname:string>\""
+  } ]
+}
+=== v_n4_access_r strict=true lower=true
+{
+  "type" : "record",
+  "name" : "pageviewevent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "device",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "device",
+      "namespace" : "rel_avro",
+      "fields" : [ {
+        "name" : "osversion",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "osname",
+        "type" : [ "null", "string" ],
+        "default" : null
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): value with type RecordType:peek_no_expand(VARCHAR(2147483647) osversion, INTEGER screenwidth, VARCHAR(2147483647) osname), \"device\", \"struct<osversion:string,osname:string>\"",
+    "default" : null
+  } ]
+}
+=== v_n6_direct strict=false lower=false
+{
+  "type" : "record",
+  "name" : "v_n6_direct",
+  "namespace" : "fz.v_n6_direct",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestHeader",
+    "type" : {
+      "type" : "record",
+      "name" : "RequestHeader",
+      "namespace" : "fz.v_n6_direct.v_n6_direct",
+      "fields" : [ {
+        "name" : "pageKey",
+        "type" : "string"
+      }, {
+        "name" : "memberId",
+        "type" : "long"
+      } ]
+    }
+  } ]
+}
+=== v_n6_direct strict=false lower=true
+{
+  "type" : "record",
+  "name" : "v_n6_direct",
+  "namespace" : "fz.v_n6_direct",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "fz.v_n6_direct.v_n6_direct",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : "string"
+      }, {
+        "name" : "memberid",
+        "type" : "long"
+      } ]
+    }
+  } ]
+}
+=== v_n6_direct strict=true lower=false
+{
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestHeader",
+    "type" : {
+      "type" : "record",
+      "name" : "RequestHeader",
+      "fields" : [ {
+        "name" : "pageKey",
+        "type" : "string"
+      }, {
+        "name" : "memberId",
+        "type" : "long"
+      } ]
+    }
+  } ]
+}
+=== v_n6_direct strict=true lower=true
+{
+  "type" : "record",
+  "name" : "pageviewevent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : {
+      "type" : "record",
+      "name" : "requestheader",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : "string"
+      }, {
+        "name" : "memberid",
+        "type" : "long"
+      } ]
+    }
+  } ]
+}
+=== v_n6_gg strict=false lower=false
+{
+  "type" : "record",
+  "name" : "v_n6_gg",
+  "namespace" : "fz.v_n6_gg",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "fz.v_n6_gg.v_n6_gg",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ]
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ]
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"requestheader\", \"struct<pagekey:string,memberid:bigint>\""
+  } ]
+}
+=== v_n6_gg strict=false lower=true
+{
+  "type" : "record",
+  "name" : "v_n6_gg",
+  "namespace" : "fz.v_n6_gg",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "fz.v_n6_gg.v_n6_gg",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"requestheader\", \"struct<pagekey:string,memberid:bigint>\"",
+    "default" : null
+  } ]
+}
+=== v_n6_gg strict=true lower=false
+{
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "rel_avro",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"requestheader\", \"struct<pagekey:string,memberid:bigint>\""
+  } ]
+}
+=== v_n6_gg strict=true lower=true
+{
+  "type" : "record",
+  "name" : "pageviewevent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "rel_avro",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"requestheader\", \"struct<pagekey:string,memberid:bigint>\"",
+    "default" : null
+  } ]
+}
+=== v_n6_lower strict=false lower=false
+{
+  "type" : "record",
+  "name" : "v_n6_lower",
+  "namespace" : "fz.v_n6_lower",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "RequestHeader",
+      "namespace" : "fz.v_n6_lower.v_n6_lower",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ]
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ]
+      } ]
+    } ]
+  } ]
+}
+=== v_n6_lower strict=false lower=true
+{
+  "type" : "record",
+  "name" : "v_n6_lower",
+  "namespace" : "fz.v_n6_lower",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "fz.v_n6_lower.v_n6_lower",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "default" : null
+  } ]
+}
+=== v_n6_lower strict=true lower=false
+!java.lang.RuntimeException
+Found namespace mismatch while configured with strict mode. Namespace for RequestHeader is: com.linkedin.events. Namespace for requestheader is: rel_avro
+=== v_n6_lower strict=true lower=true
+!java.lang.RuntimeException
+Found namespace mismatch while configured with strict mode. Namespace for requestheader is: com.linkedin.events. Namespace for requestheader is: rel_avro
+=== v_n7_lc strict=false lower=false
+{
+  "type" : "record",
+  "name" : "v_n7_lc",
+  "namespace" : "fz.v_n7_lc",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long",
+    "doc" : "Event id"
+  }, {
+    "name" : "eventcount",
+    "type" : "int",
+    "doc" : "How many",
+    "default" : 0
+  }, {
+    "name" : "note",
+    "type" : [ "null", "string" ]
+  }, {
+    "name" : "label",
+    "type" : [ "string", "null" ],
+    "default" : "none"
+  }, {
+    "name" : "status",
+    "type" : {
+      "type" : "enum",
+      "name" : "Status",
+      "namespace" : "fz.v_n7_lc.v_n7_lc",
+      "symbols" : [ "ON", "OFF" ]
+    },
+    "default" : "ON"
+  }, {
+    "name" : "eventtime",
+    "type" : {
+      "type" : "long",
+      "logicalType" : "timestamp-millis"
+    }
+  }, {
+    "name" : "header",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "Header",
+      "namespace" : "fz.v_n7_lc.v_n7_lc",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "doc" : "Page key"
+      }, {
+        "name" : "kind",
+        "type" : [ "null", "string" ]
+      }, {
+        "name" : "md5",
+        "type" : [ "null", "bytes" ]
+      }, {
+        "name" : "createdat",
+        "type" : [ "null", {
+          "type" : "long",
+          "logicalType" : "timestamp-millis"
+        } ]
+      }, {
+        "name" : "optionalnote",
+        "type" : [ "null", "string" ]
+      }, {
+        "name" : "retrycount",
+        "type" : [ "int", "null" ],
+        "default" : 1
+      }, {
+        "name" : "tags",
+        "type" : [ "null", {
+          "type" : "array",
+          "items" : [ "null", "string" ]
+        } ]
+      }, {
+        "name" : "attrs",
+        "type" : [ "null", {
+          "type" : "map",
+          "values" : [ "null", "long" ]
+        } ]
+      } ]
+    } ]
+  } ]
+}
+=== v_n7_lc strict=false lower=true
+{
+  "type" : "record",
+  "name" : "v_n7_lc",
+  "namespace" : "fz.v_n7_lc",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long",
+    "doc" : "Event id"
+  }, {
+    "name" : "eventcount",
+    "type" : "int",
+    "doc" : "How many",
+    "default" : 0
+  }, {
+    "name" : "note",
+    "type" : [ "null", "string" ],
+    "default" : null
+  }, {
+    "name" : "label",
+    "type" : [ "string", "null" ],
+    "default" : "none"
+  }, {
+    "name" : "status",
+    "type" : {
+      "type" : "enum",
+      "name" : "Status",
+      "namespace" : "fz.v_n7_lc.v_n7_lc",
+      "symbols" : [ "ON", "OFF" ]
+    },
+    "default" : "ON"
+  }, {
+    "name" : "eventtime",
+    "type" : {
+      "type" : "long",
+      "logicalType" : "timestamp-millis"
+    }
+  }, {
+    "name" : "header",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "header",
+      "namespace" : "fz.v_n7_lc.v_n7_lc",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "doc" : "Page key",
+        "default" : null
+      }, {
+        "name" : "kind",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "md5",
+        "type" : [ "null", "bytes" ],
+        "default" : null
+      }, {
+        "name" : "createdat",
+        "type" : [ "null", {
+          "type" : "long",
+          "logicalType" : "timestamp-millis"
+        } ],
+        "default" : null
+      }, {
+        "name" : "optionalnote",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "retrycount",
+        "type" : [ "int", "null" ],
+        "default" : 1
+      }, {
+        "name" : "tags",
+        "type" : [ "null", {
+          "type" : "array",
+          "items" : [ "null", "string" ]
+        } ],
+        "default" : null
+      }, {
+        "name" : "attrs",
+        "type" : [ "null", {
+          "type" : "map",
+          "values" : [ "null", "long" ]
+        } ],
+        "default" : null
+      } ]
+    } ],
+    "default" : null
+  } ]
+}
+=== v_n7_lc strict=true lower=false
+!java.lang.RuntimeException
+Found namespace mismatch while configured with strict mode. Namespace for Header is: com.linkedin.events. Namespace for header is: rel_avro
+=== v_n7_lc strict=true lower=true
+!java.lang.RuntimeException
+Found namespace mismatch while configured with strict mode. Namespace for header is: com.linkedin.events. Namespace for header is: rel_avro
+=== v_n8_item strict=false lower=false
+{
+  "type" : "record",
+  "name" : "v_n8_item",
+  "namespace" : "fz.v_n8_item",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "h",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "h",
+      "namespace" : "fz.v_n8_item.v_n8_item",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ]
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ]
+      } ]
+    } ],
+    "doc" : "Field created in view by applying operator 'ITEM' with argument(s): com.linkedin.events.CollEvent.headers, 1"
+  } ]
+}
+=== v_n8_item strict=false lower=true
+{
+  "type" : "record",
+  "name" : "v_n8_item",
+  "namespace" : "fz.v_n8_item",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "h",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "h",
+      "namespace" : "fz.v_n8_item.v_n8_item",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "doc" : "Field created in view by applying operator 'ITEM' with argument(s): com.linkedin.events.CollEvent.headers, 1",
+    "default" : null
+  } ]
+}
+=== v_n8_item strict=true lower=false
+{
+  "type" : "record",
+  "name" : "CollEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "h",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "h",
+      "namespace" : "rel_avro",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "doc" : "Field created in view by applying operator 'ITEM' with argument(s): com.linkedin.events.CollEvent.headers, 1"
+  } ]
+}
+=== v_n8_item strict=true lower=true
+{
+  "type" : "record",
+  "name" : "collevent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "h",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "h",
+      "namespace" : "rel_avro",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "doc" : "Field created in view by applying operator 'ITEM' with argument(s): com.linkedin.events.CollEvent.headers, 1",
+    "default" : null
+  } ]
+}
+=== v_n8_outer_direct strict=false lower=false
+{
+  "type" : "record",
+  "name" : "v_n8_outer_direct",
+  "namespace" : "fz.v_n8_outer_direct",
+  "fields" : [ {
+    "name" : "pk",
+    "type" : "string"
+  }, {
+    "name" : "requestHeader",
+    "type" : {
+      "type" : "record",
+      "name" : "RequestHeader",
+      "namespace" : "fz.v_n8_outer_direct.v_n8_outer_direct",
+      "fields" : [ {
+        "name" : "pageKey",
+        "type" : "string"
+      }, {
+        "name" : "memberId",
+        "type" : "long"
+      } ]
+    }
+  } ]
+}
+=== v_n8_outer_direct strict=false lower=true
+{
+  "type" : "record",
+  "name" : "v_n8_outer_direct",
+  "namespace" : "fz.v_n8_outer_direct",
+  "fields" : [ {
+    "name" : "pk",
+    "type" : "string"
+  }, {
+    "name" : "requestheader",
+    "type" : {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "fz.v_n8_outer_direct.v_n8_outer_direct",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : "string"
+      }, {
+        "name" : "memberid",
+        "type" : "long"
+      } ]
+    }
+  } ]
+}
+=== v_n8_outer_direct strict=true lower=false
+{
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "pk",
+    "type" : "string"
+  }, {
+    "name" : "requestHeader",
+    "type" : {
+      "type" : "record",
+      "name" : "RequestHeader",
+      "fields" : [ {
+        "name" : "pageKey",
+        "type" : "string"
+      }, {
+        "name" : "memberId",
+        "type" : "long"
+      } ]
+    }
+  } ]
+}
+=== v_n8_outer_direct strict=true lower=true
+{
+  "type" : "record",
+  "name" : "pageviewevent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "pk",
+    "type" : "string"
+  }, {
+    "name" : "requestheader",
+    "type" : {
+      "type" : "record",
+      "name" : "requestheader",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : "string"
+      }, {
+        "name" : "memberid",
+        "type" : "long"
+      } ]
+    }
+  } ]
+}
+=== v_n9_amb_gg strict=false lower=false
+{
+  "type" : "record",
+  "name" : "v_n9_amb_gg",
+  "namespace" : "fz.v_n9_amb_gg",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "fz.v_n9_amb_gg.v_n9_amb_gg",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ]
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ]
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"requestheader\", \"struct<pagekey:string,memberid:bigint>\""
+  } ]
+}
+=== v_n9_amb_gg strict=false lower=true
+{
+  "type" : "record",
+  "name" : "v_n9_amb_gg",
+  "namespace" : "fz.v_n9_amb_gg",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "fz.v_n9_amb_gg.v_n9_amb_gg",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"requestheader\", \"struct<pagekey:string,memberid:bigint>\"",
+    "default" : null
+  } ]
+}
+=== v_n9_amb_gg strict=true lower=false
+{
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "rel_avro",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"requestheader\", \"struct<pagekey:string,memberid:bigint>\""
+  } ]
+}
+=== v_n9_amb_gg strict=true lower=true
+{
+  "type" : "record",
+  "name" : "pageviewevent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "rel_avro",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"requestheader\", \"struct<pagekey:string,memberid:bigint>\"",
+    "default" : null
+  } ]
+}
+=== v_n9_missing_gg strict=false lower=false
+{
+  "type" : "record",
+  "name" : "v_n9_missing_gg",
+  "namespace" : "fz.v_n9_missing_gg",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "fz.v_n9_missing_gg.v_n9_missing_gg",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ]
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ]
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"requestheader\", \"struct<pagekey:string,memberid:bigint>\""
+  } ]
+}
+=== v_n9_missing_gg strict=false lower=true
+{
+  "type" : "record",
+  "name" : "v_n9_missing_gg",
+  "namespace" : "fz.v_n9_missing_gg",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "fz.v_n9_missing_gg.v_n9_missing_gg",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"requestheader\", \"struct<pagekey:string,memberid:bigint>\"",
+    "default" : null
+  } ]
+}
+=== v_n9_missing_gg strict=true lower=false
+{
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "rel_avro",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"requestheader\", \"struct<pagekey:string,memberid:bigint>\""
+  } ]
+}
+=== v_n9_missing_gg strict=true lower=true
+{
+  "type" : "record",
+  "name" : "pageviewevent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "rel_avro",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"requestheader\", \"struct<pagekey:string,memberid:bigint>\"",
+    "default" : null
+  } ]
+}
+=== v_n11_fallback strict=false lower=false
+{
+  "type" : "record",
+  "name" : "v_n11_fallback",
+  "namespace" : "fz.v_n11_fallback",
+  "fields" : [ {
+    "name" : "id",
+    "type" : [ "null", "long" ]
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "Requestheader",
+      "namespace" : "fz.v_n11_fallback.v_n11_fallback",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ]
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ]
+      } ]
+    } ]
+  } ]
+}
+=== v_n11_fallback strict=false lower=true
+{
+  "type" : "record",
+  "name" : "v_n11_fallback",
+  "namespace" : "fz.v_n11_fallback",
+  "fields" : [ {
+    "name" : "id",
+    "type" : [ "null", "long" ],
+    "default" : null
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "fz.v_n11_fallback.v_n11_fallback",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "default" : null
+  } ]
+}
+=== v_n11_fallback strict=true lower=false
+!com.linkedin.coral.schema.avro.exceptions.SchemaNotFoundException
+strictMode is set to True and fallback to Hive schema is disabled. Cannot determine Avro schema for table fz.pv_fallback.
+=== v_n11_fallback strict=true lower=true
+!com.linkedin.coral.schema.avro.exceptions.SchemaNotFoundException
+strictMode is set to True and fallback to Hive schema is disabled. Cannot determine Avro schema for table fz.pv_fallback.
+=== v_n11_fallback_r strict=false lower=false
+{
+  "type" : "record",
+  "name" : "v_n11_fallback_r",
+  "namespace" : "fz.v_n11_fallback_r",
+  "fields" : [ {
+    "name" : "id",
+    "type" : [ "null", "long" ]
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "fz.v_n11_fallback_r.v_n11_fallback_r",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ]
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ]
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"requestheader\", \"struct<pagekey:string,memberid:bigint>\""
+  } ]
+}
+=== v_n11_fallback_r strict=false lower=true
+{
+  "type" : "record",
+  "name" : "v_n11_fallback_r",
+  "namespace" : "fz.v_n11_fallback_r",
+  "fields" : [ {
+    "name" : "id",
+    "type" : [ "null", "long" ],
+    "default" : null
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "fz.v_n11_fallback_r.v_n11_fallback_r",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"requestheader\", \"struct<pagekey:string,memberid:bigint>\"",
+    "default" : null
+  } ]
+}
+=== v_n11_fallback_r strict=true lower=false
+!com.linkedin.coral.schema.avro.exceptions.SchemaNotFoundException
+strictMode is set to True and fallback to Hive schema is disabled. Cannot determine Avro schema for table fz.pv_fallback.
+=== v_n11_fallback_r strict=true lower=true
+!com.linkedin.coral.schema.avro.exceptions.SchemaNotFoundException
+strictMode is set to True and fallback to Hive schema is disabled. Cannot determine Avro schema for table fz.pv_fallback.
+=== v_n11_lower strict=false lower=false
+{
+  "type" : "record",
+  "name" : "v_n11_lower",
+  "namespace" : "fz.v_n11_lower",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "RequestHeader",
+      "namespace" : "fz.v_n11_lower.v_n11_lower",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ]
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ]
+      } ]
+    } ]
+  } ]
+}
+=== v_n11_lower strict=false lower=true
+{
+  "type" : "record",
+  "name" : "v_n11_lower",
+  "namespace" : "fz.v_n11_lower",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "fz.v_n11_lower.v_n11_lower",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "default" : null
+  } ]
+}
+=== v_n11_lower strict=true lower=false
+!java.lang.RuntimeException
+Found namespace mismatch while configured with strict mode. Namespace for RequestHeader is: com.linkedin.events. Namespace for requestheader is: rel_avro
+=== v_n11_lower strict=true lower=true
+!java.lang.RuntimeException
+Found namespace mismatch while configured with strict mode. Namespace for requestheader is: com.linkedin.events. Namespace for requestheader is: rel_avro
+=== v_n11_lower_r strict=false lower=false
+{
+  "type" : "record",
+  "name" : "v_n11_lower_r",
+  "namespace" : "fz.v_n11_lower_r",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "fz.v_n11_lower_r.v_n11_lower_r",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ]
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ]
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"requestheader\", \"struct<pagekey:string,memberid:bigint>\""
+  } ]
+}
+=== v_n11_lower_r strict=false lower=true
+{
+  "type" : "record",
+  "name" : "v_n11_lower_r",
+  "namespace" : "fz.v_n11_lower_r",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "fz.v_n11_lower_r.v_n11_lower_r",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"requestheader\", \"struct<pagekey:string,memberid:bigint>\"",
+    "default" : null
+  } ]
+}
+=== v_n11_lower_r strict=true lower=false
+!java.lang.RuntimeException
+Found namespace mismatch while configured with strict mode. Namespace for requestheader is: rel_avro. Namespace for RequestHeader is: com.linkedin.events
+=== v_n11_lower_r strict=true lower=true
+!java.lang.RuntimeException
+Found namespace mismatch while configured with strict mode. Namespace for requestheader is: rel_avro. Namespace for requestheader is: com.linkedin.events
+=== v_n11_derived strict=false lower=false
+{
+  "type" : "record",
+  "name" : "v_n11_derived",
+  "namespace" : "fz.v_n11_derived",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "fz.v_n11_derived.v_n11_derived",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ]
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ]
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'named_struct' with argument(s): \"pagekey\", value with type VARCHAR(2147483647), \"memberid\", value with type BIGINT"
+  } ]
+}
+=== v_n11_derived strict=false lower=true
+{
+  "type" : "record",
+  "name" : "v_n11_derived",
+  "namespace" : "fz.v_n11_derived",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "fz.v_n11_derived.v_n11_derived",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'named_struct' with argument(s): \"pagekey\", value with type VARCHAR(2147483647), \"memberid\", value with type BIGINT",
+    "default" : null
+  } ]
+}
+=== v_n11_derived strict=true lower=false
+{
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "rel_avro",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'named_struct' with argument(s): \"pagekey\", value with type VARCHAR(2147483647), \"memberid\", value with type BIGINT"
+  } ]
+}
+=== v_n11_derived strict=true lower=true
+{
+  "type" : "record",
+  "name" : "pageviewevent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "rel_avro",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'named_struct' with argument(s): \"pagekey\", value with type VARCHAR(2147483647), \"memberid\", value with type BIGINT",
+    "default" : null
+  } ]
+}
+=== v_n11_derived_r strict=false lower=false
+{
+  "type" : "record",
+  "name" : "v_n11_derived_r",
+  "namespace" : "fz.v_n11_derived_r",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "fz.v_n11_derived_r.v_n11_derived_r",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ]
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ]
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"requestheader\", \"struct<pagekey:string,memberid:bigint>\""
+  } ]
+}
+=== v_n11_derived_r strict=false lower=true
+{
+  "type" : "record",
+  "name" : "v_n11_derived_r",
+  "namespace" : "fz.v_n11_derived_r",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "fz.v_n11_derived_r.v_n11_derived_r",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"requestheader\", \"struct<pagekey:string,memberid:bigint>\"",
+    "default" : null
+  } ]
+}
+=== v_n11_derived_r strict=true lower=false
+{
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "rel_avro",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"requestheader\", \"struct<pagekey:string,memberid:bigint>\""
+  } ]
+}
+=== v_n11_derived_r strict=true lower=true
+{
+  "type" : "record",
+  "name" : "pageviewevent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "rel_avro",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"requestheader\", \"struct<pagekey:string,memberid:bigint>\"",
+    "default" : null
+  } ]
+}
+=== v_n12_gen strict=false lower=false
+{
+  "type" : "record",
+  "name" : "v_n12_gen",
+  "namespace" : "fz.v_n12_gen",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "fz.v_n12_gen.v_n12_gen",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ]
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ]
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"requestheader\", \"struct<pagekey:string,memberid:bigint>\""
+  } ]
+}
+=== v_n12_gen strict=false lower=true
+{
+  "type" : "record",
+  "name" : "v_n12_gen",
+  "namespace" : "fz.v_n12_gen",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "fz.v_n12_gen.v_n12_gen",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"requestheader\", \"struct<pagekey:string,memberid:bigint>\"",
+    "default" : null
+  } ]
+}
+=== v_n12_gen strict=true lower=false
+{
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "rel_avro",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"requestheader\", \"struct<pagekey:string,memberid:bigint>\""
+  } ]
+}
+=== v_n12_gen strict=true lower=true
+{
+  "type" : "record",
+  "name" : "pageviewevent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "rel_avro",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"requestheader\", \"struct<pagekey:string,memberid:bigint>\"",
+    "default" : null
+  } ]
+}
+=== v_n12_lower strict=false lower=false
+{
+  "type" : "record",
+  "name" : "v_n12_lower",
+  "namespace" : "fz.v_n12_lower",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "fz.v_n12_lower.v_n12_lower",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ]
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ]
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"requestheader\", \"struct<pagekey:string,memberid:bigint>\""
+  } ]
+}
+=== v_n12_lower strict=false lower=true
+{
+  "type" : "record",
+  "name" : "v_n12_lower",
+  "namespace" : "fz.v_n12_lower",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "fz.v_n12_lower.v_n12_lower",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"requestheader\", \"struct<pagekey:string,memberid:bigint>\"",
+    "default" : null
+  } ]
+}
+=== v_n12_lower strict=true lower=false
+!java.lang.RuntimeException
+Found namespace mismatch while configured with strict mode. Namespace for requestheader is: rel_avro. Namespace for RequestHeader is: com.linkedin.events
+=== v_n12_lower strict=true lower=true
+!java.lang.RuntimeException
+Found namespace mismatch while configured with strict mode. Namespace for requestheader is: rel_avro. Namespace for requestheader is: com.linkedin.events
+=== v_n12_fallback strict=false lower=false
+{
+  "type" : "record",
+  "name" : "v_n12_fallback",
+  "namespace" : "fz.v_n12_fallback",
+  "fields" : [ {
+    "name" : "id",
+    "type" : [ "null", "long" ]
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "fz.v_n12_fallback.v_n12_fallback",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ]
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ]
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"requestheader\", \"struct<pagekey:string,memberid:bigint>\""
+  } ]
+}
+=== v_n12_fallback strict=false lower=true
+{
+  "type" : "record",
+  "name" : "v_n12_fallback",
+  "namespace" : "fz.v_n12_fallback",
+  "fields" : [ {
+    "name" : "id",
+    "type" : [ "null", "long" ],
+    "default" : null
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "fz.v_n12_fallback.v_n12_fallback",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"requestheader\", \"struct<pagekey:string,memberid:bigint>\"",
+    "default" : null
+  } ]
+}
+=== v_n12_fallback strict=true lower=false
+!com.linkedin.coral.schema.avro.exceptions.SchemaNotFoundException
+strictMode is set to True and fallback to Hive schema is disabled. Cannot determine Avro schema for table fz.pv_fallback.
+=== v_n12_fallback strict=true lower=true
+!com.linkedin.coral.schema.avro.exceptions.SchemaNotFoundException
+strictMode is set to True and fallback to Hive schema is disabled. Cannot determine Avro schema for table fz.pv_fallback.
+=== v_n1 branch0
+{
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestHeader",
+    "type" : {
+      "type" : "record",
+      "name" : "RequestHeader",
+      "fields" : [ {
+        "name" : "pageKey",
+        "type" : "string"
+      }, {
+        "name" : "memberId",
+        "type" : "long"
+      } ]
+    }
+  } ]
+}
+=== v_n1 branch1
+{
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "rel_avro",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"requestheader\", \"struct<pagekey:string,memberid:bigint>\""
+  } ]
+}
+=== v_n1_r branch0
+{
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "rel_avro",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"requestheader\", \"struct<pagekey:string,memberid:bigint>\""
+  } ]
+}
+=== v_n1_r branch1
+{
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestHeader",
+    "type" : {
+      "type" : "record",
+      "name" : "RequestHeader",
+      "fields" : [ {
+        "name" : "pageKey",
+        "type" : "string"
+      }, {
+        "name" : "memberId",
+        "type" : "long"
+      } ]
+    }
+  } ]
+}
+=== v_n2_3 branch0
+{
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "rel_avro",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"requestheader\", \"struct<pagekey:string,memberid:bigint>\""
+  } ]
+}
+=== v_n2_3 branch1
+{
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestHeader",
+    "type" : {
+      "type" : "record",
+      "name" : "RequestHeader",
+      "fields" : [ {
+        "name" : "pageKey",
+        "type" : "string"
+      }, {
+        "name" : "memberId",
+        "type" : "long"
+      } ]
+    }
+  } ]
+}
+=== v_n2_3 branch2
+{
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "rel_avro",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"requestheader\", \"struct<pagekey:string,memberid:bigint>\""
+  } ]
+}
+=== v_n3_header branch0
+{
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "header",
+    "type" : {
+      "type" : "record",
+      "name" : "RequestHeader",
+      "fields" : [ {
+        "name" : "pageKey",
+        "type" : "string"
+      }, {
+        "name" : "memberId",
+        "type" : "long"
+      } ]
+    }
+  } ]
+}
+=== v_n3_header branch1
+{
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "header",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "header",
+      "namespace" : "rel_avro",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"header\", \"struct<pagekey:string,memberid:bigint>\""
+  } ]
+}
+=== v_n3_rh branch0
+{
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "request_header",
+    "type" : {
+      "type" : "record",
+      "name" : "RequestHeader",
+      "fields" : [ {
+        "name" : "pageKey",
+        "type" : "string"
+      }, {
+        "name" : "memberId",
+        "type" : "long"
+      } ]
+    }
+  } ]
+}
+=== v_n3_rh branch1
+{
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "request_header",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "request_header",
+      "namespace" : "rel_avro",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"request_header\", \"struct<pagekey:string,memberid:bigint>\""
+  } ]
+}
+=== v_n4 branch0
+{
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestHeader",
+    "type" : {
+      "type" : "record",
+      "name" : "RequestHeader",
+      "fields" : [ {
+        "name" : "pageKey",
+        "type" : "string"
+      }, {
+        "name" : "device",
+        "type" : {
+          "type" : "record",
+          "name" : "Device",
+          "fields" : [ {
+            "name" : "osName",
+            "type" : "string"
+          }, {
+            "name" : "osVersion",
+            "type" : "string"
+          } ]
+        }
+      } ]
+    }
+  } ]
+}
+=== v_n4 branch1
+{
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "rel_avro",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "device",
+        "type" : [ "null", {
+          "type" : "record",
+          "name" : "device",
+          "fields" : [ {
+            "name" : "osname",
+            "type" : [ "null", "string" ],
+            "default" : null
+          }, {
+            "name" : "osversion",
+            "type" : [ "null", "string" ],
+            "default" : null
+          } ]
+        } ],
+        "default" : null
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"requestheader\", \"struct<pagekey:string,device:struct<osname:string,osversion:string>>\""
+  } ]
+}
+=== v_n4_access branch0
+{
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "device",
+    "type" : {
+      "type" : "record",
+      "name" : "Device",
+      "fields" : [ {
+        "name" : "osName",
+        "type" : "string"
+      }, {
+        "name" : "osVersion",
+        "type" : "string"
+      } ]
+    }
+  } ]
+}
+=== v_n4_access branch1
+{
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "device",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "device",
+      "namespace" : "rel_avro",
+      "fields" : [ {
+        "name" : "osname",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "osversion",
+        "type" : [ "null", "string" ],
+        "default" : null
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): value with type RecordType:peek_no_expand(VARCHAR(2147483647) osversion, INTEGER screenwidth, VARCHAR(2147483647) osname), \"device\", \"struct<osname:string,osversion:string>\""
+  } ]
+}
+=== v_n5 branch0
+{
+  "type" : "record",
+  "name" : "CollEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "headers",
+    "type" : {
+      "type" : "array",
+      "items" : {
+        "type" : "record",
+        "name" : "ArrHeader",
+        "fields" : [ {
+          "name" : "pageKey",
+          "type" : "string"
+        }, {
+          "name" : "memberId",
+          "type" : "long"
+        } ]
+      }
+    }
+  }, {
+    "name" : "optHeaders",
+    "type" : [ "null", {
+      "type" : "array",
+      "items" : [ "null", {
+        "type" : "record",
+        "name" : "OptArrHeader",
+        "fields" : [ {
+          "name" : "pageKey",
+          "type" : "string"
+        }, {
+          "name" : "memberId",
+          "type" : "long"
+        } ]
+      } ]
+    } ]
+  }, {
+    "name" : "byKey",
+    "type" : {
+      "type" : "map",
+      "values" : {
+        "type" : "record",
+        "name" : "MapHeader",
+        "fields" : [ {
+          "name" : "pageKey",
+          "type" : "string"
+        }, {
+          "name" : "memberId",
+          "type" : "long"
+        } ]
+      }
+    }
+  }, {
+    "name" : "optByKey",
+    "type" : [ "null", {
+      "type" : "map",
+      "values" : [ "null", {
+        "type" : "record",
+        "name" : "OptMapHeader",
+        "fields" : [ {
+          "name" : "pageKey",
+          "type" : "string"
+        }, {
+          "name" : "memberId",
+          "type" : "long"
+        } ]
+      } ]
+    } ]
+  } ]
+}
+=== v_n5 branch1
+{
+  "type" : "record",
+  "name" : "CollEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "headers",
+    "type" : [ "null", {
+      "type" : "array",
+      "items" : [ "null", {
+        "type" : "record",
+        "name" : "headers",
+        "namespace" : "rel_avro",
+        "fields" : [ {
+          "name" : "pagekey",
+          "type" : [ "null", "string" ],
+          "default" : null
+        }, {
+          "name" : "memberid",
+          "type" : [ "null", "long" ],
+          "default" : null
+        } ]
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.CollEvent.headers, \"headers\", \"array<struct<pagekey:string,memberid:bigint>>\""
+  }, {
+    "name" : "optheaders",
+    "type" : [ "null", {
+      "type" : "array",
+      "items" : [ "null", {
+        "type" : "record",
+        "name" : "optheaders",
+        "namespace" : "rel_avro",
+        "fields" : [ {
+          "name" : "pagekey",
+          "type" : [ "null", "string" ],
+          "default" : null
+        }, {
+          "name" : "memberid",
+          "type" : [ "null", "long" ],
+          "default" : null
+        } ]
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.CollEvent.optHeaders, \"optheaders\", \"array<struct<pagekey:string,memberid:bigint>>\""
+  }, {
+    "name" : "bykey",
+    "type" : [ "null", {
+      "type" : "map",
+      "values" : [ "null", {
+        "type" : "record",
+        "name" : "bykey",
+        "namespace" : "rel_avro",
+        "fields" : [ {
+          "name" : "pagekey",
+          "type" : [ "null", "string" ],
+          "default" : null
+        }, {
+          "name" : "memberid",
+          "type" : [ "null", "long" ],
+          "default" : null
+        } ]
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.CollEvent.byKey, \"bykey\", \"map<string,struct<pagekey:string,memberid:bigint>>\""
+  }, {
+    "name" : "optbykey",
+    "type" : [ "null", {
+      "type" : "map",
+      "values" : [ "null", {
+        "type" : "record",
+        "name" : "optbykey",
+        "namespace" : "rel_avro",
+        "fields" : [ {
+          "name" : "pagekey",
+          "type" : [ "null", "string" ],
+          "default" : null
+        }, {
+          "name" : "memberid",
+          "type" : [ "null", "long" ],
+          "default" : null
+        } ]
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.CollEvent.optByKey, \"optbykey\", \"map<string,struct<pagekey:string,memberid:bigint>>\""
+  } ]
+}
+=== v_n7 branch0
+{
+  "type" : "record",
+  "name" : "MetaEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long",
+    "doc" : "Event id"
+  }, {
+    "name" : "eventCount",
+    "type" : "int",
+    "doc" : "How many",
+    "default" : 0
+  }, {
+    "name" : "note",
+    "type" : [ "null", "string" ]
+  }, {
+    "name" : "label",
+    "type" : [ "string", "null" ],
+    "default" : "none"
+  }, {
+    "name" : "status",
+    "type" : {
+      "type" : "enum",
+      "name" : "Status",
+      "symbols" : [ "ON", "OFF" ]
+    },
+    "default" : "ON"
+  }, {
+    "name" : "eventTime",
+    "type" : {
+      "type" : "long",
+      "logicalType" : "timestamp-millis"
+    }
+  }, {
+    "name" : "header",
+    "type" : {
+      "type" : "record",
+      "name" : "Header",
+      "doc" : "Header doc",
+      "fields" : [ {
+        "name" : "pageKey",
+        "type" : "string",
+        "doc" : "Page key"
+      }, {
+        "name" : "kind",
+        "type" : {
+          "type" : "enum",
+          "name" : "Kind",
+          "symbols" : [ "A", "B" ]
+        }
+      }, {
+        "name" : "md5",
+        "type" : {
+          "type" : "fixed",
+          "name" : "Md5",
+          "size" : 16
+        }
+      }, {
+        "name" : "createdAt",
+        "type" : {
+          "type" : "long",
+          "logicalType" : "timestamp-millis"
+        }
+      }, {
+        "name" : "optionalNote",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "retryCount",
+        "type" : "int",
+        "default" : 1
+      }, {
+        "name" : "tags",
+        "type" : {
+          "type" : "array",
+          "items" : "string"
+        }
+      }, {
+        "name" : "attrs",
+        "type" : {
+          "type" : "map",
+          "values" : "long"
+        }
+      } ]
+    }
+  } ]
+}
+=== v_n7 branch1
+{
+  "type" : "record",
+  "name" : "MetaEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long",
+    "doc" : "Event id"
+  }, {
+    "name" : "eventCount",
+    "type" : "int",
+    "doc" : "How many",
+    "default" : 0
+  }, {
+    "name" : "note",
+    "type" : [ "null", "string" ]
+  }, {
+    "name" : "label",
+    "type" : [ "string", "null" ],
+    "default" : "none"
+  }, {
+    "name" : "status",
+    "type" : {
+      "type" : "enum",
+      "name" : "Status",
+      "symbols" : [ "ON", "OFF" ]
+    },
+    "default" : "ON"
+  }, {
+    "name" : "eventTime",
+    "type" : {
+      "type" : "long",
+      "logicalType" : "timestamp-millis"
+    }
+  }, {
+    "name" : "header",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "header",
+      "namespace" : "rel_avro",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "kind",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "md5",
+        "type" : [ "null", "bytes" ],
+        "default" : null
+      }, {
+        "name" : "createdat",
+        "type" : [ "null", {
+          "type" : "long",
+          "logicalType" : "timestamp-millis"
+        } ],
+        "default" : null
+      }, {
+        "name" : "optionalnote",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "retrycount",
+        "type" : [ "null", "int" ],
+        "default" : null
+      }, {
+        "name" : "tags",
+        "type" : [ "null", {
+          "type" : "array",
+          "items" : [ "null", "string" ]
+        } ],
+        "default" : null
+      }, {
+        "name" : "attrs",
+        "type" : [ "null", {
+          "type" : "map",
+          "values" : [ "null", "long" ]
+        } ],
+        "default" : null
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.MetaEvent.header, \"header\", \"struct<pagekey:string,kind:string,md5:binary,createdat:timestamp,optionalnote:string,retrycount:int,tags:array<string>,attrs:map<string,bigint>>\""
+  } ]
+}
+=== v_n8_ordinal branch0
+{
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestHeader",
+    "type" : {
+      "type" : "record",
+      "name" : "RequestHeader",
+      "fields" : [ {
+        "name" : "pageKey",
+        "type" : "string"
+      }, {
+        "name" : "memberId",
+        "type" : "long"
+      } ]
+    }
+  } ]
+}
+=== v_n8_ordinal branch1
+{
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "rel_avro",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): value with type RecordType:peek_no_expand(VARCHAR(2147483647) pagekey, BIGINT memberid, VARCHAR(2147483647) trackingid), \"requestheader\", \"struct<pagekey:string,memberid:bigint>\""
+  } ]
+}
+=== v_n8_outer branch0
+{
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestHeader",
+    "type" : {
+      "type" : "record",
+      "name" : "RequestHeader",
+      "fields" : [ {
+        "name" : "pageKey",
+        "type" : "string"
+      }, {
+        "name" : "memberId",
+        "type" : "long"
+      } ]
+    }
+  } ]
+}
+=== v_n8_outer branch1
+{
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "rel_avro",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"requestheader\", \"struct<pagekey:string,memberid:bigint>\""
+  } ]
+}
+=== v_n12 branch0
+{
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "rel_avro",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"requestheader\", \"struct<pagekey:string,memberid:bigint>\""
+  } ]
+}
+=== v_n12 branch1
+{
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "rel_avro",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"requestheader\", \"struct<pagekey:string,memberid:bigint>\""
+  } ]
+}
+=== v_n12 branch2
+{
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestHeader",
+    "type" : {
+      "type" : "record",
+      "name" : "RequestHeader",
+      "fields" : [ {
+        "name" : "pageKey",
+        "type" : "string"
+      }, {
+        "name" : "memberId",
+        "type" : "long"
+      } ]
+    }
+  } ]
+}
+=== v_n12_r branch0
+{
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestHeader",
+    "type" : {
+      "type" : "record",
+      "name" : "RequestHeader",
+      "fields" : [ {
+        "name" : "pageKey",
+        "type" : "string"
+      }, {
+        "name" : "memberId",
+        "type" : "long"
+      } ]
+    }
+  } ]
+}
+=== v_n12_r branch1
+{
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "rel_avro",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"requestheader\", \"struct<pagekey:string,memberid:bigint>\""
+  } ]
+}
+=== v_n12_r branch2
+{
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "rel_avro",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"requestheader\", \"struct<pagekey:string,memberid:bigint>\""
+  } ]
+}
