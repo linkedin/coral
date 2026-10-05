@@ -5,15 +5,19 @@
  */
 package com.linkedin.coral.schema.avro;
 
+import java.util.ArrayList;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.function.Supplier;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+
+import com.linkedin.avroutil1.compatibility.AvroCompatibilityHelper;
 
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
@@ -62,6 +66,7 @@ import com.linkedin.coral.common.HiveMetastoreClient;
 import com.linkedin.coral.common.HiveUncollect;
 import com.linkedin.coral.common.catalog.CoralCatalog;
 import com.linkedin.coral.common.catalog.CoralTable;
+import com.linkedin.coral.common.functions.GenericProjectFunction;
 import com.linkedin.coral.hive.hive2rel.functions.OrdinalReturnTypeInferenceV2;
 
 
@@ -197,6 +202,9 @@ public class RelToAvroSchemaConverter {
     private final Map<RelNode, Schema> schemaMap;
     private final boolean strictMode;
     private final boolean forceLowercase;
+    // Lazy, never evaluated while a conversion succeeds: for a node with fuzzy-UNION generic_project fields, the same
+    // schema with those fields spelled like their source Avro fields, or null if there is nothing to respell.
+    private final Map<RelNode, Supplier<Schema>> sourceNamedSchemas = new HashMap<>();
 
     // Exactly one of these is non-null per instance, mirroring the public constructor split on
     // RelToAvroSchemaConverter. The two paths never mix: a CoralCatalog-backed shuttle never
@@ -260,7 +268,12 @@ public class RelToAvroSchemaConverter {
       logicalProject.accept(new SchemaRexShuttle(inputSchema, logicalProject.getInput(), suggestedFieldNames,
           logicalProjectFieldAssembler));
 
-      schemaMap.put(logicalProject, logicalProjectFieldAssembler.endRecord());
+      Schema projectSchema = logicalProjectFieldAssembler.endRecord();
+      schemaMap.put(logicalProject, projectSchema);
+      if (!forceLowercase && logicalProject.getProjects().stream()
+          .anyMatch(p -> p instanceof RexCall && ((RexCall) p).getOperator() instanceof GenericProjectFunction)) {
+        sourceNamedSchemas.put(logicalProject, () -> withSourceNames(logicalProject, inputSchema, projectSchema));
+      }
 
       return relNode;
     }
@@ -309,12 +322,60 @@ public class RelToAvroSchemaConverter {
       Schema inputSchema1 = schemaMap.get(logicalUnion.getInput(0));
       Schema inputSchema2 = schemaMap.get(logicalUnion.getInput(1));
 
-      Schema mergedSchema =
-          SchemaUtilities.mergeUnionRecordSchema(inputSchema1, inputSchema2, strictMode, forceLowercase);
+      Schema mergedSchema;
+      try {
+        mergedSchema = SchemaUtilities.mergeUnionRecordSchema(inputSchema1, inputSchema2, strictMode, forceLowercase);
+      } catch (RuntimeException original) {
+        mergedSchema = retryWithSourceNames(original, logicalUnion);
+      }
 
       schemaMap.put(logicalUnion, mergedSchema);
+      if (sourceNamedSchemas.containsKey(logicalUnion.getInput(0))
+          || sourceNamedSchemas.containsKey(logicalUnion.getInput(1))) {
+        sourceNamedSchemas.put(logicalUnion, () -> mergeSourceNamed(logicalUnion));
+      }
 
       return relNode;
+    }
+
+    /**
+     * A fuzzy UNION branch is projected with lowercase names while a pass-through branch keeps its source spelling,
+     * which the exact-name merge rejects. Only after such a plain RuntimeException (the merge's own rejection) is the
+     * merge retried once with the generated fields spelled like their source fields; any failure of the attempt
+     * rethrows the original exception.
+     */
+    private Schema retryWithSourceNames(RuntimeException original, LogicalUnion logicalUnion) {
+      if (forceLowercase || original.getClass() != RuntimeException.class
+          || !(sourceNamedSchemas.containsKey(logicalUnion.getInput(0))
+              || sourceNamedSchemas.containsKey(logicalUnion.getInput(1)))) {
+        throw original;
+      }
+      Schema merged = null;
+      try {
+        merged = mergeSourceNamed(logicalUnion);
+      } catch (RuntimeException attempt) {
+        original.addSuppressed(attempt);
+      }
+      if (merged == null) {
+        throw original;
+      }
+      return merged;
+    }
+
+    /** Merges the inputs, each in its source-named variant if it has one; null if no input has one. */
+    private Schema mergeSourceNamed(LogicalUnion logicalUnion) {
+      Schema left = sourceNamedSchema(logicalUnion.getInput(0));
+      Schema right = sourceNamedSchema(logicalUnion.getInput(1));
+      if (left == null && right == null) {
+        return null;
+      }
+      return SchemaUtilities.mergeUnionRecordSchema(left != null ? left : schemaMap.get(logicalUnion.getInput(0)),
+          right != null ? right : schemaMap.get(logicalUnion.getInput(1)), strictMode, forceLowercase);
+    }
+
+    private Schema sourceNamedSchema(RelNode node) {
+      Supplier<Schema> recipe = sourceNamedSchemas.get(node);
+      return recipe == null ? null : recipe.get();
     }
 
     @Override
@@ -429,6 +490,136 @@ public class RelToAvroSchemaConverter {
       }
       return SchemaUtilities.getAvroSchemaForTable(baseTable, strictMode);
     }
+  }
+
+  /**
+   * The schema of a Project whose generic_project fields take the spelling of the source Avro fields they project
+   * (the field name, and the field names inside the generated record), or null if no field changes. Only names are
+   * taken from the source: the generated schema keeps its record names, nullability, defaults and docs.
+   */
+  private static Schema withSourceNames(LogicalProject project, Schema inputSchema, Schema projectSchema) {
+    List<RexNode> projects = project.getProjects();
+    if (projectSchema.getFields().size() != projects.size()) {
+      return null;
+    }
+    boolean changed = false;
+    List<Schema.Field> fields = new ArrayList<>();
+    for (int i = 0; i < projects.size(); i++) {
+      Schema.Field field = projectSchema.getFields().get(i);
+      Schema.Field renamed = null;
+      RexNode expr = projects.get(i);
+      if (expr instanceof RexCall && ((RexCall) expr).getOperator() instanceof GenericProjectFunction
+          && !((RexCall) expr).getOperands().isEmpty()) {
+        Schema.Field source = sourceField(((RexCall) expr).getOperands().get(0), inputSchema);
+        Schema schema = source == null ? null : withSourceNames(field.schema(), source.schema());
+        String name = source == null ? null
+            : SchemaUtilities.getFieldName(source.name(), project.getRowType().getFieldNames().get(i));
+        if (schema != null && (schema != field.schema() || !name.equals(field.name()))) {
+          renamed = AvroCompatibilityHelper.newField(field).setName(name).setSchema(schema).build();
+        }
+      }
+      changed |= renamed != null;
+      fields.add(renamed != null ? renamed : AvroCompatibilityHelper.newField(field).build());
+    }
+    return changed ? newRecord(projectSchema, projectSchema.getName(), projectSchema.getNamespace(), fields) : null;
+  }
+
+  /** The source Avro field a generic_project operand reads: an input column, its field, or an ordinal-return argument. */
+  private static Schema.Field sourceField(RexNode operand, Schema inputSchema) {
+    if (operand instanceof RexInputRef) {
+      int index = ((RexInputRef) operand).getIndex();
+      return index < inputSchema.getFields().size() ? inputSchema.getFields().get(index) : null;
+    }
+    if (operand instanceof RexFieldAccess && ((RexFieldAccess) operand).getReferenceExpr() instanceof RexInputRef) {
+      Schema.Field column = sourceField(((RexFieldAccess) operand).getReferenceExpr(), inputSchema);
+      Schema record = column == null ? null : SchemaUtilities.extractIfOption(column.schema());
+      return record != null && record.getType() == Schema.Type.RECORD
+          ? uniqueField(record, ((RexFieldAccess) operand).getField().getName()) : null;
+    }
+    if (operand instanceof RexCall
+        && ((RexCall) operand).getOperator().getReturnTypeInference() instanceof OrdinalReturnTypeInferenceV2) {
+      int ordinal =
+          ((OrdinalReturnTypeInferenceV2) ((RexCall) operand).getOperator().getReturnTypeInference()).getOrdinal();
+      return ordinal < ((RexCall) operand).getOperands().size()
+          ? sourceField((((RexCall) operand).getOperands().get(ordinal)), inputSchema) : null;
+    }
+    return null;
+  }
+
+  /** The only field whose name matches ignoring case; null if there is none or if the match is ambiguous. */
+  private static Schema.Field uniqueField(Schema record, String name) {
+    Schema.Field found = null;
+    for (Schema.Field field : record.getFields()) {
+      if (field.name().equalsIgnoreCase(name)) {
+        if (found != null) {
+          return null;
+        }
+        found = field;
+      }
+    }
+    return found;
+  }
+
+  /**
+   * {@code generated} with the field names of {@code source} wherever it has the same structure: the same instance if
+   * no name changes, null if the source does not match the shape (so nothing is renamed). Nullable options are looked
+   * through to read names only; the generated nullability, defaults and docs are kept.
+   */
+  private static Schema withSourceNames(Schema generated, Schema source) {
+    Schema type = SchemaUtilities.extractIfOption(generated);
+    Schema src = SchemaUtilities.extractIfOption(source);
+    Schema renamed;
+    switch (type.getType()) {
+      case RECORD:
+        renamed = src.getType() == Schema.Type.RECORD ? recordWithSourceNames(type, src) : null;
+        break;
+      case ARRAY:
+        Schema element =
+            src.getType() == Schema.Type.ARRAY ? withSourceNames(type.getElementType(), src.getElementType()) : null;
+        renamed = element == null ? null : element == type.getElementType() ? type : Schema.createArray(element);
+        break;
+      case MAP:
+        Schema value =
+            src.getType() == Schema.Type.MAP ? withSourceNames(type.getValueType(), src.getValueType()) : null;
+        renamed = value == null ? null : value == type.getValueType() ? type : Schema.createMap(value);
+        break;
+      default:
+        return generated;
+    }
+    if (renamed == null || renamed == type) {
+      return renamed == null ? null : generated;
+    }
+    if (renamed.getType() == Schema.Type.ARRAY || renamed.getType() == Schema.Type.MAP) {
+      SchemaUtilities.replicateSchemaProps(type, renamed);
+    }
+    if (type == generated) {
+      return renamed;
+    }
+    List<Schema> options = new ArrayList<>(generated.getTypes());
+    options.set(options.indexOf(type), renamed);
+    return Schema.createUnion(options);
+  }
+
+  private static Schema recordWithSourceNames(Schema generated, Schema source) {
+    boolean changed = false;
+    List<Schema.Field> fields = new ArrayList<>();
+    for (Schema.Field field : generated.getFields()) {
+      Schema.Field match = uniqueField(source, field.name());
+      Schema schema = match == null ? null : withSourceNames(field.schema(), match.schema());
+      if (schema == null) {
+        return null;
+      }
+      changed |= schema != field.schema() || !match.name().equals(field.name());
+      fields.add(AvroCompatibilityHelper.newField(field).setName(match.name()).setSchema(schema).build());
+    }
+    return changed ? newRecord(generated, generated.getName(), generated.getNamespace(), fields) : generated;
+  }
+
+  private static Schema newRecord(Schema template, String name, String namespace, List<Schema.Field> fields) {
+    Schema record = Schema.createRecord(name, template.getDoc(), namespace, template.isError());
+    record.setFields(fields);
+    SchemaUtilities.replicateSchemaProps(template, record);
+    return record;
   }
 
   /**
