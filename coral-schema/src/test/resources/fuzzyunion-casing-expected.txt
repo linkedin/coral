@@ -1,0 +1,455 @@
+=== v_n1
+{
+  "type" : "record",
+  "name" : "v_n1",
+  "namespace" : "fz.v_n1",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestHeader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "RequestHeader",
+      "namespace" : "fz.v_n1.v_n1",
+      "fields" : [ {
+        "name" : "pageKey",
+        "type" : [ "null", "string" ]
+      }, {
+        "name" : "memberId",
+        "type" : [ "null", "long" ]
+      } ]
+    } ]
+  } ]
+}
+=== v_n1_r
+{
+  "type" : "record",
+  "name" : "v_n1_r",
+  "namespace" : "fz.v_n1_r",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestHeader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "fz.v_n1_r.v_n1_r",
+      "fields" : [ {
+        "name" : "pageKey",
+        "type" : [ "null", "string" ]
+      }, {
+        "name" : "memberId",
+        "type" : [ "null", "long" ]
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"requestheader\", \"struct<pagekey:string,memberid:bigint>\""
+  } ]
+}
+=== v_n2_3
+{
+  "type" : "record",
+  "name" : "v_n2_3",
+  "namespace" : "fz.v_n2_3",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestHeader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "fz.v_n2_3.v_n2_3",
+      "fields" : [ {
+        "name" : "pageKey",
+        "type" : [ "null", "string" ]
+      }, {
+        "name" : "memberId",
+        "type" : [ "null", "long" ]
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"requestheader\", \"struct<pagekey:string,memberid:bigint>\""
+  } ]
+}
+=== v_n3_header
+{
+  "type" : "record",
+  "name" : "v_n3_header",
+  "namespace" : "fz.v_n3_header",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "header",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "RequestHeader",
+      "namespace" : "fz.v_n3_header.v_n3_header",
+      "fields" : [ {
+        "name" : "pageKey",
+        "type" : [ "null", "string" ]
+      }, {
+        "name" : "memberId",
+        "type" : [ "null", "long" ]
+      } ]
+    } ]
+  } ]
+}
+=== v_n3_rh
+{
+  "type" : "record",
+  "name" : "v_n3_rh",
+  "namespace" : "fz.v_n3_rh",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "request_header",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "RequestHeader",
+      "namespace" : "fz.v_n3_rh.v_n3_rh",
+      "fields" : [ {
+        "name" : "pageKey",
+        "type" : [ "null", "string" ]
+      }, {
+        "name" : "memberId",
+        "type" : [ "null", "long" ]
+      } ]
+    } ]
+  } ]
+}
+=== v_n4
+{
+  "type" : "record",
+  "name" : "v_n4",
+  "namespace" : "fz.v_n4",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestHeader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "RequestHeader",
+      "namespace" : "fz.v_n4.v_n4",
+      "fields" : [ {
+        "name" : "pageKey",
+        "type" : [ "null", "string" ]
+      }, {
+        "name" : "device",
+        "type" : [ "null", {
+          "type" : "record",
+          "name" : "Device",
+          "namespace" : "fz.v_n4.v_n4.RequestHeader",
+          "fields" : [ {
+            "name" : "osName",
+            "type" : [ "null", "string" ]
+          }, {
+            "name" : "osVersion",
+            "type" : [ "null", "string" ]
+          } ]
+        } ]
+      } ]
+    } ]
+  } ]
+}
+=== v_n4_access
+{
+  "type" : "record",
+  "name" : "v_n4_access",
+  "namespace" : "fz.v_n4_access",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "device",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "Device",
+      "namespace" : "fz.v_n4_access.v_n4_access",
+      "fields" : [ {
+        "name" : "osName",
+        "type" : [ "null", "string" ]
+      }, {
+        "name" : "osVersion",
+        "type" : [ "null", "string" ]
+      } ]
+    } ]
+  } ]
+}
+=== v_n5
+{
+  "type" : "record",
+  "name" : "v_n5",
+  "namespace" : "fz.v_n5",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "headers",
+    "type" : [ "null", {
+      "type" : "array",
+      "items" : [ "null", {
+        "type" : "record",
+        "name" : "ArrHeader",
+        "namespace" : "fz.v_n5.v_n5",
+        "fields" : [ {
+          "name" : "pageKey",
+          "type" : [ "null", "string" ]
+        }, {
+          "name" : "memberId",
+          "type" : [ "null", "long" ]
+        } ]
+      } ]
+    } ]
+  }, {
+    "name" : "optHeaders",
+    "type" : [ "null", {
+      "type" : "array",
+      "items" : [ "null", {
+        "type" : "record",
+        "name" : "OptArrHeader",
+        "namespace" : "fz.v_n5.v_n5",
+        "fields" : [ {
+          "name" : "pageKey",
+          "type" : [ "null", "string" ]
+        }, {
+          "name" : "memberId",
+          "type" : [ "null", "long" ]
+        } ]
+      } ]
+    } ]
+  }, {
+    "name" : "byKey",
+    "type" : [ "null", {
+      "type" : "map",
+      "values" : [ "null", {
+        "type" : "record",
+        "name" : "MapHeader",
+        "namespace" : "fz.v_n5.v_n5",
+        "fields" : [ {
+          "name" : "pageKey",
+          "type" : [ "null", "string" ]
+        }, {
+          "name" : "memberId",
+          "type" : [ "null", "long" ]
+        } ]
+      } ]
+    } ]
+  }, {
+    "name" : "optByKey",
+    "type" : [ "null", {
+      "type" : "map",
+      "values" : [ "null", {
+        "type" : "record",
+        "name" : "OptMapHeader",
+        "namespace" : "fz.v_n5.v_n5",
+        "fields" : [ {
+          "name" : "pageKey",
+          "type" : [ "null", "string" ]
+        }, {
+          "name" : "memberId",
+          "type" : [ "null", "long" ]
+        } ]
+      } ]
+    } ]
+  } ]
+}
+=== v_n7
+{
+  "type" : "record",
+  "name" : "v_n7",
+  "namespace" : "fz.v_n7",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long",
+    "doc" : "Event id"
+  }, {
+    "name" : "eventCount",
+    "type" : "int",
+    "doc" : "How many",
+    "default" : 0
+  }, {
+    "name" : "note",
+    "type" : [ "null", "string" ]
+  }, {
+    "name" : "label",
+    "type" : [ "string", "null" ],
+    "default" : "none"
+  }, {
+    "name" : "status",
+    "type" : {
+      "type" : "enum",
+      "name" : "Status",
+      "namespace" : "fz.v_n7.v_n7",
+      "symbols" : [ "ON", "OFF" ]
+    },
+    "default" : "ON"
+  }, {
+    "name" : "eventTime",
+    "type" : {
+      "type" : "long",
+      "logicalType" : "timestamp-millis"
+    }
+  }, {
+    "name" : "header",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "Header",
+      "namespace" : "fz.v_n7.v_n7",
+      "fields" : [ {
+        "name" : "pageKey",
+        "type" : [ "null", "string" ],
+        "doc" : "Page key"
+      }, {
+        "name" : "kind",
+        "type" : [ "null", "string" ]
+      }, {
+        "name" : "md5",
+        "type" : [ "null", "bytes" ]
+      }, {
+        "name" : "createdAt",
+        "type" : [ "null", {
+          "type" : "long",
+          "logicalType" : "timestamp-millis"
+        } ]
+      }, {
+        "name" : "optionalNote",
+        "type" : [ "null", "string" ]
+      }, {
+        "name" : "retryCount",
+        "type" : [ "int", "null" ],
+        "default" : 1
+      }, {
+        "name" : "tags",
+        "type" : [ "null", {
+          "type" : "array",
+          "items" : [ "null", "string" ]
+        } ]
+      }, {
+        "name" : "attrs",
+        "type" : [ "null", {
+          "type" : "map",
+          "values" : [ "null", "long" ]
+        } ]
+      } ]
+    } ]
+  } ]
+}
+=== v_n8_ordinal
+{
+  "type" : "record",
+  "name" : "v_n8_ordinal",
+  "namespace" : "fz.v_n8_ordinal",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestHeader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "RequestHeader",
+      "namespace" : "fz.v_n8_ordinal.v_n8_ordinal",
+      "fields" : [ {
+        "name" : "pageKey",
+        "type" : [ "null", "string" ]
+      }, {
+        "name" : "memberId",
+        "type" : [ "null", "long" ]
+      } ]
+    } ]
+  } ]
+}
+=== v_n8_outer
+{
+  "type" : "record",
+  "name" : "v_n8_outer",
+  "namespace" : "fz.v_n8_outer",
+  "fields" : [
+    {
+      "name" : "pk",
+      "type" : [
+        "null",
+        "string"
+      ]
+    },
+    {
+      "name" : "requestHeader",
+      "type" : [
+        "null",
+        {
+          "type" : "record",
+          "name" : "RequestHeader",
+          "namespace" : "fz.v_n8_outer.v_n8_outer",
+          "fields" : [
+            {
+              "name" : "pageKey",
+              "type" : [
+                "null",
+                "string"
+              ]
+            },
+            {
+              "name" : "memberId",
+              "type" : [
+                "null",
+                "long"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+=== v_n12
+{
+  "type" : "record",
+  "name" : "v_n12",
+  "namespace" : "fz.v_n12",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestHeader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "fz.v_n12.v_n12",
+      "fields" : [ {
+        "name" : "pageKey",
+        "type" : [ "null", "string" ]
+      }, {
+        "name" : "memberId",
+        "type" : [ "null", "long" ]
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"requestheader\", \"struct<pagekey:string,memberid:bigint>\""
+  } ]
+}
+=== v_n12_r
+{
+  "type" : "record",
+  "name" : "v_n12_r",
+  "namespace" : "fz.v_n12_r",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestHeader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "RequestHeader",
+      "namespace" : "fz.v_n12_r.v_n12_r",
+      "fields" : [ {
+        "name" : "pageKey",
+        "type" : [ "null", "string" ]
+      }, {
+        "name" : "memberId",
+        "type" : [ "null", "long" ]
+      } ]
+    } ]
+  } ]
+}
