@@ -1725,6 +1725,134 @@ requestHeader is in schema PageViewEvent: {
 === v_n12_paren strict=true lower=true
 !java.lang.RuntimeException
 Found namespace mismatch while configured with strict mode. Namespace for requestheader is: com.linkedin.events. Namespace for requestheader is: rel_avro
+=== v_n12_latent strict=false lower=false
+!java.lang.RuntimeException
+requestheader is in schema PageViewEvent: {
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "com.linkedin.events.PageViewEvent",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ]
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ]
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"requestheader\", \"struct<pagekey:string,memberid:bigint>\""
+  } ]
+}, but not in schema PageViewEvent: {
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestHeader",
+    "type" : {
+      "type" : "record",
+      "name" : "RequestHeader",
+      "namespace" : "com.linkedin.events.PageViewEvent",
+      "fields" : [ {
+        "name" : "pageKey",
+        "type" : "string"
+      }, {
+        "name" : "memberId",
+        "type" : "long"
+      } ]
+    }
+  } ]
+}
+=== v_n12_latent strict=false lower=true
+{
+  "type" : "record",
+  "name" : "v_n12_latent",
+  "namespace" : "fz.v_n12_latent",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "fz.v_n12_latent.v_n12_latent",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"requestheader\", \"struct<pagekey:string,memberid:bigint>\"",
+    "default" : null
+  } ]
+}
+=== v_n12_latent strict=true lower=false
+!java.lang.RuntimeException
+requestheader is in schema PageViewEvent: {
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestheader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "requestheader",
+      "namespace" : "rel_avro",
+      "fields" : [ {
+        "name" : "pagekey",
+        "type" : [ "null", "string" ],
+        "default" : null
+      }, {
+        "name" : "memberid",
+        "type" : [ "null", "long" ],
+        "default" : null
+      } ]
+    } ],
+    "doc" : "Field created in view by applying UDF 'generic_project' with argument(s): com.linkedin.events.PageViewEvent.requestHeader, \"requestheader\", \"struct<pagekey:string,memberid:bigint>\""
+  } ]
+}, but not in schema PageViewEvent: {
+  "type" : "record",
+  "name" : "PageViewEvent",
+  "namespace" : "com.linkedin.events",
+  "fields" : [ {
+    "name" : "id",
+    "type" : "long"
+  }, {
+    "name" : "requestHeader",
+    "type" : {
+      "type" : "record",
+      "name" : "RequestHeader",
+      "fields" : [ {
+        "name" : "pageKey",
+        "type" : "string"
+      }, {
+        "name" : "memberId",
+        "type" : "long"
+      } ]
+    }
+  } ]
+}
+=== v_n12_latent strict=true lower=true
+!java.lang.RuntimeException
+Found namespace mismatch while configured with strict mode. Namespace for requestheader is: rel_avro. Namespace for requestheader is: com.linkedin.events
 === v_n13_pascal strict=false lower=false
 !java.lang.RuntimeException
 requestHeader is in schema PageViewEvent: {

@@ -49,11 +49,12 @@ public class FuzzyUnionAvroCasingTests {
       { "v_n1", "v_n1_r", "v_n2_3", "v_n3_header", "v_n3_rh", "v_n4", "v_n4_access", "v_n5", "v_n7", "v_n8_ordinal", "v_n8_outer", "v_n12", "v_n12_r" };
 
   /**
-   * Views that fail at the baseline and must keep exactly that failure: no usable name-only repair exists. v_n12_paren
-   * is the approved limitation: an ordinary Project between the inner and outer UNION carries no repair.
+   * Views that fail at the baseline and must keep exactly that failure. v_n12_paren is the approved limitation (an
+   * ordinary Project between the UNIONs carries no repair); in v_n12_latent the working inner UNION's source spellings
+   * (pageKey, PageKey) disagree, so the outer UNION keeps its own original failure, not the inner one.
    */
   private static final String[] STILL_FAILING =
-      { "v_n9_amb", "v_n9_missing", "v_n9_container", "v_n10_pascal", "v_n12_paren", "v_n13_pascal", "v_n13_union" };
+      { "v_n9_amb", "v_n9_missing", "v_n9_container", "v_n10_pascal", "v_n12_paren", "v_n12_latent", "v_n13_pascal", "v_n13_union" };
 
   /** Views that succeed at the baseline (non-strict); their outputs must not change. */
   private static final String[] WORKING =
@@ -76,11 +77,10 @@ public class FuzzyUnionAvroCasingTests {
 
   @Test
   public void testNaturalPlanShapes() {
-    // G = branch projecting with the rewriter's three-operand generic_project over a plain input reference; G[...]
-    // over another operand; D = branch without it; P = an ordinary Project between UNIONs. Calcite inlines the
-    // branch, so an aliased nested struct (N4) and a wrapping call (N8) become the helper's operand.
+    // G = three-operand generic_project over an input ref, G[...] over another (inlined) operand; D = no helper;
+    // P = an ordinary Project between UNIONs. N4's aliased nested struct and N8's wrapper become the operand.
     String[][] shapes =
-        { { "v_n1", "U(D,G)" }, { "v_n1_r", "U(G,D)" }, { "v_n2_3", "U(U(G,D),G)" }, { "v_n3_header", "U(D,G)" }, { "v_n4", "U(D,G)" }, { "v_n4_access", "U(D,G[$1.device])" }, { "v_n4_access_r", "U(G[$1.device],G[$1.device])" }, { "v_n5", "U(D,G,G,G,G)" }, { "v_n7", "U(D,G)" }, { "v_n8_ordinal", "U(D,G[li_groot_cast_nullability($1, $1)])" }, { "v_n8_item", "U(D,G[ITEM($1, 1)])" }, { "v_n12", "U(U(G,G),D)" }, { "v_n12_r", "U(U(D,G),G)" }, { "v_n12_paren", "U(D,P(U(G,G)))" }, { "v_n6_gg", "U(G,G)" }, { "v_n11_fallback", "U(D,G)" }, { "v_n11_derived_r", "U(G,D)" } };
+        { { "v_n1", "U(D,G)" }, { "v_n1_r", "U(G,D)" }, { "v_n2_3", "U(U(G,D),G)" }, { "v_n3_header", "U(D,G)" }, { "v_n4", "U(D,G)" }, { "v_n4_access", "U(D,G[$1.device])" }, { "v_n4_access_r", "U(G[$1.device],G[$1.device])" }, { "v_n5", "U(D,G,G,G,G)" }, { "v_n7", "U(D,G)" }, { "v_n8_ordinal", "U(D,G[li_groot_cast_nullability($0, $1)])" }, { "v_n8_item", "U(D,G[ITEM($1, 1)])" }, { "v_n12", "U(U(G,G),D)" }, { "v_n12_r", "U(U(D,G),G)" }, { "v_n12_paren", "U(D,P(U(G,G)))" }, { "v_n12_latent", "U(U(G,G),D)" }, { "v_n6_gg", "U(G,G)" }, { "v_n11_fallback", "U(D,G)" }, { "v_n11_derived_r", "U(G,D)" } };
     for (String[] shape : shapes) {
       RelNode union = new HiveToRelConverter(catalog).convertView(DB, shape[0]).getInput(0);
       Assert.assertEquals(shape(union), shape[1], shape[0]);
@@ -140,6 +140,9 @@ public class FuzzyUnionAvroCasingTests {
 
   @Test
   public void testRepairIsRepeatableAndLeavesSourcesUnchanged() {
+    for (String view : REPAIRED) { // each oracle is exactly Avro's serialization of itself (attainable)
+      Assert.assertEquals(new Schema.Parser().parse(expected.get(view)).toString(true), expected.get(view), view);
+    }
     ViewToAvroSchemaConverter converter = ViewToAvroSchemaConverter.create(catalog);
     String literal = catalog.getTable(DB, "pv_evolved").getParameters().toString();
     String first = outcome(() -> converter.toAvroSchema(DB, "v_n1", false, false));
@@ -357,7 +360,7 @@ public class FuzzyUnionAvroCasingTests {
     views.put("v_n7_lc", meta7 + "meta_small_lc UNION ALL " + meta7 + "meta_evolved_lc");
     views.put("v_n8_item",
         "SELECT id, headers[0] AS h FROM fz.coll_small UNION ALL " + "SELECT id, headers[0] AS h FROM fz.coll_evolved");
-    String cast = "SELECT id, li_groot_cast_nullability(requestheader, requestheader) AS requestheader FROM fz.";
+    String cast = "SELECT id, li_groot_cast_nullability(id, requestheader) AS requestheader FROM fz.";
     views.put("v_n8_ordinal", cast + "pv_small UNION ALL " + cast + "pv_evolved");
     views.put("v_n8_outer", "SELECT v.requestheader.pagekey AS pk, v.requestheader FROM fz.v_n1 v");
     views.put("v_n8_outer_direct", "SELECT v.requestheader.pagekey AS pk, v.requestheader FROM fz.v_n6_direct v");
@@ -378,6 +381,7 @@ public class FuzzyUnionAvroCasingTests {
     views.put("v_n12_r", rh + "pv_small UNION ALL " + rh + "pv_evolved UNION ALL " + rh + "pv_evolved2");
     views.put("v_n12_paren",
         rh + "pv_small UNION ALL SELECT * FROM (" + rh + "pv_evolved UNION ALL " + rh + "pv_evolved2) x");
+    views.put("v_n12_latent", rh + "pv_evolved2 UNION ALL " + rh + "pv_pascal_evolved UNION ALL " + rh + "pv_small");
     views.put("v_n12_gen", rh + "pv_evolved UNION ALL " + rh + "pv_evolved2 UNION ALL " + rh + "pv_evolved");
     views.put("v_n12_lower", rh + "pv_evolved UNION ALL " + rh + "pv_evolved2 UNION ALL " + rh + "pv_lower");
     views.put("v_n12_fallback", rh + "pv_evolved UNION ALL " + rh + "pv_evolved2 UNION ALL " + rh + "pv_fallback");

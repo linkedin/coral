@@ -367,42 +367,24 @@
   "type" : "record",
   "name" : "v_n8_outer",
   "namespace" : "fz.v_n8_outer",
-  "fields" : [
-    {
-      "name" : "pk",
-      "type" : [
-        "null",
-        "string"
-      ]
-    },
-    {
-      "name" : "requestHeader",
-      "type" : [
-        "null",
-        {
-          "type" : "record",
-          "name" : "RequestHeader",
-          "namespace" : "fz.v_n8_outer.v_n8_outer",
-          "fields" : [
-            {
-              "name" : "pageKey",
-              "type" : [
-                "null",
-                "string"
-              ]
-            },
-            {
-              "name" : "memberId",
-              "type" : [
-                "null",
-                "long"
-              ]
-            }
-          ]
-        }
-      ]
-    }
-  ]
+  "fields" : [ {
+    "name" : "pk",
+    "type" : [ "null", "string" ]
+  }, {
+    "name" : "requestHeader",
+    "type" : [ "null", {
+      "type" : "record",
+      "name" : "RequestHeader",
+      "namespace" : "fz.v_n8_outer.v_n8_outer",
+      "fields" : [ {
+        "name" : "pageKey",
+        "type" : [ "null", "string" ]
+      }, {
+        "name" : "memberId",
+        "type" : [ "null", "long" ]
+      } ]
+    } ]
+  } ]
 }
 === v_n12
 {
