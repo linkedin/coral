@@ -1,5 +1,5 @@
 /**
- * Copyright 2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2023-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -37,13 +37,13 @@ public class ToDateOperatorTransformer extends SqlCallTransformer {
   private static final String TO_OPERATOR_NAME = "date";
   private static final int NUM_OPERANDS = 1;
   private static final SqlOperator TIMESTAMP_OPERATOR =
-      new SqlUserDefinedFunction(new SqlIdentifier("timestamp", SqlParserPos.ZERO), FunctionReturnTypes.TIMESTAMP, null,
-          OperandTypes.STRING, null, null) {
+      new SqlUserDefinedFunction(new SqlIdentifier("trino_timestamp", SqlParserPos.ZERO), FunctionReturnTypes.TIMESTAMP,
+          null, OperandTypes.STRING, null, null) {
         @Override
         public void unparse(SqlWriter writer, SqlCall call, int leftPrec, int rightPrec) {
-          // for timestamp operator, we need to construct `CAST(x AS TIMESTAMP)`
+          // for timestamp operator, we need to construct `TRY_CAST(x AS TIMESTAMP)`
           Preconditions.checkState(call.operandCount() == 1);
-          final SqlWriter.Frame frame = writer.startFunCall("CAST");
+          final SqlWriter.Frame frame = writer.startFunCall("TRY_CAST");
           call.operand(0).unparse(writer, 0, 0);
           writer.sep("AS");
           writer.literal("TIMESTAMP");

@@ -1,5 +1,5 @@
 /**
- * Copyright 2021-2023 LinkedIn Corporation. All rights reserved.
+ * Copyright 2021-2024 LinkedIn Corporation. All rights reserved.
  * Licensed under the BSD-2 Clause license.
  * See LICENSE in the project root for license information.
  */
@@ -106,7 +106,7 @@ public class TrinoToRelConverterTest {
                 + "FROM \"default\".\"foo\" AS \"foo\""))
         .add(new TrinoToRelTestDataProvider("select 1 + 13 || '15' from foo",
             "LogicalProject(EXPR$0=[concat(+(1, 13), '15')])\n" + "  LogicalTableScan(table=[[hive, default, foo]])\n",
-            "SELECT \"concat\"(CAST(1 + 13 AS VARCHAR(65535)), '15')\n" + "FROM \"default\".\"foo\" AS \"foo\""))
+            "SELECT \"concat\"(TRY_CAST(1 + 13 AS VARCHAR(65535)), '15')\n" + "FROM \"default\".\"foo\" AS \"foo\""))
         .add(new TrinoToRelTestDataProvider("select x is distinct from y from foo where a is not distinct from b",
             "LogicalProject(EXPR$0=[AND(OR(IS NOT NULL($3), IS NOT NULL($4)), IS NOT TRUE(=($3, $4)))])\n"
                 + "  LogicalFilter(condition=[NOT(AND(OR(IS NOT NULL($1), IS NOT NULL($2)), IS NOT TRUE(=($1, $2))))])\n"
@@ -125,7 +125,7 @@ public class TrinoToRelConverterTest {
         .add(new TrinoToRelTestDataProvider("select x[cast(10 * sin(z) as bigint)] from my_table",
             "LogicalProject(EXPR$0=[ITEM($0, CAST(*(10, SIN($2))):BIGINT)])\n"
                 + "  LogicalTableScan(table=[[hive, default, my_table]])\n",
-            "SELECT element_at(\"my_table\".\"x\", CAST(10 * SIN(\"my_table\".\"z\") AS BIGINT))\n"
+            "SELECT element_at(\"my_table\".\"x\", TRY_CAST(10 * SIN(\"my_table\".\"z\") AS BIGINT))\n"
                 + "FROM \"default\".\"my_table\" AS \"my_table\""))
         .add(new TrinoToRelTestDataProvider("select * from my_table cross join unnest(x)",
             "LogicalProject(x=[$0], y=[$1], z=[$2], EXPR$0=[$3])\n"
@@ -169,7 +169,7 @@ public class TrinoToRelConverterTest {
                 + "FROM \"default\".\"foo\" AS \"foo0\") AS \"t0\" ON 999 = 999"))
         .add(new TrinoToRelTestDataProvider("select cast('123' as bigint)",
             "LogicalProject(EXPR$0=[CAST('123'):BIGINT])\n" + "  LogicalValues(tuples=[[{ 0 }]])\n",
-            "SELECT CAST('123' AS BIGINT)\n" + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")"))
+            "SELECT TRY_CAST('123' AS BIGINT)\n" + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")"))
         .add(new TrinoToRelTestDataProvider("select a \"my price\" from \"foo\" \"ORDERS\"",
             "LogicalProject(MY PRICE=[$1])\n" + "  LogicalTableScan(table=[[hive, default, foo]])\n",
             "SELECT \"foo\".\"a\" AS \"MY PRICE\"\n" + "FROM \"default\".\"foo\" AS \"foo\""))
