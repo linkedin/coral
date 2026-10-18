@@ -457,6 +457,26 @@ public class RegexToIntegerDomainConverterTest {
   }
 
   @Test
+  public void testLargeVariableLengthRange() {
+    // ^[1-9][0-9]{0,5}$ accepts 1..999999: too many strings to enumerate, and of different lengths
+    RegexDomain regex = new RegexDomain("^[1-9][0-9]{0,5}$");
+    assertTrue(converter.isConvertible(regex));
+
+    IntegerDomain result = converter.convert(regex);
+    assertEquals(result, IntegerDomain.of(1, 999999));
+  }
+
+  @Test
+  public void testLargeDomainMinimumOnShorterPath() {
+    // Accepts "19" and "100000".."109999"; the minimum is 19
+    RegexDomain regex = new RegexDomain("^1(9|0[0-9]{4})$");
+    assertTrue(converter.isConvertible(regex));
+
+    IntegerDomain result = converter.convert(regex);
+    assertEquals(result, IntegerDomain.of(19, 109999));
+  }
+
+  @Test
   public void testDisjointIntervals() {
     // Should produce multiple disjoint intervals
     RegexDomain regex = new RegexDomain("^(10|20|30)$");

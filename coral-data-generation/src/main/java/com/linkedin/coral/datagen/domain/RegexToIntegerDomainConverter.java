@@ -96,75 +96,65 @@ public class RegexToIntegerDomainConverter {
 
   /**
    * Computes the minimum numeric value accepted by the automaton.
-   * Uses BFS to find the shortest accepted string (which for digit-only strings
-   * with no leading zeros gives the smallest number). Falls back to DFS for correctness
-   * with leading zeros.
+   *
+   * <p>Accepted strings may have different lengths and leading zeros, so the smallest number is not
+   * necessarily on the shortest path. For a fixed length, however, lexicographic order of digit
+   * strings matches numeric order. The minimum is therefore the smallest value among the
+   * lexicographically smallest accepted string of each length.
    */
   private long computeMin(Automaton a) {
-    // For digit-only finite automata, enumerate up to a reasonable limit
-    // to find the true numeric minimum
-    Set<String> strings = a.getFiniteStrings(MAX_ENUMERATION_SIZE);
-    if (strings != null) {
-      long min = Long.MAX_VALUE;
-      for (String s : strings) {
-        min = Math.min(min, Long.parseLong(s));
-      }
-      return min;
-    }
-    // Fallback: DFS choosing shortest path with smallest digits
-    return Long.parseLong(dfsMinString(a.getInitialState(), new HashMap<>()));
+    return computeBound(a, true);
   }
 
   /**
-   * Computes the maximum numeric value accepted by the automaton.
-   * Uses DFS over the acyclic automaton choosing longest paths with largest digits.
+   * Computes the maximum numeric value accepted by the automaton. See {@link #computeMin(Automaton)}.
    */
   private long computeMax(Automaton a) {
-    Set<String> strings = a.getFiniteStrings(MAX_ENUMERATION_SIZE);
-    if (strings != null) {
-      long max = Long.MIN_VALUE;
-      for (String s : strings) {
-        max = Math.max(max, Long.parseLong(s));
-      }
-      return max;
-    }
-    // Fallback: DFS choosing longest path with largest digits
-    return Long.parseLong(dfsMaxString(a.getInitialState(), new HashMap<>()));
+    return computeBound(a, false);
   }
 
-  private String dfsMinString(State state, Map<State, String> memo) {
-    if (memo.containsKey(state)) {
-      return memo.get(state);
+  private long computeBound(Automaton a, boolean min) {
+    // In a finite language no accepted path repeats a state, so lengths are bounded by the state count.
+    int maxLength = a.getNumberOfStates();
+    Map<State, Map<Integer, Optional<String>>> memo = new HashMap<>();
+    Long bound = null;
+    for (int length = 1; length <= maxLength; length++) {
+      String s = extremeString(a.getInitialState(), length, min, memo);
+      if (s != null) {
+        long value = Long.parseLong(s);
+        if (bound == null || (min ? value < bound : value > bound)) {
+          bound = value;
+        }
+      }
     }
-    String best = state.isAccept() ? "" : null;
+    return bound;
+  }
+
+  /**
+   * Returns the lexicographically smallest (or largest) string of exactly {@code length} digits
+   * accepted from {@code state}, or null if there is none.
+   */
+  private String extremeString(State state, int length, boolean smallest,
+      Map<State, Map<Integer, Optional<String>>> memo) {
+    if (length == 0) {
+      return state.isAccept() ? "" : null;
+    }
+    Map<Integer, Optional<String>> byLength = memo.computeIfAbsent(state, k -> new HashMap<>());
+    Optional<String> cached = byLength.get(length);
+    if (cached != null) {
+      return cached.orElse(null);
+    }
+    String best = null;
     for (Transition t : state.getTransitions()) {
-      String sub = dfsMinString(t.getDest(), memo);
+      String sub = extremeString(t.getDest(), length - 1, smallest, memo);
       if (sub != null) {
-        String candidate = t.getMin() + sub; // smallest char in range
-        if (best == null || Long.parseLong(candidate) < Long.parseLong(best)) {
+        String candidate = (smallest ? t.getMin() : t.getMax()) + sub;
+        if (best == null || (smallest ? candidate.compareTo(best) < 0 : candidate.compareTo(best) > 0)) {
           best = candidate;
         }
       }
     }
-    memo.put(state, best);
-    return best;
-  }
-
-  private String dfsMaxString(State state, Map<State, String> memo) {
-    if (memo.containsKey(state)) {
-      return memo.get(state);
-    }
-    String best = state.isAccept() ? "" : null;
-    for (Transition t : state.getTransitions()) {
-      String sub = dfsMaxString(t.getDest(), memo);
-      if (sub != null) {
-        String candidate = t.getMax() + sub; // largest char in range
-        if (best == null || Long.parseLong(candidate) > Long.parseLong(best)) {
-          best = candidate;
-        }
-      }
-    }
-    memo.put(state, best);
+    byLength.put(length, Optional.ofNullable(best));
     return best;
   }
 
