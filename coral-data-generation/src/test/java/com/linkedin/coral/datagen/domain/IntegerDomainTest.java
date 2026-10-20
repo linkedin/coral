@@ -6,6 +6,7 @@
 package com.linkedin.coral.datagen.domain;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 
 import org.testng.annotations.Test;
@@ -153,6 +154,21 @@ public class IntegerDomainTest {
     assertFalse(scaled.contains(-9));
     assertFalse(scaled.contains(-21));
     assertFalse(scaled.contains(10));
+  }
+
+  @Test
+  public void testSampleIntervalWiderThanLongMaxValue() {
+    // The width of these intervals does not fit in a long
+    List<IntegerDomain> domains =
+        Arrays.asList(IntegerDomain.of(Long.MIN_VALUE, 5), IntegerDomain.of(-5, Long.MAX_VALUE), IntegerDomain.all());
+    for (IntegerDomain domain : domains) {
+      List<Long> samples = domain.sample(50);
+      assertEquals(samples.size(), 50);
+      for (long v : samples) {
+        assertTrue(domain.contains(v), domain + " sampled " + v);
+      }
+      assertTrue(new HashSet<>(samples).size() > 1, domain + " sampled a single value: " + samples);
+    }
   }
 
   // ==================== Interval Merging ====================

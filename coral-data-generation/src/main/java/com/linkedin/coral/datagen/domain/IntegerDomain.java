@@ -376,8 +376,10 @@ public class IntegerDomain extends Domain<Long, IntegerDomain> {
     try {
       range = Math.subtractExact(interval.max, interval.min);
     } catch (ArithmeticException e) {
-      // Overflow: range exceeds Long.MAX_VALUE, use random double sampling
-      return interval.min + (long) (RANDOM.nextDouble() * (double) (interval.max - interval.min));
+      // Overflow: range exceeds Long.MAX_VALUE, so interval.max - interval.min would wrap around.
+      // Sample in double space and clamp to the interval to absorb rounding.
+      double value = (double) interval.min + RANDOM.nextDouble() * ((double) interval.max - (double) interval.min);
+      return Math.max(interval.min, Math.min(interval.max, (long) value));
     }
     if (range < Integer.MAX_VALUE) {
       return interval.min + RANDOM.nextInt((int) range + 1);
