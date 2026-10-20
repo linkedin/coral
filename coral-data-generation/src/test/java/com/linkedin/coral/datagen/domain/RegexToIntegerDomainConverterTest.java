@@ -618,4 +618,42 @@ public class RegexToIntegerDomainConverterTest {
     assertFalse(domain.contains(-1)); // Below min
     assertFalse(domain.contains(1000)); // Above max
   }
+  @Test
+  public void testLargeDomainDifferentLengths() {
+    // ^[1-9][0-9]{0,5}$ accepts numbers with lengths 1 to 6 (1 to 999999)
+    RegexDomain regex = new RegexDomain("^[1-9][0-9]{0,5}$");
+    assertTrue(converter.isConvertible(regex));
+
+    IntegerDomain result = converter.convert(regex);
+    assertTrue(result.contains(1));
+    assertTrue(result.contains(999999));
+    assertFalse(result.contains(0));
+    assertFalse(result.contains(1000000));
+  }
+
+  @Test
+  public void testLargeDomainDisjointLengths() {
+    // ^1(9|0[0-9]{4})$ accepts "19" and "100000" to "109999"
+    RegexDomain regex = new RegexDomain("^1(9|0[0-9]{4})$");
+    assertTrue(converter.isConvertible(regex));
+
+    IntegerDomain result = converter.convert(regex);
+    assertTrue(result.contains(19));
+    assertTrue(result.contains(100000));
+    assertTrue(result.contains(109999));
+    assertFalse(result.contains(18));
+    assertFalse(result.contains(110000));
+  }
+
+  @Test
+  public void testLargeDomainVariableLengthWithZero() {
+    // ^[0-9]{1,6}$ accepts 0 to 999999
+    RegexDomain regex = new RegexDomain("^[0-9]{1,6}$");
+    assertTrue(converter.isConvertible(regex));
+
+    IntegerDomain result = converter.convert(regex);
+    assertTrue(result.contains(0));
+    assertTrue(result.contains(999999));
+    assertFalse(result.contains(1000000));
+  }
 }
