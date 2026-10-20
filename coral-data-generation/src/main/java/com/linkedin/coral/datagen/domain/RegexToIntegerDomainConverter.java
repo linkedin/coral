@@ -95,76 +95,107 @@ public class RegexToIntegerDomainConverter {
   }
 
   /**
+   * Finds all path lengths from the given state to an accept state.
+   */
+  private Set<Integer> getAcceptedLengths(State state, Map<State, Set<Integer>> memo) {
+    if (memo.containsKey(state)) {
+      return memo.get(state);
+    }
+    Set<Integer> lengths = new HashSet<>();
+    if (state.isAccept()) {
+      lengths.add(0);
+    }
+    for (Transition t : state.getTransitions()) {
+      Set<Integer> subLengths = getAcceptedLengths(t.getDest(), memo);
+      for (int len : subLengths) {
+        lengths.add(len + 1);
+      }
+    }
+    memo.put(state, lengths);
+    return lengths;
+  }
+
+  /**
    * Computes the minimum numeric value accepted by the automaton.
-   * Uses BFS to find the shortest accepted string (which for digit-only strings
-   * with no leading zeros gives the smallest number). Falls back to DFS for correctness
-   * with leading zeros.
+   * Evaluates the lexicographically smallest accepted string for each accepted length
+   * to determine the global numeric minimum.
    */
   private long computeMin(Automaton a) {
-    // For digit-only finite automata, enumerate up to a reasonable limit
-    // to find the true numeric minimum
-    Set<String> strings = a.getFiniteStrings(MAX_ENUMERATION_SIZE);
-    if (strings != null) {
-      long min = Long.MAX_VALUE;
-      for (String s : strings) {
-        min = Math.min(min, Long.parseLong(s));
+    Set<Integer> lengths = getAcceptedLengths(a.getInitialState(), new HashMap<>());
+    Map<String, String> memo = new HashMap<>();
+    long min = Long.MAX_VALUE;
+    for (int len : lengths) {
+      if (len > 0) {
+        String minStr = dfsMinStringOfLength(a.getInitialState(), len, memo);
+        if (minStr != null) {
+          min = Math.min(min, Long.parseLong(minStr));
+        }
       }
-      return min;
     }
-    // Fallback: DFS choosing shortest path with smallest digits
-    return Long.parseLong(dfsMinString(a.getInitialState(), new HashMap<>()));
+    return min;
   }
 
   /**
    * Computes the maximum numeric value accepted by the automaton.
-   * Uses DFS over the acyclic automaton choosing longest paths with largest digits.
+   * Evaluates the lexicographically largest accepted string for each accepted length
+   * to determine the global numeric maximum.
    */
   private long computeMax(Automaton a) {
-    Set<String> strings = a.getFiniteStrings(MAX_ENUMERATION_SIZE);
-    if (strings != null) {
-      long max = Long.MIN_VALUE;
-      for (String s : strings) {
-        max = Math.max(max, Long.parseLong(s));
-      }
-      return max;
-    }
-    // Fallback: DFS choosing longest path with largest digits
-    return Long.parseLong(dfsMaxString(a.getInitialState(), new HashMap<>()));
-  }
-
-  private String dfsMinString(State state, Map<State, String> memo) {
-    if (memo.containsKey(state)) {
-      return memo.get(state);
-    }
-    String best = state.isAccept() ? "" : null;
-    for (Transition t : state.getTransitions()) {
-      String sub = dfsMinString(t.getDest(), memo);
-      if (sub != null) {
-        String candidate = t.getMin() + sub; // smallest char in range
-        if (best == null || Long.parseLong(candidate) < Long.parseLong(best)) {
-          best = candidate;
+    Set<Integer> lengths = getAcceptedLengths(a.getInitialState(), new HashMap<>());
+    Map<String, String> memo = new HashMap<>();
+    long max = Long.MIN_VALUE;
+    for (int len : lengths) {
+      if (len > 0) {
+        String maxStr = dfsMaxStringOfLength(a.getInitialState(), len, memo);
+        if (maxStr != null) {
+          max = Math.max(max, Long.parseLong(maxStr));
         }
       }
     }
-    memo.put(state, best);
+    return max;
+  }
+
+  private String dfsMinStringOfLength(State state, int length, Map<String, String> memo) {
+    if (length == 0) {
+      return state.isAccept() ? "" : null;
+    }
+    String key = state.hashCode() + ":" + length;
+    if (memo.containsKey(key)) {
+      return memo.get(key);
+    }
+    List<Transition> transitions = new ArrayList<>(state.getTransitions());
+    transitions.sort(Comparator.comparingInt(Transition::getMin));
+    String best = null;
+    for (Transition t : transitions) {
+      String sub = dfsMinStringOfLength(t.getDest(), length - 1, memo);
+      if (sub != null) {
+        best = t.getMin() + sub;
+        break;
+      }
+    }
+    memo.put(key, best);
     return best;
   }
 
-  private String dfsMaxString(State state, Map<State, String> memo) {
-    if (memo.containsKey(state)) {
-      return memo.get(state);
+  private String dfsMaxStringOfLength(State state, int length, Map<String, String> memo) {
+    if (length == 0) {
+      return state.isAccept() ? "" : null;
     }
-    String best = state.isAccept() ? "" : null;
-    for (Transition t : state.getTransitions()) {
-      String sub = dfsMaxString(t.getDest(), memo);
+    String key = state.hashCode() + ":" + length;
+    if (memo.containsKey(key)) {
+      return memo.get(key);
+    }
+    List<Transition> transitions = new ArrayList<>(state.getTransitions());
+    transitions.sort((t1, t2) -> Integer.compare(t2.getMax(), t1.getMax()));
+    String best = null;
+    for (Transition t : transitions) {
+      String sub = dfsMaxStringOfLength(t.getDest(), length - 1, memo);
       if (sub != null) {
-        String candidate = t.getMax() + sub; // largest char in range
-        if (best == null || Long.parseLong(candidate) > Long.parseLong(best)) {
-          best = candidate;
-        }
+        best = t.getMax() + sub;
+        break;
       }
     }
-    memo.put(state, best);
+    memo.put(key, best);
     return best;
   }
 
