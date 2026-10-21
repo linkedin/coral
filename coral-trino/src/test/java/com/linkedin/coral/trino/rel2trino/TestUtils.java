@@ -362,6 +362,12 @@ public class TestUtils {
     run(driver, "CREATE VIEW IF NOT EXISTS test.cast_decimal_view AS \n"
         + "SELECT CAST(t.a as DECIMAL(6,2)) as casted_decimal FROM test.table_ints_strings t");
 
+    run(driver, "CREATE VIEW IF NOT EXISTS test.cast_in_distinct_view AS \n"
+        + "SELECT DISTINCT CAST(t.c AS DATE) AS casted_date FROM test.table_ints_strings t");
+
+    run(driver, "CREATE VIEW IF NOT EXISTS test.cast_in_group_by_view AS \n"
+        + "SELECT CAST(t.c AS DATE) AS casted_date, COUNT(*) AS cnt FROM test.table_ints_strings t GROUP BY CAST(t.c AS DATE)");
+
     run(driver, "CREATE TABLE IF NOT EXISTS test.tableS (structCol struct<a:int>)");
     run(driver, "CREATE TABLE IF NOT EXISTS test.tableT (structCol struct<a:int>)");
     run(driver, "CREATE VIEW IF NOT EXISTS test.viewA AS SELECT structCol as struct_col FROM test.tableS");
