@@ -82,6 +82,26 @@ public class TypeDerivationUtil {
       }
     }
 
+    // Deriving a sub-expression on its own can be invalid with the GROUP BY and HAVING of the top select. For
+    // `SELECT CAST(t.k AS DATE) FROM t GROUP BY CAST(t.k AS DATE)`, the bare column `t.k` is neither grouped nor
+    // aggregated. Retry without them, only once every attempt above has failed, so earlier results are unchanged.
+    for (SqlSelect topSqlSelectNode : topSelectNodes) {
+      if (topSqlSelectNode.getGroup() == null && topSqlSelectNode.getHaving() == null) {
+        continue;
+      }
+      final SqlSelect dummySqlSelect = new SqlSelect(topSqlSelectNode.getParserPosition(), null,
+          SqlNodeList.of(sqlNode), topSqlSelectNode.getFrom(), topSqlSelectNode.getWhere(), null, null,
+          topSqlSelectNode.getWindowList(), topSqlSelectNode.getOrderList(), topSqlSelectNode.getOffset(),
+          topSqlSelectNode.getFetch());
+
+      try {
+        sqlValidator.validate(dummySqlSelect);
+        return sqlValidator.getValidatedNodeType(dummySqlSelect).getFieldList().get(0).getType();
+      } catch (Throwable t) {
+        lastFailure = t;
+      }
+    }
+
     // Additional attempt to derive RelDataType of the input sqlNode by validating the topSelectNode.
     // This is particularly useful when the input is defined as an alias in topSelectNode's selectList.
     // For example, when the topSelectNode is: `SELECT a AS tmp FROM foo WHERE tmp > 5`.

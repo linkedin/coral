@@ -195,6 +195,14 @@ public class HiveToTrinoConverterTest {
         { "test", "cast_decimal_view", "SELECT CAST(\"table_ints_strings\".\"a\" AS DECIMAL(6, 2)) AS \"casted_decimal\"\n"
             + "FROM \"test\".\"table_ints_strings\" AS \"table_ints_strings\"" },
 
+        { "test", "cast_in_distinct_view", "SELECT CAST(\"table_ints_strings\".\"c\" AS DATE) AS \"casted_date\"\n"
+            + "FROM \"test\".\"table_ints_strings\" AS \"table_ints_strings\"\n"
+            + "GROUP BY CAST(\"table_ints_strings\".\"c\" AS DATE)" },
+
+        { "test", "cast_in_group_by_view", "SELECT CAST(\"table_ints_strings\".\"c\" AS DATE) AS \"casted_date\", COUNT(*) AS \"cnt\"\n"
+            + "FROM \"test\".\"table_ints_strings\" AS \"table_ints_strings\"\n"
+            + "GROUP BY CAST(\"table_ints_strings\".\"c\" AS DATE)" },
+
         { "test", "view_namesake_column_names", "SELECT \"t0\".\"some_id\" AS \"some_id\"\n"
             + "FROM (SELECT \"duplicate_column_name_a\".\"some_id\" AS \"some_id\", \"t\".\"SOME_ID\" AS \"SOME_ID0\"\n"
             + "FROM \"test\".\"duplicate_column_name_a\" AS \"duplicate_column_name_a\"\n"
