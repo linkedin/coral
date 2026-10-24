@@ -1,0 +1,20 @@
+{
+  "hive.test.bar1": {
+    "RowCount": 100,
+    "DistinctCounts": {
+      "x": 10
+    }
+  },
+  "hive.test.bar2": {
+    "RowCount": 20,
+    "DistinctCounts": {
+      "x": 5
+    }
+  },
+  "hive.test.bar3": {
+    "RowCount": 50,
+    "DistinctCounts": {
+      "x": 25
+    }
+  }
+}
