@@ -655,6 +655,29 @@ public class HiveToTrinoConverterTest {
   }
 
   @Test
+  public void testArrayIndexOnCTEColumn() {
+    // https://github.com/linkedin/coral/issues/574
+    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
+    RelNode relNode = TestUtils.getHiveToRelConverter()
+        .convertSql("WITH t1 AS (SELECT b.b1 AS str FROM test.tableA) SELECT split(str, ',')[0] AS item FROM t1");
+    // Hive's 0-based index becomes Trino's 1-based element_at
+    String targetSql = "SELECT element_at(\"split\"(\"tablea\".\"b\".\"b1\", ','), 1) AS \"item\"\n"
+        + "FROM \"test\".\"tablea\" AS \"tablea\"";
+    assertEquals(relToTrinoConverter.convert(relNode), targetSql);
+  }
+
+  @Test
+  public void testMapWithMixedValueTypes() {
+    // https://github.com/linkedin/coral/issues/570
+    RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
+    RelNode relNode = TestUtils.getHiveToRelConverter().convertSql("SELECT map('k1', 'v1', 'k2', 2)['k2']");
+    // Hive converts the map values to their common type, string, so the integer value is cast explicitly
+    String targetSql = "SELECT element_at(MAP (ARRAY['k1', 'k2'], ARRAY['v1', CAST(2 AS VARCHAR(65535))]), 'k2')\n"
+        + "FROM (VALUES  (0)) AS \"t\" (\"ZERO\")";
+    assertEquals(relToTrinoConverter.convert(relNode), targetSql);
+  }
+
+  @Test
   public void testResetTransformColumnFieldNameForGenericProject() {
     RelToTrinoConverter relToTrinoConverter = TestUtils.getRelToTrinoConverter();
     RelNode relNode = TestUtils.getHiveToRelConverter().convertView("test", "view_with_transform_column_name_reset");
