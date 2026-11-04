@@ -5,9 +5,13 @@
  */
 package com.linkedin.coral.common.utils;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Deque;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.sql.SqlCall;
@@ -15,6 +19,7 @@ import org.apache.calcite.sql.SqlIdentifier;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlNodeList;
 import org.apache.calcite.sql.SqlSelect;
+import org.apache.calcite.sql.SqlWith;
 import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.sql.util.SqlShuttle;
 import org.apache.calcite.sql.validate.SqlValidator;
@@ -26,6 +31,10 @@ import org.apache.calcite.sql.validate.SqlValidator;
 public class TypeDerivationUtil {
   private final SqlValidator sqlValidator;
   private final List<SqlSelect> topSelectNodes = new ArrayList<>();
+  // For every SELECT collected in topSelectNodes, the WITH lists that are in scope for it, outermost first.
+  // A dummy SELECT built from such a SELECT has to be wrapped in the same WITH clauses, otherwise the
+  // validator cannot resolve references to CTE names (e.g. `FROM t1` where t1 is defined by `WITH t1 AS (...)`).
+  private final Map<SqlSelect, List<SqlNodeList>> enclosingWithLists = new IdentityHashMap<>();
 
   public TypeDerivationUtil(SqlValidator sqlValidator, SqlNode topSqlNode) {
     this.sqlValidator = sqlValidator;
@@ -49,6 +58,16 @@ public class TypeDerivationUtil {
    * SELECT *
    * FROM `test`.`tableb`
    * WHERE `concat`(CURRENT_DATE, `tableb`.`a`) = 'some string'
+   *
+   * If a top-level SELECT is defined inside a WITH clause (or reads from a CTE), the dummy SqlSelect is wrapped
+   * in the WITH clauses that enclose it in the original query, so that CTE names in its FROM clause still resolve.
+   * Example SQL:
+   *
+   * WITH t1 AS (SELECT b AS str FROM test.tableOne)
+   * SELECT split(str, ':')[0] FROM t1
+   *
+   * Here the type of `split(str, ':')` is derived by validating
+   * `WITH t1 AS (SELECT b AS str FROM test.tableOne) SELECT split(str, ':') FROM t1`.
    *
    * @param sqlNode The SqlNode for which the RelDataType needs to be derived.
    * @return The RelDataType derived for the given SqlNode.
@@ -74,11 +93,14 @@ public class TypeDerivationUtil {
           topSqlSelectNode.getHaving(), topSqlSelectNode.getWindowList(), topSqlSelectNode.getOrderList(),
           topSqlSelectNode.getOffset(), topSqlSelectNode.getFetch());
 
-      try {
-        sqlValidator.validate(dummySqlSelect);
-        return sqlValidator.getValidatedNodeType(dummySqlSelect).getFieldList().get(0).getType();
-      } catch (Throwable t) {
-        lastFailure = t;
+      // Try in the CTE scope of topSqlSelectNode first, then without any WITH clause (the previous behavior)
+      for (SqlNode dummyQuery : candidateQueries(topSqlSelectNode, dummySqlSelect)) {
+        try {
+          sqlValidator.validate(dummyQuery);
+          return sqlValidator.getValidatedNodeType(dummyQuery).getFieldList().get(0).getType();
+        } catch (Throwable t) {
+          lastFailure = t;
+        }
       }
     }
 
@@ -86,13 +108,15 @@ public class TypeDerivationUtil {
     // This is particularly useful when the input is defined as an alias in topSelectNode's selectList.
     // For example, when the topSelectNode is: `SELECT a AS tmp FROM foo WHERE tmp > 5`.
     // Previous attempts would try validating dummySqlNode: `SELECT tmp FROM foo WHERE tmp > 5`, which would fail RelDataType derivation.
-    try {
-      final SqlSelect dummySqlSelect = new SqlSelect(topSelectNodes.get(0).getParserPosition(), null,
-          SqlNodeList.of(sqlNode), topSelectNodes.get(0), null, null, null, null, null, null, null);
-      sqlValidator.validate(dummySqlSelect);
-      return sqlValidator.getValidatedNodeType(sqlNode);
-    } catch (Throwable t) {
-      lastFailure = t;
+    final SqlSelect aliasDummySqlSelect = new SqlSelect(topSelectNodes.get(0).getParserPosition(), null,
+        SqlNodeList.of(sqlNode), topSelectNodes.get(0), null, null, null, null, null, null, null);
+    for (SqlNode dummyQuery : candidateQueries(topSelectNodes.get(0), aliasDummySqlSelect)) {
+      try {
+        sqlValidator.validate(dummyQuery);
+        return sqlValidator.getValidatedNodeType(sqlNode);
+      } catch (Throwable t) {
+        lastFailure = t;
+      }
     }
 
     // Chain the cause: without it this message masks the real failure (e.g. an authorization denial
@@ -101,13 +125,56 @@ public class TypeDerivationUtil {
         sqlNode, topSelectNodes.get(0)), lastFailure);
   }
 
+  /**
+   * Returns the queries to validate for a dummy SELECT built from {@code topSelect}: the dummy wrapped in the WITH
+   * clauses enclosing {@code topSelect} (if any), followed by the bare dummy.
+   */
+  private List<SqlNode> candidateQueries(SqlSelect topSelect, SqlSelect dummySqlSelect) {
+    final SqlNode wrapped = wrapInEnclosingWithClauses(topSelect, dummySqlSelect);
+    if (wrapped == dummySqlSelect) {
+      return Collections.singletonList(dummySqlSelect);
+    }
+    final List<SqlNode> candidates = new ArrayList<>(2);
+    candidates.add(wrapped);
+    candidates.add(dummySqlSelect);
+    return candidates;
+  }
+
+  /**
+   * Wraps {@code query} in the WITH clauses that enclose {@code topSelect} in the original query, innermost first,
+   * so that the result can be validated in the same CTE scope as {@code topSelect}. Returns {@code query} unchanged
+   * when {@code topSelect} is not inside a WITH clause.
+   */
+  private SqlNode wrapInEnclosingWithClauses(SqlSelect topSelect, SqlNode query) {
+    final List<SqlNodeList> withLists = enclosingWithLists.getOrDefault(topSelect, Collections.emptyList());
+    SqlNode wrapped = query;
+    for (int i = withLists.size() - 1; i >= 0; i--) {
+      final SqlNodeList withList = withLists.get(i);
+      wrapped = new SqlWith(withList.getParserPosition(), withList, wrapped);
+    }
+    return wrapped;
+  }
+
   public RelDataType leastRestrictive(List<RelDataType> types) {
     return sqlValidator.getTypeFactory().leastRestrictive(types);
   }
 
   private class SqlNodePreprocessorForTypeDerivation extends SqlShuttle {
+    // WITH lists enclosing the node currently being visited, outermost first
+    private final Deque<SqlNodeList> withListStack = new ArrayDeque<>();
+
     @Override
     public SqlNode visit(SqlCall sqlCall) {
+      if (sqlCall instanceof SqlWith) {
+        // CTE names are visible both in the WITH body and in later WITH items, so every SELECT nested anywhere
+        // under this SqlWith is validated with its WITH list in scope
+        withListStack.addLast(((SqlWith) sqlCall).withList);
+        try {
+          return super.visit(sqlCall);
+        } finally {
+          withListStack.removeLast();
+        }
+      }
       if (sqlCall instanceof SqlSelect) {
         // Updates selectList of a SqlSelect node
         // to correctly handle t.* type nodes for accurate data type derivation
@@ -119,6 +186,9 @@ public class TypeDerivationUtil {
           ((SqlSelect) sqlCall).setSelectList(SqlNodeList.of(star));
         }
         topSelectNodes.add((SqlSelect) sqlCall);
+        if (!withListStack.isEmpty()) {
+          enclosingWithLists.put((SqlSelect) sqlCall, new ArrayList<>(withListStack));
+        }
       }
       return super.visit(sqlCall);
     }

@@ -446,6 +446,84 @@ public class HiveToRelConverterTest {
   }
 
   @Test
+  public void testArrayIndexOnCTEColumn() {
+    // https://github.com/linkedin/coral/issues/574
+    final String sql = "WITH t1 AS (SELECT b AS str FROM test.tableOne) SELECT split(str, ':')[0] AS item FROM t1";
+    final String expected =
+        "LogicalProject(item=[ITEM(split($1, ':'), 1)])\n" + "  LogicalTableScan(table=[[hive, test, tableone]])\n";
+    assertEquals(relToString(sql), expected);
+  }
+
+  @Test
+  public void testArrayIndexOnChainedCTEs() {
+    // t2 reads from t1, and the array column comes through both CTEs
+    final String sql = "WITH t1 AS (SELECT c FROM complex), t2 AS (SELECT c AS arr FROM t1) "
+        + "SELECT arr[0] AS first, arr[size(arr) - 1] AS last FROM t2";
+    final String expected = "LogicalProject(first=[ITEM($2, 1)], last=[ITEM($2, +(-(CARDINALITY($2), 1), 1))])\n"
+        + "  LogicalTableScan(table=[[hive, default, complex]])\n";
+    assertEquals(relToString(sql), expected);
+  }
+
+  @Test
+  public void testArrayIndexInsideCTEDefinitionReadingAnotherCTE() {
+    final String sql = "WITH t1 AS (SELECT c FROM complex), t2 AS (SELECT c[0] AS first FROM t1) SELECT first FROM t2";
+    final String expected =
+        "LogicalProject(first=[ITEM($2, 1)])\n" + "  LogicalTableScan(table=[[hive, default, complex]])\n";
+    assertEquals(relToString(sql), expected);
+  }
+
+  @Test
+  public void testArrayIndexOnCTEColumnInWhereClause() {
+    final String sql = "WITH t1 AS (SELECT a, c FROM complex) SELECT a FROM t1 WHERE c[0] > 1.5";
+    final String expected =
+        "LogicalProject(a=[$0])\n" + "  LogicalFilter(condition=[>(ITEM($1, 1), 1.5:DECIMAL(2, 1))])\n"
+            + "    LogicalProject(a=[$0], c=[$2])\n" + "      LogicalTableScan(table=[[hive, default, complex]])\n";
+    assertEquals(relToString(sql), expected);
+  }
+
+  @Test
+  public void testMapWithStringAndIntegerValues() {
+    // https://github.com/linkedin/coral/issues/570: Hive converts the values to their common type, string
+    final String sql = "SELECT map('k1', 'v1', 'k2', 2)";
+    final String expected = "LogicalProject(EXPR$0=[MAP('k1', 'v1', 'k2', CAST(2):VARCHAR(65535))])\n"
+        + "  LogicalValues(tuples=[[{ 0 }]])\n";
+    assertEquals(relToString(sql), expected);
+  }
+
+  @Test
+  public void testMapWithMixedKeysAndValues() {
+    final String sql = "SELECT map(1, 'a', 'b', 2.5, 'c', CAST('2024-01-01' AS DATE)) FROM complex";
+    final String expected = "LogicalProject(EXPR$0=[MAP(CAST(1):VARCHAR(65535), 'a', 'b', "
+        + "CAST(2.5:DECIMAL(2, 1)):VARCHAR(65535), 'c', CAST(CAST('2024-01-01'):DATE):VARCHAR(65535))])\n"
+        + "  LogicalTableScan(table=[[hive, default, complex]])\n";
+    assertEquals(relToString(sql), expected);
+  }
+
+  @Test
+  public void testMapWithStringValueAndColumn() {
+    final String sql = "SELECT map('id', a, 'name', b)['id'] FROM complex";
+    final String expected = "LogicalProject(EXPR$0=[ITEM(MAP('id', CAST($0):VARCHAR(65535), 'name', $1), 'id')])\n"
+        + "  LogicalTableScan(table=[[hive, default, complex]])\n";
+    assertEquals(relToString(sql), expected);
+  }
+
+  @Test
+  public void testMapWithNumericValuesIsUnchanged() {
+    // Calcite already finds a common type here, so no CAST is added
+    final String sql = "SELECT map('a', 1, 'b', 2.5, 'c', NULL)";
+    final String expected = "LogicalProject(EXPR$0=[MAP('a', 1, 'b', 2.5:DECIMAL(2, 1), 'c', null:NULL)])\n"
+        + "  LogicalValues(tuples=[[{ 0 }]])\n";
+    assertEquals(relToString(sql), expected);
+  }
+
+  @Test(expectedExceptions = RuntimeException.class,
+      expectedExceptionsMessageRegExp = ".*Parameters must be of the same type.*")
+  public void testMapWithBooleanAndIntegerValuesFails() {
+    // Hive rejects this too: boolean and int have no common type
+    relToString("SELECT map('a', true, 'b', 1)");
+  }
+
+  @Test
   public void testMapItem() {
     final String sql = "SELECT m['a'] FROM complex";
     final String expected =

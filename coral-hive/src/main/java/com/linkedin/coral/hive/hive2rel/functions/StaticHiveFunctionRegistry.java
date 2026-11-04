@@ -134,7 +134,7 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
     // Complex type constructors
     addFunctionEntry("array", ARRAY_VALUE_CONSTRUCTOR);
     addFunctionEntry("struct", ROW);
-    addFunctionEntry("map", MAP_VALUE_CONSTRUCTOR);
+    addFunctionEntry("map", HiveMapValueConstructor.MAP_VALUE_CONSTRUCTOR);
     addFunctionEntry("named_struct", HiveNamedStructFunction.NAMED_STRUCT);
     addFunctionEntry("generic_project", GenericProjectFunction.GENERIC_PROJECT);
 

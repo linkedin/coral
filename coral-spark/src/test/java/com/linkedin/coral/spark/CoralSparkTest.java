@@ -319,6 +319,21 @@ public class CoralSparkTest {
   }
 
   @Test
+  public void testArrayIndexOnCTEColumn() {
+    RelNode relNode =
+        TestUtils.toRelNode("WITH t1 AS (SELECT b AS str FROM complex) SELECT split(str, ',')[0] AS item FROM t1");
+    String targetSql = "SELECT split(complex.b, ',')[0] item\n" + "FROM default.complex complex";
+    assertEquals(createCoralSpark(relNode).getSparkSql(), targetSql);
+  }
+
+  @Test
+  public void testMapWithMixedValueTypes() {
+    RelNode relNode = TestUtils.toRelNode("SELECT map('k1', 'v1', 'k2', 2) FROM bar");
+    String targetSql = "SELECT MAP ('k1', 'v1', 'k2', CAST(2 AS STRING))\n" + "FROM default.bar bar";
+    assertEquals(createCoralSpark(relNode).getSparkSql(), targetSql);
+  }
+
+  @Test
   public void testDataTypeArrayMap() {
     RelNode relNode = TestUtils.toRelNode(String.join("\n", "",
         "SELECT array(map('abc', 123, 'def', 567), map('pqr', 65, 'xyz', 89))[0]['abc']", "FROM bar"));
