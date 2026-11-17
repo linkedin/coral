@@ -341,6 +341,31 @@ public class HiveToRelConverterTest {
   }
 
   @Test
+  public void testLocateUDFReturnsInteger() {
+    // Hive's locate(substr, str[, pos]) returns INT, like instr(str, substr)
+    {
+      final String sql = "SELECT locate('a', b) FROM foo";
+      String expected =
+          "LogicalProject(EXPR$0=[locate('a', $1)])\n" + "  LogicalTableScan(table=[[hive, default, foo]])\n";
+      RelNode rel = converter.convertSql(sql);
+      assertEquals(RelOptUtil.toString(rel), expected);
+      assertEquals(rel.getRowType().getFieldList().get(0).getType().getSqlTypeName(), SqlTypeName.INTEGER);
+    }
+    {
+      final String sql = "SELECT locate('a', b, 2) FROM foo";
+      RelNode rel = converter.convertSql(sql);
+      assertEquals(rel.getRowType().getFieldList().get(0).getType().getSqlTypeName(), SqlTypeName.INTEGER);
+    }
+    {
+      // No implicit CAST should be needed to compare the position with an integer
+      final String sql = "SELECT b FROM foo WHERE locate('a', b) > 0";
+      String expected = "LogicalProject(b=[$1])\n" + "  LogicalFilter(condition=[>(locate('a', $1), 0)])\n"
+          + "    LogicalTableScan(table=[[hive, default, foo]])\n";
+      assertEquals(relToString(sql), expected);
+    }
+  }
+
+  @Test
   public void testTimestampConversion() {
     final String sql = "SELECT cast(b AS timestamp) FROM complex";
     String expected = String.join("\n", "LogicalProject(EXPR$0=[CAST($1):TIMESTAMP])",

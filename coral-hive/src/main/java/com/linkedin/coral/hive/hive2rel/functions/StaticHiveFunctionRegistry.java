@@ -249,7 +249,7 @@ public class StaticHiveFunctionRegistry implements FunctionRegistry {
     createAddUserDefinedFunction("instr", ReturnTypes.INTEGER, STRING_STRING);
     createAddUserDefinedFunction("length", INTEGER_NULLABLE, STRING);
     createAddUserDefinedFunction("levenshtein", ReturnTypes.INTEGER, STRING_STRING);
-    createAddUserDefinedFunction("locate", FunctionReturnTypes.STRING,
+    createAddUserDefinedFunction("locate", ReturnTypes.INTEGER,
         family(ImmutableList.of(SqlTypeFamily.STRING, SqlTypeFamily.STRING, SqlTypeFamily.INTEGER), optionalOrd(2)));
     addFunctionEntry("lower", LOWER);
     addFunctionEntry("lcase", LOWER);
