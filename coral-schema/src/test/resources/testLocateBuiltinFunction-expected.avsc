@@ -1,0 +1,13 @@
+{
+  "type" : "record",
+  "name" : "v",
+  "namespace" : "default.v",
+  "fields" : [ {
+    "name" : "Id_View_Col",
+    "type" : "int"
+  }, {
+    "name" : "Locate_Col",
+    "type" : [ "null", "int" ],
+    "doc" : "Field created in view by applying UDF 'locate' with argument(s): \"a\", value with type VARCHAR(2147483647)"
+  } ]
+}

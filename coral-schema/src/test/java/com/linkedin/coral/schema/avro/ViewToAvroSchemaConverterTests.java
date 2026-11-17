@@ -301,6 +301,19 @@ public class ViewToAvroSchemaConverterTests {
   }
 
   @Test
+  public void testLocateBuiltinFunction() {
+    String viewSql = "CREATE VIEW v AS "
+        + "SELECT Id AS Id_View_Col, locate('a', Struct_Col.String_Field) AS Locate_Col FROM basecomplex";
+
+    TestUtils.executeCreateViewQuery("default", "v", viewSql);
+
+    ViewToAvroSchemaConverter viewToAvroSchemaConverter = ViewToAvroSchemaConverter.create(hiveMetastoreClient);
+    Schema actualSchema = viewToAvroSchemaConverter.toAvroSchema("default", "v");
+
+    Assert.assertEquals(actualSchema.toString(true), TestUtils.loadSchema("testLocateBuiltinFunction-expected.avsc"));
+  }
+
+  @Test
   public void testUdfSquare() {
     String viewSql = "CREATE VIEW foo_dali_udf3 "
         + "tblproperties('functions' = 'FuncSquare:com.linkedin.coral.hive.hive2rel.CoralTestUDF3', "
